@@ -77,28 +77,38 @@ const BulkItemForm = ({
     return null;
   };
 
+  const allFields = renderFields({
+    retrieveItemOptions,
+    OutlinedInputStyle,
+    renderLocationOptions,
+    options,
+    displayContainerSplotLimitField,
+    subLocationsOptions,
+    suppliersOptions,
+    displaySublocationFields,
+    addSerialNumberField,
+    rangeFormat,
+    labeling,
+    loadingStatus,
+    setImageUploadedValue,
+    renderingOptionsForSubLocations,
+    isRented,
+    displayPreviewImage,
+    allSerialNumbersOptions,
+  });
+  const childLabels = new Set(
+    allFields.flatMap((field) =>
+      field.children ? field.children.map((child) => child.label) : []
+    )
+  );
+
+  const fieldsToRender = allFields.filter(
+    (field) => !childLabels.has(field.label)
+  );
   return (
     <form onSubmit={handleSubmit(savingNewItem)} id="bulkItemForm">
       <Grid container spacing={1}>
-        {renderFields({
-          retrieveItemOptions,
-          OutlinedInputStyle,
-          renderLocationOptions,
-          options,
-          displayContainerSplotLimitField,
-          subLocationsOptions,
-          suppliersOptions,
-          displaySublocationFields,
-          addSerialNumberField,
-          rangeFormat,
-          labeling,
-          loadingStatus,
-          setImageUploadedValue,
-          renderingOptionsForSubLocations,
-          isRented,
-          displayPreviewImage,
-          allSerialNumbersOptions,
-        }).map((item, index) => {
+        {fieldsToRender.map((item, index) => {
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
               return (
@@ -195,9 +205,9 @@ const BulkItemForm = ({
                     textAlign: "left",
                     display:
                       imageUploadedValue ||
-                      String(watch("image_url")).startsWith(
-                        "https://res.cloudinary",
-                      )
+                        String(watch("image_url")).startsWith(
+                          "https://res.cloudinary",
+                        )
                         ? "flex"
                         : "none",
                   }}
@@ -250,10 +260,9 @@ const BulkItemForm = ({
                     rules={
                       item.required
                         ? {
-                            required: `${
-                              item.label || "This field"
+                          required: `${item.label || "This field"
                             } is required`,
-                          }
+                        }
                         : {}
                     }
                     render={({ field: { value, onChange } }) => {
@@ -293,7 +302,7 @@ const BulkItemForm = ({
                               style={{
                                 display:
                                   item.name === "sub_location" &&
-                                  subLocationsSubmitted.length > 0
+                                    subLocationsSubmitted.length > 0
                                     ? "block"
                                     : "none",
                                 width: "100%",
@@ -344,6 +353,84 @@ const BulkItemForm = ({
                               ]}
                             />
                           </Grid>
+
+                          {item.children &&
+                            item.children.map((child) => {
+                              if (child.displayField) {
+                                return (
+                                  <Grid
+                                    key={child.name}
+                                    style={{
+                                      textAlign: "left",
+                                    }}
+                                    marginY={1}
+                                    item
+                                    xs={12}
+                                    sm={12}
+                                    md={12}
+                                    lg={12}
+                                  >
+                                    <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                                      <Tooltip
+                                        placement="top"
+                                        title={child.tooltipMessage}
+                                        style={{
+                                          width: "100%",
+                                        }}
+                                      >
+                                        <Typography
+                                          style={
+                                            stylingComponents({
+                                              loadingStatus,
+                                            }).styling
+                                          }
+                                        >
+                                          {child.label} <strong>*</strong>{" "}
+                                          {child.tooltip && <QuestionIcon />}
+                                        </Typography>
+                                      </Tooltip>
+                                    </InputLabel>
+                                    {child.htmlElement.length < 1 ? (
+                                      <Controller
+                                        control={control}
+                                        name={child.name}
+                                        rules={
+                                          child.required
+                                            ? {
+                                              required: `${child.label || "This field"} is required`,
+                                            }
+                                            : {}
+                                        }
+                                        render={({ field: { value, onChange } }) => (
+                                          <FieldsSections
+                                            Grid={Grid}
+                                            item={child}
+                                            AutoComplete={AutoComplete}
+                                            AntSelectorStyle={AntSelectorStyle}
+                                            errors={errors}
+                                            renderingErrorMessage={renderingErrorMessage}
+                                            watch={watch}
+                                            value={value}
+                                            onChange={onChange}
+                                            isChild={true}
+                                          />
+                                        )}
+                                      />
+                                    ) : (
+                                      renderOptional({
+                                        props: child.htmlElement,
+                                        watch,
+                                        register,
+                                        errors,
+                                        returningDate,
+                                        setReturningDate,
+                                      })
+                                    )}
+                                  </Grid>
+                                );
+                              }
+                              return null;
+                            })}
                         </>
                       );
                     }}
@@ -361,6 +448,7 @@ const BulkItemForm = ({
               </Grid>
             );
           }
+          return null;
         })}
       </Grid>
       <SerialNumberAndMoreInfoComponentForm
@@ -385,6 +473,7 @@ const BulkItemForm = ({
       />
     </form>
   );
+  // );
 };
 
 export default BulkItemForm;
