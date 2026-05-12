@@ -32,7 +32,7 @@ const useBulkActionLogic = () => {
     queryClient,
     dicSuppliers,
   } = useSuppliers();
-  const [updateAll, setUpdateAll] = useState(false)
+  const [updateAll, setUpdateAll] = useState(true)
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
