@@ -22,7 +22,7 @@ const UX = ({
   locationData,
   navigate,
   openAdvanceSearchModal,
-  overallSummary,
+  // overallSummary,
   ownedInventory,
   period,
   periodUpdateOnly,
@@ -99,13 +99,13 @@ const UX = ({
         </>
       )}
       {/* KPI Summary */}
-      <Grid item xs={12} md={3}>
+      {/* <Grid item xs={12} md={3}>
         <KPI
           label="Total Locations"
           value={overallSummary?.total_locations}
           color="primary"
         />
-      </Grid>
+      </Grid> */}
       <Grid item xs={12} md={3}>
         <KPI label="Item Types" value={uniqueItemGroupsCount} color="primary" />
       </Grid>
