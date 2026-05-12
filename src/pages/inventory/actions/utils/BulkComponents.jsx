@@ -22,7 +22,7 @@ export const renderTitle = () => {
           style={TextFontSize30LineHeight38}
           color={"var(--gray-600, #475467)"}
         >
-          Add a group of devices
+          Add new group of inventory
         </Typography>
       </InputLabel>
       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
@@ -408,7 +408,7 @@ export const gripingFieldsUpdateFN = (props) => {
     case "enableAssignFeature":
       return 4
     case "image_uploader":
-      return 4
+      return 12
     case "image_uploader_preview":
       return 12
     case "image_url":
@@ -422,39 +422,39 @@ export const gripingFieldsUpdateFN = (props) => {
 export const gripingFields = (props) => {
   switch (props) {
     case "brand":
-      return 6
+      return 3
     case "category_name":
-      return 6
+      return 3
     case "item_group":
-      return 6
+      return 3
     case "cost":
-      return 6
+      return 3
     case "ownership":
-      return 6
+      return 4
     case "sub_location":
-      return 6
+      return 4
     case "location":
-      return 6
+      return 4
     case "tax_location":
-      return 6
+      return 4
     case "container":
-      return 6
+      return 4
     case "isItAContainer":
-      return 6
+      return 4
     case "":
-      return 6
+      return 4
     case "supplier":
-      return 6
+      return 4
     case "enableAssignFeature":
-      return 6
+      return 4
     case "image_uploader":
-      return 6
+      return 12
     case "image_uploader_preview":
-      return 6
+      return 12
     case "image_url":
-      return 6
+      return 4
     case "containerSpotLimit":
-      return 6
+      return 4
     default:
       return 12
   }
