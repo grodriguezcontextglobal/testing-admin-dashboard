@@ -1,5 +1,6 @@
 import { Grid, Typography } from "@mui/material";
-import { AutoComplete, Checkbox, Divider } from "antd";
+import { AutoComplete, Checkbox, Divider, Switch } from "antd";
+import { uniqueId } from "lodash";
 import { useState } from "react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
@@ -9,7 +10,6 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import Input from "../../../../../components/UX/inputs/Input";
 import useBulkActionLogic from "../../add/useBulkActionLogic";
 import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
-import { uniqueId } from "lodash";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
 
@@ -21,8 +21,8 @@ const SerialNumberAndMoreInfoComponentForm = ({
   setMoreInfo,
   generalInfoForSelection,
   updateAll,
+  setUpdateAll,
 }) => {
-  console.log(generalInfoForSelection);
   const { user } = useBulkActionLogic();
   const [mainDeviceFound, setMainDeviceFound] = useState(null);
   const [searchDevice, setSearchDevice] = useState("");
@@ -42,15 +42,27 @@ const SerialNumberAndMoreInfoComponentForm = ({
       "/db_item/consulting-item",
       bodyTempl
     );
-    if (respo?.data?.ok && respo?.data?.items?.length > 0) {
-      const item = respo.data.items[0];
-      setMainDeviceFound(item);
-      const fetchedIdentifiers = item.extra_serial_number.map((item) => ({
-        id: uniqueId("identifier-"),
-        type: item.keyObject,
-        value: item.valueObject,
-      }));
-      setIdentifiers(fetchedIdentifiers);
+    if (respo?.data?.ok) {
+      if (respo?.data?.items?.length > 0) {
+        const item = respo.data.items[0];
+        setMainDeviceFound(item);
+        if (item.extra_serial_number?.length > 0) {
+          const fetchedIdentifiers = item.extra_serial_number.map((item) => ({
+            id: uniqueId("identifier-"),
+            type: item.keyObject,
+            value: item.valueObject,
+          }));
+          setIdentifiers(fetchedIdentifiers);
+        } else {
+          setIdentifiers([{
+            id: uniqueId("identifier-"),
+            type: "Serial Number",
+            value: searchDevice,
+          }]);
+        }
+      } else {
+        setMainDeviceFound(null);
+      }
     } else {
       setMainDeviceFound(null);
       setIdentifiers([]);
@@ -156,6 +168,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
     }
   };
 
+  const handleSwitching = (e) => {
+    setUpdateAll(!e);
+  }
+
   return (
     <Grid container spacing={1}>
       <div style={{ margin: "1rem 0", gap: 0 }} className="form">
@@ -163,17 +179,11 @@ const SerialNumberAndMoreInfoComponentForm = ({
           variant="h5"
           sx={{ width: "100%", textAlign: "left", mb: 0.5, fontWeight: "bold" }}
         >
-          Serial numbers and identifiers
-        </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ width: "100%", textAlign: "left", mb: 3 }}
-        >
-          Users can select an identifier to designate it as the primary key for
-          the submitted devices. If no identifier is explicitly selected, the
-          system will automatically use the first available identifier as the
-          primary key by default.
+          Make changes to specific items in group&nbsp;
+          <Switch
+            checked={!updateAll}
+            onChange={(e) => handleSwitching(e)}
+          />
         </Typography>
 
         <Grid container spacing={1} alignItems="center">
