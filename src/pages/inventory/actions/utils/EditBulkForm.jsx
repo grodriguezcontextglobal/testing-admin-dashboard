@@ -1,24 +1,25 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { AutoComplete, Breadcrumb, Checkbox, Divider, Tooltip } from "antd";
+import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import Chip from "../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
 import {
-  gripingFields,
+  gripingFieldsUpdateFN,
   renderingOptionsButtons,
   renderOptional,
-  stylingComponents,
+  // renderOptional,
+  stylingComponents
 } from "./BulkComponents";
 // import { renderFields } from "./BulkItemsFields";
+import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
+import { renderFields } from "./EditBulkFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
-import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
-import { renderFields } from "./EditBulkFields";
+import Chip from "../../../../components/UX/Chip/Chip";
 
 const EditBulkForm = ({
   acceptImage,
@@ -110,12 +111,12 @@ const EditBulkForm = ({
                   item
                   xs={12}
                   sm={12}
-                  md={gripingFields(item.name)}
-                  lg={gripingFields(item.name)}
+                  md={gripingFieldsUpdateFN(item.name)}
+                  lg={gripingFieldsUpdateFN(item.name)}
                 >
                   <ImageUploaderComponent
                     item={item}
-                    gripingFields={gripingFields}
+                    gripingFields={gripingFieldsUpdateFN}
                     stylingComponents={stylingComponents}
                     loadingStatus={loadingStatus}
                     setImageUploadedValue={setImageUploadedValue}
@@ -208,8 +209,8 @@ const EditBulkForm = ({
                   item
                   xs={12}
                   sm={12}
-                  md={gripingFields(item.name)}
-                  lg={gripingFields(item.name)}
+                  md={gripingFieldsUpdateFN(item.name)}
+                  lg={gripingFieldsUpdateFN(item.name)}
                 ></Grid>
               );
             }
@@ -223,8 +224,8 @@ const EditBulkForm = ({
                 item
                 xs={12}
                 sm={12}
-                md={gripingFields(item.name)}
-                lg={gripingFields(item.name)}
+                md={gripingFieldsUpdateFN(item.name)}
+                lg={gripingFieldsUpdateFN(item.name)}
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip
@@ -246,146 +247,180 @@ const EditBulkForm = ({
                     </Typography>
                   </Tooltip>
                 </InputLabel>
-                {item.htmlElement.length < 1 ? (
-                  <Controller
-                    control={control}
-                    name={item.name}
-                    rules={
-                      item.required
-                        ? {
-                          required: `${item.label || "This field"
-                            } is required`,
-                        }
-                        : {}
-                    }
-                    render={({ field: { value, onChange } }) => {
+                <Controller
+                  control={control}
+                  name={item.name}
+                  rules={
+                    item.required
+                      ? {
+                        required: `${item.label || "This field"} is required`,
+                      }
+                      : {}
+                  }
+                  render={({ field: { value, onChange } }) => (
+                    <>
+                      <FieldsSections
+                        Grid={Grid}
+                        item={item}
+                        AutoComplete={AutoComplete}
+                        AntSelectorStyle={AntSelectorStyle}
+                        errors={errors}
+                        renderingErrorMessage={renderingErrorMessage}
+                        renderingOptionsButtons={renderingOptionsButtons}
+                        watch={watch}
+                        setOpenScanningModal={setOpenScanningModal}
+                        setOpenScannedItemView={setOpenScannedItemView}
+                        manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
+                        addingSubLocation={addingSubLocation}
+                        setAddSerialNumberField={setAddSerialNumberField}
+                        index={index}
+                        Divider={Divider}
+                        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
+                        value={value}
+                        onChange={onChange}
+                      />
+                      <Grid item xs={12} sm={12} md={12} lg={12}>
+                        <Breadcrumb
+                          style={{
+                            display:
+                              item.name === "sub_location" &&
+                                subLocationsSubmitted.length > 0
+                                ? "block"
+                                : "none",
+                            width: "100%",
+                          }}
+                          items={[
+                            {
+                              title: (
+                                <p
+                                  style={{
+                                    backgroundColor: "transparent",
+                                    border: "none",
+                                    outline: "none",
+                                    boxShadow: "none",
+                                    margin: "auto",
+                                    padding: 0,
+                                    fontFamily: "Inter",
+                                    width: "fit-content",
+                                  }}
+                                >
+                                  {watch("location")}
+                                </p>
+                              ),
+                            },
+                            ...subLocationsSubmitted.map(
+                              (subLocation, index) => {
+                                return {
+                                  title: (
+                                    <Chip
+                                      variant="ghost"
+                                      style={{
+                                        margin: 0,
+                                        padding: 0,
+                                        alignItems: "flex-start",
+                                      }}
+                                      label={subLocation}
+                                      onDelete={() =>
+                                        setSubLocationsSubmitted(
+                                          subLocationsSubmitted.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        )
+                                      }
+                                    />
+                                  ),
+                                };
+                              },
+                            ),
+                          ]}
+                        />
+                      </Grid>
+
+                    </>
+                  )}
+                />
+                {item.children &&
+                  item.children.map((child) => {
+                    if (child.displayField) {
                       return (
-                        <>
-                          <FieldsSections
-                            Grid={Grid}
-                            item={item}
-                            AutoComplete={AutoComplete}
-                            AntSelectorStyle={AntSelectorStyle}
-                            errors={errors}
-                            renderingErrorMessage={renderingErrorMessage}
-                            renderingOptionsButtons={renderingOptionsButtons}
-                            watch={watch}
-                            setOpenScanningModal={setOpenScanningModal}
-                            setOpenScannedItemView={setOpenScannedItemView}
-                            manuallyAddingSerialNumbers={
-                              manuallyAddingSerialNumbers
-                            }
-                            addingSubLocation={addingSubLocation}
-                            setAddSerialNumberField={setAddSerialNumberField}
-                            index={index}
-                            Divider={Divider}
-                            renderingOptionsForSubLocations={
-                              renderingOptionsForSubLocations
-                            }
-                            Breadcrumb={Breadcrumb}
-                            displaySublocationFields={displaySublocationFields}
-                            Chip={Chip}
-                            setSubLocationsSubmitted={setSubLocationsSubmitted}
-                            subLocationsSubmitted={subLocationsSubmitted}
-                            value={value}
-                            onChange={onChange}
-                          />
-                          <Grid item xs={12} sm={12} md={12} lg={12}>
-                            <Breadcrumb
+                        <Grid
+                          key={child.name}
+                          style={{
+                            textAlign: "left",
+                          }}
+                          marginY={1}
+                          item
+                          xs={12}
+                          sm={12}
+                          md={12}
+                          lg={12}
+                        >
+                          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                            <Tooltip
+                              placement="top"
+                              title={child.tooltipMessage}
                               style={{
-                                display:
-                                  item.name === "sub_location" &&
-                                    subLocationsSubmitted.length > 0
-                                    ? "block"
-                                    : "none",
                                 width: "100%",
                               }}
-                              items={[
-                                {
-                                  title: (
-                                    <p
-                                      style={{
-                                        backgroundColor: "transparent",
-                                        border: "none",
-                                        outline: "none",
-                                        boxShadow: "none",
-                                        margin: "auto",
-                                        padding: 0,
-                                        fontFamily: "Inter",
-                                        width: "fit-content",
-                                      }}
-                                    >
-                                      {watch("location")}
-                                    </p>
-                                  ),
-                                },
-                                ...subLocationsSubmitted.map(
-                                  (subLocation, index) => {
-                                    return {
-                                      title: (
-                                        <Chip
-                                          variant="ghost"
-                                          style={{
-                                            margin: 0,
-                                            padding: 0,
-                                            alignItems: "flex-start",
-                                          }}
-                                          label={subLocation}
-                                          onDelete={() =>
-                                            setSubLocationsSubmitted(
-                                              subLocationsSubmitted.filter(
-                                                (_, i) => i !== index,
-                                              ),
-                                            )
-                                          }
-                                        />
-                                      ),
-                                    };
-                                  },
-                                ),
-                              ]}
+                            >
+                              <Typography
+                                style={
+                                  stylingComponents({
+                                    loadingStatus,
+                                  }).styling
+                                }
+                              >
+                                {child.label} <strong>*</strong>{" "}
+                                {child.tooltip && <QuestionIcon />}
+                              </Typography>
+                            </Tooltip>
+                          </InputLabel>
+                          {child.htmlElement.length < 1 ? (
+                            <Controller
+                              control={control}
+                              name={child.name}
+                              rules={
+                                child.required
+                                  ? {
+                                    required: `${child.label || "This field"} is required`,
+                                  }
+                                  : {}
+                              }
+                              render={({ field: { value, onChange } }) => (
+                                <FieldsSections
+                                  Grid={Grid}
+                                  item={child}
+                                  AutoComplete={AutoComplete}
+                                  AntSelectorStyle={AntSelectorStyle}
+                                  errors={errors}
+                                  renderingErrorMessage={renderingErrorMessage}
+                                  watch={watch}
+                                  value={value}
+                                  onChange={onChange}
+                                  isChild={true}
+                                />
+                              )}
                             />
-                          </Grid>
-                        </>
+                          ) : (
+                            renderOptional({
+                              props: child.htmlElement,
+                              watch,
+                              register,
+                              errors,
+                              returningDate,
+                              setReturningDate,
+                            })
+                          )}
+                        </Grid>
                       );
-                    }}
-                  />
-                ) : (
-                  renderOptional({
-                    props: item.htmlElement,
-                    watch,
-                    register,
-                    errors,
-                    returningDate,
-                    setReturningDate,
-                  })
-                )}{" "}
+                    }
+                    return null;
+                  })} {" "}
               </Grid>
             );
           }
         })}
       </Grid>
-      <div style={{ width: "100%" }}>
-        <Checkbox
-          checked={updateAll}
-          value={updateAll}
-          onChange={() => setUpdateAll(!updateAll)}
-          style={{
-            fontFamily: "Inter",
-            fontSize: "18px",
-            lineHeight: "28px",
-            width: "-webkit-fill-available",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            padding: "0px 0px 0px 12px",
-            marginLeft: "-15px"
-          }}
-        >
-          <p>Update all inventory
-          </p>
-        </Checkbox>
-      </div>
       {generalInfoForSelection && <SerialNumberAndMoreInfoComponentForm
         style={{
           ...AntSelectorStyle,
@@ -407,7 +442,7 @@ const EditBulkForm = ({
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
         scannedSerialNumbers={scannedSerialNumbers}
-        primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Update ${scannedSerialNumbers.length} items` : `Update item`}
+        primaryButtonTitle={updateAll ? `Update entire group inventory` : `Update ${scannedSerialNumbers.length} items`}
         formId="updateBulkItems"
         updateAll={updateAll}
       />
