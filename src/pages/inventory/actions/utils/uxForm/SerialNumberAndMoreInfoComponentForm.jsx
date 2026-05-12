@@ -95,7 +95,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
     setScannedSerialNumbers(newScannedSerialNumbers);
     // Reset the form for the next entry
     setNextId(uuid);
-    setIdentifiers([{ id: uuid, type: "Serial number", value: "" }]);
+    setIdentifiers(identifiers.map((item) => ({ ...item, value: "" })));
     setCheckedIndex([]);
   };
 
