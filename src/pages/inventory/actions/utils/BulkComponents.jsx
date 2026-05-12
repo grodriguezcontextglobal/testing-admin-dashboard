@@ -379,6 +379,46 @@ export const renderTitleSingleItem = () => {
   );
 };
 
+export const gripingFieldsUpdateFN = (props) => {
+  switch (props) {
+    case "brand":
+      return 4
+    case "category_name":
+      return 4
+    case "item_group":
+      return 4
+    case "cost":
+      return 4
+    case "ownership":
+      return 4
+    case "sub_location":
+      return 4
+    case "location":
+      return 4
+    case "tax_location":
+      return 4
+    case "container":
+      return 4
+    case "isItAContainer":
+      return 4
+    case "":
+      return 4
+    case "supplier":
+      return 4
+    case "enableAssignFeature":
+      return 4
+    case "image_uploader":
+      return 4
+    case "image_uploader_preview":
+      return 12
+    case "image_url":
+      return 4
+    case "containerSpotLimit":
+      return 4
+    default:
+      return 12
+  }
+}
 export const gripingFields = (props) => {
   switch (props) {
     case "brand":
