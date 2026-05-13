@@ -15,6 +15,7 @@ import {
   onAddEventInfoDetail,
   onAddEventStaff,
   onAddListEventPermitPerAdmin,
+  onResetEventInfo,
 } from "../../store/slices/eventSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
@@ -259,16 +260,15 @@ const MainPage = () => {
                 {" "}
                 <BlueButtonComponent
                   title={"Add new event"}
-                  func={() =>
+                  func={() => {
                     dispatch(
-                      dispatch(
-                        onAddCompanyAccountStripe(
-                          companyAccountStripeQuery.data.data
-                            .companyAccountStripeFound
-                        )
+                      onAddCompanyAccountStripe(
+                        companyAccountStripeQuery.data.data
+                          .companyAccountStripeFound
                       )
                     )
-                  }
+                    dispatch(onResetEventInfo())
+                  }}
                   // icon={<WhiteCirclePlusIcon />}
                   styles={{ width: "100%" }}
                 />
