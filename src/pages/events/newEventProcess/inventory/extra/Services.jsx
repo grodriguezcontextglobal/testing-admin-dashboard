@@ -8,7 +8,6 @@ import {
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { onAddExtraServiceNeeded } from "../../../../../store/slices/eventSlice";
@@ -195,12 +194,6 @@ const Services = ({
               <BlueButtonComponent
                 buttonType="submit"
                 title="Add service"
-                icon={
-                  <RectangleBluePlusIcon
-                    hoverStroke="var(--Blue-dark-800)"
-                    stroke="var(--basewhite)"
-                  />
-                }
                 styles={{ width: "100%" }}
               />
               {/* <Button
