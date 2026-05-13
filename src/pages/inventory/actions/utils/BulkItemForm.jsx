@@ -114,6 +114,7 @@ const BulkItemForm = ({
               return (
                 <Grid
                   key={item.name}
+                  marginBottom={2.5}
                   item
                   xs={12}
                   sm={12}
@@ -130,7 +131,7 @@ const BulkItemForm = ({
                   />
                   <InputLabel
                     style={{
-                      marginBottom: "0.2rem",
+                      marginBottom: "1rem",
                       width: "100%",
                       display: imageUploadedValue ? "block" : "none",
                     }}
