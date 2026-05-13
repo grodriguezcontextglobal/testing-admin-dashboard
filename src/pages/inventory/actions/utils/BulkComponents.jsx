@@ -387,6 +387,12 @@ export const gripingFieldsUpdateFN = (props) => {
       return 4
     case "item_group":
       return 4
+    case "reference_brand":
+      return 4
+    case "reference_category_name":
+      return 4
+    case "reference_item_group":
+      return 4
     case "cost":
       return 4
     case "ownership":
@@ -422,13 +428,19 @@ export const gripingFieldsUpdateFN = (props) => {
 export const gripingFields = (props) => {
   switch (props) {
     case "brand":
-      return 3
+      return 4
     case "category_name":
-      return 3
+      return 4
     case "item_group":
-      return 3
+      return 4
+    case "reference_brand":
+      return 4
+    case "reference_category_name":
+      return 4
+    case "reference_item_group":
+      return 4
     case "cost":
-      return 3
+      return 4
     case "ownership":
       return 4
     case "sub_location":
