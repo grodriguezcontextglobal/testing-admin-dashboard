@@ -32,6 +32,7 @@ const EditBulkForm = ({
   displaySublocationFields,
   errors,
   generalInfoForSelection,
+  handleSearchByReference,
   handleSubmit,
   imageUploadedValue,
   imageUrlGenerated,
@@ -106,87 +107,89 @@ const EditBulkForm = ({
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
               return (
-                <Grid
-                  key={item.name}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={gripingFieldsUpdateFN(item.name)}
-                  lg={gripingFieldsUpdateFN(item.name)}
-                >
-                  <ImageUploaderComponent
-                    item={item}
-                    gripingFields={gripingFieldsUpdateFN}
-                    stylingComponents={stylingComponents}
-                    loadingStatus={loadingStatus}
-                    setImageUploadedValue={setImageUploadedValue}
-                    QuestionIcon={QuestionIcon}
-                  />
-                  <InputLabel
-                    style={{
-                      marginBottom: "0.2rem",
-                      width: "100%",
-                      display: imageUploadedValue ? "block" : "none",
-                    }}
+                <>
+                  <Grid
+                    key={item.name}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={gripingFieldsUpdateFN(item.name)}
+                    lg={gripingFieldsUpdateFN(item.name)}
                   >
-                    <Tooltip
-                      placement="top"
-                      title={item.tooltipMessage}
+                    <ImageUploaderComponent
+                      item={item}
+                      gripingFields={gripingFieldsUpdateFN}
+                      stylingComponents={stylingComponents}
+                      loadingStatus={loadingStatus}
+                      setImageUploadedValue={setImageUploadedValue}
+                      QuestionIcon={QuestionIcon}
+                    />
+                    <InputLabel
                       style={{
+                        marginBottom: "0.2rem",
                         width: "100%",
+                        display: imageUploadedValue ? "block" : "none",
                       }}
                     >
-                      <Typography
-                        style={stylingComponents({ loadingStatus }).styling}
-                      >
-                        {item.label} <strong>*</strong>{" "}
-                        {item.tooltip && <QuestionIcon />}
-                      </Typography>
-                    </Tooltip>
-                    <div>
-                      <img
-                        src={imageUploadedValue || ""}
-                        alt="image_preview"
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
                         style={{
-                          objectFit: "cover",
-                          objectPosition: "center",
-                          aspectRatio: "1/1",
-                        }}
-                        width={150}
-                      />{" "}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-start",
-                          alignItems: "center",
                           width: "100%",
-                          marginTop: "1rem",
-                          gap: "1rem",
                         }}
                       >
-                        <BlueButtonComponent
-                          disabled={imageUrlGenerated}
-                          func={() => acceptImage()}
+                        <Typography
+                          style={stylingComponents({ loadingStatus }).styling}
+                        >
+                          {item.label} <strong>*</strong>{" "}
+                          {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                      <div>
+                        <img
+                          src={imageUploadedValue || ""}
+                          alt="image_preview"
                           style={{
-                            background: imageUrlGenerated
-                              ? "transparent"
-                              : BlueButton.background,
+                            objectFit: "cover",
+                            objectPosition: "center",
+                            aspectRatio: "1/1",
                           }}
-                          icon={
-                            imageUrlGenerated ? (
-                              <CheckIcon stroke="#fff" />
-                            ) : null
-                          }
-                          title={
-                            imageUrlGenerated
-                              ? "Image accepted"
-                              : "Accept image"
-                          }
-                        />
+                          width={150}
+                        />{" "}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-start",
+                            alignItems: "center",
+                            width: "100%",
+                            marginTop: "1rem",
+                            gap: "1rem",
+                          }}
+                        >
+                          <BlueButtonComponent
+                            disabled={imageUrlGenerated}
+                            func={() => acceptImage()}
+                            style={{
+                              background: imageUrlGenerated
+                                ? "transparent"
+                                : BlueButton.background,
+                            }}
+                            icon={
+                              imageUrlGenerated ? (
+                                <CheckIcon stroke="#fff" />
+                              ) : null
+                            }
+                            title={
+                              imageUrlGenerated
+                                ? "Image accepted"
+                                : "Accept image"
+                            }
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </InputLabel>
-                </Grid>
+                    </InputLabel>
+                  </Grid>
+                </>
               );
             } else if (
               item.htmlOption === 6 &&
@@ -213,6 +216,28 @@ const EditBulkForm = ({
                   lg={gripingFieldsUpdateFN(item.name)}
                 ></Grid>
               );
+            } 
+            else if (item.htmlElement === 8) {
+              return (
+                <>
+                  <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={12} md={8}>
+                      <Typography>
+                        Set search criteria for searching inventory group in fields above and then click search reference button.
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <BlueButtonComponent
+                        title="Search by reference"
+                        func={handleSearchByReference}
+                        buttonType="button"
+                        styles={{ width: "100%" }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Divider sx={{ my: 2 }} />
+                </>
+              )
             }
             return (
               <Grid
