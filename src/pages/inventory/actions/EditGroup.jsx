@@ -30,14 +30,15 @@ const EditGroup = () => {
     displayPreviewImage,
     displaySublocationFields,
     errors,
+    generalInfoForSelection,
     handleAddSubLocationInput,
     handleDeleteMoreInfo,
     handleMoreInfoPerDevice,
     handleRemoveSubLocationInput,
+    handleSearchByReference,
     handleSubLocationInputChange,
     handleSubmit,
     imageUrlGenerated,
-    generalInfoForSelection,
     isRented,
     keyObject,
     labeling,
@@ -69,18 +70,18 @@ const EditGroup = () => {
     setSubLocationInputs,
     setSubLocationsSubmitted,
     setSupplierModal,
+    setUpdateAll,
     setValueObject,
     subLocationInputs,
     subLocationsOptions,
     subLocationsSubmitted,
     supplierList,
     supplierModal,
+    updateAll,
+    updateGroupItems,
     user,
     valueObject,
     watch,
-    updateGroupItems,
-    updateAll,
-    setUpdateAll,
   } = useBulkActionLogic();
   return (
     <Grid
@@ -102,6 +103,7 @@ const EditGroup = () => {
         displaySublocationFields={displaySublocationFields}
         errors={errors}
         generalInfoForSelection={generalInfoForSelection}
+        handleSearchByReference={handleSearchByReference}
         handleDeleteMoreInfo={handleDeleteMoreInfo}
         handleMoreInfoPerDevice={handleMoreInfoPerDevice}
         handleSubmit={handleSubmit}
