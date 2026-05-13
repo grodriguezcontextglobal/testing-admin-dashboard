@@ -62,6 +62,10 @@ const SerialNumberAndMoreInfoComponentForm = ({
         }
       } else {
         setMainDeviceFound(null);
+        alert(
+          "No item found with that serial number in this category and group information. Please check the category and group and try again."
+        );
+
       }
     } else {
       setMainDeviceFound(null);
