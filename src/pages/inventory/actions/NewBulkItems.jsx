@@ -74,6 +74,7 @@ const AddNewBulkItems = () => {
     acceptAndGenerateImage,
     user,
     setMoreInfo,
+    handleSearchByReference,
   } = useBulkActionLogic();
   return (
     <Grid
@@ -137,7 +138,7 @@ const AddNewBulkItems = () => {
         setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
-
+        handleSearchByReference={handleSearchByReference}
       />
       {renderingModals({
         openScanningModal,
