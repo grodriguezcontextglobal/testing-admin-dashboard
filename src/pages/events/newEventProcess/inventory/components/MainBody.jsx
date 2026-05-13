@@ -237,7 +237,7 @@ const MainBody = ({
         md={12}
         lg={12}
       >
-        <GrayButtonComponent
+        {!filled && <GrayButtonComponent
           title={"Skip this step"}
           disabled={
             (!eventInfoDetail.eventName && !eventInfoDetail.building) ||
@@ -245,20 +245,16 @@ const MainBody = ({
           }
           func={() => navigate("/create-event-page/review-submit")}
           styles={{ width: "100%" }}
-        />
-        <BlueButtonComponent
-          title={
-            filled
-              ? "Service fields are filled. Please clear the fields or add service to continue."
-              : "Next step"
-          }
+        />}
+        {!filled && <BlueButtonComponent
+          title={"Next step"}
           disabled={
             (!eventInfoDetail.eventName && !eventInfoDetail.building) || filled
           }
           func={(e) => handleNextStepEventSetup(e)}
           styles={{ width: "100%" }}
           titleStyles={{ textWrap: "balance", width: "100%" }}
-        />
+        />}
       </Grid>
     </Grid>
   );
