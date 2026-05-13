@@ -38,16 +38,16 @@ export const renderFields = ({
       },
       required: false,
       options: normalizeOptions(retrieveItemOptions("category_name")),
-      htmlOption: 3,
+      htmlOption: 0,
       tooltip: true,
       tooltipMessage: "This is the category of the reference item.",
-      displayField: false,
+      displayField: true,
     },
     {
       name: "reference_item_group",
       placeholder:
         "Select item for retrieving the reference item.",
-      label: "Item name reference",
+      label: "Group reference",
       htmlElement: "",
       style: {
         ...OutlinedInputStyle,
@@ -59,6 +59,42 @@ export const renderFields = ({
       htmlOption: 0,
       tooltip: true,
       tooltipMessage: "This is the item group of the reference item.",
+      displayField: true,
+    },
+    {
+      name: "reference_brand",
+      placeholder:
+        "Select item for retrieving the reference item.",
+      label: "Brand reference",
+      htmlElement: "",
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
+      required: false,
+      options: normalizeOptions(retrieveItemOptions("brand")),
+      htmlOption: 0,
+      tooltip: true,
+      tooltipMessage: "This is the brand of the reference item.",
+      displayField: true,
+    },
+    {
+      name: "reference_search_button_",
+      placeholder:
+        "Select item for retrieving the reference item.",
+      label: "Search reference",
+      htmlElement: 8,
+      style: {
+        ...OutlinedInputStyle,
+        textDecoration: "underline",
+        fontWeight: 700,
+      },
+      required: false,
+      options: normalizeOptions(retrieveItemOptions("brand")),
+      htmlOption: 0,
+      tooltip: true,
+      tooltipMessage: "Select criteria for search inventory group.",
       displayField: true,
     },
     {
