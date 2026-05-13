@@ -201,6 +201,17 @@ const MainBody = ({
           eventInfoDetail={eventInfoDetail}
         />
       )}
+      {
+        displayFormToCreateCategory && <LightBlueButtonComponent
+          title={"Close form for new inventory"}
+          buttonType="button"
+          func={() =>
+            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
+          }
+          styles={{ width: "100%", margin: "1rem auto" }}
+        />
+
+      }
       {/* other services component */}
       {eventInfoDetail.merchant && (
         <Services
