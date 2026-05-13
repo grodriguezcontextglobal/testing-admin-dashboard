@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import costValueInputFormat from "../../utils/costValueInputFormat";
@@ -453,48 +454,67 @@ const useBulkActionLogic = () => {
     }
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const newReference = watch("reference_item_group");
-    let infoToSet = null;
+  const handleSearchByReference = () => {
+    const categoryRef = watch("reference_category_name");
+    const itemGroupRef = watch("reference_item_group");
+    const brandRef = watch("reference_brand");
 
-    if (retrieveItemDataSelected().has(newReference)) {
-      const dataToRetrieve = retrieveItemDataSelected().get(newReference);
-      if (Object.entries(dataToRetrieve).length > 0) {
-        Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (
-            key === "enableAssignFeature" ||
-            key === "container" ||
-            key === "sub_location" ||
-            key === "location"
-          ) {
-            return;
-          }
-          if (locationInApp.pathname === "/create-event-page/device-detail") {
-            setValue("ownership", "Rent");
-          }
-          setValue("quantity", 0);
-          setValue(key, value);
-        });
-        const grouping = groupBy(
-          itemsInInventoryQuery?.data?.data?.items,
-          "item_group"
-        );
-        if (grouping[newReference]) {
-          const sortedData = orderBy(
-            grouping[newReference],
-            "serial_number",
-            "asc"
-          );
-          setAllSerialNumbersOptions(sortedData.map((x) => x.serial_number));
-        }
-        infoToSet = dataToRetrieve;
-      }
-    } else {
-      setValue("item_group", newReference);
+    if (!categoryRef && !itemGroupRef && !brandRef) {
+      openNotificationWithIcon(
+        "Please provide at least one reference to search.",
+      );
+      return;
     }
 
-    if (!newReference || newReference.length === 0) {
+    const inventoryItems = itemsInInventoryQuery?.data?.data?.items || [];
+    let filteredItems = [...inventoryItems];
+
+    if (categoryRef) {
+      filteredItems = filteredItems.filter(
+        (item) => item.category_name === categoryRef,
+      );
+    }
+    if (itemGroupRef) {
+      filteredItems = filteredItems.filter(
+        (item) => item.item_group === itemGroupRef,
+      );
+    }
+    if (brandRef) {
+      filteredItems = filteredItems.filter((item) => item.brand === brandRef);
+    }
+
+    let infoToSet = null;
+    if (filteredItems.length > 0) {
+      const dataToRetrieve = filteredItems[0];
+      infoToSet = dataToRetrieve;
+
+      Object.entries(dataToRetrieve).forEach(([key, value]) => {
+        if (
+          key === "enableAssignFeature" ||
+          key === "container" ||
+          key === "sub_location" ||
+          key === "location"
+        ) {
+          return;
+        }
+        if (locationInApp.pathname === "/create-event-page/device-detail") {
+          setValue("ownership", "Rent");
+        }
+        setValue("quantity", 0);
+        setValue(key, value);
+      });
+
+      const grouping = groupBy(inventoryItems, "item_group");
+      const itemGroup = dataToRetrieve.item_group;
+      if (grouping[itemGroup]) {
+        const sortedData = orderBy(grouping[itemGroup], "serial_number", "asc");
+        setAllSerialNumbersOptions(sortedData.map((x) => x.serial_number));
+      }
+      openNotificationWithIcon(
+        `Found ${filteredItems.length} items. Displaying info for the first match.`,
+      );
+    } else {
+      openNotificationWithIcon("No inventory found matching the criteria.");
       setValue("item_group", "");
       setValue("photo", []);
       setValue("category_name", "");
@@ -512,11 +532,7 @@ const useBulkActionLogic = () => {
     }
 
     setGeneralInfoForSelection(infoToSet);
-
-    return () => {
-      controller.abort();
-    };
-  }, [watch("reference_item_group")]);
+  };
 
   useEffect(() => {
     qtyDiff();
@@ -696,6 +712,8 @@ const useBulkActionLogic = () => {
     watch,
     updateAll,
     setUpdateAll,
+    retrieveItemDataSelected,
+    handleSearchByReference,
   };
 };
 
