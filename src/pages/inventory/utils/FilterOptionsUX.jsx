@@ -3,11 +3,14 @@ import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
 import { useMemo, useCallback, memo, useContext } from "react";
 import { FilterOptionsContext } from "../MainPage";
+// import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 
 const FilterOptionsUX = memo(function FilterOptionsUX({
   // filterOptions = {},
   // chosen,
   setChosen,
+  setOpenAdvanceSearchModal,
 }) {
   const filterOptionsValues = useContext(FilterOptionsContext)
   // Helper: current value for a specific category
@@ -146,6 +149,21 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
           />
         );
       })}
+      <LightBlueButtonComponent
+        title={"Forecast Inventory"}
+        func={() => {
+          setOpenAdvanceSearchModal(true);
+        }}
+        styles={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+        titleStyles={{
+          textTransform: "none",
+        }}
+      />
+
     </div>
   );
 });
