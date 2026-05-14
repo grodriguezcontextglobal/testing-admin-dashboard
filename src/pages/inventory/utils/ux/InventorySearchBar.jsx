@@ -6,8 +6,9 @@ import Input from "../../../../components/UX/inputs/Input";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
-import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+// import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
+import { FilterOptionsContext } from "../../MainPage";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -19,10 +20,14 @@ const InventorySearchBar = ({
   setSearchedResult,
   // refetchingQueriesFn,
   // locationsQuery,
-  setOpenAdvanceSearchModal,
+  // setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
   setOpenShippingModal,
+  dataFilterOptions,
+  chosenOption,
+  setChosenOption,
+  optionsUX,
 }) => {
   const { role, locations } = useSelector((state) => state.permission);
   const { user } = useSelector(state => state.admin)
@@ -93,9 +98,9 @@ const InventorySearchBar = ({
         </div>
       </div>
       <Grid display={"flex"} spacing={1} container>
-        <Grid item xs={12} sm={12} md={8} lg={8}>
+        <Grid gap={3} item xs={12} sm={12} md={3} lg={3}>
           <form
-            style={{ width: "100%" }}
+            style={{ width: "100%", margin:"0px 0px 0.4rem 0px" }}
             id="search-form"
             onSubmit={handleSubmit(searchItem)}
           >
@@ -110,10 +115,7 @@ const InventorySearchBar = ({
               })}
             />
           </form>
-        </Grid>
-        <Grid item xs={12} sm={12} md={4} lg={4}>
-
-          <GrayButtonComponent
+          {/* <GrayButtonComponent
             title={"Forecast Inventory"}
             func={() => {
               setOpenAdvanceSearchModal(true);
@@ -126,7 +128,20 @@ const InventorySearchBar = ({
             titleStyles={{
               textTransform: "none",
             }}
-          />
+          /> */}
+
+        </Grid>
+        <Grid item xs={12} sm={12} md={9} lg={9}>
+          <FilterOptionsContext.Provider
+            value={{
+              filterOptions: dataFilterOptions,
+              chosen: chosenOption,
+              setChosenOption: setChosenOption,
+            }}
+          >
+            {optionsUX}
+          </FilterOptionsContext.Provider>
+
         </Grid>
         {/* <Divider /> */}
         {/* <ButtonsSearchAndReload
