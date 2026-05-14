@@ -134,7 +134,12 @@ const MainPage = () => {
   const [isLoadingState, setIsLoadingState] = useState(false);
 
   const optionsUX = useMemo(
-    () => <FilterOptionsUX setChosen={setChosenOption} />,
+    () => (
+      <FilterOptionsUX
+        setChosen={setChosenOption}
+        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+      />
+    ),
     [chosenOption, dataFilterOptions],
   );
 
@@ -300,9 +305,13 @@ const MainPage = () => {
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
           setOpenShippingModal={setOpenShippingModal}
+          dataFilterOptions={dataFilterOptions}
+          chosenOption={chosenOption}
+          setChosenOption={setChosenOption}
+          optionsUX={optionsUX}
         />
         <Divider />
-        <FilterOptionsContext.Provider
+        {/* <FilterOptionsContext.Provider
           value={{
             filterOptions: dataFilterOptions,
             chosen: chosenOption,
@@ -310,7 +319,7 @@ const MainPage = () => {
           }}
         >
           {optionsUX}
-        </FilterOptionsContext.Provider>
+        </FilterOptionsContext.Provider> */}
         <Grid
           display={"flex"}
           justifyContent={"center"}
