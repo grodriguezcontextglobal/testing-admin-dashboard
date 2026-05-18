@@ -30,8 +30,7 @@ const AdvanceSearchResultPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
-  const [periodUpdateOnly, setPeriodUpdateOnly] = useState(false); // New state
-
+  const [periodUpdateOnly, setPeriodUpdateOnly] = useState(false);
   // Get filter options for the search modal
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
@@ -92,9 +91,9 @@ const AdvanceSearchResultPage = () => {
       dispatch(
         onAddQRCodeLink(
           selectedEventInfo.qrCodeLink ??
-            `https://app.devitrak.net/?event=${encodeURI(
-              selectedEventInfo.eventInfoDetail.eventName,
-            )}&company=${encodeURI(selectedEventInfo.company)}`,
+          `https://app.devitrak.net/?event=${encodeURI(
+            selectedEventInfo.eventInfoDetail.eventName,
+          )}&company=${encodeURI(selectedEventInfo.company)}`,
         ),
       );
       dispatch(
@@ -144,6 +143,7 @@ const AdvanceSearchResultPage = () => {
   const handleReturnNavigation = useCallback(() => {
     dispatch(onAddAdvanceSearch(null));
     dispatch(onAddSearchParameters(null));
+    localStorage.removeItem("searchParameters");
     return navigate("/inventory");
   }, [dispatch, navigate]);
 
@@ -240,7 +240,7 @@ const AdvanceSearchResultPage = () => {
   const eventDeviceColumns = [
     { key: "category", title: "Category", dataIndex: "category" },
     { key: "group", title: "Item", dataIndex: "group" },
-    { key: "count", title: "Device Count", dataIndex: "count", width:"10%" },
+    { key: "count", title: "Device Count", dataIndex: "count", width: "10%" },
     {
       key: "events_count",
       title: "Events",
@@ -408,6 +408,7 @@ const AdvanceSearchResultPage = () => {
         // RentedInventoryTable={RentedInventoryTable}
         searchParameters={searchParameters}
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+        setPeriodUpdateOnly={setPeriodUpdateOnly}
         // SimpleTable={SimpleTable}
         uniqueEvents={uniqueEvents}
         uniqueItemGroupsCount={uniqueItemGroupsCount}
