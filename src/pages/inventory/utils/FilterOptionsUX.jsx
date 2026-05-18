@@ -153,6 +153,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
         title={"Forecast Inventory"}
         func={() => {
           setOpenAdvanceSearchModal(true);
+          localStorage.removeItem("searchParameters");
         }}
         styles={{
           alignItems: "center",
