@@ -483,17 +483,44 @@ const useBulkActionLogic = () => {
       filteredItems = filteredItems.filter((item) => item.brand === brandRef);
     }
 
+    // Reset image state before processing new search
+    setValue("image_url", "");
+    setDisplayPreviewImage(false);
+    setImageUrlGenerated(null);
+    setConvertImageTo64ForPreview(null);
+    setImageUploadedValue(null);
+
     let infoToSet = null;
     if (filteredItems.length > 0) {
       const dataToRetrieve = filteredItems[0];
       infoToSet = dataToRetrieve;
+
+      // Handle images
+      const imageUrls = new Set(
+        filteredItems.map((item) => item.image_url).filter(Boolean),
+      );
+      if (imageUrls.size === 1) {
+        const [uniqueImageUrl] = imageUrls;
+        setValue("image_url", uniqueImageUrl);
+        setDisplayPreviewImage(true);
+        setConvertImageTo64ForPreview(uniqueImageUrl); // This should make it appear in the preview
+        setImageUrlGenerated(uniqueImageUrl); // This marks it as "accepted"
+        openNotificationWithIcon(
+          "A unique image was found and has been set for this group.",
+        );
+      } else if (imageUrls.size > 1) {
+        openNotificationWithIcon(
+          "Multiple images found for this group. Please upload a new image if you wish to standardize it.",
+        );
+      }
 
       Object.entries(dataToRetrieve).forEach(([key, value]) => {
         if (
           key === "enableAssignFeature" ||
           key === "container" ||
           key === "sub_location" ||
-          key === "location"
+          key === "location" ||
+          key === "image_url" // Don't overwrite the image we just set
         ) {
           return;
         }
