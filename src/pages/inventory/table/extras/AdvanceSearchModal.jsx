@@ -17,6 +17,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { AdvanceSearchContext } from "./RenderingFilters";
+import Loading from "../../../../components/animation/Loading";
 const { RangePicker } = DatePicker;
 
 const AdvanceSearchModal = ({
@@ -25,19 +26,30 @@ const AdvanceSearchModal = ({
   existingParameters = null,
   periodUpdateOnly = false, // New prop to indicate period-only update
 }) => {
-  const values = useContext(AdvanceSearchContext);
+  const contextValues = useContext(AdvanceSearchContext);
+  // console.log(values);  
   const { user } = useSelector((state) => state.admin);
-  const { searchParameters } = useSelector((state) => state.searchResult);
+  // const { searchParameters } = useSelector((state) => state.searchResult);
   const [isLoadingState, setIsLoadingState] = useState(false);
+  const [values, setValues] = useState(null);
   const [displayMessage, setDisplayMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const { register, handleSubmit, setValue, reset } = useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    const existingValues = localStorage.getItem("searchParameters");
+    if (existingValues) {
+      setValues(JSON.parse(existingValues));
+    } else {
+      setValues(contextValues);
+      localStorage.setItem("searchParameters", JSON.stringify(contextValues));
+    }
+  }, [contextValues]);
   // Pre-populate form with existing parameters
   useEffect(() => {
-    const params = existingParameters || searchParameters;
+    const params = existingParameters;
     if (params && openAdvanceSearchModal) {
       setValue("category", params.category || "");
       setValue("group", params.group || "");
@@ -49,16 +61,13 @@ const AdvanceSearchModal = ({
         setValue("date", dateRange);
       }
     }
-  }, [existingParameters, searchParameters, openAdvanceSearchModal, setValue]);
+  }, [existingParameters, openAdvanceSearchModal, setValue]);
+
 
   const renderTitle = () => {
     return (
       <Typography style={TextFontsize18LineHeight28}>
-        {periodUpdateOnly
-          ? "Update Search Period"
-          : existingParameters || searchParameters
-            ? "Update Search Parameters"
-            : "Forecast Inventory"}
+        Forecast Inventory
       </Typography>
     );
   };
@@ -67,7 +76,7 @@ const AdvanceSearchModal = ({
     reset();
     return setOpenAdvanceSearchModal(false);
   };
-
+  if (!values) return <Loading />
   const handleSearchQuery = async (data) => {
     if (!data.date) {
       return message.error("Please select a date");
@@ -75,12 +84,10 @@ const AdvanceSearchModal = ({
     try {
       setErrorMessage(null);
       setIsLoadingState(true);
-      const date_start = `${new Date(data.date[0].$d).getFullYear()}-${
-        new Date(data.date[0].$d).getMonth() + 1
-      }-${new Date(data.date[0].$d).getDate()}`;
-      const date_end = `${new Date(data.date[1].$d).getFullYear()}-${
-        new Date(data.date[1].$d).getMonth() + 1
-      }-${new Date(data.date[1].$d).getDate()}`;
+      const date_start = `${new Date(data.date[0].$d).getFullYear()}-${new Date(data.date[0].$d).getMonth() + 1
+        }-${new Date(data.date[0].$d).getDate()}`;
+      const date_end = `${new Date(data.date[1].$d).getFullYear()}-${new Date(data.date[1].$d).getMonth() + 1
+        }-${new Date(data.date[1].$d).getDate()}`;
 
       // Store search parameters
       const searchParams = {
@@ -137,7 +144,6 @@ const AdvanceSearchModal = ({
       return null;
     }
   };
-
   const fieldOptions = [
     {
       label: "Category",
@@ -196,30 +202,29 @@ const AdvanceSearchModal = ({
             </Typography>
           </div>
 
-          {!periodUpdateOnly &&
-            fieldOptions.map((field) => (
-              <div key={field.name} style={{ margin: "0.5rem 0 0.25rem" }}>
-                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                  <Typography
-                    style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-                  >
-                    {field.label}
-                  </Typography>
-                </InputLabel>
-                <Select
-                  style={{ width: "100%" }}
-                  showSearch
-                  placeholder={field.placeholder}
-                  optionFilterProp="label"
-                  {...register(field.name)}
-                  onChange={(value) => setValue(field.name, value)}
-                  onSearch={(value) => setValue(field.name, value)}
-                  options={field.options}
-                  allowClear
-                  disabled={periodUpdateOnly}
-                />
-              </div>
-            ))}
+          {fieldOptions.map((field) => (
+            <div key={field.name} style={{ margin: "0.5rem 0 0.25rem" }}>
+              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                <Typography
+                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                >
+                  {field.label}
+                </Typography>
+              </InputLabel>
+              <Select
+                style={{ width: "100%" }}
+                showSearch
+                placeholder={field.placeholder}
+                optionFilterProp="label"
+                {...register(field.name)}
+                onChange={(value) => setValue(field.name, value)}
+                onSearch={(value) => setValue(field.name, value)}
+                options={field.options}
+                allowClear
+                // disabled={periodUpdateOnly}
+              />
+            </div>
+          ))}
 
           {/* Period Field - Always enabled */}
           <div style={{ margin: "0.5rem 0 0.25rem" }}>
@@ -239,13 +244,7 @@ const AdvanceSearchModal = ({
           </div>
 
           <BlueButtonComponent
-            title={
-              periodUpdateOnly
-                ? "Update Period"
-                : // : existingParameters || searchParameters
-                  // ? "Update Search"
-                  "Search"
-            }
+            title={"Search"}
             func={() => null}
             buttonType="submit"
             loadingState={isLoadingState}
