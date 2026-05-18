@@ -59,7 +59,7 @@ const UX = ({
         />
         <div style={{ display: "flex", gap: "8px" }}>
           <BlueButtonComponent
-            title={"Update Period"}
+            title={"New Search"}
             func={handleUpdatePeriodOnly}
             buttonType="button"
             titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
