@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import Loading from "../../../../../components/animation/Loading";
+import { DoubleRightChevronIcon } from "../../../../../components/icons/DoubleRightChevronIcon.jsx";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon.jsx";
-import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow.jsx";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import BaseTable from "../../../../../components/UX/tables/BaseTable.jsx";
@@ -47,10 +47,10 @@ const VerificationDetailsTable = ({
   );
   const itemIdsParam =
     groupByVerificationId[verificationId] &&
-    groupByVerificationId[verificationId].length > 0
+      groupByVerificationId[verificationId].length > 0
       ? groupByVerificationId[verificationId]
-          .map((id) => encodeURIComponent(id.device_id))
-          .join(",")
+        .map((id) => encodeURIComponent(id.device_id))
+        .join(",")
       : "";
 
   const renderStatusBadge = (isSigned) => (
@@ -298,63 +298,63 @@ function ListEquipment() {
     },
     ...(canSeeSignedColumnsBasedOnRole || canSeeSignedColumns
       ? [
-          {
-            title: "Contract Status",
-            key: "contract_status",
-            render: (_, record) => {
-              const verificationId = record.verification_id;
-              const queryResult = verificationMap[verificationId];
-              const allSigned = queryResult?.data?.allSigned;
+        {
+          title: "Contract Status",
+          key: "contract_status",
+          render: (_, record) => {
+            const verificationId = record.verification_id;
+            const queryResult = verificationMap[verificationId];
+            const allSigned = queryResult?.data?.allSigned;
 
-              if (queryResult?.isLoading) return <Spin size="small" />;
-              return renderStatusBadge(!!allSigned);
-            },
+            if (queryResult?.isLoading) return <Spin size="small" />;
+            return renderStatusBadge(!!allSigned);
           },
-        ]
+        },
+      ]
       : []),
     ...(canSeeSignedColumnsBasedOnRole
       ? [
-          {
-            title: "",
-            dataIndex: "address",
-            key: "address",
-            render: (_, record) => (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  alignItems: "center",
-                  gap: "20px",
+        {
+          title: "",
+          dataIndex: "address",
+          key: "address",
+          render: (_, record) => (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: "20px",
+              }}
+            >
+              <BlueButtonComponent
+                title={"Mark as returned"}
+                func={() => {
+                  setDeviceInfo({
+                    ...record,
+                    ...dataSpecificItemInAssignedDevicePerStaffMember(
+                      record.device_id,
+                    ),
+                  });
+                  setOpenReturnDeviceStaffModal(true);
                 }}
-              >
-                <BlueButtonComponent
-                  title={"Mark as returned"}
-                  func={() => {
-                    setDeviceInfo({
-                      ...record,
-                      ...dataSpecificItemInAssignedDevicePerStaffMember(
-                        record.device_id,
-                      ),
-                    });
-                    setOpenReturnDeviceStaffModal(true);
-                  }}
-                  buttonType="button"
-                  titleStyles={{
-                    textTransform: "none",
-                    with: "100%",
-                    gap: "2px",
-                  }}
-                  disabled={record.active === 0}
-                />
-                {/* <GrayButtonComponent
+                buttonType="button"
+                titleStyles={{
+                  textTransform: "none",
+                  with: "100%",
+                  gap: "2px",
+                }}
+                disabled={record.active === 0}
+              />
+              {/* <GrayButtonComponent
                   title={"Mark as lost"}
                   func={() => null}
                   disabled={true}
                 /> */}
-              </div>
-            ),
-          },
-        ]
+            </div>
+          ),
+        },
+      ]
       : []),
   ];
 
@@ -442,7 +442,7 @@ function ListEquipment() {
                     padding: "4px",
                   }}
                 >
-                  {expanded ? <UpDoubleArrow /> : <DownDoubleArrowIcon />}
+                  {expanded ? <DownDoubleArrowIcon /> : <DoubleRightChevronIcon />}
                 </span>
               ),
           }}
