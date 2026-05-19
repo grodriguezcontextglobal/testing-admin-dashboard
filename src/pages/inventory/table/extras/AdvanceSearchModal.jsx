@@ -1,4 +1,5 @@
 import { InputLabel, Typography } from "@mui/material";
+import { useMediaQuery } from "@uidotdev/usehooks";
 import { DatePicker, message, Select } from "antd";
 import dayjs from "dayjs";
 import { useContext, useEffect, useState } from "react";
@@ -72,6 +73,7 @@ const AdvanceSearchModal = ({
     );
   };
 
+  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const closeModal = () => {
     reset();
     return setOpenAdvanceSearchModal(false);
@@ -155,9 +157,9 @@ const AdvanceSearchModal = ({
       })),
     },
     {
-      label: "Device name",
+      label: "Group",
       name: "group",
-      placeholder: "Select a device",
+      placeholder: "Select a group",
       options: values.group.map((item) => ({
         value: item.key,
         label: item.key,
@@ -201,30 +203,31 @@ const AdvanceSearchModal = ({
                 : "Parameters for Forecast Inventory query"}
             </Typography>
           </div>
-
-          {fieldOptions.map((field) => (
-            <div key={field.name} style={{ margin: "0.5rem 0 0.25rem" }}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
-                >
-                  {field.label}
-                </Typography>
-              </InputLabel>
-              <Select
-                style={{ width: "100%" }}
-                showSearch
-                placeholder={field.placeholder}
-                optionFilterProp="label"
-                {...register(field.name)}
-                onChange={(value) => setValue(field.name, value)}
-                onSearch={(value) => setValue(field.name, value)}
-                options={field.options}
-                allowClear
+          <div style={{ width: "100%", display:"grid", gridTemplateColumns: isSmallDevice ? "1fr" : "1fr 1fr", gap: "10px" }}>
+            {fieldOptions.map((field) => (
+              <div key={field.name} style={{ margin: "0.5rem 0 0.25rem", width: "100%" }}>
+                <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                  <Typography
+                    style={{ ...TextFontSize14LineHeight20, fontWeight: 600 }}
+                  >
+                    {field.label}
+                  </Typography>
+                </InputLabel>
+                <Select
+                  style={{ width: "100%" }}
+                  showSearch
+                  placeholder={field.placeholder}
+                  optionFilterProp="label"
+                  {...register(field.name)}
+                  onChange={(value) => setValue(field.name, value)}
+                  onSearch={(value) => setValue(field.name, value)}
+                  options={field.options}
+                  allowClear
                 // disabled={periodUpdateOnly}
-              />
-            </div>
-          ))}
+                />
+              </div>
+            ))}
+          </div>
 
           {/* Period Field - Always enabled */}
           <div style={{ margin: "0.5rem 0 0.25rem" }}>
