@@ -2,11 +2,12 @@ import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch, Tag } from "antd";
 import { PropTypes } from "prop-types";
-import { createContext, useMemo, useState } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
@@ -60,11 +61,19 @@ const RenderingFilters = ({
   searchedResult,
   chosen,
   setTypePerLocationInfoModal,
-  setOpenDetails,
+  // setOpenDetails,
   allowedLocations,
   setFiltering,
   setOpenCreateLocationModal,
 }) => {
+  const [openDetails, setOpenDetails] = useState({});
+
+  const toggleDetails = (key) => {
+    setOpenDetails(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+  useEffect(() => {
+    console.log(openDetails);
+  }, [openDetails]);
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
@@ -1117,9 +1126,10 @@ const RenderingFilters = ({
                 alignItems: "center",
                 margin: "2rem 0",
               }}
-              open={item.open}
+              open={openDetails[item.key] ?? item.open}
             >
               <summary
+                onClick={() => toggleDetails(item.key)}
                 key={`${item.title}-*-*${index}`}
                 style={{
                   width: "100%",
@@ -1140,7 +1150,7 @@ const RenderingFilters = ({
                     alignItems: "center",
                   }}
                 >
-                  <DownNarrow />
+                  {(openDetails[item.key]) ? <RightChevronIcon /> : <DownNarrow />}
                   &nbsp;
                   {item.title}&nbsp;{" "}
                   <span
