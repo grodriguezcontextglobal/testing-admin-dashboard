@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
-import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import { RightSingleChevronIcon } from "../../../../components/icons/RightSingleChevronIcon";
 import { Title } from "../../../../styles/global/Title";
 import DisplayAllItemsSetInventoryEventForCustomers from "./DisplayAllItemsSetInventoryForCustomers";
 import HighlightedPill from "./ux/HighlightedPill";
@@ -49,7 +49,7 @@ const AlInventoryEventAssigned = ({
               margin: showInventoryTypes ? "0px" : "0 0 5dvh 0",
             }}
           >
-            {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
+            {showInventoryTypes ? <DownNarrow />: <RightSingleChevronIcon />}
             Inventory assigned to event for consumer uses:&nbsp;
             <HighlightedPill props={`${inventoryEventAssignedCount() ?? 0} total`} />
           </p>
