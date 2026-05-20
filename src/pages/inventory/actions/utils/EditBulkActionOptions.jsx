@@ -22,8 +22,6 @@ export const bulkItemUpdateAlphanumeric = async ({
   dicSuppliers,
   updateAll,
 }) => {
-
-  console.log(data)
   if (!updateAll && (!scannedSerialNumbers || scannedSerialNumbers.length === 0)) {
     alert("Please scan at least one serial number.");
     return;
