@@ -92,9 +92,13 @@ const ConfirmationModal = ({
           <BlueButtonComponent
             key="confirm"
             title="Confirm"
-            form={formId}
             styles={{ width: "100%" }}
-            buttonType="submit"
+            buttonType="button"
+            func={() => {
+              setOpenConfirmation(false)
+              document.getElementById(formId)?.requestSubmit();
+            }}
+            form={formId}
           />
         </div>
       ]}
