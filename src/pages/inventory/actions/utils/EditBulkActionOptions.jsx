@@ -22,6 +22,8 @@ export const bulkItemUpdateAlphanumeric = async ({
   dicSuppliers,
   updateAll,
 }) => {
+
+  console.log(data)
   if (!updateAll && (!scannedSerialNumbers || scannedSerialNumbers.length === 0)) {
     alert("Please scan at least one serial number.");
     return;
@@ -55,6 +57,11 @@ export const bulkItemUpdateAlphanumeric = async ({
       supplier_info: data.supplier
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
+      reference: {
+        brand: data.reference_brand,
+        item_group: data.reference_item_group,
+        category_name: data.reference_category_name,
+      }
     };
     await alphaNumericUpdateItemMutation.mutate(template);
     Object.keys(template).map((key) => {
