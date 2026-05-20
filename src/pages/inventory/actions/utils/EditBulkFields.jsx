@@ -100,7 +100,7 @@ export const renderFields = ({
     {
       name: "item_group",
       placeholder: "Type the name of the item",
-      label: "Device name",
+      label: "Group name",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -108,7 +108,7 @@ export const renderFields = ({
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
-      displayField: false,
+      displayField: true,
     },
     {
       name: "category_name",
