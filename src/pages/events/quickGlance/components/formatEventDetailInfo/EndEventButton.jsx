@@ -365,7 +365,7 @@ const EndEventButton = () => {
         inventoryBatchStart + inventoryBatchSize,
       );
 
-      const checking = await makeRequestWithRetry(() =>
+      await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/returning-item-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
           allInventoryOfEvent: JSON.stringify(inventorySlice),
@@ -373,7 +373,6 @@ const EndEventButton = () => {
           update_at: update_at,
         }),
       );
-      console.log("checking", checking)
       return;
     };
 
