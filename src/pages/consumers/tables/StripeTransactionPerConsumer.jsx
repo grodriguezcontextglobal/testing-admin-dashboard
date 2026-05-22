@@ -55,11 +55,17 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       await fetchingAllTransactionPerConsumerRelatedToEvent();
     const result = new Map();
     const groupedData = groupBy(allTransactionFetching, "paymentIntent");
-    for (let [key, value] of Object.entries(groupedData)) {
-      const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
-        paymentIntent: key,
-      });
-      const transactionData = respo?.data?.listOfReceivers;
+    const paymentIntentList = [...Object.keys(groupedData)];
+    const respo = await devitrakApi.post("/receiver/all-transaction-by-event-and-consumer", {
+      paymentIntentList,
+      company: user.companyData.id
+    })
+
+    respo?.data?.listOfReceivers?.forEach((item) => {
+      const key = item.paymentIntent
+      const value = groupedData[key]
+
+      const transactionData = respo?.data?.listOfReceivers?.filter((item) => item.paymentIntent === key)
       if (!result.has(key)) {
         result.set(key, [
           {
@@ -102,7 +108,55 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
           },
         ]);
       }
-    }
+    })
+    // for (let [key, value] of Object.entries(groupedData)) {
+    //   const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
+    //     paymentIntent: key,
+    //   });
+    //   const transactionData = respo?.data?.listOfReceivers;
+    //   if (!result.has(key)) {
+    //     result.set(key, [
+    //       {
+    //         eventSelected: value[0]?.eventSelected,
+    //         paymentIntent: key,
+    //         device: transactionData?.length,
+    //         status: Array.isArray(transactionData[0]?.device)
+    //           ? 0
+    //           : transactionData?.reduce(
+    //             (acc, { device }) =>
+    //               acc +
+    //               (device?.status === false || device?.status === "Lost"),
+    //             0,
+    //           ),
+    //         eventInfo: value,
+    //         extra_data: transactionData ?? [],
+    //         timestamp: value[0].created_at,
+    //         cost: value[0].device[0].deviceValue,
+    //       },
+    //     ]);
+    //   } else {
+    //     result.set(key, [
+    //       ...result.get(key),
+    //       {
+    //         eventSelected: value[0]?.eventSelected,
+    //         paymentIntent: key,
+    //         device: transactionData?.length,
+    //         status: Array.isArray(transactionData[0]?.device)
+    //           ? 0
+    //           : transactionData?.reduce(
+    //             (acc, { device }) =>
+    //               acc +
+    //               (device?.status === false || device?.status === "Lost"),
+    //             0,
+    //           ),
+    //         eventInfo: value,
+    //         extra_data: transactionData ?? [],
+    //         timestamp: value[0].created_at,
+    //         cost: value[0].device[0].deviceValue,
+    //       },
+    //     ]);
+    //   }
+    // }
     let final = [...result.values().map((item) => item)];
     return setResponseData(final);
   };
