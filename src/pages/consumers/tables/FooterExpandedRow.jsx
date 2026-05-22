@@ -31,6 +31,8 @@ import {
 } from "../../../store/slices/stripeSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 // import { Subtitle } from "../../../styles/global/Subtitle";
+import Dropdown from "../../../components/UX/dropdown/DropDownComponent";
+import { Subtitle } from "../../../styles/global/Subtitle";
 import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsModal";
 import "../localStyles.css";
 const FooterExpandedRow = ({
@@ -178,6 +180,31 @@ const FooterExpandedRow = ({
     "only screen and (min-width : 769px) and (max-width : 992px)",
   );
 
+  const columnStyles = {
+    height: "20vh",
+    gap: "10px",
+    width: "100%",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    // border: "solid 0.1px black"
+  }
+
+  const dropdownSelectionFN = (props) => {
+    const lostItems = groupBy(formattedData, "status")["Lost"];
+    console.log(props.key)
+    const index = String(props.key)
+    switch (index) {
+      case "0":
+        return setOpenModalCapturingDeposit(true);
+      case "1":
+        return setOpenModalReleasingDeposit(true);
+      case "2":
+        return lostFeeChargeCustomer(lostItems);
+
+      default:
+        return null;
+    }
+  }
   const footerColumn = [
     {
       title: "Deposit",
@@ -185,32 +212,24 @@ const FooterExpandedRow = ({
       key: "deposit",
       render: () => (
         <div
-          style={{
-            ...CenteringGrid,
-            flexDirection: "column",
-            width: "100%",
-            gap: "5px",
-          }}
+          style={columnStyles}
         >
           <GrayButtonConfirmationComponent
             func={() => returningAllItemsAtOnce(selectedItemsToMarkAsReturned)}
             title="Mark selected as returned"
             confirmationTitle="Are you sure?"
             styles={{ width: "100%" }}
-          // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
           />
           <GrayButtonComponent
             func={() => setExpressCheckoutModal(true)}
             title="Scan-in devices"
-            styles={{ width: "100%" }}
-          // icon={<img src={ScanIcon} alt="ScanIcon" />}
+            styles={{ width: "100%", margin: "7.5px 0" }}
           />
           <GrayButtonConfirmationComponent
             title={"Mark all as returned"}
             confirmationTitle="Are you sure?"
             func={() => returningAllItemsAtOnce(transactionDeviceData)}
             styles={{ width: "100%" }}
-          // icon={<img src={ReverseRightArrow} alt="ReverseRightArrow" />}
           />
         </div>
       ),
@@ -219,27 +238,12 @@ const FooterExpandedRow = ({
       title: "Device",
       render: () => (
         <div
-          style={{
-            ...CenteringGrid,
-            flexDirection: "column",
-            width: "100%",
-            gap: "5px",
-          }}
+          style={columnStyles}
         >
           <GrayButtonComponent
             func={() => sendEmailDeviceReport()}
             title="Send report to client"
-          // icon={<img src={Report} alt="Report" />}
-          />
-          <GrayButtonComponent
-            func={() => setOpenModalCapturingDeposit(true)}
-            title="Capture deposit"
-          // icon={<PaymentIcon />}
-          />
-          <GrayButtonComponent
-            func={() => setOpenModalReleasingDeposit(true)}
-            title="Release deposit"
-          // icon={<WithdrawIcon />}
+            styles={{ width: "100%" }}
           />
         </div>
       ),
@@ -267,12 +271,11 @@ const FooterExpandedRow = ({
           }
         };
         return (
-          <span style={{ height: "100%", width: "100%", display: "block" }}>
-            <GrayButtonComponent
-              styles={{ width: "100%" }}
-              disabled={true}
-              title={`$${Number(retrieveAmount()).toLocaleString()} total`} />
-          </span>
+          <div style={columnStyles}>
+            <h4 style={Subtitle}>
+              Total deposit held by consumer ${Number(retrieveAmount()).toLocaleString()} total
+            </h4>
+          </div>
         );
       },
     },
@@ -286,37 +289,30 @@ const FooterExpandedRow = ({
         const lostNumber = groupingByStatus["lost"] || groupingByStatus["Lost"];
         return (
           <div
-            style={{
-              ...CenteringGrid,
-              flexDirection: "column",
-              width: "100%",
-              gap: "5px",
-            }}
+            style={columnStyles}
           >
-            <GrayButtonComponent
-              disabled={true}
-              title={`${groupingByStatus[true]
+            <h4 style={Subtitle}>
+              {groupingByStatus[true]
                 ? Number(groupingByStatus[true].length)
                 : 0
-                } 
-              Active`}
-            />
-            <GrayButtonComponent
-              disabled={true}
-              title={`${groupingByStatus[false]
+              }&nbsp;
+              Active
+            </h4>
+            <h4 style={Subtitle}>
+              {groupingByStatus[false]
                 ? Number(groupingByStatus[false].length)
                 : 0
-                } 
-              Returned`}
-            />
-            <GrayButtonComponent
-              disabled={true}
-              title={`${groupingByStatus["lost"] || groupingByStatus["Lost"]
+              }&nbsp;
+              Returned
+            </h4>
+
+            <h4 style={Subtitle}>
+              {groupingByStatus["lost"] || groupingByStatus["Lost"]
                 ? Number(lostNumber.length)
                 : 0
-                } 
-              Lost`}
-            />
+              }&nbsp;
+              Lost
+            </h4>
           </div>
         );
       },
@@ -326,24 +322,60 @@ const FooterExpandedRow = ({
       dataIndex: "deposit",
       key: "deposit",
       render: () => {
-        const lostItemsList = groupBy(formattedData, "status")["Lost"];
+        // const lostItemsList = groupBy(formattedData, "status")["Lost"];
+        const groupingByStatus = groupBy(transactionDeviceData, "status");
+        // eslint-disable-next-line no-unused-vars
+        const { color, ...SubtitleWithColor } = Subtitle
+        const items = [
+          {
+            label: <p style={SubtitleWithColor}>Capture deposit</p>,
+            key: '0',
+            disabled: !groupingByStatus['true'],
+          },
+          {
+            label: <p style={SubtitleWithColor}>Release deposit</p>,
+            key: '1',
+            disabled: groupingByStatus['true'] || groupingByStatus['Lost'] || groupingByStatus['lost'],
+          },
+          {
+            label: <p style={SubtitleWithColor}>Charge all as lost</p>,
+            key: '2',
+            disabled: !groupingByStatus[true],
+            danger: true
+          },
+        ];
+
         return (
           <div
-            style={{
-              ...CenteringGrid,
-              flexDirection: "column",
-              width: "100%",
-              gap: "5px",
-            }}
+            style={columnStyles}
           >
-            <GrayButtonConfirmationComponent
-              styles={{ width: "100%" }}
+            {/* <Dropdown menu={{ items }} trigger={['click']} onSelect={dropdownSelectionFN}>
+              <p style={{ ...GrayButton, ...GrayButtonText, cursor: "pointer", padding: "5px 10px" }}>Options</p>
+            </Dropdown> */}
+            <Dropdown
+              options={items}
+              onSelect={dropdownSelectionFN}
+              placement="top-end"
+              variant="ghost" //"outline" // | "ghost" | "primary""
+              renderTrigger={({ onClick, ref }) => (
+                <div ref={ref} style={{ display: "inline-block", width: "100%" }}>
+                  <GrayButtonComponent
+                    buttonType="button"
+                    title={"Options"}
+                    func={onClick}
+                    size="lg"
+                  />
+                </div>
+              )}
+            />
+
+            {/* <GrayButtonConfirmationComponent
+              styles={{ width: "100%", marginBottom: "7.5px" }}
               title={"Charge for all lost"}
               confirmationTitle="Are you sure that you want to charge consumer for all devices marked as lost?"
               func={() => lostFeeChargeCustomer(lostItemsList)}
-            // icon={<img src={Lost} alt="Lost" />}
-            />
-            <GrayButtonComponent disabled={true} title={dataToBeRendered()} />
+             icon={<img src={Lost} alt="Lost" />}
+            /> */}
           </div>
         );
       },
