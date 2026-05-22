@@ -150,7 +150,6 @@ const Form = () => {
   };
 
   const checkIfNewAddedItemAlreadyWasAdded = () => {
-    console.log(selectedItem);
     const check = selectedItem.some(
       (element) => element.item_group === `${valueItemSelected.item_group}` && element.location === valueItemSelected.location
     );

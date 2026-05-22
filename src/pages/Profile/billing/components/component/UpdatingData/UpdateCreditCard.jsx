@@ -120,7 +120,7 @@ const UpdateCreditCard = ({
         );
       }
     } catch (error) {
-      console.log(
+      console.error(
         "🚀 ~ file: UpdateCreditCard.jsx:113 ~ updatePaymentMethodOfSubscriptionInDB ~ error:",
         error
       );

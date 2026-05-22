@@ -127,7 +127,7 @@ const ModalMultipleCompanies = ({
       navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
       // }
     } catch (error) {
-      console.log(
+      console.error(
         "loginIntoOneCompanyAccountFromMultipleCompanyRegistered",
         error,
       );

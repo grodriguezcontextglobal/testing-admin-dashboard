@@ -547,7 +547,7 @@ const ImportingXLSXFile = ({
       message.success("All items have been added to event inventory.");
       closeModal();
     } catch (error) {
-      console.log(error);
+      console.error(error);
       message.error("Failed to add XLSX data to event inventory.");
     } finally {
       setLoadingState(false);
