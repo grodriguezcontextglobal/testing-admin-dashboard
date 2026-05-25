@@ -6,6 +6,9 @@ import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import FilterOptionsUX from "../FilterOptionsUX";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import TrashIcon from "../../../../components/icons/TrashIcon";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -54,7 +57,7 @@ const InventorySearchBar = ({
         <Typography
           sx={{
             ...Title,
-            fontSize: "28px",
+            fontSize: "20px",
             padding: 0,
             textAlign: "left",
             width: {
@@ -63,14 +66,17 @@ const InventorySearchBar = ({
               md: "50%",
               lg: "50%",
             },
+            fontWeight: 600,
+            color: "#344054",
           }}
         >
           Search inventory:&nbsp;
         </Typography>
         <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
           {canRenderButton && (
-            <DangerButtonComponent
+            <GrayButtonComponent
               title="Delete group"
+              iconLeading={<TrashIcon />}
               func={() => setOpenDeleteItemModal(true)}
             />
           )}
@@ -82,8 +88,16 @@ const InventorySearchBar = ({
           )}
         </div>
       </div>
-      <Grid justifyContent={"flex-start"} gap={1} container>
-        <Grid item xs={12} sm={12} md={12} lg={12}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-start",
+          alignItems: "flex-start",
+          gap: "16px",
+          width: "100%",
+        }}
+      >
+        <div style={{ flex: "0 0 30%" }}>
           <form
             style={{ width: "100%" }}
             id="search-form"
@@ -100,14 +114,17 @@ const InventorySearchBar = ({
               })}
             />
           </form>
-        </Grid>
-        <Divider />
-        <ButtonsSearchAndReload
-          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-          refetchingQueriesFn={refetchingQueriesFn}
-          locationsQuery={locationsQuery}
-        />
-      </Grid>
+        </div>
+        <div style={{ flex: "0 0 70%", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+          <FilterOptionsUX setChosen={() => {}} />
+        </div>
+      </div>
+      <Divider />
+      <ButtonsSearchAndReload
+        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+        refetchingQueriesFn={refetchingQueriesFn}
+        locationsQuery={locationsQuery}
+      />
     </Grid>
   );
 };

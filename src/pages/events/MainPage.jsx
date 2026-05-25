@@ -194,6 +194,8 @@ const MainPage = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              marginTop: "24px",
+              marginBottom: "24px",
             }}
             container
           >

@@ -285,31 +285,33 @@ const BannerNotificationTemplate = ({
         },
       }}
     >
-      {/* Header row (icon + title/body + close) */}
-      <div style={{ display: "flex", gap: 12, width: "100%" }}>
-        {/* Left icon */}
-        <div
-          style={{
-            flex: "0 0 auto",
-            display: "flex",
-            alignItems: "flex-start",
-            paddingTop: "12px",
-            color: v.iconColor,
-          }}
-          aria-hidden="true"
-        >
-          <span style={{ display: "inline-flex", fontSize: 35 }}>
-            <InformationIcon />
-          </span>
-        </div>
+      {/* Top row: icon + title + close button (right-aligned) */}
+      <div style={{ display: "flex", gap: 12, width: "100%", alignItems: "flex-start", justifyContent: "space-between" }}>
+        {/* Left section: icon + title */}
+        <div style={{ display: "flex", gap: 12, flex: "1 1 auto", minWidth: 0 }}>
+          {/* Left icon */}
+          <div
+            style={{
+              flex: "0 0 auto",
+              display: "flex",
+              alignItems: "flex-start",
+              paddingTop: "12px",
+              color: v.iconColor,
+            }}
+            aria-hidden="true"
+          >
+            <span style={{ display: "inline-flex", fontSize: 24 }}>
+              <InformationIcon />
+            </span>
+          </div>
 
-        {/* Content */}
-        <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+          {/* Title */}
           <Typography
             style={{
               ...Title,
               padding:"12px 0",
-              display: "flex", justifyContent: "flex-start",
+              display: "flex",
+              justifyContent: "flex-start",
               fontSize: "14px",
               lineHeight: "20px",
               margin: 0,
@@ -320,56 +322,13 @@ const BannerNotificationTemplate = ({
           >
             {title}
           </Typography>
-
-          <Typography
-            style={{
-              ...Subtitle,
-              fontSize: "14px",
-              lineHeight: "20px",
-              marginTop: 4,
-              marginBottom: 0,
-              color: v.bodyColor,
-              textWrap: "pretty",
-            }}
-          >
-            {body}
-          </Typography>
-
-          {/* Footer action (UntitledUI often shows a subtle action) */}
-          {showDismissAction ? (
-            <div style={{ marginTop: 10, width: "100%", display: "flex", justifyContent: "flex-start" }}>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="transparentButton"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: 0,
-                  border: "none",
-                  background: "transparent",
-                  cursor: "pointer",
-                  color: v.actionColor,
-                  fontWeight: 600,
-                }}
-              >
-                <BorderedCloseIcon
-                  fill={v.actionColor}
-                  style={{ height: 15, width: 15 }}
-                />
-                <span style={{ lineHeight: "20px" }}>Dismiss the notification</span>
-              </button>
-            </div>
-          ) : null}
         </div>
 
-        {/* Close icon */}
+        {/* Close icon - top right */}
         <button
           type="button"
           onClick={handleClose}
           aria-label="Close alert"
-          className="transparentButton"
           style={{
             flex: "0 0 auto",
             border: "none",
@@ -378,12 +337,40 @@ const BannerNotificationTemplate = ({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 2,
-            marginTop: 2,
+            padding: "4px 8px",
+            margin: 0,
+            outline: "none",
+            transition: "opacity 0.2s ease-in-out",
+            fontSize: "24px",
+            lineHeight: "1",
+            color: "#000000",
+            fontWeight: "bold",
+            width: "auto",
+            height: "auto",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.6"}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Body text */}
+      <div style={{ marginLeft: "38px" }}>
+        <Typography
+          style={{
+            ...Subtitle,
+            fontSize: "14px",
+            lineHeight: "20px",
+            marginTop: 4,
+            marginBottom: 0,
+            color: v.bodyColor,
+            textWrap: "pretty",
           }}
         >
-          <CloseIcon />
-        </button>
+          {body}
+        </Typography>
+
       </div>
     </Card>
   );

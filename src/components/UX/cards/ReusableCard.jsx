@@ -11,7 +11,7 @@ const ReusableCard = ({ title, props, onClick=null, children, style = {}, cardSt
   );
   return (
       <Grid
-        padding={'0 0 10px'}
+        padding={'0'}
         item
         xs={12}
         // style={style}

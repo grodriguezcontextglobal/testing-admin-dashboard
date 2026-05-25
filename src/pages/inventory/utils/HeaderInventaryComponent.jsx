@@ -8,6 +8,10 @@ import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueBu
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import { useSelector } from "react-redux";
+import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
+import ExcelIcon from "../../../components/icons/ExcelIcon";
+import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
+import AnnotationPlusIcon from "../../../components/icons/AnnotationPlusIcon";
 
 /**
  * HeaderInventaryComponent
@@ -43,6 +47,8 @@ const HeaderInventaryComponent = ({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        marginTop: "24px",
+        marginBottom: "24px",
       }}
       item
       xs={12}
@@ -52,7 +58,7 @@ const HeaderInventaryComponent = ({
     >
       <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
         <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
-          Inventory of {user.company}
+          Inventory
         </p>
       </Grid>
       <Grid
@@ -76,12 +82,14 @@ const HeaderInventaryComponent = ({
               with: "100%",
               gap: "2px",
             }}
+            iconLeading={<PlusSquareDarkIcon />}
+            iconTrailing={<ExcelIcon />}
             func={() => setAddInventoryFromXLSXFileModal(true)}
           />
         )}
         {isAdmin && (
-          <BlueButtonComponent
-            title={"Create Location"}
+          <GrayButtonComponent
+            title={"Create location"}
             styles={{ with: "100%" }}
             buttonType="button"
             titleStyles={{
@@ -89,6 +97,7 @@ const HeaderInventaryComponent = ({
               with: "100%",
               gap: "2px",
             }}
+            iconLeading={<AnnotationPlusIcon />}
             func={() => setOpenCreateLocationModal(true)}
           />
         )}
@@ -115,11 +124,7 @@ const HeaderInventaryComponent = ({
               <BlueButtonComponent
                 title={"Add a group of items"}
                 styles={{ with: "100%" }}
-                // icon={
-                //   <WhiteCirclePlusIcon
-                //     style={{ height: "21px", margin: "auto" }}
-                //   />
-                // }
+                iconLeading={<PlusCircleWhiteIcon />}
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",

@@ -284,22 +284,6 @@ const MainPage = () => {
         <MobileActionsButtons user={user} />
         <Divider />
 
-        <InventorySearchBar
-          companyHasInventoryQuery={companyHasInventoryQuery}
-          handleSubmit={handleSubmit}
-          searchItem={searchItem}
-          register={register}
-          adornmentButtonsComponent={adornmentButtonsComponent}
-          setValue={setValue}
-          setParams={setParams}
-          setSearchedResult={setSearchedResult}
-          refetchingQueriesFn={refetchingQueriesFn}
-          locationsQuery={locationsQuery}
-          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-          setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
-          setOpenDeleteItemModal={setOpenDeleteItemModal}
-        />
-        <Divider />
         <FilterOptionsContext.Provider
           value={{
             filterOptions: dataFilterOptions,
@@ -307,7 +291,21 @@ const MainPage = () => {
             setChosenOption: setChosenOption,
           }}
         >
-          {optionsUX}
+          <InventorySearchBar
+            companyHasInventoryQuery={companyHasInventoryQuery}
+            handleSubmit={handleSubmit}
+            searchItem={searchItem}
+            register={register}
+            adornmentButtonsComponent={adornmentButtonsComponent}
+            setValue={setValue}
+            setParams={setParams}
+            setSearchedResult={setSearchedResult}
+            refetchingQueriesFn={refetchingQueriesFn}
+            locationsQuery={locationsQuery}
+            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+            setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
+            setOpenDeleteItemModal={setOpenDeleteItemModal}
+          />
         </FilterOptionsContext.Provider>
         <Grid
           display={"flex"}
