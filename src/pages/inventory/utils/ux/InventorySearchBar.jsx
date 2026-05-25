@@ -9,6 +9,7 @@ import DangerButtonComponent from "../../../../components/UX/buttons/DangerButto
 // import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
 import { FilterOptionsContext } from "../../MainPage";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -18,8 +19,8 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
-  // refetchingQueriesFn,
-  // locationsQuery,
+  refetchingQueriesFn,
+  locationsQuery,
   // setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
@@ -100,7 +101,7 @@ const InventorySearchBar = ({
       <Grid display={"flex"} spacing={1} container>
         <Grid gap={3} item xs={12} sm={12} md={3} lg={3}>
           <form
-            style={{ width: "100%", margin:"0px 0px 0.4rem 0px" }}
+            style={{ width: "100%", margin: "0px 0px 0.4rem 0px" }}
             id="search-form"
             onSubmit={handleSubmit(searchItem)}
           >
@@ -115,20 +116,21 @@ const InventorySearchBar = ({
               })}
             />
           </form>
-          {/* <GrayButtonComponent
-            title={"Forecast Inventory"}
+          <GrayButtonComponent
+            title={"Refresh Tables"}
             func={() => {
-              setOpenAdvanceSearchModal(true);
+              refetchingQueriesFn();
+              locationsQuery.refetch();
             }}
             styles={{
-              alignItems: "center",
-              justifyContent: "space-between",
               width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
             titleStyles={{
               textTransform: "none",
             }}
-          /> */}
+          />
 
         </Grid>
         <Grid item xs={12} sm={12} md={9} lg={9}>
@@ -144,11 +146,6 @@ const InventorySearchBar = ({
 
         </Grid>
         {/* <Divider /> */}
-        {/* <ButtonsSearchAndReload
-          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-          refetchingQueriesFn={refetchingQueriesFn}
-          locationsQuery={locationsQuery}
-        /> */}
       </Grid>
     </Grid>
   );
