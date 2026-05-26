@@ -48,7 +48,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const { data: subLocations = [], isLoading: isLoadingSubLocations } =
     useSubLocations(selectedLocation);
 
-  const { data: events = [], isLoading: isLoadingEvents } = useQuery({
+  const { data: events = [], isLoading: isLoadingEvents, refetch: eventListRefetch } = useQuery({
     queryKey: ["finishedEvents", user.companyData.id],
     queryFn: async () => {
       const respo = await devitrakApi.post(`/event/event-list`, {
@@ -99,6 +99,10 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       );
       setEventInventory(allInventory);
       if (allInventory.length === 0) {
+        await devitrakApi.patch(`/event/edit-staff-event/${event.id}`, {
+          logistic_inventory_status: "completed",
+        })
+        await eventListRefetch();
         message.info("No inventory found for this event.");
       }
     } catch (error) {
@@ -178,9 +182,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         noSqlEventName: selectedEvent,
         user_id: user.sqlMemberInfo.staff_id,
       };
-
       await devitrakApi.post("/db_event/confirm-item-return", template);
-
       message.success("Devices checked in successfully!");
       close();
     } catch (error) {
