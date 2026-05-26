@@ -160,19 +160,27 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       message.error("Please select a check-in location.");
       return;
     }
+
+    if (!selectedEvent) {
+      message.error("Please select an event.");
+      return;
+    }
+
     try {
+      setIsLoading(true);
+
       const template = {
-        serial_numbers: [
-          ...comparisonResults.matchedItems.map((serial) => serial),
-        ],
+        serial_numbers: comparisonResults.matchedItems,
         company_id: user.sqlInfo.company_id,
         location: selectedLocation,
-        sub_location: selectedSubLocations,
+        sub_location: Array.from(selectedSubLocations),
         noSqlCompanyId: user.companyData.id,
-        noSqlEventName: selectedEvent.eventInfoDetail.eventName,
+        noSqlEventName: selectedEvent,
         user_id: user.sqlMemberInfo.staff_id,
       };
+
       await devitrakApi.post("/db_event/confirm-item-return", template);
+
       message.success("Devices checked in successfully!");
       close();
     } catch (error) {
@@ -182,7 +190,6 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       setIsLoading(false);
     }
   };
-
   const renderComparisonList = (title, items, color) => (
     <>
       <Title level={5}>
@@ -203,11 +210,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     setSelectedSubLocations(value);
   };
 
-  const itemsToDisplay = useMemo(
-    () =>
-      Array.isArray(subLocations) ? subLocations.map((sub) => ({ label: sub, id: sub })) : []
-      [subLocations],
-  );
+  const itemsToDisplay = useMemo(() => Array.isArray(subLocations) ? subLocations.map((sub) => ({ label: sub, id: sub })) : [], [subLocations]);
 
   const body = (
     <>
@@ -237,9 +240,10 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
                   {Array.from(selectedSubLocations).map((sub) => (
                     <Chip
+                      key={sub}
                       variant="outlined"
                       label={sub}
-                      onDelete={() => handleRemoveSubLocation(sub)}
+                      // onDelete={() => handleRemoveSubLocation(sub)}
                       style={{
                         backgroundColor: "rgba(40, 199, 111, 0.12)",
                         color: "rgb(40, 199, 111)",
@@ -280,7 +284,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                 original: event,
               }))}
               value={selectedEvent}
-              onSelect={(option) =>(
+              onSelect={(option) => (
                 setSelectedEvent(option?.label || null),
                 handleEventSelection(option?.original || null)
               )}
