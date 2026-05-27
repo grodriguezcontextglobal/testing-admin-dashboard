@@ -262,7 +262,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         <Col span={8}>
           {isLoadingSubLocations ? (
             <Loading />
-          ) : (
+          ) : itemsToDisplay.length > 0 && (
             <MultiSelectComponent
               label="Sub Locations"
               placeholder="Select sub locations"
