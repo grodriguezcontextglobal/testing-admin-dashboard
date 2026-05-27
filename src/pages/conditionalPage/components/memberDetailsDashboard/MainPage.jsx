@@ -7,7 +7,7 @@ import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlu
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import AddNewMember from "../modals/AddNewMember";
@@ -22,20 +22,20 @@ const MainPage = () => {
   const groupNameParams = String(groupNameReference || "").replace(/-/g, " ");
   const [membersData, setMembersData] = useState(null);
   const [addingNewmember, setAddingNewMember] = useState(false)
-  const memberInfoRetrieveQuery = useQuery({
+  useQuery({
     queryKey: ["memberInfoRetrieveQuery"],
     queryFn: () =>
       devitrakApi.post("/db_member/consulting-member", {
         member_id: Number(slug),
       }),
     enabled: !!slug,
+    onSuccess: (data) => {
+      if (data?.data?.members) {
+        console.log(data?.data?.members)
+        setMembersData(data?.data?.members);
+      }
+    },
   });
-
-  useEffect(() => {
-    if (memberInfoRetrieveQuery?.data?.data?.members) {
-      setMembersData(memberInfoRetrieveQuery?.data?.data?.members);
-    }
-  }, [memberInfoRetrieveQuery.data]);
 
   const tabOptions = [
     {
