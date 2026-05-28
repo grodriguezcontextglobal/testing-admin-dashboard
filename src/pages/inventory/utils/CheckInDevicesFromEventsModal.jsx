@@ -55,6 +55,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         type: "event",
         company_id: user.companyData.id,
         logistic_inventory_status: "in-transit",
+        active: false,
       });
       return respo.data.list.filter((event) => event.active === false);
     },
