@@ -74,6 +74,10 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
         centerContentComponentTitle={"Contact"}
         email={detailMemberInfo?.email}
         phone={detailMemberInfo?.phone_number ?? "+1-000-000-0000"}
+        isMinor={detailMemberInfo.minor === 1}
+        guardianName={`${detailMemberInfo.parent_guardian_first_name} ${detailMemberInfo.parent_guardian_last_name}`}
+        guardianEmail={detailMemberInfo.parent_guardian_email}
+        guardianPhone={detailMemberInfo.parent_guardian_phone_number}
       />
     </div>
   );
