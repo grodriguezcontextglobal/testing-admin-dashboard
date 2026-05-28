@@ -140,15 +140,16 @@ const EndEventButton = () => {
     refetchOnMount: false,
   });
 
-  const listOfItemsInInventoryQuery = useQuery({
-    queryKey: ["listOfItemsInInventory"],
-    queryFn: () =>
-      devitrakApi.get("/item/list-items", {
-        eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-      }),
-    refetchOnMount: false,
-  });
+  // const listOfItemsInInventoryQuery = useQuery({
+  //   queryKey: ["listOfItemsInInventory"],
+  //   queryFn: () =>
+  //     devitrakApi.post("/item/list-items", {
+  //       eventSelected: event.eventInfoDetail.eventName,
+  //       provider: event.company,
+  //       company: user.companyData.id
+  //     }),
+  //   enabled: !!event.eventInfoDetail.eventName && !!event.company && !!user.companyData.id,
+  // });
 
   // const itemsInPoolQuery = useQuery({
   //   queryKey: ["listOfItemsInInventoryPOST"],
@@ -160,13 +161,19 @@ const EndEventButton = () => {
   //   refetchOnMount: false,
   // });
 
+  const [listOfItemsInInventoryQuery, setListOfItemsInInventoryQuery] = useState(null);
+
   const eventInventoryQuery = useQuery({
     queryKey: ["inventoryInEventList"],
     queryFn: () =>
       devitrakApi.get(
         `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       ),
-    refetchOnMount: false,
+    enabled: false,
+    onSuccess: (data) => {
+      setListOfItemsInInventoryQuery(JSON.parse(data.receiversInventory));
+    },
+
   });
 
   const transactionsRecordQuery = useQuery({
@@ -176,7 +183,7 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
       }),
-    refetchOnMount: false,
+    enabled: !!event.eventInfoDetail.eventName && !!user.companyData.id,
   });
 
   const sqlDBCompanyStockQuery = useQuery({
@@ -186,7 +193,7 @@ const EndEventButton = () => {
         company_id: user.sqlInfo.company_id,
         warehouse: false,
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id
   });
 
   const sqlDBInventoryEventQuery = useQuery({
@@ -196,7 +203,7 @@ const EndEventButton = () => {
         company: user.companyData.company_name,
         warehouse: false,
       }),
-    refetchOnMount: false,
+    enabled: !!user.companyData.company_name && !!event.sql.event_id
   });
 
   let trigger = false;
@@ -204,7 +211,6 @@ const EndEventButton = () => {
   useEffect(() => {
     const controller = new AbortController();
     listOfInventoryQuery.refetch();
-    listOfItemsInInventoryQuery.refetch();
     // itemsInPoolQuery.refetch();
     eventInventoryQuery.refetch();
     transactionsRecordQuery.refetch();
@@ -636,7 +642,7 @@ const EndEventButton = () => {
 
           const result = await makeRequestWithRetry(() =>
             devitrakApi.patch(
-              `/item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
+              `/db_item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
               { quantity: newQty },
             ),
           );
