@@ -2,12 +2,10 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
-import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
 import {
   gripingFields,
   renderingOptionsButtons,
@@ -19,9 +17,10 @@ import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "./uxForm/SerialNumberAndMoreInfoComponentForm";
+import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
 
 const BulkItemForm = ({
-  acceptImage,
+  // acceptImage,
   addingSubLocation,
   addSerialNumberField,
   allSerialNumbersOptions,
@@ -153,7 +152,7 @@ const BulkItemForm = ({
                     </Tooltip>
                     <div>
                       <img
-                        src={imageUploadedValue || ""}
+                        src={imageUrlGenerated || ""}
                         alt="image_preview"
                         style={{
                           objectFit: "cover",
@@ -162,7 +161,7 @@ const BulkItemForm = ({
                         }}
                         width={150}
                       />{" "}
-                      <div
+                      {/* <div
                         style={{
                           display: "flex",
                           justifyContent: "flex-start",
@@ -191,7 +190,7 @@ const BulkItemForm = ({
                               : "Accept image"
                           }
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </InputLabel>
                 </Grid>
@@ -201,50 +200,34 @@ const BulkItemForm = ({
               item.name === "image_uploader_preview"
             ) {
               return (
-                <Grid
-                  key={item.name}
-                  style={{
-                    textAlign: "left",
-                    display:
-                      imageUploadedValue ||
-                        String(watch("image_url")).startsWith(
-                          "https://res.cloudinary",
-                        )
-                        ? "flex"
-                        : "none",
-                  }}
-                  marginY={1}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={gripingFields(item.name)}
-                  lg={gripingFields(item.name)}
-                ></Grid>
-              );
+                <ImagePreviewClickable key={'preview'} imageUrlGenerated={imageUploadedValue}
+                  width={150}
+                  items={[imageUploadedValue,]}
+                />);
             }
-                        else if (item.htmlElement === 8) {
-                          return (
-                            <>
-                              <Grid container spacing={1} alignItems="center">
-                                <Grid item xs={12} md={8}>
-                                  <Typography>
-                                    Set search criteria for searching inventory group in fields above and then click search reference button.
-                                  </Typography>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                  <BlueButtonComponent
-                                    title="Search by reference"
-                                    func={handleSearchByReference}
-                                    buttonType="button"
-                                    styles={{ width: "100%" }}
-                                  />
-                                </Grid>
-                              </Grid>
-                              <Divider sx={{ my: 2 }} />
-                            </>
-                          )
-                        }
-            
+            else if (item.htmlElement === 8) {
+              return (
+                <>
+                  <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={12} md={8}>
+                      <Typography>
+                        Set search criteria for searching inventory group in fields above and then click search reference button.
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <BlueButtonComponent
+                        title="Search by reference"
+                        func={handleSearchByReference}
+                        buttonType="button"
+                        styles={{ width: "100%" }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Divider sx={{ my: 2 }} />
+                </>
+              )
+            }
+
             return (
               <Grid
                 key={item.name}
