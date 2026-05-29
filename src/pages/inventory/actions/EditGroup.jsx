@@ -19,7 +19,7 @@ const options = [
 
 const EditGroup = () => {
   const {
-    acceptAndGenerateImage,
+    // acceptAndGenerateImage,
     addingSubLocation,
     addSerialNumberField,
     allSerialNumbersOptions,
@@ -93,7 +93,7 @@ const EditGroup = () => {
       {contextHolder}
       {renderTitle()}
       <EditBulkForm
-        acceptImage={acceptAndGenerateImage}
+        // acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
         addSerialNumberField={addSerialNumberField}
         allSerialNumbersOptions={allSerialNumbersOptions}
