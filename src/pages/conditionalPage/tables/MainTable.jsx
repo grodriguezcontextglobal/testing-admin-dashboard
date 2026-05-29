@@ -151,7 +151,6 @@ const MainTable = ({ state }) => {
         compare: (a, b) => ("" + a.address).localeCompare(b.address),
       },
       render: (address) => {
-        console.log(address, String(address).trim().length)
         return (
           <span
             key={address}
@@ -163,7 +162,7 @@ const MainTable = ({ state }) => {
             }}
           >
             <Typography style={styleCellColumns}>
-              {String(address).trim().length < 5 ? "" : address}
+              {String(address).trim().length < 6 ? "" : address}
             </Typography>
           </span>
         );
