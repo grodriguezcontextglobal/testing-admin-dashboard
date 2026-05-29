@@ -1,10 +1,11 @@
+import { FormControlLabel } from "@mui/material";
 import { useEffect, useState } from "react";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import { Checkbox, FormControlLabel, OutlinedInput } from "@mui/material";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
+import Input from "../../../../../components/UX/inputs/Input";
 
 const Single = ({ closingModal }) => {
   const { user } = useSelector((state) => state.admin);
@@ -106,8 +107,8 @@ const Single = ({ closingModal }) => {
           <span style={{ fontWeight: "bold" }}>
             First Name <span style={{ color: "red" }}>*</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.first_name}
             onChange={update("first_name")}
             required
@@ -117,8 +118,8 @@ const Single = ({ closingModal }) => {
           <span style={{ fontWeight: "bold" }}>
             Last Name <span style={{ color: "red" }}>*</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.last_name}
             onChange={update("last_name")}
             required
@@ -129,8 +130,8 @@ const Single = ({ closingModal }) => {
           <span style={{ fontWeight: "bold" }}>
             Email <span style={{ color: "red" }}>*</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             type="email"
             value={form.email}
             onChange={update("email")}
@@ -141,8 +142,8 @@ const Single = ({ closingModal }) => {
           <span style={{ fontWeight: "bold" }}>
             Phone <span style={{ color: "red" }}>*</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.phone}
             onChange={update("phone")}
             required
@@ -154,8 +155,8 @@ const Single = ({ closingModal }) => {
             Street{" "}
             <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.address_street}
             onChange={update("address_street")}
           />
@@ -165,8 +166,8 @@ const Single = ({ closingModal }) => {
             City{" "}
             <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.address_city}
             onChange={update("address_city")}
           />
@@ -177,8 +178,8 @@ const Single = ({ closingModal }) => {
             State{" "}
             <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.address_state}
             onChange={update("address_state")}
           />
@@ -188,15 +189,16 @@ const Single = ({ closingModal }) => {
             Zip{" "}
             <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
           </span>
-          <OutlinedInput
-            style={OutlinedInputStyle}
+          <Input
+            
             value={form.address_zip}
             onChange={update("address_zip")}
           />
         </label>
       </div>
       <FormControlLabel
-        control={<Checkbox checked={form.minor} onChange={update("minor")} />}
+      control={<CheckboxReusableComponent name="minor" checked={form.minor} onChange={update("minor")} />}
+        // control={<Checkbox checked={form.minor} onChange={update("minor")} />}
         label="Is the member a minor?"
       />
 
@@ -216,8 +218,8 @@ const Single = ({ closingModal }) => {
             <span style={{ fontWeight: "bold" }}>
               Guardian&lsquo;s First Name <span style={{ color: "red" }}>*</span>
             </span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+              
               value={form.parent_guardian_first_name}
               onChange={update("parent_guardian_first_name")}
               required
@@ -227,8 +229,8 @@ const Single = ({ closingModal }) => {
             <span style={{ fontWeight: "bold" }}>
               Guardian&lsquo;s Last Name <span style={{ color: "red" }}>*</span>
             </span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+              
               value={form.parent_guardian_last_name}
               onChange={update("parent_guardian_last_name")}
               required
@@ -238,8 +240,8 @@ const Single = ({ closingModal }) => {
             <span style={{ fontWeight: "bold" }}>
               Guardian&lsquo;s Email <span style={{ color: "red" }}>*</span>
             </span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+              
               type="email"
               value={form.parent_guardian_email}
               onChange={update("parent_guardian_email")}
@@ -250,8 +252,8 @@ const Single = ({ closingModal }) => {
             <span style={{ fontWeight: "bold" }}>
               Guardian&lsquo;s Phone <span style={{ color: "red" }}>*</span>
             </span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+              
               value={form.parent_guardian_phone_number}
               onChange={update("parent_guardian_phone_number")}
               required
