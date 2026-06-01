@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Col,
@@ -62,6 +62,23 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     enabled: !!user.companyData.id,
   });
 
+  const queryClient = useQueryClient();
+  const refetchInventory = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["finishedEvents", user.companyData.id], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"], refetchActive: true });
+  }
+  
+  const checkingInItemsToWarehouseMutation = useMutation({
+    mutationFn: async (template) => await devitrakApi.post("/db_event/confirm-item-return", template),
+    onSuccess: async() => {
+      message.success("Devices checked in successfully!");
+      await refetchInventory();
+      close();
+    },
+  })
   const handleEventSelection = async (event) => {
     if (!event) {
       setEventInventory([]);
@@ -183,9 +200,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         noSqlEventName: selectedEvent,
         user_id: user.sqlMemberInfo.staff_id,
       };
-      await devitrakApi.post("/db_event/confirm-item-return", template);
-      message.success("Devices checked in successfully!");
-      close();
+      checkingInItemsToWarehouseMutation.mutateAsync(template);
     } catch (error) {
       console.error(error);
       message.error("Failed to check-in devices.");
