@@ -145,6 +145,7 @@ const ItemTable = ({
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const getDataStructuringFormat = useCallback(
     (props) => {
+      // console.log(props)
       const resultFormatToDisplay = new Map();
       const groupingBySerialNumber = groupBy(
         itemsInInventoryQuery?.data?.data?.items,
@@ -173,6 +174,7 @@ const ItemTable = ({
                 image_url:
                   groupingBySerialNumber[data.serial_number].at(-1).image_url ??
                   null,
+                logistic_status: groupingBySerialNumber[data.serial_number].at(-1).logistic_status,
               };
               resultFormatToDisplay.set(data.item_id, valu);
             }
@@ -229,6 +231,7 @@ const ItemTable = ({
           assignedToStaffMember:
             data.usage && data.usage.length > 0 ? data.usage : null,
           data: data,
+          logistic_status: data.logistic_status ?? null,
         };
         rowMap.set(itemId, row);
       }
@@ -323,6 +326,7 @@ const ItemTable = ({
         4: "ownership",
         5: "condition",
         6: "assignedToStaffMember",
+        7: "logistic_status",
       };
       if (
         !Array.isArray(searchValues?.chosenOption) ||
@@ -331,6 +335,7 @@ const ItemTable = ({
         return baseDataset;
       return baseDataset.filter((item) =>
         searchValues?.chosenOption.every((filter) => {
+          // console.log(filter)
           const propertyKey = dicSelectedOptions[filter.category];
           if (filter.category === 6) {
             return item?.[propertyKey]?.includes(filter.value);
@@ -349,6 +354,7 @@ const ItemTable = ({
     baseDataset,
     searchResult,
   ]);
+  // console.log(dataToDisplayMemo)
 
   // Provide a stable accessor for components expecting a function
   // const dataToDisplay = useCallback(
@@ -372,6 +378,7 @@ const ItemTable = ({
             `${employee.firstName} ${employee.lastName} / ${employee.user}`,
         ),
       ],
+      7: filterOptionsBasedOnProps("logistic_status"),
     });
     if (Array.isArray(dataToDisplayMemo) && dataToDisplayMemo.length > 0) {
       downloadDataReport(dataToDisplayMemo);
