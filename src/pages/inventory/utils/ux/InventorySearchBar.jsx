@@ -9,7 +9,7 @@ import DangerButtonComponent from "../../../../components/UX/buttons/DangerButto
 // import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
 import { FilterOptionsContext } from "../../MainPage";
-import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+// import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -19,9 +19,9 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
-  refetchingQueriesFn,
-  locationsQuery,
-  // setOpenAdvanceSearchModal,
+  // refetchingQueriesFn,
+  // locationsQuery,
+  setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
   setOpenShippingModal,
@@ -116,7 +116,21 @@ const InventorySearchBar = ({
               })}
             />
           </form>
-          <GrayButtonComponent
+          <LightBlueButtonComponent
+            title={"Forecast Inventory"}
+            func={() => {
+              setOpenAdvanceSearchModal(true);
+              localStorage.removeItem("searchParameters");
+            }}
+            styles={{
+              width: "100%",
+              margin:"0.5rem 0"
+            }}
+            titleStyles={{
+              textTransform: "none",
+            }}
+          />
+          {/* <GrayButtonComponent
             title={"Refresh Tables"}
             func={() => {
               refetchingQueriesFn();
@@ -124,16 +138,14 @@ const InventorySearchBar = ({
             }}
             styles={{
               width: "100%",
-              justifyContent: "space-between",
-              alignItems: "center",
             }}
             titleStyles={{
               textTransform: "none",
             }}
-          />
+          /> */}
 
         </Grid>
-        <Grid item xs={12} sm={12} md={9} lg={9}>
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={9} lg={9}>
           <FilterOptionsContext.Provider
             value={{
               filterOptions: dataFilterOptions,
