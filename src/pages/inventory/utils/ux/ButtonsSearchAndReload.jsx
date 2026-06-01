@@ -1,11 +1,10 @@
 import { Grid } from "@mui/material";
-import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+// import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
-const ButtonsSearchAndReload = ({
-  // setOpenAdvanceSearchModal,
-  refetchingQueriesFn,
-  locationsQuery,
-}) => {
+// setOpenAdvanceSearchModal,
+// refetchingQueriesFn,
+// locationsQuery,
+const ButtonsSearchAndReload = () => {
   return (
     <Grid
       display={"flex"}
@@ -17,21 +16,6 @@ const ButtonsSearchAndReload = ({
       md
       lg
     >
-      <GrayButtonComponent
-        title={"Reload"}
-        func={() => {
-          refetchingQueriesFn();
-          locationsQuery.refetch();
-        }}
-        styles={{
-          width: "100%",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-        titleStyles={{
-          textTransform: "none",
-        }}
-      />
     </Grid>
   );
 };
