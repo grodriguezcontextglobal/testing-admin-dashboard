@@ -71,6 +71,7 @@ const MainPage = () => {
     4: [],
     5: [],
     6: [],
+    7: [],
   });
   const [openDetails, setOpenDetails] = useState(false);
   const [typePerLocationInfoModal, setTypePerLocationInfoModal] =
