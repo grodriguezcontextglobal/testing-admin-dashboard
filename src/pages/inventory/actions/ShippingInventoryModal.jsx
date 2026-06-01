@@ -48,7 +48,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
     const [courier, setCourier] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
 
-    const companyId = 137 //user?.infoSql?.company_id;
+    const companyId = user?.infoSql?.company_id;
     // console.log(user)
     // ── 1. active events with reserved inventory ──────────────────────────────
     const eventsQuery = useQuery({
