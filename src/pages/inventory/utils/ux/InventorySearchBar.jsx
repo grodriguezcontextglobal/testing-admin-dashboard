@@ -1,10 +1,10 @@
 import { Grid, Typography } from "@mui/material";
-import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
+import { Title } from "../../../../styles/global/Title";
 // import { Divider } from "antd";
 // import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 // import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
@@ -25,13 +25,13 @@ const InventorySearchBar = ({
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
   setOpenShippingModal,
+  setShipmentRecordModal,
   dataFilterOptions,
   chosenOption,
   setChosenOption,
   optionsUX,
 }) => {
   const { role, locations } = useSelector((state) => state.permission);
-  const { user } = useSelector(state => state.admin)
   const canRenderButton =
     role === "0" ||
     locations?.every(
@@ -90,10 +90,16 @@ const InventorySearchBar = ({
               func={() => setOpenCheckInDevicesFromEvent(true)}
             />
           )}
-          {user.email === "gars.software.dev@gmail.com" && (
+          {canRenderButton && (
             <LightBlueButtonComponent
               title="Ship out inventory"
               func={() => setOpenShippingModal(true)}
+            />
+          )}
+          {canRenderButton && (
+            <LightBlueButtonComponent
+              title="Shipment record"
+              func={() => setShipmentRecordModal(true)}
             />
           )}
         </div>
@@ -124,7 +130,7 @@ const InventorySearchBar = ({
             }}
             styles={{
               width: "100%",
-              margin:"0.5rem 0"
+              margin: "0.5rem 0"
             }}
             titleStyles={{
               textTransform: "none",
