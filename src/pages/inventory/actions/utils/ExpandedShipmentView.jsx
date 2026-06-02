@@ -31,7 +31,9 @@ const ExpandedShipmentView = ({ package_list }) => {
         return <p>Error loading item details.</p>;
     }
 
-    return <BaseTable columns={columns} dataSource={packageData} enablePagination={true} pageSize={10} />;
+    return <div style={{ width: "100%", margin:"auto" }}>
+        <BaseTable columns={columns} dataSource={packageData} enablePagination={true} pageSize={10} />
+    </div>
 };
 
 export default ExpandedShipmentView;
