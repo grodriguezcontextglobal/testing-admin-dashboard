@@ -38,6 +38,7 @@ import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
+import { ShipmentRecord } from "./actions/ShipmentRecord";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -73,6 +74,7 @@ const MainPage = () => {
     6: [],
     7: [],
   });
+  const [shipmentRecordModal, setShipmentRecordModal] = useState(false)
   const [openDetails, setOpenDetails] = useState(false);
   const [typePerLocationInfoModal, setTypePerLocationInfoModal] =
     useState(null);
@@ -306,6 +308,7 @@ const MainPage = () => {
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
           setOpenShippingModal={setOpenShippingModal}
+          setShipmentRecordModal={setShipmentRecordModal}
           dataFilterOptions={dataFilterOptions}
           chosenOption={chosenOption}
           setChosenOption={setChosenOption}
@@ -355,6 +358,7 @@ const MainPage = () => {
                 searchItem: settingParamsForSearchResult,
                 setDataFilterOptions: setDataFilterOptions,
                 setOpenAdvanceSearchModal: setOpenAdvanceSearchModal,
+                setShipmentRecordModal: setShipmentRecordModal,
                 total: getTotalToDisplay(),
                 allowedLocations: allowedInventoryLocations,
                 userPreferences: userPreferences,
@@ -393,6 +397,9 @@ const MainPage = () => {
       }
       {
         openShippingModal && <ShippingInventoryModal visible={openShippingModal} onClose={() => setOpenShippingModal(false)} refetch={companyHasInventoryQuery.refetch} user={user} />
+      }
+      {
+        shipmentRecordModal && <ShipmentRecord open={shipmentRecordModal} setOpen={setShipmentRecordModal} />
       }
       {
         addInventoryFromXLSXFileModal && (
