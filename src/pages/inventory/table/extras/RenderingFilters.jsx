@@ -125,7 +125,7 @@ const RenderingFilters = ({
       return user.companyData.structure;
     }
     return {
-      location_1: "Locations|Sub-locations",
+      location_1: "Locations",
       category_name: "Category",
       item_group: "Groups",
       brand: "Brands",
@@ -713,7 +713,7 @@ const RenderingFilters = ({
                 gap: "8px",
               }}
             >
-              {companyStructure["location_1"]}&nbsp;{" "}
+              {companyStructure["location_1"] === "Locaciones" ? "Locations" : companyStructure["location_1"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",

@@ -9,6 +9,7 @@ import DangerButtonComponent from "../../../../components/UX/buttons/DangerButto
 import FilterOptionsUX from "../FilterOptionsUX";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import TrashIcon from "../../../../components/icons/TrashIcon";
+import CheckSquareBrokenIcon from "../../../../components/icons/CheckSquareBrokenIcon";
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -83,6 +84,7 @@ const InventorySearchBar = ({
           {canRenderButton && (
             <BlueButtonComponent
               title="Check in devices from events"
+              iconLeading={<CheckSquareBrokenIcon />}
               func={() => setOpenCheckInDevicesFromEvent(true)}
             />
           )}

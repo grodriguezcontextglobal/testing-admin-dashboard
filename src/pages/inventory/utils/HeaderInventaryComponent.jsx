@@ -12,6 +12,7 @@ import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
 import ExcelIcon from "../../../components/icons/ExcelIcon";
 import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
 import AnnotationPlusIcon from "../../../components/icons/AnnotationPlusIcon";
+import PencilLineIcon from "../../../components/icons/PencilLineIcon";
 
 /**
  * HeaderInventaryComponent
@@ -113,6 +114,7 @@ const HeaderInventaryComponent = ({
                 with: "100%",
                 gap: "2px",
               }}
+              iconLeading={<PencilLineIcon />}
               func={() => null}
             />
           </Link>

@@ -261,8 +261,8 @@ const TreeNode = ({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                fontSize: { xs: "24px", md: "30px" },
-                lineHeight: { xs: "32px", md: "38px" },
+                fontSize: "24px",
+                lineHeight: "32px",
                 textWrap: "balance",
               }}
               className="tree-title"
