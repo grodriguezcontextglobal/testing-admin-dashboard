@@ -63,11 +63,11 @@ export const ShipmentRecord = ({ open, setOpen }) => {
                     rowExpandable: (record) => record.package_list && record.package_list.length > 0,
                     expandIcon: ({ expanded, onExpand, record }) =>
                         expanded ? (
-                            <button onClick={(e) => onExpand(record, e)} style={{ cursor: 'pointer' }}>
+                            <button onClick={(e) => onExpand(record, e)} style={{ cursor: 'pointer', backgroundColor: "transparent", border: "none", outline: "none", margin: 0, padding: 0 }}>
                                 <DownNarrow style={{ cursor: 'pointer' }} />
                             </button>
                         ) : (
-                            <button onClick={(e) => onExpand(record, e)} style={{ cursor: 'pointer' }}>
+                            <button onClick={(e) => onExpand(record, e)} style={{ cursor: 'pointer', backgroundColor: "transparent", border: "none", outline: "none", margin: 0, padding: 0 }}>
                                 <RightChevronIcon style={{ cursor: 'pointer' }} />
                             </button>
                         ),
@@ -75,6 +75,7 @@ export const ShipmentRecord = ({ open, setOpen }) => {
                 enablePagination={true}
                 pageSize={10}
             />
+
         );
     };
 
