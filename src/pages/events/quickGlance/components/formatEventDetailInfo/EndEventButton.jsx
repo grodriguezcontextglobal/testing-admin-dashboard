@@ -140,16 +140,15 @@ const EndEventButton = () => {
     refetchOnMount: false,
   });
 
-  // const listOfItemsInInventoryQuery = useQuery({
-  //   queryKey: ["listOfItemsInInventory"],
-  //   queryFn: () =>
-  //     devitrakApi.post("/item/list-items", {
-  //       eventSelected: event.eventInfoDetail.eventName,
-  //       provider: event.company,
-  //       company: user.companyData.id
-  //     }),
-  //   enabled: !!event.eventInfoDetail.eventName && !!event.company && !!user.companyData.id,
-  // });
+  const listOfItemsInInventoryQuery = useQuery({
+    queryKey: ["listOfItemsInInventory"],
+    queryFn: () =>
+      devitrakApi.get("/item/list-items", {
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      }),
+    refetchOnMount: false,
+  });
 
   // const itemsInPoolQuery = useQuery({
   //   queryKey: ["listOfItemsInInventoryPOST"],
@@ -161,19 +160,13 @@ const EndEventButton = () => {
   //   refetchOnMount: false,
   // });
 
-  const [listOfItemsInInventoryQuery, setListOfItemsInInventoryQuery] = useState(null);
-
   const eventInventoryQuery = useQuery({
     queryKey: ["inventoryInEventList"],
     queryFn: () =>
       devitrakApi.get(
         `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       ),
-    enabled: false,
-    onSuccess: (data) => {
-      setListOfItemsInInventoryQuery(JSON.parse(data.receiversInventory));
-    },
-
+    refetchOnMount: false,
   });
 
   const transactionsRecordQuery = useQuery({
@@ -183,7 +176,7 @@ const EndEventButton = () => {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
       }),
-    enabled: !!event.eventInfoDetail.eventName && !!user.companyData.id,
+    refetchOnMount: false,
   });
 
   const sqlDBCompanyStockQuery = useQuery({
@@ -193,7 +186,7 @@ const EndEventButton = () => {
         company_id: user.sqlInfo.company_id,
         warehouse: false,
       }),
-    enabled: !!user.sqlInfo.company_id
+    refetchOnMount: false,
   });
 
   const sqlDBInventoryEventQuery = useQuery({
@@ -203,7 +196,7 @@ const EndEventButton = () => {
         company: user.companyData.company_name,
         warehouse: false,
       }),
-    enabled: !!user.companyData.company_name && !!event.sql.event_id
+    refetchOnMount: false,
   });
 
   let trigger = false;
@@ -211,6 +204,7 @@ const EndEventButton = () => {
   useEffect(() => {
     const controller = new AbortController();
     listOfInventoryQuery.refetch();
+    listOfItemsInInventoryQuery.refetch();
     // itemsInPoolQuery.refetch();
     eventInventoryQuery.refetch();
     transactionsRecordQuery.refetch();
@@ -371,7 +365,7 @@ const EndEventButton = () => {
         inventoryBatchStart + inventoryBatchSize,
       );
 
-      await makeRequestWithRetry(() =>
+      const checking = await makeRequestWithRetry(() =>
         devitrakApi.post("/db_event/returning-item-refactored", {
           groupingDevicesFromNoSQL: JSON.stringify(batchGrouping),
           allInventoryOfEvent: JSON.stringify(inventorySlice),
@@ -379,6 +373,7 @@ const EndEventButton = () => {
           update_at: update_at,
         }),
       );
+      console.log("checking", checking)
       return;
     };
 
@@ -409,7 +404,8 @@ const EndEventButton = () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(
-          `Error processing device status batch ${Math.floor(i / deviceBatchSize) + 1
+          `Error processing device status batch ${
+            Math.floor(i / deviceBatchSize) + 1
           }:`,
           error,
         );
@@ -445,7 +441,8 @@ const EndEventButton = () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(
-          `Error processing returning item batch ${Math.floor(i / deviceBatchSize) + 1
+          `Error processing returning item batch ${
+            Math.floor(i / deviceBatchSize) + 1
           }:`,
           error,
         );
@@ -507,13 +504,6 @@ const EndEventButton = () => {
     return Array.from(totalResult);
   };
 
-  const completingEventConfigurationProcess = async () => {
-    await devitrakApi.post(`/db_event/update-event/${event.sql.event_id}`, {
-      configuration: "finished"
-    });
-  };
-
-
   const inactiveEventAfterEndIt = async () => {
     try {
       setProgress((prev) => ({ ...prev, step: "Deactivating event..." }));
@@ -531,7 +521,7 @@ const EndEventButton = () => {
       const requestData = {
         active: false,
         "staff.headsetAttendees": Array.from(result),
-        logistic_inventory_status: "in-transit"
+        logistic_inventory_status:"in-transit"
       };
 
       checkRequestSize(requestData);
@@ -542,7 +532,11 @@ const EndEventButton = () => {
 
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));
-        return await completingEventConfigurationProcess();
+        // return openNotificationWithIcon(
+        //   "success",
+        //   "Event inventory has been moved back to Company Inventory"
+        // );
+        return;
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.message}`);
@@ -636,13 +630,14 @@ const EndEventButton = () => {
       const results = [];
       for (let data of batch) {
         if (itemsPerCompany()[data.group]) {
-          const newQty = `${Number(itemsPerCompany()[data.group].at(-1).quantity) +
+          const newQty = `${
+            Number(itemsPerCompany()[data.group].at(-1).quantity) +
             Number(data.quantity)
-            }`;
+          }`;
 
           const result = await makeRequestWithRetry(() =>
             devitrakApi.patch(
-              `/db_item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
+              `/item/edit-item/${itemsPerCompany()[data.group].at(-1)._id}`,
               { quantity: newQty },
             ),
           );
