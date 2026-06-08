@@ -37,6 +37,7 @@ const ExchangeModal = ({ visible, onClose, itemToExchange, companyId, eventId, q
                     data: { // Axios delete with body
                         event_id: eventId,
                         items: [oldItem.item_id],
+                        company_id: companyId,
                     }
                 }),
                 // d. Insert new item into event_item_shipping table
