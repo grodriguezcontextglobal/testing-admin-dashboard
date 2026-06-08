@@ -24,8 +24,8 @@ const InventorySearchBar = ({
   setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
-  // setOpenShippingModal,
-  // setShipmentRecordModal,
+  setOpenShippingModal,
+  setShipmentRecordModal,
   dataFilterOptions,
   chosenOption,
   setChosenOption,
@@ -90,7 +90,7 @@ const InventorySearchBar = ({
               func={() => setOpenCheckInDevicesFromEvent(true)}
             />
           )}
-          {/* {canRenderButton && (
+          {canRenderButton && (
             <LightBlueButtonComponent
               title="Ship out inventory"
               func={() => setOpenShippingModal(true)}
@@ -101,7 +101,7 @@ const InventorySearchBar = ({
               title="Shipment record"
               func={() => setShipmentRecordModal(true)}
             />
-          )} */}
+          )}
         </div>
       </div>
       <Grid display={"flex"} spacing={1} container>
