@@ -2,9 +2,12 @@
 import { Controller } from "react-hook-form";
 import { Avatar, AutoComplete } from "antd";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { useState } from "react";
 import SectionLabel from "../../../../components/documents/new_form_components/SectionLabel";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
 import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
+import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
+import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import "./CompanyInfo.css";
 
 const BodyFormRefactored = ({
@@ -16,6 +19,7 @@ const BodyFormRefactored = ({
   removingCompanyLogo,
   user,
 }) => {
+  const [employeesOpen, setEmployeesOpen] = useState(true);
   const renderInput = () => {
     if (feature && feature?.object) {
       return (
@@ -75,8 +79,11 @@ const BodyFormRefactored = ({
         )
     } else if (feature && feature?.array) {
         return (
-            <details className="employees-details" open>
-                <summary className="employees-summary">Employees</summary>
+            <details className="employees-details" open={employeesOpen} onToggle={(e) => setEmployeesOpen(e.target.open)}>
+                <summary className="employees-summary" style={{ listStyle: 'none', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    {employeesOpen ? <DownNarrow /> : <RightChevronIcon />}
+                    <span style={{ marginLeft: '10px' }}>Employees</span>
+                </summary>
                 <div className="employees-grid">
                     {user.companyData.employees.map((employee) => (
                     <CardSearchStaffFound
