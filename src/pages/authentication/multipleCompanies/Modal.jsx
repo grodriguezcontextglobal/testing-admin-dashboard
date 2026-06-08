@@ -34,6 +34,7 @@ import { onResetHelpers } from "../../../store/slices/helperSlice";
 import { onResetStripesInfo } from "../../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice";
 import { persistor } from "../../../store/Store";
+import { checkArray } from "../../../components/utils/checkArray";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
@@ -81,8 +82,9 @@ const ModalMultipleCompanies = ({
           company_name: selection,
         },
       );
+      console.log(companyInfoTable)
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: companyInfoTable.data.company.at(-1).company_id,
+        company_id: checkArray(companyInfoTable.data.companies).company_id,
       });
 
       const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
@@ -107,7 +109,7 @@ const ModalMultipleCompanies = ({
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
-            ...companyInfoTable.data.company.at(-1),
+            ...checkArray(companyInfoTable.data.companies),
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,
@@ -127,7 +129,7 @@ const ModalMultipleCompanies = ({
       navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
       // }
     } catch (error) {
-      console.error(
+      console.log(
         "loginIntoOneCompanyAccountFromMultipleCompanyRegistered",
         error,
       );
