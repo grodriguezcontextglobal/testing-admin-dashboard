@@ -1,20 +1,17 @@
 import { Grid, InputLabel, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Divider, message, Spin, Tag } from 'antd';
+import { Divider, message, Tag } from 'antd';
 import { saveAs } from 'file-saver';
 import { useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
-
 import { devitrakApi } from '../../../api/devitrakApi';
 import { default as BlueButton, default as BlueButtonComponent } from '../../../components/UX/buttons/BlueButton';
 import DangerButtonComponent from '../../../components/UX/buttons/DangerButton';
-import GrayButton from '../../../components/UX/buttons/GrayButton';
+import { default as GrayButton, default as GrayButtonComponent } from '../../../components/UX/buttons/GrayButton';
 import SelectComponent from '../../../components/UX/dropdown/SelectComponent';
 import Input from '../../../components/UX/inputs/Input';
 import ModalUX from '../../../components/UX/modal/ModalUX';
 import BaseTable from '../../../components/UX/tables/BaseTable';
 import ExchangeModal from './components/ExchangeModal';
-import GrayButtonComponent from '../../../components/UX/buttons/GrayButton';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -31,8 +28,7 @@ const statusRef = { delivered: 'Delivered', locked_in_warehouse: 'Locked in Ware
 
 // ─── component ───────────────────────────────────────────────────────────────
 
-const ShippingInventoryModal = ({ visible, onClose }) => {
-    const { user } = useSelector((state) => state.admin);
+const ShippingInventoryModal = ({ visible, onClose, user }) => {
     const queryClient = useQueryClient();
 
     const [openModalNotification, setOpenModalNotification] = useState(false);
@@ -48,8 +44,9 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
     const [courier, setCourier] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
 
-    const companyId = user?.infoSql?.company_id;
+    const companyId = user?.sqlInfo?.company_id ?? "";
     // console.log(user)
+    // console.log(companyId)
     // ── 1. active events with reserved inventory ──────────────────────────────
     const eventsQuery = useQuery({
         queryKey: ['shippingEvents'],
@@ -75,12 +72,12 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
             });
             return Array.from(map.values());
         },
-        enabled: !!companyId && visible,
+        // enabled: !!user?.infoSql?.company_id,
         // staleTime: 30_000,
     });
     // ── 2. packaging list for selected event ──────────────────────────────────
     const itemsQuery = useQuery({
-        enabled: !!selectedEvent,
+        queryKey: ['shippingItems', selectedEvent?.id],
         queryFn: async () => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
                 company_id: companyId,
@@ -89,7 +86,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
             });
             return res.data?.items ?? [];
         },
-        queryKey: ['shippingItems', selectedEvent?.id],
+        enabled: !!selectedEvent,
         staleTime: 30_000,
     });
 
@@ -381,9 +378,9 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                     value={selectedEvent}
                     isRequired
                 />
-                {eventsQuery.isLoading && (
+                {/* {eventsQuery.isLoading && (
                     <Spin size="small" style={{ marginTop: 8 }} />
-                )}
+                )} */}
                 {eventsQuery.isSuccess && (eventsQuery.data ?? []).length === 0 && (
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
                         No active events with inventory locked in warehouse.
@@ -553,6 +550,20 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
         </Grid>
     );
 
+    const handleRemoveItem = async(itemId) => {
+        await devitrakApi.post('/db_item/edit-item', {
+            item_id: itemId,
+            logistic_status: 'in-stock',
+        })
+        await devitrakApi.post(`/db_event/remove-reserved-items-for-event`, {
+                event_id: selectedEvent?.id,
+                item_id: [itemId],
+                company_id: companyId
+        })
+        queryClient.invalidateQueries({ queryKey: ['shipping-events'] })
+        eventsQuery.refetch()
+        return alert(`Item ${itemId} has been removed.`)
+    }
     return (
         <>
             <ModalUX
@@ -572,6 +583,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                         setNewSerialNumber={setNewSerialNumber}
                         refetchShippingEvents={itemsQuery.refetch}
                         eventId={selectedEvent?.id}
+                        companyId={companyId}
                     />
                 )
             }
@@ -594,7 +606,7 @@ const ShippingInventoryModal = ({ visible, onClose }) => {
                                 />
                                 <BlueButtonComponent
                                     title="Remove"
-                                    func={() => { alert(`Deleted. Serial number ${itemToExchange.serial_number}, item id ${itemToExchange.item_id}`); setOpenModalNotification(false); }}
+                                    func={() => { handleRemoveItem(itemToExchange.item_id); setOpenModalNotification(false); }}
                                 />
                             </div>
                         }
