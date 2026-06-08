@@ -11,6 +11,8 @@ export const dicForLogisticStatus = {
   "shipped": "Shipped",
   "in-event": "In event",
   "assigned": "Assigned",
+  "in-reserved": "Reserved",
+  "reserved": "Reserved",
 }
 
 const FilterOptionsUX = memo(function FilterOptionsUX({
