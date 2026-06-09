@@ -31,7 +31,6 @@ const MainPage = () => {
     enabled: !!slug,
     onSuccess: (data) => {
       if (data?.data?.members) {
-        console.log(data?.data?.members)
         setMembersData(data?.data?.members);
       }
     },
