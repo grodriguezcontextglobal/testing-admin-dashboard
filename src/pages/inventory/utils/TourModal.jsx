@@ -463,11 +463,11 @@ const TourModal = ({ open, setOpen }) => {
         <Tooltip title="Download Template">
           <Button
             type="primary"
-            shape="circle"
+            shape="round"
             icon={<DownloadOutlined />}
             onClick={handleDownloadTemplate}
             size="small"
-          />
+          >Download Template</Button>
         </Tooltip>
       </div>}
       description={
