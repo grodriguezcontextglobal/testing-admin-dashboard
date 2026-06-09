@@ -46,6 +46,11 @@ const MainTable = ({ state }) => {
       setMembersData(membersDataQuery?.data?.data?.members);
     }
   }, [membersDataQuery?.data?.data]);
+
+  const memberSelection = (record) => {
+    dispatch(onAddMemberInfo(record))
+    return navigate(`/member/${record?.member_id}/main`)
+  }
   const columns = [
     {
       title: "Name",
@@ -177,11 +182,12 @@ const MainTable = ({ state }) => {
         return (
           <span style={styleCellColumns}>
             <NavLink
-              onClick={() => dispatch(onAddMemberInfo(record))}
               to={`/member/${record?.member_id}/main`}
               state={{ referencing: state }}
             >
-              <RightNarrowInCircle />
+              <button onClick={() => memberSelection(record)} style={{ margin: 0, padding: 0, outline: "none", border: "none", background:"transparent" }}>
+                <RightNarrowInCircle />
+              </button>
             </NavLink>
           </span>
         );
@@ -207,7 +213,7 @@ const MainTable = ({ state }) => {
           onRow={(record) => {
             return {
               onClick: () => {
-                navigate(`/member/${record?.member_id}/main`)
+                memberSelection(record)
               },
             };
           }}
