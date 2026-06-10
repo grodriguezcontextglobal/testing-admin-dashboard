@@ -17,6 +17,7 @@ import {
   onAddListEventPermitPerAdmin,
 } from "../../store/slices/eventSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import { Subtitle } from "../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
@@ -287,12 +288,18 @@ const MainPage = () => {
           >
             <Grid marginY={0} item xs={12} sm={6} md={12} lg={12}>
               <Typography
-                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+                style={{
+                  ...TextFontSize20LineHeight30,
+                  textAlign: "left",
+                  width: "100%",
+                  fontWeight: 600,
+                  color: "#344054",
+                }}
               >
                 Scheduled events
               </Typography>
               <Typography
-                style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
+                style={{ ...Subtitle, textAlign: "left", width: "100%" }}
               >
                 Here are all the upcoming and active events.
               </Typography>
@@ -345,12 +352,18 @@ const MainPage = () => {
               >
                 <Grid marginY={0} item xs={12} sm={6} md={6} lg={6}>
                   <Typography
-                    style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+                    style={{
+                      ...TextFontSize20LineHeight30,
+                      textAlign: "left",
+                      width: "100%",
+                      fontWeight: 600,
+                      color: "#344054",
+                    }}
                   >
                     Past events
                   </Typography>
                   <Typography
-                    style={{ ...TextFontSize20LineHeight30, textAlign: "left" }}
+                    style={{ ...Subtitle, textAlign: "left", width: "100%" }}
                   >
                     Here are all the past events that have now concluded.
                   </Typography>
