@@ -28,6 +28,7 @@ import useStaffMemberRedirection from "../../utils/actions/useStaffMemberRedirec
 import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
+import SkeletonInventoryCards from "../../utils/SkeletonInventoryCards";
 import StaffMemberWrapper from "../../utils/staffmemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
 import { SearchItemContext } from "../../MainPage";
@@ -1307,17 +1308,20 @@ const RenderingFilters = ({
                 md={12}
                 lg={12}
               >
-                {item.tree && (
-                  <CardForTreeView
-                    id={`${item.key}`}
-                    key={item.key}
-                    data={item.data}
-                    setTypePerLocationInfoModal={setTypePerLocationInfoModal}
-                    setOpenDetails={setOpenDetails}
-                    selectedLocations={item.selectedLocations}
-                    onSelectLocation={item.onSelectLocation}
-                  />
-                )}{" "}
+                {item.tree &&
+                  (locationsAndSublocationsWithTypes.isLoading ? (
+                    <SkeletonInventoryCards />
+                  ) : (
+                    <CardForTreeView
+                      id={`${item.key}`}
+                      key={item.key}
+                      data={item.data}
+                      setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+                      setOpenDetails={setOpenDetails}
+                      selectedLocations={item.selectedLocations}
+                      onSelectLocation={item.onSelectLocation}
+                    />
+                  ))}{" "}
               </Grid>
 
               <Grid
@@ -1337,7 +1341,9 @@ const RenderingFilters = ({
                 lg={12}
               >
                 {!item.tree &&
-                  (item.key === "assignedToStaffMember" ? (
+                  (structuredCompanyInventory.isLoading ? (
+                    <SkeletonInventoryCards />
+                  ) : item.key === "assignedToStaffMember" ? (
                     <StaffMemberWrapper
                       item={item}
                       setSelectedStaffEmail={setSelectedStaffEmail}

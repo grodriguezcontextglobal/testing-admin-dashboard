@@ -37,6 +37,7 @@ import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import DeleteGroups from "./actions/DeleteGroups";
+import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -198,7 +199,7 @@ const MainPage = () => {
   const [filteredDataCount, setFilteredDataCount] = useState(0);
 
   const renderingOption = {
-    0: <Spin indicator={<Loading />} fullscreen={true} />,
+    0: <SkeletonInventoryCards count={6} />,
     1: (
       <ItemTable
         chosen={chosenOption}
