@@ -1,14 +1,18 @@
 import { Grid, Typography } from "@mui/material";
 import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
-import { Divider } from "antd";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import { Button as AntButton, Divider, Tag } from "antd";
+import { useContext, useState } from "react";
 import { useSelector } from "react-redux";
-import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
-import FilterOptionsUX from "../FilterOptionsUX";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import TrashIcon from "../../../../components/icons/TrashIcon";
 import CheckSquareBrokenIcon from "../../../../components/icons/CheckSquareBrokenIcon";
+import FilterLinesIcon from "../../../../components/icons/FilterLinesIcon";
+import TrashIcon from "../../../../components/icons/TrashIcon";
+import FilterOptionsUX from "../FilterOptionsUX";
+import { dicSelectedOptions, dictionary } from "../dicSelectedOptions";
+import { FilterOptionsContext } from "../../MainPage";
+
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -18,13 +22,24 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
-  refetchingQueriesFn,
-  locationsQuery,
-  setOpenAdvanceSearchModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
 }) => {
   const { role, locations } = useSelector((state) => state.permission);
+  const filterContext = useContext(FilterOptionsContext);
+  const chosen = Array.isArray(filterContext?.chosen)
+    ? filterContext.chosen
+    : [];
+  const setChosenOption = filterContext?.setChosenOption;
+  const [showFilters, setShowFilters] = useState(false);
+
+  const removeFilter = (filterToRemove) => {
+    setChosenOption?.(
+      chosen.filter((f) => f.category !== filterToRemove.category),
+    );
+  };
+  const clearAllFilters = () => setChosenOption?.([]);
+
   const canRenderButton =
     role === "0" ||
     locations?.some(
@@ -93,33 +108,115 @@ const InventorySearchBar = ({
         style={{
           display: "flex",
           justifyContent: "flex-start",
-          alignItems: "flex-start",
-          gap: "16px",
+          alignItems: "center",
+          gap: "8px",
           width: "100%",
         }}
       >
-        <div style={{ flex: "0 0 30%" }}>
-          <form
-            style={{ width: "100%" }}
-            id="search-form"
-            onSubmit={handleSubmit(searchItem)}
-          >
-            <Input
-              {...register("searchItem")}
-              fullWidth
-              placeholder="Search device here"
-              endAdornment={adornmentButtonsComponent({
-                setValue,
-                setParams,
-                setSearchedResult,
-              })}
-            />
-          </form>
-        </div>
-        <div style={{ flex: "0 0 70%", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-          <FilterOptionsUX setChosen={() => {}} />
-        </div>
+        <form
+          style={{ flex: 1 }}
+          id="search-form"
+          onSubmit={handleSubmit(searchItem)}
+        >
+          <Input
+            {...register("searchItem")}
+            fullWidth
+            placeholder="Search by serial number, name, or brand"
+            endAdornment={adornmentButtonsComponent({
+              setValue,
+              setParams,
+              setSearchedResult,
+            })}
+          />
+        </form>
+        <GrayButtonComponent
+          title={
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              Filters
+              {chosen.length > 0 && (
+                <span
+                  style={{
+                    background: "var(--blue-50, #EFF8FF)",
+                    color: "var(--blue-700, #175CD3)",
+                    borderRadius: "9999px",
+                    padding: "0 8px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    lineHeight: "20px",
+                  }}
+                >
+                  {chosen.length}
+                </span>
+              )}
+            </span>
+          }
+          iconLeading={<FilterLinesIcon />}
+          func={() => setShowFilters((prev) => !prev)}
+          titleStyles={{ textTransform: "none" }}
+          ariaLabel="Toggle filter options"
+        />
       </div>
+      {chosen.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+            alignItems: "center",
+            margin: "12px 0 0",
+            width: "100%",
+          }}
+        >
+          {chosen.map((filter, idx) => (
+            <Tag
+              key={`active-filter-${filter.category}-${idx}`}
+              closable
+              onClose={(e) => {
+                e.preventDefault();
+                removeFilter(filter);
+              }}
+              style={{
+                padding: "4px 10px",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                margin: 0,
+                borderRadius: "9999px",
+              }}
+            >
+              {dicSelectedOptions[filter.category]}:{" "}
+              {dictionary[filter.value] ?? String(filter.value)}
+            </Tag>
+          ))}
+          <AntButton
+            type="link"
+            onClick={clearAllFilters}
+            style={{ padding: "0 4px", fontSize: "13px" }}
+          >
+            Clear all
+          </AntButton>
+        </div>
+      )}
+      {showFilters && (
+        <div
+          style={{
+            width: "100%",
+            margin: "12px 0 0",
+            padding: "16px",
+            border: "1px solid var(--gray-200, #EAECF0)",
+            borderRadius: "12px",
+            background: "var(--base-white, #FFF)",
+          }}
+        >
+          <FilterOptionsUX setChosen={setChosenOption ?? (() => {})} />
+        </div>
+      )}
       <Divider />
     </Grid>
   );

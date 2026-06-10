@@ -1,6 +1,6 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Switch, Tag } from "antd";
+import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -1096,64 +1096,8 @@ const RenderingFilters = ({
     );
   };
 
-  const handleResetFilters = () => {
-    if (setFiltering) setFiltering([]);
-  };
-
-  const handleRemoveFilter = (filterToRemove) => {
-    if (setFiltering && Array.isArray(chosen)) {
-      setFiltering(
-        chosen.filter((f) => f.category !== filterToRemove.category)
-      );
-    }
-  };
-  // console.log(typeof dataToDisplay)
-
   return (
     <Grid key="rendering-filter-option-container" container>
-      {/* Active Filters Display */}
-      {Array.isArray(chosen) && chosen.length > 0 && (
-        <Grid
-          item
-          xs={12}
-          style={{
-            padding: "0 0 1rem 0",
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontWeight: "bold", marginRight: "8px" }}>
-            Active Filters:
-          </span>
-          {chosen.map((filter, idx) => (
-            <Tag
-              key={`${filter.category}-${idx}`}
-              closable
-              onClose={() => handleRemoveFilter(filter)}
-              style={{
-                padding: "4px 10px",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ textTransform: "capitalize" }}>
-                {keyMap[filter.category]?.replace("_", " ")}
-              </span>
-              : {String(filter.value)}
-            </Tag>
-          ))}
-          <Button
-            type="link"
-            onClick={handleResetFilters}
-            style={{ marginLeft: "10px" }}
-          >
-            Clear all
-          </Button>
-        </Grid>
-      )}
       {(!Array.isArray(chosen) || chosen.length === 0) && (
         <Grid
           item
