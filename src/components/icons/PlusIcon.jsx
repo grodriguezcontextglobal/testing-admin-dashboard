@@ -1,32 +1,7 @@
-export const PlusIcon = ({
-  width = "21",
-  height = "20",
-  stroke = "currentColor",
-  strokeWidth = "1",
-  className,
-  style,
-  isHovered = false,
-  hoverStroke,
-  ...props
-}) => {
-  const currentStroke = isHovered && hoverStroke ? hoverStroke : stroke;
-
+export const PlusIcon = ({ fill = "currentColor", stroke = "currentColor", width = "20", height = "20" }) => {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={width} 
-      height={height} 
-      fill="none"
-      className={className}
-      style={style}
-      {...props}
-    >
-      <path 
-        stroke={currentStroke} 
-        strokeWidth={strokeWidth}
-        d="M10.5 4.167v11.666M4.667 10h11.666" 
-      />
+    <svg width={width} height={height} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9.99996 4.16699V15.8337M4.16663 10.0003H15.8333" stroke={stroke} strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 };
-  

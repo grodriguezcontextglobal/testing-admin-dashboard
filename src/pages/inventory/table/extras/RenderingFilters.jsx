@@ -1,14 +1,23 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Switch, Tag } from "antd";
+import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
+<<<<<<< claude/practical-snyder-3e5ec7
+import { createContext, useContext, useMemo, useState } from "react";
+=======
 import { createContext, useEffect, useMemo, useState } from "react";
+>>>>>>> main
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+<<<<<<< claude/practical-snyder-3e5ec7
+import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
+import RefreshIcon from "../../../../components/icons/RefreshIcon";
+=======
 import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+>>>>>>> main
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -27,9 +36,57 @@ import useStaffMemberRedirection from "../../utils/actions/useStaffMemberRedirec
 import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
+import SkeletonInventoryCards from "../../utils/SkeletonInventoryCards";
 import StaffMemberWrapper from "../../utils/staffmemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
+import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();
+
+const labelTranslations = {
+  Locaciones: "Locations",
+  Categorias: "Categories",
+  Grupos: "Groups",
+  Marcas: "Brands",
+  Propiedad: "Ownership",
+};
+const translateLabel = (label) => labelTranslations[label] ?? label;
+
+const groupByOptions = [
+  "location_1",
+  "category_name",
+  "item_group",
+  "brand",
+  "ownership",
+  "assignedToStaffMember",
+];
+
+const groupByFallbackLabels = {
+  location_1: "Locations",
+  category_name: "Categories",
+  item_group: "Groups",
+  brand: "Brands",
+  ownership: "Ownership",
+  assignedToStaffMember: "Staff Members",
+};
+
+const groupByPillStyle = {
+  border: "none",
+  background: "transparent",
+  borderRadius: "9999px",
+  padding: "6px 14px",
+  fontSize: "14px",
+  lineHeight: "20px",
+  color: "#475467",
+  fontWeight: 400,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const groupByPillActiveStyle = {
+  background: "#344054",
+  color: "#fff",
+  fontWeight: 500,
+};
 
 /**
  * RenderingFilters Component
@@ -64,6 +121,14 @@ const RenderingFilters = ({
   // setOpenDetails,
   allowedLocations,
   setFiltering,
+<<<<<<< claude/practical-snyder-3e5ec7
+}) => {
+  const searchItemContext = useContext(SearchItemContext);
+  const contextSetOpenAdvanceSearchModal = searchItemContext?.setOpenAdvanceSearchModal;
+  const contextRefetchingQueriesFn = searchItemContext?.refetchingQueriesFn;
+  const contextLocationsQuery = searchItemContext?.locationsQuery;
+
+=======
   setOpenCreateLocationModal,
 }) => {
   const [openDetails, setOpenDetails] = useState({});
@@ -74,6 +139,7 @@ const RenderingFilters = ({
   useEffect(() => {
     console.log(openDetails);
   }, [openDetails]);
+>>>>>>> main
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
@@ -136,7 +202,7 @@ const RenderingFilters = ({
       return user.companyData.structure;
     }
     return {
-      location_1: "Locations|Sub-locations",
+      location_1: "Locations",
       category_name: "Category",
       item_group: "Groups",
       brand: "Brands",
@@ -144,6 +210,15 @@ const RenderingFilters = ({
       assignedToStaffMember: "Staff Members",
     };
   });
+
+  const [groupBy, setGroupBy] = useState(() => {
+    const stored = localStorage.getItem("inventoryGroupBy");
+    return groupByOptions.includes(stored) ? stored : "location_1";
+  });
+  const handleGroupByChange = (key) => {
+    localStorage.setItem("inventoryGroupBy", key);
+    setGroupBy(key);
+  };
 
   const [selectedLocations, setSelectedLocations] = useState(new Set());
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
@@ -724,7 +799,7 @@ const RenderingFilters = ({
                 gap: "8px",
               }}
             >
-              {companyStructure["location_1"]}&nbsp;{" "}
+              {translateLabel(companyStructure["location_1"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -796,7 +871,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["category_name"]}&nbsp;{" "}
+              {translateLabel(companyStructure["category_name"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -840,7 +915,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["item_group"]}&nbsp;{" "}
+              {translateLabel(companyStructure["item_group"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -882,7 +957,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["brand"]}&nbsp;{" "}
+              {translateLabel(companyStructure["brand"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -926,7 +1001,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["ownership"]}&nbsp;{" "}
+              {translateLabel(companyStructure["ownership"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -970,8 +1045,10 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["assignedToStaffMember"] ??
-                "Staff Members with assigned devices"}
+              {translateLabel(
+                companyStructure["assignedToStaffMember"] ??
+                  "Staff Members with assigned devices",
+              )}
               &nbsp;{" "}
               <Button
                 style={{
@@ -1042,62 +1119,88 @@ const RenderingFilters = ({
   //   );
   // };
 
-  const handleResetFilters = () => {
-    if (setFiltering) setFiltering([]);
-  };
-
-  const handleRemoveFilter = (filterToRemove) => {
-    if (setFiltering && Array.isArray(chosen)) {
-      setFiltering(
-        chosen.filter((f) => f.category !== filterToRemove.category)
-      );
-    }
-  };
-  // console.log(typeof dataToDisplay)
-
   return (
     <Grid key="rendering-filter-option-container" container>
-      {/* Active Filters Display */}
-      {Array.isArray(chosen) && chosen.length > 0 && (
+      {(!Array.isArray(chosen) || chosen.length === 0) && (
         <Grid
           item
           xs={12}
           style={{
-            padding: "0 0 1rem 0",
             display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
+            justifyContent: "space-between",
             alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+            padding: "1rem 0 0 0",
           }}
         >
-          <span style={{ fontWeight: "bold", marginRight: "8px" }}>
-            Active Filters:
-          </span>
-          {chosen.map((filter, idx) => (
-            <Tag
-              key={`${filter.category}-${idx}`}
-              closable
-              onClose={() => handleRemoveFilter(filter)}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "2px",
+              border: "1px solid #D0D5DD",
+              borderRadius: "9999px",
+              padding: "4px",
+              backgroundColor: "#fff",
+              width: "fit-content",
+            }}
+          >
+            <span
               style={{
-                padding: "4px 10px",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
+                fontSize: "12px",
+                color: "#475467",
+                padding: "0 8px 0 12px",
               }}
             >
-              <span style={{ textTransform: "capitalize" }}>
-                {keyMap[filter.category]?.replace("_", " ")}
-              </span>
-              : {String(filter.value)}
-            </Tag>
-          ))}
-          <Button
-            type="link"
-            onClick={handleResetFilters}
-            style={{ marginLeft: "10px" }}
-          >
-            Clear all
-          </Button>
+              Group by
+            </span>
+            {groupByOptions.map((optionKey) => (
+              <button
+                key={`group-by-${optionKey}`}
+                onClick={() => handleGroupByChange(optionKey)}
+                style={{
+                  ...groupByPillStyle,
+                  ...(groupBy === optionKey ? groupByPillActiveStyle : {}),
+                }}
+              >
+                {translateLabel(
+                  companyStructure[optionKey] ??
+                    groupByFallbackLabels[optionKey],
+                )}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <GrayButtonComponent
+              title={"Forecast Inventory"}
+              iconLeading={<CalendarCheckIcon />}
+              func={() => {
+                contextSetOpenAdvanceSearchModal?.(true);
+              }}
+              styles={{
+                width: "fit-content",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+            <GrayButtonComponent
+              title={"Reload"}
+              iconLeading={<RefreshIcon />}
+              func={() => {
+                contextRefetchingQueriesFn?.();
+                contextLocationsQuery?.refetch?.();
+              }}
+              styles={{
+                width: "fit-content",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+          </div>
         </Grid>
       )}
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
@@ -1120,11 +1223,11 @@ const RenderingFilters = ({
             <details
               style={{
                 width: "100%",
-                display: item.show ? "flex" : "none",
+                display: item.show && item.key === groupBy ? "flex" : "none",
                 flexDirection: "column",
                 justifyContent: "flex-start",
                 alignItems: "center",
-                margin: "2rem 0",
+                margin: "1rem 0 2rem",
               }}
               open={openDetails[item.key] ?? item.open}
             >
@@ -1244,17 +1347,20 @@ const RenderingFilters = ({
                 md={12}
                 lg={12}
               >
-                {item.tree && (
-                  <CardForTreeView
-                    id={`${item.key}`}
-                    key={item.key}
-                    data={item.data}
-                    setTypePerLocationInfoModal={setTypePerLocationInfoModal}
-                    setOpenDetails={setOpenDetails}
-                    selectedLocations={item.selectedLocations}
-                    onSelectLocation={item.onSelectLocation}
-                  />
-                )}{" "}
+                {item.tree &&
+                  (locationsAndSublocationsWithTypes.isLoading ? (
+                    <SkeletonInventoryCards />
+                  ) : (
+                    <CardForTreeView
+                      id={`${item.key}`}
+                      key={item.key}
+                      data={item.data}
+                      setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+                      setOpenDetails={setOpenDetails}
+                      selectedLocations={item.selectedLocations}
+                      onSelectLocation={item.onSelectLocation}
+                    />
+                  ))}{" "}
               </Grid>
 
               <Grid
@@ -1274,7 +1380,9 @@ const RenderingFilters = ({
                 lg={12}
               >
                 {!item.tree &&
-                  (item.key === "assignedToStaffMember" ? (
+                  (structuredCompanyInventory.isLoading ? (
+                    <SkeletonInventoryCards />
+                  ) : item.key === "assignedToStaffMember" ? (
                     <StaffMemberWrapper
                       item={item}
                       setSelectedStaffEmail={setSelectedStaffEmail}

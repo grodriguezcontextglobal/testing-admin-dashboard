@@ -37,8 +37,12 @@ import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import DeleteGroups from "./actions/DeleteGroups";
+<<<<<<< claude/practical-snyder-3e5ec7
+import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
+=======
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 import { ShipmentRecord } from "./actions/ShipmentRecord";
+>>>>>>> main
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -208,7 +212,7 @@ const MainPage = () => {
   const [filteredDataCount, setFilteredDataCount] = useState(0);
 
   const renderingOption = {
-    0: <Spin indicator={<Loading />} fullscreen={true} />,
+    0: <SkeletonInventoryCards count={6} />,
     1: (
       <ItemTable
         chosen={chosenOption}
@@ -248,16 +252,21 @@ const MainPage = () => {
   };
 
   const searchItem = async (data) => {
+    const query = data.searchItem?.trim();
+    if (!query) {
+      setSearchedResult(null);
+      return setParams(null);
+    }
     const result = await devitrakApi.post(
       "/db_company/get-grouped-inventory-by-search-parameter",
       {
-        searchParameter: data.searchItem,
+        searchParameter: query,
         company_id: user.sqlInfo.company_id,
       },
     );
     if (result?.data?.ok) {
       setSearchedResult(result.data.data);
-      return setParams(data.searchItem);
+      return setParams(query);
     }
   };
 
@@ -289,6 +298,9 @@ const MainPage = () => {
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
           setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
+<<<<<<< claude/practical-snyder-3e5ec7
+          setOpenCreateLocationModal={setOpenCreateLocationModal}
+=======
         />
         <MobileActionsButtons user={user} />
         <Divider />
@@ -305,6 +317,7 @@ const MainPage = () => {
           refetchingQueriesFn={refetchingQueriesFn}
           locationsQuery={locationsQuery}
           setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+>>>>>>> main
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
           setOpenShippingModal={setOpenShippingModal}
@@ -314,16 +327,35 @@ const MainPage = () => {
           setChosenOption={setChosenOption}
           optionsUX={optionsUX}
         />
+        <MobileActionsButtons user={user} />
         <Divider />
+<<<<<<< claude/practical-snyder-3e5ec7
+
+        <FilterOptionsContext.Provider
+=======
         {/* <FilterOptionsContext.Provider
+>>>>>>> main
           value={{
             filterOptions: dataFilterOptions,
             chosen: chosenOption,
             setChosenOption: setChosenOption,
           }}
         >
+<<<<<<< claude/practical-snyder-3e5ec7
+          <InventorySearchBar
+            companyHasInventoryQuery={companyHasInventoryQuery}
+            handleSubmit={handleSubmit}
+            searchItem={searchItem}
+            register={register}
+            setValue={setValue}
+            setParams={setParams}
+            setSearchedResult={setSearchedResult}
+          />
+        </FilterOptionsContext.Provider>
+=======
           {optionsUX}
         </FilterOptionsContext.Provider> */}
+>>>>>>> main
         <Grid
           display={"flex"}
           justifyContent={"center"}
@@ -362,6 +394,8 @@ const MainPage = () => {
                 total: getTotalToDisplay(),
                 allowedLocations: allowedInventoryLocations,
                 userPreferences: userPreferences,
+                locationsQuery: locationsQuery,
+                refetchingQueriesFn: refetchingQueriesFn,
               }}
             >
               {renderingOption[currentTab]}

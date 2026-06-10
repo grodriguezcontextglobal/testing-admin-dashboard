@@ -12,6 +12,7 @@ import {
   onResetEventInfo
 } from "../../store/slices/eventSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import { Subtitle } from "../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { useEventHook } from "./hook/useEventHook";
@@ -85,8 +86,12 @@ const MainPage = () => {
           container
         >
           <Grid
-            sx={{
-              display: { xs: "flex", sm: "flex", md: "none", lg: "none" },
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "24px",
+              marginBottom: "24px",
             }}
             textAlign={"center"}
             justifyContent={"center"}
@@ -136,29 +141,24 @@ const MainPage = () => {
             md={12}
             lg={12}
           >
-            <Typography
-              style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-            >
-              Events
-            </Typography>
-            {/* /event/new_subscription */}
-            <Link to="/create-event-page/event-detail">
-              {" "}
-              <BlueButtonComponent
-                title={"Add new event"}
-                func={() => {
-                  dispatch(
-                    onAddCompanyAccountStripe(
-                      companyAccountStripeQuery.data.data
-                        .companyAccountStripeFound
-                    )
-                  )
-                  dispatch(onResetEventInfo())
+            <Grid marginY={0} item xs={12} sm={6} md={12} lg={12}>
+              <Typography
+                style={{
+                  ...TextFontSize20LineHeight30,
+                  textAlign: "left",
+                  width: "100%",
+                  fontWeight: 600,
+                  color: "#344054",
                 }}
-                // icon={<WhiteCirclePlusIcon />}
-                styles={{ width: "100%" }}
-              />
-            </Link>
+              >
+                Scheduled events
+              </Typography>
+              <Typography
+                style={{ ...Subtitle, textAlign: "left", width: "100%" }}
+              >
+                Here are all the upcoming and active events.
+              </Typography>
+            </Grid>
           </Grid>
         </Grid>
         <Grid
@@ -181,12 +181,44 @@ const MainPage = () => {
               Here are all the upcoming and active events.
             </Typography>
           </Grid>
-        </Grid>
-        <Grid marginY={3} container spacing={1}>
-          {dataToBeRenderedInUpcomingSection()?.length > 0 ? (
-            dataToBeRenderedInUpcomingSection()?.map((event) => {
-              // console.log('event', event)
-              return (
+          {renderingDataBasedOnStaffAndActiveEvent()?.length > 0 && (
+            <>
+              {" "}
+              <Grid
+                marginY={3}
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignItems={"center"}
+                gap={1}
+                container
+              >
+                <Grid marginY={0} item xs={12} sm={6} md={6} lg={6}>
+                  <Typography
+                    style={{
+                      ...TextFontSize20LineHeight30,
+                      textAlign: "left",
+                      width: "100%",
+                      fontWeight: 600,
+                      color: "#344054",
+                    }}
+                  >
+                    Past events
+                  </Typography>
+                  <Typography
+                    style={{ ...Subtitle, textAlign: "left", width: "100%" }}
+                  >
+                    Here are all the past events that have now concluded.
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Grid
+                marginY={3}
+                display={"flex"}
+                justifyContent={"flex-start"}
+                alignItems={"center"}
+                gap={1}
+                container
+              >
                 <Grid
                   key={event.id}
                   padding={1}
