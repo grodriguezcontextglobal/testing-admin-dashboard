@@ -140,6 +140,10 @@ const InventorySearchBar = ({
             onChange={(e) => {
               searchRegistration.onChange(e);
               setSearchText(e.target.value);
+              if (e.target.value.trim() === "") {
+                setParams(null);
+                setSearchedResult(null);
+              }
             }}
             fullWidth
             placeholder="Search"

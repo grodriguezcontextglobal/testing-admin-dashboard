@@ -238,16 +238,21 @@ const MainPage = () => {
   };
 
   const searchItem = async (data) => {
+    const query = data.searchItem?.trim();
+    if (!query) {
+      setSearchedResult(null);
+      return setParams(null);
+    }
     const result = await devitrakApi.post(
       "/db_company/get-grouped-inventory-by-search-parameter",
       {
-        searchParameter: data.searchItem,
+        searchParameter: query,
         company_id: user.sqlInfo.company_id,
       },
     );
     if (result?.data?.ok) {
       setSearchedResult(result.data.data);
-      return setParams(data.searchItem);
+      return setParams(query);
     }
   };
 
