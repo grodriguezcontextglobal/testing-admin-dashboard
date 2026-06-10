@@ -2,11 +2,13 @@ import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch, Tag } from "antd";
 import { PropTypes } from "prop-types";
-import { createContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
+import RefreshIcon from "../../../../components/icons/RefreshIcon";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -28,6 +30,7 @@ import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPr
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import StaffMemberWrapper from "../../utils/staffmemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
+import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();
 
 /**
@@ -63,7 +66,12 @@ const RenderingFilters = ({
   setOpenDetails,
   allowedLocations,
   setFiltering,
-}) => {  
+}) => {
+  const searchItemContext = useContext(SearchItemContext);
+  const contextSetOpenAdvanceSearchModal = searchItemContext?.setOpenAdvanceSearchModal;
+  const contextRefetchingQueriesFn = searchItemContext?.refetchingQueriesFn;
+  const contextLocationsQuery = searchItemContext?.locationsQuery;
+
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
@@ -707,48 +715,80 @@ const RenderingFilters = ({
           ) : (
             <div
               style={{
-                width: "fit-content",
+                width: "100%",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
+                justifyContent: "space-between",
               }}
             >
-              {companyStructure["location_1"] === "Locaciones" ? "Locations" : companyStructure["location_1"]}&nbsp;{" "}
-              <Button
-                style={{
-                  borderRadius: "25px",
-                  width: "fit-content",
-                  aspectRatio: "1/1",
-                }}
-                onClick={() => handleEditClick("location_1")}
-                disabled={Number(user.role) > 0}
-              >
-                <EditIcon />
-              </Button>
-              {selectedLocations.size > 0 && (
-                <DangerButtonComponent
-                  func={handleDeleteSelectedLocations}
-                  style={{ margin: "0 1.5rem" }}
-                  loading={isDeleting}
-                  title={`Delete Selected (${selectedLocations.size})`}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {companyStructure["location_1"] === "Locaciones" ? "Locations" : companyStructure["location_1"]}&nbsp;{" "}
+                <Button
+                  style={{
+                    borderRadius: "25px",
+                    width: "fit-content",
+                    aspectRatio: "1/1",
+                  }}
+                  onClick={() => handleEditClick("location_1")}
+                  disabled={Number(user.role) > 0}
+                >
+                  <EditIcon />
+                </Button>
+                {selectedLocations.size > 0 && (
+                  <DangerButtonComponent
+                    func={handleDeleteSelectedLocations}
+                    style={{ margin: "0 1.5rem" }}
+                    loading={isDeleting}
+                    title={`Delete Selected (${selectedLocations.size})`}
+                  />
+                )}
+                <div
+                  style={{
+                    marginLeft: "20px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span style={{ fontSize: "14px", fontWeight: "normal" }}>
+                    Empty Only
+                  </span>
+                  <Switch
+                    size="small"
+                    checked={showOnlyEmpty}
+                    onChange={(checked) => setShowOnlyEmpty(checked)}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <GrayButtonComponent
+                  title={"Forecast Inventory"}
+                  iconLeading={<CalendarCheckIcon />}
+                  func={() => {
+                    contextSetOpenAdvanceSearchModal?.(true);
+                  }}
+                  styles={{
+                    width: "fit-content",
+                  }}
+                  titleStyles={{
+                    textTransform: "none",
+                  }}
                 />
-              )}
-              <div
-                style={{
-                  marginLeft: "20px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span style={{ fontSize: "14px", fontWeight: "normal" }}>
-                  Empty Only
-                </span>
-                <Switch
-                  size="small"
-                  checked={showOnlyEmpty}
-                  onChange={(checked) => setShowOnlyEmpty(checked)}
+                <GrayButtonComponent
+                  title={"Reload"}
+                  iconLeading={<RefreshIcon />}
+                  func={() => {
+                    contextRefetchingQueriesFn?.();
+                    contextLocationsQuery?.refetch?.();
+                  }}
+                  styles={{
+                    width: "fit-content",
+                  }}
+                  titleStyles={{
+                    textTransform: "none",
+                  }}
                 />
               </div>
             </div>
@@ -785,7 +825,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["category_name"]}&nbsp;{" "}
+              {companyStructure["category_name"] === "Categorias" ? "Categories" : companyStructure["category_name"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -829,7 +869,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["item_group"]}&nbsp;{" "}
+              {companyStructure["item_group"] === "Grupos" ? "Groups" : companyStructure["item_group"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -871,7 +911,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["brand"]}&nbsp;{" "}
+              {companyStructure["brand"] === "Marcas" ? "Brands" : companyStructure["brand"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -915,7 +955,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["ownership"]}&nbsp;{" "}
+              {companyStructure["ownership"] === "Propiedad" ? "Ownership" : companyStructure["ownership"]}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",

@@ -2,7 +2,6 @@ import { Grid, Typography } from "@mui/material";
 import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
 import { Divider } from "antd";
-import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
@@ -122,11 +121,6 @@ const InventorySearchBar = ({
         </div>
       </div>
       <Divider />
-      <ButtonsSearchAndReload
-        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-        refetchingQueriesFn={refetchingQueriesFn}
-        locationsQuery={locationsQuery}
-      />
     </Grid>
   );
 };

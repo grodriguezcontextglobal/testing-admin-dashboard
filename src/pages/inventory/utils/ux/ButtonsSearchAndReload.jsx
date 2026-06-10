@@ -11,13 +11,18 @@ const ButtonsSearchAndReload = ({
   return (
     <Grid
       display={"flex"}
-      justifyContent={"flex-start"}
+      justifyContent={"flex-end"}
       gap={1}
       item
       xs={12}
       sm={12}
       md
       lg
+      sx={{
+        position: "absolute",
+        right: 0,
+        top: 0,
+      }}
     >
       <GrayButtonComponent
         title={"Forecast Inventory"}
@@ -26,7 +31,7 @@ const ButtonsSearchAndReload = ({
           setOpenAdvanceSearchModal(true);
         }}
         styles={{
-          width: "100%",
+          width: "fit-content",
           justifyContent: "space-between",
           alignItems: "center",
         }}
@@ -42,7 +47,7 @@ const ButtonsSearchAndReload = ({
           locationsQuery.refetch();
         }}
         styles={{
-          width: "100%",
+          width: "fit-content",
           justifyContent: "space-between",
           alignItems: "center",
         }}

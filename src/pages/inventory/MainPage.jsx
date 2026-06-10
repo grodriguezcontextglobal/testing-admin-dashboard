@@ -344,6 +344,8 @@ const MainPage = () => {
                 total: getTotalToDisplay(),
                 allowedLocations: allowedInventoryLocations,
                 userPreferences: userPreferences,
+                locationsQuery: locationsQuery,
+                refetchingQueriesFn: refetchingQueriesFn,
               }}
             >
               {renderingOption[currentTab]}

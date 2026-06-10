@@ -81,8 +81,10 @@ const ModalMultipleCompanies = ({
           company_name: selection,
         },
       );
+      const companyRecords =
+        companyInfoTable.data.companies ?? companyInfoTable.data.company ?? [];
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: companyInfoTable.data.company.at(-1).company_id,
+        company_id: companyRecords.at(-1).company_id,
       });
 
       const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
@@ -107,7 +109,7 @@ const ModalMultipleCompanies = ({
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
-            ...companyInfoTable.data.company.at(-1),
+            ...companyRecords.at(-1),
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,
@@ -131,10 +133,11 @@ const ModalMultipleCompanies = ({
         "loginIntoOneCompanyAccountFromMultipleCompanyRegistered",
         error,
       );
-      openNotificationWithIcon("error", `${error.response.data.msg}`);
+      setIsLoading(false);
+      const errorMsg = error?.response?.data?.msg ?? error.message;
+      openNotificationWithIcon("error", `${errorMsg}`);
       dispatch(onLogout("Incorrect credentials"));
-      dispatch(onAddErrorMessage(error?.response?.data?.msg));
-      throw error;
+      dispatch(onAddErrorMessage(errorMsg));
     }
   };
 
