@@ -126,8 +126,7 @@ const InventorySearchBar = ({
         <form
           style={{
             display: "flex",
-            width: "320px",
-            maxWidth: "100%",
+            flex: 1,
             flexDirection: "column",
             alignItems: "flex-start",
             gap: "8px",
