@@ -1,3 +1,4 @@
+import { message } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -6,6 +7,7 @@ import BaseTable from "../../../components/UX/tables/BaseTable";
 import ExpandedShipmentView from "./utils/ExpandedShipmentView";
 import { RightChevronIcon } from "../../../components/icons/RightChevronIcon";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { CopyIcon } from "../../../components/icons/CopyIcon";
 
 export const ShipmentRecord = ({ open, setOpen }) => {
     const { user } = useSelector((state) => state.admin);
@@ -49,28 +51,46 @@ export const ShipmentRecord = ({ open, setOpen }) => {
             key: "trackingNumber",
             render: (tracking_number, record) => {
                 const getTrackingUrl = (courier, trackingNumber) => {
-                    if (!courier) return null;
+                    if (!courier || !trackingNumber) return null;
                     const courierLower = courier.toLowerCase();
                     switch (courierLower) {
                         case 'ups':
-                            return `https://www.ups.com/track?track=yes&trackNums=${trackingNumber}`
+                            return `https://www.ups.com/track?track=yes&trackNums=${trackingNumber}`;
                         case 'usps':
-                            return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${trackingNumber}`
+                            return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${trackingNumber}`;
                         case 'fedex':
-                            return `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`
+                            return `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`;
                         case 'dhl':
-                            return `https://www.dhl.com/en/express/tracking.html?AWB=${trackingNumber}`
+                            return `https://www.dhl.com/en/express/tracking.html?AWB=${trackingNumber}`;
                         default:
                             return null;
                     }
-                }
+                };
+
+                const handleCopy = () => {
+                    navigator.clipboard.writeText(tracking_number)
+                        .then(() => message.success('Tracking number copied to clipboard!'))
+                        .catch(() => message.error('Failed to copy tracking number.'));
+                };
+
                 const trackingUrl = getTrackingUrl(record.courier, tracking_number);
+
                 if (trackingUrl) {
-                    return <a href={trackingUrl} target="_blank" rel="noopener noreferrer">
-                        {tracking_number}
-                    </a>
+                    return (
+                        <a href={trackingUrl} target="_blank" rel="noopener noreferrer">
+                            {tracking_number}
+                        </a>
+                    );
                 }
-                return tracking_number;
+
+                return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{tracking_number}</span>
+                        <button onClick={handleCopy} style={{ cursor: 'pointer',outline:"none", border: 'none', background: 'transparent' }}>
+                            <CopyIcon size={16} stroke={"#000"} />
+                        </button>
+                    </div>
+                );
             }
         },
     ];
