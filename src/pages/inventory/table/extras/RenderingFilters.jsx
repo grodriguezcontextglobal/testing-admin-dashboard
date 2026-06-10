@@ -33,6 +33,52 @@ import AdvanceSearchModal from "./AdvanceSearchModal";
 import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();
 
+const labelTranslations = {
+  Locaciones: "Locations",
+  Categorias: "Categories",
+  Grupos: "Groups",
+  Marcas: "Brands",
+  Propiedad: "Ownership",
+};
+const translateLabel = (label) => labelTranslations[label] ?? label;
+
+const groupByOptions = [
+  "location_1",
+  "category_name",
+  "item_group",
+  "brand",
+  "ownership",
+  "assignedToStaffMember",
+];
+
+const groupByFallbackLabels = {
+  location_1: "Locations",
+  category_name: "Categories",
+  item_group: "Groups",
+  brand: "Brands",
+  ownership: "Ownership",
+  assignedToStaffMember: "Staff Members",
+};
+
+const groupByPillStyle = {
+  border: "none",
+  background: "transparent",
+  borderRadius: "9999px",
+  padding: "6px 14px",
+  fontSize: "14px",
+  lineHeight: "20px",
+  color: "#475467",
+  fontWeight: 400,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const groupByPillActiveStyle = {
+  background: "#344054",
+  color: "#fff",
+  fontWeight: 500,
+};
+
 /**
  * RenderingFilters Component
  *
@@ -141,6 +187,15 @@ const RenderingFilters = ({
       assignedToStaffMember: "Staff Members",
     };
   });
+
+  const [groupBy, setGroupBy] = useState(() => {
+    const stored = localStorage.getItem("inventoryGroupBy");
+    return groupByOptions.includes(stored) ? stored : "location_1";
+  });
+  const handleGroupByChange = (key) => {
+    localStorage.setItem("inventoryGroupBy", key);
+    setGroupBy(key);
+  };
 
   const [selectedLocations, setSelectedLocations] = useState(new Set());
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
@@ -715,80 +770,48 @@ const RenderingFilters = ({
           ) : (
             <div
               style={{
-                width: "100%",
+                width: "fit-content",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                justifyContent: "space-between",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                {companyStructure["location_1"] === "Locaciones" ? "Locations" : companyStructure["location_1"]}&nbsp;{" "}
-                <Button
-                  style={{
-                    borderRadius: "25px",
-                    width: "fit-content",
-                    aspectRatio: "1/1",
-                  }}
-                  onClick={() => handleEditClick("location_1")}
-                  disabled={Number(user.role) > 0}
-                >
-                  <EditIcon />
-                </Button>
-                {selectedLocations.size > 0 && (
-                  <DangerButtonComponent
-                    func={handleDeleteSelectedLocations}
-                    style={{ margin: "0 1.5rem" }}
-                    loading={isDeleting}
-                    title={`Delete Selected (${selectedLocations.size})`}
-                  />
-                )}
-                <div
-                  style={{
-                    marginLeft: "20px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span style={{ fontSize: "14px", fontWeight: "normal" }}>
-                    Empty Only
-                  </span>
-                  <Switch
-                    size="small"
-                    checked={showOnlyEmpty}
-                    onChange={(checked) => setShowOnlyEmpty(checked)}
-                  />
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <GrayButtonComponent
-                  title={"Forecast Inventory"}
-                  iconLeading={<CalendarCheckIcon />}
-                  func={() => {
-                    contextSetOpenAdvanceSearchModal?.(true);
-                  }}
-                  styles={{
-                    width: "fit-content",
-                  }}
-                  titleStyles={{
-                    textTransform: "none",
-                  }}
+              {translateLabel(companyStructure["location_1"])}&nbsp;{" "}
+              <Button
+                style={{
+                  borderRadius: "25px",
+                  width: "fit-content",
+                  aspectRatio: "1/1",
+                }}
+                onClick={() => handleEditClick("location_1")}
+                disabled={Number(user.role) > 0}
+              >
+                <EditIcon />
+              </Button>
+              {selectedLocations.size > 0 && (
+                <DangerButtonComponent
+                  func={handleDeleteSelectedLocations}
+                  style={{ margin: "0 1.5rem" }}
+                  loading={isDeleting}
+                  title={`Delete Selected (${selectedLocations.size})`}
                 />
-                <GrayButtonComponent
-                  title={"Reload"}
-                  iconLeading={<RefreshIcon />}
-                  func={() => {
-                    contextRefetchingQueriesFn?.();
-                    contextLocationsQuery?.refetch?.();
-                  }}
-                  styles={{
-                    width: "fit-content",
-                  }}
-                  titleStyles={{
-                    textTransform: "none",
-                  }}
+              )}
+              <div
+                style={{
+                  marginLeft: "20px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span style={{ fontSize: "14px", fontWeight: "normal" }}>
+                  Empty Only
+                </span>
+                <Switch
+                  size="small"
+                  checked={showOnlyEmpty}
+                  onChange={(checked) => setShowOnlyEmpty(checked)}
                 />
               </div>
             </div>
@@ -825,7 +848,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["category_name"] === "Categorias" ? "Categories" : companyStructure["category_name"]}&nbsp;{" "}
+              {translateLabel(companyStructure["category_name"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -869,7 +892,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["item_group"] === "Grupos" ? "Groups" : companyStructure["item_group"]}&nbsp;{" "}
+              {translateLabel(companyStructure["item_group"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -911,7 +934,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["brand"] === "Marcas" ? "Brands" : companyStructure["brand"]}&nbsp;{" "}
+              {translateLabel(companyStructure["brand"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -955,7 +978,7 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["ownership"] === "Propiedad" ? "Ownership" : companyStructure["ownership"]}&nbsp;{" "}
+              {translateLabel(companyStructure["ownership"])}&nbsp;{" "}
               <Button
                 style={{
                   borderRadius: "25px",
@@ -999,8 +1022,10 @@ const RenderingFilters = ({
             </div>
           ) : (
             <>
-              {companyStructure["assignedToStaffMember"] ??
-                "Staff Members with assigned devices"}
+              {translateLabel(
+                companyStructure["assignedToStaffMember"] ??
+                  "Staff Members with assigned devices",
+              )}
               &nbsp;{" "}
               <Button
                 style={{
@@ -1129,6 +1154,88 @@ const RenderingFilters = ({
           </Button>
         </Grid>
       )}
+      {(!Array.isArray(chosen) || chosen.length === 0) && (
+        <Grid
+          item
+          xs={12}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+            padding: "1rem 0 0 0",
+          }}
+        >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "2px",
+              border: "1px solid #D0D5DD",
+              borderRadius: "9999px",
+              padding: "4px",
+              backgroundColor: "#fff",
+              width: "fit-content",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "12px",
+                color: "#475467",
+                padding: "0 8px 0 12px",
+              }}
+            >
+              Group by
+            </span>
+            {groupByOptions.map((optionKey) => (
+              <button
+                key={`group-by-${optionKey}`}
+                onClick={() => handleGroupByChange(optionKey)}
+                style={{
+                  ...groupByPillStyle,
+                  ...(groupBy === optionKey ? groupByPillActiveStyle : {}),
+                }}
+              >
+                {translateLabel(
+                  companyStructure[optionKey] ??
+                    groupByFallbackLabels[optionKey],
+                )}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <GrayButtonComponent
+              title={"Forecast Inventory"}
+              iconLeading={<CalendarCheckIcon />}
+              func={() => {
+                contextSetOpenAdvanceSearchModal?.(true);
+              }}
+              styles={{
+                width: "fit-content",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+            <GrayButtonComponent
+              title={"Reload"}
+              iconLeading={<RefreshIcon />}
+              func={() => {
+                contextRefetchingQueriesFn?.();
+                contextLocationsQuery?.refetch?.();
+              }}
+              styles={{
+                width: "fit-content",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+          </div>
+        </Grid>
+      )}
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
         return (
           <Grid
@@ -1149,11 +1256,11 @@ const RenderingFilters = ({
             <details
               style={{
                 width: "100%",
-                display: item.show ? "flex" : "none",
+                display: item.show && item.key === groupBy ? "flex" : "none",
                 flexDirection: "column",
                 justifyContent: "flex-start",
                 alignItems: "center",
-                margin: "2rem 0",
+                margin: "1rem 0 2rem",
               }}
               open={item.open}
             >
