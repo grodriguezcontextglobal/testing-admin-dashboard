@@ -17,8 +17,8 @@ import "./styles.css"
 const LightBlueButtonComponent = ({
   // ---- New (UntitledUI-like) props ----
   size = "md",
-  iconLeading = null,
-  iconTrailing = null,
+  // iconLeading = null,
+  // iconTrailing = null,
   href = null,
   target,
   rel,
@@ -58,11 +58,11 @@ const LightBlueButtonComponent = ({
 
   const content = (
     <span className="customized__lightBlueButtonContent">
-      {iconLeading ? (
+      {/* {iconLeading ? (
         <span className="customized__lightBlueButtonIcon" data-icon>
           {iconLeading}
         </span>
-      ) : null}
+      ) : null} */}
 
       {(title || showTextWhileLoading || !resolvedLoading) && (
         <span
@@ -73,11 +73,11 @@ const LightBlueButtonComponent = ({
         </span>
       )}
 
-      {iconTrailing ? (
+      {/* {iconTrailing ? (
         <span className="customized__lightBlueButtonIcon" data-icon>
           {iconTrailing}
         </span>
-      ) : null}
+      ) : null} */}
     </span>
   );
 

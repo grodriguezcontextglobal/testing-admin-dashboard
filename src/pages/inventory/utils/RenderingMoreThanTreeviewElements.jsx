@@ -27,12 +27,6 @@ const RenderingMoreThanTreeviewElements = ({
             }
             title={dictionary[opt?.key] ?? opt?.key}
             props={`${opt?.value} total devices`}
-            total={typeof opt?.value === "number" ? opt.value : null}
-            available={
-              typeof opt?.totalAvailable === "number"
-                ? opt.totalAvailable
-                : null
-            }
             optional={null}
             style={{ general: { opacity: opt?.fake ? 0 : 1, cursor: null } }}
           />
