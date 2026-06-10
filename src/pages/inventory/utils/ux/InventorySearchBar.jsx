@@ -8,7 +8,9 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import CheckSquareBrokenIcon from "../../../../components/icons/CheckSquareBrokenIcon";
 import FilterLinesIcon from "../../../../components/icons/FilterLinesIcon";
+import SearchLgIcon from "../../../../components/icons/SearchLgIcon";
 import TrashIcon from "../../../../components/icons/TrashIcon";
+import XCloseIcon from "../../../../components/icons/XCloseIcon";
 import FilterOptionsUX from "../FilterOptionsUX";
 import { dicSelectedOptions, dictionary } from "../dicSelectedOptions";
 import { FilterOptionsContext } from "../../MainPage";
@@ -18,7 +20,6 @@ const InventorySearchBar = ({
   handleSubmit,
   searchItem,
   register,
-  adornmentButtonsComponent,
   setValue,
   setParams,
   setSearchedResult,
@@ -32,6 +33,15 @@ const InventorySearchBar = ({
     : [];
   const setChosenOption = filterContext?.setChosenOption;
   const [showFilters, setShowFilters] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  const searchRegistration = register("searchItem");
+  const clearSearch = () => {
+    setValue("searchItem", "");
+    setSearchText("");
+    setParams(null);
+    setSearchedResult(null);
+  };
 
   const removeFilter = (filterToRemove) => {
     setChosenOption?.(
@@ -114,19 +124,68 @@ const InventorySearchBar = ({
         }}
       >
         <form
-          style={{ flex: 1 }}
+          style={{
+            display: "flex",
+            width: "320px",
+            maxWidth: "100%",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "8px",
+          }}
           id="search-form"
           onSubmit={handleSubmit(searchItem)}
         >
           <Input
-            {...register("searchItem")}
+            {...searchRegistration}
+            onChange={(e) => {
+              searchRegistration.onChange(e);
+              setSearchText(e.target.value);
+            }}
             fullWidth
-            placeholder="Search by serial number, name, or brand"
-            endAdornment={adornmentButtonsComponent({
-              setValue,
-              setParams,
-              setSearchedResult,
-            })}
+            placeholder="Search"
+            endAdornment={
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                {searchText.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      margin: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <XCloseIcon />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  aria-label="Search"
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    margin: 0,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <SearchLgIcon />
+                </button>
+              </div>
+            }
           />
         </form>
         <GrayButtonComponent
