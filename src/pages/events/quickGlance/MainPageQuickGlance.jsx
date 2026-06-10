@@ -430,8 +430,8 @@ const MainPageQuickGlance = () => {
             item
             xs={12}
             sm={12}
-            md={6}
-            lg={6}
+            md={12}
+            lg={12}
           >
             <div
               style={{

@@ -37,7 +37,7 @@ const ChartComponent = ({allConsumersBasedOnEventsPerCompany}) => {
                 ?.inactiveTransactions ?? 0,
           }}
           props={{
-            title: "General activity",
+            title: "Consumer with Inventory assigned to",
             description:
               "Active consumers refers to those users currently holding one or more devices.", // from the database
             total:
@@ -74,7 +74,7 @@ const ChartComponent = ({allConsumersBasedOnEventsPerCompany}) => {
               0,
           }}
           props={{
-            title: "Consumer origin",
+            title: "Consumer registration source",
             description:
               "Consumers from an event typically spend a shorter time with your devices.",
             total:

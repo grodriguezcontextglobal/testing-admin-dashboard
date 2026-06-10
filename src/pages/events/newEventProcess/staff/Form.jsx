@@ -10,6 +10,7 @@ import "../../../../styles/global/ant-select.css";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import FormFields from "./components/FormFields";
 import AddingEventCreated from "./components/AddingEventCreated";
+import { devitrakApi } from "../../../../api/devitrakApi";
 const schema = yup.object().shape({
   firstName: yup.string().required("First name is required"),
   lastName: yup.string().required("Last name is required"),
@@ -21,7 +22,7 @@ const schema = yup.object().shape({
 });
 
 const Form = () => {
-  const { staff } = useSelector((state) => state.event);
+  const { staff, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const { register, setValue, watch, handleSubmit } = useForm({
     resolver: yupResolver(schema),
@@ -97,29 +98,28 @@ const Form = () => {
     const newMemberProfile =
       selectedEmployee && !isAddingNewMember
         ? {
-            firstName: selectedEmployee.firstName,
-            lastName: selectedEmployee.lastName,
-            email: selectedEmployee.user || "", // schema email
-            role: watch("role") || "HeadsetAttendees" || "headsetAttendees",
-          }
+          firstName: selectedEmployee.firstName,
+          lastName: selectedEmployee.lastName,
+          email: selectedEmployee.user || "", // schema email
+          role: watch("role") || "HeadsetAttendees" || "headsetAttendees",
+        }
         : {
-            firstName: watch("firstName"),
-            lastName: watch("lastName"),
-            email: watch("email"),
-            role: watch("role"),
-          };
+          firstName: watch("firstName"),
+          lastName: watch("lastName"),
+          email: watch("email"),
+          role: watch("role"),
+        };
     // Validate that all fields are filled
     if (!validateMemberData(newMemberProfile)) {
       alert(
         `Please fill in all required fields before adding a staff member. 
-        Missing field: ${
-          newMemberProfile.firstName.length === 0
-            ? "First Name"
-            : newMemberProfile.lastName.length === 0
+        Missing field: ${newMemberProfile.firstName.length === 0
+          ? "First Name"
+          : newMemberProfile.lastName.length === 0
             ? "Last Name"
             : newMemberProfile.email.length === 0
-            ? "Email"
-            : "Role"
+              ? "Email"
+              : "Role"
         }`
       );
       return;
@@ -222,6 +222,13 @@ const Form = () => {
       };
       setAdminStaff([...adminStaff, newMemberProfile]);
       dispatch(onAddEventStaff(format));
+      await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
+        staff: {
+          adminUser: format.adminUser,
+          headsetAttendees: format.headsetAttendees,
+        }
+      });
+
       return navigate("/create-event-page/document-detail");
     } else {
       const format = {
@@ -230,6 +237,12 @@ const Form = () => {
       };
       setHeadsetAttendeesStaff([...headsetAttendeesStaff, newMemberProfile]);
       dispatch(onAddEventStaff(format));
+      await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
+        staff: {
+          adminUser: format.adminUser,
+          headsetAttendees: format.headsetAttendees,
+        }
+      });
       return navigate("/create-event-page/document-detail");
     }
   };
@@ -240,6 +253,12 @@ const Form = () => {
       headsetAttendees: headsetAttendeesStaff,
     };
     dispatch(onAddEventStaff(format));
+    await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
+      staff: {
+        adminUser: adminStaff,
+        headsetAttendees: headsetAttendeesStaff,
+      }
+    });
     return navigate("/create-event-page/document-detail");
   };
   const tagStyles = {

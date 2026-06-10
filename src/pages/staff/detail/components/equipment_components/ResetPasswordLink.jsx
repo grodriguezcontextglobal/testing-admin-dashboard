@@ -77,13 +77,11 @@ const ForgetPasswordLinkFromStaffPage = () => {
       }
     },
     onError: (error) => {
-      console.log(error);
+      console.error(error);
       openNotificationWithIcon("error", error.message);
     },
   });
   const handleSubmitEmailLink = async (data) => {
-    console.log(data)
-    console.log(adminUserInfoRef.current)
     if (adminUserInfoRef.current) {
       const stampTime = `${new Date()}`;
       sendingResetPasswordLink.mutateAsync({
@@ -106,6 +104,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
     setValue("email", "");
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
+  
   const renderTitle = () => {
     return (
       <Typography

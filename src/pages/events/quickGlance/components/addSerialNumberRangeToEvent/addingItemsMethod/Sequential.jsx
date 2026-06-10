@@ -1,5 +1,5 @@
-import { Divider, Typography, Progress, Alert } from "antd";
-import { useState, useCallback, useEffect } from "react";
+import { Alert, Divider, Progress, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
 import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
 import ScannedSerialsList from "./ScannedSerialsList";
 import SerialNumberInput from "./SerialNumberInput";
@@ -27,25 +27,26 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
   const processBatch = useCallback(
     async (batch) => {
       const sqlTemplate = {
-        event_id: event.sql.event_id,
-        item_group: deviceTitle,
-        company_id: user.sqlInfo.company_id,
         category_name: event.deviceSetup.find(
           (item) => item.group === deviceTitle
         ).category,
+        company_id: user.sqlInfo.company_id,
         data: batch,
+        event_id: event.sql.event_id,
+        item_group: deviceTitle,
+        logistic_status: "in-event",
         warehouse: 0,
       };
 
       const noSqlTemplate = {
         type: deviceTitle,
-        deviceList: batch,
-        company: event.company_id,
-        status:"Operational",
         activity:false,
         comment:"No comment",
+        company: event.company_id,
+        deviceList: batch,
         eventSelected:event.eventInfoDetail.eventName,
-        provider:event.company
+        provider:event.company,
+        status:"Operational"
       };
       // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
       await devitrakApi.post('/db_event/allocate-device-event', sqlTemplate)
@@ -117,7 +118,7 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
       <Divider />
 
       <div>
-        <div style={{ margin:"0.5rem 0", gap:2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ alignItems: "center", display: "flex", gap:2, justifyContent: "space-between", margin:"0.5rem 0" }}>
         <Typography.Title level={5}>
           Scanned Items ({scannedSerials.length})
         </Typography.Title>

@@ -1,4 +1,4 @@
-import { InputLabel, OutlinedInput } from "@mui/material";
+import { FormControlLabel, InputLabel } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Avatar, Divider, notification } from "antd";
 import { useEffect, useState } from "react";
@@ -12,8 +12,9 @@ import ImageUploaderUX from "../../../../../components/utils/UX/ImageUploaderUX"
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
+import Input from "../../../../../components/UX/inputs/Input";
 import { dicIcons } from "./utils/dicIcons";
+import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
 
 const UpdateMemberInformation = () => {
   const [errors, setErrors] = useState([]);
@@ -37,7 +38,7 @@ const UpdateMemberInformation = () => {
   const updateMemberInfoMutation = useMutation({
     mutationKey: ["updateMemberInformationData"],
     mutationFn: async (data) =>
-      await devitrakApi.post("/db_member/update-member-info", data),
+      await devitrakApi.patch("/db_member/update-member-info", data),
     onSuccess: () => {
       openNotificationWithIcon(
         "success",
@@ -128,6 +129,11 @@ const UpdateMemberInformation = () => {
       setValue("city", membersData?.address_city);
       setValue("state", membersData?.address_state);
       setValue("zip", membersData?.address_zip);
+      setValue("minor", membersData?.minor === 1);
+      setValue("parent_guardian_first_name", membersData?.parent_guardian_first_name);
+      setValue("parent_guardian_last_name", membersData?.parent_guardian_last_name);
+      setValue("parent_guardian_email", membersData?.parent_guardian_email);
+      setValue("parent_guardian_phone_number", membersData?.parent_guardian_phone_number);
     }
   }, [membersData, memberInfoRetrieveQuery.data]);
 
@@ -173,6 +179,11 @@ const UpdateMemberInformation = () => {
         address_state: data?.state,
         address_zip: data?.zip,
         image_url: newImageUploaded ? newImageUploaded : memberInfo.image_url,
+        minor: data?.minor,
+        parent_guardian_first_name: data?.parent_guardian_first_name,
+        parent_guardian_last_name: data?.parent_guardian_last_name,
+        parent_guardian_email: data?.parent_guardian_email,
+        parent_guardian_phone_number: data?.parent_guardian_phone_number,
       };
       return updateMemberInfoMutation.mutate(payload);
     } catch (error) {
@@ -231,7 +242,9 @@ const UpdateMemberInformation = () => {
           />
         </div>
         <div style={{ display: "grid", gap: 4 }}>
-          <ImageUploaderUX setImageUploadedValue={setNewImageProfileURL} />
+          <div style={{ width: "100%" }}>
+            <ImageUploaderUX setImageUploadedValue={setNewImageProfileURL} />
+          </div>
           <BlueButtonComponent
             title="Update image"
             func={handleImageProfile}
@@ -253,8 +266,8 @@ const UpdateMemberInformation = () => {
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>First name</span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+
               {...register("first_name")}
             />
           </InputLabel>
@@ -262,8 +275,8 @@ const UpdateMemberInformation = () => {
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>Last name</span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+
               {...register("last_name")}
             />
           </InputLabel>
@@ -271,8 +284,8 @@ const UpdateMemberInformation = () => {
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>Email</span>
-            <OutlinedInput
-              style={OutlinedInputStyle}
+            <Input
+
               {...register("email")}
               type="email"
             />
@@ -281,33 +294,87 @@ const UpdateMemberInformation = () => {
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>Phone</span>
-            <OutlinedInput style={OutlinedInputStyle} {...register("phone")} />
+            <Input {...register("phone")} />
           </InputLabel>
           <InputLabel
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>Street</span>
-            <OutlinedInput style={OutlinedInputStyle} {...register("street")} />
+            <Input {...register("street")} />
           </InputLabel>
           <InputLabel
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>City</span>
-            <OutlinedInput style={OutlinedInputStyle} {...register("city")} />
+            <Input {...register("city")} />
           </InputLabel>
           <InputLabel
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>State</span>
-            <OutlinedInput style={OutlinedInputStyle} {...register("state")} />
+            <Input {...register("state")} />
           </InputLabel>
           <InputLabel
             style={{ display: "flex", flexDirection: "column", gap: 4 }}
           >
             <span style={{ width: "100%", textAlign: "left" }}>Zip</span>
-            <OutlinedInput style={OutlinedInputStyle} {...register("zip")} />
+            <Input {...register("zip")} />
           </InputLabel>
         </div>
+        <FormControlLabel
+          control={<CheckboxReusableComponent name="minor" checked={watch("minor")} onChange={(e) => setValue("minor", e.target.checked)} />}
+          label="Is the member a minor?"
+        />
+        {watch("minor") && (
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+          >
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>
+                Guardian First name
+              </span>
+              <Input
+
+                {...register("parent_guardian_first_name")}
+              />
+            </InputLabel>
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>
+                Guardian Last name
+              </span>
+              <Input
+
+                {...register("parent_guardian_last_name")}
+              />
+            </InputLabel>
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>
+                Guardian Email
+              </span>
+              <Input
+
+                {...register("parent_guardian_email")}
+                type="email"
+              />
+            </InputLabel>
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>
+                Guardian Phone
+              </span>
+              <Input
+                {...register("parent_guardian_phone_number")}
+              />
+            </InputLabel>
+          </div>
+        )}
 
         {errors.length ? (
           <div style={{ color: "crimson" }}>
@@ -318,7 +385,7 @@ const UpdateMemberInformation = () => {
         ) : null}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <GrayButtonComponent title="Cancel" func={()=> navigate(`/member/${memberInfo?.member_id}/main`)} />
+          <GrayButtonComponent title="Cancel" func={() => navigate(`/member/${memberInfo?.member_id}/main`)} />
           <BlueButtonComponent
             title="Update"
             loadingState={saving}

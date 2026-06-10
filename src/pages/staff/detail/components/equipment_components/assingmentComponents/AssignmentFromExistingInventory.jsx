@@ -56,6 +56,7 @@ const AssignmentFromExistingInventory = () => {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
+        logistic_status:"in-stock"
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 1 * 60 * 100, // 1 minutes
@@ -66,16 +67,17 @@ const AssignmentFromExistingInventory = () => {
       devitrakApi.post("/db_staff/consulting-member", {
         email: profile.email,
       }),
-    refetchOnMount: false,
+    enabled: !!profile.email,
+    staleTime: 1 * 60 * 100, // 1 minutes
   });
   const queryClient = useQueryClient();
-  useEffect(() => {
-    const controller = new AbortController();
-    staffMemberQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const controller = new AbortController();
+  //   staffMemberQuery.refetch();
+  //   return () => {
+  //     controller.abort();
+  //   };
+  // }, []);
 
   dataFound.current = itemsInInventoryQuery?.data?.data;
   const optionsToRenderInSelector = () => {
@@ -166,6 +168,7 @@ const AssignmentFromExistingInventory = () => {
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
+      logistic_status: "assigned",
       company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       category_name: props.category_name,

@@ -34,6 +34,7 @@ import { onResetHelpers } from "../../../store/slices/helperSlice";
 import { onResetStripesInfo } from "../../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice";
 import { persistor } from "../../../store/Store";
+import { checkArray } from "../../../components/utils/checkArray";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
@@ -81,10 +82,16 @@ const ModalMultipleCompanies = ({
           company_name: selection,
         },
       );
+<<<<<<< claude/practical-snyder-3e5ec7
       const companyRecords =
         companyInfoTable.data.companies ?? companyInfoTable.data.company ?? [];
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyRecords.at(-1).company_id,
+=======
+      console.log(companyInfoTable)
+      const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
+        company_id: checkArray(companyInfoTable.data.companies).company_id,
+>>>>>>> main
       });
 
       const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
@@ -109,7 +116,11 @@ const ModalMultipleCompanies = ({
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
+<<<<<<< claude/practical-snyder-3e5ec7
             ...companyRecords.at(-1),
+=======
+            ...checkArray(companyInfoTable.data.companies),
+>>>>>>> main
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,

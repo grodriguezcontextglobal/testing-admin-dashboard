@@ -15,11 +15,13 @@
 
 .select-input-wrapper {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .select-input {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 30px 10px 14px;
     border: 1px solid #D0D5DD;
     border-radius: 8px;
     font-size: 16px;
@@ -28,6 +30,24 @@
     background: #fff;
     cursor: pointer;
     box-sizing: border-box;
+}
+
+.clear-button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #98A2B3;
+    padding: 0;
+    line-height: 1;
+}
+
+.clear-button:hover {
+    color: #344054;
 }
 
 .select-input:focus {

@@ -36,8 +36,8 @@ import { DevitrakName } from "../icons/DevitrakName";
 import { LogoutIcon } from "../icons/LogoutIcon";
 // import { ProfileIcon } from "../icons/ProfileIcon";
 import Input from "../UX/inputs/Input";
+import { CircleDeleteIcon } from "../icons/CircleDeleteIcon";
 import MenuIcon from "../icons/MenuIcon";
-import { TrashIcon } from "../icons/TashIcon";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
@@ -397,22 +397,6 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               onChange={(e) => onChange(e)}
               name={"searchValue"}
               value={searchValue}
-              // endAdornment={
-              //   <InputAdornment position="end">
-              //     <button
-              //       style={{
-              //         ...transparentStyle,
-              //         display:
-              //           String(searchValue)?.length > 0 ? "flex" : "none",
-              //         opacity: String(searchValue)?.length > 0 ? 1 : 0,
-              //       }}
-
-              //       onClick={() => handleResetSearchValue()}
-              //     >
-              //       <TrashIcon fill="var(--blue700)" />
-              //     </button>
-              //   </InputAdornment>
-              // }
               fullWidth
             />
           </form>
@@ -467,7 +451,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                         fontSize: "25px",
                       }}
                     >
-                      <TrashIcon />
+                      <CircleDeleteIcon/>
                     </p>
                   </div>
                 </div>

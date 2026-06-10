@@ -1,16 +1,16 @@
 import { Grid } from "@mui/material";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
-import { UpNarrowIcon } from "../../../../components/icons/UpNarrowIcon";
+import { RightSingleChevronIcon } from "../../../../components/icons/RightSingleChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { Title } from "../../../../styles/global/Title";
 import DisplayAllItemsSetInventoryEvent from "./DisplayAllItemsSetInventoryEvent";
 import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
-import HighlightedPill from "./ux/HighlightedPill";
 import gettingInventoryTotalCount from "./gettingInventoryTotalCount";
-import { useSelector } from "react-redux";
 import ImportingXLSXFile from "./ImportingXLSXFile";
+import HighlightedPill from "./ux/HighlightedPill";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
@@ -68,7 +68,7 @@ const AllInventoryEventForCustomerOnly = ({
               margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
             }}
           >
-            {showInventoryTypes ? <UpNarrowIcon /> : <DownNarrow />}
+            {showInventoryTypes ? <DownNarrow /> : <RightSingleChevronIcon /> }
             Inventory assigned to event:&nbsp;
             <HighlightedPill
               props={`${gettingInventoryTotalCount({

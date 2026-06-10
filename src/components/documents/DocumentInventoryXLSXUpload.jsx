@@ -84,7 +84,6 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 const assignable = val(["assignable", "enableAssignFeature", "enable_assign_feature"]);
                 const storedInContainer = val(["stored in container?", "isItInContainer", "is_it_in_container"]);
                 const subLocationRaw = val(["sub locations", "sub_location", "Sub Locations"]);
-                console.log("subLocationRaw:", subLocationRaw);
                 // eslint-disable-next-line no-useless-escape
                 const subLocationArray = typeof subLocationRaw === "string" ? String(subLocationRaw).replace(/[\\\[\\\]\\\"]/g, '').split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'null') : [];
                 const containerSpotLimitRaw = val(["container capacity", "containerSpotLimit", "Container Capacity"]);

@@ -7,7 +7,7 @@ import TableHeader from "../../../components/UX/TableHeader";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import BaseTable from "../../../components/UX/tables/BaseTable";
@@ -29,6 +29,7 @@ const MainTable = ({ state }) => {
   const tableStyle = {
     position: "absolute !important",
   };
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [membersData, setMembersData] = useState([]);
   const { user } = useSelector((state) => state.admin);
@@ -45,6 +46,11 @@ const MainTable = ({ state }) => {
       setMembersData(membersDataQuery?.data?.data?.members);
     }
   }, [membersDataQuery?.data?.data]);
+
+  const memberSelection = (record) => {
+    dispatch(onAddMemberInfo(record))
+    return navigate(`/member/${record?.member_id}/main`)
+  }
   const columns = [
     {
       title: "Name",
@@ -160,7 +166,9 @@ const MainTable = ({ state }) => {
               alignSelf: "flex-start",
             }}
           >
-            <Typography style={styleCellColumns}>{address}</Typography>
+            <Typography style={styleCellColumns}>
+              {String(address).trim().length < 6 ? "" : address}
+            </Typography>
           </span>
         );
       },
@@ -174,11 +182,12 @@ const MainTable = ({ state }) => {
         return (
           <span style={styleCellColumns}>
             <NavLink
-              onClick={() => dispatch(onAddMemberInfo(record))}
               to={`/member/${record?.member_id}/main`}
               state={{ referencing: state }}
             >
-              <RightNarrowInCircle />
+              <button onClick={() => memberSelection(record)} style={{ margin: 0, padding: 0, outline: "none", border: "none", background:"transparent" }}>
+                <RightNarrowInCircle />
+              </button>
             </NavLink>
           </span>
         );
@@ -200,6 +209,14 @@ const MainTable = ({ state }) => {
           rowClassName="editable-row"
           enablePagination={true}
           pageSize={10}
+          rowKey={(record) => record.member_id}
+          onRow={(record) => {
+            return {
+              onClick: () => {
+                memberSelection(record)
+              },
+            };
+          }}
         />
       )}{" "}
     </Grid>

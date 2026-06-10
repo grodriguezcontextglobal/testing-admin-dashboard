@@ -41,6 +41,8 @@ const MainBody = ({
   setValue,
   staff,
   triggerAddingAdminStaff,
+  register,
+  handleSubmit,
 }) => {
   const { isAdmin, locationsCreatePermission, locationsAssignPermission } =
     useStaffRoleAndLocations();
@@ -115,6 +117,8 @@ const MainBody = ({
                 handleAddingNewItemToDeviceSetupEvent={
                   handleAddingNewItemToDeviceSetupEvent
                 }
+                register={register}
+                handleSubmit={handleSubmit}
               />
             ) : (
               <NoMerchantService
@@ -123,6 +127,8 @@ const MainBody = ({
                 handleAddingNewItemToDeviceSetupEvent={
                   handleAddingNewItemToDeviceSetupEvent
                 }
+                register={register}
+                handleSubmit={handleSubmit}
               />
             )}
             <SelectedItemsRendered
@@ -195,6 +201,17 @@ const MainBody = ({
           eventInfoDetail={eventInfoDetail}
         />
       )}
+      {
+        displayFormToCreateCategory && <LightBlueButtonComponent
+          title={"Close form for new inventory"}
+          buttonType="button"
+          func={() =>
+            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
+          }
+          styles={{ width: "100%", margin: "1rem auto" }}
+        />
+
+      }
       {/* other services component */}
       {eventInfoDetail.merchant && (
         <Services
@@ -220,7 +237,7 @@ const MainBody = ({
         md={12}
         lg={12}
       >
-        <GrayButtonComponent
+        {!filled && <GrayButtonComponent
           title={"Skip this step"}
           disabled={
             (!eventInfoDetail.eventName && !eventInfoDetail.building) ||
@@ -228,20 +245,16 @@ const MainBody = ({
           }
           func={() => navigate("/create-event-page/review-submit")}
           styles={{ width: "100%" }}
-        />
-        <BlueButtonComponent
-          title={
-            filled
-              ? "Service fields are filled. Please clear the fields or add service to continue."
-              : "Next step"
-          }
+        />}
+        {!filled && <BlueButtonComponent
+          title={"Next step"}
           disabled={
             (!eventInfoDetail.eventName && !eventInfoDetail.building) || filled
           }
           func={(e) => handleNextStepEventSetup(e)}
           styles={{ width: "100%" }}
           titleStyles={{ textWrap: "balance", width: "100%" }}
-        />
+        />}
       </Grid>
     </Grid>
   );

@@ -19,7 +19,7 @@ const options = [
 
 const EditGroup = () => {
   const {
-    acceptAndGenerateImage,
+    // acceptAndGenerateImage,
     addingSubLocation,
     addSerialNumberField,
     allSerialNumbersOptions,
@@ -30,14 +30,15 @@ const EditGroup = () => {
     displayPreviewImage,
     displaySublocationFields,
     errors,
+    generalInfoForSelection,
     handleAddSubLocationInput,
     handleDeleteMoreInfo,
     handleMoreInfoPerDevice,
     handleRemoveSubLocationInput,
+    handleSearchByReference,
     handleSubLocationInputChange,
     handleSubmit,
     imageUrlGenerated,
-    generalInfoForSelection,
     isRented,
     keyObject,
     labeling,
@@ -69,16 +70,18 @@ const EditGroup = () => {
     setSubLocationInputs,
     setSubLocationsSubmitted,
     setSupplierModal,
+    setUpdateAll,
     setValueObject,
     subLocationInputs,
     subLocationsOptions,
     subLocationsSubmitted,
     supplierList,
     supplierModal,
+    updateAll,
+    updateGroupItems,
     user,
     valueObject,
     watch,
-    updateGroupItems
   } = useBulkActionLogic();
   return (
     <Grid
@@ -90,7 +93,7 @@ const EditGroup = () => {
       {contextHolder}
       {renderTitle()}
       <EditBulkForm
-        acceptImage={acceptAndGenerateImage}
+        // acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
         addSerialNumberField={addSerialNumberField}
         allSerialNumbersOptions={allSerialNumbersOptions}
@@ -100,6 +103,7 @@ const EditGroup = () => {
         displaySublocationFields={displaySublocationFields}
         errors={errors}
         generalInfoForSelection={generalInfoForSelection}
+        handleSearchByReference={handleSearchByReference}
         handleDeleteMoreInfo={handleDeleteMoreInfo}
         handleMoreInfoPerDevice={handleMoreInfoPerDevice}
         handleSubmit={handleSubmit}
@@ -110,6 +114,7 @@ const EditGroup = () => {
         loadingStatus={loadingStatus}
         manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
         moreInfo={moreInfo}
+        setMoreInfo={setMoreInfo}
         moreInfoDisplay={moreInfoDisplay}
         options={options}
         OutlinedInputStyle={OutlinedInputStyle}
@@ -140,10 +145,10 @@ const EditGroup = () => {
         valueObject={valueObject}
         watch={watch}
         imageUrlGenerated={imageUrlGenerated}
-        setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
-
+        updateAll={updateAll}
+        setUpdateAll={setUpdateAll}
       />
       {renderingModals({
         openScanningModal,

@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
-import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
+<<<<<<< claude/practical-snyder-3e5ec7
 import { Button as AntButton, Divider, Tag } from "antd";
 import { useContext, useState } from "react";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
@@ -11,6 +11,18 @@ import FilterOptionsUX from "../FilterOptionsUX";
 import { dicSelectedOptions, dictionary } from "../dicSelectedOptions";
 import { FilterOptionsContext } from "../../MainPage";
 
+=======
+import { Title } from "../../../../styles/global/Title";
+// import { Divider } from "antd";
+// import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
+import { useSelector } from "react-redux";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+// import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
+import { FilterOptionsContext } from "../../MainPage";
+// import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+>>>>>>> main
 const InventorySearchBar = ({
   companyHasInventoryQuery,
   handleSubmit,
@@ -19,6 +31,7 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
+<<<<<<< claude/practical-snyder-3e5ec7
 }) => {
   const filterContext = useContext(FilterOptionsContext);
   const chosen = Array.isArray(filterContext?.chosen)
@@ -39,6 +52,29 @@ const InventorySearchBar = ({
   const removeFilter = (filterToRemove) => {
     setChosenOption?.(
       chosen.filter((f) => f.category !== filterToRemove.category),
+=======
+  // refetchingQueriesFn,
+  // locationsQuery,
+  setOpenAdvanceSearchModal,
+  setOpenCheckInDevicesFromEvent,
+  setOpenDeleteItemModal,
+  setOpenShippingModal,
+  setShipmentRecordModal,
+  dataFilterOptions,
+  chosenOption,
+  setChosenOption,
+  optionsUX,
+}) => {
+  const { role, locations } = useSelector((state) => state.permission);
+  const canRenderButton =
+    role === "0" ||
+    locations?.every(
+      (location) =>
+        location.actions?.create &&
+        location.actions?.assign &&
+        location.actions?.delete &&
+        location.actions?.transfer
+>>>>>>> main
     );
   };
   const clearAllFilters = () => setChosenOption?.([]);
@@ -56,11 +92,11 @@ const InventorySearchBar = ({
     >
       <div
         style={{
-          width: "100%",
+          alignItems: "center",
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
           margin: "0px 0px 1rem 0px",
+          width: "100%",
         }}
       >
         <Typography
@@ -81,6 +117,7 @@ const InventorySearchBar = ({
         >
           Search inventory:&nbsp;
         </Typography>
+<<<<<<< claude/practical-snyder-3e5ec7
       </div>
       <div
         style={{
@@ -248,6 +285,96 @@ const InventorySearchBar = ({
         </div>
       )}
       <Divider />
+=======
+        <div style={{ alignItems: "center", display: "flex", gap: 6, justifyContent: "flex-end" }}>
+          {canRenderButton && (
+            <DangerButtonComponent
+              title="Delete group"
+              func={() => setOpenDeleteItemModal(true)}
+            />
+          )}
+          {canRenderButton && (
+            <BlueButtonComponent
+              title="Check in devices from events"
+              func={() => setOpenCheckInDevicesFromEvent(true)}
+            />
+          )}
+          {canRenderButton && (
+            <LightBlueButtonComponent
+              title="Ship out inventory"
+              func={() => setOpenShippingModal(true)}
+            />
+          )}
+          {canRenderButton && (
+            <LightBlueButtonComponent
+              title="Shipment record"
+              func={() => setShipmentRecordModal(true)}
+            />
+          )}
+        </div>
+      </div>
+      <Grid display={"flex"} spacing={1} container>
+        <Grid gap={3} item xs={12} sm={12} md={3} lg={3}>
+          <form
+            style={{ width: "100%", margin: "0px 0px 0.4rem 0px" }}
+            id="search-form"
+            onSubmit={handleSubmit(searchItem)}
+          >
+            <Input
+              {...register("searchItem")}
+              fullWidth
+              placeholder="Search device here"
+              endAdornment={adornmentButtonsComponent({
+                setParams,
+                setSearchedResult,
+                setValue,
+              })}
+            />
+          </form>
+          <LightBlueButtonComponent
+            title={"Forecast Inventory"}
+            func={() => {
+              setOpenAdvanceSearchModal(true);
+              localStorage.removeItem("searchParameters");
+            }}
+            styles={{
+              width: "100%",
+              margin: "0.5rem 0"
+            }}
+            titleStyles={{
+              textTransform: "none",
+            }}
+          />
+          {/* <GrayButtonComponent
+            title={"Refresh Tables"}
+            func={() => {
+              refetchingQueriesFn();
+              locationsQuery.refetch();
+            }}
+            styles={{
+              width: "100%",
+            }}
+            titleStyles={{
+              textTransform: "none",
+            }}
+          /> */}
+
+        </Grid>
+        <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={9} lg={9}>
+          <FilterOptionsContext.Provider
+            value={{
+              filterOptions: dataFilterOptions,
+              chosen: chosenOption,
+              setChosenOption: setChosenOption,
+            }}
+          >
+            {optionsUX}
+          </FilterOptionsContext.Provider>
+
+        </Grid>
+        {/* <Divider /> */}
+      </Grid>
+>>>>>>> main
     </Grid>
   );
 };

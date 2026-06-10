@@ -2,23 +2,31 @@ import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
+<<<<<<< claude/practical-snyder-3e5ec7
 import { createContext, useContext, useMemo, useState } from "react";
+=======
+import { createContext, useEffect, useMemo, useState } from "react";
+>>>>>>> main
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+<<<<<<< claude/practical-snyder-3e5ec7
 import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
 import RefreshIcon from "../../../../components/icons/RefreshIcon";
+=======
+import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+>>>>>>> main
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../store/slices/adminSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 import {
   displayTotalDevicesAndTotalAvailablePerLocation,
   extractDataForRendering,
@@ -110,21 +118,35 @@ const RenderingFilters = ({
   searchedResult,
   chosen,
   setTypePerLocationInfoModal,
-  setOpenDetails,
+  // setOpenDetails,
   allowedLocations,
   setFiltering,
+<<<<<<< claude/practical-snyder-3e5ec7
 }) => {
   const searchItemContext = useContext(SearchItemContext);
   const contextSetOpenAdvanceSearchModal = searchItemContext?.setOpenAdvanceSearchModal;
   const contextRefetchingQueriesFn = searchItemContext?.refetchingQueriesFn;
   const contextLocationsQuery = searchItemContext?.locationsQuery;
 
+=======
+  setOpenCreateLocationModal,
+}) => {
+  const [openDetails, setOpenDetails] = useState({});
+
+  const toggleDetails = (key) => {
+    setOpenDetails(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+  useEffect(() => {
+    console.log(openDetails);
+  }, [openDetails]);
+>>>>>>> main
   const dictionary = {
     Permanent: "Owned",
     Rent: "Leased",
     Sale: "For resale",
     Resale: "For resale",
   };
+  const { isAdmin } = useStaffRoleAndLocations();
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>
@@ -164,9 +186,9 @@ const RenderingFilters = ({
   });
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
-  const renderingCardData = user?.companyData?.employees?.find(
-    (element) => element.user === user.email
-  );
+  // const renderingCardData = user?.companyData?.employees?.find(
+  //   (element) => element.user === user.email
+  // );
   const extractedData = extractDataForRendering(
     structuredCompanyInventory?.data?.data?.groupedData || {}
   );
@@ -1071,31 +1093,31 @@ const RenderingFilters = ({
       ],
     },
   ];
-  const deepEqual = (obj1, obj2) => {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
+  // const deepEqual = (obj1, obj2) => {
+  //   const keys1 = Object.keys(obj1);
+  //   const keys2 = Object.keys(obj2);
 
-    if (keys1?.length !== keys2?.length) return false;
+  //   if (keys1?.length !== keys2?.length) return false;
 
-    return keys1.every((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
+  //   return keys1.every((key) => {
+  //     const val1 = obj1[key];
+  //     const val2 = obj2[key];
 
-      const areObjects =
-        val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
-      return areObjects ? deepEqual(val1, val2) : val1 === val2;
-    });
-  };
-  const compareArraysOfObjects = (arr1, arr2) => {
-    if (arr1?.length !== arr2?.length) return false;
+  //     const areObjects =
+  //       val1 && typeof val1 === "object" && val2 && typeof val2 === "object";
+  //     return areObjects ? deepEqual(val1, val2) : val1 === val2;
+  //   });
+  // };
+  // const compareArraysOfObjects = (arr1, arr2) => {
+  //   if (arr1?.length !== arr2?.length) return false;
 
-    const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
-    const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
+  //   const sortedArr1 = arr1.slice().sort((a, b) => a.key.localeCompare(b.key));
+  //   const sortedArr2 = arr2.slice().sort((a, b) => a.key.localeCompare(b.key));
 
-    return sortedArr1.every((obj1, index) =>
-      deepEqual(obj1, sortedArr2[index])
-    );
-  };
+  //   return sortedArr1.every((obj1, index) =>
+  //     deepEqual(obj1, sortedArr2[index])
+  //   );
+  // };
 
   return (
     <Grid key="rendering-filter-option-container" container>
@@ -1207,13 +1229,17 @@ const RenderingFilters = ({
                 alignItems: "center",
                 margin: "1rem 0 2rem",
               }}
-              open={item.open}
+              open={openDetails[item.key] ?? item.open}
             >
               <summary
+                onClick={() => toggleDetails(item.key)}
                 key={`${item.title}-*-*${index}`}
                 style={{
                   width: "100%",
                   margin: "0 0 1rem",
+                  display:"flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
                 <p
@@ -1227,7 +1253,7 @@ const RenderingFilters = ({
                     alignItems: "center",
                   }}
                 >
-                  <DownNarrow />
+                  {(openDetails[item.key]) ? <RightChevronIcon /> : <DownNarrow />}
                   &nbsp;
                   {item.title}&nbsp;{" "}
                   <span
@@ -1245,7 +1271,8 @@ const RenderingFilters = ({
                       : "units"}
                   </span>{" "}
                   &nbsp;{" "}
-                  {item.buttonFn &&
+
+                  {/* {item.buttonFn &&
                     !compareArraysOfObjects(
                       [],
                       renderingCardData.preference.inventory_location
@@ -1255,8 +1282,20 @@ const RenderingFilters = ({
                           Update locations preferences
                         </p>
                       </button>
-                    )}
+                    )} */}
                 </p>
+                {item.key === "location_1" && isAdmin && (<BlueButtonComponent
+                  title={"Create Location"}
+                  styles={{ with: "100%" }}
+                  buttonType="button"
+                  titleStyles={{
+                    textTransform: "none",
+                    with: "100%",
+                    gap: "2px",
+                  }}
+                  func={() => setOpenCreateLocationModal(true)}
+                />)}
+
               </summary>
               <Grid item xs={12} sm={12} md={12} lg={12}>
                 <Grid container>

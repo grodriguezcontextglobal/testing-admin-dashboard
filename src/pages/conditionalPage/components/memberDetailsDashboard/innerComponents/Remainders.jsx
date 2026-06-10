@@ -30,9 +30,15 @@ const Remainders = () => {
   };
   const navigate = useNavigate()
   const handleSubmitEmailNotification = async (data) => {
+    const isMinor = memberInfo?.minor === 1;
+    const consumerEmails = [memberInfo?.email];
+    if (isMinor && memberInfo?.parent_guardian_email) {
+      consumerEmails.push(memberInfo.parent_guardian_email);
+    }
+
     const emailNotificationProfile = {
-      consumer: memberInfo?.email,
-      subject: data.subject,
+      consumer: consumerEmails,
+      subject: `${data.subject} - Notification from ${user.companyData.company_name}`,
       message: message,
       eventSelected: "",
       company: user.companyData.company_name,
@@ -49,6 +55,7 @@ const Remainders = () => {
       return navigate(`/member/${memberInfo?.member_id}/main`);
     }
   };
+  const isMinorWithGuardian = memberInfo?.minor === 1 && memberInfo?.parent_guardian_email;
   return (
     <Grid
       display={"flex"}
@@ -70,7 +77,10 @@ const Remainders = () => {
         md={10}
         lg={10}
       >
-        <p style={Subtitle}>This email will be sent to {memberInfo?.email}.</p>
+        <p style={Subtitle}>
+          This email will be sent to {memberInfo?.email}
+          {isMinorWithGuardian && ` and ${memberInfo.parent_guardian_email}`}.
+        </p>
       </Grid>
       <Grid
         display={"flex"}

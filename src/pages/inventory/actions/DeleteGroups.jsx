@@ -2,7 +2,7 @@ import { Box, FormControlLabel, Radio, RadioGroup, Typography } from "@mui/mater
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { devitrakApi } from "../../../api/devitrakApi";
-import DangerButton from "../../../components/UX/buttons/DangerButton";
+import BlueButtonConfirmationComponent from "../../../components/UX/buttons/BlueButtonConfirmation";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
@@ -89,27 +89,6 @@ const DeleteGroups = ({ openModal, closeModal, refetch, user }) => {
         return deleteMutation.mutate(itemsToDelete);
     };
     const bodyModl = <form id="delete-form">
-        {/* <Box
-         display="flex"
-         justifyContent="center"
-         alignItems="center"
-         style={{
-             minHeight: "100vh",
-             position: "absolute",
-             top: 0,
-             left: 0,
-             width: "100%",
-             height: "100%",
-             backgroundColor: "rgba(0, 0, 0, 0.5)",
-             zIndex: 1,
-         }}
-     >
-         <Paper
-             style={{
-                 width: screens.xs ? "90%" : "50%",
-                 padding: "2rem",
-             }}
-         > */}
         < Typography variant="h6">Delete Item Groups</Typography>
         <div style={{ margin: "1rem 0" }}>
             <RadioGroup
@@ -157,21 +136,26 @@ const DeleteGroups = ({ openModal, closeModal, refetch, user }) => {
                 />
             </div>
         }
-        {/* </Paper>
-     </Box> */}
     </form >
     return (
-        <ModalUX openDialog={openModal} closeModal={() => closeModal(false)} body={bodyModl} footer={<Box display="flex" justifyContent="flex-end" style={{ gap: "1rem", marginTop: "1rem" }}>
-            <GrayButtonComponent func={() => closeModal(false)} title="Cancel" />
-            <DangerButton
-                title="Delete"
-                func={handleDelete}
-                isDisabled={isDeleteDisabled()}
-                isLoading={deleteMutation.isPending}
-                buttonType="submit"
-                form="delete-form"
-            />
-        </Box>
+        <ModalUX openDialog={openModal} closeModal={() => closeModal(false)} body={bodyModl} footer={
+            <Box display="flex" justifyContent="flex-end" style={{ gap: "1rem", marginTop: "1rem" }}>
+                <GrayButtonComponent buttonType="reset" func={() => closeModal(false)} title="Cancel" styles={{ width: "50%" }} />
+                <BlueButtonConfirmationComponent
+                    title="Delete"
+                    func={(e) => {
+                        e.preventDefault();
+                        handleDelete();
+                    }}
+                    isDisabled={isDeleteDisabled()}
+                    isLoading={deleteMutation.isPending}
+                    buttonType="submit"
+                    form="delete-form"
+                    confirmationTitle="Are you sure you want to delete this item group?"
+                    confirmationDescription="This action cannot be undone."
+                    styles={{ width: "50%" }}
+                />
+            </Box>
         } />
     );
 };

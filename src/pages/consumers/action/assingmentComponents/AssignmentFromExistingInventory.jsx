@@ -68,6 +68,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
+        logistic_status:"in-stock"
       }),
     enabled: !!user.sqlInfo.company_id,
     staleTime: 1 * 60 * 100, // 1 minutes

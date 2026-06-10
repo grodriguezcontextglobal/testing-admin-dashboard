@@ -26,7 +26,7 @@ const RefreshButton = ({ propsFn = null }) => {
           padding: "0px",
         }}
       >
-        <Icon icon="jam:refresh" /> Refresh
+        <Icon icon="jam:refresh" /> Refresh table
       </p>
     </Button>
   );

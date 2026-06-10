@@ -1,13 +1,16 @@
 import { Grid } from "@mui/material";
+<<<<<<< claude/practical-snyder-3e5ec7
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
 import RefreshIcon from "../../../../components/icons/RefreshIcon";
+=======
+// import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+>>>>>>> main
 
-const ButtonsSearchAndReload = ({
-  setOpenAdvanceSearchModal,
-  refetchingQueriesFn,
-  locationsQuery,
-}) => {
+// setOpenAdvanceSearchModal,
+// refetchingQueriesFn,
+// locationsQuery,
+const ButtonsSearchAndReload = () => {
   return (
     <Grid
       display={"flex"}
@@ -24,6 +27,7 @@ const ButtonsSearchAndReload = ({
         top: 0,
       }}
     >
+<<<<<<< claude/practical-snyder-3e5ec7
       <GrayButtonComponent
         title={"Forecast Inventory"}
         iconLeading={<CalendarCheckIcon />}
@@ -55,6 +59,8 @@ const ButtonsSearchAndReload = ({
           textTransform: "none",
         }}
       />
+=======
+>>>>>>> main
     </Grid>
   );
 };
