@@ -3,22 +3,25 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
+import TableHeader from "../../../components/UX/TableHeader";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 import "../../../styles/global/ant-table.css";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
 import { columns } from "./detailTableComponents/columns";
-import BaseTable from "../../../components/UX/tables/BaseTable";
-import TableHeader from "../../../components/UX/TableHeader";
-import RefreshButton from "../../../components/utils/UX/RefreshButton";
+import { useLocation } from "react-router-dom";
 const DetailMemberInfo = () => {
-  const { memberInfo } = useSelector((state) => state.member);
+  // const { memberInfo } = useSelector((state) => state.member);
   const { user } = useSelector((state) => state.admin);
   const [editing, setEditing] = useState([]);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checked, setChecked] = useState(false);
   const [storedRecord, setStoredRecord] = useState(null);
-  const memberId = memberInfo?.member_id;
+  const location = useLocation();
+  const memberId = location.pathname.split("/")[2]
+  const [devicesAssignedActiveData, setDevicesAssignedActiveData] = useState([])
   const devicesAssignedActive = useQuery({
     queryKey: ["devicesAssignedActive"],
     queryFn: () =>
@@ -27,7 +30,16 @@ const DetailMemberInfo = () => {
         company_id: user.sqlInfo.company_id,
       }),
     enabled: !!memberId && !!user.sqlInfo.company_id,
+    onSuccess: (data) => {
+      setDevicesAssignedActiveData(data?.data?.rows || [])
+    },
   });
+  // useEffect(() => {
+  //   if (memberId) {
+  //     devicesAssignedActive.refetch()
+  //   }
+  // }, [memberId]);
+
   const queryClient = useQueryClient();
   const bodyModal = (
     <ReturnOptions
@@ -96,7 +108,7 @@ const DetailMemberInfo = () => {
             setStoredRecord,
           })}
           style={{ width: "100%" }}
-          dataSource={devicesAssignedActive?.data?.data?.rows || []}
+          dataSource={devicesAssignedActiveData}
           enablePagination={true}
         />
       </Grid>

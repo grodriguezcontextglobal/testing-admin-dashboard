@@ -69,7 +69,7 @@ const ItemTable = ({
   // total,
   // searchedResult,
   dataFilterOptions,
-  // refreshFn,
+  setOpenCreateLocationModal,
   setTypePerLocationInfoModal,
   setOpenDetails,
   allowedLocations,
@@ -145,6 +145,7 @@ const ItemTable = ({
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const getDataStructuringFormat = useCallback(
     (props) => {
+      // console.log(props)
       const resultFormatToDisplay = new Map();
       const groupingBySerialNumber = groupBy(
         itemsInInventoryQuery?.data?.data?.items,
@@ -173,6 +174,7 @@ const ItemTable = ({
                 image_url:
                   groupingBySerialNumber[data.serial_number].at(-1).image_url ??
                   null,
+                logistic_status: groupingBySerialNumber[data.serial_number].at(-1).logistic_status,
               };
               resultFormatToDisplay.set(data.item_id, valu);
             }
@@ -209,6 +211,7 @@ const ItemTable = ({
       const itemId = data.item_id || data.id;
 
       if (itemId) {
+        // console.log("itemId",itemId)
         const row = {
           key: itemId,
           item_id: itemId,
@@ -227,6 +230,8 @@ const ItemTable = ({
           condition: data.status ?? null,
           assignedToStaffMember:
             data.usage && data.usage.length > 0 ? data.usage : null,
+          data: data,
+          logistic_status: data.logistic_status ?? null,
         };
         rowMap.set(itemId, row);
       }
@@ -321,6 +326,7 @@ const ItemTable = ({
         4: "ownership",
         5: "condition",
         6: "assignedToStaffMember",
+        7: "logistic_status",
       };
       if (
         !Array.isArray(searchValues?.chosenOption) ||
@@ -329,6 +335,7 @@ const ItemTable = ({
         return baseDataset;
       return baseDataset.filter((item) =>
         searchValues?.chosenOption.every((filter) => {
+          // console.log(filter)
           const propertyKey = dicSelectedOptions[filter.category];
           if (filter.category === 6) {
             return item?.[propertyKey]?.includes(filter.value);
@@ -347,6 +354,7 @@ const ItemTable = ({
     baseDataset,
     searchResult,
   ]);
+  // console.log(dataToDisplayMemo)
 
   // Provide a stable accessor for components expecting a function
   // const dataToDisplay = useCallback(
@@ -370,6 +378,7 @@ const ItemTable = ({
             `${employee.firstName} ${employee.lastName} / ${employee.user}`,
         ),
       ],
+      7: filterOptionsBasedOnProps("logistic_status"),
     });
     if (Array.isArray(dataToDisplayMemo) && dataToDisplayMemo.length > 0) {
       downloadDataReport(dataToDisplayMemo);
@@ -385,28 +394,29 @@ const ItemTable = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
-          <Grid
-            display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <RenderingFilters
-              dataToDisplay={dataToDisplayMemo}
-              searchItem={searchValues?.searchItem}
-              user={user}
-              openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
-              setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-              searchedResult={searchValues?.searchedResult}
-              chosen={searchValues?.chosenOption}
-              setFiltering={searchValues?.setChosenOption}
-              setTypePerLocationInfoModal={setTypePerLocationInfoModal}
-              setOpenDetails={setOpenDetails}
-              allowedLocations={allowedLocations}
-            />
-          </Grid>
+        <Grid
+          display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
+          item
+          xs={12}
+          sm={12}
+          md={12}
+          lg={12}
+        >
+          <RenderingFilters
+            dataToDisplay={dataToDisplayMemo}
+            searchItem={searchValues?.searchItem}
+            user={user}
+            openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
+            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+            searchedResult={searchValues?.searchedResult}
+            chosen={searchValues?.chosenOption}
+            setFiltering={searchValues?.setChosenOption}
+            setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+            setOpenDetails={setOpenDetails}
+            allowedLocations={allowedLocations}
+            setOpenCreateLocationModal={setOpenCreateLocationModal}
+          />
+        </Grid>
         <Grid
           flexDirection={"column"}
           justifyContent={"flex-start"}
@@ -438,13 +448,8 @@ const ItemTable = ({
                 rightCta={<DownloadingXlslFile props={dataToDisplayMemo} />}
               />
               <BaseTable
-                pagination={{
-                  position: ["bottomCenter"],
-                  pageSizeOptions: [10, 20, 30, 50, 100],
-                  total: dataToDisplayMemo.length,
-                  defaultPageSize: 10,
-                  defaultCurrent: 1,
-                }}
+                enablePagination={true}
+                pageSize={10}
                 style={{ width: "100%" }}
                 columns={ColumnsFormat({
                   dictionary,
@@ -453,7 +458,15 @@ const ItemTable = ({
                   userPreferences, // Pass preferences to column formatter for action buttons
                 })}
                 dataSource={dataToDisplayMemo}
-                rowKey={(record) => record.item_id || record.key}
+                rowKey={(record) => record.item_id}
+                onRow={(record) => {
+                  return {
+                    onClick: () => {
+                      navigate(`/inventory/item?id=${record.item_id}`)
+                    },
+                  };
+                }}
+
               />
               <Divider />
             </Grid>

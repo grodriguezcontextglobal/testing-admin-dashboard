@@ -24,16 +24,23 @@ const headerAliasMap = {
   phone: ["phone", "phone_number", "phonenumber", "mobile"],
   "external id": ["external_id", "external id", "id"],
   address: ["address", "addr"],
-  street: ["address_street", "street", "addr_street", "addres_street"], // handle common typo addres_street
+  street: ["address_street", "street", "addr_street", "addres_street"],
   city: ["address_city", "city", "addr_city"],
   state: ["address_state", "state", "addr_state", "province"],
-  zip: [
-    "address_zip",
-    "zip",
-    "zip_code",
-    "zipcode",
-    "postal_code",
-    "address_zip_code",
+  zip: ["address_zip", "zip", "zip_code", "zipcode", "postal_code"],
+  minor: ["minor", "is_minor"],
+  "parent guardian first name": [
+    "parent_guardian_first_name",
+    "guardian_first_name",
+  ],
+  "parent guardian last name": [
+    "parent_guardian_last_name",
+    "guardian_last_name",
+  ],
+  "parent guardian email": ["parent_guardian_email", "guardian_email"],
+  "parent guardian phone number": [
+    "parent_guardian_phone_number",
+    "guardian_phone",
   ],
 };
 
@@ -41,8 +48,6 @@ const resolveKey = (normalizedKey) => {
   for (const target in headerAliasMap) {
     if (headerAliasMap[target].includes(normalizedKey)) return target;
   }
-  // Special case: some sheets use address_zip_code
-  if (normalizedKey === "address_zip_code") return "address_zip";
   return null;
 };
 
@@ -53,13 +58,9 @@ const MultipleFromXLSX = ({ companyId = null }) => {
   const [columnsDetected, setColumnsDetected] = useState([]);
   const [importing, setImporting] = useState(false);
   const { user } = useSelector((state) => state.admin);
+
   const requiredCore = useMemo(
     () => ["first name", "last name", "email", "phone"],
-    []
-  );
-  const optionalCombinedAddress = "address";
-  const optionalAddressParts = useMemo(
-    () => ["street", "city", "state", "zip"],
     []
   );
 
@@ -72,7 +73,6 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       inputRows.forEach((row, idx) => {
         const normalizedRow = {};
 
-        // Map headers through alias map
         Object.entries(row).forEach(([k, v]) => {
           const nk = normalizeHeader(k);
           const target = resolveKey(nk);
@@ -82,7 +82,6 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           }
         });
 
-        // Check core required fields
         const missingCore = requiredCore.filter((k) => !normalizedRow[k]);
         if (missingCore.length) {
           errs.push(
@@ -92,14 +91,24 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           );
         }
 
-        // Address handling: either combined or parts (accept either)
-        const hasCombined = Boolean(normalizedRow[optionalCombinedAddress]);
-        const hasParts = optionalAddressParts.every((k) => normalizedRow[k]);
-        if (!hasCombined && !hasParts) {
-          // address is optional overall, but we’ll still try to build from any partials
+        const isMinor = /true|1|yes/i.test(String(normalizedRow.minor));
+        if (isMinor) {
+          if (!normalizedRow["parent guardian first name"])
+            errs.push(`Row ${idx + 1}: Guardian first name is required for minors.`);
+          if (!normalizedRow["parent guardian last name"])
+            errs.push(`Row ${idx + 1}: Guardian last name is required for minors.`);
+          if (!normalizedRow["parent guardian email"])
+            errs.push(`Row ${idx + 1}: Guardian email is required for minors.`);
+          if (!normalizedRow["parent guardian phone number"])
+            errs.push(
+              `Row ${idx + 1}: Guardian phone number is required for minors.`
+            );
         }
 
-        // Build final schema row
+        const hasParts = ["street", "city", "state", "zip"].every((k) =>
+          Boolean(normalizedRow[k])
+        );
+
         const out = {
           first_name: normalizedRow["first name"] || "",
           last_name: normalizedRow["last name"] || "",
@@ -116,6 +125,14 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           address_state: normalizedRow.state || "",
           address_zip: normalizedRow.zip || "",
           company_id: user?.sqlInfo?.company_id || companyId,
+          minor: isMinor,
+          parent_guardian_first_name:
+            normalizedRow["parent guardian first name"] || "",
+          parent_guardian_last_name:
+            normalizedRow["parent guardian last name"] || "",
+          parent_guardian_email: normalizedRow["parent guardian email"] || "",
+          parent_guardian_phone_number:
+            normalizedRow["parent guardian phone number"] || "",
         };
 
         normalized.push(out);
@@ -125,7 +142,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       setColumnsDetected(Array.from(detectedSet));
       setRows(normalized);
     },
-    [companyId, optionalAddressParts, optionalCombinedAddress, requiredCore]
+    [companyId, requiredCore, user?.sqlInfo?.company_id]
   );
 
   const handleFileChange = async (e) => {
@@ -170,29 +187,27 @@ const MultipleFromXLSX = ({ companyId = null }) => {
     }
   };
 
-  // Pagination state and helpers for preview table
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const totalPages = useMemo(() => {
-    if (!rows.length) return 1;
-    return Math.max(1, Math.ceil(rows.length / pageSize));
-  }, [rows, pageSize]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(rows.length / pageSize)),
+    [rows, pageSize]
+  );
   const pagedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    return rows.slice(start, end);
+    return rows.slice(start, start + pageSize);
   }, [rows, page, pageSize]);
+
   const goPrev = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
   const goNext = useCallback(
     () => setPage((p) => Math.min(totalPages, p + 1)),
     [totalPages]
   );
   const onPageSizeChange = useCallback((val) => {
-    const num = parseInt(val, 10);
-    setPageSize(Number.isNaN(num) ? 10 : num);
+    setPageSize(parseInt(val, 10) || 10);
     setPage(1);
   }, []);
-  // Reset to first page when dataset changes
+
   useEffect(() => {
     setPage(1);
   }, [rows]);
@@ -205,7 +220,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           accept=".xlsx,.xls,.csv"
           onChange={handleFileChange}
         />
-        {fileName ? <span>{fileName}</span> : null}
+        {fileName && <span>{fileName}</span>}
         <GrayButtonComponent
           func={handleClear}
           style={{ marginLeft: "auto", width: "fit-content" }}
@@ -217,24 +232,28 @@ const MultipleFromXLSX = ({ companyId = null }) => {
         <div>Mandatory columns:</div>
         <ul>
           <li>first name, last name, email, phone</li>
+          <li>
+            If minor is true, guardian first name, last name, email, and phone
+            are required.
+          </li>
         </ul>
       </div>
 
-      {columnsDetected.length ? (
+      {columnsDetected.length > 0 && (
         <div>
           <div>Detected columns: {columnsDetected.join(", ")}</div>
         </div>
-      ) : null}
+      )}
 
-      {errors.length ? (
+      {errors.length > 0 && (
         <div style={{ color: "crimson" }}>
           {errors.map((e, i) => (
             <div key={i}>{e}</div>
           ))}
         </div>
-      ) : null}
+      )}
 
-      {rows.length ? (
+      {rows.length > 0 && (
         <div>
           <div
             style={{
@@ -287,44 +306,38 @@ const MultipleFromXLSX = ({ companyId = null }) => {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th>first name</th>
-                  <th>last name</th>
-                  <th>email</th>
-                  <th>phone</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
                   <th>External ID</th>
-                  <th>address</th>
-                  <th>street</th>
-                  <th>city</th>
-                  <th>state</th>
-                  <th>zip</th>
+                  <th>Address</th>
+                  <th>Minor</th>
+                  <th>Guardian Name</th>
+                  <th>Guardian Email</th>
+                  <th>Guardian Phone</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedRows.map((r, i) => (
                   <tr key={i}>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.first_name}
-                    </td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.last_name}
-                    </td>
+                    <td style={{ borderTop: "1px solid #ddd" }}>{r.first_name}</td>
+                    <td style={{ borderTop: "1px solid #ddd" }}>{r.last_name}</td>
                     <td style={{ borderTop: "1px solid #ddd" }}>{r.email}</td>
                     <td style={{ borderTop: "1px solid #ddd" }}>{r.phone}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.external_id}
-                    </td>
+                    <td style={{ borderTop: "1px solid #ddd" }}>{r.external_id}</td>
                     <td style={{ borderTop: "1px solid #ddd" }}>{r.address}</td>
                     <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.address_street}
+                      {r.minor ? "Yes" : "No"}
                     </td>
                     <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.address_city}
+                      {r.parent_guardian_first_name} {r.parent_guardian_last_name}
                     </td>
                     <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.address_state}
+                      {r.parent_guardian_email}
                     </td>
                     <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.address_zip}
+                      {r.parent_guardian_phone_number}
                     </td>
                   </tr>
                 ))}
@@ -332,7 +345,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
             </table>
           </div>
         </div>
-      ) : null}
+      )}
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
         <BlueButtonComponent

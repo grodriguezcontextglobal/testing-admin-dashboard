@@ -414,33 +414,34 @@ export default function Dropdown({
                 key={item.key}
                 type="button"
                 role="menuitem"
+                aria-disabled={isDisabled}
                 data-disabled={isDisabled ? "true" : "false"}
-                className={`ud-item ${isDisabled ? "is-disabled" : ""} ${isSelected ? "is-selected" : ""}`}
+                className={`ud-item ${isDisabled ? "is-disabled" : ""} ${isSelected ? "is-selected" : ""
+                  }`}
                 onClick={() => handleSelect(item)}
-                disabled={false} // Keep focusable
+                disabled={false}
                 tabIndex={-1}
-              >
-                {renderOption ? (
-                  renderOption(item, {
-                    selected: isSelected,
-                    disabled: isDisabled,
-                  })
-                ) : (
-                  <>
-                    {item.icon && (
-                      <span className="ud-item-icon">{item.icon}</span>
-                    )}
-                    <span className="ud-item-label">{item.label}</span>
-                    {item.addon && (
-                      <span className="ud-item-addon">{item.addon}</span>
-                    )}
-                    {isSelected && (
+              >                {renderOption ? (
+                renderOption(item, {
+                  selected: isSelected,
+                  disabled: isDisabled,
+                })
+              ) : (
+                <>
+                  {item.icon && (
+                    <span className="ud-item-icon">{item.icon}</span>
+                  )}
+                  <span className="ud-item-label">{item.label}</span>
+                  {item.addon && (
+                    <span className="ud-item-addon">{item.addon}</span>
+                  )}
+                  {/* {isSelected && (
                       <span className="ud-item-check">
                         <CheckIcon />
                       </span>
-                    )}
-                  </>
-                )}
+                    )} */}
+                </>
+              )}
               </button>
             );
           })}
@@ -486,26 +487,26 @@ function DotsIcon() {
     </svg>
   );
 }
-function CheckIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-      style={{ marginLeft: "auto" }}
-    >
-      <path
-        d="M16.6666 5L7.49992 14.1667L3.33325 10"
-        stroke="currentColor"
-        strokeWidth="1.66667"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+// function CheckIcon() {
+//   return (
+//     <svg
+//       width="16"
+//       height="16"
+//       viewBox="0 0 20 20"
+//       fill="none"
+//       aria-hidden="true"
+//       style={{ marginLeft: "auto" }}
+//     >
+//       <path
+//         d="M16.6666 5L7.49992 14.1667L3.33325 10"
+//         stroke="currentColor"
+//         strokeWidth="1.66667"
+//         strokeLinecap="round"
+//         strokeLinejoin="round"
+//       />
+//     </svg>
+//   );
+// }
 
 // --- PropTypes ---
 Dropdown.propTypes = {

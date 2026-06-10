@@ -71,9 +71,10 @@ const AddNewBulkItems = () => {
     renderingOptionsForSubLocations,
     addingSubLocation,
     manuallyAddingSerialNumbers,
-    acceptAndGenerateImage,
+    // acceptAndGenerateImage,
     user,
     setMoreInfo,
+    handleSearchByReference,
   } = useBulkActionLogic();
   return (
     <Grid
@@ -85,7 +86,7 @@ const AddNewBulkItems = () => {
       {contextHolder}
       {renderTitle()}
       <BulkItemForm
-        acceptImage={acceptAndGenerateImage}
+        // acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
         addSerialNumberField={addSerialNumberField}
         allSerialNumbersOptions={allSerialNumbersOptions}
@@ -137,7 +138,7 @@ const AddNewBulkItems = () => {
         setMoreInfo={setMoreInfo}
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
-
+        handleSearchByReference={handleSearchByReference}
       />
       {renderingModals({
         openScanningModal,

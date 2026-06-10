@@ -3,11 +3,23 @@ import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
 import { useMemo, useCallback, memo, useContext } from "react";
 import { FilterOptionsContext } from "../MainPage";
+// import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+// import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+export const dicForLogisticStatus = {
+  "in-transit": "In transit",
+  "in-stock": "In stock",
+  "shipped": "Shipped",
+  "in-event": "In event",
+  "assigned": "Assigned",
+  "in-reserved": "Reserved",
+  "reserved": "Reserved",
+}
 
 const FilterOptionsUX = memo(function FilterOptionsUX({
   // filterOptions = {},
   // chosen,
   setChosen,
+  // setOpenAdvanceSearchModal,
 }) {
   const filterOptionsValues = useContext(FilterOptionsContext)
   // Helper: current value for a specific category
@@ -55,7 +67,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
 
   // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
-    return new Array(7).fill(null).map((_, index) => {
+    return new Array(8).fill(null).map((_, index) => {
       const opts = Array.isArray(filterOptionsValues?.filterOptions[index])
         ? filterOptionsValues?.filterOptions[index]
         : [];
@@ -74,7 +86,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
                 justifyContent: "flex-start",
               }}
             >
-              {item}
+              {index === 7 ? dicForLogisticStatus[item] : item}
             </div>
           ),
         };
@@ -83,70 +95,72 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
   }, [filterOptionsValues?.filterOptions]);
 
   return (
-    <div
-      style={{
-        display: "grid",
-        width: "100%",
-        gap: "8px",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      }}
-    >
-      {new Array(7).fill(null).map((_, index) => {
-        const currentValue = getCurrentValue(index);
+    // <div style={{ width:"100%", alignSelf:"flex-start", height:"100%"}}>
+      <div
+        style={{
+          display: "grid",
+          width: "100%",
+          gap: "8px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+        }}
+      >
+        {new Array(8).fill(null).map((_, index) => {
+          const currentValue = getCurrentValue(index);
 
-        const onChange = (value) => {
-          if (value === currentValue) return;
-          updateChosenFilters(index, value);
-        };
+          const onChange = (value) => {
+            if (value === currentValue) return;
+            updateChosenFilters(index, value);
+          };
 
-        const onClear = () => {
-          if (currentValue == null) return;
-          updateChosenFilters(index, null);
-        };
+          const onClear = () => {
+            if (currentValue == null) return;
+            updateChosenFilters(index, null);
+          };
 
-        return (
-          <Select
-            style={{
-              margin: "0 5px 0 0",
-              width: "100%",
-              fontSize: "14px",
-              fontWeight: 600,
-              fontFamily: "Inter, sans-serif",
-            }}
-            key={index}
-            title={dicSelectedOptions[index]}
-            prefix={dicSelectedOptions[index]}
-            suffixIcon={
-              <Icon
-                icon="fluent:chevron-down-12-filled"
-                style={{ color: "var(--gray-600, #475467)" }}
-              />
-            }
-            popupClassName="no-indent-options"
-            optionLabelProp="label"
-            value={currentValue}
-            options={selectOptionsByIndex[index]}
-            allowClear
-            onClear={onClear}
-            onChange={onChange}
-            showSearch
-            optionFilterProp="value"
-            filterOption={(input, option) => {
-              const val = (option?.value ?? "").toString();
-              return val
-                .toLowerCase()
-                .includes((input ?? "").trim().toLowerCase());
-            }}
-            virtual={true}
-            placeholder={
-              dicSelectedOptions[index] !== "Serial Number"
-                ? null
-                : "Type or scan"
-            }
-          />
-        );
-      })}
-    </div>
+          return (
+            <Select
+              style={{
+                margin: "0 5px 0 0",
+                width: "100%",
+                fontSize: "14px",
+                fontWeight: 600,
+                fontFamily: "Inter, sans-serif",
+              }}
+              key={index}
+              title={dicSelectedOptions[index]}
+              prefix={dicSelectedOptions[index]}
+              suffixIcon={
+                <Icon
+                  icon="fluent:chevron-down-12-filled"
+                  style={{ color: "var(--gray-600, #475467)" }}
+                />
+              }
+              popupClassName="no-indent-options"
+              optionLabelProp="label"
+              value={currentValue}
+              options={selectOptionsByIndex[index]}
+              allowClear
+              onClear={onClear}
+              onChange={onChange}
+              showSearch
+              optionFilterProp="value"
+              filterOption={(input, option) => {
+                const val = (option?.value ?? "").toString();
+                return val
+                  .toLowerCase()
+                  .includes((input ?? "").trim().toLowerCase());
+              }}
+              virtual={true}
+              placeholder={
+                dicSelectedOptions[index] !== "Serial Number"
+                  ? null
+                  : "Type or scan"
+              }
+            />
+          );
+        })}
+      </div>
+    // </div>
   );
 });
 

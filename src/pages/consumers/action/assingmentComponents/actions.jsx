@@ -13,6 +13,7 @@ export const updateDeviceInWarehouse = ({
     const updateItemsInWarehouse = async () => {
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: 0,
+        logistic_status: "allocated",
         company_id: user.sqlInfo.company_id,
         item_group: item_group,
         category_name: category_name,
@@ -128,16 +129,15 @@ export const createDeviceRecordInNoSQLDatabase = ({
           id: db[index].item_id,
         });
       }
-      {
-        addContracts &&
-          emailContractToStaffMember({
-            customer,
-            user,
-            contractList,
-            stampTime,
-            verificationInfo,
-            items,
-          });
+      if (addContracts) {
+        await emailContractToStaffMember({
+          customer,
+          user,
+          contractList,
+          stampTime,
+          verificationInfo,
+          items,
+        });
       }
       return null;
     };
@@ -146,7 +146,7 @@ export const createDeviceRecordInNoSQLDatabase = ({
     console.log(error);
   }
 };
-export const addDeviceToEvent = ({
+export const addDeviceToEvent = async ({
   selectedList,
   newEventInfo,
   queryClient,
@@ -160,7 +160,7 @@ export const addDeviceToEvent = ({
         });
       }
     };
-    insertingDeviceSQL();
+    await insertingDeviceSQL();
     queryClient.invalidateQueries({
       queryKey: ["staffMemberInfo"],
       exact: true,
@@ -414,7 +414,7 @@ export const transactionDeviceAdded = ({
           type: "lease",
         };
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
-        deviceInfo.forEach((item) => {
+        for (const item of deviceInfo) {
           const deviceFormat = {
             serialNumber: item.serial_number,
             deviceType: item.item_group,
@@ -431,13 +431,10 @@ export const transactionDeviceAdded = ({
             user.companyData.id,
             verificationInfo.noSql.eventId
           );
-          const fetchingNewDeviceTransaction = async () => {
-            return await devitrakApi.post("/receiver/receiver-assignation", {
-              ...transaction.render(),
-            });
-          };
-          fetchingNewDeviceTransaction();
-        });
+          await devitrakApi.post("/receiver/receiver-assignation", {
+            ...transaction.render(),
+          });
+        }
       }
     };
     return createTransaction();

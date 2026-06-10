@@ -62,6 +62,14 @@ const SelectComponent = ({
     }
   };
 
+  const handleClear = () => {
+    setSearchTerm("");
+    setIsOpen(false);
+    if (onSelect) {
+      onSelect(null);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -94,6 +102,11 @@ const SelectComponent = ({
           onClick={() => setIsOpen(!isOpen)}
           onChange={handleInputChange}
         />
+        {searchTerm && (
+          <button className="clear-button" onClick={handleClear}>
+            &times;
+          </button>
+        )}
       </div>
       {hint && <p className="select-hint">{hint}</p>}
       {isOpen && (

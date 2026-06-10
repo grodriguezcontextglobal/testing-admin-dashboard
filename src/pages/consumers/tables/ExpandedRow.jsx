@@ -203,7 +203,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
       }
       return setActionInProgress(false);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setActionInProgress(false);
       return message.error(error.message);
     }
@@ -259,7 +259,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         return setInfoNeededToBeRenderedInTable(template);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -355,6 +355,10 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     );
   };
 
+  const showActions = dataRendering()?.some(
+    (item) => item.status !== false
+  );
+
   const columns = [
     {
       title: "Device name",
@@ -392,11 +396,12 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             "string",
             "error",
             "success",
-            "primary",
+            "primary"
           )}
           label={
             <p
               style={{
+                ...Subtitle,
                 color: "inherit",
                 fontFamily: "Inter",
                 fontSize: "12px",
@@ -412,46 +417,49 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         />
       ),
     },
-    {
+
+    showActions && {
       title: "Actions",
       key: "operation",
       responsive: ["xs", "sm", "md", "lg"],
-      render: (record) => (
-        <Space
-          size="middle"
-          style={{
-            display: `${typeof record.status !== "string" && record.status && "flex"
-              }`,
-            justifyContent: "flex-end",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          {typeof record.status !== "string" ? (
-            <ExpandedRowTableButtons
-              record={record}
-              handleReturnItemInTransaction={handleReturnItemInTransaction}
-              handleLostSingleDevice={handleLostSingleDevice}
-              handleReturnItemFromLeaseTransaction={
-                handleReturnItemFromLeaseTransaction
-              }
-              ReverseRightArrow={ReverseRightArrow}
-              refetchingAfterAction={refetchingQueries}
-              LostIcon={Lost}
-            />
-          ) : (
-            <ExpandedLostButton
-              record={record}
-              handleFoundSingleDevice={handleLostSingleDevice}
-              handleLostSingleDevice={lostFeeChargeCustomer}
-              Lost={Lost}
-              refetchingAfterAction={refetchingQueries}
-            />
-          )}
-        </Space>
-      ),
+      render: (record) => {
+        if (record.status === false) return null;
+
+        return (
+          <Space
+            size="middle"
+            style={{
+              justifyContent: "flex-end",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            {typeof record.status !== "string" ? (
+              <ExpandedRowTableButtons
+                record={record}
+                handleReturnItemInTransaction={handleReturnItemInTransaction}
+                handleLostSingleDevice={handleLostSingleDevice}
+                handleReturnItemFromLeaseTransaction={
+                  handleReturnItemFromLeaseTransaction
+                }
+                ReverseRightArrow={ReverseRightArrow}
+                refetchingAfterAction={refetchingQueries}
+                LostIcon={Lost}
+              />
+            ) : (
+              <ExpandedLostButton
+                record={record}
+                handleFoundSingleDevice={handleLostSingleDevice}
+                handleLostSingleDevice={lostFeeChargeCustomer}
+                Lost={Lost}
+                refetchingAfterAction={refetchingQueries}
+              />
+            )}
+          </Space>
+        );
+      },
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <div style={{ gap: "10px" }}>
@@ -471,6 +479,8 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             className="table-ant-expanded-row-customized"
             rowSelection={rowSelection}
             virtual={false}
+            enablePagination={true}
+            pageSize={10}
           />
           <FooterExpandedRow
             displayTernary={displayTernary}

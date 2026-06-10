@@ -82,7 +82,7 @@ const Releasing = ({
   const renderingTitle = () => {
     return (
       <Typography style={TextFontSize30LineHeight38}>
-        Cancelling deposit
+        Release deposit
       </Typography>
     );
   };
@@ -265,7 +265,7 @@ const Releasing = ({
                     color={"var(--gray-600, #475467)"}
                   >
                     Please note that the displayed deposit amount will be
-                    cancelled. This action will result in the consumer observing
+                    released. This action will result in the consumer observing
                     the corresponding transaction being removed from their bank
                     statement. Kindly inform consumers that this adjustment may
                     take approximately 7 to 10 business days to reflect on their
@@ -295,7 +295,7 @@ const Releasing = ({
                       ?.status === "canceled"
                       ? "Transaction released already"
                       : "Cancelling deposit"} */}
-                    Cancelling deposit
+                    Release deposit
                   </Typography>
                 </Button>
               </form>

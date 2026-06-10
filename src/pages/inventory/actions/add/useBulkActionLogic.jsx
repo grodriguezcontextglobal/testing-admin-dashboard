@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import costValueInputFormat from "../../utils/costValueInputFormat";
@@ -20,6 +21,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import { formatDate } from "../../utils/dateFormat";
 import { bulkItemUpdateAlphanumeric } from "../utils/EditBulkActionOptions";
+import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const useBulkActionLogic = () => {
   const {
@@ -31,6 +33,7 @@ const useBulkActionLogic = () => {
     queryClient,
     dicSuppliers,
   } = useSuppliers();
+  const [updateAll, setUpdateAll] = useState(true)
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
@@ -123,6 +126,7 @@ const useBulkActionLogic = () => {
       ),
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
+
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
@@ -142,6 +146,10 @@ const useBulkActionLogic = () => {
         exact: true,
         refetchType: "active",
       });
+      clearCacheMemory(
+        `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+      );
+      clearCacheMemory(`providerCompanies_${user.companyData.id}`);
     },
   });
 
@@ -275,6 +283,7 @@ const useBulkActionLogic = () => {
         alphaNumericUpdateItemMutation,
         dicSuppliers,
         queryClient,
+        updateAll,
       });
       openNotificationWithIcon("All items were updated database.");
       return navigate("/inventory");
@@ -316,6 +325,7 @@ const useBulkActionLogic = () => {
     scannedSerialNumbers.length,
   ]);
   qtyDiff();
+
   const subLocationsOptions = useMemo(
     () =>
       retrieveExistingSubLocationsForCompanyInventory(
@@ -324,6 +334,7 @@ const useBulkActionLogic = () => {
       ),
     [watch("location")],
   );
+
   const handleAddSubLocationInput = () => {
     setSubLocationInputs([...subLocationInputs, { id: Date.now(), value: "" }]);
   };
@@ -338,7 +349,6 @@ const useBulkActionLogic = () => {
   };
 
   const handleSubLocationInputChange = (id, value) => {
-    console.log("handleSubLocationInputChange", value)
     const newInputs = subLocationInputs.map((item) => {
       if (item.id === id) {
         return { ...item, value };
@@ -347,7 +357,7 @@ const useBulkActionLogic = () => {
     });
     setSubLocationInputs(newInputs);
   };
-console.log({subLocationsSubmitted})
+
   const renderingOptionsForSubLocations = (item) => {
     if (typeof displaySublocationFields !== "boolean")
       return {
@@ -401,6 +411,7 @@ console.log({subLocationsSubmitted})
     setValue("sub_location", "");
     return setSubLocationsSubmitted(result);
   };
+
   const manuallyAddingSerialNumbers = () => {
     if (String(watch("serial_number_list")).length < 1) return;
     if (scannedSerialNumbers.includes(watch("serial_number_list")))
@@ -412,86 +423,95 @@ console.log({subLocationsSubmitted})
     return setScannedSerialNumbers(result);
   };
 
-  const acceptAndGenerateImage = async () => {
-    try {
-      if (
-        imageUploadedValue?.length > 0 &&
-        imageUploadedValue[0].size > 5242880
-      ) {
-        return alert(
-          "Image is bigger than allow. Please resize the image or select a new one.",
+
+  const handleSearchByReference = () => {
+    const categoryRef = watch("reference_category_name");
+    const itemGroupRef = watch("reference_item_group");
+    const brandRef = watch("reference_brand");
+
+    if (!categoryRef && !itemGroupRef && !brandRef) {
+      openNotificationWithIcon(
+        "Please provide at least one reference to search.",
+      );
+      return;
+    }
+
+    const inventoryItems = itemsInInventoryQuery?.data?.data?.items || [];
+    let filteredItems = [...inventoryItems];
+
+    if (categoryRef) {
+      filteredItems = filteredItems.filter(
+        (item) => item.category_name === categoryRef,
+      );
+    }
+    if (itemGroupRef) {
+      filteredItems = filteredItems.filter(
+        (item) => item.item_group === itemGroupRef,
+      );
+    }
+    if (brandRef) {
+      filteredItems = filteredItems.filter((item) => item.brand === brandRef);
+    }
+
+    // Reset image state before processing new search
+    setValue("image_url", "");
+    setDisplayPreviewImage(false);
+    setImageUrlGenerated(null);
+    setConvertImageTo64ForPreview(null);
+    setImageUploadedValue(null);
+
+    let infoToSet = null;
+    if (filteredItems.length > 0) {
+      const dataToRetrieve = filteredItems[0];
+      infoToSet = dataToRetrieve;
+
+      // Handle images
+      const imageUrls = new Set(
+        filteredItems.map((item) => item.image_url).filter(Boolean),
+      );
+      if (imageUrls.size === 1) {
+        const [uniqueImageUrl] = imageUrls;
+        setValue("image_url", uniqueImageUrl);
+        setDisplayPreviewImage(true);
+        setConvertImageTo64ForPreview(uniqueImageUrl); // This should make it appear in the preview
+        setImageUrlGenerated(uniqueImageUrl); // This marks it as "accepted"
+        openNotificationWithIcon(
+          "A unique image was found and has been set for this group.",
+        );
+      } else if (imageUrls.size > 1) {
+        openNotificationWithIcon(
+          "Multiple images found for this group. Please upload a new image if you wish to standardize it.",
         );
       }
-      if (!watch("category_name") || !watch("item_group")) {
-        return alert("Category name and item group are required.");
-      }
-      const data = {
-        category_name: watch("category_name"),
-        item_group: watch("item_group"),
-      };
 
-      const img_url = await storeAndGenerateImageUrl({
-        data,
-        imageUploadedValue,
-        user,
+      Object.entries(dataToRetrieve).forEach(([key, value]) => {
+        if (
+          key === "enableAssignFeature" ||
+          key === "container" ||
+          key === "sub_location" ||
+          key === "location" ||
+          key === "image_url" // Don't overwrite the image we just set
+        ) {
+          return;
+        }
+        if (locationInApp.pathname === "/create-event-page/device-detail") {
+          setValue("ownership", "Rent");
+        }
+        setValue("quantity", 0);
+        setValue(key, value);
       });
 
-      setImageUrlGenerated(img_url);
-      return message.success("Image was successfully accepted.");
-    } catch (error) {
-      message.error("Failed to upload image: " + error.message);
-    }
-  };
-  // useEffect(() => {
-  //   const controller = new AbortController();
-  //   itemsInInventoryQuery.refetch();
-  //   return () => {
-  //     controller.abort();
-  //   };
-  // }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const newReference = watch("reference_item_group");
-    let infoToSet = null;
-
-    if (retrieveItemDataSelected().has(newReference)) {
-      const dataToRetrieve = retrieveItemDataSelected().get(newReference);
-      if (Object.entries(dataToRetrieve).length > 0) {
-        Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (
-            key === "enableAssignFeature" ||
-            key === "container" ||
-            key === "sub_location" ||
-            key === "location"
-          ) {
-            return;
-          }
-          if (locationInApp.pathname === "/create-event-page/device-detail") {
-            setValue("ownership", "Rent");
-          }
-          setValue("quantity", 0);
-          setValue(key, value);
-        });
-        const grouping = groupBy(
-          itemsInInventoryQuery?.data?.data?.items,
-          "item_group"
-        );
-        if (grouping[newReference]) {
-          const sortedData = orderBy(
-            grouping[newReference],
-            "serial_number",
-            "asc"
-          );
-          setAllSerialNumbersOptions(sortedData.map((x) => x.serial_number));
-        }
-        infoToSet = dataToRetrieve;
+      const grouping = groupBy(inventoryItems, "item_group");
+      const itemGroup = dataToRetrieve.item_group;
+      if (grouping[itemGroup]) {
+        const sortedData = orderBy(grouping[itemGroup], "serial_number", "asc");
+        setAllSerialNumbersOptions(sortedData.map((x) => x.serial_number));
       }
+      openNotificationWithIcon(
+        `Found ${filteredItems.length} items. Displaying info for the first match.`,
+      );
     } else {
-      setValue("item_group", newReference);
-    }
-
-    if (!newReference || newReference.length === 0) {
+      openNotificationWithIcon("No inventory found matching the criteria.");
       setValue("item_group", "");
       setValue("photo", []);
       setValue("category_name", "");
@@ -509,11 +529,7 @@ console.log({subLocationsSubmitted})
     }
 
     setGeneralInfoForSelection(infoToSet);
-
-    return () => {
-      controller.abort();
-    };
-  }, [watch("reference_item_group")]);
+  };
 
   useEffect(() => {
     qtyDiff();
@@ -599,6 +615,33 @@ console.log({subLocationsSubmitted})
         const base64 = await convertToBase64(imageUploadedValue[0]);
         setConvertImageTo64ForPreview(base64);
         setDisplayPreviewImage(true);
+
+        // Automatically generate image URL
+        try {
+          if (imageUploadedValue[0].size > 5242880) {
+            return alert(
+              "Image is bigger than allow. Please resize the image or select a new one."
+            );
+          }
+          if (!watch("category_name") || !watch("item_group")) {
+            return alert("Category name and item group are required.");
+          }
+          const data = {
+            category_name: watch("category_name"),
+            item_group: watch("item_group"),
+          };
+
+          const img_url = await storeAndGenerateImageUrl({
+            data,
+            imageUploadedValue,
+            user,
+          });
+
+          setImageUrlGenerated(img_url);
+          message.success("Image was successfully accepted.");
+        } catch (error) {
+          message.error("Failed to upload image: " + error.message);
+        }
       };
       triggerImageInto64();
     } else {
@@ -617,7 +660,7 @@ console.log({subLocationsSubmitted})
   }, [watch("tax_location")]);
 
   return {
-    acceptAndGenerateImage,
+    // acceptAndGenerateImage,
     addingSubLocation,
     addSerialNumberField,
     allSerialNumbersOptions,
@@ -691,6 +734,10 @@ console.log({subLocationsSubmitted})
     user,
     valueObject,
     watch,
+    updateAll,
+    setUpdateAll,
+    retrieveItemDataSelected,
+    handleSearchByReference,
   };
 };
 

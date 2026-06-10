@@ -86,7 +86,7 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
       >
         {props.description}
       </p>
-      <p
+      {/* <p
         style={{
           ...Subtitle,
           width: "100%",
@@ -98,7 +98,7 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
         }}
       >
         Total: {props.total}
-      </p>
+      </p> */}
     </Card>
   );
 };

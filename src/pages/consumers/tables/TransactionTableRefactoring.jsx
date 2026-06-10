@@ -349,6 +349,8 @@ const TransactionTableRefactoring = () => {
           <ExpandedRow rowRecord={record} refetching={refetchingQueries} />
         ),
       }}
+      enablePagination={true}
+      pageSize={10}
     />
   );
 };

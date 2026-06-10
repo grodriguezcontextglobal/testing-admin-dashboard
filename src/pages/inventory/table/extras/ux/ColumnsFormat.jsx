@@ -7,7 +7,10 @@ import {
 import { Avatar } from "antd";
 import { GeneralDeviceIcon } from "../../../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../../../components/icons/RightNarrowInCircle";
+import PillUIComponent from "../../../../../components/UX/Chip/PillUIComponent";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { warehouseDicStatus } from "../../../utils/warehouseDicStatus";
+// import { getLogisticStatusColor } from "../../../utils/logisticStatusConfig";
 
 const ColumnsFormat = ({
   dictionary,
@@ -47,13 +50,13 @@ const ColumnsFormat = ({
         <span style={cellStyle}>
           <Avatar
             size={"80px"}
-            style={{ borderRadius: "8px", background: "transparent" }}
+            style={{ background: "transparent", borderRadius: "8px" }}
           >
             {record.image_url ? (
               <img
                 src={record.image_url}
                 alt={`${record.item}-${record.item_group}-${record.serial_number}`}
-                style={{ width: "100%", height: "auto" }}
+                style={{ height: "auto", width: "100%" }}
               />
             ) : (
               <Avatar size={"80px"}>
@@ -73,12 +76,8 @@ const ColumnsFormat = ({
       ),
     },
     {
-      title: "Device name",
       dataIndex: "item_group",
       key: "item_group",
-      sorter: {
-        compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
-      },
       render: (item_group) => (
         <span style={cellStyle}>
           {" "}
@@ -87,115 +86,74 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
+      sorter: {
+        compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
+      },
+      title: "Device name",
     },
     {
-      title: "Status",
       dataIndex: "warehouse",
       key: "warehouse",
+      render: (warehouse, record) => {
+        const status = record?.data?.logistic_status;
+        // console.log(status, getLogisticStatusColor(status))
+        // const backgroundColor = {
+        //   allocated: "brand",
+        //   archived: "danger",
+        //   assigned: "info",
+        //   "awaiting-pickup": "warning",
+        //   damaged: "danger",
+        //   "in-container": "info",
+        //   "in-event": "info",
+        //   "in-reserved": "info",
+        //   "in-stock": "success",
+        //   "in-transit": "info",
+        //   "in-use": "info",
+        //   lost: "danger",
+        //   "pending-checkin": "warning",
+        //   "ready-for-restock": "success",
+        //   reserved: "info",
+        //   returned: "success",
+        //   shipped: "success",
+        //   "under-inspection": "warning",
+        //   "under-maintenance": "danger",
+        // }
+        // console.log(status, backgroundColor[status])
+        return (
+          <PillUIComponent
+            color={status === "in-stock" ? "success" : status === "in-transit" ? "warning" : status === "in-event" ? "brand" : status === "shipped" ? "brand":"success"} //{backgroundColor[status]}
+            size="sm"
+          >{warehouseDicStatus[status] || ""}
+          </PillUIComponent>
+        );
+      },
       sorter: {
         compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
       },
-      render: (warehouse) => {
-        // if (record.enableAssignFeature === 1) {
-        return (
-          <span
-            style={{
-              ...cellStyle,
-              borderRadius: "16px",
-              justifyContent: "center",
-              display: "flex",
-              padding: "2px 8px",
-              alignItems: "center",
-              background: `${
-                warehouse === 0
-                  ? "var(--blue-50, #EFF8FF)"
-                  : "var(--success-50, #ECFDF3)"
-              }`,
-              width: "fit-content",
-            }}
-          >
-            <p
-              style={{
-                color: `${
-                  warehouse === 0
-                    ? "var(--blue-700, #175CD3)"
-                    : "var(--success-700, #027A48)"
-                }`,
-                textTransform: "capitalize",
-                width: "100%",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              <Icon
-                icon="tabler:point-filled"
-                rotate={3}
-                color={`${warehouse === 0 ? "#2E90FA" : "#12B76A"}`}
-              />
-              {warehouse === 0 ? "In Use" : "In Stock"}
-            </p>
-          </span>
-        );
-      },
+      title: "Status",
     },
     {
-      title: "Ownership",
       dataIndex: "ownership",
       key: "ownership",
+      render: (ownership) => (
+        <PillUIComponent
+          color={ownership === "Permanent" ? "brand" : "success"}
+          size="sm"
+        >
+          <Icon icon="tabler:point-filled" rotate={3} />
+          <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
+            {dictionary[ownership]}
+          </span>
+        </PillUIComponent>
+      ),
       sorter: {
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
-      render: (ownership) => (
-        <span
-          style={{
-            ...cellStyle,
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${
-              ownership === "Permanent"
-                ? "var(--blue-50, #EFF8FF)"
-                : "var(--success-50, #ECFDF3)"
-            }`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${
-              ownership === "Permanent"
-                ? "var(--blue-700, #175CD3)"
-                : "var(--success-700, #027A48)"
-            }`}
-            style={{
-              ...Subtitle,
-              width: "100%",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            textTransform={"capitalize"}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${ownership === "Permanent" ? "#2E90FA" : "#12B76A"}`}
-            />
-            {dictionary[ownership]}
-          </Typography>
-        </span>
-      ),
+      title: "Ownership",
     },
     {
-      title: "Taxable address",
       dataIndex: "main_warehouse",
       key: "main_warehouse",
-      sorter: {
-        compare: (a, b) =>
-          ("" + a.main_warehouse).localeCompare(b.main_warehouse),
-      },
       render: (main_warehouse) => (
         <span style={cellStyle}>
           {" "}
@@ -204,14 +162,15 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
+      sorter: {
+        compare: (a, b) =>
+          ("" + a.main_warehouse).localeCompare(b.main_warehouse),
+      },
+      title: "Taxable address",
     },
     {
-      title: "Location",
       dataIndex: "location",
       key: "location",
-      sorter: {
-        compare: (a, b) => ("" + a.location).localeCompare(b.location),
-      },
       render: (location) => {
         let result = location;
         if (String(result).toLowerCase().includes("leased equipment")) {
@@ -238,12 +197,14 @@ const ColumnsFormat = ({
           </span>
         );
       },
+      sorter: {
+        compare: (a, b) => ("" + a.location).localeCompare(b.location),
+      },
+      title: "Location",
     },
     {
-      title: "Main Serial Number",
       dataIndex: "serial_number",
       key: "serial_number",
-      sorter: (a, b) => a.serial_number - b.serial_number,
       render: (serial_number) => (
         <span style={cellStyle}>
           {" "}
@@ -252,6 +213,8 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
+      sorter: (a, b) => a.serial_number - b.serial_number,
+      title: "Main Serial Number",
     },
     {
       title: "Actions",
@@ -266,9 +229,9 @@ const ColumnsFormat = ({
         return (
           <div
             style={{
+              alignItems: "center",
               display: "flex",
               gap: "8px",
-              alignItems: "center",
               justifyContent: "flex-end",
             }}
           >

@@ -1,16 +1,16 @@
-import { OutlinedInput } from "@mui/material";
-import { Button, message, notification, Popconfirm, Space } from "antd";
+import { message, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../api/devitrakApi";
 import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
-import ModalUX from "../UX/modal/ModalUX";
 import Chip from "../UX/Chip/Chip";
+import BlueButtonComponent from "../UX/buttons/BlueButton";
+import BlueButtonConfirmationComponent from "../UX/buttons/BlueButtonConfirmation";
+import Input from "../UX/inputs/Input";
+import ModalUX from "../UX/modal/ModalUX";
 
 const ExpressCheckoutItems = ({
   openReturnDeviceBulkModal,
@@ -144,15 +144,12 @@ const ExpressCheckoutItems = ({
           }}
           onSubmit={handleSubmit(handleAddDevices)}
         >
-          <OutlinedInput
+          <Input
             {...register("serialNumber")}
-            style={OutlinedInputStyle}
             placeholder="Scan serial number to check in."
             fullWidth
           />
-          <Button style={{ ...BlueButton, width: "100%" }} htmlType="submit">
-            <p style={BlueButtonText}>Add</p>
-          </Button>
+          <BlueButtonComponent title="Add" buttonType="submit" />
         </form>
         <div
           style={{
@@ -173,19 +170,13 @@ const ExpressCheckoutItems = ({
               />
             ))}
           </Space>
-          <Popconfirm
-            title="Are you sure you want to return all scanned devices?"
-            onConfirm={(e) => handleReturnDevices(e)}
-          >
-            <Button
-              style={{ ...BlueButton, width: "100%" }}
-              loading={loadingStatus}
-            >
-              <p style={BlueButtonText}>
-                Confirm return | Total items to return: {scannedDevice.length}
-              </p>
-            </Button>
-          </Popconfirm>
+          <BlueButtonConfirmationComponent
+            style={{ ...BlueButton, width: "100%" }}
+            loading={loadingStatus}
+            title={`Confirm return | Total items to return: ${scannedDevice.length}`}
+            confirmationTitle="Are you sure you want to return all scanned devices?"
+            func={(e) => handleReturnDevices(e)}
+          />
         </div>
       </>
     );

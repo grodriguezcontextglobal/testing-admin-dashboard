@@ -53,6 +53,22 @@
   pointer-events: none;
 }
 
+.ud-item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #f5f5f5;
+  color: #9ca3af;
+}
+
+.ud-item.is-disabled .ud-item-label,
+.ud-item.is-disabled p {
+  color: #9ca3af !important;
+}
+
+.ud-item.is-disabled:hover {
+  background-color: #f5f5f5;
+}
 /* Sizes */
 .ud-trigger--sm {
   height: 32px;

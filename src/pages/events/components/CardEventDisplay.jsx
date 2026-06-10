@@ -163,18 +163,19 @@ const CardEventDisplay = ({ props }) => {
                 style={{
                   alignSelf: "stretch",
                   width: "15%",
-                  display: `${(isSmallDevice || isMediumDevice) && "none"}`,
+                  display: `${(isSmallDevice || isMediumDevice || !props.eventInfoDetail.logo) && "none"}`,
                 }}
               >
-                <Avatar
-                  src={
-                    props.eventInfoDetail.logo ??
-                    props.eventInfoDetail.eventName
-                  }
-                  size={70}
-                ></Avatar>
+                {props.eventInfoDetail.logo && (
+                  <Avatar
+                    src={
+                      props.eventInfoDetail.logo
+                    }
+                    size={70}
+                  />
+                )}
               </div>
-              <div style={{ width: "85%" }}>
+              <div style={{ width: props.eventInfoDetail.logo ? "85%" : "100%" }}>
                 <Tooltip title={`${props.eventInfoDetail.eventName}`}>
                   {" "}
                   {props.eventInfoDetail.eventName}

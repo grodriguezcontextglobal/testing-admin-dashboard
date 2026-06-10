@@ -547,7 +547,7 @@ const ImportingXLSXFile = ({
       message.success("All items have been added to event inventory.");
       closeModal();
     } catch (error) {
-      console.log(error);
+      console.error(error);
       message.error("Failed to add XLSX data to event inventory.");
     } finally {
       setLoadingState(false);
@@ -577,11 +577,11 @@ const ImportingXLSXFile = ({
               <Tooltip title="Download Template">
                 <Button
                   type="primary"
-                  shape="circle"
+                  shape="round"
                   icon={<DownloadOutlined />}
                   onClick={handleDownloadTemplate}
                   size="small"
-                />
+                >Download Template</Button>
               </Tooltip>
             </div>
           }

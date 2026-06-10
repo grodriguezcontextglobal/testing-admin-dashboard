@@ -25,6 +25,11 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
   const cityRef = useRef(null);
   const stateRef = useRef(null);
   const zipRef = useRef(null);
+  const minorRef = useRef(null);
+  const guardianFirstNameRef = useRef(null);
+  const guardianLastNameRef = useRef(null);
+  const guardianEmailRef = useRef(null);
+  const guardianPhoneRef = useRef(null);
 
   // Tour Configuration
   const tourColumns = [
@@ -91,6 +96,41 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       key: "zip",
       width: 100,
     },
+    {
+      title: "Minor",
+      onHeaderCell: () => ({ ref: minorRef }),
+      dataIndex: "minor",
+      key: "minor",
+      width: 100,
+    },
+    {
+      title: "Guardian First Name",
+      onHeaderCell: () => ({ ref: guardianFirstNameRef }),
+      dataIndex: "parent_guardian_first_name",
+      key: "parent_guardian_first_name",
+      width: 150,
+    },
+    {
+      title: "Guardian Last Name",
+      onHeaderCell: () => ({ ref: guardianLastNameRef }),
+      dataIndex: "parent_guardian_last_name",
+      key: "parent_guardian_last_name",
+      width: 150,
+    },
+    {
+      title: "Guardian Email",
+      onHeaderCell: () => ({ ref: guardianEmailRef }),
+      dataIndex: "parent_guardian_email",
+      key: "parent_guardian_email",
+      width: 200,
+    },
+    {
+      title: "Guardian Phone",
+      onHeaderCell: () => ({ ref: guardianPhoneRef }),
+      dataIndex: "parent_guardian_phone_number",
+      key: "parent_guardian_phone_number",
+      width: 150,
+    },
   ];
 
   const tourSteps = [
@@ -117,7 +157,7 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
     {
       title: "External ID (optional)",
       description: "Enter the member's ID number if exists.",
-      target: () => idRef.current,  
+      target: () => idRef.current,
     },
     {
       title: "Street (optional)",
@@ -139,6 +179,31 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       description: "Enter the member's zip code.",
       target: () => zipRef.current,
     },
+    {
+      title: "Minor (optional)",
+      description: "Set to 'true' if the member is a minor.",
+      target: () => minorRef.current,
+    },
+    {
+      title: "Guardian First Name (mandatory if minor)",
+      description: "Enter the guardian's first name if the member is a minor.",
+      target: () => guardianFirstNameRef.current,
+    },
+    {
+      title: "Guardian Last Name (mandatory if minor)",
+      description: "Enter the guardian's last name if the member is a minor.",
+      target: () => guardianLastNameRef.current,
+    },
+    {
+      title: "Guardian Email (mandatory if minor)",
+      description: "Enter the guardian's email if the member is a minor.",
+      target: () => guardianEmailRef.current,
+    },
+    {
+      title: "Guardian Phone (mandatory if minor)",
+      description: "Enter the guardian's phone number if the member is a minor.",
+      target: () => guardianPhoneRef.current,
+    },
   ];
 
   const tourData = [
@@ -147,11 +212,16 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       last_name: "Doe",
       email: "john.doe@example.com",
       phone: "555-0123",
-      id:"123456 or ED_123456",
+      id: "123456 or ED_123456",
       street: "123 Main St",
       city: "New York",
       state: "NY",
       zip: "10001",
+      minor: "true",
+      parent_guardian_first_name: "Jane",
+      parent_guardian_last_name: "Doe",
+      parent_guardian_email: "jane.doe@example.com",
+      parent_guardian_phone_number: "555-0124",
     },
   ];
 
@@ -245,11 +315,11 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
               <Tooltip title="Download Template">
                 <Button
                   type="primary"
-                  shape="circle"
+                  shape="round"
                   icon={<DownloadOutlined />}
                   onClick={handleDownloadTemplate}
                   size="small"
-                />
+                >Download Template</Button>
               </Tooltip>
             </div>
           }

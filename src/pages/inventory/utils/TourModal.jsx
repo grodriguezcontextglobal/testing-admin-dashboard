@@ -17,7 +17,7 @@ const TourModal = ({ open, setOpen }) => {
   const mainWarehouseRef = useRef(null);
   const serialNumberRef = useRef(null);
   const warehouseRef = useRef(null);
-  const companyRef = useRef(null);
+  // const companyRef = useRef(null);
   const locationRef = useRef(null);
   const extraInfoRef = useRef(null);
   const imageRef = useRef(null);
@@ -93,13 +93,13 @@ const TourModal = ({ open, setOpen }) => {
       width: 150,
       onHeaderCell: attachRef(warehouseRef),
     },
-    {
-      title: <Text type="danger">Company*</Text>,
-      dataIndex: "company",
-      key: "company",
-      width: 150,
-      onHeaderCell: attachRef(companyRef),
-    },
+    // {
+    //   title: <Text type="danger">Company*</Text>,
+    //   dataIndex: "company",
+    //   key: "company",
+    //   width: 150,
+    //   onHeaderCell: attachRef(companyRef),
+    // },
     {
       title: <Text type="danger">Location*</Text>,
       dataIndex: "location",
@@ -143,7 +143,7 @@ const TourModal = ({ open, setOpen }) => {
       onHeaderCell: attachRef(subLocationRef),
     },
     {
-      title: <Text type="danger">Supplier Info*</Text>,
+      title: <Text>Supplier Info</Text>,
       dataIndex: "supplier_info",
       key: "supplier_info",
       width: 150,
@@ -162,8 +162,7 @@ const TourModal = ({ open, setOpen }) => {
       ownership: "Owned",
       main_warehouse: "Washington, DC",
       serial_number: "SN123456",
-      warehouse: "Washington, DCYes",
-      company: "MyCompany",
+      warehouse: "Yes",
       location: "Warehouse",
       extra_serial_number: "Material: Silicon",
       image_url: "http://example.com/img.png",
@@ -271,16 +270,16 @@ const TourModal = ({ open, setOpen }) => {
       ),
       target: () => warehouseRef.current,
     },
-    {
-      title: "Company",
-      description: (
-        <Space direction="vertical">
-          <Text strong>Mandatory Field</Text>
-          <Text>The company that owns the item.</Text>
-        </Space>
-      ),
-      target: () => companyRef.current,
-    },
+    // {
+    //   title: "Company",
+    //   description: (
+    //     <Space direction="vertical">
+    //       <Text strong>Mandatory Field</Text>
+    //       <Text>The company that owns the item.</Text>
+    //     </Space>
+    //   ),
+    //   target: () => companyRef.current,
+    // },
     {
       title: "Location",
       description: (
@@ -373,7 +372,7 @@ const TourModal = ({ open, setOpen }) => {
         <Space direction="vertical">
           <Text strong>Mandatory Field</Text>
           <Text>
-            Information about the supplier if the item is rented.
+            Information about the supplier if the item is a rental equipment.
           </Text>
           <Text>
             Possible names: supplier information, supplier, rental company
@@ -463,11 +462,11 @@ const TourModal = ({ open, setOpen }) => {
         <Tooltip title="Download Template">
           <Button
             type="primary"
-            shape="circle"
+            shape="round"
             icon={<DownloadOutlined />}
             onClick={handleDownloadTemplate}
             size="small"
-          />
+          >Download Template</Button>
         </Tooltip>
       </div>}
       description={
