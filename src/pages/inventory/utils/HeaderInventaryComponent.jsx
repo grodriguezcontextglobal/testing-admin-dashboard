@@ -187,7 +187,7 @@ const HeaderInventaryComponent = ({
           >
             <span style={{ display: "inline-flex" }}>
               <GrayButtonComponent
-                title={"More Options"}
+                title={"More options"}
                 ariaLabel="More options"
                 buttonType="button"
                 titleStyles={{
