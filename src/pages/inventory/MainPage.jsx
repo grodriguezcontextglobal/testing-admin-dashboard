@@ -285,6 +285,8 @@ const MainPage = () => {
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
           setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
           setOpenCreateLocationModal={setOpenCreateLocationModal}
+          setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
+          setOpenDeleteItemModal={setOpenDeleteItemModal}
         />
         <MobileActionsButtons user={user} />
         <Divider />
@@ -301,15 +303,9 @@ const MainPage = () => {
             handleSubmit={handleSubmit}
             searchItem={searchItem}
             register={register}
-            adornmentButtonsComponent={adornmentButtonsComponent}
             setValue={setValue}
             setParams={setParams}
             setSearchedResult={setSearchedResult}
-            refetchingQueriesFn={refetchingQueriesFn}
-            locationsQuery={locationsQuery}
-            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-            setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
-            setOpenDeleteItemModal={setOpenDeleteItemModal}
           />
         </FilterOptionsContext.Provider>
         <Grid

@@ -3,13 +3,9 @@ import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
 import { Button as AntButton, Divider, Tag } from "antd";
 import { useContext, useState } from "react";
-import { useSelector } from "react-redux";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import CheckSquareBrokenIcon from "../../../../components/icons/CheckSquareBrokenIcon";
 import FilterLinesIcon from "../../../../components/icons/FilterLinesIcon";
 import SearchLgIcon from "../../../../components/icons/SearchLgIcon";
-import TrashIcon from "../../../../components/icons/TrashIcon";
 import XCloseIcon from "../../../../components/icons/XCloseIcon";
 import FilterOptionsUX from "../FilterOptionsUX";
 import { dicSelectedOptions, dictionary } from "../dicSelectedOptions";
@@ -23,10 +19,7 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
-  setOpenCheckInDevicesFromEvent,
-  setOpenDeleteItemModal,
 }) => {
-  const { role, locations } = useSelector((state) => state.permission);
   const filterContext = useContext(FilterOptionsContext);
   const chosen = Array.isArray(filterContext?.chosen)
     ? filterContext.chosen
@@ -50,15 +43,6 @@ const InventorySearchBar = ({
   };
   const clearAllFilters = () => setChosenOption?.([]);
 
-  const canRenderButton =
-    role === "0" ||
-    locations?.some(
-      (location) =>
-        location.actions?.create &&
-        location.actions?.assign &&
-        location.actions?.delete &&
-        location.actions?.transfer,
-    );
   return (
     <Grid
       display={companyHasInventoryQuery?.data?.data?.total === 0 && "none"}
@@ -97,22 +81,6 @@ const InventorySearchBar = ({
         >
           Search inventory:&nbsp;
         </Typography>
-        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
-          {canRenderButton && (
-            <GrayButtonComponent
-              title="Delete group"
-              iconLeading={<TrashIcon />}
-              func={() => setOpenDeleteItemModal(true)}
-            />
-          )}
-          {canRenderButton && (
-            <BlueButtonComponent
-              title="Check in devices from events"
-              iconLeading={<CheckSquareBrokenIcon />}
-              func={() => setOpenCheckInDevicesFromEvent(true)}
-            />
-          )}
-        </div>
       </div>
       <div
         style={{
