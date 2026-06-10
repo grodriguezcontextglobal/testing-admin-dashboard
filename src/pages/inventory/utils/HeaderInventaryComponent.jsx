@@ -64,31 +64,55 @@ const HeaderInventaryComponent = ({
         location.actions?.transfer,
     );
 
+  const overflowMenuLabel = (icon, text) => (
+    <span
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: "8px",
+        textAlign: "left",
+        width: "100%",
+      }}
+    >
+      {icon}
+      <span>{text}</span>
+    </span>
+  );
+
   const overflowMenuItems = [
     canUpdate && {
       key: "update-group",
-      label: "Update a group of items",
-      icon: <PencilLineIcon width={18} height={18} stroke="#344054" />,
+      label: overflowMenuLabel(
+        <PencilLineIcon width={18} height={18} stroke="#344054" />,
+        "Update a group of items",
+      ),
       onClick: () => navigate("/inventory/edit-group"),
     },
     isAdmin && {
       key: "create-location",
-      label: "Create location",
-      icon: <AnnotationPlusIcon width={18} height={18} />,
+      label: overflowMenuLabel(
+        <AnnotationPlusIcon width={18} height={18} />,
+        "Create location",
+      ),
       onClick: () => setOpenCreateLocationModal(true),
     },
     canManageDevices && {
       key: "check-in-devices",
-      label: "Check in devices from events",
-      icon: <CheckSquareBrokenIcon width={18} height={18} stroke="#344054" />,
+      label: overflowMenuLabel(
+        <CheckSquareBrokenIcon width={18} height={18} stroke="#344054" />,
+        "Check in devices from events",
+      ),
       onClick: () => setOpenCheckInDevicesFromEvent?.(true),
     },
     canManageDevices && { type: "divider" },
     canManageDevices && {
       key: "delete-group",
-      label: "Delete group",
+      label: overflowMenuLabel(
+        <TrashIcon width={18} height={18} stroke="#B42318" />,
+        "Delete group",
+      ),
       danger: true,
-      icon: <TrashIcon width={18} height={18} stroke="#B42318" />,
       onClick: () => setOpenDeleteItemModal?.(true),
     },
   ].filter(Boolean);
@@ -125,6 +149,22 @@ const HeaderInventaryComponent = ({
         lg={8}
       >
         {canCreate && (
+          <Link to="/inventory/new-bulk-items">
+            <BlueButtonComponent
+              title={"Add a group of items"}
+              styles={{ with: "100%" }}
+              iconLeading={<PlusCircleWhiteIcon />}
+              buttonType="button"
+              titleStyles={{
+                textTransform: "none",
+                with: "100%",
+                gap: "2px",
+              }}
+              func={() => null}
+            />
+          </Link>
+        )}
+        {canCreate && (
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
             styles={{ with: "100%" }}
@@ -154,22 +194,6 @@ const HeaderInventaryComponent = ({
               />
             </span>
           </Dropdown>
-        )}
-        {canCreate && (
-          <Link to="/inventory/new-bulk-items">
-            <BlueButtonComponent
-              title={"Add a group of items"}
-              styles={{ with: "100%" }}
-              iconLeading={<PlusCircleWhiteIcon />}
-              buttonType="button"
-              titleStyles={{
-                textTransform: "none",
-                with: "100%",
-                gap: "2px",
-              }}
-              func={() => null}
-            />
-          </Link>
         )}
       </Grid>
     </Grid>
