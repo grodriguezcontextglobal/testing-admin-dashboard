@@ -181,17 +181,15 @@ const FooterExpandedRow = ({
   );
 
   const columnStyles = {
-    height: "20vh",
-    gap: "10px",
-    width: "100%",
+    display: "flex",
     flexDirection: "column",
     justifyContent: "flex-start",
-    // border: "solid 0.1px black"
+    gap: "8px",
+    width: "100%",
   }
 
   const dropdownSelectionFN = (props) => {
     const lostItems = groupBy(formattedData, "status")["Lost"];
-    console.log(props.key)
     const index = String(props.key)
     switch (index) {
       case "0":
@@ -210,6 +208,7 @@ const FooterExpandedRow = ({
       title: "Deposit",
       dataIndex: "deposit",
       key: "deposit",
+      onCell: () => ({ style: { verticalAlign: "top" } }),
       render: () => (
         <div
           style={columnStyles}
@@ -236,6 +235,7 @@ const FooterExpandedRow = ({
     },
     {
       title: "Device",
+      onCell: () => ({ style: { verticalAlign: "top" } }),
       render: () => (
         <div
           style={columnStyles}
@@ -253,6 +253,7 @@ const FooterExpandedRow = ({
       dataIndex: "status",
       key: "status",
       responsive: ["md", "lg"],
+      onCell: () => ({ style: { verticalAlign: "top" } }),
       render: (_, record) => {
         const paymentIntent = record.data[0].eventInfo[0].paymentIntent;
         const retrieveAmount = () => {
@@ -272,9 +273,9 @@ const FooterExpandedRow = ({
         };
         return (
           <div style={columnStyles}>
-            <h4 style={Subtitle}>
+            <p style={Subtitle}>
               Total deposit held by consumer ${Number(retrieveAmount()).toLocaleString()} total
-            </h4>
+            </p>
           </div>
         );
       },
@@ -284,6 +285,7 @@ const FooterExpandedRow = ({
       dataIndex: "status",
       key: "status",
       responsive: ["md", "lg"],
+      onCell: () => ({ style: { verticalAlign: "top" } }),
       render: () => {
         const groupingByStatus = groupBy(transactionDeviceData, "status");
         const lostNumber = groupingByStatus["lost"] || groupingByStatus["Lost"];
@@ -291,28 +293,28 @@ const FooterExpandedRow = ({
           <div
             style={columnStyles}
           >
-            <h4 style={Subtitle}>
+            <p style={Subtitle}>
               {groupingByStatus[true]
                 ? Number(groupingByStatus[true].length)
                 : 0
               }&nbsp;
               Active
-            </h4>
-            <h4 style={Subtitle}>
+            </p>
+            <p style={Subtitle}>
               {groupingByStatus[false]
                 ? Number(groupingByStatus[false].length)
                 : 0
               }&nbsp;
               Returned
-            </h4>
+            </p>
 
-            <h4 style={Subtitle}>
+            <p style={Subtitle}>
               {groupingByStatus["lost"] || groupingByStatus["Lost"]
                 ? Number(lostNumber.length)
                 : 0
               }&nbsp;
               Lost
-            </h4>
+            </p>
           </div>
         );
       },
@@ -321,6 +323,7 @@ const FooterExpandedRow = ({
       title: "Deposit",
       dataIndex: "deposit",
       key: "deposit",
+      onCell: () => ({ style: { verticalAlign: "top" } }),
       render: () => {
         // const lostItemsList = groupBy(formattedData, "status")["Lost"];
         const groupingByStatus = groupBy(transactionDeviceData, "status");
@@ -387,6 +390,7 @@ const FooterExpandedRow = ({
       title: "Deposit",
       dataIndex: "deposit",
       key: "deposit",
+      onCell: () => ({ style: { verticalAlign: "top" } }),
       render: () => {
         const lostItemsList = groupBy(formattedData, "status")["Lost"];
 
@@ -396,7 +400,7 @@ const FooterExpandedRow = ({
               ...CenteringGrid,
               flexDirection: "column",
               width: "100%",
-              gap: "5px",
+              gap: "8px",
             }}
           >
             <GrayButtonConfirmationComponent
