@@ -25,7 +25,7 @@ export const renderTitle = () => {
           style={TextFontSize30LineHeight38}
           color={"var(--gray-600, #475467)"}
         >
-          Edit a group of items
+          Update inventory
         </Typography>
       </InputLabel>
       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>

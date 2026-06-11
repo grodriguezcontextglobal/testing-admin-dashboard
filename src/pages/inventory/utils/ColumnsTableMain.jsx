@@ -8,6 +8,8 @@ import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
 import FilterIconSVG from "../../../components/icons/filter.svg";
 import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
+import { warehouseDicStatus } from "./warehouseDicStatus";
+import { getLogisticStatusColor, logisticStatusFilters } from "./logisticStatusConfig";
 // import Chip from "../../../components/UX/Chip/Chip";
 const columnsTableMain = ({
   groupingByDeviceType,
@@ -109,40 +111,26 @@ const columnsTableMain = ({
     },
     {
       title: "Status",
-      dataIndex: "warehouse",
-      key: "warehouse",
+      // dataIndex: "logistic_status",
+      // key: "logistic_status",
       showSorterTooltip: { target: "full-header" },
       filterIcon: <img src={FilterIconSVG} alt="" width={20} height={20} />,
-      filters: [
-        {
-          text: "In Stock",
-          value: 1,
-        },
-        {
-          text: "In Use",
-          value: 0,
-        },
-      ],
-      onFilter: (value, record) => record.warehouse === value,
+      filters: logisticStatusFilters,
+      onFilter: (value, record) => record.data.logistic_status === value,
       sorter: {
-        compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
+        compare: (a, b) => ("" + a.data.logistic_status).localeCompare(b.data.logistic_status),
       },
       responsive: responsive[2],
-      render: (warehouse) => {
+      render: (record) => {
+        const status = record?.data?.logistic_status;
         return (
-          // <Chip
-          //   color={warehouse === 0 ? "warning" : "success"}
-          //   size="sm"
-          //   outlined={warehouse === 0 ? true : false}
-          //   filled={warehouse === 0 ? false : true}
-          // />
           <PillUIComponent
-            color={warehouse === 0 ? "brand" : "success"}
+            color={getLogisticStatusColor(status)}
             size="sm"
           >
             <Icon icon="tabler:point-filled" rotate={3} />
             <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
-              {warehouse === 0 ? "In Use" : "In Stock"}
+              {warehouseDicStatus[status]}
             </span>
           </PillUIComponent>
         );
@@ -183,11 +171,7 @@ const columnsTableMain = ({
           size="sm"
         >
           <Icon icon="tabler:point-filled" rotate={3} />
-          <span style={{
-            textTransform: "capitalize", marginLeft: "2px", color: ownership === "Permanent"
-              ? "var(--blue-700, #175CD3)"
-              : "var(--success-700, #027A48)"
-          }}>
+          <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
             {dictionary[ownership]}
           </span>
         </PillUIComponent>

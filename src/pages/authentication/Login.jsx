@@ -226,7 +226,7 @@ const Login = () => {
         email: props.email,
       });
     } catch (error) {
-      console.log("loginIntoOneCompanyAccount", error);
+      console.error("loginIntoOneCompanyAccount", error);
     }
   };
 

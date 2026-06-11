@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Grid, Typography } from "@mui/material";
-import { Card, Tooltip } from "antd";
-import { useSelector } from "react-redux";
-import { useMediaQuery } from "@uidotdev/usehooks";
 import { Icon } from "@iconify/react";
-import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import { Grid, Typography } from "@mui/material";
+import { useMediaQuery } from "@uidotdev/usehooks";
+import { Card, Tooltip } from "antd";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
-import displayMonth from "./displayMonth";
+import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import UpdateEventInfo from "../../updateEvent/UpdateEventInfo";
+import { EventPeriodFormatDisplay } from "./EventPeriodFormatDisplay";
 
 const EventDateInformation = () => {
   const [openUpdateEventModal, setOpenUpdateEventModal] = useState(false);
@@ -114,18 +114,7 @@ const EventDateInformation = () => {
             item
             xs={12}
           >
-            <p style={{...TextFontSize30LineHeight38, textAlign: "left", paddingTop: "8px"}}>
-              {displayMonth(`${event?.eventInfoDetail?.dateBegin}`)}
-              &nbsp;
-              {new Date(`${event?.eventInfoDetail?.dateBegin}`).getDate()}{" "}
-              &nbsp;-&nbsp;
-              {displayMonth(`${event?.eventInfoDetail?.dateEnd}`) !==
-                displayMonth(`${event?.eventInfoDetail?.dateBegin}`) && <br />}
-              {displayMonth(`${event?.eventInfoDetail?.dateEnd}`) !==
-                displayMonth(`${event?.eventInfoDetail?.dateBegin}`) &&
-                displayMonth(`${event?.eventInfoDetail?.dateEnd}`)}{" "}
-              {new Date(`${event?.eventInfoDetail?.dateEnd}`).getDate()}
-            </p>
+              <EventPeriodFormatDisplay event={event} styleText={TextFontSize30LineHeight38} />
           </Grid>
           <Grid
             display={"flex"}

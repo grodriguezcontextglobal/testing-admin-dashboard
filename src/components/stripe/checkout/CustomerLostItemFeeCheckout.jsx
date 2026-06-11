@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
 import {
   PaymentElement,
-  useStripe,
   useElements,
+  useStripe,
 } from "@stripe/react-stripe-js";
+import { useEffect, useState } from "react";
 // import "./checkoutStyles.css";
-import { useSelector } from "react-redux";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 
 export const CustomerLostItemFeeCheckout = ({
   total,
@@ -16,8 +14,9 @@ export const CustomerLostItemFeeCheckout = ({
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState(null);
+  const [backgroundColorMessage, setBackgroundColorMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { customer } = useSelector((state) => state.stripe);
+  // const { customer } = useSelector((state) => state.stripe);
 
   useEffect(() => {
     if (!stripe) {
@@ -36,15 +35,19 @@ export const CustomerLostItemFeeCheckout = ({
       switch (paymentIntent.status) {
         case "succeeded":
           setMessage("Payment succeeded!");
+          setBackgroundColorMessage({ backgroundColor: "green", color: "white" });
           break;
         case "processing":
           setMessage("Your payment is processing.");
+          setBackgroundColorMessage({ backgroundColor: "orange", color: "white" });
           break;
         case "requires_payment_method":
           setMessage("Your payment was not successful, please try again.");
+          setBackgroundColorMessage({ backgroundColor: "red", color: "black" });
           break;
         default:
           setMessage("Something went wrong.");
+          setBackgroundColorMessage({ backgroundColor: "red", color: "black" });
           break;
       }
     });
@@ -86,7 +89,7 @@ export const CustomerLostItemFeeCheckout = ({
       elements,
       confirmParams: {
         // Make sure to change this to your payment completion page
-        return_url: myUrl + `/consumers/${customer.uid}/${redirectUrl}`,
+        return_url: myUrl + redirectUrl, ///consumers/${customer.uid}/${redirectUrl}
       },
     });
     // This point will only be reached if there is an immediate error when
@@ -106,27 +109,23 @@ export const CustomerLostItemFeeCheckout = ({
   return (
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
-      <button
-        style={{ ...BlueButton, width: "100%", margin: "2dvh 0 0" }}
-        // className="btn"
+      <BlueButtonComponent
+        func={handleSubmit}
+        key="pay_lost_item_fee"
+        title={`Charge $${total}`}
         disabled={isLoading || !stripe || !elements}
         id="submit"
-      >
-        <span
-          style={{
-            ...BlueButtonText,
-            margin: "auto",
-            textTransform: "capitalize",
-          }}
-        >
-          {isLoading ? (
-            <div className="spinner" id="spinner"></div>
-          ) : (
-            `charge $${total}`
-          )}
-        </span>
-      </button>
-      {message && <div id="payment-message">{message}</div>}
+        buttonType="submit"
+        styles={{ margin: "2dvh 0 0", width: "100%" }}
+        loadingState={isLoading}
+      />
+      {message && <div id="payment-message" style={{
+        backgroundColor: backgroundColorMessage?.backgroundColor || "red",
+        color: backgroundColorMessage?.color || "white", width: "100%",
+        margin: "1dvh 0 0",
+        padding: "1dvh 0",
+        borderRadius: "1dvh"
+      }}>{message}</div>}
     </form>
   );
 };

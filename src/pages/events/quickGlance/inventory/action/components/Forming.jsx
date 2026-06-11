@@ -197,6 +197,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     if (respoUpdating.data.ok) {
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: false,
+        logistic_status: "allocated",
         company_id: user.sqlInfo.company_id,
         item_group: valueItemSelected[0].item_group,
         min_serial_number: valueItemSelected[0].serial_number,

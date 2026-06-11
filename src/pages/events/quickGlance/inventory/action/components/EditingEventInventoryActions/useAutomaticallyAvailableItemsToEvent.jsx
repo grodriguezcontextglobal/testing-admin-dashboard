@@ -124,6 +124,7 @@ const useAutomaticallyAvailableItemsToEvent = ({
         });
         await devitrakApi.post("/db_item/item-out-warehouse", {
           warehouse: 0,
+          logistic_status: "allocated",
           company_id: user.sqlInfo.company_id,
           item_group: database[0].item_group,
           startingNumber: database[0].serial_number,
@@ -321,7 +322,7 @@ const useAutomaticallyAvailableItemsToEvent = ({
       setLoadingStatus(false);
       closeModal();
     } catch (error) {
-      console.log(error);
+      console.error(error);
       message.error("Failed to add devices to event. Please try again.");
     } finally {
       setLoadingStatus(false);

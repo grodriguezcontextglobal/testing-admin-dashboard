@@ -23,7 +23,7 @@ const MainPage = () => {
         container
         display="flex"
         justifyContent="center"
-        alignItems="center"
+        alignItems="flex-start"
         key="settingUp-deviceList-event"
         sx={{
           px: isMobile ? 2 : 3,
@@ -86,6 +86,11 @@ const MainPage = () => {
             md={4}
             lg={4}
             sx={{
+              position: "-webkit-sticky",
+              // eslint-disable-next-line no-dupe-keys
+              position: "sticky",
+              top: theme.spacing(4),
+              height: "fit-content",
               mb: isMobile ? 3 : 4,
             }}
           >

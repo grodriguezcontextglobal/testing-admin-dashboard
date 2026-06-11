@@ -29,6 +29,7 @@ import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/T
 import { dicIcons } from "../../utils/dicIcons";
 import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
 import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
+import Input from "../../../../../../../components/UX/inputs/Input";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -56,22 +57,24 @@ const AssignmentDevicesToMember = () => {
     setValue("expectedReturnDate", dateToUse);
   }, [dateToUse, setValue]);
 
+  const referenceDateTime = useMemo(() => new Date().getTime(), []);
+
   const { role, locationsAssignPermission } = useStaffRoleAndLocations();
-  const bodyFetchRequest = () => {
-    if (role === "0" || role === 0) {
-      return {
-        company_id: user.sqlInfo.company_id,
-        warehouse: 1,
-        enableAssignFeature: 1,
-      };
-    }
-    return {
-      company_id: user.sqlInfo.company_id,
-      warehouse: 1,
-      enableAssignFeature: 1,
-      location: locationsAssignPermission,
-    };
-  };
+  // const bodyFetchRequest = () => {
+  //   if (role === "0" || role === 0) {
+  //     return {
+  //       company_id: user.sqlInfo.company_id,
+  //       warehouse: 1,
+  //       enableAssignFeature: 1,
+  //     };
+  //   }
+  //   return {
+  //     company_id: user.sqlInfo.company_id,
+  //     warehouse: 1,
+  //     enableAssignFeature: 1,
+  //     location: locationsAssignPermission,
+  //   };
+  // };
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
@@ -82,6 +85,7 @@ const AssignmentDevicesToMember = () => {
           warehouse: 1,
           enableAssignFeature: 1,
           location: locationsAssignPermission,
+          logistic_status:"in-stock"
         }
       ),
     enabled: !!user.sqlInfo.company_id,
@@ -188,6 +192,7 @@ const AssignmentDevicesToMember = () => {
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
+      logistic_status: "assigned",
       company_id: user.sqlInfo.company_id,
       item_group: props.item_group,
       category_name: props.category_name,
@@ -223,9 +228,9 @@ const AssignmentDevicesToMember = () => {
     try {
       const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
         event_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()}`,
+          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
         venue_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()}`,
+          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
         street_address: props.street,
         city_address: props.city,
         state_address: props.state,
@@ -252,7 +257,7 @@ const AssignmentDevicesToMember = () => {
         activity: true,
         comment: "No comment",
         eventSelected: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()}`,
+          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
         provider: user.company,
         type: db[index].item_group,
         company: user.companyData.id,
@@ -305,7 +310,7 @@ const AssignmentDevicesToMember = () => {
   };
   const createEventNoSQL = async (props) => {
     const eventName = `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-      } / ${new Date().toLocaleDateString()}`;
+      } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`;
     const eventLink = eventName.replace(/ /g, "%20");
     const eventFormat = {
       user: user.email,
@@ -365,6 +370,7 @@ const AssignmentDevicesToMember = () => {
       qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
       type: "lease",
       company_id: user.companyData.id,
+      contract_for: "member",
     };
     const newEventInfo = await devitrakApi.post(
       "/event/create-event",
@@ -609,11 +615,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Street</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     {...register("street")}
                     disabled={loadingStatus}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     fullWidth
@@ -624,11 +630,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>City</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     disabled={loadingStatus}
                     {...register("city")}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     required
@@ -648,11 +654,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>State</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     {...register("state")}
                     disabled={loadingStatus}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     required
@@ -663,11 +669,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Zip</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     disabled={loadingStatus}
                     {...register("zip")}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     required
@@ -688,12 +694,12 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Expected return date</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     type="date"
                     disabled={loadingStatus}
                     {...register("expectedReturnDate")}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     fullWidth
@@ -832,12 +838,12 @@ const AssignmentDevicesToMember = () => {
                     >
                       <p style={Subtitle}>Quantity</p>
                     </InputLabel>
-                    <OutlinedInput
+                    <Input
                       disabled={loadingStatus}
                       required
                       {...register("quantity")}
                       style={{
-                        ...OutlinedInputStyle,
+                        
                         width: "100%",
                       }}
                       placeholder="e.g. 0"
@@ -876,7 +882,7 @@ const AssignmentDevicesToMember = () => {
                         </strong>
                       </p>
                     </InputLabel>
-                    <OutlinedInput
+                    <Input
                       disabled={
                         loadingStatus ||
                         valueItemSelected.max_serial_number ===
@@ -888,7 +894,7 @@ const AssignmentDevicesToMember = () => {
                         message: "Starting serial number is required",
                       })}
                       style={{
-                        ...OutlinedInputStyle,
+                        
                         width: "100%",
                       }}
                       placeholder={`Selected category serial numbers start: ${valueItemSelected.min_serial_number} end: ${valueItemSelected.max_serial_number}`}

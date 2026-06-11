@@ -3,17 +3,15 @@ import {
 } from "@mui/material";
 import { Dropdown } from "antd";
 import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import { useSelector } from "react-redux";
-import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
-import ExcelIcon from "../../../components/icons/ExcelIcon";
-import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
-import AnnotationPlusIcon from "../../../components/icons/AnnotationPlusIcon";
 import CheckSquareBrokenIcon from "../../../components/icons/CheckSquareBrokenIcon";
+import ExcelIcon from "../../../components/icons/ExcelIcon";
 import PencilLineIcon from "../../../components/icons/PencilLineIcon";
+import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
+import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
 import TrashIcon from "../../../components/icons/TrashIcon";
 import Vertical3Dots from "../../../components/icons/Vertical3Dots";
 
@@ -24,9 +22,9 @@ import Vertical3Dots from "../../../components/icons/Vertical3Dots";
  *
  * Responsibilities:
  * - Displays the company inventory title.
- * - Keeps one primary action ("Add a group of items") and one secondary
- *   action ("Import inventory") visible; folds the remaining actions into
- *   an overflow menu.
+ * - Keeps one primary action ("Add inventory") and one secondary action
+ *   ("Import inventory") visible; folds the remaining actions into an
+ *   overflow menu.
  * - Checks `user.companyData.employees[].preference.managerLocation` for
  *   `create` and `update` permissions.
  *
@@ -34,7 +32,6 @@ import Vertical3Dots from "../../../components/icons/Vertical3Dots";
  * @param {Object} props.user - User data object containing permissions.
  * @param {Object} props.TextFontSize30LineHeight38 - Style object for the title.
  * @param {Function} props.setAddInventoryFromXLSXFileModal - Callback to open the import modal.
- * @param {Function} props.setOpenCreateLocationModal - Callback to open the create-location modal.
  * @param {Function} props.setOpenCheckInDevicesFromEvent - Callback to open the check-in modal.
  * @param {Function} props.setOpenDeleteItemModal - Callback to open the delete-group modal.
  */
@@ -42,13 +39,9 @@ const HeaderInventaryComponent = ({
   user,
   TextFontSize30LineHeight38,
   setAddInventoryFromXLSXFileModal,
-  setOpenCreateLocationModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
 }) => {
-  const {
-    isAdmin
-  } = useStaffRoleAndLocations();
   const navigate = useNavigate();
   const { role, locations } = useSelector((state) => state.permission);
   // Check permissions
@@ -56,7 +49,7 @@ const HeaderInventaryComponent = ({
   const canUpdate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.update)
   const canManageDevices =
     role === "0" ||
-    locations?.some(
+    locations?.every(
       (location) =>
         location.actions?.create &&
         location.actions?.assign &&
@@ -85,17 +78,9 @@ const HeaderInventaryComponent = ({
       key: "update-group",
       label: overflowMenuLabel(
         <PencilLineIcon width={18} height={18} stroke="#344054" />,
-        "Update a group of items",
+        "Update inventory",
       ),
       onClick: () => navigate("/inventory/edit-group"),
-    },
-    isAdmin && {
-      key: "create-location",
-      label: overflowMenuLabel(
-        <AnnotationPlusIcon width={18} height={18} />,
-        "Create location",
-      ),
-      onClick: () => setOpenCreateLocationModal(true),
     },
     canManageDevices && {
       key: "check-in-devices",
@@ -151,7 +136,7 @@ const HeaderInventaryComponent = ({
         {canCreate && (
           <Link to="/inventory/new-bulk-items">
             <BlueButtonComponent
-              title={"Add a group of items"}
+              title={"Add inventory"}
               styles={{ with: "100%" }}
               iconLeading={<PlusCircleWhiteIcon />}
               buttonType="button"
@@ -219,7 +204,6 @@ HeaderInventaryComponent.propTypes = {
   }).isRequired,
   TextFontSize30LineHeight38: PropTypes.object,
   setAddInventoryFromXLSXFileModal: PropTypes.func,
-  setOpenCreateLocationModal: PropTypes.func,
   setOpenCheckInDevicesFromEvent: PropTypes.func,
   setOpenDeleteItemModal: PropTypes.func,
 };

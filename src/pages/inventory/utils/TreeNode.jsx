@@ -1,7 +1,7 @@
 // TreeNode.jsx
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, message, Checkbox, Avatar } from "antd";
+import { Button, Checkbox, message } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,8 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../components/icons/EditIcon";
+import { RightChevronIcon } from "../../../components/icons/RightChevronIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
-import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import ViewIcon from "../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -84,9 +84,8 @@ const TreeNode = ({
         // Update the same message key to success (no destroy needed)
         message.open({
           type: "success",
-          content: `Location/Sub locations updated successfully. Total: ${
-            response.data.affectedRows ?? 0
-          }`,
+          content: `Location/Sub locations updated successfully. Total: ${response.data.affectedRows ?? 0
+            }`,
           duration: 2.5,
           key: "updateLocationPath",
         });
@@ -237,22 +236,23 @@ const TreeNode = ({
         transition: "background-color 0.3s",
         borderRadius: "8px !important",
         // opacity: isSelectable ? 1 : 0.6,
+        width: "-webkit-fill-available",
       }}
     >
       {/* Removed contextHolder to avoid hooking per-node message portals */}
       <Grid container style={{ cursor: children ? "pointer" : "default" }}>
         <Grid
           sx={{
-            width: "100%",
+            width: "fit-content",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
           item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
+        // xs={12}
+        // sm={12}
+        // md={12}
+        // lg={12}
         >
           <Button htmlType="button" style={style} onClick={toggleOpen}>
             <Typography
@@ -267,7 +267,7 @@ const TreeNode = ({
               }}
               className="tree-title"
             >
-              {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
+              {children && (isOpen ? <DownNarrow /> : <RightChevronIcon />)}{" "}
               {Number(user.role) === 0 && nodeId && onSelectLocation && (
                 <span onClick={(e) => e.stopPropagation()}>
                   <Checkbox
@@ -318,20 +318,25 @@ const TreeNode = ({
                     />
                   </>
                 ) : (
-                  <Button
+                  <span
                     style={{
-                      borderRadius: "25px",
-                      width: "fit-content",
-                      aspectRatio: "1/1",
-                      marginLeft: "5px",
+                      width: "40px !important",
+                      height: "40px !important",
+                      borderRadius: "50% !important",
                     }}
-                    onClick={handleEdit}
-                    disabled={Number(user.role) > 0}
-                  >
-                    <EditIcon />
-                  </Button>
+                    onClick={handleEdit}>
+                    &nbsp;<EditIcon />
+                  </span>
                 )}
-                <Avatar
+                <span onClick={() => {
+                  clickTypeLocationInfo();
+                  setOpenDetails(true);
+                }}
+                  style={{ margin: "0 0.5rem" }}
+                >
+                  <ViewIcon fill="#000000e0" />
+                </span>
+                {/* <Avatar
                   onClick={() => {
                     clickTypeLocationInfo();
                     setOpenDetails(true);
@@ -339,21 +344,17 @@ const TreeNode = ({
                   style={{
                     margin: "auto",
                     background: "#fff",
-                    borderColor: "#d9d9d9",
+                    // borderColor: "#d9d9d9",
                   }}
                 >
-                  <ViewIcon width="20" height="20" fill="#000000e0" />
-                </Avatar>
+                  <ViewIcon fill="#000000e0" />
+                </Avatar> */}
               </div>
             </Typography>
           </Button>
-          <Button
-            htmlType="button"
-            style={style}
-            onClick={() => navigateToLocation(path)}
-          >
+          <span style={{ cursor: "pointer" }} onClick={() => navigateToLocation(path)}>
             <RightNarrowInCircle />
-          </Button>
+          </span>
         </Grid>
         <Grid className="tree-sub" item xs={12}>
           Total: {total}, Available: {available}

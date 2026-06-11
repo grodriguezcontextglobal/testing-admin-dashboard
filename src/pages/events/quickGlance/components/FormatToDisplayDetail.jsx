@@ -18,7 +18,7 @@ const FormatToDisplayDetail = () => {
       devitrakApi.get(
         `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
       ),
-    refetchOnMount: false,
+    enabled: !!event.eventInfoDetail.eventName && !!user.companyData.id,
   });
   const receiversNoOperatingInPoolQuery = useQuery({
     queryKey: ["listOfNoOperatingDevices"],
@@ -85,9 +85,15 @@ const FormatToDisplayDetail = () => {
 
     const deviceRangeDisplay = () => {
       let allItemsForConsumers = 0;
+      const groupingInventorySetForConsumer = groupBy(
+        foundAllDevicesGivenInEvent(),
+        "type"
+      );
       for (let data of event.deviceSetup) {
         if (data.consumerUses) {
-          allItemsForConsumers += Number(data.quantity);
+          // allItemsForConsumers += Number(data.quantity);
+          const checkingTypeInventory = Number(groupingInventorySetForConsumer[data.group]?.length) ?? 0;
+          allItemsForConsumers += checkingTypeInventory;
         }
       }
       return allItemsForConsumers;

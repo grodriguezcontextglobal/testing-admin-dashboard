@@ -20,8 +20,9 @@ const UX = ({
   handleReturnNavigation,
   handleUpdatePeriodOnly,
   locationData,
+  navigate,
   openAdvanceSearchModal,
-  overallSummary,
+  // overallSummary,
   ownedInventory,
   period,
   periodUpdateOnly,
@@ -58,7 +59,7 @@ const UX = ({
         />
         <div style={{ display: "flex", gap: "8px" }}>
           <BlueButtonComponent
-            title={"Update Period"}
+            title={"New Search"}
             func={handleUpdatePeriodOnly}
             buttonType="button"
             titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
@@ -98,13 +99,13 @@ const UX = ({
         </>
       )}
       {/* KPI Summary */}
-      <Grid item xs={12} md={3}>
+      {/* <Grid item xs={12} md={3}>
         <KPI
           label="Total Locations"
           value={overallSummary?.total_locations}
           color="primary"
         />
-      </Grid>
+      </Grid> */}
       <Grid item xs={12} md={3}>
         <KPI label="Item Types" value={uniqueItemGroupsCount} color="primary" />
       </Grid>
@@ -117,14 +118,15 @@ const UX = ({
       </Grid>
       <DivAnt />
       {/* Rental Analysis Buckets */}
-      {rentedInventory.total_items > 0 && (
+      {/* {rentedInventory.total_items > 0 && ( */}
         <Grid id="rental-equipment-inventory" item xs={12}>
           <RentalEquipmentInventory
             rentalAnalysis={rentalAnalysis}
             // RentedInventoryTable={RentedInventoryTable}
+            navigate={navigate}
           />
         </Grid>
-      )}{" "}
+      {/* )}{" "} */}
       <DivAnt />
       {/* Event Inventory - Enhanced */}
       <Grid item xs={12}>

@@ -1,12 +1,13 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Space, Table, message, notification } from "antd";
+import { Space, message, notification } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import {
   onReceiverObjectToReplace,
   onTriggerModalToReplaceReceiver,
@@ -20,12 +21,12 @@ import "../../../../../styles/global/ant-table.css";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
-import SignaturesProof from "./SignaturesProof";
-import { ReplaceDevice } from "./actions/ReplaceDevice";
-import ExpandedTableButtons from "./ux/ExpandedTableButtons";
 import DisplayDeviceRequestedLegendPerTransaction from "./AssigningDevice/components/DisplayDeviceRequestedLegendPerTransaction";
+import SignaturesProof from "./SignaturesProof";
 import ExpressCheckInDevices from "./actions/ExpressCheckInDevices";
+import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
+import ExpandedTableButtons from "./ux/ExpandedTableButtons";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
 const ExpandedRowInTable = ({
   rowRecord,
@@ -624,7 +625,7 @@ const ExpandedRowInTable = ({
               styles={{width:"fit-content"
               }}
               func={() => setOpenReturnDeviceInBulkModal(true)}
-              title={`Return multiple items of this transaction | Total items to
+              title={`Return items of this transaction | Total items to
                 return: ${selectedItems.length}`}
             />}
             {selectedItems.length === 0 && <BlueButtonConfirmationComponent
@@ -648,12 +649,11 @@ const ExpandedRowInTable = ({
             />
           </Space>
 
-          <Table
+          <BaseTable
             columns={columns}
             dataSource={checkDevicesInTransaction()}
-            pagination={{
-              position: ["bottomCenter"],
-            }}
+            enablePagination={true}
+            pageSize={10}
             rowSelection={{
               type: "checkbox",
               ...rowSelection,

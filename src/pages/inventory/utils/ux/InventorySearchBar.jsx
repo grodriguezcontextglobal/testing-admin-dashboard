@@ -3,7 +3,9 @@ import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
 import { Button as AntButton, Divider, Tag } from "antd";
 import { useContext, useState } from "react";
+import { useSelector } from "react-redux";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
 import FilterLinesIcon from "../../../../components/icons/FilterLinesIcon";
 import SearchLgIcon from "../../../../components/icons/SearchLgIcon";
 import XCloseIcon from "../../../../components/icons/XCloseIcon";
@@ -19,7 +21,10 @@ const InventorySearchBar = ({
   setValue,
   setParams,
   setSearchedResult,
+  setOpenShippingModal,
+  setShipmentRecordModal,
 }) => {
+  const { role, locations } = useSelector((state) => state.permission);
   const filterContext = useContext(FilterOptionsContext);
   const chosen = Array.isArray(filterContext?.chosen)
     ? filterContext.chosen
@@ -42,6 +47,16 @@ const InventorySearchBar = ({
     );
   };
   const clearAllFilters = () => setChosenOption?.([]);
+
+  const canRenderButton =
+    role === "0" ||
+    locations?.every(
+      (location) =>
+        location.actions?.create &&
+        location.actions?.assign &&
+        location.actions?.delete &&
+        location.actions?.transfer,
+    );
 
   return (
     <Grid
@@ -81,6 +96,27 @@ const InventorySearchBar = ({
         >
           Search inventory:&nbsp;
         </Typography>
+        <div
+          style={{
+            alignItems: "center",
+            display: "flex",
+            gap: 6,
+            justifyContent: "flex-end",
+          }}
+        >
+          {canRenderButton && (
+            <LightBlueButtonComponent
+              title="Ship out inventory"
+              func={() => setOpenShippingModal(true)}
+            />
+          )}
+          {canRenderButton && (
+            <LightBlueButtonComponent
+              title="Shipment record"
+              func={() => setShipmentRecordModal(true)}
+            />
+          )}
+        </div>
       </div>
       <div
         style={{

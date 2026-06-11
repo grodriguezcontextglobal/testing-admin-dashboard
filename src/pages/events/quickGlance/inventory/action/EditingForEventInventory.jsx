@@ -35,6 +35,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
+        logistic_status: "in-stock"
       }),
   });
   const [api, contextHolder] = notification.useNotification();
@@ -226,15 +227,17 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   };
   const bodyModal = () => {
     return (
-      <div style={{ display:"grid", gap:"1rem"}}>
-        <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory">
+      <div style={{ display: "grid", gap: "1rem" }}>
+        <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory" style={{
+          backgroundColor: "#F2F4F7",
+        }}>
           <Grid container>
             <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
               <Grid
                 style={{
                   borderRadius: "8px",
-                  border: "1px solid var(--gray300, #D0D5DD)",
-                  background: "var(--gray100, #F2F4F7)",
+                  // border: "1px solid var(--gray300, #D0D5DD)",
+                  backgroundColor: "#F2F4F7",
                   padding: "24px",
                   width: "100%",
                 }}

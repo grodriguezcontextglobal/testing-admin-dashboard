@@ -6,6 +6,7 @@ export const dicSelectedOptions = {
   4: "Ownership",
   5: "Condition",
   6: "Staff member",
+  7: "Status",
 };
 
 export const dictionary = {

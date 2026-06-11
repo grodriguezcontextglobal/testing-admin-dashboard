@@ -109,7 +109,7 @@ const LegalDocumentModal = ({
       setAutoAssignedFromFolder(true);
 
       message.success(
-        `Auto-assigned ${autoAssignedDocs.length} document(s) from equipment staff folder`
+        `Auto-assigned ${autoAssignedDocs.length} document(s)`
       );
     }
   }, [
@@ -122,7 +122,7 @@ const LegalDocumentModal = ({
 
   const handleAssignDocuments = () => {
     if (selectedDocuments.length === 0) {
-      message.warning("Please select at least one document");
+      message.warning("No documents selected. Please choose one or more documents to send.");
       return;
     }
 
@@ -148,19 +148,19 @@ const LegalDocumentModal = ({
       if (!data?.ok || !data?.downloadUrl) {
         throw new Error("Invalid or missing download URL");
       }
-      return message.success("Document displayed successfully");
+      return message.success("Document is now available for viewing.");
     } catch (error) {
-      message.error("Failed to download document");
+      message.error("Unable to open the selected document. Please try again.");
       throw new Error(error);
     }
   };
 
   const assignedColumns = [
-    {
-      title: "Document ID",
-      dataIndex: "id",
-      key: "id",
-    },
+    // {
+    //   title: "Document ID",
+    //   dataIndex: "id",
+    //   key: "id",
+    // },
     {
       title: "Document Name",
       dataIndex: "title",
@@ -193,17 +193,17 @@ const LegalDocumentModal = ({
   const items = !foldersExisting
     ? [
         {
-          label: "Assigned Documents",
+          label: "Selected Documents",
           key: "0",
         },
         {
-          label: "Assign Documents",
+          label: "Browse Documents",
           key: "1",
         },
       ]
     : [
         {
-          label: "Assigned Documents",
+          label: "Selected Documents",
           key: "0",
         },
       ];
@@ -232,7 +232,7 @@ const LegalDocumentModal = ({
             }}
           >
             <p style={Subtitle}>
-              Do you want to email a device contract to staff?{" "}
+              Send legal documents and equipment agreements by email{" "}
             </p>
             <BlueButtonComponent
               title={"Add legal document"}
@@ -251,7 +251,7 @@ const LegalDocumentModal = ({
           }}
         >
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-            <p style={Subtitle}>Email address</p>
+            <p style={Subtitle}>Recipient Email Address</p>
           </InputLabel>
           <OutlinedInput
             {...register("emailContract")}
@@ -302,7 +302,7 @@ const LegalDocumentModal = ({
                 <Box>
                   <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to staff member.">
                     <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                      Select documents to email to staff member <QuestionIcon />
+                      Select documents to be attached to device assignment <QuestionIcon />
                     </Typography>
                   </Tooltip>
                   <Select

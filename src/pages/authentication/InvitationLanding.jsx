@@ -234,7 +234,6 @@ const InvitationLanding = () => {
         ],
       },
     );
-    console.log(resp?.data)
     if (resp.data.ok) {
       const findInvitedStaff = hostCompanyInfo.employees.findIndex(
         (element) => element.user === email,

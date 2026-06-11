@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Col,
@@ -24,11 +24,12 @@ import Input from "../../../components/UX/inputs/Input";
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
 import Loading from "../../../components/animation/Loading";
 import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
+import Chip from "../../../components/UX/Chip/Chip";
 const { Title } = Typography;
 const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedLocationObject, setSelectedLocationObject] = useState(null);
-  const [selectedSubLocations, setSelectedSubLocations] = useState([]);
+  const [selectedSubLocations, setSelectedSubLocations] = useState(new Set());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventInventory, setEventInventory] = useState([]);
   const [scannedSerials, setScannedSerials] = useState([]);
@@ -47,19 +48,37 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const { data: subLocations = [], isLoading: isLoadingSubLocations } =
     useSubLocations(selectedLocation);
 
-  const { data: events = [], isLoading: isLoadingEvents } = useQuery({
+  const { data: events = [], isLoading: isLoadingEvents, refetch: eventListRefetch } = useQuery({
     queryKey: ["finishedEvents", user.companyData.id],
     queryFn: async () => {
       const respo = await devitrakApi.post(`/event/event-list`, {
         type: "event",
         company_id: user.companyData.id,
         logistic_inventory_status: "in-transit",
+        active: false,
       });
       return respo.data.list.filter((event) => event.active === false);
     },
     enabled: !!user.companyData.id,
   });
 
+  const queryClient = useQueryClient();
+  const refetchInventory = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["finishedEvents", user.companyData.id], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"], refetchActive: true });
+    await queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"], refetchActive: true });
+  }
+  
+  const checkingInItemsToWarehouseMutation = useMutation({
+    mutationFn: async (template) => await devitrakApi.post("/db_event/confirm-item-return", template),
+    onSuccess: async() => {
+      message.success("Devices checked in successfully!");
+      await refetchInventory();
+      close();
+    },
+  })
   const handleEventSelection = async (event) => {
     if (!event) {
       setEventInventory([]);
@@ -75,7 +94,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       extraItems: [],
     });
 
-    setSelectedEvent(event);
+    setSelectedEvent(event.eventInfoDetail.eventName);
     if (!event || !event.deviceSetup) {
       message.warning("Selected event has no device setup.");
       return;
@@ -98,6 +117,10 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       );
       setEventInventory(allInventory);
       if (allInventory.length === 0) {
+        await devitrakApi.patch(`/event/edit-staff-event/${event.id}`, {
+          logistic_inventory_status: "completed",
+        })
+        await eventListRefetch();
         message.info("No inventory found for this event.");
       }
     } catch (error) {
@@ -159,21 +182,25 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       message.error("Please select a check-in location.");
       return;
     }
+
+    if (!selectedEvent) {
+      message.error("Please select an event.");
+      return;
+    }
+
     try {
+      setIsLoading(true);
+
       const template = {
-        serial_numbers: [
-          ...comparisonResults.matchedItems.map((serial) => serial),
-        ],
+        serial_numbers: comparisonResults.matchedItems,
         company_id: user.sqlInfo.company_id,
         location: selectedLocation,
-        sub_location: selectedSubLocations,
+        sub_location: Array.from(selectedSubLocations),
         noSqlCompanyId: user.companyData.id,
-        noSqlEventName: selectedEvent.eventInfoDetail.eventName,
+        noSqlEventName: selectedEvent,
         user_id: user.sqlMemberInfo.staff_id,
       };
-      await devitrakApi.post("/db_event/confirm-item-return", template);
-      message.success("Devices checked in successfully!");
-      close();
+      checkingInItemsToWarehouseMutation.mutateAsync(template);
     } catch (error) {
       console.error(error);
       message.error("Failed to check-in devices.");
@@ -181,7 +208,6 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       setIsLoading(false);
     }
   };
-
   const renderComparisonList = (title, items, color) => (
     <>
       <Title level={5}>
@@ -198,6 +224,12 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     </>
   );
 
+  const handleItemChange = (value) => {
+    setSelectedSubLocations(value);
+  };
+
+  const itemsToDisplay = useMemo(() => Array.isArray(subLocations) ? subLocations.map((sub) => ({ label: sub, id: sub })) : [], [subLocations]);
+
   const body = (
     <>
       <Row gutter={[16, 16]}>
@@ -205,34 +237,55 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
           {isLoadingLocations ? (
             <Loading />
           ) : (
-            <SelectComponent
-              items={locations.map((loc) => ({
-                label: loc.location,
-                id: loc.id,
-              }))}
-              value={selectedLocationObject}
-              onSelect={(option) => {
-                setSelectedLocation(option?.id || null);
-                setSelectedLocationObject(option);
-                setSelectedSubLocations([]);
-              }}
-              placeholder="Select Location"
-              disabled={!open}
-              label={"Select Location"}
-            />
+            <>
+              <SelectComponent
+                items={locations.map((loc) => ({
+                  label: loc.location,
+                  id: loc.id,
+                }))}
+                value={selectedLocationObject}
+                onSelect={(option) => {
+                  setSelectedLocation(option?.id || null);
+                  setSelectedLocationObject(option);
+                  setSelectedSubLocations(new Set());
+                }}
+                placeholder="Select Location"
+                disabled={!open}
+                label={"Select Location"}
+              />
+              <div style={{ marginTop: '1rem' }}>
+                <Title level={5}>Sub-locations selected</Title>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                  {Array.from(selectedSubLocations).map((sub) => (
+                    <Chip
+                      key={sub}
+                      variant="outlined"
+                      label={sub}
+                      // onDelete={() => handleRemoveSubLocation(sub)}
+                      style={{
+                        backgroundColor: "rgba(40, 199, 111, 0.12)",
+                        color: "rgb(40, 199, 111)",
+                        fontWeight: 600,
+                        padding: "0 8px"
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </Col>
         <Col span={8}>
           {isLoadingSubLocations ? (
             <Loading />
-          ) : (
+          ) : itemsToDisplay.length > 0 && (
             <MultiSelectComponent
-              onChange={setSelectedSubLocations}
-              items={subLocations.map((sub) => ({ label: sub, value: sub }))}
-              placeholder="Select or create sub-locations"
-              disabled={!selectedLocation || !open}
-              value={selectedSubLocations}
-              label={"Select or create sub-locations"}
+              label="Sub Locations"
+              placeholder="Select sub locations"
+              items={itemsToDisplay}
+              selectedKeys={selectedSubLocations}
+              onSelectionChange={handleItemChange}
+              disabled={!selectedLocation}
             />
           )}
         </Col>
@@ -249,9 +302,10 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                 original: event,
               }))}
               value={selectedEvent}
-              onSelect={(option) =>
+              onSelect={(option) => (
+                setSelectedEvent(option?.label || null),
                 handleEventSelection(option?.original || null)
-              }
+              )}
               placeholder="Type to search for closed events"
               disabled={!open}
             />
@@ -341,8 +395,8 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       />
       <Divider />
       {comparisonResults.matchedItems.length > 0 ||
-      comparisonResults.missingItems.length > 0 ||
-      comparisonResults.extraItems.length > 0 ? (
+        comparisonResults.missingItems.length > 0 ||
+        comparisonResults.extraItems.length > 0 ? (
         <Row gutter={[16, 16]}>
           <Col span={8}>
             {renderComparisonList(

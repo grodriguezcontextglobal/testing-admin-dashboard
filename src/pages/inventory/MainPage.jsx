@@ -34,10 +34,12 @@ import CheckInDevicesFromEventsModal from "./utils/CheckInDevicesFromEventsModal
 import CreateLocationModal from "./utils/CreateLocationModal";
 import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
+import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import DeleteGroups from "./actions/DeleteGroups";
-import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
+import ShippingInventoryModal from "./actions/ShippingInventoryModal";
+import { ShipmentRecord } from "./actions/ShipmentRecord";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -71,7 +73,9 @@ const MainPage = () => {
     4: [],
     5: [],
     6: [],
+    7: [],
   });
+  const [shipmentRecordModal, setShipmentRecordModal] = useState(false)
   const [openDetails, setOpenDetails] = useState(false);
   const [typePerLocationInfoModal, setTypePerLocationInfoModal] =
     useState(null);
@@ -83,6 +87,7 @@ const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const [currentTab, setCurrentTab] = useState(0);
   const [activeView, setActiveView] = useState("1");
+  const [openShippingModal, setOpenShippingModal] = useState(false);
   const { register, setValue, handleSubmit } = useForm({
     defaultValues: {
       searchItem: "...",
@@ -133,7 +138,12 @@ const MainPage = () => {
   const [isLoadingState, setIsLoadingState] = useState(false);
 
   const optionsUX = useMemo(
-    () => <FilterOptionsUX setChosen={setChosenOption} />,
+    () => (
+      <FilterOptionsUX
+        setChosen={setChosenOption}
+        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+      />
+    ),
     [chosenOption, dataFilterOptions],
   );
 
@@ -213,7 +223,7 @@ const MainPage = () => {
         reference={null}
         refreshFn={refetchingQueriesFn}
         searchedResult={searchedResult}
-        // searchItem={settingParamsForSearchResult}
+        setOpenCreateLocationModal={setOpenCreateLocationModal}
         setDataFilterOptions={setDataFilterOptions}
         setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
         total={getTotalToDisplay()}
@@ -285,7 +295,6 @@ const MainPage = () => {
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
           setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
-          setOpenCreateLocationModal={setOpenCreateLocationModal}
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
         />
@@ -307,8 +316,11 @@ const MainPage = () => {
             setValue={setValue}
             setParams={setParams}
             setSearchedResult={setSearchedResult}
+            setOpenShippingModal={setOpenShippingModal}
+            setShipmentRecordModal={setShipmentRecordModal}
           />
         </FilterOptionsContext.Provider>
+        <Divider />
         <Grid
           display={"flex"}
           justifyContent={"center"}
@@ -343,6 +355,7 @@ const MainPage = () => {
                 searchItem: settingParamsForSearchResult,
                 setDataFilterOptions: setDataFilterOptions,
                 setOpenAdvanceSearchModal: setOpenAdvanceSearchModal,
+                setShipmentRecordModal: setShipmentRecordModal,
                 total: getTotalToDisplay(),
                 allowedLocations: allowedInventoryLocations,
                 userPreferences: userPreferences,
@@ -380,6 +393,12 @@ const MainPage = () => {
       }
       {
         openDeleteItemModal && <DeleteGroups openModal={openDeleteItemModal} closeModal={setOpenDeleteItemModal} refetch={companyHasInventoryQuery.refetch} user={user} />
+      }
+      {
+        openShippingModal && <ShippingInventoryModal visible={openShippingModal} onClose={() => setOpenShippingModal(false)} refetch={companyHasInventoryQuery.refetch} user={user} />
+      }
+      {
+        shipmentRecordModal && <ShipmentRecord open={shipmentRecordModal} setOpen={setShipmentRecordModal} />
       }
       {
         addInventoryFromXLSXFileModal && (

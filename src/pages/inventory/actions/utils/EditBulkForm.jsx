@@ -1,26 +1,29 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
-import { CheckIcon } from "../../../../components/icons/CheckIcon";
+// import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import Chip from "../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
+// import { BlueButton } from "../../../../styles/global/BlueButton";
 import {
-  gripingFields,
+  gripingFieldsUpdateFN,
   renderingOptionsButtons,
   renderOptional,
-  stylingComponents,
+  // renderOptional,
+  stylingComponents
 } from "./BulkComponents";
-import { renderFields } from "./BulkItemsFields";
+// import { renderFields } from "./BulkItemsFields";
+import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
+import { renderFields } from "./EditBulkFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
-import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSections";
+import Chip from "../../../../components/UX/Chip/Chip";
+import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
 
 const EditBulkForm = ({
-  acceptImage,
+  // acceptImage,
   addingSubLocation,
   addSerialNumberField,
   allSerialNumbersOptions,
@@ -30,9 +33,10 @@ const EditBulkForm = ({
   displaySublocationFields,
   errors,
   generalInfoForSelection,
+  handleSearchByReference,
   handleSubmit,
   imageUploadedValue,
-  imageUrlGenerated,
+  // imageUrlGenerated,
   isRented,
   labeling,
   loadingStatus,
@@ -61,6 +65,8 @@ const EditBulkForm = ({
   subLocationsSubmitted,
   suppliersOptions,
   watch,
+  updateAll,
+  setUpdateAll,
 }) => {
   const renderingErrorMessage = (error) => {
     if (error) {
@@ -78,7 +84,7 @@ const EditBulkForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(savingNewItem)} id="updateBulkItems"> 
+    <form onSubmit={handleSubmit(savingNewItem)} id="updateBulkItems">
       <Grid container spacing={1}>
         {renderFields({
           retrieveItemOptions,
@@ -102,113 +108,90 @@ const EditBulkForm = ({
           if (item.displayField) {
             if (item.htmlOption === 6 && item.name === "image_uploader") {
               return (
-                <Grid
-                  key={item.name}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={gripingFields(item.name)}
-                  lg={gripingFields(item.name)}
-                >
-                  <ImageUploaderComponent
-                    item={item}
-                    gripingFields={gripingFields}
-                    stylingComponents={stylingComponents}
-                    loadingStatus={loadingStatus}
-                    setImageUploadedValue={setImageUploadedValue}
-                    QuestionIcon={QuestionIcon}
-                  />
-                  <InputLabel
-                    style={{
-                      marginBottom: "0.2rem",
-                      width: "100%",
-                      display: imageUploadedValue ? "block" : "none",
-                    }}
+                <>
+                  <Grid
+                    key={item.name}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={gripingFieldsUpdateFN(item.name)}
+                    lg={gripingFieldsUpdateFN(item.name)}
                   >
-                    <Tooltip
-                      placement="top"
-                      title={item.tooltipMessage}
+                    <ImageUploaderComponent
+                      item={item}
+                      gripingFields={gripingFieldsUpdateFN}
+                      stylingComponents={stylingComponents}
+                      loadingStatus={loadingStatus}
+                      setImageUploadedValue={setImageUploadedValue}
+                      QuestionIcon={QuestionIcon}
+                    />
+                    <InputLabel
                       style={{
+                        marginBottom: "0.2rem",
                         width: "100%",
+                        display: imageUploadedValue ? "block" : "none",
                       }}
                     >
-                      <Typography
-                        style={stylingComponents({ loadingStatus }).styling}
-                      >
-                        {item.label} <strong>*</strong>{" "}
-                        {item.tooltip && <QuestionIcon />}
-                      </Typography>
-                    </Tooltip>
-                    <div>
-                      <img
-                        src={imageUploadedValue || ""}
-                        alt="image_preview"
+                      <Tooltip
+                        placement="top"
+                        title={item.tooltipMessage}
                         style={{
-                          objectFit: "cover",
-                          objectPosition: "center",
-                          aspectRatio: "1/1",
-                        }}
-                        width={150}
-                      />{" "}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-start",
-                          alignItems: "center",
                           width: "100%",
-                          marginTop: "1rem",
-                          gap: "1rem",
                         }}
                       >
-                        <BlueButtonComponent
-                          disabled={imageUrlGenerated}
-                          func={() => acceptImage()}
+                        <Typography
+                          style={stylingComponents({ loadingStatus }).styling}
+                        >
+                          {item.label} <strong>*</strong>{" "}
+                          {item.tooltip && <QuestionIcon />}
+                        </Typography>
+                      </Tooltip>
+                      <div>
+                        <img
+                          src={imageUploadedValue || ""}
+                          alt="image_preview"
                           style={{
-                            background: imageUrlGenerated
-                              ? "transparent"
-                              : BlueButton.background,
+                            objectFit: "cover",
+                            objectPosition: "center",
+                            aspectRatio: "1/1",
                           }}
-                          icon={
-                            imageUrlGenerated ? (
-                              <CheckIcon stroke="#fff" />
-                            ) : null
-                          }
-                          title={
-                            imageUrlGenerated
-                              ? "Image accepted"
-                              : "Accept image"
-                          }
-                        />
+                          width={150}
+                        />{" "}
                       </div>
-                    </div>
-                  </InputLabel>
-                </Grid>
+                    </InputLabel>
+                  </Grid>
+                </>
               );
             } else if (
               item.htmlOption === 6 &&
               item.name === "image_uploader_preview"
             ) {
               return (
-                <Grid
-                  key={item.name}
-                  style={{
-                    textAlign: "left",
-                    display:
-                      imageUploadedValue ||
-                      String(watch("image_url")).startsWith(
-                        "https://res.cloudinary",
-                      )
-                        ? "flex"
-                        : "none",
-                  }}
-                  marginY={1}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={gripingFields(item.name)}
-                  lg={gripingFields(item.name)}
-                ></Grid>
-              );
+                <ImagePreviewClickable key={'preview'} imageUrlGenerated={imageUploadedValue}
+                  width={150}
+                />);
+            }
+            else if (item.htmlElement === 8) {
+              return (
+                <>
+                  <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={12} md={8}>
+                      <Typography>
+                        Set search criteria for searching inventory group in fields above and then click search reference button.
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <BlueButtonComponent
+                        title="Search by reference"
+                        func={handleSearchByReference}
+                        buttonType="button"
+                        styles={{ width: "100%" }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Divider sx={{ my: 2 }} />
+                </>
+              )
             }
             return (
               <Grid
@@ -220,8 +203,8 @@ const EditBulkForm = ({
                 item
                 xs={12}
                 sm={12}
-                md={gripingFields(item.name)}
-                lg={gripingFields(item.name)}
+                md={gripingFieldsUpdateFN(item.name)}
+                lg={gripingFieldsUpdateFN(item.name)}
               >
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip
@@ -243,127 +226,181 @@ const EditBulkForm = ({
                     </Typography>
                   </Tooltip>
                 </InputLabel>
-                {item.htmlElement.length < 1 ? (
-                  <Controller
-                    control={control}
-                    name={item.name}
-                    rules={
-                      item.required
-                        ? {
-                            required: `${
-                              item.label || "This field"
-                            } is required`,
-                          }
-                        : {}
-                    }
-                    render={({ field: { value, onChange } }) => {
+                <Controller
+                  control={control}
+                  name={item.name}
+                  rules={
+                    item.required
+                      ? {
+                        required: `${item.label || "This field"} is required`,
+                      }
+                      : {}
+                  }
+                  render={({ field: { value, onChange } }) => (
+                    <>
+                      <FieldsSections
+                        Grid={Grid}
+                        item={item}
+                        AutoComplete={AutoComplete}
+                        AntSelectorStyle={AntSelectorStyle}
+                        errors={errors}
+                        renderingErrorMessage={renderingErrorMessage}
+                        renderingOptionsButtons={renderingOptionsButtons}
+                        watch={watch}
+                        setOpenScanningModal={setOpenScanningModal}
+                        setOpenScannedItemView={setOpenScannedItemView}
+                        manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
+                        addingSubLocation={addingSubLocation}
+                        setAddSerialNumberField={setAddSerialNumberField}
+                        index={index}
+                        Divider={Divider}
+                        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
+                        value={value}
+                        onChange={onChange}
+                      />
+                      <Grid item xs={12} sm={12} md={12} lg={12}>
+                        <Breadcrumb
+                          style={{
+                            display:
+                              item.name === "sub_location" &&
+                                subLocationsSubmitted.length > 0
+                                ? "block"
+                                : "none",
+                            width: "100%",
+                          }}
+                          items={[
+                            {
+                              title: (
+                                <p
+                                  style={{
+                                    backgroundColor: "transparent",
+                                    border: "none",
+                                    outline: "none",
+                                    boxShadow: "none",
+                                    margin: "auto",
+                                    padding: 0,
+                                    fontFamily: "Inter",
+                                    width: "fit-content",
+                                  }}
+                                >
+                                  {watch("location")}
+                                </p>
+                              ),
+                            },
+                            ...subLocationsSubmitted.map(
+                              (subLocation, index) => {
+                                return {
+                                  title: (
+                                    <Chip
+                                      variant="ghost"
+                                      style={{
+                                        margin: 0,
+                                        padding: 0,
+                                        alignItems: "flex-start",
+                                      }}
+                                      label={subLocation}
+                                      onDelete={() =>
+                                        setSubLocationsSubmitted(
+                                          subLocationsSubmitted.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        )
+                                      }
+                                    />
+                                  ),
+                                };
+                              },
+                            ),
+                          ]}
+                        />
+                      </Grid>
+
+                    </>
+                  )}
+                />
+                {item.children &&
+                  item.children.map((child) => {
+                    if (child.displayField) {
                       return (
-                        <>
-                          <FieldsSections
-                            Grid={Grid}
-                            item={item}
-                            AutoComplete={AutoComplete}
-                            AntSelectorStyle={AntSelectorStyle}
-                            errors={errors}
-                            renderingErrorMessage={renderingErrorMessage}
-                            renderingOptionsButtons={renderingOptionsButtons}
-                            watch={watch}
-                            setOpenScanningModal={setOpenScanningModal}
-                            setOpenScannedItemView={setOpenScannedItemView}
-                            manuallyAddingSerialNumbers={
-                              manuallyAddingSerialNumbers
-                            }
-                            addingSubLocation={addingSubLocation}
-                            setAddSerialNumberField={setAddSerialNumberField}
-                            index={index}
-                            Divider={Divider}
-                            renderingOptionsForSubLocations={
-                              renderingOptionsForSubLocations
-                            }
-                            Breadcrumb={Breadcrumb}
-                            displaySublocationFields={displaySublocationFields}
-                            Chip={Chip}
-                            setSubLocationsSubmitted={setSubLocationsSubmitted}
-                            subLocationsSubmitted={subLocationsSubmitted}
-                            value={value}
-                            onChange={onChange}
-                          />
-                          <Grid item xs={12} sm={12} md={12} lg={12}>
-                            <Breadcrumb
+                        <Grid
+                          key={child.name}
+                          style={{
+                            textAlign: "left",
+                          }}
+                          marginY={1}
+                          item
+                          xs={12}
+                          sm={12}
+                          md={12}
+                          lg={12}
+                        >
+                          <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+                            <Tooltip
+                              placement="top"
+                              title={child.tooltipMessage}
                               style={{
-                                display:
-                                  item.name === "sub_location" &&
-                                  subLocationsSubmitted.length > 0
-                                    ? "block"
-                                    : "none",
                                 width: "100%",
                               }}
-                              items={[
-                                {
-                                  title: (
-                                    <p
-                                      style={{
-                                        backgroundColor: "transparent",
-                                        border: "none",
-                                        outline: "none",
-                                        boxShadow: "none",
-                                        margin: "auto",
-                                        padding: 0,
-                                        fontFamily: "Inter",
-                                        width: "fit-content",
-                                      }}
-                                    >
-                                      {watch("location")}
-                                    </p>
-                                  ),
-                                },
-                                ...subLocationsSubmitted.map(
-                                  (subLocation, index) => {
-                                    return {
-                                      title: (
-                                        <Chip
-                                          variant="ghost"
-                                          style={{
-                                            margin: 0,
-                                            padding: 0,
-                                            alignItems: "flex-start",
-                                          }}
-                                          label={subLocation}
-                                          onDelete={() =>
-                                            setSubLocationsSubmitted(
-                                              subLocationsSubmitted.filter(
-                                                (_, i) => i !== index,
-                                              ),
-                                            )
-                                          }
-                                        />
-                                      ),
-                                    };
-                                  },
-                                ),
-                              ]}
+                            >
+                              <Typography
+                                style={
+                                  stylingComponents({
+                                    loadingStatus,
+                                  }).styling
+                                }
+                              >
+                                {child.label} <strong>*</strong>{" "}
+                                {child.tooltip && <QuestionIcon />}
+                              </Typography>
+                            </Tooltip>
+                          </InputLabel>
+                          {child.htmlElement.length < 1 ? (
+                            <Controller
+                              control={control}
+                              name={child.name}
+                              rules={
+                                child.required
+                                  ? {
+                                    required: `${child.label || "This field"} is required`,
+                                  }
+                                  : {}
+                              }
+                              render={({ field: { value, onChange } }) => (
+                                <FieldsSections
+                                  Grid={Grid}
+                                  item={child}
+                                  AutoComplete={AutoComplete}
+                                  AntSelectorStyle={AntSelectorStyle}
+                                  errors={errors}
+                                  renderingErrorMessage={renderingErrorMessage}
+                                  watch={watch}
+                                  value={value}
+                                  onChange={onChange}
+                                  isChild={true}
+                                />
+                              )}
                             />
-                          </Grid>
-                        </>
+                          ) : (
+                            renderOptional({
+                              props: child.htmlElement,
+                              watch,
+                              register,
+                              errors,
+                              returningDate,
+                              setReturningDate,
+                            })
+                          )}
+                        </Grid>
                       );
-                    }}
-                  />
-                ) : (
-                  renderOptional({
-                    props: item.htmlElement,
-                    watch,
-                    register,
-                    errors,
-                    returningDate,
-                    setReturningDate,
-                  })
-                )}{" "}
+                    }
+                    return null;
+                  })} {" "}
               </Grid>
             );
           }
         })}
       </Grid>
-      <SerialNumberAndMoreInfoComponentForm
+      {generalInfoForSelection && <SerialNumberAndMoreInfoComponentForm
         style={{
           ...AntSelectorStyle,
           fontFamily: "Inter",
@@ -375,14 +412,18 @@ const EditBulkForm = ({
         setMoreInfo={setMoreInfo}
         setScannedSerialNumbers={setScannedSerialNumbers}
         generalInfoForSelection={generalInfoForSelection}
+        updateAll={updateAll}
+        setUpdateAll={setUpdateAll}
       />
+      }
       <ButtonsForm
         stylingComponents={stylingComponents}
         loadingStatus={loadingStatus}
         moreInfoDisplay={moreInfoDisplay}
         scannedSerialNumbers={scannedSerialNumbers}
-        primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Save and add ${scannedSerialNumbers.length} items` : `Save and add item`}
+        primaryButtonTitle={updateAll ? `Update entire group inventory` : `Update ${scannedSerialNumbers.length} items`}
         formId="updateBulkItems"
+        updateAll={updateAll}
       />
     </form>
   );

@@ -2,17 +2,15 @@ import {
   Grid,
   InputAdornment,
   InputLabel,
-  OutlinedInput,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { RectangleBluePlusIcon } from "../../../../../components/icons/RectangleBluePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import Input from "../../../../../components/UX/inputs/Input";
 import { onAddExtraServiceNeeded } from "../../../../../store/slices/eventSlice";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import SelectedServiceAddedRendered from "../components/SelectedServicesAddedRendered";
@@ -136,11 +134,10 @@ const Services = ({
                     Service
                   </Typography>
                 </InputLabel>
-                <OutlinedInput
+                <Input
                   {...register("service")}
                   required
                   style={{
-                    ...OutlinedInputStyle,
                     width: "100%",
                   }}
                   placeholder="Enter service name."
@@ -164,11 +161,10 @@ const Services = ({
                     Amount to charge
                   </Typography>
                 </InputLabel>
-                <OutlinedInput
+                <Input
                   {...register("deposit")}
                   required
                   style={{
-                    ...OutlinedInputStyle,
                     width: "100%",
                   }}
                   startAdornment={
@@ -195,12 +191,6 @@ const Services = ({
               <BlueButtonComponent
                 buttonType="submit"
                 title="Add service"
-                icon={
-                  <RectangleBluePlusIcon
-                    hoverStroke="var(--Blue-dark-800)"
-                    stroke="var(--basewhite)"
-                  />
-                }
                 styles={{ width: "100%" }}
               />
               {/* <Button

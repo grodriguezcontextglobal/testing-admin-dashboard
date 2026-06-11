@@ -6,7 +6,7 @@ import renderingTitle from "../../../../components/general/renderingTitle";
 const GeneralActivity = () => {
   return (
     <Card
-      title={renderingTitle("General activity")}
+      title={renderingTitle("Consumer with Inventory assigned to")}
       extra={
         <p
           style={{

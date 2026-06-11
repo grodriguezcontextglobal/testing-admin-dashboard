@@ -22,7 +22,7 @@ export const renderTitle = () => {
           style={TextFontSize30LineHeight38}
           color={"var(--gray-600, #475467)"}
         >
-          Add a group of devices
+          Add new group of inventory
         </Typography>
       </InputLabel>
       <InputLabel id="eventName" style={{ marginBottom: "6px", width: "100%" }}>
@@ -32,10 +32,7 @@ export const renderTitle = () => {
           style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
           color={"var(--gray-600, #475467)"}
         >
-          Device serial numbers can be created by inputting a serial number base
-          to define the category of devices, and then a range from one number to
-          another, depending on your inventory.
-        </Typography>
+          Create multiple devices at once by entering a base identifier and a number range. Each device in the range will be added to your inventory automatically.        </Typography>
       </InputLabel>
     </>
   );
@@ -221,8 +218,8 @@ export const renderingModals = ({
         <ScanningModal
           openScanningModal={openScanningModal}
           setOpenScanningModal={setOpenScanningModal}
-          // setScannedSerialNumbers={setScannedSerialNumbers}
-          // scannedSerialNumbers={scannedSerialNumbers}
+        // setScannedSerialNumbers={setScannedSerialNumbers}
+        // scannedSerialNumbers={scannedSerialNumbers}
         />
       )}
       {openScannedItemView && (
@@ -253,13 +250,11 @@ export const stylingComponents = ({ loadingStatus }) => {
     ...BlueButton,
     ...CenteringGrid,
     width: "100%",
-    border: `1px solid ${
-      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
-    }`,
+    border: `1px solid ${loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+      }`,
     borderRadius: "8px",
-    background: `${
-      loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
-    }`,
+    background: `${loadingStatus ? "var(--disabled-blue-button)" : "var(--blue-dark-600)"
+      }`,
     boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
     padding: "6px 12px",
     cursor: "pointer",
@@ -339,7 +334,7 @@ export const renderOptional = ({
   );
 };
 
-export const dicColumnsNameProperlyDisplayed = () => {};
+export const dicColumnsNameProperlyDisplayed = () => { };
 
 export const renderingResultUX = ({ name, value }) => {
   if (name === "enableAssignFeature") {
@@ -384,42 +379,95 @@ export const renderTitleSingleItem = () => {
   );
 };
 
-export const gripingFields = (props) => {
+export const gripingFieldsUpdateFN = (props, imageUrl) => {
   switch (props) {
     case "brand":
-      return 6
+      return 4;
     case "category_name":
-      return 6
+      return 4;
     case "item_group":
-      return 6
+      return 4;
+    case "reference_brand":
+      return 4;
+    case "reference_category_name":
+      return 4;
+    case "reference_item_group":
+      return 4;
     case "cost":
-      return 6
+      return 4;
     case "ownership":
-      return 6
+      return 4;
     case "sub_location":
-      return 6
+      return 4;
     case "location":
-      return 6
+      return 4;
     case "tax_location":
-      return 6
+      return 4;
     case "container":
-      return 6
+      return 4;
     case "isItAContainer":
-      return 6
+      return 4;
     case "":
-      return 6
+      return 4;
     case "supplier":
-      return 6
+      return 4;
     case "enableAssignFeature":
-      return 6
-    case "image_uploader": 
-      return 6
+      return 4;
+    case "image_uploader":
+      return imageUrl ? 6 : 12;
     case "image_uploader_preview":
-      return 6
+      return imageUrl ? 6 : 12;
     case "image_url":
-      return 6
-      case "containerSpotLimit":
-        return 6
+      return 4;
+    case "containerSpotLimit":
+      return 4;
     default:
-      return 12  }
-}
+      return 12;
+  }
+};
+export const gripingFields = (props, imageUrl) => {
+  switch (props) {
+    case "brand":
+      return 4;
+    case "category_name":
+      return 4;
+    case "item_group":
+      return 4;
+    case "reference_brand":
+      return 4;
+    case "reference_category_name":
+      return 4;
+    case "reference_item_group":
+      return 4;
+    case "cost":
+      return 4;
+    case "ownership":
+      return 4;
+    case "sub_location":
+      return 4;
+    case "location":
+      return 4;
+    case "tax_location":
+      return 4;
+    case "container":
+      return 4;
+    case "isItAContainer":
+      return 4;
+    case "":
+      return 4;
+    case "supplier":
+      return 4;
+    case "enableAssignFeature":
+      return 4;
+    case "image_uploader":
+      return imageUrl ? 6 : 12;
+    case "image_uploader_preview":
+      return imageUrl ? 6 : 12;
+    case "image_url":
+      return 4;
+    case "containerSpotLimit":
+      return 4;
+    default:
+      return 12;
+  }
+};

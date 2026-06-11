@@ -7,6 +7,7 @@ import { UploadIcon } from "../icons/UploadIcon";
 import SectionFooter from "./new_form_components/SectionFooter";
 import SectionHeader from "./new_form_components/SectionHeader";
 import SectionLabel from "./new_form_components/SectionLabel";
+import industries from "../navbar/component/industriesList.json";
 
 const DocumentUpload = ({ activeTab, refetch }) => {
   const [form] = Form.useForm();
@@ -29,7 +30,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
     formDataToSend.append("created_by", user.uid);
     formDataToSend.append("at_", new Date().toISOString());
     formDataToSend.append("requires_signature", false);
-
+    formDataToSend.append("document_type", "document");
     // Append all form fields
     Object.keys(values).forEach((key) => {
       if (
@@ -69,9 +70,10 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       throw error;
     }
   };
-
+  const industry = String(user.companyData.industry);
+  const representative = industries[industry][0];
   return (
-    <Form form={form} onFinish={handleSubmit} layout="vertical" style={{margin:"1rem 0"}}>
+    <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ margin: "1rem 0" }}>
       <SectionHeader
         title="Document details"
         subtitle="Update your document details here."
@@ -95,7 +97,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
         </Grid>
       </Grid>
       <Divider />
-      <Grid container spacing={3} mt={2}>
+      {/* <Grid container spacing={3} mt={2}>
         <Grid item xs={12} lg={3}>
           <SectionLabel
             title="Document type"
@@ -116,7 +118,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
             </Select>
           </Form.Item>
         </Grid>
-      </Grid>
+      </Grid> */}
       <Divider />
       <Grid container spacing={3} mt={2}>
         <Grid item xs={12} lg={3}>
@@ -130,6 +132,8 @@ const DocumentUpload = ({ activeTab, refetch }) => {
             <Select>
               <Select.Option value="onboarding">Staff</Select.Option>
               <Select.Option value="event">Event</Select.Option>
+              <Select.Option value="consumer">Consumer</Select.Option>
+              <Select.Option value={`${representative}`}>{representative}</Select.Option>
             </Select>
           </Form.Item>
         </Grid>

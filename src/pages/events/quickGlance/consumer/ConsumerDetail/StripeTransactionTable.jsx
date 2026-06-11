@@ -1,11 +1,11 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Popconfirm, Spin } from "antd";
-import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
@@ -21,13 +21,14 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
 import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
+import { groupBy } from "lodash";
 import Loading from "../../../../../components/animation/Loading";
+import { DoubleRightChevronIcon } from "../../../../../components/icons/DoubleRightChevronIcon";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon";
-import UpDoubleArrow from "../../../../../components/icons/UpDoubleArrow";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import { groupBy } from "lodash";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -48,8 +49,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
     queryKey: ["transactionPerConsumerListQuery", customer.uid],
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?event_id=${event.id}&company=${
-          user.companyData.id
+        `/transaction/transaction?event_id=${event.id}&company=${user.companyData.id
         }&consumerInfo.id=${customer.id ?? customer.uid}`,
       ),
     enabled: !!customer.id || !!customer.uid,
@@ -203,8 +203,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           <span style={{ ...Subtitle, textOverflow: "ellipsis" }}>
             {checkPaymentIntent[1] === "cash"
               ? `${checkPaymentIntent[1]}_${checkPaymentIntent[2]}_${String(
-                  checkPaymentIntent[4].split("**")[1],
-                )}`
+                checkPaymentIntent[4].split("**")[1],
+              )}`
               : paymentIntent}
           </span>
         );
@@ -277,16 +277,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       style={{
                         ...CenteringGrid,
                         ...DangerButton,
-                        background: `${
-                          !record.active
-                            ? GrayButton.background
-                            : DangerButton.backgroundColor
-                        }`,
-                        border: `${
-                          !record.active
-                            ? GrayButton.border
-                            : DangerButton.border
-                        }`,
+                        background: `${!record.active
+                          ? GrayButton.background
+                          : DangerButton.backgroundColor
+                          }`,
+                        border: `${!record.active
+                          ? GrayButton.border
+                          : DangerButton.border
+                          }`,
                       }}
                       onClick={() => handleRefund(record)}
                     >
@@ -318,16 +316,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       // ...CenteringGrid,
                       ...DangerButton,
                       width: "100%",
-                      border: `${
-                        !record.active
-                          ? "1px solid var(--disabled-danger-button)"
-                          : DangerButton.border
-                      }`,
-                      background: `${
-                        !record.active
-                          ? "var(--disabled-danger-button)"
-                          : DangerButton.background
-                      }`,
+                      border: `${!record.active
+                        ? "1px solid var(--disabled-danger-button)"
+                        : DangerButton.border
+                        }`,
+                      background: `${!record.active
+                        ? "var(--disabled-danger-button)"
+                        : DangerButton.background
+                        }`,
                     }}
                   >
                     <Typography
@@ -369,16 +365,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       ...CenteringGrid,
                       ...BlueButton,
                       width: "100%",
-                      border: `${
-                        !record.active
-                          ? "1px solid var(--disabled-blue-button)"
-                          : BlueButton.border
-                      }`,
-                      background: `${
-                        !record.active
-                          ? "var(--disabled-blue-button)"
-                          : BlueButton.background
-                      }`,
+                      border: `${!record.active
+                        ? "1px solid var(--disabled-blue-button)"
+                        : BlueButton.border
+                        }`,
+                      background: `${!record.active
+                        ? "var(--disabled-blue-button)"
+                        : BlueButton.background
+                        }`,
                     }}
                   >
                     <Typography textTransform={"none"} style={BlueButtonText}>
@@ -398,23 +392,21 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const customExpandIcon = (props) => {
     if (props.expanded) {
       return (
-        <Button
-          onClick={(e) => {
-            props.onExpand(props.record, e);
-          }}
-        >
-          <UpDoubleArrow />
-        </Button>
+        <GrayButtonComponent func={(e) => {
+          props.onExpand(props.record, e);
+        }} title={
+
+          <DownDoubleArrowIcon />
+        } />
       );
     } else {
       return (
-        <Button
-          onClick={(e) => {
-            props.onExpand(props.record, e);
-          }}
-        >
-          <DownDoubleArrowIcon />
-        </Button>
+        <GrayButtonComponent func={(e) => {
+          props.onExpand(props.record, e);
+        }} title={
+
+          <DoubleRightChevronIcon />
+        } />
       );
     }
   };
@@ -478,9 +470,9 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 signatureProof={
                   signaturesProofUrl.data
                     ? groupBy(
-                        signaturesProofUrl.data.data.signatures,
-                        "transaction_id",
-                      )
+                      signaturesProofUrl.data.data.signatures,
+                      "transaction_id",
+                    )
                     : []
                 }
                 enablePagination={true}
