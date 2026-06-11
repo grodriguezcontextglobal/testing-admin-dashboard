@@ -2,11 +2,13 @@ import { Grid, OutlinedInput } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch, Tag } from "antd";
 import { PropTypes } from "prop-types";
-import { createContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
+import RefreshIcon from "../../../../components/icons/RefreshIcon";
 import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
@@ -66,6 +68,11 @@ const RenderingFilters = ({
   setFiltering,
   setOpenCreateLocationModal,
 }) => {
+  const searchItemContext = useContext(SearchItemContext);
+  const contextSetOpenAdvanceSearchModal = searchItemContext?.setOpenAdvanceSearchModal;
+  const contextRefetchingQueriesFn = searchItemContext?.refetchingQueriesFn;
+  const contextLocationsQuery = searchItemContext?.locationsQuery;
+
   const [openDetails, setOpenDetails] = useState({});
 
   const toggleDetails = (key) => {
@@ -1085,19 +1092,54 @@ const RenderingFilters = ({
                 alignItems: "center",
               }}
             >
-              <span style={{ textTransform: "capitalize" }}>
-                {keyMap[filter.category]?.replace("_", " ")}
-              </span>
-              : {String(filter.value)}
-            </Tag>
-          ))}
-          <Button
-            type="link"
-            onClick={handleResetFilters}
-            style={{ marginLeft: "10px" }}
-          >
-            Clear all
-          </Button>
+              Group by
+            </span>
+            {groupByOptions.map((optionKey) => (
+              <button
+                key={`group-by-${optionKey}`}
+                onClick={() => handleGroupByChange(optionKey)}
+                style={{
+                  ...groupByPillStyle,
+                  ...(groupBy === optionKey ? groupByPillActiveStyle : {}),
+                }}
+              >
+                {translateLabel(
+                  companyStructure[optionKey] ??
+                    groupByFallbackLabels[optionKey],
+                )}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <GrayButtonComponent
+              title={"Forecast Inventory"}
+              iconLeading={<CalendarCheckIcon />}
+              func={() => {
+                contextSetOpenAdvanceSearchModal?.(true);
+                localStorage.removeItem("searchParameters");
+              }}
+              styles={{
+                width: "fit-content",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+            <GrayButtonComponent
+              title={"Reload"}
+              iconLeading={<RefreshIcon />}
+              func={() => {
+                contextRefetchingQueriesFn?.();
+                contextLocationsQuery?.refetch?.();
+              }}
+              styles={{
+                width: "fit-content",
+              }}
+              titleStyles={{
+                textTransform: "none",
+              }}
+            />
+          </div>
         </Grid>
       )}
       {optionsToRenderInDetailsHtmlTags?.map((item, index) => {
@@ -1182,7 +1224,7 @@ const RenderingFilters = ({
                     )} */}
                 </p>
                 {item.key === "location_1" && isAdmin && (<BlueButtonComponent
-                  title={"Create Location"}
+                  title={"Create location"}
                   styles={{ with: "100%" }}
                   buttonType="button"
                   titleStyles={{

@@ -3,10 +3,16 @@ import {
 } from "@mui/material";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+import CheckSquareBrokenIcon from "../../../components/icons/CheckSquareBrokenIcon";
+import ExcelIcon from "../../../components/icons/ExcelIcon";
+import PencilLineIcon from "../../../components/icons/PencilLineIcon";
+import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
+import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
+import TrashIcon from "../../../components/icons/TrashIcon";
+import Vertical3Dots from "../../../components/icons/Vertical3Dots";
 
 /**
  * HeaderInventaryComponent
@@ -15,23 +21,86 @@ import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueBu
  *
  * Responsibilities:
  * - Displays the company inventory title.
- * - Conditionally renders "Import inventory", "Update group", and "Add item" buttons.
- * - Checks `user.companyData.employees[].preference.managerLocation` for `create` and `update` permissions.
+ * - Keeps one primary action ("Add inventory") and one secondary action
+ *   ("Import inventory") visible; folds the remaining actions into an
+ *   overflow menu.
+ * - Checks `user.companyData.employees[].preference.managerLocation` for
+ *   `create` and `update` permissions.
  *
  * @param {Object} props
  * @param {Object} props.user - User data object containing permissions.
  * @param {Object} props.TextFontSize30LineHeight38 - Style object for the title.
  * @param {Function} props.setAddInventoryFromXLSXFileModal - Callback to open the import modal.
+ * @param {Function} props.setOpenCheckInDevicesFromEvent - Callback to open the check-in modal.
+ * @param {Function} props.setOpenDeleteItemModal - Callback to open the delete-group modal.
  */
 const HeaderInventaryComponent = ({
   user,
   TextFontSize30LineHeight38,
   setAddInventoryFromXLSXFileModal,
+  setOpenCheckInDevicesFromEvent,
+  setOpenDeleteItemModal,
 }) => {
+  const navigate = useNavigate();
   const { role, locations } = useSelector((state) => state.permission);
   // Check permissions
   const canCreate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.create)
   const canUpdate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.update)
+  const canManageDevices =
+    role === "0" ||
+    locations?.every(
+      (location) =>
+        location.actions?.create &&
+        location.actions?.assign &&
+        location.actions?.delete &&
+        location.actions?.transfer,
+    );
+
+  const overflowMenuLabel = (icon, text) => (
+    <span
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: "8px",
+        textAlign: "left",
+        width: "100%",
+      }}
+    >
+      {icon}
+      <span>{text}</span>
+    </span>
+  );
+
+  const overflowMenuItems = [
+    canUpdate && {
+      key: "update-group",
+      label: overflowMenuLabel(
+        <PencilLineIcon width={18} height={18} stroke="#344054" />,
+        "Update inventory",
+      ),
+      onClick: () => navigate("/inventory/edit-group"),
+    },
+    canManageDevices && {
+      key: "check-in-devices",
+      label: overflowMenuLabel(
+        <CheckSquareBrokenIcon width={18} height={18} stroke="#344054" />,
+        "Check in devices from events",
+      ),
+      onClick: () => setOpenCheckInDevicesFromEvent?.(true),
+    },
+    canManageDevices && { type: "divider" },
+    canManageDevices && {
+      key: "delete-group",
+      label: overflowMenuLabel(
+        <TrashIcon width={18} height={18} stroke="#B42318" />,
+        "Delete group",
+      ),
+      danger: true,
+      onClick: () => setOpenDeleteItemModal?.(true),
+    },
+  ].filter(Boolean);
+
   return (
     <Grid
       style={{
@@ -61,6 +130,22 @@ const HeaderInventaryComponent = ({
         md={8}
         lg={8}
       >
+        {canCreate && (
+          <Link to="/inventory/new-bulk-items">
+            <BlueButtonComponent
+              title={"Add inventory"}
+              styles={{ with: "100%" }}
+              iconLeading={<PlusCircleWhiteIcon />}
+              buttonType="button"
+              titleStyles={{
+                textTransform: "none",
+                with: "100%",
+                gap: "2px",
+              }}
+              func={() => null}
+            />
+          </Link>
+        )}
         {canCreate && (
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
@@ -133,7 +218,8 @@ HeaderInventaryComponent.propTypes = {
   }).isRequired,
   TextFontSize30LineHeight38: PropTypes.object,
   setAddInventoryFromXLSXFileModal: PropTypes.func,
-  setOpenCreateLocationModal: PropTypes.func,
+  setOpenCheckInDevicesFromEvent: PropTypes.func,
+  setOpenDeleteItemModal: PropTypes.func,
 };
 
 export default HeaderInventaryComponent;

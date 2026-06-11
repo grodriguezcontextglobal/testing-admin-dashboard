@@ -34,6 +34,7 @@ import CheckInDevicesFromEventsModal from "./utils/CheckInDevicesFromEventsModal
 import CreateLocationModal from "./utils/CreateLocationModal";
 import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
+import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import DeleteGroups from "./actions/DeleteGroups";
@@ -289,41 +290,31 @@ const MainPage = () => {
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
           setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
-        />
-        <MobileActionsButtons user={user} />
-        <Divider />
-
-        <InventorySearchBar
-          companyHasInventoryQuery={companyHasInventoryQuery}
-          handleSubmit={handleSubmit}
-          searchItem={searchItem}
-          register={register}
-          adornmentButtonsComponent={adornmentButtonsComponent}
-          setValue={setValue}
-          setParams={setParams}
-          setSearchedResult={setSearchedResult}
-          refetchingQueriesFn={refetchingQueriesFn}
-          locationsQuery={locationsQuery}
-          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
-          setOpenShippingModal={setOpenShippingModal}
-          setShipmentRecordModal={setShipmentRecordModal}
-          dataFilterOptions={dataFilterOptions}
-          chosenOption={chosenOption}
-          setChosenOption={setChosenOption}
-          optionsUX={optionsUX}
         />
         <Divider />
-        {/* <FilterOptionsContext.Provider
+
+        <FilterOptionsContext.Provider
           value={{
             filterOptions: dataFilterOptions,
             chosen: chosenOption,
             setChosenOption: setChosenOption,
           }}
         >
-          {optionsUX}
-        </FilterOptionsContext.Provider> */}
+          <InventorySearchBar
+            companyHasInventoryQuery={companyHasInventoryQuery}
+            handleSubmit={handleSubmit}
+            searchItem={searchItem}
+            register={register}
+            setValue={setValue}
+            setParams={setParams}
+            setSearchedResult={setSearchedResult}
+            setOpenShippingModal={setOpenShippingModal}
+            setShipmentRecordModal={setShipmentRecordModal}
+          />
+        </FilterOptionsContext.Provider>
+        <Divider />
         <Grid
           display={"flex"}
           justifyContent={"center"}

@@ -142,13 +142,13 @@ const BannerNotificationTemplate = ({
           </span>
         </div>
 
-        {/* Content */}
-        <div style={{ minWidth: 0 }}>
+          {/* Title */}
           <Typography
             style={{
               ...Title,
               padding:"12px 0",
-              display: "flex", justifyContent: "space-between",
+              display: "flex",
+              justifyContent: "flex-start",
               fontSize: "14px",
               lineHeight: "20px",
               margin: 0,
@@ -157,25 +157,9 @@ const BannerNotificationTemplate = ({
               textAlign: "left",
             }}
           >
-            {title}          
+            {title}
 
           </Typography>
-
-          <Typography
-            style={{
-              ...Subtitle,
-              fontSize: "14px",
-              lineHeight: "20px",
-              marginTop: 4,
-              marginBottom: 0,
-              color: v.bodyColor,
-              textWrap: "pretty",
-            }}
-          >
-            {body}
-          </Typography>
-
-          {/* Footer action (UntitledUI often shows a subtle action) */}
         </div>
 
         {/* Close icon */}
