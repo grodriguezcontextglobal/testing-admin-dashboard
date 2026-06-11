@@ -462,14 +462,17 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   ].filter(Boolean);
 
   return (
-    <div style={{ gap: "10px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       {contextHolder}
       {rowRecord.device > 0 && (
         <div id={rowRecord.key} key={rowRecord.key} style={{ width: "100%" }}>
           <TableHeader
-            rightCta={
-              <RefreshButton propsFn={refetchingQueries} />
+            leftCta={
+              <p style={{ fontFamily: "Inter", fontSize: "14px", fontWeight: 600, color: "#344054", padding: "12px 16px", margin: 0 }}>
+                {Array.isArray(rowRecord.eventSelected) ? rowRecord.eventSelected[0] : rowRecord.eventSelected}
+              </p>
             }
+            rightCta={<RefreshButton propsFn={refetchingQueries} />}
           />
           <BaseTable
             id={rowRecord.key}
@@ -482,25 +485,27 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             enablePagination={true}
             pageSize={10}
           />
-          <FooterExpandedRow
-            displayTernary={displayTernary}
-            handleReturnSingleDevice={handleReturnItemInTransaction}
-            handleLostSingleDevice={handleLostSingleDevice}
-            dataRendering={rowRecord}
-            returningDevice={handleReturnItemInTransaction}
-            formattedData={dataRendering()}
-            paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
-            deviceListInfo={dataRendering()}
-            selectedItems={selectedRows}
-            setSelectedItems={setSelectedRows}
-            refetchingDevicePerTransaction={refetchingQueries}
-            setOpenModalReleasingDeposit={setOpenModalReleasingDeposit}
-            setOpenModalCapturingDeposit={setOpenModalCapturingDeposit}
-            setOpenModal={setOpenModal}
-            assignedItemsPerTransactionData={
-              assignedDevicesQuery?.data?.data?.listOfReceivers
-            }
-          />
+          <div style={{ borderTop: "1px solid #EAECF0", paddingTop: "4px" }}>
+            <FooterExpandedRow
+              displayTernary={displayTernary}
+              handleReturnSingleDevice={handleReturnItemInTransaction}
+              handleLostSingleDevice={handleLostSingleDevice}
+              dataRendering={rowRecord}
+              returningDevice={handleReturnItemInTransaction}
+              formattedData={dataRendering()}
+              paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
+              deviceListInfo={dataRendering()}
+              selectedItems={selectedRows}
+              setSelectedItems={setSelectedRows}
+              refetchingDevicePerTransaction={refetchingQueries}
+              setOpenModalReleasingDeposit={setOpenModalReleasingDeposit}
+              setOpenModalCapturingDeposit={setOpenModalCapturingDeposit}
+              setOpenModal={setOpenModal}
+              assignedItemsPerTransactionData={
+                assignedDevicesQuery?.data?.data?.listOfReceivers
+              }
+            />
+          </div>
         </div>
       )}
 
