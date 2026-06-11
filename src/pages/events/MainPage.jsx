@@ -12,7 +12,6 @@ import {
   onResetEventInfo
 } from "../../store/slices/eventSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import { Subtitle } from "../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { useEventHook } from "./hook/useEventHook";
