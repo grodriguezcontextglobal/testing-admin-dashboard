@@ -209,7 +209,7 @@ const MainPage = () => {
   const [filteredDataCount, setFilteredDataCount] = useState(0);
 
   const renderingOption = {
-    0: <Spin indicator={<Loading />} fullscreen={true} />,
+    0: <SkeletonInventoryCards count={6} />,
     1: (
       <ItemTable
         chosen={chosenOption}
@@ -249,16 +249,21 @@ const MainPage = () => {
   };
 
   const searchItem = async (data) => {
+    const query = data.searchItem?.trim();
+    if (!query) {
+      setSearchedResult(null);
+      return setParams(null);
+    }
     const result = await devitrakApi.post(
       "/db_company/get-grouped-inventory-by-search-parameter",
       {
-        searchParameter: data.searchItem,
+        searchParameter: query,
         company_id: user.sqlInfo.company_id,
       },
     );
     if (result?.data?.ok) {
       setSearchedResult(result.data.data);
-      return setParams(data.searchItem);
+      return setParams(query);
     }
   };
 
@@ -293,6 +298,7 @@ const MainPage = () => {
           setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
           setOpenDeleteItemModal={setOpenDeleteItemModal}
         />
+        <MobileActionsButtons user={user} />
         <Divider />
 
         <FilterOptionsContext.Provider
@@ -353,6 +359,8 @@ const MainPage = () => {
                 total: getTotalToDisplay(),
                 allowedLocations: allowedInventoryLocations,
                 userPreferences: userPreferences,
+                locationsQuery: locationsQuery,
+                refetchingQueriesFn: refetchingQueriesFn,
               }}
             >
               {renderingOption[currentTab]}

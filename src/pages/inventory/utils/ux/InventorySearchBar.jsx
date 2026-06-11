@@ -18,7 +18,6 @@ const InventorySearchBar = ({
   handleSubmit,
   searchItem,
   register,
-  adornmentButtonsComponent,
   setValue,
   setParams,
   setSearchedResult,
@@ -82,7 +81,7 @@ const InventorySearchBar = ({
         <Typography
           sx={{
             ...Title,
-            fontSize: "28px",
+            fontSize: "20px",
             padding: 0,
             textAlign: "left",
             width: {
@@ -91,6 +90,8 @@ const InventorySearchBar = ({
               md: "50%",
               lg: "50%",
             },
+            fontWeight: 600,
+            color: "#344054",
           }}
         >
           Search inventory:&nbsp;
