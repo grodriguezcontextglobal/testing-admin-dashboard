@@ -20,8 +20,6 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { Title } from "../../styles/global/Title";
-import { PlusIcon } from "../../components/icons/PlusIcon";
-import { PlusSquareIcon } from "../../components/icons/PlusSquareIcon";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -151,7 +149,6 @@ const MainPage = () => {
           justifyContent: "center",
           alignItems: "center",
           width: "100%",
-          marginTop: "24px",
         }}
         container
       >
@@ -196,7 +193,7 @@ const MainPage = () => {
           </Grid>
         )}
         <Grid
-          sx={{ display: "flex" }}
+          sx={{ display: "flex" }} //{ xs: "flex", sm: "flex", md: "flex", lg: "flex" } }}
           textAlign={"center"}
           justifyContent={"flex-start"}
           alignItems={"center"}
@@ -245,7 +242,7 @@ const MainPage = () => {
             }}
             to="/inventory/new-bulk-items"
           >
-            <BlueButtonComponent title={"Add to inventory"} iconTrailing={<PlusSquareIcon stroke="#ffffff" />} func={null} />
+            <BlueButtonComponent title={"Add to inventory"} func={null} />
           </Link>
           <Link
             to="/create-event-page/event-detail"
@@ -253,7 +250,7 @@ const MainPage = () => {
               width: "fit-content",
             }}
           >
-            <GrayButtonComponent title={"Create new event"} iconTrailing={<PlusIcon stroke="#000000" />} func={null} />
+            <GrayButtonComponent title={"Create new event"} func={null} />
           </Link>
         </Grid>
         <Grid
@@ -263,7 +260,6 @@ const MainPage = () => {
           justifyContent={"flex-start"}
           alignItems={"center"}
           gap={1}
-          marginTop={4}
           item
           xs={12}
           sm={12}
@@ -275,8 +271,6 @@ const MainPage = () => {
               ...TextFontSize20LineHeight30,
               textAlign: "left",
               width: "100%",
-              fontWeight: 600,
-              color: "#344054",
             }}
           >
             Quick glance

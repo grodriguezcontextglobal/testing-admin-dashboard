@@ -6,32 +6,17 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 import { useNavigate } from "react-router-dom";
 import { Subtitle } from "../../../styles/global/Subtitle";
 
-const LOW_STOCK_RATIO = 0.25;
-
 const CardLocations = ({
   props,
   title,
   optional,
   navigate = null,
-  total = null,
-  available = null,
 }) => {
   const navigateTo = useNavigate();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  const hasAvailability =
-    typeof total === "number" && typeof available === "number" && total > 0;
-  const availabilityRatio = hasAvailability ? available / total : null;
-  const isOutOfStock = hasAvailability && available === 0;
-  const isLowStock =
-    hasAvailability && !isOutOfStock && availabilityRatio <= LOW_STOCK_RATIO;
-  const barColor = isOutOfStock
-    ? "var(--error-500, #F04438)"
-    : isLowStock
-    ? "var(--warning-500, #F79009)"
-    : "var(--success-500, #12B76A)";
   return (
     <Grid spacing={1} container>
       <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -58,8 +43,6 @@ const CardLocations = ({
               <Typography
                 style={{
                   ...TextFontSize30LineHeight38,
-                  fontSize: "24px",
-                  lineHeight: "32px",
                   textWrap: "balance",
                   textAlign: "left",
                   cursor: "pointer",
@@ -121,58 +104,8 @@ const CardLocations = ({
                 }}
                 color={"var(--gray-600, #475467)"}
               >
-                {hasAvailability
-                  ? `${total.toLocaleString()} devices · ${available.toLocaleString()} available`
-                  : props}
+                {props}
               </Typography>
-              {hasAvailability && (
-                <>
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "6px",
-                      borderRadius: "9999px",
-                      background: "var(--gray-100, #F2F4F7)",
-                      marginTop: "12px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${Math.min(
-                          100,
-                          Math.max(0, Math.round(availabilityRatio * 100))
-                        )}%`,
-                        height: "100%",
-                        borderRadius: "9999px",
-                        background: barColor,
-                      }}
-                    />
-                  </div>
-                  {(isOutOfStock || isLowStock) && (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        marginTop: "8px",
-                        padding: "2px 8px",
-                        borderRadius: "16px",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        lineHeight: "18px",
-                        fontFamily: "Inter",
-                        background: isOutOfStock
-                          ? "var(--error-50, #FEF3F2)"
-                          : "var(--warning-50, #FFFAEB)",
-                        color: isOutOfStock
-                          ? "var(--error-700, #B42318)"
-                          : "var(--warning-700, #B54708)",
-                      }}
-                    >
-                      {isOutOfStock ? "None available" : "Low stock"}
-                    </span>
-                  )}
-                </>
-              )}
             </Grid>
           </Grid>
         </Card>

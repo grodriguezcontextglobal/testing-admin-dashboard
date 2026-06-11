@@ -1,7 +1,6 @@
 import {
   Grid,
 } from "@mui/material";
-import { Dropdown } from "antd";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -108,8 +107,6 @@ const HeaderInventaryComponent = ({
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginTop: "24px",
-        marginBottom: "24px",
       }}
       item
       xs={12}
@@ -119,7 +116,7 @@ const HeaderInventaryComponent = ({
     >
       <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
         <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
-          Inventory
+          Inventory of {user.company}
         </p>
       </Grid>
       <Grid
@@ -159,29 +156,46 @@ const HeaderInventaryComponent = ({
               with: "100%",
               gap: "2px",
             }}
-            iconLeading={<PlusSquareDarkIcon />}
-            iconTrailing={<ExcelIcon />}
             func={() => setAddInventoryFromXLSXFileModal(true)}
           />
         )}
-        {overflowMenuItems.length > 0 && (
-          <Dropdown
-            menu={{ items: overflowMenuItems }}
-            trigger={["click"]}
-            placement="bottomRight"
-          >
-            <span style={{ display: "inline-flex" }}>
-              <GrayButtonComponent
-                title={"More options"}
-                ariaLabel="More options"
+        {canUpdate && (
+          <Link to="/inventory/edit-group">
+            <LightBlueButtonComponent
+              title={"Update inventory"}
+              styles={{ with: "100%" }}
+              buttonType="button"
+              titleStyles={{
+                textTransform: "none",
+                with: "100%",
+                gap: "2px",
+              }}
+              func={() => null}
+            />
+          </Link>
+        )}
+
+        {canCreate && (
+          <>
+            <Link to="/inventory/new-bulk-items">
+              <BlueButtonComponent
+                title={"Add inventory"}
+                styles={{ with: "100%" }}
+                // icon={
+                //   <WhiteCirclePlusIcon
+                //     style={{ height: "21px", margin: "auto" }}
+                //   />
+                // }
                 buttonType="button"
                 titleStyles={{
                   textTransform: "none",
+                  with: "100%",
+                  gap: "2px",
                 }}
-                iconLeading={<Vertical3Dots stroke="#344054" />}
+                func={() => null}
               />
-            </span>
-          </Dropdown>
+            </Link>
+          </>
         )}
       </Grid>
     </Grid>
