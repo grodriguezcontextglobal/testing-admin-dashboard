@@ -11,7 +11,7 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
-import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+// import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import {
@@ -338,7 +338,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       dataIndex: "action",
       key: "action",
       responsive: ["xs", "sm", "md", "lg"],
-      width: "3%",
       render: (_, record) => {
         const checkPaymentID = String(record.paymentIntent).split("_");
         return (
@@ -367,13 +366,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
               title={"Release"}
               func={() => null}
             />
-
-            <button
-              style={{ background: "transparent", border: "none", outline: "none", cursor: "pointer", padding: "4px", display: "inline-flex", alignItems: "center" }}
-              onClick={() => moreDetailFn(record)}
-            >
-              <RightNarrowInCircle />
-            </button>
           </div>
         );
       },
@@ -388,6 +380,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
         onClick={(e) => {
           e.stopPropagation();
           props.onExpand(props.record, e);
+          moreDetailFn(props.record)
         }}
         style={{
           border: "1px solid #D0D5DD",
@@ -403,6 +396,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
           alignItems: "center",
           gap: "6px",
           whiteSpace: "nowrap",
+          width:"fit-content"
         }}
       >
         {props.expanded ? "Close" : "Open"}
