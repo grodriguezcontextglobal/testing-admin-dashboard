@@ -1,7 +1,6 @@
 // TreeNode.jsx
-import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Checkbox, message } from "antd";
+import { Checkbox, message } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -17,10 +16,13 @@ import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import "../style/viewtree.css";
 
+const LOW_STOCK_RATIO = 0.25;
+
 const TreeNode = ({
   nodeName,
   nodeData,
   path,
+  depth = 0,
   onUpdateLocation,
   setTypePerLocationInfoModal,
   setOpenDetails,
@@ -34,14 +36,25 @@ const TreeNode = ({
   const [editedName, setEditedName] = useState(nodeName);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  // if (!nodeData) return null;
 
   const { total, available, children, types } = nodeData;
   const nodeId = nodeData?.location_id || nodeData?._id || nodeData?.id;
   const isSelectable = total === 0;
+  const subLocationNames = children
+    ? Object.keys(children).filter((key) => key !== "null")
+    : [];
+  const hasChildren = subLocationNames.length > 0;
+  const hasDevices = typeof total === "number" && total > 0;
+  const availabilityRatio = hasDevices ? available / total : null;
+  const barColor =
+    hasDevices && available === 0
+      ? "var(--error-500, #F04438)"
+      : hasDevices && availabilityRatio <= LOW_STOCK_RATIO
+      ? "var(--warning-500, #F79009)"
+      : "var(--success-500, #12B76A)";
 
   const toggleOpen = () => {
-    if (children) setIsOpen(!isOpen);
+    if (hasChildren) setIsOpen(!isOpen);
   };
 
   const handleEdit = () => {
@@ -109,16 +122,6 @@ const TreeNode = ({
   const handleCancel = () => {
     setEditedName(nodeName);
     setIsEditing(false);
-  };
-
-  const style = {
-    backgroundColor: "transparent",
-    border: "none",
-    outline: "none",
-    margin: 0,
-    padding: 0,
-    width: "fit-content",
-    boxShadow: "none",
   };
 
   const navigateToLocation = (location) => {
@@ -225,143 +228,147 @@ const TreeNode = ({
     }
   };
 
-  return (
-    <div
-      key={nodeName}
-      className="tree-card"
-      style={{
-        backgroundColor: selectedLocations?.has(nodeId)
-          ? "rgba(24, 144, 255, 0.1)"
-          : "var(--basewhite)",
-        transition: "background-color 0.3s",
-        borderRadius: "8px !important",
-        // opacity: isSelectable ? 1 : 0.6,
-        width: "-webkit-fill-available",
-      }}
-    >
-      {/* Removed contextHolder to avoid hooking per-node message portals */}
-      <Grid container style={{ cursor: children ? "pointer" : "default" }}>
-        <Grid
-          sx={{
-            width: "fit-content",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          item
-        // xs={12}
-        // sm={12}
-        // md={12}
-        // lg={12}
-        >
-          <Button htmlType="button" style={style} onClick={toggleOpen}>
-            <Typography
-              sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                fontSize: "24px",
-                lineHeight: "32px",
-                textWrap: "balance",
-              }}
-              className="tree-title"
-            >
-              {children && (isOpen ? <DownNarrow /> : <RightChevronIcon />)}{" "}
-              {Number(user.role) === 0 && nodeId && onSelectLocation && (
-                <span onClick={(e) => e.stopPropagation()}>
-                  <Checkbox
-                    checked={selectedLocations?.has(nodeId)}
-                    onChange={() => onSelectLocation(nodeId)}
-                    style={{ margin: "0 8px" }}
-                    disabled={!isSelectable}
-                    aria-disabled={!isSelectable}
-                  />
-                </span>
-              )}
-              <span>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    style={{
-                      fontSize: "20px",
-                      lineHeight: "24px",
-                      width: "auto",
-                      minWidth: "100px",
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  editedName
-                )}
-              </span>
-              <div
-                style={{ display: "flex", gap: "5px", width: "fit-content" }}
-              >
-                {isEditing ? (
-                  <>
-                    {" "}
-                    <BlueButtonComponent
-                      buttonType="button"
-                      func={handleSave}
-                      title={"Save"}
-                      loadingState={isLoading}
-                    />
-                    &nbsp;
-                    <GrayButtonComponent
-                      buttonType="button"
-                      func={handleCancel}
-                      title={"Cancel"}
-                      disabled={isLoading}
-                    />
-                  </>
-                ) : (
-                  <span
-                    style={{
-                      width: "40px !important",
-                      height: "40px !important",
-                      borderRadius: "50% !important",
-                    }}
-                    onClick={handleEdit}>
-                    &nbsp;<EditIcon />
-                  </span>
-                )}
-                <span onClick={() => {
-                  clickTypeLocationInfo();
-                  setOpenDetails(true);
-                }}
-                  style={{ margin: "0 0.5rem" }}
-                >
-                  <ViewIcon fill="#000000e0" />
-                </span>
-                {/* <Avatar
-                  onClick={() => {
-                    clickTypeLocationInfo();
-                    setOpenDetails(true);
-                  }}
-                  style={{
-                    margin: "auto",
-                    background: "#fff",
-                    // borderColor: "#d9d9d9",
-                  }}
-                >
-                  <ViewIcon fill="#000000e0" />
-                </Avatar> */}
-              </div>
-            </Typography>
-          </Button>
-          <span style={{ cursor: "pointer" }} onClick={() => navigateToLocation(path)}>
-            <RightNarrowInCircle />
-          </span>
-        </Grid>
-        <Grid className="tree-sub" item xs={12}>
-          Total: {total}, Available: {available}
-        </Grid>
-      </Grid>
+  const rowClassNames = [
+    "tree-row",
+    depth > 0 ? "tree-row--child" : "",
+    selectedLocations?.has(nodeId) ? "tree-row--selected" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-      {isOpen && children && (
+  return (
+    <div key={nodeName} className="tree-node">
+      <div
+        className={rowClassNames}
+        style={{ paddingLeft: `${16 + depth * 28}px` }}
+      >
+        {hasChildren ? (
+          <button
+            type="button"
+            className="tree-row__chevron"
+            onClick={toggleOpen}
+            aria-label={isOpen ? "Collapse sub-locations" : "Expand sub-locations"}
+            aria-expanded={isOpen}
+          >
+            {isOpen ? <DownNarrow /> : <RightChevronIcon />}
+          </button>
+        ) : (
+          <span className="tree-row__chevron" aria-hidden="true" />
+        )}
+        {Number(user.role) === 0 && nodeId && onSelectLocation && (
+          <Checkbox
+            checked={selectedLocations?.has(nodeId)}
+            onChange={() => onSelectLocation(nodeId)}
+            disabled={!isSelectable}
+            aria-disabled={!isSelectable}
+            title={
+              isSelectable
+                ? "Select location"
+                : "Only empty locations can be selected for deletion"
+            }
+          />
+        )}
+        {isEditing ? (
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <input
+              type="text"
+              className="tree-row__edit-input"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              autoFocus
+            />
+            <BlueButtonComponent
+              buttonType="button"
+              func={handleSave}
+              title={"Save"}
+              loadingState={isLoading}
+            />
+            <GrayButtonComponent
+              buttonType="button"
+              func={handleCancel}
+              title={"Cancel"}
+              disabled={isLoading}
+            />
+          </span>
+        ) : (
+          <span
+            className={`tree-row__name ${
+              hasChildren ? "tree-row__name--clickable" : ""
+            } ${!hasDevices ? "tree-row__name--muted" : ""}`}
+            onClick={toggleOpen}
+          >
+            {editedName}
+          </span>
+        )}
+        {!isEditing && hasChildren && (
+          <span className="tree-row__chip">
+            {subLocationNames.length}{" "}
+            {subLocationNames.length === 1 ? "sub-location" : "sub-locations"}
+          </span>
+        )}
+        {!isEditing && !hasDevices && (
+          <span className="tree-row__chip tree-row__chip--empty">Empty</span>
+        )}
+        <div className="tree-row__meta">
+          <span className="tree-row__avail">
+            {hasDevices
+              ? `${Number(available ?? 0).toLocaleString()} of ${Number(
+                  total,
+                ).toLocaleString()} available`
+              : "No devices"}
+          </span>
+          <div className="tree-row__track">
+            {hasDevices && (
+              <div
+                className="tree-row__fill"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.max(0, Math.round((availabilityRatio ?? 0) * 100)),
+                  )}%`,
+                  background: barColor,
+                }}
+              />
+            )}
+          </div>
+          <div className="tree-row__actions">
+            <button
+              type="button"
+              className="tree-row__action-btn"
+              onClick={handleEdit}
+              title="Rename location"
+              aria-label="Rename location"
+            >
+              <EditIcon />
+            </button>
+            <button
+              type="button"
+              className="tree-row__action-btn"
+              onClick={() => {
+                clickTypeLocationInfo();
+                setOpenDetails(true);
+              }}
+              title="View item types in this location"
+              aria-label="View item types in this location"
+            >
+              <ViewIcon fill="#000000e0" />
+            </button>
+            <button
+              type="button"
+              className="tree-row__action-btn"
+              onClick={() => navigateToLocation(path)}
+              title="Open location"
+              aria-label="Open location"
+            >
+              <RightNarrowInCircle />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {isOpen && hasChildren && (
         <div className="tree-children">
           {Object.entries(children)
             .filter(([key]) => key !== "null")
@@ -371,6 +378,7 @@ const TreeNode = ({
                 nodeName={childName}
                 nodeData={childData}
                 path={[...path, childName]}
+                depth={depth + 1}
                 onUpdateLocation={onUpdateLocation}
                 setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                 setOpenDetails={setOpenDetails}
@@ -398,6 +406,7 @@ TreeNode.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }).isRequired,
   path: PropTypes.arrayOf(PropTypes.string).isRequired,
+  depth: PropTypes.number,
   onUpdateLocation: PropTypes.func,
   setTypePerLocationInfoModal: PropTypes.func,
   setOpenDetails: PropTypes.func,

@@ -1,7 +1,6 @@
 // TreeView.jsx
 import TreeNode from "./TreeNode";
 import "../style/viewtree.css";
-import { Grid } from "@mui/material";
 
 const TreeView = ({
   data,
@@ -11,32 +10,21 @@ const TreeView = ({
   onSelectLocation,
 }) => {
   return (
-    <Grid container alignContent={"flex-start"} padding={0} margin={0} gap={1} width={"100%"}>
+    <div className="tree-list">
       {Object.entries(data).map(([location, details]) => (
-        <Grid
+        <TreeNode
           key={location}
-          id={`tree-node-${location}`}
-          padding={0}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-
-          <TreeNode
-            key={location}
-            nodeName={location}
-            nodeData={details}
-            path={[location]} // start path
-            setTypePerLocationInfoModal={setTypePerLocationInfoModal}
-            setOpenDetails={setOpenDetails}
-            selectedLocations={selectedLocations}
-            onSelectLocation={onSelectLocation}
-          />
-        </Grid>
+          nodeName={location}
+          nodeData={details}
+          path={[location]}
+          depth={0}
+          setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+          setOpenDetails={setOpenDetails}
+          selectedLocations={selectedLocations}
+          onSelectLocation={onSelectLocation}
+        />
       ))}
-    </Grid>
+    </div>
   );
 };
 
