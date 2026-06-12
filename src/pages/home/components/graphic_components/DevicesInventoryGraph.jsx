@@ -30,7 +30,7 @@ const CustomTooltipContent = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div className="chart-tooltip">
-        <p className="tooltip-label">{payload[0].name}</p>
+        <p className="tooltip-label">{payload[0].payload?.name ?? payload[0].name}</p>
         <p className="tooltip-value">{`Value: ${payload[0].value}`}</p>
       </div>
     );
@@ -71,6 +71,7 @@ const DevicesInventoryGraph = ({ dataToRender, total }) => {
         <RadialBar
           isAnimationActive={false}
           dataKey="value"
+          nameKey="name"
           cornerRadius={6}
           background={{ fill: "#f4f4f5" }}
         />
