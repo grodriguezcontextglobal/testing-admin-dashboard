@@ -8,7 +8,7 @@ import {
   onAddEventData,
 } from "../../../../store/slices/eventSlice";
 
-const DisplayAllItemsSetInventoryEventForCustomers = (database) => {
+const DisplayAllItemsSetInventoryEventForCustomers = ({ database }) => {
   const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const dispatch = useDispatch();
