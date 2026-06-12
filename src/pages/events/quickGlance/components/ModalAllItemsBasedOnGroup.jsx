@@ -17,7 +17,8 @@ const ModalAllItemsBasedOnGroup = ({
 
     try {
       // Parse the JSON string from receiversInventory
-      const inventoryData = JSON.parse(database?.database?.receiversInventory);
+      const raw = database?.receiversInventory;
+      const inventoryData = typeof raw === "string" ? JSON.parse(raw) : raw;
       // Filter data by deviceTitle (type field) and sort by device ID
       const filteredData = inventoryData
         .filter((item) => item.type === deviceTitle)
