@@ -1352,9 +1352,9 @@ const RenderingFilters = ({
 
               <Grid
                 style={{
-                  width: "100vw",
+                  width: "100%",
                   display: item.open ? "flex" : "none",
-                  justifyContent: "center",
+                  justifyContent: "flex-start",
                   alignItems: "center",
                 }}
                 display={item.open ? "flex" : "none"}
