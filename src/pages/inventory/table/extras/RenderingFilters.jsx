@@ -1210,10 +1210,8 @@ const RenderingFilters = ({
             <details
               style={{
                 width: "100%",
-                display: item.show && item.key === groupBy ? "flex" : "none",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
+                display:
+                  item.show && item.key === groupBy ? "block" : "none",
                 margin: "1rem 0 2rem",
               }}
               open={openSections[item.key] ?? item.open}
