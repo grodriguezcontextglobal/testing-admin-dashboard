@@ -1,18 +1,17 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, Badge } from "antd";
+import { Avatar } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Chip from "../../../components/UX/Chip/Chip";
 import TableHeader from "../../../components/UX/TableHeader";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
-import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+// import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import {
@@ -23,7 +22,7 @@ import {
 import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
 
@@ -339,7 +338,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       dataIndex: "action",
       key: "action",
       responsive: ["xs", "sm", "md", "lg"],
-      width: "3%",
       render: (_, record) => {
         const checkPaymentID = String(record.paymentIntent).split("_");
         return (
@@ -368,13 +366,6 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
               title={"Release"}
               func={() => null}
             />
-
-            <button
-              style={{ background: "transparent", outline: "none" }}
-              onClick={() => moreDetailFn(record)}
-            >
-              <RightNarrowInCircle />
-            </button>
           </div>
         );
       },
@@ -385,44 +376,32 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
 
   const customExpandIcon = (props) => {
     return (
-      <div
+      <button
         onClick={(e) => {
+          e.stopPropagation();
           props.onExpand(props.record, e);
+          moreDetailFn(props.record)
         }}
-        key={props.expanded}
-        style={{ ...Subtitle, cursor: "pointer" }}
+        style={{
+          border: "1px solid #D0D5DD",
+          background: props.expanded ? "#344054" : "#fff",
+          borderRadius: "9999px",
+          padding: "6px 14px",
+          fontSize: "14px",
+          lineHeight: "20px",
+          color: props.expanded ? "#fff" : "#475467",
+          fontWeight: props.expanded ? 500 : 400,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          whiteSpace: "nowrap",
+          width:"fit-content"
+        }}
       >
-        <Badge>
-          <Chip
-            variant="filled"
-            color={props.expanded ? "default" : "success"}
-            style={{
-              width: "100%",
-            }}
-            label={
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <p
-                  style={{
-                    ...Subtitle,
-                    margin: 0,
-                    color: "inherit",
-                  }}
-                >
-                  {props.expanded ? "Close" : "Open"}
-                </p>
-                {props.expanded ? <UpNarrowIcon /> : <DownNarrow />}
-              </div>
-            }
-          />
-        </Badge>
-      </div>
+        {props.expanded ? "Close" : "Open"}
+        {props.expanded ? <UpNarrowIcon /> : <DownNarrow />}
+      </button>
     );
   };
 
@@ -467,23 +446,18 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     });
   };
   const headerTitleStyle = {
-    ...TextFontSize20LineHeight30,
-    fontWeight: 500,
-    color: "#000",
+    ...TextFontsize18LineHeight28,
+    fontWeight: 600,
+    color: "#344054",
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
-    padding: "24px 12px",
   };
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <TableHeader
         leftCta={<p style={headerTitleStyle}>Transactions</p>}
-        rightCta={
-          <span style={{ marginBottom: "-25px" }}>
-            <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
-          </span>
-        }
+        rightCta={<RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />}
       />
       <ExpandableTable
         key={customerFormat.id}

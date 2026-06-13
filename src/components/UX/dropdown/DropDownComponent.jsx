@@ -421,27 +421,16 @@ export default function Dropdown({
                 onClick={() => handleSelect(item)}
                 disabled={false}
                 tabIndex={-1}
-              >                {renderOption ? (
-                renderOption(item, {
-                  selected: isSelected,
-                  disabled: isDisabled,
-                })
-              ) : (
-                <>
-                  {item.icon && (
-                    <span className="ud-item-icon">{item.icon}</span>
-                  )}
-                  <span className="ud-item-label">{item.label}</span>
-                  {item.addon && (
-                    <span className="ud-item-addon">{item.addon}</span>
-                  )}
-                  {/* {isSelected && (
-                      <span className="ud-item-check">
-                        <CheckIcon />
-                      </span>
-                    )} */}
-                </>
-              )}
+              >
+                {renderOption ? (
+                  renderOption(item, { selected: isSelected, disabled: isDisabled })
+                ) : (
+                  <>
+                    {item.icon && <span className="ud-item-icon">{item.icon}</span>}
+                    <span className="ud-item-label">{item.label}</span>
+                    {item.addon && <span className="ud-item-addon">{item.addon}</span>}
+                  </>
+                )}
               </button>
             );
           })}

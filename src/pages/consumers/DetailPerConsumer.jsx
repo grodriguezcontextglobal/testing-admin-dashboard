@@ -1,6 +1,6 @@
 // import StripeTransactionHistoryByUser from '../Attendees/tables/StripeTransactionHistoryByUser';
 import { Icon } from "@iconify/react";
-import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useForm } from "react-hook-form";
@@ -159,7 +159,7 @@ const DetailPerConsumer = () => {
         <Grid
           key={customer.id}
           style={{
-            padding: "5px",
+            padding: "0 0 24px",
             display: "flex",
             justifyContent: "center",
             alignSelf: "stretch",
@@ -180,7 +180,7 @@ const DetailPerConsumer = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                margin: "0 0 1.5dvh",
+                margin: "0 0 16px",
               }}
               item
               xs={12}
@@ -188,12 +188,9 @@ const DetailPerConsumer = () => {
               md={8}
               lg={8}
             >
-              <Typography
-                textTransform={"none"}
-                style={TextFontSize30LineHeight38}
-              >
+              <p style={{ ...TextFontSize30LineHeight38, textTransform: "none" }}>
                 Consumer
-              </Typography>
+              </p>
             </Grid>
             {/* /event/new_subscription */}
             <Grid
@@ -228,7 +225,6 @@ const DetailPerConsumer = () => {
           </Grid>
           <Grid
             style={{
-              paddingTop: "0px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -253,14 +249,14 @@ const DetailPerConsumer = () => {
               actions={<CardActionsButton />}
             />
           </Grid>
-          <Divider />{" "}
+          <Divider />
           <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
             <CardRendered
               title={"Transactions"}
               props={renderingTransactions()}
               optional={null}
             />
-          </Grid>{" "}
+          </Grid>
           <Grid alignSelf={"flex-start"} item xs={12} sm={12} md={3} lg={3}>
             <CardRendered
               title={"Events"}
@@ -274,13 +270,13 @@ const DetailPerConsumer = () => {
               props={substractingNotesAddedForCompany()}
             />
           </Grid>
-          <Divider />{" "}
+          <Divider />
           <p
             style={{
               ...TextFontsize18LineHeight28,
               width: "100%",
               textAlign: "left",
-              margin: "0 0 1.5dvh",
+              margin: "0 0 12px",
             }}
           >
             Transactions

@@ -1,265 +1,230 @@
-import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Space, notification } from "antd";
 import { useNavigate } from "react-router-dom";
-import { Footer } from "antd/es/layout/layout";
 import { groupBy } from "lodash";
 import { devitrakApi } from "../../api/devitrakApi";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
-import "./style/authStyle.css";
+import { AlertCircleIcon } from "../../components/icons/AlertCircleIcon";
+import { LeftArrowIcon } from "../../components/icons/LeftArrowIcon";
+import { LockUnlock01Icon } from "../../components/icons/LockUnlock01";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
+import Input from "../../components/UX/inputs/Input";
+import { FormHelperText, FormLabel } from "@mui/material";
+
 const schema = yup.object().shape({
-  password: yup.string().min(6).max(20).required("Password is required"),
-  password2: yup.string().oneOf([yup.ref("password"), null]),
+    password: yup.string().min(6).max(20).required("Password is required"),
+    password2: yup.string().oneOf([yup.ref("password"), null], "Passwords must match").required("Please confirm your password"),
 });
 
-const STATUS = {
-  idle: false,
-  loading: true,
-  success: false,
-  error: true,
-};
-const ResetPassword = () => {
-  const [loadingStatus, setLoadingStatus] = useState(STATUS.idle);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
-  const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, message, description) => {
-    api.open({
-      message: message,
-      description: description,
-    });
-  };
-  const adminStaffQuery = useQuery({
-    queryKey: ["staffMember"],
-    queryFn: () => devitrakApi.get("/staff/__staff-search"),
-  });
-
-  if (adminStaffQuery.isLoading) return <Typography>Loading...</Typography>;
-  if (adminStaffQuery.data) {
-    const stampTime = new URLSearchParams(window.location.search).get(
-      "stamp-time",
-    );
-    const timeRef = new Date();
-    const groupAdminPerEmail = groupBy(
-      adminStaffQuery.data.data.adminUsers,
-      "id",
-    );
-    const adminUid = new URLSearchParams(window.location.search).get("uid");
-    const foundAdminStaffData = groupAdminPerEmail[adminUid];
-    const submitNewPassword = async (data) => {
-      setLoadingStatus(STATUS.loading);
-      const resp = await devitrakApi.patch(`/admin/update-password`, {
-        email: foundAdminStaffData.at(-1).email,
-        password: data.password,
-      });
-      if (resp) {
-        setLoadingStatus(STATUS.success);
-        openNotificationWithIcon(
-          "success",
-          "Password updated.",
-          "Please log in with your new password. You will be redirected to login page in a moment.",
-        );
-        setTimeout(() => {
-          navigate("/login");
-        }, 5000);
-      }
+const FeaturedIcon = ({ children, color = "gray" }) => {
+    const colorStyles = {
+        gray: { border: "1px solid #e4e7ec", background: "#fff", color: "#344054" },
+        warning: { border: "1px solid #fec84b", background: "#fffcf5", color: "#b54708" },
     };
     return (
-      <>
-        {contextHolder}
-        <Grid
-          style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
-          container
+        <div
+            style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "56px",
+                height: "56px",
+                borderRadius: "12px",
+                boxShadow: "0px 1px 2px rgba(16,24,40,0.06), 0px 1px 3px rgba(16,24,40,0.1)",
+                position: "relative",
+                zIndex: 10,
+                ...colorStyles[color],
+            }}
         >
-          <Grid item xs={12} sm={12} md={6} lg={6}>
-            <Grid
-              container
-              display={"flex"}
-              flexDirection={"column"}
-              justifyContent={"space-around"}
-              alignItems={"center"}
-            >
-              <Grid marginX={0} className="register-container" container>
-                <Grid
-                  item
-                  xs={12}
-                  display={"flex"}
-                  flexDirection={"column"}
-                  justifyContent={"space-around"}
-                  alignItems={"center"}
-                >
-                  <Typography
-                    style={{
-                      color: "var(--gray900, #101828)",
-                      fontSize: "30px",
-                      fontFamily: "Inter",
-                      fontWeight: "600",
-                      lineHeight: "38px",
-                      marginBottom: "1rem",
-                    }}
-                    variant="h1"
-                  >
-                    Welcome to devitrak App
-                  </Typography>
-                  <Typography
-                    style={{
-                      color: "var(--gray-500, #667085)",
-                      fontSize: "16px",
-                      fontFamily: "Inter",
-                      lineHeight: "24px",
-                    }}
-                    variant="subtitle1"
-                  >
-                    Please enter your new password
-                  </Typography>
-                </Grid>
-                {new Date(stampTime).getTime() - timeRef.getTime() > -400000 ? (
-                  <form
-                    className="register-form-container"
-                    onSubmit={handleSubmit(submitNewPassword)}
-                  >
-                    <Grid
-                      marginY={"20px"}
-                      marginX={0}
-                      textAlign={"left"}
-                      item
-                      xs={12}
-                      sm={12}
-                      md
-                    >
-                      <FormLabel style={{ marginBottom: "0.5rem" }}>
-                        New password
-                      </FormLabel>
-                      <OutlinedInput
-                        {...register("password", {
-                          required: true,
-                          minLength: 6,
-                        })}
-                        style={OutlinedInputStyle}
-                        placeholder="******"
-                        type="password"
-                        fullWidth
-                      />
-                      {errors?.password?.message}
-                    </Grid>
-                    <Grid
-                      marginY={"20px"}
-                      marginX={0}
-                      textAlign={"left"}
-                      item
-                      xs={12}
-                    >
-                      <FormLabel style={{ marginBottom: "0.5rem" }}>
-                        Repeat new password
-                      </FormLabel>
-                      <OutlinedInput
-                        {...register("password2")}
-                        style={OutlinedInputStyle}
-                        placeholder="******"
-                        type="password"
-                        fullWidth
-                      />
-                      {errors?.password2 && <p>Password must match</p>}
-                    </Grid>
-
-                    <Grid
-                      marginY={"20px"}
-                      marginX={0}
-                      textAlign={"left"}
-                      display={"flex"}
-                      justifyContent={"space-between"}
-                      alignItems={"center"}
-                      item
-                      xs={12}
-                      style={{
-                        position: "sticky",
-                        bottom: "0px",
-                        opacity: "1",
-                      }}
-                    >
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={loadingStatus}
-                      >
-                        Submit
-                      </Button>
-                    </Grid>
-                  </form>
-                ) : (
-                  <Grid
-                    display={"flex"}
-                    alignItems={"center"}
-                    justifyContent={"center"}
-                    margin={"40% auto"}
-                    container
-                  >
-                    <Grid
-                      display={"flex"}
-                      alignItems={"center"}
-                      justifyContent={"center"}
-                      item
-                      xs={12}
-                    >
-                      <Space
-                        direction="vertical"
-                        style={{
-                          width: "100%",
-                        }}
-                      >
-                        <Alert
-                          banner
-                          message="Link is expired."
-                          type="warning"
-                          showIcon
-                        />
-                      </Space>
-                    </Grid>
-                  </Grid>
-                )}
-              </Grid>
-            </Grid>
-            <Footer
-              style={{
-                height: "5dvh",
-                padding: "2rem",
-                backgroundColor: "var(--basewhite)",
-              }}
-            >
-              <Grid
-                item
-                xs={2}
-                display={"flex"}
-                justifyContent={"flex-start"}
-                alignItems={"center"}
-              >
-                <Typography
-                  style={{
-                    fontSize: "14px",
-                    fontFamily: "Inter",
-                    lineHeight: "20px",
-                  }}
-                >
-                  @ devitrak 2023
-                </Typography>
-              </Grid>
-            </Footer>
-          </Grid>
-          <Grid id="section-img-login-component" item md={6} lg={6}></Grid>
-        </Grid>
-      </>
+            {children}
+        </div>
     );
-  }
+};
+
+const BackgroundPattern = () => (
+    <svg
+        style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", pointerEvents: "none", userSelect: "none", zIndex: 0 }}
+        width="400"
+        height="400"
+        viewBox="0 0 400 400"
+        fill="none"
+        aria-hidden="true"
+    >
+        {Array.from({ length: 9 }).map((_, i) => (
+            <circle key={i} cx="200" cy="200" r={28 + i * 32} stroke="#f2f4f7" strokeWidth="1" />
+        ))}
+    </svg>
+);
+
+const ResetPassword = () => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({ resolver: yupResolver(schema) });
+    const navigate = useNavigate();
+
+    const adminStaffQuery = useQuery({
+        queryKey: ["staffMember"],
+        queryFn: () => devitrakApi.get("/staff/__staff-search"),
+    });
+
+    if (adminStaffQuery.isLoading) {
+        return (
+            <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
+                <p style={{ color: "#667085", fontSize: "16px" }}>Loading...</p>
+            </section>
+        );
+    }
+
+    if (!adminStaffQuery.data) return null;
+
+    const stampTime = new URLSearchParams(window.location.search).get("stamp-time");
+    const adminUid = new URLSearchParams(window.location.search).get("uid");
+    const groupAdminPerEmail = groupBy(adminStaffQuery.data.data.adminUsers, "id");
+    const foundAdminStaffData = groupAdminPerEmail[adminUid];
+    const isLinkValid = new Date(stampTime).getTime() - new Date().getTime() > -400000;
+
+    const submitNewPassword = async (data) => {
+        setIsLoading(true);
+        try {
+            await devitrakApi.patch(`/admin/update-password`, {
+                email: foundAdminStaffData.at(-1).email,
+                password: data.password,
+            });
+            setSuccessMessage("Password updated. Redirecting to login...");
+            setTimeout(() => navigate("/login"), 5000);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const pageStyle = {
+        minHeight: "100vh",
+        overflow: "hidden",
+        background: "#fff",
+        padding: "48px 16px",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+    };
+
+    const containerStyle = {
+        display: "flex",
+        flexDirection: "column",
+        gap: "32px",
+        width: "100%",
+        maxWidth: "360px",
+    };
+
+    const headerStyle = {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "24px",
+        textAlign: "center",
+    };
+
+    if (!isLinkValid) {
+        return (
+            <section style={pageStyle}>
+                <div style={containerStyle}>
+                    <div style={headerStyle}>
+                        <div style={{ position: "relative" }}>
+                            <FeaturedIcon color="warning">
+                                <AlertCircleIcon />
+                            </FeaturedIcon>
+                            <BackgroundPattern />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", position: "relative", zIndex: 10 }}>
+                            <h1 style={{ fontSize: "24px", fontWeight: 600, color: "#101828", lineHeight: "32px", margin: 0 }}>
+                                Link expired
+                            </h1>
+                            <p style={{ fontSize: "16px", color: "#667085", lineHeight: "24px", margin: 0 }}>
+                                This password reset link has expired. Please request a new one.
+                            </p>
+                        </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", position: "relative", zIndex: 10 }}>
+                        <GrayButtonComponent href="/login" title="Back to log in" iconLeading={<LeftArrowIcon />} />
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    return (
+        <section style={pageStyle}>
+            <div style={containerStyle}>
+                <div style={headerStyle}>
+                    <div style={{ position: "relative" }}>
+                        <FeaturedIcon color="gray">
+                            <LockUnlock01Icon />
+                        </FeaturedIcon>
+                        <BackgroundPattern />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", position: "relative", zIndex: 10 }}>
+                        <h1 style={{ fontSize: "24px", fontWeight: 600, color: "#101828", lineHeight: "32px", margin: 0 }}>
+                            Set new password
+                        </h1>
+                        <p style={{ fontSize: "16px", color: "#667085", lineHeight: "24px", margin: 0 }}>
+                            Your new password must be at least 6 characters.
+                        </p>
+                    </div>
+                </div>
+
+                {successMessage ? (
+                    <p style={{ textAlign: "center", fontSize: "16px", color: "#027a48", position: "relative", zIndex: 10 }}>
+                        {successMessage}
+                    </p>
+                ) : (
+                    <form
+                        onSubmit={handleSubmit(submitNewPassword)}
+                        style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative", zIndex: 10 }}
+                    >
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            <FormLabel htmlFor="password" style={{ width: "100%", textAlign: "left" }}>New password
+                                <Input
+                                    // label="New password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    {...register("password")}
+                                    error={!!errors?.password}
+                                    helperText={errors?.password?.message}
+                                />
+                            </FormLabel>
+                            <FormLabel htmlFor="password2" style={{ width: "100%", textAlign: "left" }}>Confirm password
+                                <Input
+                                    // label="Confirm password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    {...register("password2")}
+                                    error={!!errors?.password2}
+                                />
+                            </FormLabel>
+                            <FormHelperText>{errors?.password2?.message}</FormHelperText>
+                        </div>
+                        <BlueButtonComponent
+                            buttonType="submit"
+                            size="lg"
+                            isLoading={isLoading}
+                            title="Reset password"
+                            styles={{ width: "100%" }}
+                        />
+                    </form>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "center", position: "relative", zIndex: 10 }}>
+                    <GrayButtonComponent href="/login" title="Back to log in" iconLeading={<LeftArrowIcon />} />
+                </div>
+            </div>
+        </section>
+    );
 };
 
 export default ResetPassword;

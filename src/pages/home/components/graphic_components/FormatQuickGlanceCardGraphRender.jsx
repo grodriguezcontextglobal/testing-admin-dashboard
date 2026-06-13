@@ -1,24 +1,14 @@
 import { Grid, Typography } from "@mui/material";
 import { PropTypes } from "prop-types";
-import { lazy, Suspense } from "react";
-import Loading from "../../../../components/animation/Loading";
 import ReusableCardWithHeaderAndFooter from "../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
-// import ChartsRenderer from "../../../../components/utils/ChartsRenderer";
-const ChartsRenderer = lazy(
-  () => import("../../../../components/utils/ChartsRenderer"),
-);
+import DevicesInventoryGraph from "./DevicesInventoryGraph";
+
 const FormatQuickGlanceCardGraphRender = ({
   dataToRender,
   totalDeviceInRange,
   index,
 }) => {
-  // const style = {
-  //   padding: 0,
-  // };
-
   const renderTitle = () => {
     return (
       <Grid
@@ -28,20 +18,13 @@ const FormatQuickGlanceCardGraphRender = ({
         item
         xs={10}
       >
-        <Typography
-          style={TextFontsize18LineHeight28}
-          // fontFamily={"Inter"}
-          // fontSize={"18px"}
-          // fontStyle={"normal"}
-          // fontWeight={600}
-          // lineHeight={"28px"}
-          // color={"var(--gray-900, #101828)"}
-        >
+        <Typography style={TextFontsize18LineHeight28}>
           Devices inventory
         </Typography>
       </Grid>
     );
   };
+
   const cardStyles = {
     body: {
       padding: "10px 10px 0px 10px",
@@ -54,69 +37,40 @@ const FormatQuickGlanceCardGraphRender = ({
       alignItems: "center",
     },
   };
-  const cardActions = [
-    <Typography
-      style={{
-        ...Subtitle,
-        padding: "10px 24px",
-        fontWeight: 600,
-      }}
-      key={"render-total-device-activity"}
-      // fontFamily={"Inter"}
-      // fontSize={"16px"}
-      // fontStyle={"normal"}
-      // lineHeight={"24px"}
-      // textAlign={"right"}
-      // padding={"10px 24px"}
-      // color={"var(--gray-600, #475467)"}
-    >
-      Total:&nbsp;
-      {totalDeviceInRange}
-    </Typography>,
-  ];
-  const cardChildren = () => {
-    return (
-          <ChartsRenderer
-            dataToRender={dataToRender}
-            title=""
-            orient="vertical"
-            top="auto"
-            right={0}
-            showLabel={false}
-            legendAlign="right"
-            colors={["#84ADFF", "#155EEF", "#00359E", "#fb6b6b"]}
-            radiusProps={["40%", "55%"]}
-            innerWidth={'25rem'}
-          />
-    );
-  };
+
+  // const cardActions = [
+  //   <Typography
+  //     style={{
+  //       ...Subtitle,
+  //       padding: "10px 24px",
+  //       fontWeight: 600,
+  //     }}
+  //     key={"render-total-device-activity"}
+  //   >
+  //     Total:&nbsp;{totalDeviceInRange}
+  //   </Typography>,
+  // ];
+
   return (
-    <Suspense
-      fallback={
-        <div style={CenteringGrid}>
-          <Loading />
-        </div>
-      }
+    <ReusableCardWithHeaderAndFooter
+      id={`total-device-inventory-${index + 1}`}
+      key={index + 1}
+      title={renderTitle()}
+      // actions={cardActions}
+      style={cardStyles}
     >
-      {/* <Grid key={index + 1} style={style} item xs={12}> */}
-        <ReusableCardWithHeaderAndFooter
-          id={`total-device-inventory-${index + 1}`}
-          key={index + 1}
-          title={renderTitle()}
-          actions={cardActions}
-          style={cardStyles}
-        >
-          {cardChildren()}
-        </ReusableCardWithHeaderAndFooter>
-      {/* </Grid> */}
-    </Suspense>
+      <DevicesInventoryGraph
+        dataToRender={dataToRender}
+        total={totalDeviceInRange}
+      />
+    </ReusableCardWithHeaderAndFooter>
   );
 };
 
 export default FormatQuickGlanceCardGraphRender;
 
 FormatQuickGlanceCardGraphRender.propTypes = {
-  dataToRender: PropTypes.Array,
+  dataToRender: PropTypes.array,
   totalDeviceInRange: PropTypes.number,
   index: PropTypes.number,
 };

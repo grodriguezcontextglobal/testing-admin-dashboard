@@ -103,15 +103,14 @@ const ReturningLeasedEquipModal = ({
       });
 
       // Step 3: Delete items from records
-      const deleteQuery = `DELETE FROM item_inv WHERE item_id = ? AND company_id = ?`;
-      const deleteValues = [dataFound.item_id, dataFound.company_id];
-      const payloadDelete = {
-        query: deleteQuery,
-        values: deleteValues,
-      };
+      // const deleteQuery = `DELETE FROM item_inv WHERE item_id = ? AND company_id = ?`;
+      // const deleteValues = [dataFound.item_id, dataFound.company_id];
+      // const payloadDelete = {
+      //   query: deleteQuery,
+      //   values: deleteValues,
+      // };
       await devitrakApi.post(
-        "/db_company/inventory-based-on-submitted-parameters",
-        payloadDelete
+        `/db_item/${dataFound.item_id}`,
       );
 
       // Step 4: Clear cache memory

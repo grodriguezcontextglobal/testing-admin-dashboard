@@ -1,15 +1,16 @@
 /* UntitledUI-ish tokens (tweak to match your global CSS vars if you have them) */
 :root {
   --ud-bg: #fff;
-  --ud-border: rgba(16, 24, 40, 0.12);
+  --ud-border: #D0D5DD;
   --ud-shadow:
-    0 12px 24px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.08);
+    0 4px 6px -2px rgba(16, 24, 40, 0.03),
+    0 12px 16px -4px rgba(16, 24, 40, 0.08);
   --ud-text: #101828;
   --ud-muted: #475467;
-  --ud-hover: rgba(16, 24, 40, 0.04);
+  --ud-hover: #F9FAFB;
   --ud-focus: rgba(46, 144, 250, 0.35);
-  --ud-radius: 12px;
-  --ud-radius-sm: 10px;
+  --ud-radius: 8px;
+  --ud-radius-sm: 6px;
 
   /* Variant colors */
   --ud-primary: #155eef;
@@ -27,18 +28,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  border-radius: 10px;
-  /* border: 1px solid var(--ud-border); */
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--ud-border);
   background: var(--ud-bg);
   color: var(--ud-text);
   cursor: pointer;
-  height: 40px; /* Default md size */
-  padding: 0 12px;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  height: 40px;
+  padding: 0 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
   outline: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
 }
 
 /* .ud-trigger:focus-visible {
@@ -194,29 +198,30 @@
 
 /* Menu / Popover */
 .ud-menu {
-  position: fixed; /* aligns with getBoundingClientRect; no portal needed */
+  position: fixed;
   z-index: 9999;
   background: var(--ud-bg);
   border: 1px solid var(--ud-border);
   border-radius: var(--ud-radius);
   box-shadow: var(--ud-shadow);
-  padding: 6px;
+  padding: 4px;
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
   pointer-events: none;
   transition:
-    opacity 140ms ease,
-    transform 140ms ease;
+    opacity 120ms ease,
+    transform 120ms ease;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-height: 300px;
+  gap: 1px;
+  max-height: 320px;
   overflow-y: auto;
 }
 
 .ud-menu.is-ready {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
@@ -224,29 +229,49 @@
 .ud-item {
   display: flex;
   align-items: center;
+  gap: 8px;
   width: 100%;
   text-align: left;
   background: transparent;
   border: none;
   border-radius: var(--ud-radius-sm);
-  padding: 8px 10px;
+  padding: 9px 10px;
   cursor: pointer;
   color: var(--ud-text);
   font-size: 14px;
   font-family: inherit;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  font-weight: 400;
+  line-height: 20px;
+  transition: background-color 0.12s ease;
   outline: none;
 }
 
 .ud-item:hover,
 .ud-item:focus-visible {
-  background-color: #155eef;
-  color: #fff;
+  background-color: var(--ud-hover);
+  color: var(--ud-text);
+}
+
+.ud-item:hover p,
+.ud-item:focus-visible p {
+  color: var(--ud-text);
 }
 
 .ud-item:hover .ud-item-icon,
-.ud-item:hover .ud-item-addon {
-  color: #fff;
+.ud-item:focus-visible .ud-item-icon,
+.ud-item:hover .ud-item-addon,
+.ud-item:focus-visible .ud-item-addon {
+  color: var(--ud-muted);
+}
+
+.ud-item.is-selected {
+  background-color: #F2F4F7;
+  color: var(--ud-text);
+  font-weight: 500;
+}
+
+.ud-item.is-selected:hover {
+  background-color: #EAECF0;
 }
 
 .ud-item-label {
@@ -260,11 +285,10 @@
 }
 
 .ud-section-header {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  /* color: var(--ud-muted); */
-  color: #155eef;
+  color: var(--ud-muted);
   padding: 8px 10px 4px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
