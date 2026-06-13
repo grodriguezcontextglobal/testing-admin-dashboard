@@ -36,7 +36,7 @@ import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();
 
 const labelTranslations = {
-  Locaciones: "Locations",
+  Locaciones: "Locations | Sub locations",
   Categorias: "Categories",
   Grupos: "Groups",
   Marcas: "Brands",
@@ -54,7 +54,7 @@ const groupByOptions = [
 ];
 
 const groupByFallbackLabels = {
-  location_1: "Locations",
+  location_1: "Locations | Sub locations",
   category_name: "Categories",
   item_group: "Groups",
   brand: "Brands",
@@ -188,7 +188,7 @@ const RenderingFilters = ({
       return user.companyData.structure;
     }
     return {
-      location_1: "Locations",
+      location_1: "Locations | Sub locations",
       category_name: "Category",
       item_group: "Groups",
       brand: "Brands",
@@ -1210,10 +1210,8 @@ const RenderingFilters = ({
             <details
               style={{
                 width: "100%",
-                display: item.show && item.key === groupBy ? "flex" : "none",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
+                display:
+                  item.show && item.key === groupBy ? "block" : "none",
                 margin: "1rem 0 2rem",
               }}
               open={openSections[item.key] ?? item.open}
@@ -1320,9 +1318,9 @@ const RenderingFilters = ({
               </Grid>
               <Grid
                 style={{
-                  width: "100vw",
+                  width: "100%",
                   display: item.open ? "flex" : "none",
-                  justifyContent: "center",
+                  justifyContent: "flex-start",
                   alignItems: "center",
                 }}
                 display={item.open ? "flex" : "none"}
@@ -1352,9 +1350,9 @@ const RenderingFilters = ({
 
               <Grid
                 style={{
-                  width: "100vw",
+                  width: "100%",
                   display: item.open ? "flex" : "none",
-                  justifyContent: "center",
+                  justifyContent: "flex-start",
                   alignItems: "center",
                 }}
                 display={item.open ? "flex" : "none"}
