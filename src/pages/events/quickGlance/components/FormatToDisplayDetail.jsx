@@ -136,24 +136,25 @@ const FormatToDisplayDetail = () => {
             title={"Total devices checked out"}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={6} lg={4}>
-          <button
-            onClick={() => setDefectedDeviceList(true)}
-            style={{
-              backgroundColor: "transparent",
-              outline: "none",
-              width: "100%",
-              padding: 0,
-              margin: 0,
-            }}
-          >
-            <CardRendered
-              key={"Total lost/defected devices"}
-              props={foundAllNoOperatingDeviceInEvent()}
-              title={"Total devices not functional"}
-            />
-          </button>
-        </Grid>
+        {foundAllNoOperatingDeviceInEvent() > 0 && (
+          <Grid item xs={12} sm={6} md={6} lg={4}>
+            <button
+              onClick={() => setDefectedDeviceList(true)}
+              style={{
+                backgroundColor: "transparent",
+                outline: "none",
+                width: "100%",
+                padding: 0,
+                margin: 0,
+              }}
+            >
+              <CardRendered
+                key={"Total lost/defected devices"}
+                props={foundAllNoOperatingDeviceInEvent()}
+                title={"Total devices not functional"}
+              />
+            </button>
+          </Grid>)}
         {defectedDeviceList && (
           <ModalListOfDefectedDevices
             data={foundAllNoOperatingDeviceListInEvent()}
