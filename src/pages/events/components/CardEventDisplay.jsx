@@ -20,6 +20,10 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import displayMonth from "../quickGlance/components/formatEventDetailInfo/displayMonth";
 import WeekdayDifference from "../utils/DateDifference";
+import {
+  countdownBadgeColors,
+  getCountdownLabel,
+} from "../utils/eventStatusHelpers";
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform";
 import renderingStatusUIComponent from "./renderingStatusUIComponent";
 
@@ -151,6 +155,8 @@ const CardEventDisplay = ({ props }) => {
               textTransform={"none"}
               style={{
                 ...TextFontSize30LineHeight38,
+                fontSize: "20px",
+                lineHeight: "28px",
                 textAlign: "left",
                 display: "flex",
                 justifyContent: "space-between",
@@ -176,11 +182,38 @@ const CardEventDisplay = ({ props }) => {
                 )}
               </div>
               <div style={{ width: props.eventInfoDetail.logo ? "85%" : "100%" }}>
-                <Tooltip title={`${props.eventInfoDetail.eventName}`}>
-                  {" "}
-                  {props.eventInfoDetail.eventName}
-                </Tooltip>
-                <br />
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Tooltip title={`${props.eventInfoDetail.eventName}`}>
+                    {props.eventInfoDetail.eventName}
+                  </Tooltip>
+                  {(() => {
+                    const { text, tone } = getCountdownLabel(props);
+                    const { bg, fg } = countdownBadgeColors(tone);
+                    return (
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          lineHeight: "18px",
+                          padding: "2px 9px",
+                          borderRadius: "999px",
+                          background: bg,
+                          color: fg,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {text}
+                      </span>
+                    );
+                  })()}
+                </span>
                 <div
                   style={{
                     ...Subtitle,

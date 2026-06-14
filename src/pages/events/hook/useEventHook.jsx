@@ -1,11 +1,9 @@
 import { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddContactInfo, onAddDeviceSetup, onAddEventInfoDetail, onAddEventStaff, onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
 
-export const useEventHook = ({ eventList = [] }) => {
+export const useEventHook = ({ eventList = [], searchValue = "" }) => {
     const { user } = useSelector((state) => state.admin);
-    const { watch } = useForm();
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -32,8 +30,6 @@ export const useEventHook = ({ eventList = [] }) => {
         );
         dispatch(onAddDeviceSetup([]));
     }, [dispatch, user.company]);
-
-    const searchValue = watch("searchEvent") || "";
 
     const dataPerCompany = useMemo(() => {
         const list = Array.isArray(eventList) ? eventList : [];
@@ -93,14 +89,47 @@ export const useEventHook = ({ eventList = [] }) => {
         return removeDuplicatesById(permittedEvents);
     }, [permittedEvents]);
 
+    // Events happening right now: active and the current moment is within
+    // [begin, end]. Sorted by which ends soonest.
+    const dataToBeRenderedInLiveSection = () => {
+        const currentDate = new Date();
+
+        return normalizedEvents
+            .filter((event) => {
+                const begin = new Date(event?.eventInfoDetail?.dateBegin);
+                const ending = new Date(event?.eventInfoDetail?.dateEnd);
+
+                return (
+                    event?.active === true &&
+                    begin <= currentDate &&
+                    ending >= currentDate
+                );
+            })
+            .map((event) => ({
+                key: event.id,
+                ...event,
+            }))
+            .sort(
+                (a, b) =>
+                    new Date(a.eventInfoDetail.dateEnd).getTime() -
+                    new Date(b.eventInfoDetail.dateEnd).getTime()
+            );
+    };
+
+    // Active events that have not started yet. Sorted by which starts soonest.
     const dataToBeRenderedInUpcomingSection = () => {
         const currentDate = new Date();
 
         return normalizedEvents
             .filter((event) => {
+                const begin = new Date(event?.eventInfoDetail?.dateBegin);
                 const ending = new Date(event?.eventInfoDetail?.dateEnd);
 
-                return event?.active === true && ending >= currentDate;
+                return (
+                    event?.active === true &&
+                    ending >= currentDate &&
+                    begin > currentDate
+                );
             })
             .map((event) => ({
                 key: event.id,
@@ -134,19 +163,34 @@ export const useEventHook = ({ eventList = [] }) => {
     };
 
     const renderingDataBasedOnStaffAndActiveEvent = () => {
+        const live = dataToBeRenderedInLiveSection();
         const upcoming = dataToBeRenderedInUpcomingSection();
         const past = dataToBeRenderedInPastSection();
-
-        dispatch(
-            onAddListEventPermitPerAdmin({
-                active: upcoming,
-                completed: past,
-            })
-        );
-        return [...upcoming, ...past];
+        return [...live, ...upcoming, ...past];
     };
 
+    // Keep the redux contract in sync without dispatching during render.
+    // "active" historically meant every currently-relevant event
+    // (live + not-yet-started).
+    useEffect(() => {
+        const currentDate = new Date();
+        const active = normalizedEvents
+            .filter((event) => {
+                const ending = new Date(event?.eventInfoDetail?.dateEnd);
+                return event?.active === true && ending >= currentDate;
+            })
+            .map((event) => ({ key: event.id, ...event }));
+        const completed = normalizedEvents
+            .filter((event) => {
+                const ending = new Date(event?.eventInfoDetail?.dateEnd);
+                return event?.active === false || ending < currentDate;
+            })
+            .map((event) => ({ key: event.id, ...event }));
+        dispatch(onAddListEventPermitPerAdmin({ active, completed }));
+    }, [normalizedEvents, dispatch]);
+
     return {
+        dataToBeRenderedInLiveSection,
         dataToBeRenderedInUpcomingSection,
         dataToBeRenderedInPastSection,
         renderingDataBasedOnStaffAndActiveEvent,
