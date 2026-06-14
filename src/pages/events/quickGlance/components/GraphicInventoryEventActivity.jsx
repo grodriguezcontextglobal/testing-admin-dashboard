@@ -81,7 +81,7 @@ const GraphicInventoryEventActivity = () => {
       >
         {dataToMap?.map((item, index) => {
           return (
-            <Grid key={index} item xs={12}>
+            <Grid key={index} item xs={12} sm={12} md={12} lg={12}>
               <FormatQuickGlanceCardGraphRender
                 key={index}
                 dataToRender={item}

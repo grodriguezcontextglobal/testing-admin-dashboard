@@ -1,9 +1,13 @@
 .tree-list {
-  width: 100%;
+  width: "190%";
   background: var(--base-white, #fff);
   border: 1px solid var(--gray-200, #eaecf0);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.tree-node {
+  width: 100%;
 }
 
 .tree-row {

@@ -113,7 +113,7 @@ const RenderingFilters = ({
   setTypePerLocationInfoModal,
   setOpenDetails,
   allowedLocations,
-  setFiltering,
+  // setFiltering,
   setOpenCreateLocationModal,
 }) => {
   const searchItemContext = useContext(SearchItemContext);
