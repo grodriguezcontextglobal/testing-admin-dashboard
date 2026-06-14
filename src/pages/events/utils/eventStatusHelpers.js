@@ -45,6 +45,55 @@ export const getCountdownLabel = (event) => {
   return { text, tone: days <= 7 ? "soon" : "upcoming" };
 };
 
+/**
+ * At-a-glance readiness metrics derived purely from the event-list payload
+ * (no extra API calls): total planned devices, distinct device groups, and
+ * staff assigned.
+ */
+export const getEventMetrics = (event) => {
+  const deviceSetup = Array.isArray(event?.deviceSetup) ? event.deviceSetup : [];
+  const totalDevices = deviceSetup.reduce(
+    (sum, group) => sum + (Number(group?.quantity) || 0),
+    0,
+  );
+  const deviceGroups = deviceSetup.length;
+  const staff =
+    (event?.staff?.adminUser?.length || 0) +
+    (event?.staff?.headsetAttendees?.length || 0);
+
+  return { totalDevices, deviceGroups, staff };
+};
+
+/**
+ * Map the event's logistics status to a labeled chip + tone.
+ * Known values: "no_received_yet" | "in-transit" | "completed".
+ */
+export const getLogisticsStatus = (event) => {
+  switch (event?.logistic_inventory_status) {
+    case "completed":
+      return { label: "Devices received", tone: "ready" };
+    case "in-transit":
+      return { label: "In transit", tone: "info" };
+    case "no_received_yet":
+      return { label: "Awaiting delivery", tone: "pending" };
+    default:
+      return null;
+  }
+};
+
+/** Background/foreground colors for a small status chip by tone. */
+export const logisticsChipColors = (tone) => {
+  switch (tone) {
+    case "ready":
+      return { bg: "var(--success-50, #ECFDF3)", fg: "var(--success-700, #027A48)" };
+    case "info":
+      return { bg: "var(--blue-50, #EFF8FF)", fg: "var(--blue-700, #175CD3)" };
+    case "pending":
+    default:
+      return { bg: "var(--warning-50, #FFFAEB)", fg: "var(--warning-700, #B54708)" };
+  }
+};
+
 /** Background/foreground colors for a countdown badge by tone. */
 export const countdownBadgeColors = (tone) => {
   switch (tone) {

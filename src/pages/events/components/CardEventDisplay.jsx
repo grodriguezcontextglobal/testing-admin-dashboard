@@ -23,6 +23,9 @@ import WeekdayDifference from "../utils/DateDifference";
 import {
   countdownBadgeColors,
   getCountdownLabel,
+  getEventMetrics,
+  getLogisticsStatus,
+  logisticsChipColors,
 } from "../utils/eventStatusHelpers";
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform";
 import renderingStatusUIComponent from "./renderingStatusUIComponent";
@@ -239,6 +242,75 @@ const CardEventDisplay = ({ props }) => {
             </Typography>
           </Grid>
         </Grid>
+        {(() => {
+          const { totalDevices, deviceGroups, staff } = getEventMetrics(props);
+          const logistics = getLogisticsStatus(props);
+          const statStyle = {
+            display: "flex",
+            flexDirection: "column",
+            lineHeight: 1.2,
+          };
+          const numStyle = {
+            fontFamily: "Inter",
+            fontSize: "17px",
+            fontWeight: 500,
+            color: "var(--gray-900, #101828)",
+          };
+          const lblStyle = {
+            fontFamily: "Inter",
+            fontSize: "11px",
+            color: "var(--gray-500, #667085)",
+          };
+          return (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "24px",
+                padding: "14px 0 4px",
+                borderTop: "1px solid var(--gray-200, #EAECF0)",
+                marginTop: "4px",
+              }}
+            >
+              <div style={statStyle}>
+                <span style={numStyle}>{totalDevices.toLocaleString()}</span>
+                <span style={lblStyle}>Devices</span>
+              </div>
+              <div style={statStyle}>
+                <span style={numStyle}>{deviceGroups}</span>
+                <span style={lblStyle}>
+                  {deviceGroups === 1 ? "Group" : "Groups"}
+                </span>
+              </div>
+              <div style={statStyle}>
+                <span style={numStyle}>{staff}</span>
+                <span style={lblStyle}>
+                  {staff === 1 ? "Staff member" : "Staff"}
+                </span>
+              </div>
+              {logistics && (
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    lineHeight: "18px",
+                    padding: "2px 10px",
+                    borderRadius: "999px",
+                    whiteSpace: "nowrap",
+                    ...(() => {
+                      const { bg, fg } = logisticsChipColors(logistics.tone);
+                      return { background: bg, color: fg };
+                    })(),
+                  }}
+                >
+                  {logistics.label}
+                </span>
+              )}
+            </div>
+          );
+        })()}
         {
           <WeekdayDifference
             dateBegin={`${props.eventInfoDetail.dateBegin}`}
