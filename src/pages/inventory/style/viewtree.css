@@ -1,5 +1,5 @@
 .tree-list {
-  width: "190%";
+  width: 100%;
   background: var(--base-white, #fff);
   border: 1px solid var(--gray-200, #eaecf0);
   border-radius: 12px;
