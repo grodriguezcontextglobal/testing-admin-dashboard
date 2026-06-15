@@ -20,6 +20,12 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import displayMonth from "../quickGlance/components/formatEventDetailInfo/displayMonth";
 import WeekdayDifference from "../utils/DateDifference";
+import {
+  countdownBadgeColors,
+  getCountdownLabel,
+  getEventMetrics,
+  getLogisticsStatus,
+} from "../utils/eventStatusHelpers";
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform";
 import renderingStatusUIComponent from "./renderingStatusUIComponent";
 
@@ -133,7 +139,6 @@ const CardEventDisplay = ({ props }) => {
           justifyContent={"flex-start"}
           alignItems={"center"}
           marginX={"auto"}
-          marginTop={1}
           container
         >
           <Grid
@@ -145,12 +150,13 @@ const CardEventDisplay = ({ props }) => {
             sm={12}
             md={12}
             lg={12}
-            padding={"18px 0"}
           >
             <Typography
               textTransform={"none"}
               style={{
                 ...TextFontSize30LineHeight38,
+                fontSize: "20px",
+                lineHeight: "28px",
                 textAlign: "left",
                 display: "flex",
                 justifyContent: "space-between",
@@ -176,11 +182,38 @@ const CardEventDisplay = ({ props }) => {
                 )}
               </div>
               <div style={{ width: props.eventInfoDetail.logo ? "85%" : "100%" }}>
-                <Tooltip title={`${props.eventInfoDetail.eventName}`}>
-                  {" "}
-                  {props.eventInfoDetail.eventName}
-                </Tooltip>
-                <br />
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Tooltip title={`${props.eventInfoDetail.eventName}`}>
+                    {props.eventInfoDetail.eventName}
+                  </Tooltip>
+                  {(() => {
+                    const { text, tone } = getCountdownLabel(props);
+                    const { bg, fg } = countdownBadgeColors(tone);
+                    return (
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          lineHeight: "18px",
+                          padding: "2px 9px",
+                          borderRadius: "999px",
+                          background: bg,
+                          color: fg,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {text}
+                      </span>
+                    );
+                  })()}
+                </span>
                 <div
                   style={{
                     ...Subtitle,
@@ -206,6 +239,89 @@ const CardEventDisplay = ({ props }) => {
             </Typography>
           </Grid>
         </Grid>
+        {(() => {
+          const { totalDevices, deviceGroups, staff } = getEventMetrics(props);
+          const logistics = getLogisticsStatus(props);
+          const stats = [
+            { value: totalDevices.toLocaleString(), label: "Devices" },
+            { value: deviceGroups, label: deviceGroups === 1 ? "Group" : "Groups" },
+            { value: staff, label: staff === 1 ? "Staff member" : "Staff" },
+          ];
+          return (
+            <div
+              style={{
+                borderTop: "1px solid var(--gray-200, #EAECF0)",
+                marginTop: "16px",
+                paddingTop: "16px",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", gap: "32px" }}>
+                {stats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    style={{ display: "flex", flexDirection: "column", gap: "2px" }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: "18px",
+                        fontWeight: 500,
+                        lineHeight: "24px",
+                        color: "var(--gray-900, #101828)",
+                      }}
+                    >
+                      {stat.value}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color: "var(--gray-500, #667085)",
+                      }}
+                    >
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {logistics && (
+                <div style={{ marginTop: "16px" }}>
+                  <div
+                    style={{
+                      height: "6px",
+                      borderRadius: "9999px",
+                      background: "var(--gray-100, #F2F4F7)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${logistics.progress}%`,
+                        height: "100%",
+                        borderRadius: "9999px",
+                        background: logistics.barColor,
+                      }}
+                    />
+                  </div>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "6px",
+                      fontFamily: "Inter",
+                      fontSize: "12px",
+                      lineHeight: "16px",
+                      color: "var(--gray-600, #475467)",
+                    }}
+                  >
+                    {logistics.label}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {
           <WeekdayDifference
             dateBegin={`${props.eventInfoDetail.dateBegin}`}

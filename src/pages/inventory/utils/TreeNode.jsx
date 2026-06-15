@@ -255,17 +255,11 @@ const TreeNode = ({
         ) : (
           <span className="tree-row__chevron" aria-hidden="true" />
         )}
-        {Number(user.role) === 0 && nodeId && onSelectLocation && (
+        {Number(user.role) === 0 && nodeId && onSelectLocation && isSelectable && (
           <Checkbox
             checked={selectedLocations?.has(nodeId)}
             onChange={() => onSelectLocation(nodeId)}
-            disabled={!isSelectable}
-            aria-disabled={!isSelectable}
-            title={
-              isSelectable
-                ? "Select location"
-                : "Only empty locations can be selected for deletion"
-            }
+            title="Select empty location for deletion"
           />
         )}
         {isEditing ? (
