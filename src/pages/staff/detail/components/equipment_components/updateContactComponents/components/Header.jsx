@@ -1,66 +1,28 @@
-import { Grid, Typography } from "@mui/material";
-
 const Header = () => {
   return (
-    <Grid
-      style={{
-        padding: "5px",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-      container
-    >
-      <Grid
+    <div style={{ padding: "4px 0 0" }}>
+      <h2
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          fontSize: "18px",
+          fontWeight: 600,
+          color: "var(--gray-900, #101828)",
+          margin: "0 0 4px",
+          lineHeight: "28px",
         }}
-        container
       >
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          alignSelf={"stretch"}
-          marginY={0}
-          item
-          xs={5}
-          sm={5}
-          md={6}
-        >
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "var(--gray-900, #101828)",
-              lineHeight: "38px",
-            }}
-            textAlign={"left"}
-            fontWeight={600}
-            fontFamily={"Inter"}
-            fontSize={"18px"}
-            lineHeight={"28px"}
-          >
-            Personal info
-          </Typography>
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "#475467",
-              lineHeight: "38px",
-            }}
-            textAlign={"left"}
-            fontWeight={400}
-            fontFamily={"Inter"}
-            fontSize={"14x"}
-            lineHeight={"20px"}
-          >
-            Update your photo and personal details.
-          </Typography>
-        </Grid>
-      </Grid>
-    </Grid>
+        Personal info
+      </h2>
+      <p
+        style={{
+          fontSize: "14px",
+          color: "#475467",
+          margin: 0,
+          lineHeight: "20px",
+        }}
+      >
+        Update your photo and personal details.
+      </p>
+    </div>
   );
 };
 
