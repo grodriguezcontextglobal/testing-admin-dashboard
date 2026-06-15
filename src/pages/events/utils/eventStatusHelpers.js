@@ -65,32 +65,35 @@ export const getEventMetrics = (event) => {
 };
 
 /**
- * Map the event's logistics status to a labeled chip + tone.
+ * Map the event's logistics status to a labeled progress stage.
  * Known values: "no_received_yet" | "in-transit" | "completed".
+ * `progress` drives a 3-stage readiness bar; `barColor` is its fill.
  */
 export const getLogisticsStatus = (event) => {
   switch (event?.logistic_inventory_status) {
     case "completed":
-      return { label: "Devices received", tone: "ready" };
+      return {
+        label: "Devices received",
+        tone: "ready",
+        progress: 100,
+        barColor: "var(--success-500, #12B76A)",
+      };
     case "in-transit":
-      return { label: "In transit", tone: "info" };
+      return {
+        label: "In transit",
+        tone: "info",
+        progress: 55,
+        barColor: "var(--blue-500, #2E90FA)",
+      };
     case "no_received_yet":
-      return { label: "Awaiting delivery", tone: "pending" };
+      return {
+        label: "Awaiting delivery",
+        tone: "pending",
+        progress: 8,
+        barColor: "var(--warning-500, #F79009)",
+      };
     default:
       return null;
-  }
-};
-
-/** Background/foreground colors for a small status chip by tone. */
-export const logisticsChipColors = (tone) => {
-  switch (tone) {
-    case "ready":
-      return { bg: "var(--success-50, #ECFDF3)", fg: "var(--success-700, #027A48)" };
-    case "info":
-      return { bg: "var(--blue-50, #EFF8FF)", fg: "var(--blue-700, #175CD3)" };
-    case "pending":
-    default:
-      return { bg: "var(--warning-50, #FFFAEB)", fg: "var(--warning-700, #B54708)" };
   }
 };
 
