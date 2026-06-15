@@ -1,74 +1,42 @@
 import { Avatar, Card } from 'antd'
-const CardEventsFound = ({ props, fn }) => {
-    const subs = String(props.eventName).split(' ')
-    const initials = [...subs.map(item => item[0])].toString().toUpperCase().replaceAll(',', '')
-    return (
-        <Card onClick={() => fn(props)} style={{
-            borderRadius: '12px',
-            border: '1px solid #D0D5DD',
-            background: '#FFF',
-            boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            padding: '5px',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            height:"100%",
-            gap: '20px',
-            cursor: "pointer"
-        }}
-            styles={{
-                body: {
-                    padding: '5px 20px 20px 20px',
-                }
-            }}>
-            <div style={{ width: "100%", textAlign: "left" }}><Avatar src={props.data.eventInfoDetail?.logo} style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>{!props.data.eventInfoDetail.logo && initials}</Avatar></div>
-            <div style={{
-                width: "100%",
-                textAlign: "left",
-                color: 'var(--Gray-900, #101828)',
-                fontFamily: 'Inter',
-                fontSize: '18px',
-                fontStyle: ' normal',
-                fontWeight: 600,
-                lineHeight: '28px', /* 155.556% */
 
-            }}>
-                <p style={{
-                    width: "100%",
-                    textAlign: "left",
-                    color: 'var(--Gray-900, #101828)',
-                    fontFamily: 'Inter',
-                    fontSize: '18px',
-                    fontStyle: ' normal',
-                    fontWeight: 600,
-                    lineHeight: '28px', /* 155.556% */
-                    textWrap: "pretty"
-                }}>{props.eventName}</p>
-            </div>
-            <div style={{
-                width: "100%",
-                textAlign: "left",
-                color: 'var(--Gray-600, #475467)',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 400,
-                lineHeight: '24px' /* 150% */
-            }}><p style={{
-                width: "100%",
-                textAlign: "left",
-                color: 'var(--Gray-600, #475467)',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 400,
-                lineHeight: '24px', /* 150% */
-                textWrap: "pretty",
-                overflowWrap: "anywhere",
-      
-            }}>{props.address}</p></div>
-        </Card >
-    )
+const CARD_STYLE = {
+  borderRadius: '12px',
+  border: '1px solid var(--gray-200, #EAECF0)',
+  background: 'var(--base-white, #FFF)',
+  boxShadow: '0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)',
+  cursor: 'pointer',
+  height: '100%',
+}
+
+const CardEventsFound = ({ props, fn }) => {
+  const initials = String(props.eventName)
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
+  return (
+    <Card
+      onClick={() => fn(props)}
+      style={CARD_STYLE}
+      styles={{ body: { padding: '16px 20px 20px' } }}
+    >
+      <Avatar
+        src={props.data.eventInfoDetail?.logo}
+        style={{ width: '3.5rem', height: '3.5rem', marginBottom: '12px', display: 'block' }}
+      >
+        {!props.data.eventInfoDetail?.logo && initials}
+      </Avatar>
+      <p style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 600, lineHeight: '24px', color: 'var(--gray-900, #101828)', textWrap: 'pretty', marginBottom: '4px' }}>
+        {props.eventName}
+      </p>
+      <p style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: 'var(--gray-500, #667085)', overflowWrap: 'anywhere', textWrap: 'pretty', margin: 0 }}>
+        {props.address}
+      </p>
+    </Card>
+  )
 }
 
 export default CardEventsFound
