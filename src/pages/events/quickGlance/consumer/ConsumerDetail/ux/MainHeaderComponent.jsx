@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import { Avatar } from 'antd';
+import { useMediaQuery } from '@mui/material';
 import './MainHeaderComponent.css';
 
 const MainHeaderComponent = ({ consumer, actions }) => {
+    const isDesktop = useMediaQuery('(min-width: 768px)');
+
     const getInitials = () => {
         const firstName = consumer.name || '';
         const lastName = consumer.lastName || '';
@@ -19,7 +22,7 @@ const MainHeaderComponent = ({ consumer, actions }) => {
         <div className="consumer-header-container">
             <div className="consumer-header-content">
                 <div className="consumer-header-left">
-                    <Avatar src={consumer?.profile_picture} size={120}>
+                    <Avatar src={consumer?.profile_picture} size={isDesktop ? 80 : 56}>
                         {!consumer?.profile_picture && getInitials()}
                     </Avatar>
                     <div className="consumer-header-info">
