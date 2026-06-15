@@ -1,18 +1,26 @@
-import { Icon } from "@iconify/react";
-import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { BadgeWithDot } from "../../../../components/base/badges/badges";
 import Loading from "../../../../components/animation/Loading";
 import BaseTable from "../../../../components/ux/tables/BaseTable";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import ListEquipment from "./equipment_components/ListEquipment";
+
+const sectionHeadingStyle = {
+  fontSize: "15px",
+  fontWeight: 600,
+  color: "#101828",
+  margin: "2rem 0 0.75rem",
+  lineHeight: "24px",
+  padding: 0,
+};
 
 const TableStaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
+
   const eventQuery = useQuery({
     queryKey: ["events"],
     queryFn: () =>
@@ -20,9 +28,9 @@ const TableStaffDetail = () => {
         company: user.company,
         type: "event",
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     eventQuery.refetch();
@@ -37,22 +45,18 @@ const TableStaffDetail = () => {
       title: "Event",
       dataIndex: "event",
       align: "left",
-      sorter: {
-        compare: (a, b) => ("" + a.event).localeCompare(b.event),
-      },
+      sorter: { compare: (a, b) => ("" + a.event).localeCompare(b.event) },
       render: (event) => (
-        <span key={`${event}`}>
-          <div
-            key={`${event}`}
-            style={{
-              flexDirection: "column",
-              fontSize: "14px",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-            }}
-          >
-            <Typography textTransform={"capitalize"}>{event}</Typography>
-          </div>
+        <span
+          style={{
+            fontSize: "14px",
+            fontFamily: "Inter",
+            lineHeight: "20px",
+            textTransform: "capitalize",
+            color: "#101828",
+          }}
+        >
+          {event}
         </span>
       ),
     },
@@ -61,83 +65,22 @@ const TableStaffDetail = () => {
       dataIndex: "role",
       width: "25%",
       responsive: ["lg"],
-
-      sorter: {
-        compare: (a, b) => ("" + a.role).localeCompare(b.role),
-      },
+      sorter: { compare: (a, b) => ("" + a.role).localeCompare(b.role) },
       render: (role) => (
-        <span
-          style={{
-            alignItems: "center",
-            background: `${
-              role !== "Damaged" ? "var(--blue-50, #EFF8FF)" : "#ffefef"
-            }`,
-            borderRadius: "16px",
-            display: "flex",
-            justifyContent: "center",
-            padding: "2px 8px",
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            fontSize={"12px"}
-            fontFamily={"Inter"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"18px"}
-            textAlign={"center"}
-            textTransform={"capitalize"}
-          >
-            {role}
-          </Typography>
-        </span>
+        <BadgeWithDot color={role === "Administrator" ? "blue" : "indigo"}>
+          {role}
+        </BadgeWithDot>
       ),
     },
     {
       title: "Status",
       dataIndex: "status",
       width: "25%",
-      sorter: {
-        compare: (a, b) => ("" + a.status).localeCompare(b.status),
-      },
+      sorter: { compare: (a, b) => ("" + a.status).localeCompare(b.status) },
       render: (status) => (
-        <span
-          style={{
-            borderRadius: "16px",
-            justifyContent: "center",
-            display: "flex",
-            padding: "2px 8px",
-            alignItems: "center",
-            background: `${
-              status
-                ? "var(--primary-50, #F9F5FF)"
-                : "var(--success-50, #ECFDF3)"
-            }`,
-            width: "fit-content",
-          }}
-        >
-          <Typography
-            color={`${
-              status
-                ? "var(--primary-700, #6941C6)"
-                : "var(--success-700, #027A48)"
-            }`}
-            fontSize={"12px"}
-            fontFamily={"Inter"}
-            fontStyle={"normal"}
-            fontWeight={500}
-            lineHeight={"18px"}
-            textAlign={"center"}
-            textTransform={"capitalize"}
-          >
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={`${status ? "var(--primary-700, #6941C6)" : "#12B76A"}`}
-            />
-            {status ? "Active" : "Completed"}
-          </Typography>
-        </span>
+        <BadgeWithDot color={status ? "brand" : "success"}>
+          {status ? "Active" : "Completed"}
+        </BadgeWithDot>
       ),
     },
   ];
@@ -148,124 +91,43 @@ const TableStaffDetail = () => {
         <Loading />
       </div>
     );
-  if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
-    const dataPerCompany = () => {
-      const groupOfCompanies = eventQuery?.data?.data?.list;
-      return groupOfCompanies;
-    };
-    dataPerCompany();
 
+  if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
     const sortData = () => {
-      let result = [];
-      let index = 0;
-      if (dataPerCompany()) {
-        for (let data of dataPerCompany()) {
-          if (
-            data.staff.adminUser?.some((item) => item.email === profile.email)
-          ) {
-            result.splice(index, 0, { ...data, role: "Administrator" });
-            index++;
-          } else if (
-            data.staff.headsetAttendees?.some(
-              (item) => item.email === profile.email,
-            )
-          ) {
-            result.splice(index, 0, { ...data, role: "Coordinator" });
-            index++;
-          }
+      const result = [];
+      const data = eventQuery?.data?.data?.list ?? [];
+      for (let item of data) {
+        if (item.staff.adminUser?.some((m) => m.email === profile.email)) {
+          result.push({ ...item, role: "Administrator" });
+        } else if (
+          item.staff.headsetAttendees?.some((m) => m.email === profile.email)
+        ) {
+          result.push({ ...item, role: "Coordinator" });
         }
       }
       return result;
     };
-    sortData();
-    const dataToRenderInTable = () => {
-      let tableData = [];
-      let index = 0;
-      for (let data of sortData()) {
-        tableData.splice(index, 0, {
-          event: data.eventInfoDetail.eventName,
-          status: data.active,
-          role: data.role,
-          entireData: data,
-        });
-      }
-      return tableData;
-    };
-    dataToRenderInTable();
+
+    const dataToRenderInTable = () =>
+      sortData().map((item) => ({
+        event: item.eventInfoDetail.eventName,
+        status: item.active,
+        role: item.role,
+        entireData: item,
+      }));
 
     return (
-      <Grid
-        style={{
-          padding: "5px",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-        container
-      >
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          margin={"2rem auto 1rem"}
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              fontWeight: 500,
-              color: "#000",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            Current assigned devices:&nbsp;
-          </p>
-        </Grid>
+      <div style={{ padding: "4px 0", width: "100%" }}>
+        <h3 style={sectionHeadingStyle}>Current assigned devices</h3>
         <ListEquipment />
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          margin={"2rem auto 1rem"}
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              fontWeight: 500,
-              color: "#000",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            Events assigned:&nbsp;
-          </p>
-        </Grid>
-        <Grid
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          item
-          xs={12}
-        >
-          <BaseTable
-            enablePagination={true}
-            columns={columns}
-            dataSource={dataToRenderInTable() ? dataToRenderInTable() : []}
-            pageSize={10}
-          />
-        </Grid>
-      </Grid>
+        <h3 style={sectionHeadingStyle}>Events assigned</h3>
+        <BaseTable
+          enablePagination={true}
+          columns={columns}
+          dataSource={dataToRenderInTable()}
+          pageSize={10}
+        />
+      </div>
     );
   }
 };
