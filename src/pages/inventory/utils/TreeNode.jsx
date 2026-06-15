@@ -4,6 +4,7 @@ import { Checkbox, message } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { usePermission } from "../../../hooks/usePermission";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
@@ -36,6 +37,7 @@ const TreeNode = ({
   const [editedName, setEditedName] = useState(nodeName);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const canManageLocation = usePermission("inventory:manage_location");
 
   const { total, available, children, types } = nodeData;
   const nodeId = nodeData?.location_id || nodeData?._id || nodeData?.id;
@@ -255,7 +257,7 @@ const TreeNode = ({
         ) : (
           <span className="tree-row__chevron" aria-hidden="true" />
         )}
-        {Number(user.role) === 0 && nodeId && onSelectLocation && isSelectable && (
+        {canManageLocation && nodeId && onSelectLocation && isSelectable && (
           <Checkbox
             checked={selectedLocations?.has(nodeId)}
             onChange={() => onSelectLocation(nodeId)}
