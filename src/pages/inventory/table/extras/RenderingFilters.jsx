@@ -5,7 +5,7 @@ import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
-import CreateSubLocationPathModal from "../../utils/CreateSubLocationPathModal";
+// import CreateSubLocationPathModal from "../../utils/CreateSubLocationPathModal";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
@@ -186,7 +186,7 @@ const RenderingFilters = ({
   //   staleTime: 2 * 60 * 1000,
   // });
 
-  const [openPathModal, setOpenPathModal] = useState(false);
+  // const [openPathModal, setOpenPathModal] = useState(false);
 
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
@@ -1415,13 +1415,13 @@ const RenderingFilters = ({
         );
       })}
 
-      {openPathModal && (
+      {/* {openPathModal && (
         <CreateSubLocationPathModal
           open={openPathModal}
           onClose={() => setOpenPathModal(false)}
           user={user}
         />
-      )}
+      )} */}
 
       {openAdvanceSearchModal && (
         <AdvanceSearchContext.Provider
