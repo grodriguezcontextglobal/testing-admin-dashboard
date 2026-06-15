@@ -42,6 +42,7 @@ import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
 import "./style/style.css";
+import { EnterIcon } from "../icons/EnterIcon";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
@@ -109,6 +110,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // const { register, handleSubmit, watch } = useForm()
   const { window } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
   const [searchValue, setSearchValue] = useState("");
@@ -144,6 +146,14 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const handleResetSearchValue = () => {
     setSearchValue("");
     return dispatch(onResetResult());
+  };
+
+  const toggleSearch = () => {
+    if (showSearch) {
+      setSearchValue("");
+      dispatch(onResetResult());
+    }
+    setShowSearch((prev) => !prev);
   };
 
   const handleSearch = (e) => {
@@ -381,54 +391,85 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             justifyContent: "flex-end",
             alignItems: "center",
             margin: 0,
-            // gap: "5px",
           }}
         >
-          <form
-            style={{ margin: "0 5px 0 0", width: "100%" }}
-            onSubmit={handleSearch}
-            method="get"
-            action="/search-result-page?search="
-          >
-            <Input
-              placeholder="Search"
-              required
-              style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
-              onChange={(e) => onChange(e)}
-              name={"searchValue"}
-              value={searchValue}
-              fullWidth
-            />
-          </form>
-          <button
-            style={{
-              outline: "none",
-              border: "transparent",
-              margin: 0,
-              padding: 0,
-              backgroundColor: "transparent",
-              display: searchValue?.length === 0 ? "none" : "flex",
-            }}
-            key={"item.title"}
-            onClick={(e) => handleSearch(e)}
-          >
-            <div className="content-main-navbar-updated">
-              <article className={"nav-item-base-1-main-navbar-updated"}>
-                <div className="content-2-main-navbar-updated">
-                  <div className="text-1-main-navbar-updated text-mdsemibold">
-                    <p
-                      style={{
-                        textTransform: "capitalize",
-                        fontSize: "25px",
-                      }}
-                    >
-                      <img src={MagnifyIcon} alt="search-icon" />
-                    </p>
+          {showSearch && (
+            <form
+              style={{
+                margin: "0 5px 0 0",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+              onSubmit={handleSearch}
+              method="get"
+              action="/search-result-page?search="
+            >
+              <Input
+                placeholder="Search"
+                required
+                style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
+                onChange={(e) => onChange(e)}
+                name={"searchValue"}
+                value={searchValue}
+                fullWidth
+                autoFocus
+              />
+              {showSearch && searchValue?.length > 0 && (
+                <button
+                  style={{
+                    outline: "none",
+                    border: "transparent",
+                    margin: 0,
+                    padding: 0,
+                    backgroundColor: "transparent",
+                    display: "flex",
+                  }}
+                  type="submit"
+                >
+                  <div className="content-main-navbar-updated">
+                    {/* <article className={"nav-item-base-1-main-navbar-updated"}> */}
+                    <div className="content-2-main-navbar-updated">
+                      <div className="text-1-main-navbar-updated text-mdsemibold">
+                        <p style={{ textTransform: "capitalize", fontSize: "18px" }}>
+                          <EnterIcon width="15" height="15" />
+                        </p>
+                      </div>
+                    </div>
+                    {/* </article> */}
                   </div>
-                </div>
-              </article>
-            </div>
-          </button>
+                </button>
+              )}
+
+
+            </form>
+          )}
+          {showSearch && searchValue?.length > 0 && (
+            <button
+              style={{
+                outline: "none",
+                border: "transparent",
+                margin: 0,
+                padding: 0,
+                backgroundColor: "transparent",
+                display: "flex",
+              }}
+              onClick={() => handleResetSearchValue()}
+            >
+              <div className="content-main-navbar-updated">
+                <article className={"nav-item-base-1-main-navbar-updated"}>
+                  <div className="content-2-main-navbar-updated">
+                    <div className="text-1-main-navbar-updated text-mdsemibold">
+                      <p style={{ textTransform: "capitalize", fontSize: "25px" }}>
+                        <CircleDeleteIcon width="20" height="20" />
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </button>
+          )}
           <button
             style={{
               outline: "none",
@@ -436,22 +477,22 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               margin: 0,
               padding: 0,
               backgroundColor: "transparent",
-              display: searchValue?.length === 0 ? "none" : "flex",
+              display: "flex",
             }}
-            key={"item.title"}
-            onClick={() => handleResetSearchValue()}
+            onClick={toggleSearch}
           >
             <div className="content-main-navbar-updated">
-              <article className={"nav-item-base-1-main-navbar-updated"}>
+              <article
+                className={
+                  showSearch
+                    ? "nav-item-base-main-navbar-updated"
+                    : "nav-item-base-1-main-navbar-updated"
+                }
+              >
                 <div className="content-2-main-navbar-updated">
                   <div className="text-1-main-navbar-updated text-mdsemibold">
-                    <p
-                      style={{
-                        textTransform: "capitalize",
-                        fontSize: "25px",
-                      }}
-                    >
-                      <CircleDeleteIcon/>
+                    <p style={{ textTransform: "capitalize", fontSize: "25px" }}>
+                      <img src={MagnifyIcon} alt="search-icon" />
                     </p>
                   </div>
                 </div>
@@ -469,12 +510,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               >
                 <div className="content-2-main-navbar-updated">
                   <div className="text-1-main-navbar-updated text-mdsemibold">
-                    <p
-                      style={{
-                        textTransform: "capitalize",
-                        fontSize: "25px",
-                      }}
-                    >
+                    <p style={{ textTransform: "capitalize", fontSize: "25px" }}>
                       <img src={Profile} alt="Logo" />
                     </p>
                   </div>
