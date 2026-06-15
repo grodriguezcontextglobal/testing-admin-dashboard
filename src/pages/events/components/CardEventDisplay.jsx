@@ -139,7 +139,6 @@ const CardEventDisplay = ({ props }) => {
           justifyContent={"flex-start"}
           alignItems={"center"}
           marginX={"auto"}
-          marginTop={1}
           container
         >
           <Grid
@@ -151,7 +150,6 @@ const CardEventDisplay = ({ props }) => {
             sm={12}
             md={12}
             lg={12}
-            padding={"18px 0"}
           >
             <Typography
               textTransform={"none"}
