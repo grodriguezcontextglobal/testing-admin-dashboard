@@ -142,6 +142,7 @@ const DetailPerConsumer = () => {
       {
         title: (
           <p
+            data-testid="consumer-detail-title"
             style={{
               ...TextFontsize18LineHeight28,
               textTransform: "capitalize",
