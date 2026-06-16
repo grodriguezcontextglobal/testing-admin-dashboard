@@ -6,7 +6,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Divider, Modal, Select } from "antd";
+import { Divider, Select } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +19,7 @@ import TextFontsize18LineHeight28 from "../../../../../../../styles/global/TextF
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../../../../../components/UX/buttons/LigthBlueButton";
+import ModalUX from "../../../../../../../components/UX/modal/ModalUX";
 import { onAddDevicesSelectionPaidTransactions } from "../../../../../../../store/slices/devicesHandleSlice";
 
 const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
@@ -48,7 +49,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
   useEffect(() => {
     setValue("price", serviceSelected.deposit);
   }, [serviceSelected]);
-  
+
   const renderServiceList = () => {
     const result = new Set();
     for (let data of serviceList) {
@@ -83,8 +84,8 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
         quantity: data.quantity,
       },
     ];
-    setValue("quantity","");
-    setValue("price","");
+    setValue("quantity", "");
+    setValue("price", "");
     return setServicesAddedForCustomer(result);
   };
 
@@ -103,7 +104,7 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
     );
     return setServicesAddedForCustomer(filter);
   };
-  
+
   const refData = useRef(null);
   const submitServicesAddedForCustomerPaymentIntent = async () => {
     refData.current = { amount: Number(totalToBeCharged() * 100) };
@@ -142,167 +143,164 @@ const ServicesTransaction = ({ setExtraServiceNeeded, extraServiceNeeded }) => {
       user.companyData.employees.some((ele) => ele.email === user.email)
     );
   };
-  
-  return (
-    <Modal
-      title={renderTitle()}
-      open={extraServiceNeeded}
-      onOk={() => closeModal()}
-      onCancel={() => closeModal()}
-      centered
-      footer={[]}
-      width={1000}
-      maskClosable={false}
+
+  const modalBody = (
+    <div
       style={{
-        top: "10dvh",
-        zIndex: 30,
+        minWidth: "fit-content",
+        backgroundColor: "#ffffff",
+        padding: "20px",
       }}
     >
-      <div
+      <Typography
+        marginY={2}
         style={{
-          minWidth: "fit-content",
-          backgroundColor: "#ffffff",
-          padding: "20px",
+          ...TextFontsize18LineHeight28,
+          width: "80%",
         }}
       >
-        <Typography
-          marginY={2}
-          style={{
-            ...TextFontsize18LineHeight28,
-            width: "80%",
-          }}
+        Please select service to be charged:
+      </Typography>
+      <Divider
+        style={{
+          display: clientSecret !== "" ? "none" : "block",
+        }}
+      />
+      <form
+        style={{
+          width: "100%",
+          display: clientSecret !== null && "none",
+        }}
+        onSubmit={handleSubmit(addingServiceToCharge)}
+      >
+        <Grid
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          gap={2}
+          container
         >
-          Please select service to be charged:
-        </Typography>
-        <Divider
-          style={{
-            display: clientSecret !== "" ? "none" : "block",
-          }}
-        />
-        <form
-          style={{
-            width: "100%",
-            display: clientSecret !== null && "none",
-          }}
-          onSubmit={handleSubmit(addingServiceToCharge)}
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            gap={2}
-            container
-          >
-            <Grid item xs={6} sm={6} md={6} lg={6}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  Service
-                </Typography>
-              </InputLabel>
-              <Select
-                defaultValue=""
-                style={{
-                  width: "100%",
-                }}
-                onChange={handleChange}
-                options={renderServiceList()}
-              />{" "}
-            </Grid>
-            <Grid item xs={6} sm={6} md={2} lg={2}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  Price
-                </Typography>
-              </InputLabel>
-              <OutlinedInput
-                disabled={clientSecret !== null}
-                {...register("price")}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-                placeholder="Price."
-                required
-                readOnly={!checkAdminForEnableEditPriceField()}
-                startAdornment={
-                  <InputAdornment position="start">$</InputAdornment>
-                }
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={6} sm={6} md={2} lg={2}>
-              <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  textAlign={"left"}
-                  style={{ ...Subtitle, fontWeight: 500 }}
-                >
-                  Quantity
-                </Typography>
-              </InputLabel>
-              <OutlinedInput
-                required
-                disabled={clientSecret !== null}
-                {...register("quantity")}
-                style={{
-                  ...OutlinedInputStyle,
-                  width: "100%",
-                }}
-                placeholder="Enter quantity."
-                fullWidth
-              />
-            </Grid>
+          <Grid item xs={6} sm={6} md={6} lg={6}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Service
+              </Typography>
+            </InputLabel>
+            <Select
+              defaultValue=""
+              style={{
+                width: "100%",
+              }}
+              onChange={handleChange}
+              options={renderServiceList()}
+            />{" "}
           </Grid>
-          <LightBlueButtonComponent
-            buttonType="submit"
-            title="Adding service"
-            styles={{ marginTop: "1rem" }}
-          />
-        </form>
-        <Divider />
-        {servicesAddedForCustomer?.length > 0 &&
-          servicesAddedForCustomer.map((item, index) => {
-            return (
-              <Chip
-                key={`${item.service}-${item.price}-${item.quantity}`}
-                label={`${item.service} - ($${item.price} p/u) - Qty:${item.quantity}`}
-                style={{ margin: "0.5rem" }}
-                onDelete={() => removeServiceFromCharge(index)}
-              />
-            );
-          })}
-        <Divider
-          style={{
-            display: servicesAddedForCustomer?.length > 0 ? "block" : "none",
+          <Grid item xs={6} sm={6} md={2} lg={2}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Price
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              disabled={clientSecret !== null}
+              {...register("price")}
+              style={{
+                ...OutlinedInputStyle,
+                width: "100%",
+              }}
+              placeholder="Price."
+              required
+              readOnly={!checkAdminForEnableEditPriceField()}
+              startAdornment={
+                <InputAdornment position="start">$</InputAdornment>
+              }
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={2} lg={2}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Quantity
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              required
+              disabled={clientSecret !== null}
+              {...register("quantity")}
+              style={{
+                ...OutlinedInputStyle,
+                width: "100%",
+              }}
+              placeholder="Enter quantity."
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+        <LightBlueButtonComponent
+          buttonType="submit"
+          title="Adding service"
+          styles={{ marginTop: "1rem" }}
+        />
+      </form>
+      <Divider />
+      {servicesAddedForCustomer?.length > 0 &&
+        servicesAddedForCustomer.map((item, index) => {
+          return (
+            <Chip
+              key={`${item.service}-${item.price}-${item.quantity}`}
+              label={`${item.service} - ($${item.price} p/u) - Qty:${item.quantity}`}
+              style={{ margin: "0.5rem" }}
+              onDelete={() => removeServiceFromCharge(index)}
+            />
+          );
+        })}
+      <Divider
+        style={{
+          display: servicesAddedForCustomer?.length > 0 ? "block" : "none",
+        }}
+      />
+      {totalToBeCharged() > 0 && clientSecret == null && (
+        <BlueButtonComponent
+          func={() => submitServicesAddedForCustomerPaymentIntent()}
+          title={`Total to be charged: $${totalToBeCharged()} | Click to submit CC information`}
+          styles={{
+            ...CenteringGrid,
+            display: clientSecret !== null ? "none" : "flex",
+            width: "100%",
           }}
         />
-        {totalToBeCharged() > 0 && clientSecret == null && (
-          <BlueButtonComponent
-            func={() => submitServicesAddedForCustomerPaymentIntent()}
-            title={`Total to be charged: $${totalToBeCharged()} | Click to submit CC information`}
-            styles={{
-              ...CenteringGrid,
-              display: clientSecret !== null ? "none" : "flex",
-              width: "100%",
-            }}
-          />
-        )}
-        {clientSecret !== "" && (
-          <StripeElementServicesTransaction
-            clientSecret={clientSecret}
-            total={refData.current?.amount}
-          />
-        )}
-      </div>
-    </Modal>
+      )}
+      {clientSecret !== "" && (
+        <StripeElementServicesTransaction
+          clientSecret={clientSecret}
+          total={refData.current?.amount}
+        />
+      )}
+    </div>
+  );
+
+  return (
+    <ModalUX
+      title={renderTitle()}
+      openDialog={extraServiceNeeded}
+      closeModal={closeModal}
+      body={modalBody}
+      width={1000}
+      footer={[]}
+      modalStyles={{ top: "10dvh", zIndex: 30 }}
+    />
   );
 };
 
