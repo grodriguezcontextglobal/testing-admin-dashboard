@@ -1,3 +1,4 @@
+import { Divider } from "antd";
 import { useState } from "react";
 import SingleEmailNotification from "../../../components/notification/email/SingleEmail";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -21,15 +22,18 @@ const CardActionsButton = ({ refetching }) => {
         }}
       >
         <GrayButtonComponent
-          title={"Send notification to customer"}
+          title={"Send notification"}
+          size="lg"
           styles={{ width: "100%" }}
           func={() => setNotificationActivation(true)}
         />
         <LightBlueButtonComponent
-          title={"Edit consumer information"}
+          title={"Edit consumer"}
+          size="lg"
           styles={{ width: "100%" }}
           func={() => setOpenEditConsumerModal(true)}
         />
+        <Divider style={{ margin: "4px 0" }} />
         <div style={{ width: "100%" }}>
           <AssigmentAction style={{ width: "100%" }} refetching={refetching} />
         </div>
