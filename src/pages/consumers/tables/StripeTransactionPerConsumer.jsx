@@ -1,8 +1,10 @@
+import { Icon } from "@iconify/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -11,7 +13,6 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
-// import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import {
@@ -26,7 +27,23 @@ import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18Lin
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
 
-const StripeTransactionPerConsumer = ({ data, searchValue }) => {
+const searchInputStyle = {
+  height: "36px",
+  padding: "0 32px 0 34px",
+  border: "1px solid var(--gray-300, #D0D5DD)",
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontFamily: "Inter",
+  color: "var(--gray-900, #101828)",
+  outline: "none",
+  width: "200px",
+  background: "#fff",
+  boxShadow: "0px 1px 2px rgba(16, 24, 40, 0.05)",
+};
+
+const StripeTransactionPerConsumer = ({ data, refetching }) => {
+  const { register, watch, setValue } = useForm();
+  const searchValue = watch("searchEvent") ?? "";
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const [paymentIntentInfoRetrieved, setPaymentIntentInfoRetrieved] = useState(
@@ -171,6 +188,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   const refetchingAfterReturnDeviceInRow = async () => {
     await queryClient.invalidateQueries(["transactionsList"]);
     await queryClient.invalidateQueries(["receiverList"]);
+    if (refetching) refetching();
     return fetchingDataPerAllowed();
   };
 
@@ -396,7 +414,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
           alignItems: "center",
           gap: "6px",
           whiteSpace: "nowrap",
-          width:"fit-content"
+          width: "fit-content"
         }}
       >
         {props.expanded ? "Close" : "Open"}
@@ -452,13 +470,56 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
+    margin: 0,
   };
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
-      <TableHeader
-        leftCta={<p style={headerTitleStyle}>Transactions</p>}
-        rightCta={<RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />}
-      />
+          <TableHeader
+            leftCta={
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <p style={headerTitleStyle}>Transactions</p>
+                <div style={{ position: "relative" }}>
+                  <Icon
+                    icon="radix-icons:magnifying-glass"
+                    color="#667085"
+                    width={16}
+                    height={16}
+                    style={{
+                      position: "absolute",
+                      left: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <input
+                    {...register("searchEvent")}
+                    type="text"
+                    placeholder="Search a transaction here"
+                    data-testid="transaction-search"
+                    style={searchInputStyle}
+                  />
+                  {searchValue.length > 0 && (
+                    <Icon
+                      icon="ic:baseline-delete-forever"
+                      color="#667085"
+                      width={18}
+                      height={18}
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => setValue("searchEvent", "")}
+                    />
+                  )}
+                </div>
+              </div>
+            }
+            rightCta={<RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />}
+          />
       <ExpandableTable
         key={customerFormat.id}
         id={customerFormat.id}
@@ -489,6 +550,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
 };
 
 StripeTransactionPerConsumer.propTypes = {
-  searchValue: PropTypes.string,
+  data: PropTypes.array,
+  refetching: PropTypes.func,
 };
 export default StripeTransactionPerConsumer;
