@@ -358,12 +358,12 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
       responsive: ["xs", "sm", "md", "lg"],
       render: (_, record) => {
         const checkPaymentID = String(record.paymentIntent).split("_");
+        const showActions = renderingOptionsBasedOnPaymentIntentStatus(record.paymentIntent) === "flex";
+        if (!showActions) return null;
         return (
           <div
             style={{
-              display: renderingOptionsBasedOnPaymentIntentStatus(
-                record.paymentIntent,
-              ),
+              display: "flex",
               justifyContent: "flex-end",
               alignItems: "center",
               width: "100%",
@@ -476,8 +476,10 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     <div style={{ width: "100%", overflowX: "auto" }}>
           <TableHeader
             leftCta={
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <p style={headerTitleStyle}>Transactions</p>
+              <p style={headerTitleStyle}>Transactions</p>
+            }
+            rightCta={
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <div style={{ position: "relative" }}>
                   <Icon
                     icon="radix-icons:magnifying-glass"
@@ -516,9 +518,9 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
                     />
                   )}
                 </div>
+                <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
               </div>
             }
-            rightCta={<RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />}
           />
       <ExpandableTable
         key={customerFormat.id}
