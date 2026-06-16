@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Button,
   FormHelperText,
   Grid,
   InputAdornment,
@@ -15,10 +14,9 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import PropTypes from "prop-types";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
+import BlueButton from "../../../../../../../components/UX/buttons/BlueButton";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -211,9 +209,9 @@ const Capturing = ({
                     value={paymentIntentDetailSelected.paymentIntent}
                     style={{
                       borderRadius: "12px",
-                      border: `${
-                        errors.serialNumberBase && "solid 1px #004EEB"
-                      }`,
+                      border: errors.serialNumberBase
+                        ? "solid 1px var(--blue-dark-600, #155eef)"
+                        : "1px solid var(--gray-300, #D0D5DD)",
                       margin: "0.1rem auto 1rem",
                       display: "flex",
                       justifyContent: "flex-start",
@@ -228,7 +226,9 @@ const Capturing = ({
                     {...register("amount")}
                     style={{
                       borderRadius: "12px",
-                      border: `${errors.amount && "solid 1px #004EEB"}`,
+                      border: errors.amount
+                        ? "solid 1px var(--blue-dark-600, #155eef)"
+                        : "1px solid var(--gray-300, #D0D5DD)",
                       margin: "0.1rem auto 1rem",
                       display: "flex",
                       width: "100%",
@@ -257,28 +257,18 @@ const Capturing = ({
                       desired value before submitting.
                     </p>
                   </FormHelperText>
-                  <Button
-                    disabled={
-                      stripeTransactionQuery?.data?.data?.paymentIntent
-                        .status !== "requires_capture"
-                    }
-                    type="submit"
-                    style={{
-                      ...BlueButton,
-                      width: "100%",
-                      display: transactionStatus? "none" : "flex",
-                    }}
-                  >
-                    <Typography
-                      textTransform={"none"}
-                      style={{
-                        ...BlueButtonText,
-                        width: "100%",
-                      }}
-                    >
-                      Capture deposit
-                    </Typography>
-                  </Button>
+                  {!transactionStatus && (
+                    <BlueButton
+                      title="Capture deposit"
+                      buttonType="submit"
+                      size="md"
+                      isDisabled={
+                        stripeTransactionQuery?.data?.data?.paymentIntent
+                          .status !== "requires_capture"
+                      }
+                      styles={{ width: "100%" }}
+                    />
+                  )}
                 </form>
               </Grid>
             </Grid>{" "}
