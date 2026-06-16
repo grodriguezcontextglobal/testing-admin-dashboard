@@ -4,7 +4,7 @@ import { Card, Tooltip } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import UpdateListOfNotesPerConsumer from "./ModalDeleteNote";
-import EditConsumerInfoModal from "./EditCOnsumerInfoModal";
+import AddNoteModal from "./AddNoteModal";
 
 const formatNoteDate = (dateStr) => {
   try {
@@ -106,7 +106,7 @@ const NotesRendering = ({ props, title }) => {
                 textAlign: "left",
               }}
             >
-              No notes yet. Click &apos;Edit&apos; to add one.
+              No notes yet. Click &apos;+&apos; to add one.
             </p>
           ) : (
             notesForCompany.map((item, idx) => (
@@ -158,9 +158,9 @@ const NotesRendering = ({ props, title }) => {
         />
       )}
       {openAddNoteModal && (
-        <EditConsumerInfoModal
-          openEditConsumerModal={openAddNoteModal}
-          setOpenEditConsumerModal={setOpenAddNoteModal}
+        <AddNoteModal
+          openAddNoteModal={openAddNoteModal}
+          setOpenAddNoteModal={setOpenAddNoteModal}
         />
       )}
     </>
