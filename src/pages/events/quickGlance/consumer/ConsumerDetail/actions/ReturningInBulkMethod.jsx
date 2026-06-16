@@ -1,14 +1,16 @@
 import { Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { message, Modal, notification, Space } from "antd";
+import { message, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import Chip from "../../../../../../components/UX/Chip/Chip";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+
 const ReturningInBulkMethod = ({
   openReturnDeviceBulkModal,
   setOpenReturnDeviceInBulkModal,
@@ -115,17 +117,9 @@ const ReturningInBulkMethod = ({
       message.error(`There was an error. ${error}`);
     }
   };
-  return (
-    <Modal
-      open={openReturnDeviceBulkModal}
-      title={renderingTitle()}
-      onOk={() => closeModal()}
-      onCancel={() => closeModal()}
-      footer={[]}
-      maskClosable={false}
-      width={1000}
-      style={{ zIndex: 30 }}
-    >
+
+  const modalBody = (
+    <>
       {contextHolder}
       <div
         style={{
@@ -154,17 +148,20 @@ const ReturningInBulkMethod = ({
           title={"Confirm return"}
           func={(e) => handleReturnDevices(e)}
         />
-        {/* <Button
-          style={{ ...BlueButton, width: "100%" }}
-          loading={loadingStatus}
-          onClick={(e) => handleReturnDevices(e)}
-        >
-          <p style={BlueButtonText}>
-            Confirm return | Total items to return: {selectedItems.length}
-          </p>
-        </Button> */}
       </div>
-    </Modal>
+    </>
+  );
+
+  return (
+    <ModalUX
+      title={renderingTitle()}
+      openDialog={openReturnDeviceBulkModal}
+      closeModal={closeModal}
+      body={modalBody}
+      width={1000}
+      footer={[]}
+      modalStyles={{ zIndex: 30 }}
+    />
   );
 };
 
