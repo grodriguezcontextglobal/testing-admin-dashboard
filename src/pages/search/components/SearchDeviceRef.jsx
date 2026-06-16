@@ -247,6 +247,8 @@ const SearchDeviceRef = ({ searchParams, data }) => {
       company: [record.type, record.data.eventSelected],
       entireData: {
         ...eventInventoryQuery,
+        device: eventInventoryQuery.device?.serialNumber,
+        type: eventInventoryQuery.device?.deviceType,
       },
       serialNumber: record.serialNumber,
       status: eventInventoryQuery.activity,
