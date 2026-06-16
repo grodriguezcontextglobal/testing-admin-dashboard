@@ -1,48 +1,40 @@
-import { Card } from "antd";
 import { useState } from "react";
 import SingleEmailNotification from "../../../components/notification/email/SingleEmail";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-import { CardStyle } from "../../../styles/global/CardStyle";
 import EditConsumerInfoModal from "./EditCOnsumerInfoModal";
+import AssigmentAction from "./AssigmentAction";
 
-const CardActionsButton = () => {
+const CardActionsButton = ({ refetching }) => {
   const [notificationActivation, setNotificationActivation] = useState(false);
   const [openEditConsumerModal, setOpenEditConsumerModal] = useState(false);
+
   return (
     <>
-      <Card
-        style={{ ...CardStyle, alignSelf: "flex-start", width: "100%" }}
-        styles={{
-          body: {
-            padding: "10px 0 10px 10px",
-          },
+      <div
+        data-testid="consumer-actions"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          width: "100%",
         }}
       >
-        <div style={{ width: "100%", alignSelf: "stretch" }}>
-          <GrayButtonComponent
-            title={"Send notification to customer"}
-            styles={{ width: "100%" }}
-            func={() => setNotificationActivation(true)}
-          />
+        <GrayButtonComponent
+          title={"Send notification to customer"}
+          styles={{ width: "100%" }}
+          func={() => setNotificationActivation(true)}
+        />
+        <LightBlueButtonComponent
+          title={"Edit consumer information"}
+          styles={{ width: "100%" }}
+          func={() => setOpenEditConsumerModal(true)}
+        />
+        <div style={{ width: "100%" }}>
+          <AssigmentAction style={{ width: "100%" }} refetching={refetching} />
         </div>
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            alignSelf: "stretch",
-            margin: "1.5dvh 0",
-          }}
-        >
-          <LightBlueButtonComponent
-            title={"Edit"}
-            styles={{ width: "100%" }}
-            func={() => setOpenEditConsumerModal(true)}
-          />
-        </div>
-      </Card>
+      </div>
+
       {notificationActivation && (
         <SingleEmailNotification
           customizedEmailNotificationModal={notificationActivation}
