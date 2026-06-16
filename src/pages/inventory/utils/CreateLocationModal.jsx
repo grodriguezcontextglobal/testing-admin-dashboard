@@ -10,14 +10,14 @@ import ModalUX from "../../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
-import CreateSubLocationPathModal from "./CreateSubLocationPathModal";
+// import CreateSubLocationPathModal from "./CreateSubLocationPathModal";
 
 const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
   const { control, handleSubmit, reset } = useForm();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [createdLocation, setCreatedLocation] = useState(null);
-  const [openPathModal, setOpenPathModal] = useState(false);
+  // const [openPathModal, setOpenPathModal] = useState(false);
 
   const createLocationMutation = useMutation({
     mutationFn: async (data) => {
@@ -73,7 +73,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
   const handleClose = () => {
     setStep(1);
     setCreatedLocation(null);
-    setOpenPathModal(false);
+    // setOpenPathModal(false);
     reset();
     setOpenModal(false);
   };
@@ -147,7 +147,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
           color: "#344054",
         }}
       >
-        <strong>"{createdLocation?.name}"</strong> was created successfully.
+        <strong>&quot;{createdLocation?.name}&quot;</strong> was created successfully.
       </div>
 
       <p style={{ margin: 0, fontSize: "14px", color: "#475467" }}>
@@ -161,14 +161,14 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
           func={handleClose}
           buttonType="button"
         />
-        <BlueButtonComponent
+        {/* <BlueButtonComponent
           title="Register Sub-location Paths"
           func={() => setOpenPathModal(true)}
           buttonType="button"
-        />
+        /> */}
       </div>
 
-      {openPathModal && (
+      {/* {openPathModal && (
         <CreateSubLocationPathModal
           open={openPathModal}
           onClose={() => setOpenPathModal(false)}
@@ -176,7 +176,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
           locationName={createdLocation?.name || null}
           user={user}
         />
-      )}
+      )} */}
     </div>
   );
 
