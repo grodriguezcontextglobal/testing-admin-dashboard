@@ -22,13 +22,13 @@ const CardActionsButton = ({ refetching }) => {
         }}
       >
         <GrayButtonComponent
-          title={"Send notification"}
+          title={"Send notification to customer"}
           size="lg"
           styles={{ width: "100%" }}
           func={() => setNotificationActivation(true)}
         />
         <LightBlueButtonComponent
-          title={"Edit consumer"}
+          title={"Edit"}
           size="lg"
           styles={{ width: "100%" }}
           func={() => setOpenEditConsumerModal(true)}
