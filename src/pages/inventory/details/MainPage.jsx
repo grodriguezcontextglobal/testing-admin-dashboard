@@ -15,6 +15,7 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import ExtraInformation from "./detailComponent/components/ExtraInformation";
 import ExtraInformationItemComponent from "./detailComponent/components/ExtraInformationItemComponent";
 import MainHeaderContainingAllSections from "./UX/MainHeaderContainingAllSections";
+import { can } from "../../../config/roleCapabilities";
 const DeleteItem = lazy(() => import("./detailComponent/actions/DeleteItem"));
 const TableDetailPerDevice = lazy(() =>
   import("./detailComponent/TableDetailPerDevice")
@@ -97,10 +98,10 @@ const MainPage = () => {
       },
     ];
 
-    const headersActions = [Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && (
+    const headersActions = [can(user.role, "inventory.deleteItem") && dataFound[0].ownership !== "Rent" && (
       <DeleteItem dataFound={dataFound} />
     ),
-    Number(user.role) < 2 && (
+    can(user.role, "inventory.editItem") && (
       <EditItem dataFound={dataFound} refetchingFn={refetchingFn} />
     )
     ]

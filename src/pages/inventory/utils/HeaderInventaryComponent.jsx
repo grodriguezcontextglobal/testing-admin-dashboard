@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+import { can } from "../../../config/roleCapabilities";
 
 /**
  * HeaderInventaryComponent
@@ -30,8 +31,8 @@ const HeaderInventaryComponent = ({
 }) => {
   const { role, locations } = useSelector((state) => state.permission);
   // Check permissions
-  const canCreate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.create)
-  const canUpdate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.update)
+  const canCreate = can(role, "inventory.mode") === "all" ? true : locations.some(item => item.preference.managerLocation.actions.create)
+  const canUpdate = can(role, "inventory.mode") === "all" ? true : locations.some(item => item.preference.managerLocation.actions.update)
   return (
     <Grid
       style={{

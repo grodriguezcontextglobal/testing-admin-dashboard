@@ -14,6 +14,7 @@ import { Title } from "../../styles/global/Title";
 import MainAdminSettingPage from "./MainAdminSettingPage";
 import DeleteStaffMember from "./action/DeleteStaffMember";
 import { NewStaffMember } from "./action/NewStaffMember";
+import { can } from "../../config/roleCapabilities";
 const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
@@ -63,7 +64,7 @@ const MainPage = () => {
           </p>
         </Grid>
         <Grid
-          display={Number(user.role) < 2 ? "flex" : "none"}
+          display={can(user.role, "staff.add") ? "flex" : "none"}
           gap={2}
           sx={{
             display: "flex",
@@ -88,7 +89,7 @@ const MainPage = () => {
           />
           <DangerButtonComponent
             style={{
-              display: `${Number(user.role) > 1 ? "none" : "flex"}`,
+              display: can(user.role, "staff.delete") ? "flex" : "none",
               width: "fit-content",
             }}
             func={() => setDeleteModalState(true)}

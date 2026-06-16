@@ -20,6 +20,7 @@ import {
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
+import { can } from "../../config/roleCapabilities";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
 const PastEventsTable = lazy(() => import("./components/PastEventsTable"));
 const BannerMsg = lazy(() => import("./utils/BannerMsg"));
@@ -103,9 +104,12 @@ const MainPage = () => {
       const groupByActive = groupBy(companyData, "active");
       const filterEventsByEmail = (events, key = null) => {
         if (
-          user.companyData.employees.filter(
-            (employee) => employee.user === user.email
-          )[0].role < 1
+          can(
+            user.companyData.employees.filter(
+              (employee) => employee.user === user.email
+            )[0].role,
+            "events.scope"
+          ) === "all"
         ) {
           return events ?? [];
         }

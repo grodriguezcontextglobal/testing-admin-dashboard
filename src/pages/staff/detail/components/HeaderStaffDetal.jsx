@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { can } from "../../../../config/roleCapabilities";
 import Chip from "../../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import Loading from "../../../../components/animation/Loading";
@@ -110,7 +111,7 @@ const HeaderStaffDetail = () => {
         ),
       },
     ];
-    const actions = [Number(user.role) < 2 && (
+    const actions = [can(user.role, "staff.viewActiveStatus") && (
       <div
         style={{
           background: "transparent",

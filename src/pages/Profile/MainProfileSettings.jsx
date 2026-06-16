@@ -17,6 +17,7 @@ import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import MainHeaders from "./ui/MainHeaders";
+import { rolesWith } from "../../config/roleCapabilities";
 
 const MainProfileSettings = () => {
   const { user } = useSelector((state) => state.admin);
@@ -50,17 +51,17 @@ const MainProfileSettings = () => {
     {
       label: "My details",
       route: "my_details",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("profile.details"),
     },
     {
       label: "Password",
       route: "password",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("profile.password"),
     },
     {
       label: "MFA Setup",
       route: "mfa-setup",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("profile.mfa"),
     },
     // {
     //   label: "Billing",
@@ -70,7 +71,7 @@ const MainProfileSettings = () => {
     {
       label: "Notifications",
       route: "notifications",
-      permission: [0, 1],
+      permission: rolesWith("profile.notifications"),
     },
     // {
     //   label: "Staff activity",
@@ -80,27 +81,27 @@ const MainProfileSettings = () => {
     {
       label: "Company info",
       route: "company-info",
-      permission: [0],
+      permission: rolesWith("profile.companyInfo"),
     },
     {
       label: "Stripe account",
       route: "stripe_connected_account",
-      permission: [0],
+      permission: rolesWith("profile.stripeAccount"),
     },
     {
       label: "Documents",
       route: "documents",
-      permission: [0, 1], // Allowing access for admin and managers
+      permission: rolesWith("profile.documents"), // admin + managers
     },
     {
       label: "Suppliers",
       route: "providers",
-      permission: [0, 1], // Allowing access for admin and managers
+      permission: rolesWith("profile.suppliers"), // admin + managers
     },
     {
       label: "Platform policies",
       route: "platform_policies",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("profile.policies"),
     },
   ];
   const theme = useTheme();

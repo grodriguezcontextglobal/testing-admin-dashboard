@@ -15,6 +15,7 @@ import ActionsMainPage from "./action/MainPage";
 import DeviceDescriptionTags from "./detailComponent/DeviceDescriptionTags";
 import DeviceInformationDetail from "./detailComponent/DeviceInformationDetail";
 import TableDetailPerDevice from "./detailComponent/TableDetailPerDevice";
+import { can } from "../../../../config/roleCapabilities";
 
 const DeviceDetail = () => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -51,7 +52,7 @@ const DeviceDetail = () => {
             </Typography>
             <BlueButtonComponent
               style={{
-                display: user.role === "4" && "none",
+                display: !can(user.role, "events.editResources") && "none",
                 width:"fit-content"
               }}
               func={() => navigate("/inventory/new-bulk-items")}

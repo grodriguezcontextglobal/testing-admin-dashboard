@@ -18,6 +18,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
+import { can } from "../../../../config/roleCapabilities";
 import {
   displayTotalDevicesAndTotalAvailablePerLocation,
   extractDataForRendering,
@@ -732,7 +733,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("location_1")}
-                disabled={Number(user.role) > 0}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -804,7 +805,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("category_name")}
-                disabled={Number(user.role) > 0}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -848,7 +849,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("item_group")}
-                disabled={Number(user.role) > 0}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -890,7 +891,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("brand")}
-                disabled={Number(user.role) > 0}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -934,7 +935,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("ownership")}
-                disabled={Number(user.role) > 0}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -980,7 +981,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("assignedToStaffMember")}
-                disabled={Number(user.role) > 0}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>

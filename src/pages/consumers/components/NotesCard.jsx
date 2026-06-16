@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import UpdateListOfNotesPerConsumer from "./ModalDeleteNote";
+import { can } from "../../../config/roleCapabilities";
 const { TextArea } = Input;
 const NotesRendering = ({ props, title }) => {
   const { user } = useSelector((state) => state.admin);
@@ -92,9 +93,12 @@ const NotesRendering = ({ props, title }) => {
                 textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
                 style={Subtitle}
               >
-                {user.companyData.employees.filter(
-                  (ele) => ele.user === user.email
-                )[0].role < 1 && (
+                {can(
+                  user.companyData.employees.filter(
+                    (ele) => ele.user === user.email
+                  )[0].role,
+                  "consumers.deleteNotes"
+                ) && (
                   <Tooltip title="Click to delete note">
                     <Icon
                       onClick={() => setOpenDeleteNoteModal(true)}

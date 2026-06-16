@@ -18,6 +18,7 @@ import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize1
 // import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import { can } from "../../../config/roleCapabilities";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
@@ -638,7 +639,7 @@ const MainPageQuickGlance = () => {
             func={() => setEditingStaff(true)}
             styles={{
               width: "fit-content",
-              display: user.role === "4" ? "none" : "flex",
+              display: can(user.role, "events.editResources") ? "flex" : "none",
               justifyContent: "space-between",
               alignItems: "center",
             }}

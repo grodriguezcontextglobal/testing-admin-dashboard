@@ -41,6 +41,7 @@ import MenuIcon from "../icons/MenuIcon";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
+import { rolesWith } from "../../config/roleCapabilities";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
@@ -48,46 +49,47 @@ const navItems = [
   {
     title: "home",
     route: "/",
-    permission: [0, 1, 2, 3],
+    permission: rolesWith("nav.home"),
     mobile: true,
     desktop: true,
   },
   {
     title: "inventory",
     route: "/inventory",
-    permission: [0, 1, 2],
+    permission: rolesWith("nav.inventory"),
     mobile: true,
     desktop: true,
   },
   {
     title: "events",
     route: "/events",
-    permission: [0, 1, 2, 3, 4],
+    permission: rolesWith("nav.events"),
     mobile: true,
     desktop: true,
   },
   {
     title: "consumers",
     route: "/consumers",
-    permission: [0, 1],
+    permission: rolesWith("nav.consumers"),
     mobile: true,
     desktop: true,
   },
   {
     title: "Posts",
     route: "/posts",
-    permission: [0, 1, 2, 3],
+    permission: rolesWith("nav.posts"),
     mobile: true,
     desktop: true,
   },
   {
     title: "staff",
     route: "/staff",
-    permission: [0, 1, 2, 3],
+    permission: rolesWith("nav.staff"),
     mobile: true,
     desktop: true,
   },
   {
+    // layout spacer (desktop only) — not a real nav target
     title: 0,
     route: 0,
     permission: [0, 1, 2, 3, 4],
@@ -97,7 +99,7 @@ const navItems = [
   {
     title: "profile",
     route: "/profile/my_details",
-    permission: [0, 1, 2, 3, 4],
+    permission: rolesWith("nav.profile"),
     mobile: true,
     desktop: false,
   },

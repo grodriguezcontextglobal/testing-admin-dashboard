@@ -15,6 +15,7 @@ import ViewIcon from "../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import { can } from "../../../config/roleCapabilities";
 import "../style/viewtree.css";
 
 const TreeNode = ({
@@ -268,7 +269,7 @@ const TreeNode = ({
               className="tree-title"
             >
               {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
-              {Number(user.role) === 0 && nodeId && onSelectLocation && (
+              {can(user.role, "inventory.editStructure") && nodeId && onSelectLocation && (
                 <span onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedLocations?.has(nodeId)}
@@ -326,7 +327,7 @@ const TreeNode = ({
                       marginLeft: "5px",
                     }}
                     onClick={handleEdit}
-                    disabled={Number(user.role) > 0}
+                    disabled={!can(user.role, "inventory.editStructure")}
                   >
                     <EditIcon />
                   </Button>

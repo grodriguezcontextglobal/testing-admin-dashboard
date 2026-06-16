@@ -9,6 +9,7 @@ import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
 import { lazy, Suspense, useEffect } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { can } from "../../../config/roleCapabilities";
 const CardEventDisplay = lazy(() => import("../../events/components/CardEventDisplay"));
 const BannerMsg = lazy(() => import("../../events/utils/BannerMsg"));
 const MainPage = () => {
@@ -53,9 +54,12 @@ const MainPage = () => {
       const groupByActive = groupBy(companyData, "active");
       const filterEventsByEmail = (events, key = null) => {
         if (
-          user.companyData.employees.filter(
-            (employee) => employee.user === user.email
-          )[0].role < 1
+          can(
+            user.companyData.employees.filter(
+              (employee) => employee.user === user.email
+            )[0].role,
+            "events.scope"
+          ) === "all"
         ) {
           return events ?? [];
         }

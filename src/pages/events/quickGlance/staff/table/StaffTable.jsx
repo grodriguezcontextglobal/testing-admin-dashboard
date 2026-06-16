@@ -11,6 +11,7 @@ import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFet
 import { useNavigate } from "react-router-dom";
 import StaffMemberStructure from "../../../../../classes/staffMemberStructure";
 import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
+import { can } from "../../../../../config/roleCapabilities";
 
 const StaffTable = ({ searching }) => {
   const { user } = useSelector((state) => state.admin);
@@ -217,7 +218,7 @@ const StaffTable = ({ searching }) => {
       onRow={(record) => {
         return {
           onClick: () =>
-            record.id && user.role < 4 && handleDataStaffMember(record),
+            record.id && can(user.role, "staff.viewDetail") && handleDataStaffMember(record),
         };
       }}
       enablePagination={true}

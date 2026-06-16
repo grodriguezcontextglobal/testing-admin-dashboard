@@ -10,6 +10,7 @@ import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueBu
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { updateStaffMemberInList } from "../../../utils/staffUtils";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
+import { rolesWith } from "../../../config/roleCapabilities";
 
 const StaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
@@ -78,7 +79,7 @@ const StaffDetail = () => {
     {
       label: "Assign devices",
       route: "assignment",
-      permission: [0, 1],
+      permission: rolesWith("staff.assignDevices"),
       disabled: false,
       id: 0,
       fn: () => null,
@@ -98,7 +99,7 @@ const StaffDetail = () => {
     {
       label: "Assign user to event",
       route: "assign-staff-events",
-      permission: [0, 1],
+      permission: rolesWith("staff.assignToEvent"),
       disabled: false,
       id: 1,
       fn: () => null,
@@ -119,7 +120,7 @@ const StaffDetail = () => {
     {
       label: "Assign Location/Permission",
       route: "assign-location-manager",
-      permission: [0, 1],
+      permission: rolesWith("staff.assignLocationPermission"),
       disabled: user.email === profile.email,
       id: 7,
       fn: () => null,
@@ -140,7 +141,7 @@ const StaffDetail = () => {
     {
       label: "Update contact info",
       route: "update-contact-info",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("staff.updateContactInfo"),
       disabled: user.email !== profile.email,
       id: 2,
       fn: () => null,
@@ -161,7 +162,7 @@ const StaffDetail = () => {
     {
       label: "Change role",
       route: "update-role-company",
-      permission: [0, 1],
+      permission: rolesWith("staff.changeRole"),
       disabled: user.email === profile.email,
       id: 3,
       fn: () => null,
@@ -182,7 +183,7 @@ const StaffDetail = () => {
     {
       label: "Send password reset email",
       route: "reset-password-link",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("staff.sendPasswordReset"),
       disabled: false,
       id: 4,
       fn: () => null,
@@ -203,7 +204,7 @@ const StaffDetail = () => {
     {
       label: `${profile.active ? "Remove" : "Grant"} access`,
       route: `/staff/${profile.adminUserInfo.id}/main`,
-      permission: [0, 1, 2],
+      permission: rolesWith("staff.grantRevokeAccess"),
       disabled: user.email === profile.email,
       id: 5,
       fn: null,
