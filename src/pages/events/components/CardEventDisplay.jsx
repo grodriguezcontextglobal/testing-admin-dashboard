@@ -251,7 +251,7 @@ const CardEventDisplay = ({ props }) => {
             "completed": "Returned to warehouse",
             "in-transit": "In Transit back to warehouse",
           }
-          const inventoryLogisticStatus = dicInventoryLogistic[props.logistic_inventory_status];
+          const inventoryLogisticStatus = dicInventoryLogistic[props.logistic_inventory_status] ?? "No data";
           const inventoryBadge = getInventoryBadgeProps(props);
           const stats = [
             { value: totalDevices.toLocaleString(), label: "Devices" },
