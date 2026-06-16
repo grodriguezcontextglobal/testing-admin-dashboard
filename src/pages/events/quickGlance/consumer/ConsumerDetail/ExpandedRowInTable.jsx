@@ -28,6 +28,22 @@ import { ReplaceDevice } from "./actions/ReplaceDevice";
 import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import ExpandedTableButtons from "./ux/ExpandedTableButtons";
 // import EmailStructureUpdateItem from "../../../../../classes/emailStructureUpdateItem";
+
+const DeviceStatusBadge = ({ status }) => {
+  const styles = {
+    "Returned": { bg: "#ECFDF3", color: "var(--success-700, #067647)" },
+    "In-use": { bg: "var(--blue-dark-100, #d1e0ff)", color: "var(--blue-dark-600, #155eef)" },
+    "Lost": { bg: "#FEF3F2", color: "var(--danger-action, #b42318)" },
+  };
+  const s = styles[status] || { bg: "var(--main-background-color, #f9fafb)", color: "var(--gray-700, #344054)" };
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "2px 8px", borderRadius: "9999px", background: s.bg, color: s.color, fontSize: "12px", fontWeight: 500, fontFamily: "Inter" }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+      {status}
+    </span>
+  );
+};
+
 const ExpandedRowInTable = ({
   rowRecord,
   refetching,
@@ -318,15 +334,6 @@ const ExpandedRowInTable = ({
     }
   };
 
-  const checkingRenderBackgroundColor = (props, col1, col2, col3) => {
-    if (typeof props === "string") {
-      return col1;
-    } else {
-      if (props) return col2;
-      return col3;
-    }
-  };
-
   const checkingRenderStatus = (props) => {
     if (typeof props === "string") {
       return props;
@@ -381,40 +388,7 @@ const ExpandedRowInTable = ({
       },
       sortDirections: ["descend", "ascend"],
       render: (status) => (
-        <span
-          style={{
-            width: "fit-content",
-            padding: "5px",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: checkingRenderBackgroundColor(
-              status,
-              "#ffb5b5",
-              "#ffe4b5",
-              "#ECFDF3"
-            ),
-            color: checkingRenderBackgroundColor(
-              status,
-              "#ad0101",
-              "#714904",
-              "#027A48"
-            ),
-          }}
-        >
-          <p
-            style={{
-              textTransform: "none",
-              textAlign: "left",
-              fontWeight: 400,
-              fontSize: "14px",
-              fontFamily: "Inter",
-              lineHeight: "24px",
-            }}
-          >
-            {checkingRenderStatus(status)}
-          </p>
-        </span>
+        <DeviceStatusBadge status={checkingRenderStatus(status)} />
       ),
     },
     {
