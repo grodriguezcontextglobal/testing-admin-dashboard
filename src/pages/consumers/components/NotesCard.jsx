@@ -1,9 +1,10 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid } from "@mui/material";
-import { Tooltip } from "antd";
+import { Card, Tooltip } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import UpdateListOfNotesPerConsumer from "./ModalDeleteNote";
+import EditConsumerInfoModal from "./EditCOnsumerInfoModal";
 
 const formatNoteDate = (dateStr) => {
   try {
@@ -20,6 +21,7 @@ const formatNoteDate = (dateStr) => {
 const NotesRendering = ({ props, title }) => {
   const { user } = useSelector((state) => state.admin);
   const [openDeleteNoteModal, setOpenDeleteNoteModal] = useState(false);
+  const [openAddNoteModal, setOpenAddNoteModal] = useState(false);
 
   const isAdmin =
     user.companyData.employees.filter((ele) => ele.user === user.email)[0]
@@ -32,7 +34,7 @@ const NotesRendering = ({ props, title }) => {
 
   return (
     <>
-      <div
+      <Card
         data-testid="notes-card"
         style={{
           borderRadius: "12px",
@@ -40,9 +42,9 @@ const NotesRendering = ({ props, title }) => {
           background: "var(--base-white, #FFF)",
           boxShadow:
             "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-          padding: "16px 20px",
-          height: "60%",
+          height: "100%",
         }}
+        styles={{ body: { padding: "16px 20px" } }}
       >
         {/* Card header */}
         <Grid
@@ -62,23 +64,33 @@ const NotesRendering = ({ props, title }) => {
           >
             {title}
           </span>
-          {isAdmin && (
-            <Tooltip title="Delete notes">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Tooltip title="Add note">
               <Icon
-                onClick={() => setOpenDeleteNoteModal(true)}
-                icon="uil:ellipsis-v"
-                width={20}
-                style={{ cursor: "pointer", color: "var(--gray-400, #98A2B3)" }}
+                onClick={() => setOpenAddNoteModal(true)}
+                icon="ic:round-add"
+                width={18}
+                style={{ cursor: "pointer", color: "var(--blue-dark-600, #155EEF)" }}
               />
             </Tooltip>
-          )}
+            {isAdmin && (
+              <Tooltip title="Manage notes">
+                <Icon
+                  onClick={() => setOpenDeleteNoteModal(true)}
+                  icon="uil:ellipsis-v"
+                  width={20}
+                  style={{ cursor: "pointer", color: "var(--gray-400, #98A2B3)" }}
+                />
+              </Tooltip>
+            )}
+          </div>
         </Grid>
 
         {/* Notes list */}
         <div
           data-testid="notes-list"
           style={{
-            maxHeight: "160px",
+            maxHeight: "200px",
             overflowY: "auto",
             display: "flex",
             flexDirection: "column",
@@ -136,13 +148,19 @@ const NotesRendering = ({ props, title }) => {
             ))
           )}
         </div>
-      </div>
+      </Card>
 
       {openDeleteNoteModal && (
         <UpdateListOfNotesPerConsumer
           openDeleteNoteModal={openDeleteNoteModal}
           setOpenDeleteNoteModal={setOpenDeleteNoteModal}
           renderingNotesPerCustomer={() => notesForCompany}
+        />
+      )}
+      {openAddNoteModal && (
+        <EditConsumerInfoModal
+          openEditConsumerModal={openAddNoteModal}
+          setOpenEditConsumerModal={setOpenAddNoteModal}
         />
       )}
     </>
