@@ -14,9 +14,25 @@ import RefreshButton from "../../components/utils/UX/RefreshButton";
 import "../../styles/global/OutlineInput.css";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import ConsumerHeader from "./components/ConsumerHeader";
+import ConsumerStatsSection from "./components/ConsumerStatsSection";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
 import TableHeader from "../../components/UX/TableHeader";
+
+const searchInputStyle = {
+  height: "36px",
+  padding: "0 12px",
+  border: "1px solid var(--gray-300, #D0D5DD)",
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontFamily: "Inter",
+  color: "var(--gray-900, #101828)",
+  outline: "none",
+  width: "200px",
+  background: "#fff",
+  boxShadow: "0px 1px 2px rgba(16, 24, 40, 0.05)",
+};
+
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
   const [counting, setCounting] = useState(null);
@@ -54,20 +70,14 @@ const MainPage = () => {
           });
         }
       }
-      const returnValues = {
-        active: [],
-        inactive: [],
-      };
-
-      if (result.has(true)) {
-        returnValues.active = result.get(true);
-      }
-      if (result.has(false)) {
-        returnValues.inactive = [...result.get(false)];
-      }
+      const returnValues = { active: [], inactive: [] };
+      if (result.has(true)) returnValues.active = result.get(true);
+      if (result.has(false)) returnValues.inactive = [...result.get(false)];
       if (result.has("Lost")) {
-        const lost = [...returnValues.inactive, ...result.get("Lost")];
-        returnValues.inactive = [...lost];
+        returnValues.inactive = [
+          ...returnValues.inactive,
+          ...result.get("Lost"),
+        ];
       }
       return returnValues;
     },
@@ -77,40 +87,40 @@ const MainPage = () => {
   useEffect(() => {
     if (allConsumersBasedOnEventsPerCompany.data) {
       setCounting(
-        allConsumersBasedOnEventsPerCompany.data.data.result.totalConsumers,
+        allConsumersBasedOnEventsPerCompany?.data?.data?.result?.totalConsumers || 0,
       );
-      setConsumersList(allConsumersBasedOnEventsPerCompany.data.data);
+      setConsumersList(allConsumersBasedOnEventsPerCompany?.data?.data);
     } else {
       setCounting(0);
     }
   }, [allConsumersBasedOnEventsPerCompany.data]);
 
+  const hasConsumers = counting > 0;
+
   return (
-    <Grid
-      style={{
-        padding: "5px",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-      container
-    >
-      <ConsumerHeader
-        setCreateUserButton={setCreateUserButton}
-        counting={counting}
-        allConsumersBasedOnEventsPerCompany={
-          allConsumersBasedOnEventsPerCompany
-        }
-        register={register}
-      />
+    <Grid container sx={{ padding: "5px" }}>
+      {/* Header */}
+      <Grid item xs={12}>
+        <ConsumerHeader setCreateUserButton={setCreateUserButton} />
+      </Grid>
+
+      {/* Quick glance — solo cuando hay consumidores */}
+      {hasConsumers && (
+        <Grid item xs={12}>
+          <ConsumerStatsSection data={allConsumersBasedOnEventsPerCompany.data} />
+        </Grid>
+      )}
+
+      {/* Table section */}
       <Grid
-        marginY={3}
-        display={`${counting > 0 ? "flex" : "none"}`}
-        justifyContent={"flex-start"}
-        alignItems={"center"}
-        gap={1}
-        container
+        item
+        xs={12}
+        sx={{
+          display: hasConsumers ? "flex" : "none",
+          flexDirection: "column",
+          gap: 1,
+          marginY: 2,
+        }}
       >
         <TableHeader
           leftCta={
@@ -126,39 +136,41 @@ const MainPage = () => {
                 textAlign: "left",
               }}
             >
-              {" "}
               Consumers&nbsp;
-              <div
+              <span
                 style={{
                   borderRadius: "16px",
                   background: "var(--blue-dark-50, #EFF4FF)",
                   mixBlendMode: "multiply",
-                  width: "fit-content",
-                  height: "fit-content",
+                  padding: "0px 8px",
+                  fontWeight: 500,
+                  fontSize: "12px",
+                  fontFamily: "Inter",
+                  lineHeight: "28px",
+                  color: "var(--blue-dark-700, #004EEB)",
                 }}
               >
-                <p
-                  style={{
-                    textTransform: "none",
-                    textAlign: "left",
-                    fontWeight: 500,
-                    fontSize: "12px",
-                    fontFamily: "Inter",
-                    lineHeight: "28px",
-                    color: "var(--blue-dark-700, #004EEB)",
-                    padding: "0px 8px",
-                  }}
-                >
-                  {counting} total
-                </p>
-              </div>
+                {counting} total
+              </span>
             </p>
           }
           rightCta={
-            <div style={{ margin:"0 1rem -1rem 0"}}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "0 8px",
+              }}
+            >
+              <input
+                {...register("searchEvent")}
+                type="text"
+                placeholder="Search consumer here"
+                style={searchInputStyle}
+              />
               <RefreshButton
                 propsFn={() => {
-                  // Invalidate and refetch to bypass staleTime and pull fresh data
                   queryClient.invalidateQueries({
                     queryKey: ["allConsumersBasedOnEventsPerCompany"],
                   });
@@ -168,7 +180,7 @@ const MainPage = () => {
             </div>
           }
         />
-        <Grid item xs={12}>
+        <div>
           {allConsumersBasedOnEventsPerCompany.isLoading ? (
             <Loading />
           ) : (
@@ -181,20 +193,20 @@ const MainPage = () => {
               statePage={null}
             />
           )}
-        </Grid>
+        </div>
       </Grid>
+
+      {/* Empty state */}
       <Grid
-        textAlign={"right"}
-        display={`${counting < 1 ? "flex" : "none"}`}
-        flexDirection={"column"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        gap={1}
         item
         xs={12}
-        sm={12}
-        md={10}
-        lg={10}
+        sx={{
+          display: counting < 1 ? "flex" : "none",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 1,
+        }}
       >
         <BannerMsg
           props={{
@@ -207,26 +219,15 @@ const MainPage = () => {
             paragraphText: "Add new consumer",
           }}
         />
-        <Grid
-          textAlign={"right"}
-          display={"flex"}
-          justifyContent={"flex-end"}
-          alignItems={"center"}
-          margin={"-10px 0 0 0"}
-          gap={1}
-          item
-          xs={12}
-          sm={12}
-          md={10}
-          lg={10}
-        >
+        <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
           <BlueButtonComponent
             func={() => setCreateUserButton(true)}
             title={"Add new consumer"}
             icon={<WhiteCirclePlusIcon />}
           />
-        </Grid>
+        </div>
       </Grid>
+
       {createUserButton && (
         <CreateNewConsumer
           createUserButton={createUserButton}
