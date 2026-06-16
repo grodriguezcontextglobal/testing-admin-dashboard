@@ -66,25 +66,11 @@ export const getEventMetrics = (event) => {
 
 /**
  * Map the event's logistics status to a labeled progress stage.
- * Known values: "no_received_yet" | "in-transit" | "completed".
- * `progress` drives a 3-stage readiness bar; `barColor` is its fill.
+ * Known values: "no_received_yet" | "in-idle" | "in-transit" | "completed".
+ * `progress` drives a 4-stage readiness bar; `barColor` is its fill.
  */
 export const getLogisticsStatus = (event) => {
   switch (event?.logistic_inventory_status) {
-    case "completed":
-      return {
-        label: "Devices received",
-        tone: "ready",
-        progress: 100,
-        barColor: "var(--success-500, #12B76A)",
-      };
-    case "in-transit":
-      return {
-        label: "In transit",
-        tone: "info",
-        progress: 55,
-        barColor: "var(--blue-500, #2E90FA)",
-      };
     case "no_received_yet":
       return {
         label: "Awaiting delivery",
@@ -92,6 +78,46 @@ export const getLogisticsStatus = (event) => {
         progress: 8,
         barColor: "var(--warning-500, #F79009)",
       };
+    case "in-idle":
+      return {
+        label: "On site",
+        tone: "ready",
+        progress: 50,
+        barColor: "var(--success-500, #12B76A)",
+      };
+    case "in-transit":
+      return {
+        label: "Returning to warehouse",
+        tone: "info",
+        progress: 75,
+        barColor: "var(--blue-500, #2E90FA)",
+      };
+    case "completed":
+      return {
+        label: "Returned to warehouse",
+        tone: "done",
+        progress: 100,
+        barColor: "var(--gray-400, #98A2B3)",
+      };
+    default:
+      return null;
+  }
+};
+
+/**
+ * Badge props for the inventory status pill shown on event cards.
+ * Returns { color, label } for <BadgeWithDot>, or null when status is unknown.
+ */
+export const getInventoryBadgeProps = (event) => {
+  switch (event?.logistic_inventory_status) {
+    case "no_received_yet":
+      return { color: "warning", label: "Awaiting delivery" };
+    case "in-idle":
+      return { color: "success", label: "On site" };
+    case "in-transit":
+      return { color: "blue", label: "In transit" };
+    case "completed":
+      return { color: "gray", label: "Returned" };
     default:
       return null;
   }
