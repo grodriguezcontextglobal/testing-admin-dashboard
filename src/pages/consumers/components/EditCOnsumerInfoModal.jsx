@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, Divider, notification } from "antd";
+import { Avatar, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +9,6 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import Input from "../../../components/UX/inputs/Input";
 import ModalUX from "../../../components/UX/modal/ModalUX";
-import ReusableTextArea from "../../../components/UX/inputs/TextArea";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
@@ -41,7 +40,6 @@ const EditConsumerInfoModal = ({
   const { register, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
   const { customer } = useSelector((state) => state.customer);
-  const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const queryClient = useQueryClient();
@@ -60,14 +58,6 @@ const EditConsumerInfoModal = ({
           lastName: data.lastName,
           email: data.email,
           phoneNumber: data.phoneNumber,
-          notes: [
-            ...customer.data.notes,
-            {
-              company: user.companyData.id,
-              notes: data.notes,
-              date: new Date().getTime(),
-            },
-          ],
         }
       );
       if (updatingUserInfoQuery.data) {
@@ -189,18 +179,6 @@ const EditConsumerInfoModal = ({
             </label>
           </Grid>
         </Grid>
-
-        {/* Section: Notes */}
-        <Divider style={{ margin: "0 0 16px" }} />
-        <p style={sectionLabelStyle}>Add a note</p>
-        <p style={{ ...Subtitle, marginTop: "4px", marginBottom: "10px" }}>
-          Notes are visible only to your company.
-        </p>
-        <ReusableTextArea
-          fullWidth
-          textAreaProps={{ rows: 4 }}
-          {...register("notes", { value: "" })}
-        />
 
         {/* Footer */}
         <div
