@@ -1,26 +1,27 @@
 import { Grid } from "@mui/material";
+import { Card } from "antd";
 import PropTypes from "prop-types";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ActivityGauge from "./ActivityGauge";
 
-const statCardStyle = {
+const cardTokens = {
   borderRadius: "12px",
   border: "1px solid var(--gray-200, #EAECF0)",
   background: "var(--base-white, #FFF)",
   boxShadow:
     "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-  padding: "16px 20px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "4px",
-  height: "100%",
 };
 
 const StatTile = ({ value, label, accentColor, "data-testid": testId }) => (
-  <div style={statCardStyle} data-testid={testId}>
+  <Card
+    data-testid={testId}
+    style={{ ...cardTokens, height: "100%" }}
+    styles={{ body: { padding: "16px 20px" } }}
+  >
     <span
       style={{
+        display: "block",
         fontFamily: "Inter",
         fontSize: "24px",
         fontWeight: 600,
@@ -32,15 +33,17 @@ const StatTile = ({ value, label, accentColor, "data-testid": testId }) => (
     </span>
     <span
       style={{
+        display: "block",
         fontFamily: "Inter",
         fontSize: "13px",
         lineHeight: "18px",
         color: "var(--gray-500, #667085)",
+        marginTop: "4px",
       }}
     >
       {label}
     </span>
-  </div>
+  </Card>
 );
 
 const ConsumerStatsSection = ({ data }) => {
@@ -51,7 +54,7 @@ const ConsumerStatsSection = ({ data }) => {
   const fromEvents = result.totalConsumersFromEvents ?? 0;
 
   return (
-    <Grid container sx={{ marginY: 2 }} alignItems="flex-start" data-testid="consumer-stats-section">
+    <Grid spacing={2} container sx={{ marginY: 2 }} alignItems="flex-start" data-testid="consumer-stats-section">
       <Grid item xs={12} sx={{ marginBottom: 1.5 }}>
         <p
           style={{
@@ -70,7 +73,7 @@ const ConsumerStatsSection = ({ data }) => {
 
       {/* Stat tiles — 2×2 grid */}
       <Grid item xs={12} md={7} lg={8}>
-        <Grid container spacing={8}>
+        <Grid container spacing={2}>
           <Grid item xs={6}>
             <StatTile
               value={total}
