@@ -1,3 +1,4 @@
+import { Card } from "antd";
 import PropTypes from "prop-types";
 
 const SIZE = 160;
@@ -6,18 +7,15 @@ const R = (SIZE - STROKE) / 2;
 const C = 2 * Math.PI * R;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
+const VIEWBOX = `0 0 ${SIZE} ${SIZE}`;
 
-const cardStyle = {
+const cardTokens = {
   borderRadius: "12px",
   border: "1px solid var(--gray-200, #EAECF0)",
   background: "var(--base-white, #FFF)",
   boxShadow:
     "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-  padding: "20px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: "16px",
+  width: "100%",
 };
 
 const LegendItem = ({ color, label, value }) => (
@@ -73,13 +71,17 @@ const ActivityGauge = ({ active = 0, inactive = 0, total = 0 }) => {
   const activeDash = C * activeRatio;
 
   return (
-    <div style={cardStyle} data-testid="activity-gauge">
+    <Card
+      data-testid="activity-gauge"
+      style={cardTokens}
+      styles={{ body: { padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" } }}
+    >
       {/* Ring */}
-      <div style={{ position: "relative", width: SIZE, height: SIZE }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: SIZE }}>
         <svg
-          width={SIZE}
-          height={SIZE}
-          style={{ transform: "rotate(-90deg)" }}
+          viewBox={VIEWBOX}
+          width="100%"
+          style={{ transform: "rotate(-90deg)", display: "block" }}
           aria-hidden="true"
         >
           {/* Track */}
@@ -106,7 +108,7 @@ const ActivityGauge = ({ active = 0, inactive = 0, total = 0 }) => {
           )}
         </svg>
 
-        {/* Center label */}
+        {/* Center label — overlay sobre el SVG responsivo */}
         <div
           style={{
             position: "absolute",
@@ -116,6 +118,7 @@ const ActivityGauge = ({ active = 0, inactive = 0, total = 0 }) => {
             alignItems: "center",
             justifyContent: "center",
             gap: "2px",
+            pointerEvents: "none",
           }}
         >
           <span
@@ -163,7 +166,7 @@ const ActivityGauge = ({ active = 0, inactive = 0, total = 0 }) => {
           value={inactive}
         />
       </div>
-    </div>
+    </Card>
   );
 };
 
