@@ -27,12 +27,12 @@ const RefactoredHeaderUntitledUiReact = ({
   };
 
   return (
-    <div className="main-header-container">
+    <div className="main-header-container" data-testid="consumer-header">
       <div className="main-header-content">
         <div className="main-header-left">
           {renderAvatar()}
           <div className="main-header-info">
-            <h1 className="title">{title}</h1>
+            <h1 className="title" data-testid="consumer-name">{title}</h1>
             <p className="subtitle">{subtitle}</p>
           </div>
         </div>
