@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spin } from "antd";
@@ -9,7 +10,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Loading from "../../components/animation/Loading";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
-import BannerMsg from "../../components/utils/BannerMsg";
+import BannerReusableComponentUntitleUI from "../../components/UX/banner/BannerReusableComponentUntitleUI";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
 import "../../styles/global/OutlineInput.css";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
@@ -98,7 +99,7 @@ const MainPage = () => {
   const hasConsumers = counting > 0;
 
   return (
-    <Grid container sx={{ padding: "5px" }}>
+    <Grid container sx={{ padding: "16px 24px" }}>
       {/* Header */}
       <Grid item xs={12}>
         <ConsumerHeader setCreateUserButton={setCreateUserButton} />
@@ -163,12 +164,27 @@ const MainPage = () => {
                 padding: "0 8px",
               }}
             >
-              <input
-                {...register("searchEvent")}
-                type="text"
-                placeholder="Search consumer here"
-                style={searchInputStyle}
-              />
+              <div style={{ position: "relative" }}>
+                <Icon
+                  icon="radix-icons:magnifying-glass"
+                  color="#667085"
+                  width={16}
+                  height={16}
+                  style={{
+                    position: "absolute",
+                    left: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                  }}
+                />
+                <input
+                  {...register("searchEvent")}
+                  type="text"
+                  placeholder="Search consumer here"
+                  style={{ ...searchInputStyle, padding: "0 12px 0 34px" }}
+                />
+              </div>
               <RefreshButton
                 propsFn={() => {
                   queryClient.invalidateQueries({
@@ -208,16 +224,11 @@ const MainPage = () => {
           gap: 1,
         }}
       >
-        <BannerMsg
-          props={{
-            title: "Add consumers",
-            message:
-              "Consumers are users that will use the devices you provide with an intent to be returned. They can include ",
-            link: "?",
-            button: { display: "none" },
-            paragraphStyle: { display: "none" },
-            paragraphText: "Add new consumer",
-          }}
+        <BannerReusableComponentUntitleUI
+          title="No consumers yet"
+          description="Consumers are the people who will use the devices you manage. Add your first consumer to get started."
+          linkText="Learn more"
+          linkHref="#"
         />
         <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
           <BlueButtonComponent
