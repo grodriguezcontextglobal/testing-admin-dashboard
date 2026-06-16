@@ -1,5 +1,4 @@
 import {
-  Button,
   FormHelperText,
   Grid,
   InputAdornment,
@@ -11,11 +10,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
+import BlueButton from "../../../../../../../components/UX/buttons/BlueButton";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -273,31 +271,18 @@ const Releasing = ({
                   </Typography>
                 </FormHelperText>
 
-                <Button
-                  type="submit"
-                  disabled={
-                    stripeTransactionQuery?.data?.data?.paymentIntent
-                      ?.status === "canceled"
-                  }
-                  style={{
-                    ...BlueButton,
-                    width: "100%",
-                    display: transactionStatus ? "none" : "flex",
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      ...BlueButtonText,
-                    }}
-                  >
-                    {/* {stripeTransactionQuery?.data?.data?.paymentIntent
-                      ?.status === "canceled"
-                      ? "Transaction released already"
-                      : "Cancelling deposit"} */}
-                    Release deposit
-                  </Typography>
-                </Button>
+                {!transactionStatus && (
+                  <BlueButton
+                    title="Release deposit"
+                    buttonType="submit"
+                    size="md"
+                    isDisabled={
+                      stripeTransactionQuery?.data?.data?.paymentIntent
+                        ?.status === "canceled"
+                    }
+                    styles={{ width: "100%" }}
+                  />
+                )}
               </form>
             </Grid>
           </Grid>{" "}
