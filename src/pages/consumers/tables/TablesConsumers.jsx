@@ -307,23 +307,39 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           );
         }
 
-        const firstEventName = data[0]?.eventInfoDetail?.eventName || "";
+        const MAX_VISIBLE = 4;
+        const visible = data.slice(0, MAX_VISIBLE);
+        const overflow = data.length - MAX_VISIBLE;
+
+        const getInitials = (name = "") =>
+          name
+            .split(" ")
+            .slice(0, 2)
+            .map((w) => w[0]?.toUpperCase() ?? "")
+            .join("");
 
         return (
-          <div className="avatar-group-container">
-            <Tooltip title={firstEventName}>
-              <div className="event-name-chip">{firstEventName}</div>
-            </Tooltip>
-            {data.length > 1 && (
-              <Tooltip title={`${data.length - 1} more events`}>
-                <Avatar className="event-count-avatar">
-                  +{data.length - 1}
-                </Avatar>
+          <div className="event-badge-group">
+            {visible.map((event, idx) => {
+              const eventName = event.eventInfoDetail?.eventName ?? "";
+              return (
+                <Tooltip key={event.id ?? idx} title={eventName}>
+                  <Avatar className="event-badge-avatar">
+                    {getInitials(eventName)}
+                  </Avatar>
+                </Tooltip>
+              );
+            })}
+            {overflow > 0 && (
+              <Tooltip title={`+${overflow} more event${overflow > 1 ? "s" : ""}`}>
+                <Avatar className="event-badge-overflow">+{overflow}</Avatar>
               </Tooltip>
             )}
-          </div>);
+          </div>
+        );
       },
-    },];
+    },
+  ];
 
   return (
     <>
