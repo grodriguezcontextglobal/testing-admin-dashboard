@@ -1,11 +1,4 @@
-import {
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-} from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,6 +17,7 @@ const AssignStaffMemberToEvent = () => {
   const [listOfEventsToRender, setListOfEventsToRender] = useState([]);
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
+
   const eventsPerCompanyQuery = useQuery({
     queryKey: ["eventsPerCompanyList"],
     queryFn: () =>
@@ -32,26 +26,21 @@ const AssignStaffMemberToEvent = () => {
         type: "event",
         active: true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
 
   useEffect(() => {
     const controller = new AbortController();
     eventsPerCompanyQuery.refetch();
-    return () => {
-      controller.abort();
-    };
+    return () => { controller.abort(); };
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     if (eventsPerCompanyQuery?.data) {
-      return setListOfEventsToRender(eventsPerCompanyQuery?.data?.data?.list);
+      setListOfEventsToRender(eventsPerCompanyQuery.data.data.list);
     }
-    return () => {
-      controller.abort();
-    };
+    return () => { controller.abort(); };
   }, [eventsPerCompanyQuery.data]);
 
   const handleEventInfo = async (data) => {
@@ -59,13 +48,10 @@ const AssignStaffMemberToEvent = () => {
       adminUser: "Administrator",
       headsetAttendees: "headsetAttendees",
     };
-    if (
-      !JSON.parse(data.event).staff[data.role].some(
-        (element) => element.email === profile.user,
-      )
-    ) {
-      const newStaff = (JSON.parse(data.event).staff[data.role] = [
-        ...JSON.parse(data.event).staff[data.role],
+    const parsedEvent = JSON.parse(data.event);
+    if (!parsedEvent.staff[data.role].some((el) => el.email === profile.user)) {
+      const newStaff = (parsedEvent.staff[data.role] = [
+        ...parsedEvent.staff[data.role],
         {
           firstName: profile.firstName,
           lastName: profile.lastName,
@@ -73,154 +59,98 @@ const AssignStaffMemberToEvent = () => {
           role: dicRole[data.role],
         },
       ]);
-      const keyParameter = `staff.${data.role}`;
-      const respAddingStaffMember = await devitrakApi.patch(
-        `/event/edit-staff-event/${JSON.parse(data.event).id}`,
-        {
-          [keyParameter]: newStaff,
-        },
+      const resp = await devitrakApi.patch(
+        `/event/edit-staff-event/${parsedEvent.id}`,
+        { [`staff.${data.role}`]: newStaff },
       );
-      if (respAddingStaffMember.data) {
-        alert(
-          `Staff member has been assigned to ${
-            JSON.parse(data.event).eventInfoDetail.eventName
-          }`,
-        );
-        await clearCacheMemory(`event_staff_info=${JSON.parse(data.event).id}`);
-        return navigate(`/staff/${profile.adminUserInfo.id}/main`);
+      if (resp.data) {
+        alert(`Staff member has been assigned to ${parsedEvent.eventInfoDetail.eventName}`);
+        await clearCacheMemory(`event_staff_info=${parsedEvent.id}`);
+        navigate(`/staff/${profile.adminUserInfo.id}/main`);
       }
     } else {
-      alert("staff member is already assigned to event.");
+      alert("Staff member is already assigned to this event.");
     }
-    return null;
   };
+
   return (
     <ReusableCardWithHeaderAndFooter
       actions={[
-        <Grid
+        <div
           key="footer-actions-buttons"
-          container
-          spacing={2}
-          style={{
-            justifyContent: "flex-start",
-            gap:"24px",
-            padding: "0px 24px",
-            margin: "3dvh 0",
-          }}
+          style={{ display: "flex", gap: "12px", padding: "0 24px", margin: "3dvh 0" }}
         >
-            <GrayButtonComponent
-              func={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
-              title="Go back"
-            />
-            <BlueButtonComponent
-              buttonType="submit"
-              title="Assign staff member to event."
-            />
-        </Grid>,
+          <GrayButtonComponent
+            func={() => navigate(`/staff/${profile.adminUserInfo.id}/main`)}
+            title="Go back"
+            buttonType="button"
+          />
+          <BlueButtonComponent
+            buttonType="submit"
+            title="Assign to event"
+            form="assign-to-event-form"
+          />
+        </div>,
       ]}
     >
       <form
-        style={{
-          width: "100%",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          textAlign: "left",
-        }}
+        id="assign-to-event-form"
+        style={{ width: "100%", textAlign: "left" }}
         onSubmit={handleSubmit(handleEventInfo)}
-        // className="form"
       >
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          alignItems={"flex-start"}
-          alignSelf={"stretch"}
-          gap={"24px"}
+        <div
           style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
             borderRadius: "8px",
             border: "1px solid var(--gray-300, #D0D5DD)",
             background: "var(--gray-100, #F2F4F7)",
             padding: "24px",
           }}
-          item
-          xs={12}
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"flex-start"}
-            alignSelf={"stretch"}
-            gap={"24px"}
-            item
-            xs={12}
-          >
-            <Grid item xs={12}>
-              <InputLabel>Event</InputLabel>
-              <FormControl fullWidth>
-                <Select
-                  className="custom-autocomplete"
-                  style={{ ...AntSelectorStyle, background: "#fff" }}
-                  {...register("event")}
-                >
+          {/* Event selector */}
+          <div>
+            <InputLabel style={{ marginBottom: "6px" }}>Event</InputLabel>
+            <FormControl fullWidth>
+              <Select
+                className="custom-autocomplete"
+                style={{ ...AntSelectorStyle, background: "#fff" }}
+                {...register("event")}
+              >
+                <MenuItem disabled defaultValue="">
+                  Select event
+                </MenuItem>
+                {listOfEventsToRender.map((item) => (
                   <MenuItem
-                    key={"select-role"}
-                    defaultChecked
-                    defaultValue={"Select role"}
-                    disabled
+                    key={item.eventInfoDetail.eventName}
+                    value={JSON.stringify(item)}
                   >
-                    <Typography>Select role</Typography>
+                    {item.eventInfoDetail.eventName}
                   </MenuItem>
-                  {listOfEventsToRender.map((item) => {
-                    return (
-                      <MenuItem
-                        style={{ width: "fit-content" }}
-                        key={item.eventInfoDetail.evenName}
-                        value={JSON.stringify(item)}
-                      >
-                        <Typography>
-                          {item.eventInfoDetail.eventName}
-                        </Typography>
-                      </MenuItem>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"flex-start"}
-            alignSelf={"stretch"}
-            gap={"24px"}
-            item
-            xs={12}
-          >
-            <Grid item xs={12}>
-              <InputLabel>Role</InputLabel>
-              <FormControl fullWidth>
-                <Select
-                  className="custom-autocomplete"
-                  style={{ ...AntSelectorStyle, background: "#fff" }}
-                  {...register("role")}
-                >
-                  <MenuItem
-                    defaultChecked
-                    defaultValue={"Select role"}
-                    disabled
-                  >
-                    <Typography>Select role</Typography>
-                  </MenuItem>
-                  <MenuItem value={"adminUser"}>
-                    <Typography>Administrator</Typography>
-                  </MenuItem>
-                  <MenuItem value={"headsetAttendees"}>
-                    <Typography>Assistant</Typography>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Grid>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+
+          {/* Role selector */}
+          <div>
+            <InputLabel style={{ marginBottom: "6px" }}>Role</InputLabel>
+            <FormControl fullWidth>
+              <Select
+                className="custom-autocomplete"
+                style={{ ...AntSelectorStyle, background: "#fff" }}
+                {...register("role")}
+              >
+                <MenuItem disabled defaultValue="">
+                  Select role
+                </MenuItem>
+                <MenuItem value="adminUser">Administrator</MenuItem>
+                <MenuItem value="headsetAttendees">Assistant</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
+        </div>
       </form>
     </ReusableCardWithHeaderAndFooter>
   );

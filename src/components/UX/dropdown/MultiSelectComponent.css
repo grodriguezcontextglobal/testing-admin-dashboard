@@ -227,11 +227,21 @@
   background-color: transparent;
 }
 
+.multiselect-item.selected {
+  background-color: var(--primary-color-light);
+}
+
 .multiselect-item-checkbox {
   margin-right: 12px;
   width: 16px;
   height: 16px;
   accent-color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.multiselect-item-checkbox--right {
+  margin-right: 0;
+  margin-left: auto;
 }
 
 .multiselect-item-avatar {

@@ -4,7 +4,7 @@ import { PropTypes } from "prop-types";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { useMediaQuery } from "@uidotdev/usehooks";
 
-const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
+const RenderingConsumersChartsBehavior = ({ active, inactive, props, compact = false }) => {
   const isLargeDevice = useMediaQuery(
     "only screen and (min-width : 993px) and (max-width : 1200px)"
   );
@@ -12,7 +12,7 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
     "only screen and (min-width : 1201px)"
   );
   const option = {
-    color: ["#00359E", "#528BFF"], // Add your custom colors here
+    color: ["var(--blue-dark-700, #00359E)", "var(--primary-300, #9B8AFB)"],
     tooltip: {
       trigger: "item",
     },
@@ -49,9 +49,15 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
     ],
   };
 
+  const chartSize = compact
+    ? "180px"
+    : isLargeDevice || isExtraLargeDevice
+    ? "350px"
+    : "250px";
+
   return (
     <Card
-      title={props.title}
+      title={compact ? null : props.title}
       styles={{
         header: {
           backgroundColor: "#fff",
@@ -65,40 +71,27 @@ const RenderingConsumersChartsBehavior = ({ active, inactive, props }) => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
+          padding: compact ? "12px" : undefined,
         },
       }}
       style={{ backgroundColor: "#fff", width: "100%", height: "auto" }}
     >
       <ReactECharts
         option={option}
-        style={{
-          height: isLargeDevice || isExtraLargeDevice ? "350px" : "250px",
-          width: isLargeDevice || isExtraLargeDevice ? "350px" : "250px",
-        }}
+        style={{ height: chartSize, width: chartSize }}
       />
-      <p
-        style={{
-          ...Subtitle,
-          width: "100%",
-          textAlign: "left",
-          textWrap: "balance",
-        }}
-      >
-        {props.description}
-      </p>
-      {/* <p
-        style={{
-          ...Subtitle,
-          width: "100%",
-          fontSize: "16px",
-          lineHeight: "20px",
-          textAlign: "right",
-          textWrap: "balance",
-          margin: "20px 0 0 0",
-        }}
-      >
-        Total: {props.total}
-      </p> */}
+      {!compact && (
+        <p
+          style={{
+            ...Subtitle,
+            width: "100%",
+            textAlign: "left",
+            textWrap: "balance",
+          }}
+        >
+          {props.description}
+        </p>
+      )}
     </Card>
   );
 };
@@ -112,6 +105,7 @@ RenderingConsumersChartsBehavior.propTypes = {
     number: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
   }).isRequired,
+  compact: PropTypes.bool,
 };
 
 export default RenderingConsumersChartsBehavior;

@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Loading from "../../components/animation/Loading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import EventsCarousel from "../../components/UX/carousel/EventsCarousel";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
 import {
   onResetEventInfo
@@ -272,12 +273,13 @@ const MainPage = () => {
                 </Typography>
               </Grid>
             </Grid>
-            <Grid marginY={1} container spacing={1}>
-              {liveEvents.map((event) => (
-                <Grid key={event.id} padding={1} item xs={12} sm={12} md={12} lg={6}>
-                  <CardEventDisplay props={event} />
-                </Grid>
-              ))}
+            <Grid marginY={1} container>
+              <Grid item xs={12}>
+                <EventsCarousel
+                  items={liveEvents}
+                  renderItem={(event) => <CardEventDisplay props={event} />}
+                />
+              </Grid>
             </Grid>
           </>
         )}
@@ -294,13 +296,14 @@ const MainPage = () => {
                 </Typography>
               </Grid>
             </Grid>
-            <Grid marginY={1} container spacing={1}>
+            <Grid marginY={1} container>
               {upcomingEvents.length > 0 ? (
-                upcomingEvents.map((event) => (
-                  <Grid key={event.id} padding={1} item xs={12} sm={12} md={12} lg={6}>
-                    <CardEventDisplay props={event} />
-                  </Grid>
-                ))
+                <Grid item xs={12}>
+                  <EventsCarousel
+                    items={upcomingEvents}
+                    renderItem={(event) => <CardEventDisplay props={event} />}
+                  />
+                </Grid>
               ) : noActiveEvents ? (
                 <>
                   {Number(user.role) < 4 ? (

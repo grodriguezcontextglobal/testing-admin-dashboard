@@ -103,6 +103,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           status: "Pending",
           super_user: false,
           role,
+          active: Number(role) !== 0,
         },
       ],
     });

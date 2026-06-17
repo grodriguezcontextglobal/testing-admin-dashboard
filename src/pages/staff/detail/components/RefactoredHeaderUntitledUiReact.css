@@ -1,99 +1,112 @@
 .main-header-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
 }
 
 .main-header-content {
-    display: flex;
-    align-self: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
 }
 
+/* ── Left: avatar + name ─────────────────────────── */
 .main-header-left {
-    display: flex;
-    align-self: flex-start;
-    gap: 1rem;
-    flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.main-header-info .title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #101828;
-    margin: 0;
-    padding: 0;
-    text-align: left;
-    line-height: 25px;
-    width: fit-content
+.main-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.main-header-info .subtitle {
-    font-size: 0.875rem;
-    line-height: 25px;
-    color: #667085;
-    margin: 0;
-    padding: 0;
-    text-align: left;
-    width: fit-content
+.mh-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #101828;
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
 }
 
+.mh-role {
+  font-size: 0.875rem;
+  color: #667085;
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
+}
+
+/* ── Center: contact ─────────────────────────────── */
 .main-header-center {
-    display: flex;
-    flex-direction: column;
-    align-self: flex-start;
-    gap: 0.5rem;
-    flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.main-header-center .title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #101828;
-    margin: 0;
-    padding: 0;
-    text-align: left;
-    line-height: 25px;
-    width: fit-content
+.mh-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #98a2b3;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
 
-.main-header-center .subtitle {
-    font-size: 0.875rem;
-    line-height: 25px;
-    color: #667085;
-    margin: 0;
-    padding: 0;
-    text-align: left;
-    width: fit-content
+.mh-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.mh-contact-value {
+  font-size: 0.875rem;
+  color: #344054;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* ── Right: badges ───────────────────────────────── */
 .main-header-right {
-    display: flex;
-    flex-direction: column;
-    align-self: flex-start;
-    gap: 0.5rem;
+  display: flex;
+  align-items: flex-start;
 }
 
 .main-header-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: space-between;
-    gap: 0.75rem;
-    align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
+/* ── Responsive ─────────────────────────────────── */
 @media (min-width: 768px) {
-    .main-header-content {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
+  .main-header-content {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
 
-    .main-header-right {
-        flex-direction: row;
-        align-items: center;
-    }
+  .main-header-left {
+    flex: 1;
+  }
+
+  .main-header-center {
+    flex: 1;
+  }
+
+  .main-header-right {
+    align-items: flex-end;
+  }
+
+  .main-header-actions {
+    flex-direction: row;
+    align-items: center;
+  }
 }

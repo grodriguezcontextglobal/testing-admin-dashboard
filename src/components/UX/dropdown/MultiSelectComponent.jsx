@@ -1,6 +1,54 @@
 import { useState, useEffect, useRef } from "react";
+import React from "react";
 import { Icon } from "@iconify/react";
 import "./MultiSelectComponent.css";
+
+// ─── MultiSelect.Item ─────────────────────────────────────────────────────────
+// Compound sub-component rendered inside the dropdown for each item.
+// `selected` and `onClick` are injected by the parent via React.cloneElement.
+
+const MultiSelectItem = ({
+  // id,
+  children,
+  supportingText,
+  selectionIndicator = "checkbox",
+  selectionIndicatorAlign = "left",
+  avatarUrl,
+  disabled = false,
+  selected = false,
+  onClick,
+}) => {
+  const checkboxEl = selectionIndicator === "checkbox" ? (
+    <input
+      type="checkbox"
+      className={`multiselect-item-checkbox${selectionIndicatorAlign === "right" ? " multiselect-item-checkbox--right" : ""}`}
+      checked={selected}
+      disabled={disabled}
+      readOnly
+    />
+  ) : null;
+
+  return (
+    <div
+      className={`multiselect-item${disabled ? " disabled" : ""}${selected ? " selected" : ""}`}
+      onClick={!disabled ? onClick : undefined}
+    >
+      {selectionIndicatorAlign === "left" && checkboxEl}
+      {avatarUrl && (
+        <img src={avatarUrl} alt={String(children)} className="multiselect-item-avatar" />
+      )}
+      <div className="multiselect-item-content">
+        <span className="multiselect-item-label">{children}</span>
+        {supportingText && (
+          <span className="multiselect-item-supporting-text">{supportingText}</span>
+        )}
+      </div>
+      {selectionIndicatorAlign === "right" && checkboxEl}
+    </div>
+  );
+};
+
+// ─── MultiSelect ──────────────────────────────────────────────────────────────
 
 const MultiSelectComponent = ({
   size = "md",
@@ -16,6 +64,7 @@ const MultiSelectComponent = ({
   onSelectAll,
   isRequired,
   disabled,
+  children, // render prop: (item) => <MultiSelectComponent.Item ...>
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,64 +77,85 @@ const MultiSelectComponent = ({
 
   const handleSelectionChange = (newSelection) => {
     setSelectedKeys(newSelection);
-    if (onSelectionChange) {
-      onSelectionChange(newSelection);
-    }
+    if (onSelectionChange) onSelectionChange(newSelection);
   };
 
   const handleToggleItem = (item) => {
     if (item.disabled) return;
-    const newKeys = new Set(selectedKeys);
-    if (newKeys.has(item.id)) {
-      newKeys.delete(item.id);
+    const next = new Set(selectedKeys);
+    if (next.has(item.id)) {
+      next.delete(item.id);
     } else {
-      newKeys.add(item.id);
+      next.add(item.id);
     }
-    handleSelectionChange(newKeys);
+    handleSelectionChange(next);
   };
 
   const handleRemoveItem = (item) => {
-    const newKeys = new Set(selectedKeys);
-    newKeys.delete(item.id);
-    handleSelectionChange(newKeys);
+    const next = new Set(selectedKeys);
+    next.delete(item.id);
+    handleSelectionChange(next);
   };
 
-  const handleReset = () => {
+  const handleReset = (e) => {
+    e?.stopPropagation();
     handleSelectionChange(new Set());
     if (onReset) onReset();
   };
 
-  const handleSelectAll = () => {
+  const handleSelectAll = (e) => {
+    e?.stopPropagation();
     const allIds = new Set(items.map((item) => item.id));
     handleSelectionChange(allIds);
     if (onSelectAll) onSelectAll();
   };
 
   const filteredItems = items.filter((item) =>
-    item.label.toLowerCase().includes(searchTerm.toLowerCase())
+    item.label.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const selectedItems = items.filter(item => selectedKeys.has(item.id));
+  const selectedItems = items.filter((item) => selectedKeys.has(item.id));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsOpen(false);
+        setSearchTerm("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const renderDropdownItem = (item) => {
+    if (typeof children === "function") {
+      const rendered = children(item);
+      return React.cloneElement(rendered, {
+        key: item.id,
+        selected: selectedKeys.has(item.id),
+        onClick: () => handleToggleItem(item),
+        disabled: item.disabled || rendered.props.disabled,
+      });
+    }
+    // Fallback: default rendering when no render prop is provided
+    return (
+      <MultiSelectItem
+        key={item.id}
+        id={item.id}
+        selected={selectedKeys.has(item.id)}
+        onClick={() => handleToggleItem(item)}
+        disabled={item.disabled}
+        avatarUrl={item.avatarUrl}
+        supportingText={item.supportingText}
+      >
+        {item.label}
+      </MultiSelectItem>
+    );
+  };
 
   return (
     <div
-      className={`multiselect-container ${size} ${disabled ? "disabled" : ""
-        }`}
+      className={`multiselect-container ${size}${disabled ? " disabled" : ""}`}
       ref={containerRef}
     >
       <div className="label-wrapper">
@@ -166,36 +236,7 @@ const MultiSelectComponent = ({
             <button onClick={handleReset}>Reset</button>
           </div>
           {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className={`multiselect-item ${item.disabled ? "disabled" : ""}`}
-                onClick={() => handleToggleItem(item)}
-              >
-                <input
-                  type="checkbox"
-                  className="multiselect-item-checkbox"
-                  checked={selectedKeys.has(item.id)}
-                  disabled={item.disabled}
-                  readOnly
-                />
-                {item.avatarUrl && (
-                  <img
-                    src={item.avatarUrl}
-                    alt={item.label}
-                    className="multiselect-item-avatar"
-                  />
-                )}
-                <div className="multiselect-item-content">
-                  <span className="multiselect-item-label">{item.label}</span>
-                  {item.supportingText && (
-                    <span className="multiselect-item-supporting-text">
-                      {item.supportingText}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))
+            filteredItems.map((item) => renderDropdownItem(item))
           ) : (
             <div className="multiselect-item disabled">No results found</div>
           )}
@@ -204,5 +245,7 @@ const MultiSelectComponent = ({
     </div>
   );
 };
+
+MultiSelectComponent.Item = MultiSelectItem;
 
 export default MultiSelectComponent;

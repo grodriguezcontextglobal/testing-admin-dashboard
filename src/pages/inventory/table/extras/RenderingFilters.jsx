@@ -1,9 +1,11 @@
 import { Grid, OutlinedInput } from "@mui/material";
+import { PERMISSIONS } from "../../../../config/roles";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
+// import CreateSubLocationPathModal from "../../utils/CreateSubLocationPathModal";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { EditIcon } from "../../../../components/icons/EditIcon";
@@ -36,7 +38,7 @@ import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();
 
 const labelTranslations = {
-  Locaciones: "Locations",
+  Locaciones: "Locations | Sub locations",
   Categorias: "Categories",
   Grupos: "Groups",
   Marcas: "Brands",
@@ -54,7 +56,7 @@ const groupByOptions = [
 ];
 
 const groupByFallbackLabels = {
-  location_1: "Locations",
+  location_1: "Locations | Sub locations",
   category_name: "Categories",
   item_group: "Groups",
   brand: "Brands",
@@ -133,6 +135,9 @@ const RenderingFilters = ({
     Resale: "For resale",
   };
   const { isAdmin } = useStaffRoleAndLocations();
+  const canManageLocation =
+    Number(user.role) === 0 ||
+    PERMISSIONS["inventory:manage_location"]?.includes(Number(user.role));
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>
@@ -170,6 +175,19 @@ const RenderingFilters = ({
     enabled: !!user.sqlInfo.company_id,
     staleTime: 2 * 60 * 1000,
   });
+
+  // const locationPathsTreeQuery = useQuery({
+  //   queryKey: ["locationPathsTree", user.sqlInfo.company_id],
+  //   queryFn: () =>
+  //     devitrakApi.get(
+  //       `/db_location/companies/${user.sqlInfo.company_id}/location-paths-tree`
+  //     ),
+  //   enabled: !!user.sqlInfo.company_id,
+  //   staleTime: 2 * 60 * 1000,
+  // });
+
+  // const [openPathModal, setOpenPathModal] = useState(false);
+
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
   // const renderingCardData = user?.companyData?.employees?.find(
@@ -188,7 +206,7 @@ const RenderingFilters = ({
       return user.companyData.structure;
     }
     return {
-      location_1: "Locations",
+      location_1: "Locations | Sub locations",
       category_name: "Category",
       item_group: "Groups",
       brand: "Brands",
@@ -793,7 +811,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("location_1")}
-                disabled={Number(user.role) > 0}
+                disabled={!canManageLocation}
               >
                 <EditIcon />
               </Button>
@@ -865,7 +883,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("category_name")}
-                disabled={Number(user.role) > 0}
+                disabled={!canManageLocation}
               >
                 <EditIcon />
               </Button>
@@ -909,7 +927,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("item_group")}
-                disabled={Number(user.role) > 0}
+                disabled={!canManageLocation}
               >
                 <EditIcon />
               </Button>
@@ -951,7 +969,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("brand")}
-                disabled={Number(user.role) > 0}
+                disabled={!canManageLocation}
               >
                 <EditIcon />
               </Button>
@@ -995,7 +1013,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("ownership")}
-                disabled={Number(user.role) > 0}
+                disabled={!canManageLocation}
               >
                 <EditIcon />
               </Button>
@@ -1043,7 +1061,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("assignedToStaffMember")}
-                disabled={Number(user.role) > 0}
+                disabled={!canManageLocation}
               >
                 <EditIcon />
               </Button>
@@ -1269,17 +1287,27 @@ const RenderingFilters = ({
                       </button>
                     )} */}
                 </p>
-                {item.key === "location_1" && isAdmin && (<BlueButtonComponent
-                  title={"Create location"}
-                  styles={{ with: "100%" }}
-                  buttonType="button"
-                  titleStyles={{
-                    textTransform: "none",
-                    with: "100%",
-                    gap: "2px",
-                  }}
-                  func={() => setOpenCreateLocationModal(true)}
-                />)}
+                {item.key === "location_1" && isAdmin && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {/* <GrayButtonComponent
+                      title={"Register Path"}
+                      styles={{ width: "fit-content" }}
+                      buttonType="button"
+                      titleStyles={{ textTransform: "none" }}
+                      func={() => setOpenPathModal(true)}
+                    /> */}
+                    <BlueButtonComponent
+                      title={"Create location"}
+                      styles={{ width: "fit-content" }}
+                      buttonType="button"
+                      titleStyles={{
+                        textTransform: "none",
+                        gap: "2px",
+                      }}
+                      func={() => setOpenCreateLocationModal(true)}
+                    />
+                  </div>
+                )}
 
               </summary>
               <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -1386,6 +1414,15 @@ const RenderingFilters = ({
           </Grid>
         );
       })}
+
+      {/* {openPathModal && (
+        <CreateSubLocationPathModal
+          open={openPathModal}
+          onClose={() => setOpenPathModal(false)}
+          user={user}
+        />
+      )} */}
+
       {openAdvanceSearchModal && (
         <AdvanceSearchContext.Provider
           value={{

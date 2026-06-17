@@ -1,18 +1,15 @@
-import { Icon } from "@iconify/react";
-import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Breadcrumb, Divider } from "antd";
+import { Divider, Breadcrumb } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import Chip from "../../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import { BadgeWithDot } from "../../../../components/base/badges/badges";
 import Loading from "../../../../components/animation/Loading";
-import { PointFilled } from "../../../../components/icons/PointFilled";
+import { usePermission } from "../../../../hooks/usePermission";
 import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { NewStaffMember } from "../../action/NewStaffMember";
 import RefactoredHeaderUntitledUiReact from "./RefactoredHeaderUntitledUiReact";
@@ -20,8 +17,10 @@ import RefactoredHeaderUntitledUiReact from "./RefactoredHeaderUntitledUiReact";
 const HeaderStaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
+  const canManageStaff = usePermission("staff:create");
   const [modalState, setModalState] = useState(false);
   const dispatch = useDispatch();
+
   const eventQuery = useQuery({
     queryKey: ["events-header-section"],
     queryFn: () =>
@@ -30,9 +29,9 @@ const HeaderStaffDetail = () => {
         type: "event",
         active: true,
       }),
-    // enabled: false,
     refetchOnMount: false,
   });
+
   useEffect(() => {
     const controller = new AbortController();
     eventQuery.refetch();
@@ -47,6 +46,7 @@ const HeaderStaffDetail = () => {
         <Loading />
       </div>
     );
+
   if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
     const filterActiveEventsPerStaffMember = () => {
       const data = eventQuery?.data?.data?.list;
@@ -65,178 +65,81 @@ const HeaderStaffDetail = () => {
           }
         }
       }
-      const sortedResultValue = Array.from(findingEvent);
-      return sortedResultValue.sort((a, b) => a.startingDate - b.startingDate);
+      return Array.from(findingEvent).sort(
+        (a, b) => a.startingDate - b.startingDate,
+      );
     };
+
+    const activeEvents = filterActiveEventsPerStaffMember();
 
     const breadcrumbItems = [
       {
         title: (
-          <Link to="/staff">
-            <button
-              style={{
-                backgroundColor: "transparent",
-                outline: "none",
-                margin: 0,
-                padding: 0,
-              }}
-              onClick={() => dispatch(onResetStaffProfile())}
-            >
-              {" "}
-              <p
-                style={{
-                  ...TextFontsize18LineHeight28,
-                  textAlign: "left",
-                  color: "var(--blue-dark-600)",
-                }}
-              >
-                All staff
-              </p>
-            </button>
+          <Link
+            to="/staff"
+            onClick={() => dispatch(onResetStaffProfile())}
+            style={{ fontSize: "14px", fontWeight: 500, color: "var(--blue-dark-600)" }}
+          >
+            All staff
           </Link>
         ),
       },
       {
         title: (
-          <p
-            style={{
-              ...TextFontsize18LineHeight28,
-              textAlign: "left",
-              color: "var(--gray-900)",
-            }}
-          >
+          <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--gray-900)" }}>
             {profile.firstName}, {profile?.lastName}
-          </p>
+          </span>
         ),
       },
     ];
-    const actions = [Number(user.role) < 2 && (
-      <div
-        style={{
-          background: "transparent",
-          cursor: "default",
-          padding: "12px 0",
-          width: "100%",
-          textAlign: "right",
-        }}
-      >
-        <Chip
-          label={profile.status ? "Active" : "Inactive"}
-          color={profile.status ? "success" : "info"}
-          icon={
-            profile.status ? (
-              <PointFilled style={{ color: "#12b76a" }} />
-            ) : (
-              <PointFilled style={{ color: "#D0D5DD" }} />
-            )
-          }
-        />
-      </div>
-    ),
-    <div
-      style={{ width: "100%" }}
-      key={""}
-    >
-      <Chip
-        color={
-          filterActiveEventsPerStaffMember().length > 0
-            ? "primary"
-            : "warning"
-        }
-        label={
-          filterActiveEventsPerStaffMember().length > 0
-            ? filterActiveEventsPerStaffMember().at(-1).eventName
-            : "No active event"
-        }
-        icon={
-          <Icon
-            icon="tabler:point-filled"
-            rotate={3}
-            color={
-              filterActiveEventsPerStaffMember().length > 0
-                ? "var(--primary-700, #6941C6)"
-                : "#EF6820"
-            }
-          />
-        }
-        style={{ marginBottom: "5px" }}
-      />
-    </div>
 
-    ]
+    const actions = [
+      canManageStaff && (
+        <BadgeWithDot key="status" color={profile.status ? "success" : "gray"}>
+          {profile.status ? "Active" : "Inactive"}
+        </BadgeWithDot>
+      ),
+      <BadgeWithDot
+        key="event"
+        color={activeEvents.length > 0 ? "brand" : "warning"}
+      >
+        {activeEvents.length > 0
+          ? activeEvents.at(-1).eventName
+          : "No active event"}
+      </BadgeWithDot>,
+    ].filter(Boolean);
+
     return (
       <>
-        <Grid
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
-        >
-          <Grid container flexDirection={"column"}>
-            <Grid
-              sx={{
-                justifyContent: {
-                  xs: "flex-start",
-                  sm: "flex-start",
-                  md: "space-between",
-                  lg: "space-between",
-                },
-                display: "flex",
-                flexDirection: {
-                  xs: "column",
-                  sm: "column",
-                  md: "row",
-                  lg: "row",
-                },
-              }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <Typography
-                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
-              >
-                Staff
-              </Typography>
-              <Grid
-                sx={{
-                  justifyContent: {
-                    xs: "flex-start",
-                    sm: "flex-start",
-                    md: "flex-end",
-                    lg: "flex-end",
-                  },
-                  display: Number(user.role) < 2 ? "flex" : "none",
-                  gap: 1,
-                  alignItems: "center",
-                }}
-                item
-                xs={12}
-                sm={12}
-                md={6}
-                lg={6}
-              >
-                {" "}
-                <BlueButtonComponent
-                  title={"Add new staff"}
-                  func={() => setModalState(true)}
-                // icon={<WhiteCirclePlusIcon />}
-                />
-              </Grid>
-            </Grid>
-            <Breadcrumb
-              style={{ margin: "15px 0px 7.5px" }}
-              separator=">"
-              items={breadcrumbItems}
-            />
-          </Grid>
-          <Divider style={{ margin: "0 0 15px" }} />
+        <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "4px",
+            }}
+          >
+            <h1 style={{ ...TextFontSize30LineHeight38, textAlign: "left", margin: 0 }}>
+              Staff
+            </h1>
+            {canManageStaff && (
+              <BlueButtonComponent
+                title="Add new staff"
+                func={() => setModalState(true)}
+              />
+            )}
+          </div>
+          <Breadcrumb
+            style={{ margin: "12px 0 8px" }}
+            separator=">"
+            items={breadcrumbItems}
+          />
+          <Divider style={{ margin: "0 0 16px" }} />
           <RefactoredHeaderUntitledUiReact actions={actions} />
-        </Grid>
+        </div>
         {modalState && (
           <NewStaffMember
             modalState={modalState}

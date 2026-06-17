@@ -77,7 +77,14 @@ export const LOGISTICS_TOTAL_STEPS = 3;
 
 export const getLogisticsStatus = (event) => {
   switch (event?.logistic_inventory_status) {
-    case "completed":
+    case "no_received_yet":
+      return {
+        label: "Awaiting delivery",
+        tone: "pending",
+        progress: 8,
+        barColor: "var(--warning-500, #F79009)",
+      };
+    case "in-idle":
       return {
         label: "Returned",
         tone: "ready",
@@ -87,13 +94,13 @@ export const getLogisticsStatus = (event) => {
       };
     case "in-transit":
       return {
-        label: "In transit",
+        label: "Returning to warehouse",
         tone: "info",
         step: 2,
         barColor: "var(--blue-500, #2E90FA)",
         labelColor: "var(--blue-700, #175CD3)",
       };
-    case "no_received_yet":
+    case "completed":
       return {
         label: "At event",
         tone: "pending",

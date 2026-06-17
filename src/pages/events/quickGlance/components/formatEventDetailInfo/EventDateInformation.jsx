@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
-import { useMediaQuery } from "@uidotdev/usehooks";
 import { Card, Tooltip } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -33,8 +32,6 @@ const EventDateInformation = () => {
     1
       ? new Date(event?.eventInfoDetail?.dateEnd).getMinutes()
       : `0${new Date(event?.eventInfoDetail?.dateEnd).getMinutes()}`;
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-
   const addressSplitting = () => {
     const address = event?.eventInfoDetail?.address.split(",");
     return {
@@ -73,135 +70,54 @@ const EventDateInformation = () => {
           )
         }
         style={{
-          border: "none",
+          border: "1px solid var(--gray-200, #EAECF0)",
+          borderRadius: "12px",
+          width: "100%",
         }}
         styles={{
-          border: "none",
           header: {
-            borderBottom: "transparent",
+            borderBottom: "1px solid var(--gray-200, #EAECF0)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "0 24px 0 0",
+            padding: "12px 16px",
             background: "var(--main-background-color)",
-            border: "none",
           },
           body: {
-            borderRadius: "12px",
-            border: "none",
             background: "var(--main-background-color)",
-            boxShadow: "none",
             textAlign: "left",
             width: "100%",
-            padding: 0,
-          },
-          cover: {
-            border: "none",
+            padding: "16px",
           },
         }}
       >
-        <Grid
-          display={"flex"}
-          justifyContent={"space-around"}
-          alignItems={"center"}
-          container
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"left"}
-            alignItems={"center"}
-            textAlign={"left"}
-            item
-            xs={12}
-          >
-              <EventPeriodFormatDisplay event={event} styleText={TextFontSize30LineHeight38} />
+        <Grid container>
+          <Grid item xs={12}>
+            <EventPeriodFormatDisplay event={event} styleText={TextFontSize30LineHeight38} />
           </Grid>
-          <Grid
-            display={"flex"}
-            justifyContent={"left"}
-            alignItems={"center"}
-            textAlign={"left"}
-            item
-            xs={12}
-          >
-            <Typography textAlign={"left"} paddingTop={"8px"} style={Subtitle}>
-              {`${hourBeginTime}:${minutesBeginTime}`}
-              {new Date(`${event?.eventInfoDetail?.dateBegin}`).getHours() < 12
-                ? "AM"
-                : "PM"}
-              -
-            </Typography>
-            <Typography textAlign={"left"} paddingTop={"8px"} style={Subtitle}>
-              {`${hourEndTime}:${minutesEndTime}`}
-              {new Date(`${event?.eventInfoDetail?.dateEnd}`).getHours() < 12
-                ? "AM"
-                : "PM"}{" "}
-            </Typography>
-            <Typography textAlign={"left"} paddingTop={"8px"} style={Subtitle}>
-              (
-              {`${new Date(
-                `${event?.eventInfoDetail?.dateBegin}`
-              ).getHours()}:${minutesBeginTime}`}
-              -
-              {`${new Date(
-                `${event?.eventInfoDetail?.dateEnd}`
-              ).getHours()}:${minutesEndTime}`}
-              )
-              {!isSmallDevice && (
-                <span
-                  style={{
-                    textTransform: "capitalize",
-                    textDecoration: "underline",
-                    textDecorationColor: "var(--gray-600, #475467)",
-                  }}
-                >
-                  local time
-                </span>
-              )}
+          <Grid item xs={12} style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+            <Icon icon="mdi:clock-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0 }} />
+            <Typography style={Subtitle}>
+              {`${hourBeginTime}:${minutesBeginTime} ${new Date(`${event?.eventInfoDetail?.dateBegin}`).getHours() < 12 ? "AM" : "PM"}`}
+              {" – "}
+              {`${hourEndTime}:${minutesEndTime} ${new Date(`${event?.eventInfoDetail?.dateEnd}`).getHours() < 12 ? "AM" : "PM"}`}
+              {" local time"}
             </Typography>
           </Grid>
-          <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"flex-start"}
-            textAlign={"left"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <Typography
-              style={{
-                width: "100%",
-                ...Subtitle,
-                fontWeight: 600,
-              }}
-              textAlign={"left"}
-              paddingTop={"8px"}
-              fontFamily={"Inter"}
-            >
-              {event?.eventInfoDetail?.building}
-            </Typography>
-            <Typography
-              style={{
-                width: "100%",
-                ...Subtitle,
-              }}
-              textAlign={"left"}
-              paddingTop={"8px"}
-            >
-              {addressSplitting().address}
-            </Typography>
-            <Typography
-              style={{
-                width: "100%",
-                ...Subtitle,
-                textTransform: "capitalize",
-              }}
-              textAlign={"left"}
-              paddingTop={"8px"}
-            >
-              {addressSplitting().cityAndState}, {addressSplitting().zip}
-            </Typography>{" "}
+          <Grid item xs={12} style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+              <Icon icon="mdi:map-marker-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <Typography style={{ ...Subtitle, fontWeight: 600 }}>
+                  {event?.eventInfoDetail?.building}
+                </Typography>
+                <Typography style={{ ...Subtitle, marginTop: "2px" }}>
+                  {[addressSplitting().address, addressSplitting().cityAndState, addressSplitting().zip]
+                    .filter(Boolean)
+                    .join(", ")}
+                </Typography>
+              </div>
+            </div>
           </Grid>
         </Grid>
       </Card>

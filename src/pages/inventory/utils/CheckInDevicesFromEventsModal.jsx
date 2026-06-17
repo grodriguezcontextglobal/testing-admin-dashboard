@@ -1,16 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Button,
-  Col,
-  Divider,
-  List,
-  Row,
-  message,
-  Typography,
-  Spin,
-  Tree,
-  Empty,
-} from "antd";
+import { Col, Row, Spin, Tree, Empty, message } from "antd";
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -25,7 +14,98 @@ import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
 import Loading from "../../../components/animation/Loading";
 import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
 import Chip from "../../../components/UX/Chip/Chip";
-const { Title } = Typography;
+
+// ─── Layout helpers ───────────────────────────────────────────────────────────
+
+const SectionHeader = ({ step, title }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+    <div
+      style={{
+        width: "22px",
+        height: "22px",
+        borderRadius: "50%",
+        background: "#155EEF",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "11px",
+        fontWeight: 700,
+        flexShrink: 0,
+      }}
+    >
+      {step}
+    </div>
+    <span style={{ fontSize: "14px", fontWeight: 600, color: "#101828" }}>{title}</span>
+    <div style={{ flex: 1, height: "1px", background: "#EAECF0" }} />
+  </div>
+);
+
+const PanelCard = ({ title, children }) => (
+  <div style={{ border: "1px solid #EAECF0", borderRadius: "12px", overflow: "hidden" }}>
+    <div
+      style={{
+        padding: "10px 16px",
+        borderBottom: "1px solid #EAECF0",
+        background: "#F9FAFB",
+      }}
+    >
+      <span style={{ fontSize: "13px", fontWeight: 600, color: "#344054" }}>{title}</span>
+    </div>
+    <div style={{ padding: "12px" }}>{children}</div>
+  </div>
+);
+
+const ResultCard = ({ title, items, borderColor, bgColor, textColor, chipColor }) => (
+  <div style={{ border: `1px solid ${borderColor}`, borderRadius: "12px", overflow: "hidden" }}>
+    <div
+      style={{
+        padding: "10px 14px",
+        background: bgColor,
+        borderBottom: `1px solid ${borderColor}`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <span style={{ fontSize: "13px", fontWeight: 600, color: textColor }}>{title}</span>
+      <span
+        style={{
+          background: "white",
+          color: textColor,
+          border: `1px solid ${borderColor}`,
+          borderRadius: "9999px",
+          padding: "1px 10px",
+          fontSize: "12px",
+          fontWeight: 700,
+        }}
+      >
+        {items.length}
+      </span>
+    </div>
+    <div
+      style={{
+        padding: "12px",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "6px",
+        maxHeight: 160,
+        overflow: "auto",
+      }}
+    >
+      {items.length > 0 ? (
+        items.map((item) => (
+          <Chip key={item} label={item} color={chipColor} size="small" />
+        ))
+      ) : (
+        <span style={{ color: "#98A2B3", fontSize: "13px" }}>None</span>
+      )}
+    </div>
+  </div>
+);
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedLocationObject, setSelectedLocationObject] = useState(null);
@@ -43,12 +123,15 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
 
   const { user } = useSelector((state) => state.admin);
 
-  const { data: locations = [], isLoading: isLoadingLocations } =
-    useCompanyLocations();
+  const { data: locations = [], isLoading: isLoadingLocations } = useCompanyLocations();
   const { data: subLocations = [], isLoading: isLoadingSubLocations } =
     useSubLocations(selectedLocation);
 
-  const { data: events = [], isLoading: isLoadingEvents, refetch: eventListRefetch } = useQuery({
+  const {
+    data: events = [],
+    isLoading: isLoadingEvents,
+    refetch: eventListRefetch,
+  } = useQuery({
     queryKey: ["finishedEvents", user.companyData.id],
     queryFn: async () => {
       const respo = await devitrakApi.post(`/event/event-list`, {
@@ -63,39 +146,37 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
   });
 
   const queryClient = useQueryClient();
+
   const refetchInventory = async () => {
     await queryClient.invalidateQueries({ queryKey: ["finishedEvents", user.companyData.id], refetchActive: true });
     await queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"], refetchActive: true });
     await queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], refetchActive: true });
     await queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"], refetchActive: true });
     await queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"], refetchActive: true });
-  }
-  
+  };
+
   const checkingInItemsToWarehouseMutation = useMutation({
-    mutationFn: async (template) => await devitrakApi.post("/db_event/confirm-item-return", template),
-    onSuccess: async() => {
+    mutationFn: async (template) =>
+      await devitrakApi.post("/db_event/confirm-item-return", template),
+    onSuccess: async () => {
       message.success("Devices checked in successfully!");
       await refetchInventory();
       close();
     },
-  })
+  });
+
   const handleEventSelection = async (event) => {
     if (!event) {
       setEventInventory([]);
       setSelectedEvent(null);
       return;
     }
-    // Clear previous state on new event selection
     setEventInventory([]);
     setScannedSerials([]);
-    setComparisonResults({
-      matchedItems: [],
-      missingItems: [],
-      extraItems: [],
-    });
-
+    setComparisonResults({ matchedItems: [], missingItems: [], extraItems: [] });
     setSelectedEvent(event.eventInfoDetail.eventName);
-    if (!event || !event.deviceSetup) {
+
+    if (!event.deviceSetup) {
       message.warning("Selected event has no device setup.");
       return;
     }
@@ -110,16 +191,13 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
           eventSelected: event.eventInfoDetail.eventName,
         }),
       );
-
       const responses = await Promise.all(inventoryPromises);
-      const allInventory = responses.flatMap(
-        (resp) => resp.data.receiversInventory,
-      );
+      const allInventory = responses.flatMap((resp) => resp.data.receiversInventory);
       setEventInventory(allInventory);
       if (allInventory.length === 0) {
         await devitrakApi.patch(`/event/edit-staff-event/${event.id}`, {
           logistic_inventory_status: "completed",
-        })
+        });
         await eventListRefetch();
         message.info("No inventory found for this event.");
       }
@@ -147,9 +225,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
 
   const handleScanSerial = (e) => {
     if (e.key === "Enter" && scannedSerialInput.trim() !== "") {
-      if (
-        !scannedSerials.some((item) => item.value === scannedSerialInput.trim())
-      ) {
+      if (!scannedSerials.some((item) => item.value === scannedSerialInput.trim())) {
         setScannedSerials((prev) => [
           ...prev,
           { id: Date.now(), value: scannedSerialInput.trim() },
@@ -163,17 +239,23 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
     setScannedSerials((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleRemoveSubLocation = (sub) => {
+    const next = new Set(selectedSubLocations);
+    next.delete(sub);
+    setSelectedSubLocations(next);
+  };
+
+  const handleItemChange = (value) => {
+    setSelectedSubLocations(value);
+  };
+
   const handleCompare = () => {
     const inventorySerials = eventInventory.map((item) => item.device);
     const scanned = scannedSerials.map((item) => item.value);
-
-    const matched = scanned.filter((s) => inventorySerials.includes(s));
-    const missing = inventorySerials.filter((s) => !scanned.includes(s));
-    const extra = scanned.filter((s) => !inventorySerials.includes(s));
     setComparisonResults({
-      matchedItems: matched,
-      missingItems: missing,
-      extraItems: extra,
+      matchedItems: scanned.filter((s) => inventorySerials.includes(s)),
+      missingItems: inventorySerials.filter((s) => !scanned.includes(s)),
+      extraItems: scanned.filter((s) => !inventorySerials.includes(s)),
     });
   };
 
@@ -182,15 +264,12 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       message.error("Please select a check-in location.");
       return;
     }
-
     if (!selectedEvent) {
       message.error("Please select an event.");
       return;
     }
-
     try {
       setIsLoading(true);
-
       const template = {
         serial_numbers: comparisonResults.matchedItems,
         company_id: user.sqlInfo.company_id,
@@ -208,135 +287,134 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
       setIsLoading(false);
     }
   };
-  const renderComparisonList = (title, items, color) => (
-    <>
-      <Title level={5}>
-        {title} ({items.length})
-      </Title>
-      <List
-        bordered
-        dataSource={items}
-        renderItem={(item) => (
-          <List.Item style={{ color: color }}>{item}</List.Item>
-        )}
-        style={{ maxHeight: 150, overflow: "auto" }}
-      />
-    </>
+
+  const itemsToDisplay = useMemo(
+    () =>
+      Array.isArray(subLocations)
+        ? subLocations.map((sub) => ({ label: sub, id: sub }))
+        : [],
+    [subLocations],
   );
 
-  const handleItemChange = (value) => {
-    setSelectedSubLocations(value);
-  };
+  const hasComparisonResults =
+    comparisonResults.matchedItems.length > 0 ||
+    comparisonResults.missingItems.length > 0 ||
+    comparisonResults.extraItems.length > 0;
 
-  const itemsToDisplay = useMemo(() => Array.isArray(subLocations) ? subLocations.map((sub) => ({ label: sub, id: sub })) : [], [subLocations]);
+  // ─── Modal body ─────────────────────────────────────────────────────────────
 
   const body = (
-    <>
-      <Row gutter={[16, 16]}>
-        <Col span={8}>
-          {isLoadingLocations ? (
-            <Loading />
-          ) : (
-            <>
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "4px" }}>
+
+      {/* ── 1. Location & Event ────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader step="1" title="Location & Event" />
+        <Row gutter={[16, 16]} align="bottom">
+          <Col span={8}>
+            {isLoadingLocations ? (
+              <Loading />
+            ) : (
               <SelectComponent
-                items={locations.map((loc) => ({
-                  label: loc.location,
-                  id: loc.id,
-                }))}
+                label="Location"
+                placeholder="Select a location"
+                items={locations.map((loc) => ({ label: loc.location, id: loc.id }))}
                 value={selectedLocationObject}
                 onSelect={(option) => {
                   setSelectedLocation(option?.id || null);
                   setSelectedLocationObject(option);
                   setSelectedSubLocations(new Set());
                 }}
-                placeholder="Select Location"
-                disabled={!open}
-                label={"Select Location"}
               />
-              <div style={{ marginTop: '1rem' }}>
-                <Title level={5}>Sub-locations selected</Title>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-                  {Array.from(selectedSubLocations).map((sub) => (
-                    <Chip
-                      key={sub}
-                      variant="outlined"
-                      label={sub}
-                      // onDelete={() => handleRemoveSubLocation(sub)}
-                      style={{
-                        backgroundColor: "rgba(40, 199, 111, 0.12)",
-                        color: "rgb(40, 199, 111)",
-                        fontWeight: 600,
-                        padding: "0 8px"
-                      }}
-                    />
-                  ))}
+            )}
+          </Col>
+
+          <Col span={8}>
+            {isLoadingSubLocations ? (
+              <Loading />
+            ) : (
+              itemsToDisplay.length > 0 && (
+                <MultiSelectComponent
+                  label="Sub-locations"
+                  placeholder="Select sub-locations"
+                  items={itemsToDisplay}
+                  selectedKeys={selectedSubLocations}
+                  onSelectionChange={handleItemChange}
+                  disabled={!selectedLocation}
+                  onReset={() => setSelectedSubLocations(new Set())}
+                  onSelectAll={() =>
+                    setSelectedSubLocations(new Set(itemsToDisplay.map((i) => i.id)))
+                  }
+                >
+                  {(item) => (
+                    <MultiSelectComponent.Item
+                      id={item.id}
+                      selectionIndicator="checkbox"
+                      selectionIndicatorAlign="left"
+                    >
+                      {item.label}
+                    </MultiSelectComponent.Item>
+                  )}
+                </MultiSelectComponent>
+              )
+            )}
+          </Col>
+
+          <Col span={8}>
+            {isLoadingEvents ? (
+              <Loading />
+            ) : (
+              <SelectComponent
+                label="Event"
+                placeholder="Search closed events…"
+                items={events.map((event) => ({
+                  id: event.id,
+                  label: event.eventInfoDetail.eventName,
+                  original: event,
+                }))}
+                value={selectedEvent}
+                onSelect={(option) => {
+                  setSelectedEvent(option?.label || null);
+                  handleEventSelection(option?.original || null);
+                }}
+              />
+            )}
+          </Col>
+        </Row>
+
+        {selectedSubLocations.size > 0 && (
+          <div style={{ marginTop: "12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {Array.from(selectedSubLocations).map((sub) => (
+              <Chip
+                key={sub}
+                label={sub}
+                color="success"
+                variant="outlined"
+                size="small"
+                onDelete={() => handleRemoveSubLocation(sub)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── 2. Inventory & Scan ────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader step="2" title="Inventory & Scan" />
+        <Row gutter={[16, 0]}>
+          <Col span={12}>
+            <PanelCard title={`Event Inventory (${eventInventory.length})`}>
+              {isLoading ? (
+                <div
+                  style={{
+                    height: 280,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Spin />
                 </div>
-              </div>
-            </>
-          )}
-        </Col>
-        <Col span={8}>
-          {isLoadingSubLocations ? (
-            <Loading />
-          ) : itemsToDisplay.length > 0 && (
-            <MultiSelectComponent
-              label="Sub Locations"
-              placeholder="Select sub locations"
-              items={itemsToDisplay}
-              selectedKeys={selectedSubLocations}
-              onSelectionChange={handleItemChange}
-              disabled={!selectedLocation}
-            />
-          )}
-        </Col>
-        <Col span={8}>
-          {isLoadingEvents ? (
-            <Loading />
-          ) : (
-            <SelectComponent
-              label="Select Event"
-              items={events.map((event) => ({
-                id: event.id,
-                label: event.eventInfoDetail.eventName,
-                // supportingText: `Starts: ${new Date(event.eventInfoDetail.startingDate).toLocaleDateString()}`,
-                original: event,
-              }))}
-              value={selectedEvent}
-              onSelect={(option) => (
-                setSelectedEvent(option?.label || null),
-                handleEventSelection(option?.original || null)
-              )}
-              placeholder="Type to search for closed events"
-              disabled={!open}
-            />
-          )}
-        </Col>
-      </Row>
-      <Divider />
-      <Row gutter={[16, 16]}>
-        <Col span={12}>
-          <Title level={5}>Event Inventory ({eventInventory.length})</Title>
-          {isLoading ? (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100%",
-              }}
-            >
-              <Spin />
-            </div>
-          ) : (
-            <div
-              style={{
-                border: "1px solid #d9d9d9",
-                borderRadius: "12px",
-                padding: "8px",
-                maxHeight: 300,
-              }}
-            >
-              {treeData?.length > 0 ? (
+              ) : treeData?.length > 0 ? (
                 <Tree treeData={treeData} height={280} defaultExpandAll />
               ) : (
                 <div
@@ -347,99 +425,118 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                     alignItems: "center",
                   }}
                 >
-                  <Empty
-                    style={{ borderRadius: "12px !important" }}
-                    description="No inventory available for this event."
-                  />
+                  <Empty description="No inventory for this event." />
                 </div>
               )}
-            </div>
-          )}
-        </Col>
-        <Col span={12}>
-          <Title level={5}>Scan Serial Number</Title>
-          <Input
-            placeholder="Scan or type serial number and press Enter"
-            value={scannedSerialInput}
-            onChange={(e) => setScannedSerialInput(e.target.value)}
-            onKeyDown={handleScanSerial}
-          />
-          <List
-            bordered
-            dataSource={scannedSerials}
-            renderItem={(item) => (
-              <List.Item
-                actions={[
-                  <Button
-                    key={item.id}
-                    type="link"
-                    danger
-                    onClick={() => handleRemoveSerial(item.id)}
-                  >
-                    Remove
-                  </Button>,
-                ]}
+            </PanelCard>
+          </Col>
+
+          <Col span={12}>
+            <PanelCard title={`Scanned Serials (${scannedSerials.length})`}>
+              <Input
+                placeholder="Scan or type and press Enter"
+                value={scannedSerialInput}
+                onChange={(e) => setScannedSerialInput(e.target.value)}
+                onKeyDown={handleScanSerial}
+              />
+              <div
+                style={{
+                  marginTop: "12px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "6px",
+                  maxHeight: 220,
+                  overflow: "auto",
+                }}
               >
-                {item.value}
-              </List.Item>
-            )}
-            style={{ marginTop: 16, maxHeight: 220, overflow: "auto" }}
-          />
-        </Col>
-      </Row>
-      <Divider />
-      <BlueButtonComponent
-        title="Compare"
-        func={handleCompare}
-        disabled={scannedSerials.length === 0}
-      />
-      <Divider />
-      {comparisonResults.matchedItems.length > 0 ||
-        comparisonResults.missingItems.length > 0 ||
-        comparisonResults.extraItems.length > 0 ? (
-        <Row gutter={[16, 16]}>
-          <Col span={8}>
-            {renderComparisonList(
-              "Matched Items",
-              comparisonResults.matchedItems,
-              "green",
-            )}
-          </Col>
-          <Col span={8}>
-            {renderComparisonList(
-              "Missing Items",
-              comparisonResults.missingItems,
-              "red",
-            )}
-          </Col>
-          <Col span={8}>
-            {renderComparisonList(
-              "Items do not belong to this event.",
-              comparisonResults.extraItems,
-              "orange",
-            )}
+                {scannedSerials.length > 0 ? (
+                  scannedSerials.map((item) => (
+                    <Chip
+                      key={item.id}
+                      label={item.value}
+                      color="indigo"
+                      size="small"
+                      onDelete={() => handleRemoveSerial(item.id)}
+                    />
+                  ))
+                ) : (
+                  <span style={{ color: "#98A2B3", fontSize: "13px" }}>
+                    No serials scanned yet.
+                  </span>
+                )}
+              </div>
+            </PanelCard>
           </Col>
         </Row>
-      ) : null}
-      {comparisonResults.matchedItems.length > 0 && (
-        <>
-          <Divider />
-          <div style={{ width: "100%", display: "flex", gap: 5 }}>
-            <GrayButtonComponent
-              styles={{ width: "100%" }}
-              title="Cancel"
-              func={close}
-            />
-            <BlueButtonComponent
-              styles={{ width: "100%" }}
-              func={handleCheckIn}
-              loadingState={isLoading}
-              title="Check-In"
-            />
-          </div>
-        </>
+
+        <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end" }}>
+          <BlueButtonComponent
+            title="Compare"
+            func={handleCompare}
+            disabled={scannedSerials.length === 0 || eventInventory.length === 0}
+          />
+        </div>
+      </section>
+
+      {/* ── 3. Comparison Results ──────────────────────────────────────────── */}
+      {hasComparisonResults && (
+        <section>
+          <SectionHeader step="3" title="Comparison Results" />
+          <Row gutter={[12, 12]}>
+            <Col span={8}>
+              <ResultCard
+                title="Matched"
+                items={comparisonResults.matchedItems}
+                borderColor="#ABEFC6"
+                bgColor="#ECFDF3"
+                textColor="#067647"
+                chipColor="success"
+              />
+            </Col>
+            <Col span={8}>
+              <ResultCard
+                title="Missing"
+                items={comparisonResults.missingItems}
+                borderColor="#FECDCA"
+                bgColor="#FEF3F2"
+                textColor="#B42318"
+                chipColor="error"
+              />
+            </Col>
+            <Col span={8}>
+              <ResultCard
+                title="Not in Event"
+                items={comparisonResults.extraItems}
+                borderColor="#FEDF89"
+                bgColor="#FFFAEB"
+                textColor="#B54708"
+                chipColor="warning"
+              />
+            </Col>
+          </Row>
+        </section>
       )}
-    </>
+
+      {/* ── Footer actions ─────────────────────────────────────────────────── */}
+      {comparisonResults.matchedItems.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            justifyContent: "flex-end",
+            paddingTop: "4px",
+            borderTop: "1px solid #EAECF0",
+          }}
+        >
+          <GrayButtonComponent title="Cancel" func={close} />
+          <BlueButtonComponent
+            title="Check-In"
+            func={handleCheckIn}
+            loadingState={isLoading}
+          />
+        </div>
+      )}
+    </div>
   );
 
   return (

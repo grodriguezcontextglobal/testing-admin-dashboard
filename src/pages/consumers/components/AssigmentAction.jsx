@@ -28,23 +28,23 @@ const AssigmentAction = ({ refetching }) => {
 
 
   return (
-    <>
+    <div style={{ width: "100%" }}>
       <Dropdown
         options={items}
         onSelect={handleSelect}
-        placement="top-end"
-        variant="ghost" //"outline" // | "ghost" | "primary""
+        placement="bottom-start"
+        variant="ghost"
+        rootStyle={{ display: "block", width: "100%" }}
         renderTrigger={({ onClick, ref }) => (
-          <div ref={ref} style={{ display: "inline-block", width: "100%" }}>
+          <div ref={ref} style={{ display: "block", width: "100%" }}>
             <BlueButtonComponent
               buttonType="button"
               title={"Create a new transaction"}
               func={onClick}
-              size="lg"
+              styles={{ width: "100%" }}
             />
           </div>
         )}
-        style={{ width: "100%" }}
       />
       {assignDevice && (
         <ModalAssignDeviceToConsumer
@@ -59,7 +59,7 @@ const AssigmentAction = ({ refetching }) => {
           setAssignDevice={setAssignDeviceEvent}
         />
       )}
-    </>
+    </div>
   );
 };
 

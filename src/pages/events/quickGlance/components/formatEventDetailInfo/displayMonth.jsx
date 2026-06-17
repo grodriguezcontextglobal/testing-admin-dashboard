@@ -2,10 +2,10 @@ const displayMonth = (props) => {
     const checkMonth = new Date(`${props}`).getMonth() + 1;
     switch (checkMonth) {
       case 1:
-        return "January";
+        return "Jan";
   
       case 2:
-        return "February";
+        return "Feb";
   
       case 3:
         return "March";
@@ -23,19 +23,19 @@ const displayMonth = (props) => {
         return "July";
   
       case 8:
-        return "August";
+        return "Aug";
   
       case 9:
-        return "September";
+        return "Sept";
   
       case 10:
-        return "October";
+        return "Oct";
   
       case 11:
-        return "November";
+        return "Nov";
   
       default:
-        return "December";
+        return "Dec";
     }
   };
   export default displayMonth;

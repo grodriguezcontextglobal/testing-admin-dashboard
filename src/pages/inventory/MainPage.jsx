@@ -37,6 +37,7 @@ import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 import { ShipmentRecord } from "./actions/ShipmentRecord";
@@ -85,6 +86,7 @@ const MainPage = () => {
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
+  const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
   const [currentTab, setCurrentTab] = useState(0);
   const [activeView, setActiveView] = useState("1");
   const [openShippingModal, setOpenShippingModal] = useState(false);
@@ -94,25 +96,15 @@ const MainPage = () => {
     },
   });
 
-  // Extract user preferences for inventory location filtering
+  // Extract user preferences for inventory location filtering.
+  // isAdmin is true only for role 0 — they see all locations (null = no filter).
+  // All other roles see only the locations where their managerLocation preference has view: true.
   const userPreferences = useMemo(() => {
     return user?.companyData?.employees?.find((emp) => emp.user === user.email)
       ?.preference;
   }, [user]);
 
-  const allowedInventoryLocations = useMemo(() => {
-    // Role 0 Bypass: Admin/Owner has full access (return null to indicate no filter)
-    if (
-      user?.companyData.employees.find((e) => e.user === user.email).role ===
-      0 ||
-      user?.companyData.employees.find((e) => e.user === user.email).role ===
-      "0"
-    ) {
-      return null;
-    }
-    // For other roles, return assigned locations or empty array if none
-    return userPreferences?.inventory_location || [];
-  }, [userPreferences, user]);
+  const allowedInventoryLocations = isAdmin ? null : locationsViewPermission;
 
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],

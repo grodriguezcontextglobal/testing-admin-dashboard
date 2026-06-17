@@ -70,6 +70,7 @@ export default function Dropdown({
   disabled = false,
   className = "",
   style = {},
+  rootStyle = {},
   variant = "default", // "default" | "outline" | "ghost" | "primary"
   size = "md", // "sm" | "md" | "lg"
   placement = "bottom-end",
@@ -368,7 +369,7 @@ export default function Dropdown({
   };
 
   return (
-    <div className="ud-root">
+    <div className="ud-root" style={rootStyle}>
       <TriggerComponent />
 
       {open && (
@@ -525,8 +526,10 @@ Dropdown.propTypes = {
   disabled: PropTypes.bool,
   /** Additional class names */
   className: PropTypes.string,
-  /** Inline styles */
+  /** Inline styles for the trigger */
   style: PropTypes.object,
+  /** Inline styles for the root container */
+  rootStyle: PropTypes.object,
   /** Visual variant */
   variant: PropTypes.oneOf(["default", "outline", "ghost", "primary"]),
   /** Size of the trigger */

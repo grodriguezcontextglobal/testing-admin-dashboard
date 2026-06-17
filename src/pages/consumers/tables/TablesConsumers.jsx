@@ -104,8 +104,6 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       result.add({
         ...data,
         currentActivity: data.entireData.totalDeviceRequested,
-        status: data.entireData.totalEventsActive,
-        currentConsumerActive: data.entireData.totalEventsActive,
       });
     }
     setIsLoading(false);
@@ -147,23 +145,32 @@ export default function TablesConsumers({ searching, data, getCounting }) {
   );
 
   const renderingEventsPermittedForAdminBasedOnAdminAssignment = (record) => {
-    const active = eventsPerAdmin?.active.map((item) => item.id) ?? [];
-    const completed = eventsPerAdmin?.completed.map((item) => item.id) ?? [];
-    const adminPermitted = [...active, ...completed];
     if (!eventInfoCompanyQuery?.data?.data?.list) return [];
+
     const eventCompanyData = groupBy(
       eventInfoCompanyQuery?.data?.data?.list,
       "id",
     );
+
+    const active = eventsPerAdmin?.active?.map((item) => item.id) ?? [];
+    const completed = eventsPerAdmin?.completed?.map((item) => item.id) ?? [];
+    const adminPermitted = [...active, ...completed];
+
     const checked = new Map();
-    if (adminPermitted?.length > 0) {
-      for (let event of record.event_providers) {
-        if (adminPermitted.includes(event)) {
-          checked.set(event, ...eventCompanyData[event]);
-        }
+
+    for (let eventId of record.event_providers ?? []) {
+      const eventEntry = eventCompanyData[eventId];
+      if (!eventEntry) continue;
+
+      // Si el admin tiene eventos asignados, filtrar por sus permisos.
+      // Si no tiene ninguno cargado (ej. navegación directa a /consumers),
+      // mostrar todos los eventos del consumer.
+      if (adminPermitted.length === 0 || adminPermitted.includes(eventId)) {
+        checked.set(eventId, eventEntry[0]);
       }
     }
-    return Array.from(checked.values()).flat();
+
+    return Array.from(checked.values());
   };
   const columns = [
     {
@@ -190,7 +197,7 @@ export default function TablesConsumers({ searching, data, getCounting }) {
               display: isSmallDevice || isMediumDevice ? "none" : "flex",
             }}
           />
-          {user.map((detail, index) => {
+          {user?.map((detail, index) => {
             return (
               <div
                 key={`${detail}-${index}`}
@@ -218,25 +225,41 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           {renderingRowStyling("Status")}
         </div>
       ),
-      dataIndex: "currentConsumerActive",
+      dataIndex: "entireData",
       responsive: ["md", "lg"],
       width: "13%",
       sorter: {
-        compare: (a, b) => a.currentConsumerActive - b.currentConsumerActive,
+        compare: (a, b) => {
+          const toActive = (d) =>
+            d.entireData.currentActivity?.some(
+              (item) => item.device.status === true,
+            )
+              ? 1
+              : 0;
+          return toActive(a) - toActive(b);
+        },
       },
-      render: (currentConsumerActive) => (
-        <Chip
-          label={currentConsumerActive === 0 ? "Inactive" : "Active"}
-          color={currentConsumerActive === 0 ? "info" : "success"}
-          icon={
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}
-            />
-          }
-        />
-      ),
+      render: (entireData) => {
+        const devicesByStatus = new Map();
+        entireData.currentActivity?.forEach((item) => {
+          const s = item.device.status;
+          devicesByStatus.set(s, [...(devicesByStatus.get(s) ?? []), item.device]);
+        });
+        const isActive = (devicesByStatus.get(true)?.length ?? 0) > 0;
+        return (
+          <Chip
+            label={isActive ? "Active" : "Inactive"}
+            color={isActive ? "success" : "info"}
+            icon={
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={isActive ? "#12B76A" : "#2E90FA"}
+              />
+            }
+          />
+        );
+      },
     },
     {
       title: (

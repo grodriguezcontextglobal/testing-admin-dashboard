@@ -1,5 +1,5 @@
 import { Switch, Tooltip } from "antd";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import Loading from "../../../../components/animation/Loading";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
@@ -8,7 +8,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import ModalAllItemsBasedOnGroup from "./ModalAllItemsBasedOnGroup";
-
+import { ProgressBar } from "../../../../components/base/progress-indicators/progress-indicators";
 const ModalAddAndUpdateDeviceSetup = lazy(
   () => import("./ModalAddAndUpdateDeviceSetup"),
 );
@@ -17,24 +17,22 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const [openModalItemList, setOpenModalItemList] = useState(false);
 
-  // const allocatedCount = useMemo(() => {
-  //   const raw = database?.receiversInventory;
-  //   if (!raw) return 0;
-  //   try {
-  //     const data = typeof raw === "string" ? JSON.parse(raw) : raw;
-  //     return data.filter((inv) => inv.type === title && inv.activity === true).length;
-  //   } catch {
-  //     return 0;
-  //   }
-  // }, [database, title]);
+  const poolCount = useMemo(() => {
+    const raw = database?.receiversInventory;
+    if (!raw) return 0;
+    try {
+      const data = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return data.filter((inv) => inv.type === title).length;
+    } catch {
+      return 0;
+    }
+  }, [database, title]);
+
+  const poolPct =
+    props.quantity > 0 ? Math.min((poolCount / props.quantity) * 100, 100) : 0;
 
   const hasSerialNumbers =
     props.startingNumber !== null && props.endingNumber !== null;
-
-  // const allocationPct =
-  //   props.quantity > 0
-  //     ? Math.min((allocatedCount / props.quantity) * 100, 100)
-  //     : 0;
 
   const cardFooter = (
     <div
@@ -43,7 +41,6 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
         justifyContent: "flex-end",
         alignItems: "center",
         gap: "8px",
-        // padding: "0 8px",
         width: "100%",
       }}
     >
@@ -84,50 +81,30 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
             paddingTop: "8px",
           }}
         >
-          <div>
-            <p style={TextFontSize30LineHeight38}>{props.quantity}</p>
-            {/* <p style={{ ...Subtitle, marginTop: "2px" }}>Expected total</p> */}
+          {/* Total set for event + pool count */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div>
+              <p style={TextFontSize30LineHeight38}>{props.quantity}</p>
+              <p style={{ ...Subtitle, marginTop: "2px" }}>Set for event</p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <p style={TextFontSize30LineHeight38}>{poolCount}</p>
+              <p style={{ ...Subtitle, marginTop: "2px" }}>In event pool</p>
+            </div>
           </div>
 
-          {/* <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <p style={Subtitle}>Allocated</p>
-              <p
-                style={{
-                  ...Subtitle,
-                  fontWeight: 500,
-                  color: "var(--gray-900, #101828)",
-                }}
-              >
-                {allocatedCount}&nbsp;/&nbsp;{props.quantity}
+          {/* Pool assignment progress */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <p style={Subtitle}>Assigned to event</p>
+              <p style={{ ...Subtitle, fontWeight: 500, color: "var(--gray-900, #101828)" }}>
+                {poolCount}&nbsp;/&nbsp;{props.quantity}
               </p>
             </div>
-            <div
-              style={{
-                height: "6px",
-                borderRadius: "9999px",
-                background: "var(--gray-100, #F2F4F7)",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  height: "100%",
-                  borderRadius: "9999px",
-                  background: "var(--blue-600, #1570EF)",
-                  width: `${allocationPct}%`,
-                  transition: "width 0.3s ease",
-                }}
-              />
-            </div>
-          </div> */}
+            <ProgressBar labelPosition="right" min={0} max={100} value={poolPct} />
+          </div>
 
+          {/* Consumer / internal toggle */}
           <div
             style={{
               display: "flex",

@@ -1,5 +1,7 @@
-import { Grid, Typography } from "@mui/material";
-import { message } from "antd";
+import { Grid } from "@mui/material";
+import { message, Pagination } from "antd";
+
+const PAGE_SIZE = 10;
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -18,8 +20,6 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 import ReleaseDeposit from "./ReleaseDeposit";
@@ -27,9 +27,17 @@ import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 const SearchDeviceRef = ({ searchParams, data }) => {
   const location = useLocation();
   const [foundDeviceData, setFoundDeviceData] = useState(() =>
-    (data.pool ?? []).filter((d) => d?.activity === true),
+    (data.device ?? []).map((item) => ({
+      serialNumber: item.device.serialNumber,
+      type: item.device.deviceType,
+      event: item.eventSelected[0],
+      image: false,
+      data: item,
+      active: item.active,
+    }))
   );
   const { user } = useSelector((state) => state.admin);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [loadingSearchingResult, setLoadingSearchingResult] = useState(true);
   const [returnLoading, setReturnLoading] = useState(false);
@@ -39,30 +47,31 @@ const SearchDeviceRef = ({ searchParams, data }) => {
   const navigate = useNavigate();
   useEffect(() => {
     const controller = new AbortController();
-    const addingResult = new Set();
-    if (data.pool) {
-      for (let item of data.pool.filter(
-        (i) => i?.activity === true && i.contract_type === "event",
-      )) {
-        addingResult.add({
-          serialNumber: item.device,
-          type: item.type,
-          event: item.eventSelected,
-          image: false,
-          data: item,
-          active: item.activity,
-        });
-      }
-      setLoadingSearchingResult(false);
-      setFoundDeviceData(Array.from(addingResult));
+    if (data.device) {
+      const mapped = data.device.map((item) => ({
+        serialNumber: item.device.serialNumber,
+        type: item.device.deviceType,
+        event: item.eventSelected[0],
+        image: false,
+        data: item,
+        active: item.active,
+      }));
+      setFoundDeviceData(mapped);
     }
+    setLoadingSearchingResult(false);
+    setCurrentPage(1);
     return () => controller.abort();
-  }, [searchParams, data.pool, location?.search]);
+  }, [searchParams, data.device, location?.search]);
+
+  const pageDevices = foundDeviceData.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   const returningDevice = async (record) => {
     try {
       const transactionFound = checkArray(
-        data.device.deviceTransaction.filter(
+        (data.device ?? []).filter(
           (item) =>
             item.eventSelected[0] === record.event && item.device.status,
         ),
@@ -160,9 +169,9 @@ const SearchDeviceRef = ({ searchParams, data }) => {
           company_assigned_event_id: user.sqlInfo.company_id,
         },
       );
-      if (data.device.deviceTransaction.length > 0) {
+      if ((data.device ?? []).length > 0) {
         const transactionFound = checkArray(
-          data.device.deviceTransaction.filter(
+          (data.device ?? []).filter(
             (item) => item.eventSelected[0] === record.event,
           ),
         );
@@ -238,6 +247,8 @@ const SearchDeviceRef = ({ searchParams, data }) => {
       company: [record.type, record.data.eventSelected],
       entireData: {
         ...eventInventoryQuery,
+        device: eventInventoryQuery.device?.serialNumber,
+        type: eventInventoryQuery.device?.deviceType,
       },
       serialNumber: record.serialNumber,
       status: eventInventoryQuery.activity,
@@ -280,53 +291,31 @@ const SearchDeviceRef = ({ searchParams, data }) => {
         id={location.key}
       >
         <Grid
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            alignSelf: "flex-start",
-          }}
+          style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignSelf: "flex-start", gap: "4px" }}
           item
           xs={12}
           sm={12}
           md={4}
           lg={4}
         >
-          <Typography
-            style={{
-              ...TextFontSize30LineHeight38,
-              fontSize: "36px",
-              lineHeight: "44px",
-              fontWeight: 600,
-              width: "100%",
-              textAlign: "left",
-            }}
-          >
-            Search Device{" "}
-          </Typography>
-          <br />
-          <Typography
-            style={{
-              ...TextFontSize20LineHeight30,
-              width: "100%",
-              textAlign: "left",
-            }}
-          >
-            All devices matching the search keywords.
-          </Typography>
+          <p style={{ fontFamily: "Inter", fontSize: "18px", fontWeight: 600, lineHeight: "28px", color: "var(--gray-900, #101828)", margin: 0 }}>
+            Devices
+          </p>
+          <p style={{ fontFamily: "Inter", fontSize: "14px", fontWeight: 400, lineHeight: "20px", color: "var(--gray-600, #475467)", margin: 0 }}>
+            Active event transactions matching your search.
+          </p>
         </Grid>
         <Grid item xs={12} sm={12} md={8} lg={8}>
           <Grid
             style={{ display: "flex", justifyContent: "flex-end" }}
             container
-            gap={"0.5px"}
+            gap={1}
           >
-            {data.pool && foundDeviceData.length > 0
-              ? foundDeviceData?.map((item) => (
-                  <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
+            {data.device && foundDeviceData.length > 0
+              ? pageDevices.map((item) => (
+                  <Grid key={item.data?.id} item xs={12} sm={12} md={4} lg={4}>
                     <CardDeviceFound
-                      key={item.id}
+                      key={item.data?.id}
                       props={item}
                       fn={handleDeviceSearch}
                       returnFn={returningDevice}
@@ -337,6 +326,18 @@ const SearchDeviceRef = ({ searchParams, data }) => {
                 ))
               : ternaryRender(loadingSearchingResult)}
           </Grid>
+          {foundDeviceData.length > PAGE_SIZE && (
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+              <Pagination
+                current={currentPage}
+                pageSize={PAGE_SIZE}
+                total={foundDeviceData.length}
+                onChange={setCurrentPage}
+                showSizeChanger={false}
+                showTotal={(total, range) => `${range[0]}–${range[1]} of ${total}`}
+              />
+            </div>
+          )}
         </Grid>
       </Grid>
 

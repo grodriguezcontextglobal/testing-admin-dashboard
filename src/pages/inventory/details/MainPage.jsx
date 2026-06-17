@@ -3,12 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Breadcrumb, Divider } from "antd";
 import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import { usePermission } from "../../../hooks/usePermission";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
@@ -30,7 +30,8 @@ const TotalReturnedDevice = lazy(() =>
 );
 const EditItem = lazy(() => import("./detailComponent/actions/EditItem"));
 const MainPage = () => {
-  const { user } = useSelector((state) => state.admin);
+  const canEditInventory = usePermission("inventory:update");
+  const canDeleteInventory = usePermission("inventory:delete");
   const item_id = new URLSearchParams(window.location.search).get("id");
   const trackingHistoryItemQuery = useQuery({
     queryKey: ["trackingItemActivity"],
@@ -97,10 +98,10 @@ const MainPage = () => {
       },
     ];
 
-    const headersActions = [Number(user.role) < 2 && dataFound[0].ownership !== "Rent" && (
+    const headersActions = [canDeleteInventory && dataFound[0].ownership !== "Rent" && (
       <DeleteItem dataFound={dataFound} />
     ),
-    Number(user.role) < 2 && (
+    canEditInventory && (
       <EditItem dataFound={dataFound} refetchingFn={refetchingFn} />
     )
     ]
