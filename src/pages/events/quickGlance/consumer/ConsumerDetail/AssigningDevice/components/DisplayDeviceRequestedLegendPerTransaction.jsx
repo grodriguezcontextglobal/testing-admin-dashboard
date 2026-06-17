@@ -89,14 +89,18 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
         }}
       >
         <h4 style={{ margin: 0 }}>Requested Devices</h4>
-        <span style={{ color: "#667085", fontWeight: 500 }}>
-          Total Qty Requested: {totalRequested} • Assigned: {totalAssigned} • Remaining:{" "}
-          {totalRemaining}
+        <span style={{ color: "var(--gray-500, #667085)", fontWeight: 500 }}>
+          Total Qty Requested:{" "}
+          <span style={{ color: "var(--blue-dark-600, #155eef)", fontWeight: 700 }}>{totalRequested}</span>
+          {" "}• Assigned:{" "}
+          <span style={{ color: "var(--success-700, #067647)", fontWeight: 700 }}>{totalAssigned}</span>
+          {" "}• Remaining:{" "}
+          <span style={{ color: "var(--gray-700, #344054)", fontWeight: 700 }}>{totalRemaining}</span>
         </span>
       </div>
 
       {rows.length === 0 ? (
-        <div style={{ fontStyle: "italic", color: "#667085" }}>
+        <div style={{ fontStyle: "italic", color: "var(--gray-500, #667085)" }}>
           No devices requested
         </div>
       ) : (
@@ -109,10 +113,10 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "6px 8px",
-                border: "1px solid #EAECF0",
+                border: "1px solid var(--gray-200, #EAECF0)",
                 borderRadius: "8px",
                 marginBottom: "6px",
-                background: "#F9FAFB",
+                background: "var(--main-background-color, #f9fafb)",
               }}
             >
               <span style={{ fontWeight: 500 }}>{deviceType}</span>
@@ -120,7 +124,7 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                 <span
                   style={{
                     background: "#EEF4FF",
-                    color: "#3538CD",
+                    color: "var(--blue-dark-600, #155eef)",
                     borderRadius: "12px",
                     padding: "2px 8px",
                     fontSize: "12px",
@@ -133,7 +137,7 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                 <span
                   style={{
                     background: "#E7F5ED",
-                    color: "#067647",
+                    color: "var(--success-700, #067647)",
                     borderRadius: "12px",
                     padding: "2px 8px",
                     fontSize: "12px",
@@ -146,7 +150,7 @@ const DisplayDeviceRequestedLegendPerTransaction = ({ record, checked }) => {
                 <span
                   style={{
                     background: remaining > 0 ? "#FEF3F2" : "#F2F4F7",
-                    color: remaining > 0 ? "#B42318" : "#344054",
+                    color: remaining > 0 ? "var(--danger-action, #b42318)" : "var(--gray-700, #344054)",
                     borderRadius: "12px",
                     padding: "2px 8px",
                     fontSize: "12px",
