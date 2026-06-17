@@ -31,12 +31,12 @@ const ExpandedTableButtons = ({
               border: `${
                 String(record.status).toLowerCase() === "lost"
                   ? "1px solid var(--disabled-blue-button)"
-                  : "1px solid var(--blue-dark-600, #155EEF)"
+                  : "1px solid var(--blue-dark-600, #155eef)"
               }`,
               backgroundColor: `${
                 String(record.status).toLowerCase() === "lost"
                   ? "var(--disabled-blue-button)"
-                  : "var(--blue-dark-600, #155EEF)"
+                  : "var(--blue-dark-600, #155eef)"
               }`,
             }}
           />
