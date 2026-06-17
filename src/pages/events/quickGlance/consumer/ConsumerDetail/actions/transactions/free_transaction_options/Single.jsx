@@ -235,7 +235,7 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
     <div
       style={{
         minWidth: "fit-content",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--main-background-color, #f9fafb)",
         padding: "20px 0",
       }}
     >
