@@ -1,9 +1,10 @@
 .consumer-header-container {
     padding: 1.25rem;
     border-radius: 12px;
-    border: 1px solid #eaecf0;
+    border: 1px solid var(--gray-200, #EAECF0);
     background-color: #fff;
     box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+    font-family: Inter, -apple-system, sans-serif;
 }
 
 .consumer-header-content {
@@ -27,15 +28,18 @@
 .consumer-header-left .name {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #101828;
+    color: var(--gray-900, #101828);
     margin: 0;
 }
 
 .consumer-header-left .email,
 .consumer-header-left .phone {
     font-size: 0.875rem;
-    color: #667085;
+    color: var(--gray-500, #667085);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .consumer-header-right {
