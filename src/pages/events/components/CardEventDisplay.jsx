@@ -20,15 +20,13 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import displayMonth from "../quickGlance/components/formatEventDetailInfo/displayMonth";
 import WeekdayDifference from "../utils/DateDifference";
-import { BadgeWithDot } from "../../../components/base/badges/badges";
 import {
   countdownBadgeColors,
   getCountdownLabel,
   getEventMetrics,
-  getInventoryBadgeProps,
   getLogisticsStatus,
   LOGISTICS_LEGEND,
-  LOGISTICS_TOTAL_STEPS,
+  LOGISTICS_TOTAL_STEPS
 } from "../utils/eventStatusHelpers";
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform";
 import renderingStatusUIComponent from "./renderingStatusUIComponent";
@@ -254,7 +252,7 @@ const CardEventDisplay = ({ props }) => {
             "in-transit": "In Transit back to warehouse",
           }
           const inventoryLogisticStatus = dicInventoryLogistic[props.logistic_inventory_status] ?? "No data";
-          const inventoryBadge = getInventoryBadgeProps(props);
+          // const inventoryBadge = getInventoryBadgeProps(props);
           const stats = [
             { value: totalDevices.toLocaleString(), label: "Devices" },
             { value: deviceGroups, label: deviceGroups === 1 ? "Group" : "Groups" },
@@ -285,50 +283,20 @@ const CardEventDisplay = ({ props }) => {
                         color: "var(--gray-900, #101828)",
                       }}
                     >
-                      <BadgeWithDot color={inventoryBadge.color} size="sm">
-                        {inventoryLogisticStatus}
-                      </BadgeWithDot>
-                      <span
-                        style={{
-                          fontFamily: "Inter",
-                          fontSize: "12px",
-                          lineHeight: "16px",
-                          color: "var(--gray-500, #667085)",
-                        }}
-                      >
-                        {stat.label}
-                      </span>
-                    </div>
-                  }
-                  return (
-                    <div
-                      key={stat.label}
-                      style={{ display: "flex", flexDirection: "column", gap: "2px" }}
+                      {stat.value}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color: "var(--gray-500, #667085)",
+                      }}
                     >
-                      <span
-                        style={{
-                          fontFamily: "Inter",
-                          fontSize: "18px",
-                          fontWeight: 500,
-                          lineHeight: "24px",
-                          color: "var(--gray-900, #101828)",
-                        }}
-                      >
-                        {stat.value}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "Inter",
-                          fontSize: "12px",
-                          lineHeight: "16px",
-                          color: "var(--gray-500, #667085)",
-                        }}
-                      >
-                        {stat.label}
-                      </span>
-                    </div>
-                  )
-                })}
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
               </div>
               {/* {inventoryBadge && (
                 <div style={{ marginTop: "12px" }}>
