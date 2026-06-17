@@ -27,6 +27,8 @@ import {
   getEventMetrics,
   getInventoryBadgeProps,
   getLogisticsStatus,
+  LOGISTICS_LEGEND,
+  LOGISTICS_TOTAL_STEPS,
 } from "../utils/eventStatusHelpers";
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform";
 import renderingStatusUIComponent from "./renderingStatusUIComponent";
@@ -268,12 +270,20 @@ const CardEventDisplay = ({ props }) => {
                 textAlign: "left",
               }}
             >
-              <div style={{ display: "flex", gap: "32px" }}>
-                {stats.map((stat, index) => {
-                  if (index === 3) {
-                    return <div
-                      key={stat.label}
-                      style={{ display: "flex", flexDirection: "column", gap: "2px" }}
+              <div style={{ display: "flex", gap: "32px", width: "100%" }}>
+                {stats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: "18px",
+                        fontWeight: 500,
+                        lineHeight: "24px",
+                        color: "var(--gray-900, #101828)",
+                      }}
                     >
                       <BadgeWithDot color={inventoryBadge.color} size="sm">
                         {inventoryLogisticStatus}
@@ -331,20 +341,97 @@ const CardEventDisplay = ({ props }) => {
                 <div style={{ marginTop: "16px" }}>
                   <div
                     style={{
-                      height: "6px",
-                      borderRadius: "9999px",
-                      background: "var(--gray-100, #F2F4F7)",
-                      overflow: "hidden",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontFamily: "Inter",
+                      fontSize: "12px",
+                      lineHeight: "16px",
+                      color: "var(--gray-500, #667085)",
+                      marginBottom: "8px",
                     }}
                   >
-                    <div
-                      style={{
-                        width: `${logistics.progress}%`,
-                        height: "100%",
-                        borderRadius: "9999px",
-                        background: logistics.barColor,
-                      }}
-                    />
+                    Equipment location
+                    <Tooltip
+                      title={
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                            padding: "2px 0",
+                          }}
+                        >
+                          {LOGISTICS_LEGEND.map((stage) => (
+                            <div
+                              key={stage.label}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: "8px",
+                                  height: "8px",
+                                  borderRadius: "9999px",
+                                  background: stage.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span>
+                                <span style={{ fontWeight: 500 }}>
+                                  {stage.label}
+                                </span>{" "}
+                                — {stage.description}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      }
+                    >
+                      <span
+                        aria-label="Equipment location statuses"
+                        style={{
+                          display: "inline-flex",
+                          cursor: "help",
+                          color: "var(--gray-400, #98A2B3)",
+                        }}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="16" x2="12" y2="12" />
+                          <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", width: "100%" }}>
+                    {Array.from({ length: LOGISTICS_TOTAL_STEPS }, (_, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          flex: 1,
+                          height: "6px",
+                          borderRadius: "9999px",
+                          background:
+                            idx < logistics.step
+                              ? logistics.barColor
+                              : "var(--gray-200, #EAECF0)",
+                        }}
+                      />
+                    ))}
                   </div>
                   <span
                     style={{
@@ -352,8 +439,9 @@ const CardEventDisplay = ({ props }) => {
                       marginTop: "6px",
                       fontFamily: "Inter",
                       fontSize: "12px",
+                      fontWeight: 500,
                       lineHeight: "16px",
-                      color: "var(--gray-600, #475467)",
+                      color: logistics.labelColor,
                     }}
                   >
                     {logistics.label}
