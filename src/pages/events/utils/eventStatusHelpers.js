@@ -65,37 +65,68 @@ export const getEventMetrics = (event) => {
 };
 
 /**
- * Map the event's logistics status to a labeled progress stage.
- * Known values: "no_received_yet" | "in-transit" | "completed".
- * `progress` drives a 3-stage readiness bar; `barColor` is its fill.
+ * Map the event's logistics status to a labeled stage on a 3-segment stepper.
+ * This tracks the post-event RETURN of devices to the warehouse:
+ *   "no_received_yet" — default; devices still out at the event
+ *   "in-transit"      — heading back to the warehouse (set when the event ends)
+ *   "completed"       — checked back into inventory
+ * `step` (1-3) is how many segments are filled; `barColor` fills them and
+ * `labelColor` tints the status label.
  */
+export const LOGISTICS_TOTAL_STEPS = 3;
+
 export const getLogisticsStatus = (event) => {
   switch (event?.logistic_inventory_status) {
     case "completed":
       return {
-        label: "Devices received",
+        label: "Returned",
         tone: "ready",
-        progress: 100,
+        step: 3,
         barColor: "var(--success-500, #12B76A)",
+        labelColor: "var(--success-700, #027A48)",
       };
     case "in-transit":
       return {
         label: "In transit",
         tone: "info",
-        progress: 55,
+        step: 2,
         barColor: "var(--blue-500, #2E90FA)",
+        labelColor: "var(--blue-700, #175CD3)",
       };
     case "no_received_yet":
       return {
-        label: "Awaiting delivery",
+        label: "At event",
         tone: "pending",
-        progress: 8,
-        barColor: "var(--warning-500, #F79009)",
+        step: 1,
+        barColor: "var(--primary-600, #7F56D9)",
+        labelColor: "var(--primary-700, #6941C6)",
       };
     default:
       return null;
   }
 };
+
+/**
+ * Ordered legend for the equipment-location stepper — shown in the card's
+ * info tooltip. Colors match the stepper segments.
+ */
+export const LOGISTICS_LEGEND = [
+  {
+    label: "At event",
+    description: "Devices are out at the event",
+    color: "var(--primary-600, #7F56D9)",
+  },
+  {
+    label: "In transit",
+    description: "On the way back to the assigned location",
+    color: "var(--blue-500, #2E90FA)",
+  },
+  {
+    label: "Returned",
+    description: "Checked back into inventory",
+    color: "var(--success-500, #12B76A)",
+  },
+];
 
 /** Background/foreground colors for a countdown badge by tone. */
 export const countdownBadgeColors = (tone) => {
