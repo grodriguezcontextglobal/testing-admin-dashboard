@@ -1,8 +1,7 @@
-import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { MagnifyIcon } from "../../../../../../components/icons/MagnifyIcon";
+import { Search, Trash2, RefreshCw } from "lucide-react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import StripeTransactionTable from "../StripeTransactionTable";
@@ -53,18 +52,18 @@ const TransactionsDetails = () => {
             placeholder="Search a transaction here"
             startAdornment={
               <InputAdornment position="start">
-                <MagnifyIcon />
+                <Search size={16} />
               </InputAdornment>
             }
             endAdornment={
               <InputAdornment position="end">
-                <Icon
-                  cursor={"pointer"}
-                  icon="ic:baseline-delete-forever"
-                  color="#1e73be"
-                  width="25"
-                  height="25"
-                  opacity={`${String(searchValue).length > 0 ? 1 : 0}`}
+                <Trash2
+                  size={20}
+                  color="var(--blue-dark-600, #155eef)"
+                  style={{
+                    cursor: "pointer",
+                    opacity: String(searchValue).length > 0 ? 1 : 0,
+                  }}
                   onClick={() => {
                     setSearchValue("");
                   }}
@@ -83,7 +82,7 @@ const TransactionsDetails = () => {
         container
       >
         <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
+          border={"1px solid var(--gray-200, #EAECF0)"}
           borderRadius={"12px 12px 0 0"}
           display={"flex"}
           justifyContent={"space-between"}
@@ -106,25 +105,22 @@ const TransactionsDetails = () => {
             style={{
               display: "flex",
               alignItems: "center",
+              gap: "4px",
               outline: "none",
               backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--blue-dark-600, #155eef)",
+              fontWeight: 500,
+              fontSize: "12px",
+              fontFamily: "Inter",
+              lineHeight: "28px",
+              padding: "0px 8px",
             }}
             onClick={() => refetchingTrigger()}
           >
-            <p
-              style={{
-                textTransform: "none",
-                textAlign: "left",
-                fontWeight: 500,
-                fontSize: "12px",
-                fontFamily: "Inter",
-                lineHeight: "28px",
-                color: "var(--blue-dark-700, #004EEB)",
-                padding: "0px 8px",
-              }}
-            >
-              <Icon icon="jam:refresh" /> Refresh
-            </p>
+            <RefreshCw size={14} />
+            Refresh
           </button>
         </Grid>
         <Grid item xs={12}>
