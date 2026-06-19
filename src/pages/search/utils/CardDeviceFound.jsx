@@ -2,7 +2,7 @@ import { PropTypes } from 'prop-types'
 import { BadgeWithDot } from '../../../components/base/badges/badges'
 import { GeneralDeviceIcon } from '../../../components/icons/GeneralDeviceIcon'
 import BlueButtonComponent from '../../../components/UX/buttons/BlueButton'
-import DangerButtonConfirmationComponent from '../../../components/UX/buttons/DangerButtonConfirmation'
+// import DangerButtonConfirmationComponent from '../../../components/UX/buttons/DangerButtonConfirmation'
 import ReusableCardWithHeaderAndFooter from '../../../components/UX/cards/ReusableCardWithHeaderAndFooter'
 
 const FIELD_LABEL = {
@@ -24,6 +24,7 @@ const FIELD_VALUE = {
   overflowWrap: 'anywhere',
 }
 
+// eslint-disable-next-line no-unused-vars
 const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) => (
   <ReusableCardWithHeaderAndFooter
     key={props.data?.id}
@@ -44,14 +45,14 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) 
           loadingState={loadingStatus}
           size="sm"
         />
-        <DangerButtonConfirmationComponent
+        {/* <DangerButtonConfirmationComponent
           loadingState={returnLoading}
           func={() => returnFn(props)}
           title="Return"
           confirmationTitle="Return this device?"
           size="sm"
-        />
-      </div>,
+        /> */}
+0      </div>,
     ]}
   >
     <div style={{ paddingTop: '8px' }}>
