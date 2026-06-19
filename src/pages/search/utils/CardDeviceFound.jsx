@@ -52,7 +52,7 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) 
           confirmationTitle="Return this device?"
           size="sm"
         /> */}
-0      </div>,
+      </div>,
     ]}
   >
     <div style={{ paddingTop: '8px' }}>
