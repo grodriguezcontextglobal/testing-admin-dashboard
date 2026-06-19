@@ -13,6 +13,7 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
+import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { UpNarrowIcon } from "../../../components/icons/UpNarrowIcon";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import {
@@ -50,6 +51,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     {},
   );
   const [responseData, setResponseData] = useState([]);
+  const [stripeStatusMap, setStripeStatusMap] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -60,6 +62,24 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
 
   const retrievePaymentIntentInfo = (props) => {
     return setPaymentIntentInfoRetrieved(props);
+  };
+
+  const fetchStripeStatusesForPaymentIntents = async (paymentIntentIds) => {
+    await Promise.all(
+      paymentIntentIds
+        .filter((pi) => pi?.length >= 16 && !String(pi).includes("cash"))
+        .map(async (pi) => {
+          try {
+            const res = await devitrakApi.get(`/stripe/payment_intents/${pi}`);
+            const status = res?.data?.paymentIntent?.status;
+            if (status) {
+              setStripeStatusMap((prev) => ({ ...prev, [pi]: status }));
+            }
+          } catch {
+            // skip individual failures
+          }
+        })
+    );
   };
 
   const fetchingAllTransactionPerConsumerRelatedToEvent = async () => {
@@ -125,54 +145,6 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
         ]);
       }
     })
-    // for (let [key, value] of Object.entries(groupedData)) {
-    //   const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
-    //     paymentIntent: key,
-    //   });
-    //   const transactionData = respo?.data?.listOfReceivers;
-    //   if (!result.has(key)) {
-    //     result.set(key, [
-    //       {
-    //         eventSelected: value[0]?.eventSelected,
-    //         paymentIntent: key,
-    //         device: transactionData?.length,
-    //         status: Array.isArray(transactionData[0]?.device)
-    //           ? 0
-    //           : transactionData?.reduce(
-    //             (acc, { device }) =>
-    //               acc +
-    //               (device?.status === false || device?.status === "Lost"),
-    //             0,
-    //           ),
-    //         eventInfo: value,
-    //         extra_data: transactionData ?? [],
-    //         timestamp: value[0].created_at,
-    //         cost: value[0].device[0].deviceValue,
-    //       },
-    //     ]);
-    //   } else {
-    //     result.set(key, [
-    //       ...result.get(key),
-    //       {
-    //         eventSelected: value[0]?.eventSelected,
-    //         paymentIntent: key,
-    //         device: transactionData?.length,
-    //         status: Array.isArray(transactionData[0]?.device)
-    //           ? 0
-    //           : transactionData?.reduce(
-    //             (acc, { device }) =>
-    //               acc +
-    //               (device?.status === false || device?.status === "Lost"),
-    //             0,
-    //           ),
-    //         eventInfo: value,
-    //         extra_data: transactionData ?? [],
-    //         timestamp: value[0].created_at,
-    //         cost: value[0].device[0].deviceValue,
-    //       },
-    //     ]);
-    //   }
-    // }
     let final = [...result.values().map((item) => item)];
     return setResponseData(final);
   };
@@ -186,8 +158,8 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
   }, [customer.id, customer.uid, data]); // Add dependencies to trigger refresh
 
   const refetchingAfterReturnDeviceInRow = async () => {
-    await queryClient.invalidateQueries(["transactionsList"]);
-    await queryClient.invalidateQueries(["receiverList"]);
+    await queryClient.invalidateQueries({ queryKey: ["transactionsList"] });
+    await queryClient.invalidateQueries({ queryKey: ["receiverList"] });
     if (refetching) refetching();
     return fetchingDataPerAllowed();
   };
@@ -225,6 +197,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     ) {
       return "none";
     } else {
+      fetchStripeStatusesForPaymentIntents(paymentIntent);
       return "flex";
     }
   };
@@ -357,33 +330,68 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
       key: "action",
       responsive: ["xs", "sm", "md", "lg"],
       render: (_, record) => {
-        const checkPaymentID = String(record.paymentIntent).split("_");
-        const showActions = renderingOptionsBasedOnPaymentIntentStatus(record.paymentIntent) === "flex";
-        if (!showActions) return null;
+        const paymentIntent = record.paymentIntent;
+
+        // Free transactions (pi_ auto-generated, length < 16): no buttons
+        if (!paymentIntent || paymentIntent.length < 16) return null;
+
+        const isCash = String(paymentIntent).includes("cash");
+
+        if (isCash) {
+          // Cash: hide buttons if transaction is inactive
+          if (record.eventInfo?.[0]?.active === false) return null;
+          return (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "flex-start",
+                width: "100%",
+                gap: "5px",
+              }}
+            >
+              <DangerButtonComponent title={"Capture"} func={() => null} />
+              <BlueButtonComponent title={"Release"} func={() => null} />
+              <button
+                style={{ background: "transparent", outline: "none" }}
+                onClick={() => moreDetailFn(record)}
+              >
+                <RightNarrowInCircle />
+              </button>
+            </div>
+          );
+        }
+
+        // Card (Stripe): gray out when status ≠ requires_capture
+        const stripeStatus = stripeStatusMap[paymentIntent];
+        const isActive = stripeStatus === "requires_capture";
+
         return (
           <div
             style={{
               display: "flex",
               justifyContent: "flex-end",
-              alignItems: "center",
+              alignItems: "flex-start",
               width: "100%",
               gap: "5px",
             }}
           >
             <DangerButtonComponent
-              disabled={
-                checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
-              }
+              disabled={!isActive}
               title={"Capture"}
               func={() => null}
             />
             <BlueButtonComponent
-              disabled={
-                checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
-              }
+              disabled={!isActive}
               title={"Release"}
               func={() => null}
             />
+            <button
+              style={{ background: "transparent", outline: "none" }}
+              onClick={() => moreDetailFn(record)}
+            >
+              <RightNarrowInCircle />
+            </button>
           </div>
         );
       },
@@ -398,7 +406,6 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
         onClick={(e) => {
           e.stopPropagation();
           props.onExpand(props.record, e);
-          moreDetailFn(props.record)
         }}
         style={{
           border: "1px solid #D0D5DD",
@@ -474,54 +481,54 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
   };
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
-          <TableHeader
-            leftCta={
-              <p style={headerTitleStyle}>Transactions</p>
-            }
-            rightCta={
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ position: "relative" }}>
-                  <Icon
-                    icon="radix-icons:magnifying-glass"
-                    color="#667085"
-                    width={16}
-                    height={16}
-                    style={{
-                      position: "absolute",
-                      left: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      pointerEvents: "none",
-                    }}
-                  />
-                  <input
-                    {...register("searchEvent")}
-                    type="text"
-                    placeholder="Search a transaction here"
-                    data-testid="transaction-search"
-                    style={searchInputStyle}
-                  />
-                  {searchValue.length > 0 && (
-                    <Icon
-                      icon="ic:baseline-delete-forever"
-                      color="#667085"
-                      width={18}
-                      height={18}
-                      style={{
-                        position: "absolute",
-                        right: "8px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setValue("searchEvent", "")}
-                    />
-                  )}
-                </div>
-                <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
-              </div>
-            }
-          />
+      <TableHeader
+        leftCta={
+          <p style={headerTitleStyle}>Transactions</p>
+        }
+        rightCta={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ position: "relative" }}>
+              <Icon
+                icon="radix-icons:magnifying-glass"
+                color="#667085"
+                width={16}
+                height={16}
+                style={{
+                  position: "absolute",
+                  left: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                {...register("searchEvent")}
+                type="text"
+                placeholder="Search a transaction here"
+                data-testid="transaction-search"
+                style={searchInputStyle}
+              />
+              {searchValue.length > 0 && (
+                <Icon
+                  icon="ic:baseline-delete-forever"
+                  color="#667085"
+                  width={18}
+                  height={18}
+                  style={{
+                    position: "absolute",
+                    right: "8px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setValue("searchEvent", "")}
+                />
+              )}
+            </div>
+            <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
+          </div>
+        }
+      />
       <ExpandableTable
         key={customerFormat.id}
         id={customerFormat.id}
