@@ -12,7 +12,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../../../styles/global/Title";
 import ActionsMainPage from "./action/MainPage";
-import DeviceDescriptionTags from "./detailComponent/DeviceDescriptionTags";
+// import DeviceDescriptionTags from "./detailComponent/DeviceDescriptionTags";
 import DeviceInformationDetail from "./detailComponent/DeviceInformationDetail";
 import TableDetailPerDevice from "./detailComponent/TableDetailPerDevice";
 
@@ -134,7 +134,7 @@ const DeviceDetail = () => {
             md={4}
             lg={4}
           >
-            <DeviceDescriptionTags />
+            {/* <DeviceDescriptionTags /> */}
           </Grid>
           <Grid
             display={"flex"}
