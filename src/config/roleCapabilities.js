@@ -87,6 +87,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       close: true,                  // ButtonSections.jsx:258 — close/end event (Owner + Admin only)
     },
     consumers: { deleteNotes: true }, // NotesCard.jsx:97 (role < 1)
+    member: { manage: true, detailTabs: true }, // conditionalPage /members — manage = add/delete (role < 2); detailTabs (role < 4)
   },
 
   // ──────────────────────────────────────────────── 1 · Administrator
@@ -123,6 +124,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       close: true,                   // Admins review & close events
     },
     consumers: { deleteNotes: false },
+    member: { manage: true, detailTabs: true },
   },
 
   // ──────────────────────────────────────────────── 2 · Location Manager
@@ -158,6 +160,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       close: false, // Location Manager doesn't run events
     },
     consumers: { deleteNotes: false },
+    member: { manage: false, detailTabs: true },
   },
 
   // ──────────────────────────────────────────────── 3 · Event Manager
@@ -186,6 +189,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
     inventory: { mode: "none", deleteItem: false, editItem: false, editStructure: false, deleteLocation: false },
     events: { scope: "assignedOnly", editResources: true, createPermanentDevices: false, close: false }, // runs events but cannot close — only Owner/Admin close
     consumers: { deleteNotes: false },
+    member: { manage: false, detailTabs: true },
   },
 
   // ──────────────────────────────────────────────── 4 · Assistant
@@ -218,6 +222,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       close: false,
     },
     consumers: { deleteNotes: false },
+    member: { manage: false, detailTabs: false },
   },
 });
 

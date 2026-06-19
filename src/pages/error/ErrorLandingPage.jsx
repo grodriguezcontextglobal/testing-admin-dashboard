@@ -3,6 +3,7 @@ import { message } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import { rolesWith } from "../../config/roleCapabilities";
 import { Title } from "../../styles/global/Title";
 import { Subtitle } from "../../styles/global/Subtitle";
 const ErrorLandingPage = () => {
@@ -31,27 +32,27 @@ const ErrorLandingPage = () => {
     {
       title: "home",
       route: "/",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("nav.home"),
     },
     {
       title: "events",
       route: "/events",
-      permission: [0, 1, 2, 3, 4],
+      permission: rolesWith("nav.events"),
     },
     {
       title: "inventory",
       route: "/inventory",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("nav.inventory"),
     },
     {
       title: "customers",
       route: "/customers",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("nav.consumers"),
     },
     {
       title: "staff",
       route: "/staff",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("nav.staff"),
     },
   ];
   return (

@@ -2,6 +2,7 @@ import { Divider } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Breadcrumb from "../../../../components/UX/breadcrumbs/Breadcrumb";
+import { can } from "../../../../config/roleCapabilities";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import RefactoredHeaderUntitledUiReact from "../../../../components/UX/header/DynamicHeaderCompnent";
 import Loading from "../../../../components/animation/Loading";
@@ -48,13 +49,13 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
   ];
 
   const actions = {
-    desktop: Number(user.role) < 2 ? (
+    desktop: can(user, "member.manage") ? (
       <BlueButtonComponent
         title={"Add new member"}
         func={() => setAddingNewMember(true)}
       />
     ) : null,
-    mobile: Number(user.role) < 2 ? (
+    mobile: can(user, "member.manage") ? (
       <BlueButtonComponent
         title={"Add new"}
         func={() => setAddingNewMember(true)}

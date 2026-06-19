@@ -10,6 +10,7 @@ import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { rolesWith } from "../../../../config/roleCapabilities";
 import AddNewMember from "../modals/AddNewMember";
 import MemberInfoHeader from "./Header";
 
@@ -41,7 +42,7 @@ const MainPage = () => {
     {
       label: "Home",
       route: "main",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("member.detailTabs"),
       disabled: false,
       id: 0,
       fn: () => null,
@@ -61,7 +62,7 @@ const MainPage = () => {
     {
       label: "Assign devices",
       route: "assignment",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("member.detailTabs"),
       disabled: false,
       id: 0,
       fn: () => null,
@@ -81,7 +82,7 @@ const MainPage = () => {
     {
       label: "Update member info",
       route: "update-member-information",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("member.detailTabs"),
       disabled: false,
       id: 1,
       fn: () => null,
@@ -101,7 +102,7 @@ const MainPage = () => {
     {
       label: "Reminders",
       route: "reminders",
-      permission: [0, 1, 2, 3],
+      permission: rolesWith("member.detailTabs"),
       disabled: user.email !== membersData?.email,
       id: 2,
       fn: () => null,
