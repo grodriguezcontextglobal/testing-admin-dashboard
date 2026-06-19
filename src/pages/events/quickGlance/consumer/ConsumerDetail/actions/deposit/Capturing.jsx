@@ -53,8 +53,7 @@ const Capturing = ({
     queryKey: ["transaction"],
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?paymentIntent=${
-          paymentIntentDetailSelected.paymentIntent
+        `/transaction/transaction?paymentIntent=${paymentIntentDetailSelected.paymentIntent
         }&active=${true}`
       ),
     refetchOnMount: false,
@@ -125,6 +124,19 @@ const Capturing = ({
             `/transaction/update-transaction/${transactionInfo.id}`,
             { active: false, id: transactionInfo.id }
           );
+          //change all receiver transactions attached to this transaction to inactive
+          const listOfReceivers = await devitrakApi.post(
+            `/receiver/receiver-assigned-list`,
+            { paymentIntent: paymentIntentDetailSelected.paymentIntent }
+          );
+          if (listOfReceivers.data.ok && listOfReceivers.data.list.length > 0) {
+            listOfReceivers.data.list.forEach(async (receiver) => {
+              await devitrakApi.patch(
+                `/receiver/receiver-update/${receiver.id}`,
+                { active: false }
+              );
+            });
+          }
           await devitrakApi.post("/nodemailer/deposit-collected-notification", {
             consumer: {
               name: `${customer.name}, ${customer.lastName}`,
