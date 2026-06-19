@@ -247,7 +247,7 @@ const CardEventDisplay = ({ props }) => {
           const dicInventoryLogistic = {
             "no_received_yet": "Not Received Yet",
             "received": "Received",
-            "in-idle": "In Idle",
+            "in-idle": "Received At Event",
             "completed": "Returned to warehouse",
             "in-transit": "In Transit back to warehouse",
           }
