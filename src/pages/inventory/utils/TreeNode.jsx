@@ -269,7 +269,7 @@ const TreeNode = ({
               className="tree-title"
             >
               {children && (isOpen ? <UpNarrowIcon /> : <DownNarrow />)}{" "}
-              {can(user.role, "inventory.editStructure") && nodeId && onSelectLocation && (
+              {can(user.role, "inventory.deleteLocation") && nodeId && onSelectLocation && (
                 <span onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedLocations?.has(nodeId)}

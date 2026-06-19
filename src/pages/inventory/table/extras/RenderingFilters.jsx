@@ -737,7 +737,7 @@ const RenderingFilters = ({
               >
                 <EditIcon />
               </Button>
-              {selectedLocations.size > 0 && (
+              {can(user.role, "inventory.deleteLocation") && selectedLocations.size > 0 && (
                 <DangerButtonComponent
                   func={handleDeleteSelectedLocations}
                   style={{ margin: "0 1.5rem" }}

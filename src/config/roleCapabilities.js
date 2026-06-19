@@ -77,7 +77,8 @@ export const ROLE_CAPABILITIES = Object.freeze({
       mode: "all",
       deleteItem: true,    // inventory/details/MainPage.jsx:100 (role < 2)
       editItem: true,      // inventory/details/MainPage.jsx:103 (role < 2)
-      editStructure: true, // RenderingFilters.jsx:735.. & TreeNode.jsx:329 (disabled when role > 0)
+      editStructure: true, // create / rename locations & categories
+      deleteLocation: true, // delete locations (Owner only)
     },
     events: {
       scope: "all",                 // events/MainPage.jsx:108 (role < 1 sees all)
@@ -108,11 +109,12 @@ export const ROLE_CAPABILITIES = Object.freeze({
       viewDetail: true, viewSignedContracts: true, viewActiveStatus: true,
     },
     inventory: {
-      mode: "byLocation", // intentional — Admins are location-scoped: Owner grants the specific
-                          //               locations whose inventory they manage (like Location Manager)
-      deleteItem: true,   // but item delete/edit on the detail page IS allowed (role < 2)
+      mode: "all", // all-locations Admin — NOTE: inventory DATA scoping is server-side, so the
+                   //                       backend must also return all inventory for role 1 (ItemTable queries)
+      deleteItem: true,
       editItem: true,
-      editStructure: false, // locations/categories/brands/groups editable by role 0 only
+      editStructure: true,   // Admin can create & rename locations/categories
+      deleteLocation: false, // but NOT delete locations — Owner only
     },
     events: {
       scope: "all", // Administrators see all company events
@@ -147,6 +149,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       deleteItem: false, // ...but cannot delete or edit items (role < 2 excludes Manager)
       editItem: false,
       editStructure: false,
+      deleteLocation: false,
     },
     events: {
       scope: "assignedOnly",
@@ -180,7 +183,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       viewSignedContracts: false,
       viewActiveStatus: false,
     },
-    inventory: { mode: "none", deleteItem: false, editItem: false, editStructure: false },
+    inventory: { mode: "none", deleteItem: false, editItem: false, editStructure: false, deleteLocation: false },
     events: { scope: "assignedOnly", editResources: true, createPermanentDevices: false, close: false }, // runs events but cannot close — only Owner/Admin close
     consumers: { deleteNotes: false },
   },
@@ -207,7 +210,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       viewSignedContracts: false,
       viewActiveStatus: false,
     },
-    inventory: { mode: "none", deleteItem: false, editItem: false, editStructure: false },
+    inventory: { mode: "none", deleteItem: false, editItem: false, editStructure: false, deleteLocation: false },
     events: {
       scope: "assignedOnly",
       editResources: false,          // event edit buttons hidden for role 4

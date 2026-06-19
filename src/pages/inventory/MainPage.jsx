@@ -36,6 +36,7 @@ import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { can } from "../../config/roleCapabilities";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
@@ -97,16 +98,14 @@ const MainPage = () => {
   }, [user]);
 
   const allowedInventoryLocations = useMemo(() => {
-    // Role 0 Bypass: Admin/Owner has full access (return null to indicate no filter)
-    if (
-      user?.companyData.employees.find((e) => e.user === user.email).role ===
-      0 ||
-      user?.companyData.employees.find((e) => e.user === user.email).role ===
-      "0"
-    ) {
+    const role = user?.companyData.employees.find(
+      (e) => e.user === user.email,
+    )?.role;
+    // Full access (Owner + all-locations Admin): no location filter
+    if (can(role, "inventory.mode") === "all") {
       return null;
     }
-    // For other roles, return assigned locations or empty array if none
+    // Location-scoped roles: their assigned locations (empty array → no grants yet)
     return userPreferences?.inventory_location || [];
   }, [userPreferences, user]);
 
