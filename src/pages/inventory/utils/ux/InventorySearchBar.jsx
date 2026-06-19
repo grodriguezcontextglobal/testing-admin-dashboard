@@ -5,6 +5,7 @@ import Input from "../../../../components/UX/inputs/Input";
 // import ButtonsSearchAndReload from "./ButtonsSearchAndReload";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useSelector } from "react-redux";
+import { can } from "../../../../config/roleCapabilities";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 // import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
@@ -32,7 +33,7 @@ const InventorySearchBar = ({
   const { role, locations } = useSelector((state) => state.permission);
   const { user } = useSelector(state => state.admin)
   const canRenderButton =
-    role === "0" ||
+    can(role, "inventory.mode") === "all" ||
     locations?.every(
       (location) =>
         location.actions?.create &&

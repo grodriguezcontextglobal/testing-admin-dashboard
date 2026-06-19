@@ -6,6 +6,7 @@ import ModalUX from "../../../components/UX/modal/ModalUX";
 import TourModal from "../utils/TourModal";
 
 import DocumentInventoryXLSXUpload from "../../../components/documents/DocumentInventoryXLSXUpload";
+import { can } from "../../../config/roleCapabilities";
 
 /**
  * AddInventoryFromXLSXFile Component
@@ -29,7 +30,7 @@ const AddInventoryFromXLSXFile = ({ openModal, closeModal }) => {
   const [tourModal, setTourModal] = useState(false);
   const { role, locations } = useSelector(state => state.permission)
   const canCreate = useMemo(() => {
-    if (role === "0") {
+    if (can(role, "inventory.mode") === "all") {
       return true;
     }
     if (Array.isArray(locations)) {

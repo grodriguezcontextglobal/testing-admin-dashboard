@@ -16,6 +16,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "../../../../styles/global/ant-select.css";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
+import { can } from "../../../../config/roleCapabilities";
 import MainBody from "./components/MainBody";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
@@ -42,7 +43,7 @@ const Form = () => {
   const dispatch = useDispatch();
   const { role, locationsAssignPermission } = useStaffRoleAndLocations();
   const bodyFetchRequest = () => {
-    if (role === "0" || role === 0) {
+    if (can(role, "inventory.mode") === "all") {
       return {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
