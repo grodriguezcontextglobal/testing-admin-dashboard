@@ -21,6 +21,7 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../store/slices/stripeSlice";
+import { onAddTransactionInfo } from "../../../store/slices/customerSlice";
 import "../../../styles/global/ant-table.css";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import Capturing from "../action/deposit/Capturing";
@@ -318,10 +319,12 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   };
 
   const lostFeeChargeCustomer = async (props) => {
-    setOpenModal(true);
+    const eventName = Array.isArray(rowRecord.eventSelected)
+      ? rowRecord.eventSelected[0]
+      : rowRecord.eventSelected;
     const responseEvent = await devitrakApi.post("/event/event-list", {
       company: user.company,
-      "eventInfoDetail.eventName": rowRecord.eventSelected,
+      "eventInfoDetail.eventName": eventName,
     });
     const receiversList = assignedDevicesQuery?.data?.data?.listOfReceivers;
     const foundDeviceToChargeLostFee = receiversList?.filter(
@@ -329,10 +332,11 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         element.device.serialNumber === props.serial_number &&
         element.device.status === "Lost",
     );
-    dispatch(onAddEventData(checkArray(responseEvent.data?.list)));
-    dispatch(onAddEventInfoDetail(rowRecord.eventSelected));
+    const eventData = checkArray(responseEvent.data?.list);
+    dispatch(onAddEventData(eventData));
+    dispatch(onAddEventInfoDetail(eventName));
     dispatch(onSelectCompany(rowRecord.company));
-    dispatch(onSelectEvent(rowRecord.eventSelected));
+    dispatch(onSelectEvent(eventName));
     dispatch(
       onReceiverObjectToReplace({
         serialNumber: props.serial_number,
@@ -353,6 +357,20 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         status: props.status,
       }),
     );
+    dispatch(
+      onAddTransactionInfo({
+        type: "lost-fee",
+        event: eventData,
+        staff: user,
+        customer: customer,
+        device: {
+          serialNumber: props.serial_number,
+          deviceType: props.type,
+        },
+        receiversAssigned: checkArray(foundDeviceToChargeLostFee),
+      }),
+    );
+    setOpenModal(true);
   };
 
   const showActions = dataRendering()?.some(
