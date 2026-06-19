@@ -142,6 +142,7 @@ const Cash = () => {
           ...checkTypeOfPaymentIntentReceiversAssigned().device,
           status: "Lost",
         },
+        active: false,
       };
       const updateAssignedDeviceList = await devitrakApi.patch(
         `/receiver/receiver-update/${assignedDeviceProfile.id}`,
