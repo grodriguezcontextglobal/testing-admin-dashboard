@@ -359,7 +359,22 @@ const MainPage = () => {
                 userPreferences: userPreferences,
               }}
             >
-              {renderingOption[currentTab]}
+              {Array.isArray(allowedInventoryLocations) &&
+              allowedInventoryLocations.length === 0 ? (
+                <BannerMsg
+                  props={{
+                    title: "No locations assigned yet",
+                    message:
+                      "You haven't been granted any inventory locations yet. Ask an Owner or Administrator to assign you locations so you can view and manage their inventory.",
+                    link: "",
+                    button: { display: "none" },
+                    paragraphStyle: { display: "none" },
+                    paragraphText: "",
+                  }}
+                />
+              ) : (
+                renderingOption[currentTab]
+              )}
             </SearchItemContext.Provider>
           </Grid>
         </Grid>

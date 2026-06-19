@@ -60,6 +60,14 @@ const adminSlice = createSlice({
     onUpdateMfaStatus: (state, { payload }) => {
       state.mfaEnabled = payload;
     },
+    onUpdateCompanyData: (state, { payload }) => {
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          companyData: { ...state.user.companyData, ...payload },
+        };
+      }
+    },
   },
 });
 
@@ -73,6 +81,7 @@ export const {
   clearErrorMessage,
   onAddCompanyAccountStripe,
   onUpdateMfaStatus,
+  onUpdateCompanyData,
 } = adminSlice.actions;
 
 export default adminSlice.reducer;

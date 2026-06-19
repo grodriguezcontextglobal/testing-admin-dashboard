@@ -28,11 +28,11 @@
  */
 
 export const ROLE = Object.freeze({
-  ROOT: 0,       // Root administrator
+  ROOT: 0,       // Owner
   ADMIN: 1,      // Administrator
-  MANAGER: 2,    // Manager
-  SUPPORT: 3,    // Support
-  ASSISTANT: 4,  // Staff Event Assistant
+  MANAGER: 2,    // Location Manager
+  SUPPORT: 3,    // Event Manager
+  ASSISTANT: 4,  // Assistant
 });
 
 /**
@@ -47,9 +47,9 @@ export const ROLE = Object.freeze({
  * Each line cites the gate it was derived from (file:line) for auditability.
  */
 export const ROLE_CAPABILITIES = Object.freeze({
-  // ──────────────────────────────────────────────── 0 · Root administrator
+  // ──────────────────────────────────────────────── 0 · Owner
   [ROLE.ROOT]: {
-    label: "Root administrator",
+    label: "Owner",
     isAccountOwner: true, // only role 0 reaches Company info / Stripe settings
     nav: { home: true, inventory: true, events: true, consumers: true, posts: true, staff: true, profile: true },
     profile: {
@@ -83,6 +83,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       scope: "all",                 // events/MainPage.jsx:108 (role < 1 sees all)
       editResources: true,          // MainPageQuickGlance.jsx:641 etc. (hidden when role === 4)
       createPermanentDevices: true, // FormDeviceTrackingMethod.jsx:31 (role 0 → Permanent+Rent)
+      close: true,                  // ButtonSections.jsx:258 — close/end event (Owner + Admin only)
     },
     consumers: { deleteNotes: true }, // NotesCard.jsx:97 (role < 1)
   },
@@ -95,8 +96,8 @@ export const ROLE_CAPABILITIES = Object.freeze({
     profile: {
       details: true, password: true, mfa: true, policies: true,
       notifications: true,
-      companyInfo: false,   // ⚠️ #1 — "Administrator" cannot see Company info (role 0 only)
-      stripeAccount: false, // ⚠️ #1 — ...nor Stripe/billing. Consider renaming 0/1 to Owner/Admin.
+      companyInfo: false,   // intentional — company identity is set-once; Owner-only
+      stripeAccount: false, // intentional — only the Owner manages the Stripe / billing connection
       documents: true,
       suppliers: true,
     },
@@ -107,23 +108,24 @@ export const ROLE_CAPABILITIES = Object.freeze({
       viewDetail: true, viewSignedContracts: true, viewActiveStatus: true,
     },
     inventory: {
-      mode: "byLocation", // ⚠️ #2 — an Administrator needs explicit managerLocation grants
-                          //         to create/update inventory (HeaderInventaryComponent.jsx:33-34)
+      mode: "byLocation", // intentional — Admins are location-scoped: Owner grants the specific
+                          //               locations whose inventory they manage (like Location Manager)
       deleteItem: true,   // but item delete/edit on the detail page IS allowed (role < 2)
       editItem: true,
       editStructure: false, // locations/categories/brands/groups editable by role 0 only
     },
     events: {
-      scope: "assignedOnly", // ⚠️ #3 — even an Administrator only sees events they're assigned to
+      scope: "all", // Administrators see all company events
       editResources: true,
       createPermanentDevices: false, // Rent only
+      close: true,                   // Admins review & close events
     },
     consumers: { deleteNotes: false },
   },
 
-  // ──────────────────────────────────────────────── 2 · Manager
+  // ──────────────────────────────────────────────── 2 · Location Manager
   [ROLE.MANAGER]: {
-    label: "Manager",
+    label: "Location Manager",
     isAccountOwner: false,
     nav: { home: true, inventory: true, events: true, consumers: false, posts: true, staff: true, profile: true },
     profile: {
@@ -150,17 +152,18 @@ export const ROLE_CAPABILITIES = Object.freeze({
       scope: "assignedOnly",
       editResources: true,
       createPermanentDevices: false,
+      close: false, // Location Manager doesn't run events
     },
     consumers: { deleteNotes: false },
   },
 
-  // ──────────────────────────────────────────────── 3 · Support
+  // ──────────────────────────────────────────────── 3 · Event Manager
   [ROLE.SUPPORT]: {
-    label: "Support",
+    label: "Event Manager",
     isAccountOwner: false,
     nav: {
       home: true, inventory: false, events: true,
-      consumers: false, // ⚠️ #4 — "Support" cannot see Consumers (likely wrong if this is customer support)
+      consumers: false, // intentional — Event Manager handles consumers via the per-event attendee flow, not the global Consumers page
       posts: true, staff: true, profile: true,
     },
     profile: {
@@ -178,13 +181,13 @@ export const ROLE_CAPABILITIES = Object.freeze({
       viewActiveStatus: false,
     },
     inventory: { mode: "none", deleteItem: false, editItem: false, editStructure: false },
-    events: { scope: "assignedOnly", editResources: true, createPermanentDevices: false },
+    events: { scope: "assignedOnly", editResources: true, createPermanentDevices: false, close: false }, // runs events but cannot close — only Owner/Admin close
     consumers: { deleteNotes: false },
   },
 
-  // ──────────────────────────────────────────────── 4 · Staff Event Assistant
+  // ──────────────────────────────────────────────── 4 · Assistant
   [ROLE.ASSISTANT]: {
-    label: "Staff Event Assistant",
+    label: "Assistant",
     isAccountOwner: false,
     nav: {
       home: false, inventory: false, events: true,
@@ -209,6 +212,7 @@ export const ROLE_CAPABILITIES = Object.freeze({
       scope: "assignedOnly",
       editResources: false,          // event edit buttons hidden for role 4
       createPermanentDevices: false,
+      close: false,
     },
     consumers: { deleteNotes: false },
   },

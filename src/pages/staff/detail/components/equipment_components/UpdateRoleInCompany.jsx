@@ -88,11 +88,11 @@ const UpdateRoleInCompany = () => {
   };
 
   const options = [
-    { label: "Root administrator", value: 0 },
+    { label: "Owner", value: 0 },
     { label: "Administrator", value: 1 },
-    { label: "Manager", value: 2 },
-    { label: "Support", value: 3 },
-    { label: "Staff event assistant", value: 4 },
+    { label: "Location Manager", value: 2 },
+    { label: "Event Manager", value: 3 },
+    { label: "Assistant", value: 4 },
   ];
 
   const optionsBasedOnCurrentRolePermission = options.filter((option) => {

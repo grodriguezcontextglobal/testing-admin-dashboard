@@ -13,6 +13,7 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
 import FeedbackModal from "../FeedbackModal";
+import { can } from "../../../../../config/roleCapabilities";
 const EmailNotification = lazy(() =>
   import("../../../../../components/notification/email/EmailNotification")
 );
@@ -168,20 +169,6 @@ const ButtonSections = () => {
     return Object.entries(result);
   };
   checkItemsInUseToUpdateInventory();
-  const checkUserIsAssignedAsAdminInEvent = () => {
-    const staffList = [...event.staff.adminUser];
-    if (!staffList.some((element) => element.email === user.email)) {
-      const companyEmployees = [...user.companyData.employees];
-      const checkRoleInCompany = companyEmployees.findIndex(
-        (element) => element.user === user.email
-      );
-      return companyEmployees[checkRoleInCompany].role < 2;
-    }
-    const check = staffList.findIndex(
-      (element) => element.email === user.email
-    );
-    return check > -1;
-  };
 
   return (
     <Suspense
@@ -255,7 +242,7 @@ const ButtonSections = () => {
           <Grid
             display={`${
               (!event.active ||
-                (event.active && !checkUserIsAssignedAsAdminInEvent())) &&
+                (event.active && !can(user.role, "events.close"))) &&
               "none"
             }`}
             item

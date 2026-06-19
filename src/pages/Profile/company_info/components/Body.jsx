@@ -7,7 +7,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import SectionFooter from "../../../../components/documents/new_form_components/SectionFooter";
 import SectionHeader from "../../../../components/documents/new_form_components/SectionHeader";
-import { onLogout } from "../../../../store/slices/adminSlice";
+import { onUpdateCompanyData } from "../../../../store/slices/adminSlice";
 import "./Body.css";
 import BodyForm from "./BodyForm.refactored";
 const Body = () => {
@@ -273,12 +273,12 @@ const Body = () => {
         companyUpdatePayload,
       };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       openNotificationWithIcon(
         "Company information updated successfully",
         3000
       );
-      dispatch(onLogout());
+      dispatch(onUpdateCompanyData(result.companyUpdatePayload));
     },
   });
 
