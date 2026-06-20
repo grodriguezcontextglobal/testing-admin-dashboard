@@ -124,31 +124,33 @@ const BannerNotificationTemplate = ({
         },
       }}
     >
-      {/* Header row (icon + title/body + close) */}
-      <div style={{ display: "flex", gap: 12, width: "100%" }}>
-        {/* Left icon */}
-        <div
-          style={{
-            flex: "0 0 auto",
-            display: "flex",
-            alignItems: "flex-start",
-            paddingTop: "12px",
-            color: v.iconColor,
-          }}
-          aria-hidden="true"
-        >
-          <span style={{ display: "inline-flex", fontSize: 35 }}>
-            <InformationIcon />
-          </span>
-        </div>
+      {/* Top row: icon + title + close button (right-aligned) */}
+      <div style={{ display: "flex", gap: 12, width: "100%", alignItems: "flex-start", justifyContent: "space-between" }}>
+        {/* Left section: icon + title */}
+        <div style={{ display: "flex", gap: 12, flex: "1 1 auto", minWidth: 0 }}>
+          {/* Left icon */}
+          <div
+            style={{
+              flex: "0 0 auto",
+              display: "flex",
+              alignItems: "flex-start",
+              paddingTop: "12px",
+              color: v.iconColor,
+            }}
+            aria-hidden="true"
+          >
+            <span style={{ display: "inline-flex", fontSize: 24 }}>
+              <InformationIcon />
+            </span>
+          </div>
 
-        {/* Content */}
-        <div style={{ minWidth: 0 }}>
+          {/* Title */}
           <Typography
             style={{
               ...Title,
               padding:"12px 0",
-              display: "flex", justifyContent: "space-between",
+              display: "flex",
+              justifyContent: "flex-start",
               fontSize: "14px",
               lineHeight: "20px",
               margin: 0,
@@ -157,33 +159,16 @@ const BannerNotificationTemplate = ({
               textAlign: "left",
             }}
           >
-            {title}          
+            {title}
 
           </Typography>
-
-          <Typography
-            style={{
-              ...Subtitle,
-              fontSize: "14px",
-              lineHeight: "20px",
-              marginTop: 4,
-              marginBottom: 0,
-              color: v.bodyColor,
-              textWrap: "pretty",
-            }}
-          >
-            {body}
-          </Typography>
-
-          {/* Footer action (UntitledUI often shows a subtle action) */}
         </div>
 
-        {/* Close icon */}
+        {/* Close icon - top right */}
         <button
           type="button"
           onClick={handleClose}
           aria-label="Close alert"
-          className="transparentButton"
           style={{
             flex: "0 0 auto",
             border: "none",
@@ -192,12 +177,40 @@ const BannerNotificationTemplate = ({
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 2,
-            marginTop: 2,
+            padding: "4px 8px",
+            margin: 0,
+            outline: "none",
+            transition: "opacity 0.2s ease-in-out",
+            fontSize: "24px",
+            lineHeight: "1",
+            color: "#000000",
+            fontWeight: "bold",
+            width: "auto",
+            height: "auto",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.6"}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Body text */}
+      <div style={{ marginLeft: "38px" }}>
+        <Typography
+          style={{
+            ...Subtitle,
+            fontSize: "14px",
+            lineHeight: "20px",
+            marginTop: 4,
+            marginBottom: 0,
+            color: v.bodyColor,
+            textWrap: "pretty",
           }}
         >
-          <CloseIcon />
-        </button>
+          {body}
+        </Typography>
+
       </div>
     </Card>
   );

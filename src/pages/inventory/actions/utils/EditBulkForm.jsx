@@ -1,11 +1,11 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
-import { CheckIcon } from "../../../../components/icons/CheckIcon";
+// import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
+// import { BlueButton } from "../../../../styles/global/BlueButton";
 import {
   gripingFieldsUpdateFN,
   renderingOptionsButtons,
@@ -20,9 +20,10 @@ import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
 import Chip from "../../../../components/UX/Chip/Chip";
+import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
 
 const EditBulkForm = ({
-  acceptImage,
+  // acceptImage,
   addingSubLocation,
   addSerialNumberField,
   allSerialNumbersOptions,
@@ -35,7 +36,7 @@ const EditBulkForm = ({
   handleSearchByReference,
   handleSubmit,
   imageUploadedValue,
-  imageUrlGenerated,
+  // imageUrlGenerated,
   isRented,
   labeling,
   loadingStatus,
@@ -156,36 +157,6 @@ const EditBulkForm = ({
                           }}
                           width={150}
                         />{" "}
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
-                            width: "100%",
-                            marginTop: "1rem",
-                            gap: "1rem",
-                          }}
-                        >
-                          <BlueButtonComponent
-                            disabled={imageUrlGenerated}
-                            func={() => acceptImage()}
-                            style={{
-                              background: imageUrlGenerated
-                                ? "transparent"
-                                : BlueButton.background,
-                            }}
-                            icon={
-                              imageUrlGenerated ? (
-                                <CheckIcon stroke="#fff" />
-                              ) : null
-                            }
-                            title={
-                              imageUrlGenerated
-                                ? "Image accepted"
-                                : "Accept image"
-                            }
-                          />
-                        </div>
                       </div>
                     </InputLabel>
                   </Grid>
@@ -196,27 +167,10 @@ const EditBulkForm = ({
               item.name === "image_uploader_preview"
             ) {
               return (
-                <Grid
-                  key={item.name}
-                  style={{
-                    textAlign: "left",
-                    display:
-                      imageUploadedValue ||
-                        String(watch("image_url")).startsWith(
-                          "https://res.cloudinary",
-                        )
-                        ? "flex"
-                        : "none",
-                  }}
-                  marginY={1}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={gripingFieldsUpdateFN(item.name)}
-                  lg={gripingFieldsUpdateFN(item.name)}
-                ></Grid>
-              );
-            } 
+                <ImagePreviewClickable key={'preview'} imageUrlGenerated={imageUploadedValue}
+                  width={150}
+                />);
+            }
             else if (item.htmlElement === 8) {
               return (
                 <>

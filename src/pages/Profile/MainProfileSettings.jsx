@@ -1,6 +1,6 @@
-import { Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import { persistor } from "../../store/Store";
@@ -21,7 +21,6 @@ import { rolesWith } from "../../config/roleCapabilities";
 
 const MainProfileSettings = () => {
   const { user } = useSelector((state) => state.admin);
-  const location = useLocation();
   const dispatch = useDispatch();
   const logout = async () => {
     try {
@@ -104,12 +103,43 @@ const MainProfileSettings = () => {
       permission: rolesWith("profile.policies"),
     },
   ];
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const pillStyle = {
+    border: "none",
+    background: "transparent",
+    borderRadius: "9999px",
+    padding: "6px 14px",
+    fontSize: "14px",
+    lineHeight: "20px",
+    color: "#475467",
+    fontWeight: 400,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    textDecoration: "none",
+    display: "inline-flex",
+    alignItems: "center",
+  };
+
+  const pillActiveStyle = {
+    background: "#344054",
+    color: "#fff",
+    fontWeight: 500,
+  };
 
   const optionsNavOut = () => {
     return (
-      <nav className="profile-options-nav">
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "2px",
+          border: "1px solid #D0D5DD",
+          borderRadius: "9999px",
+          padding: "4px",
+          backgroundColor: "#fff",
+          width: "fit-content",
+        }}
+      >
         {tabOptions.map((option) => {
           if (
             option.permission.some((element) => element === Number(user.role))
@@ -119,36 +149,16 @@ const MainProfileSettings = () => {
                 key={option.label}
                 to={`${option.route}`}
                 style={({ isActive }) => ({
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: isMobile ? "4px 8px" : "1px 4px 11px",
-                  gap: "8px",
-                  borderBottom: isActive
-                    ? "1px solid #004EEB"
-                    : "rgba(0, 0, 0, 0.88)",
-                  whiteSpace: "nowrap",
+                  ...pillStyle,
+                  ...(isActive ? pillActiveStyle : {}),
                 })}
               >
-                <Typography
-                  sx={{
-                    color: () =>
-                      location.pathname === `/profile/${option.route}`
-                        ? "#004EEB"
-                        : "#667085",
-                    fontFamily: "Inter",
-                    fontSize: { xs: "12px", sm: "14px" },
-                    fontWeight: 600,
-                    lineHeight: "20px",
-                  }}
-                >
-                  {option.label}
-                </Typography>
+                {option.label}
               </NavLink>
             );
           }
         })}
-      </nav>
+      </div>
     );
   };
   return (

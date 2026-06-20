@@ -34,11 +34,14 @@ import CheckInDevicesFromEventsModal from "./utils/CheckInDevicesFromEventsModal
 import CreateLocationModal from "./utils/CreateLocationModal";
 import adornmentButtonsComponent from "./utils/ux/adornmentButtonsComponent";
 import InventorySearchBar from "./utils/ux/InventorySearchBar";
+import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import { can } from "../../config/roleCapabilities";
+import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
+import { ShipmentRecord } from "./actions/ShipmentRecord";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -72,7 +75,9 @@ const MainPage = () => {
     4: [],
     5: [],
     6: [],
+    7: [],
   });
+  const [shipmentRecordModal, setShipmentRecordModal] = useState(false)
   const [openDetails, setOpenDetails] = useState(false);
   const [typePerLocationInfoModal, setTypePerLocationInfoModal] =
     useState(null);
@@ -82,6 +87,7 @@ const MainPage = () => {
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
+  const { role, locationsViewPermission } = useStaffRoleAndLocations();
   const [currentTab, setCurrentTab] = useState(0);
   const [activeView, setActiveView] = useState("1");
   const [openShippingModal, setOpenShippingModal] = useState(false);
@@ -91,23 +97,18 @@ const MainPage = () => {
     },
   });
 
-  // Extract user preferences for inventory location filtering
+  // Extract user preferences for inventory location filtering.
+  // Owner + all-locations Admin (inventory.mode === "all") see all locations (null = no filter).
+  // All other roles see only the locations where their managerLocation preference has view: true.
   const userPreferences = useMemo(() => {
     return user?.companyData?.employees?.find((emp) => emp.user === user.email)
       ?.preference;
   }, [user]);
 
-  const allowedInventoryLocations = useMemo(() => {
-    const role = user?.companyData.employees.find(
-      (e) => e.user === user.email,
-    )?.role;
-    // Full access (Owner + all-locations Admin): no location filter
-    if (can(role, "inventory.mode") === "all") {
-      return null;
-    }
-    // Location-scoped roles: their assigned locations (empty array → no grants yet)
-    return userPreferences?.inventory_location || [];
-  }, [userPreferences, user]);
+  // Full access (Owner + all-locations Admin): no location filter (null).
+  // Location-scoped roles: only the locations where they have view permission.
+  const allowedInventoryLocations =
+    can(role, "inventory.mode") === "all" ? null : locationsViewPermission;
 
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
@@ -204,7 +205,7 @@ const MainPage = () => {
   const [filteredDataCount, setFilteredDataCount] = useState(0);
 
   const renderingOption = {
-    0: <Spin indicator={<Loading />} fullscreen={true} />,
+    0: <SkeletonInventoryCards count={6} />,
     1: (
       <ItemTable
         chosen={chosenOption}
@@ -244,16 +245,21 @@ const MainPage = () => {
   };
 
   const searchItem = async (data) => {
+    const query = data.searchItem?.trim();
+    if (!query) {
+      setSearchedResult(null);
+      return setParams(null);
+    }
     const result = await devitrakApi.post(
       "/db_company/get-grouped-inventory-by-search-parameter",
       {
-        searchParameter: data.searchItem,
+        searchParameter: query,
         company_id: user.sqlInfo.company_id,
       },
     );
     if (result?.data?.ok) {
       setSearchedResult(result.data.data);
-      return setParams(data.searchItem);
+      return setParams(query);
     }
   };
 
@@ -285,40 +291,32 @@ const MainPage = () => {
           user={user}
           TextFontSize30LineHeight38={TextFontSize30LineHeight38}
           setAddInventoryFromXLSXFileModal={setAddInventoryFromXLSXFileModal}
+          setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
+          setOpenDeleteItemModal={setOpenDeleteItemModal}
         />
         <MobileActionsButtons user={user} />
         <Divider />
 
-        <InventorySearchBar
-          companyHasInventoryQuery={companyHasInventoryQuery}
-          handleSubmit={handleSubmit}
-          searchItem={searchItem}
-          register={register}
-          adornmentButtonsComponent={adornmentButtonsComponent}
-          setValue={setValue}
-          setParams={setParams}
-          setSearchedResult={setSearchedResult}
-          refetchingQueriesFn={refetchingQueriesFn}
-          locationsQuery={locationsQuery}
-          setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-          setOpenCheckInDevicesFromEvent={setOpenCheckInDevicesFromEvent}
-          setOpenDeleteItemModal={setOpenDeleteItemModal}
-          setOpenShippingModal={setOpenShippingModal}
-          dataFilterOptions={dataFilterOptions}
-          chosenOption={chosenOption}
-          setChosenOption={setChosenOption}
-          optionsUX={optionsUX}
-        />
-        <Divider />
-        {/* <FilterOptionsContext.Provider
+        <FilterOptionsContext.Provider
           value={{
             filterOptions: dataFilterOptions,
             chosen: chosenOption,
             setChosenOption: setChosenOption,
           }}
         >
-          {optionsUX}
-        </FilterOptionsContext.Provider> */}
+          <InventorySearchBar
+            companyHasInventoryQuery={companyHasInventoryQuery}
+            handleSubmit={handleSubmit}
+            searchItem={searchItem}
+            register={register}
+            setValue={setValue}
+            setParams={setParams}
+            setSearchedResult={setSearchedResult}
+            setOpenShippingModal={setOpenShippingModal}
+            setShipmentRecordModal={setShipmentRecordModal}
+          />
+        </FilterOptionsContext.Provider>
+        <Divider />
         <Grid
           display={"flex"}
           justifyContent={"center"}
@@ -353,9 +351,12 @@ const MainPage = () => {
                 searchItem: settingParamsForSearchResult,
                 setDataFilterOptions: setDataFilterOptions,
                 setOpenAdvanceSearchModal: setOpenAdvanceSearchModal,
+                setShipmentRecordModal: setShipmentRecordModal,
                 total: getTotalToDisplay(),
                 allowedLocations: allowedInventoryLocations,
                 userPreferences: userPreferences,
+                locationsQuery: locationsQuery,
+                refetchingQueriesFn: refetchingQueriesFn,
               }}
             >
               {Array.isArray(allowedInventoryLocations) &&
@@ -406,6 +407,9 @@ const MainPage = () => {
       }
       {
         openShippingModal && <ShippingInventoryModal visible={openShippingModal} onClose={() => setOpenShippingModal(false)} refetch={companyHasInventoryQuery.refetch} user={user} />
+      }
+      {
+        shipmentRecordModal && <ShipmentRecord open={shipmentRecordModal} setOpen={setShipmentRecordModal} />
       }
       {
         addInventoryFromXLSXFileModal && (

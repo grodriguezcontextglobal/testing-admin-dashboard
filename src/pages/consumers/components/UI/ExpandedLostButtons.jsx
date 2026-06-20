@@ -79,8 +79,7 @@ const ExpandedLostButton = ({
         });
       }
       await devitrakApi.patch(
-        `/cash-report/update-cash-report/${
-          checkArray(cashReportToPassAsProps).id
+        `/cash-report/update-cash-report/${checkArray(cashReportToPassAsProps).id
         }`,
         {
           id: checkArray(cashReportToPassAsProps).id,
@@ -88,7 +87,7 @@ const ExpandedLostButton = ({
         }
       );
       sendRefundReceiptEmail({
-        event:record.entireData.eventSelected[0],
+        event: record.entireData.eventSelected[0],
         company: user.companyData.company_name,
         customer: record.entireData.userInfo,
         amount: data.amount,
@@ -124,13 +123,12 @@ const ExpandedLostButton = ({
           });
         }
         await devitrakApi.post(
-          `/cash-report/remove-cash-report/${
-            checkArray(cashReportTransactionData).id
+          `/cash-report/remove-cash-report/${checkArray(cashReportTransactionData).id
           }`
         );
       }
       sendRefundReceiptEmail({
-        event:record.entireData.eventSelected[0],
+        event: record.entireData.eventSelected[0],
         company: user.companyData.company_name,
         customer: record.entireData.userInfo,
         amount: checkArray(cashReportToPassAsProps).amount,
@@ -160,7 +158,9 @@ const ExpandedLostButton = ({
         key={record.serial_number}
         style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}
       >
-        <DangerButtonComponent disabled={checkingExistingData()} func={() => handleLostSingleDevice(record)} title={checkingExistingData() ? "Charged" : "Charge customer"} />
+        <DangerButtonComponent disabled={checkingExistingData()}
+          func={() => handleLostSingleDevice(record)}
+          title={checkingExistingData() ? "Charged" : "Charge"} />
         {/* <Button
           disabled={checkingExistingData()}
           onClick={() => handleLostSingleDevice(record)}
@@ -180,17 +180,17 @@ const ExpandedLostButton = ({
           </p>
         </Button> */}
         <GrayButtonConfirmationComponent title={
-            checkingExistingData()
-              ? "Are you sure that you want to refund?"
-              : "Are you sure that you want to mark as found?"
-          } 
+          checkingExistingData()
+            ? "Refund charge"
+            : "Mark as found?"
+        }
           func={() =>
             checkingExistingData()
               ? handleRefund(record)
               : handleFoundSingleDevice(propsUpdateSingleDevice)
           }
           loadingState={isLoadingState}
-          />
+        />
         {/* <Popconfirm
           title={
             checkingExistingData()

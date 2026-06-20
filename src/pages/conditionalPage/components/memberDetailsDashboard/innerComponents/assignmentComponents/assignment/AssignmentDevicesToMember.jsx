@@ -29,6 +29,7 @@ import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/T
 import { dicIcons } from "../../utils/dicIcons";
 import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
 import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
+import Input from "../../../../../../../components/UX/inputs/Input";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -614,11 +615,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Street</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     {...register("street")}
                     disabled={loadingStatus}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     fullWidth
@@ -629,11 +630,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>City</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     disabled={loadingStatus}
                     {...register("city")}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     required
@@ -653,11 +654,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>State</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     {...register("state")}
                     disabled={loadingStatus}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     required
@@ -668,11 +669,11 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Zip</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     disabled={loadingStatus}
                     {...register("zip")}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     required
@@ -693,12 +694,12 @@ const AssignmentDevicesToMember = () => {
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <p style={Subtitle}>Expected return date</p>
                   </InputLabel>
-                  <OutlinedInput
+                  <Input
                     type="date"
                     disabled={loadingStatus}
                     {...register("expectedReturnDate")}
                     style={{
-                      ...OutlinedInputStyle,
+                      
                       width: "100%",
                     }}
                     fullWidth
@@ -837,12 +838,12 @@ const AssignmentDevicesToMember = () => {
                     >
                       <p style={Subtitle}>Quantity</p>
                     </InputLabel>
-                    <OutlinedInput
+                    <Input
                       disabled={loadingStatus}
                       required
                       {...register("quantity")}
                       style={{
-                        ...OutlinedInputStyle,
+                        
                         width: "100%",
                       }}
                       placeholder="e.g. 0"
@@ -881,7 +882,7 @@ const AssignmentDevicesToMember = () => {
                         </strong>
                       </p>
                     </InputLabel>
-                    <OutlinedInput
+                    <Input
                       disabled={
                         loadingStatus ||
                         valueItemSelected.max_serial_number ===
@@ -893,7 +894,7 @@ const AssignmentDevicesToMember = () => {
                         message: "Starting serial number is required",
                       })}
                       style={{
-                        ...OutlinedInputStyle,
+                        
                         width: "100%",
                       }}
                       placeholder={`Selected category serial numbers start: ${valueItemSelected.min_serial_number} end: ${valueItemSelected.max_serial_number}`}

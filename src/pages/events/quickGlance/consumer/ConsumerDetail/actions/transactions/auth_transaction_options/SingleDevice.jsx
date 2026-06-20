@@ -1,5 +1,4 @@
 import {
-  Button,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -18,12 +17,12 @@ import {
   onAddDevicesSelectionPaidTransactions,
 } from "../../../../../../../../store/slices/devicesHandleSlice";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import { groupBy } from "lodash";
 import { checkArray } from "../../../../../../../../components/utils/checkArray";
+import BlueButton from "../../../../../../../../components/UX/buttons/BlueButton";
+import GrayButton from "../../../../../../../../components/UX/buttons/GrayButton";
 
 const SingleDevice = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -250,11 +249,12 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
           </FormControl>
         </div>
         <Tooltip title="Please submit CC info after assign all devices.">
-          <Button style={{ ...BlueButton, width: "100%" }} type="submit">
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Credit Card Info
-            </Typography>
-          </Button>
+          <BlueButton
+            title="Credit Card Info"
+            buttonType="submit"
+            size="md"
+            styles={{ width: "100%" }}
+          />
         </Tooltip>
       </form>
       {clientSecret !== "" && (
@@ -264,7 +264,12 @@ const SingleDevice = ({ setCreateTransactionPaid }) => {
         />
       )}
       {clientSecret !== "" && (
-        <Button onClick={() => closeModal()}>Cancel</Button>
+        <GrayButton
+          title="Cancel"
+          func={() => closeModal()}
+          size="md"
+          styles={{ width: "100%" }}
+        />
       )}
     </>
   );

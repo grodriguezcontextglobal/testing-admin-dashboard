@@ -322,7 +322,7 @@ const useAutomaticallyAvailableItemsToEvent = ({
       setLoadingStatus(false);
       closeModal();
     } catch (error) {
-      console.log(error);
+      console.error(error);
       message.error("Failed to add devices to event. Please try again.");
     } finally {
       setLoadingStatus(false);

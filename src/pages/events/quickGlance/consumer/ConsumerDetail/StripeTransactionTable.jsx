@@ -4,6 +4,7 @@ import { Button, message, Popconfirm, Spin } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import {
@@ -23,8 +24,6 @@ import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import { groupBy } from "lodash";
 import Loading from "../../../../../components/animation/Loading";
-import { DoubleRightChevronIcon } from "../../../../../components/icons/DoubleRightChevronIcon";
-import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
@@ -254,14 +253,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     padding: "2px 8px",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    background: `${"var(--success-50, #ECFDF3)"}`,
+                    background: "var(--success-50, #ECFDF3)",
                     width: "100%",
                   }}
                 >
                   <p
                     style={{
                       ...Subtitle,
-                      color: "var(--success-700, #027A48)",
+                      color: "var(--success-700, #067647)",
                       textTransform: "capitalize",
                     }}
                   >
@@ -395,8 +394,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         <GrayButtonComponent func={(e) => {
           props.onExpand(props.record, e);
         }} title={
-
-          <DownDoubleArrowIcon />
+          <ChevronDown size={16} />
         } />
       );
     } else {
@@ -404,8 +402,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         <GrayButtonComponent func={(e) => {
           props.onExpand(props.record, e);
         }} title={
-
-          <DoubleRightChevronIcon />
+          <ChevronRight size={16} />
         } />
       );
     }

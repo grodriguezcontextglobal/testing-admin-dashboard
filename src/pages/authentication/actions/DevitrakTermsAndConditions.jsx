@@ -205,12 +205,14 @@ export const agreedAgreement = async ({
       return setOpen(false);
     }
   } catch (error) {
-    message.error(
-      "Error submitting agreement:",
-      error?.message || error?.msg || error,
-    );
+    const errorMessage = error.responseerror.dataerror.message || error.message || error.msg || error;
+    // message.error(
+    //   "Error submitting agreement:",
+    //   errorMessage,
+    // );
     //throw error; // Re-throw to be handled by the form submission
-    return setOpen(false);
+    setOpen(false);
+    return errorMessage
   } finally {
     setIsLoading(false);
   }

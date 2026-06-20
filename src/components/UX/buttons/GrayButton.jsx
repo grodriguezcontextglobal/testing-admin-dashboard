@@ -17,8 +17,8 @@ import "./styles.css"
 const GrayButtonComponent = ({
   // ---- New (UntitledUI-like) props ----
   size = "md",
-  // iconLeading = null,
-  // iconTrailing = null,
+  iconLeading = null,
+  iconTrailing = null,
   href = null,
   target,
   rel,
@@ -58,11 +58,11 @@ const GrayButtonComponent = ({
 
   const content = (
     <span className="customized__grayButtonContent">
-      {/* {iconLeading ? (
+      {iconLeading ? (
         <span className="customized__grayButtonIcon" data-icon>
           {iconLeading}
         </span>
-      ) : null} */}
+      ) : null}
 
       {(title || showTextWhileLoading || !resolvedLoading) && (
         <span className="customized__grayButtonText" style={{ ...titleStyles }}>
@@ -70,11 +70,11 @@ const GrayButtonComponent = ({
         </span>
       )}
 
-      {/* {iconTrailing ? (
+      {iconTrailing ? (
         <span className="customized__grayButtonIcon" data-icon>
           {iconTrailing}
         </span>
-      ) : null} */}
+      ) : null}
     </span>
   );
 

@@ -1,4 +1,3 @@
-// import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -14,25 +13,35 @@ import { onAddEventData } from "../../../store/slices/eventSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-// import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { can, isAdmin } from "../../../config/roleCapabilities";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import AlInventoryEventAssigned from "./components/AlInventoryEventAssigned";
 import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
 import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
 import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
-// import InventoryEventValue from "./components/InventoryEventValue";
 import Report from "./components/lostFee/Report";
 import ModalsComponentsEventQuickGlance from "./components/modals/ModalsComponentsEventQuickGlance";
 import HighlightedPill from "./components/ux/HighlightedPill";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import StaffMainPage from "./staff/StaffMainPage";
+
+const sectionHeaderStyle = {
+  fontFamily: "Inter",
+  fontSize: "20px",
+  fontWeight: 600,
+  lineHeight: "30px",
+  color: "var(--gray-900, #101828)",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  margin: 0,
+};
+
 const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
@@ -40,32 +49,23 @@ const MainPageQuickGlance = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showInventoryTypes, setShowInventoryTypes] = useState(true);
-  const [
-    showInventoryTypesForCustomersOnly,
-    setShowInventoryTypesForCustomersOnly,
-  ] = useState(true);
+  const [showInventoryTypesForCustomersOnly, setShowInventoryTypesForCustomersOnly] = useState(true);
   const [editingStaff, setEditingStaff] = useState(false);
   const [editingInventory, setEditingInventory] = useState(false);
   const [editingServiceInEvent, setEditingServiceInEvent] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState(
     today > new Date(event?.eventInfoDetail?.dateEnd).getTime()
   );
+
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)"
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)"
-  );
 
   const dispatch = useDispatch();
 
-  const sum = (a, b) => {
-    return a + b;
-  };
+  const sum = (a, b) => a + b;
+
   const eventAttendeesQuery = useQuery({
     queryKey: ["listOfAttendees"],
     queryFn: () => devitrakApi.get("/auth/users"),
@@ -88,18 +88,13 @@ const MainPageQuickGlance = () => {
   const receiversPoolQuery = useQuery({
     queryKey: ["listOfreceiverInPool"],
     queryFn: () =>
-      devitrakApi.post(
-        `/receiver/receiver-pool-list`,
-        // ?eventSelected=${event?.eventInfoDetail?.eventName}&company=${user.companyData.id}`, 
-        {
-          eventSelected: event?.eventInfoDetail?.eventName,
-          company: user.companyData.id,
-        }
-      ),
-    // refetchOnMount: false,
+      devitrakApi.post(`/receiver/receiver-pool-list`, {
+        eventSelected: event?.eventInfoDetail?.eventName,
+        company: user.companyData.id,
+      }),
     enabled: !!user.companyData.id,
-    // staleTime: 10 * 60 * 60,
   });
+
   if (
     eventAttendeesQuery.isLoading ||
     receiversPoolQuery.isLoading ||
@@ -107,10 +102,10 @@ const MainPageQuickGlance = () => {
   )
     return (
       <div style={{ ...CenteringGrid, width: "100%" }}>
-        {" "}
         <Loading />
       </div>
     );
+
   if (
     eventAttendeesQuery.data &&
     receiversPoolQuery.data &&
@@ -119,41 +114,31 @@ const MainPageQuickGlance = () => {
     const parsingData =
       receiversPoolQuery?.data?.data?.receiversInventory ??
       receiversPoolQuery?.data?.data?.items;
+
     const inventoryEventAssignedCount = () => {
       let result = 0;
-      const { deviceSetup } = event;
-      for (let data of deviceSetup) {
-        if (!data.consumerUses) {
-          result += Number(data.quantity);
-        }
+      for (let data of event.deviceSetup) {
+        if (!data.consumerUses) result += Number(data.quantity);
       }
       return result;
     };
 
     const inventoryEventAssignedForCustomersCount = () => {
       let result = 0;
-      const { deviceSetup } = event;
-      for (let data of deviceSetup) {
-        if (data.consumerUses) {
-          result += Number(data.quantity);
-        }
+      for (let data of event.deviceSetup) {
+        if (data.consumerUses) result += Number(data.quantity);
       }
       return result;
     };
 
-    const foundAllDevicesGivenInEvent = () => {
-      const check = parsingData;
-      return check;
-    };
+    const foundAllDevicesGivenInEvent = () => parsingData;
 
-    const checkStaffRoleToDisplayCashReportInfo = () => {
-      return event?.staff?.adminUser?.some((member) => member === user.email);
-    };
+    const checkStaffRoleToDisplayCashReportInfo = () =>
+      event?.staff?.adminUser?.some((member) => member === user.email);
 
-    const foundAttendeesPerEvent = () => {
-      const check = eventAttendeesParametersQuery.data.data.users;
-      return check;
-    };
+    const foundAttendeesPerEvent = () =>
+      eventAttendeesParametersQuery.data.data.users;
+
     const displayElementsBasedOnRole = () => {
       if (
         event.staff.adminUser.some((element) => element.email === user.email) ||
@@ -166,42 +151,27 @@ const MainPageQuickGlance = () => {
     const beforeUpload = (file) => {
       const isJpgOrPng =
         file.type === "image/jpeg" || file.type === "image/png";
-      if (!isJpgOrPng) {
-        message.error("You can only upload JPG/PNG file!");
-      }
+      if (!isJpgOrPng) message.error("You can only upload JPG/PNG file!");
       const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error("Image must smaller than 2MB!");
-      }
+      if (!isLt2M) message.error("Image must smaller than 2MB!");
       return isJpgOrPng && isLt2M;
     };
 
     const uploadButton = (
       <button
-        style={{
-          border: 0,
-          background: "none",
-          width: "100%",
-          aspectRatio: 1,
-          overflow: "hidden",
-        }}
+        style={{ border: 0, background: "none", width: "100%", aspectRatio: 1 }}
         type="button"
       >
         {isLoading ? <Loading /> : null}
-        <div
+        <p
           style={{
+            ...Subtitle,
             marginTop: 8,
+            display: isLoading ? "none" : "inline-block",
           }}
         >
-          <p
-            style={{
-              ...Subtitle,
-              display: `${isLoading ? "none" : "inline-block"}`,
-            }}
-          >
-            Upload
-          </p>
-        </div>
+          Upload
+        </p>
       </button>
     );
 
@@ -210,17 +180,8 @@ const MainPageQuickGlance = () => {
         setIsLoading(true);
         const imageUrl = await convertToBase64(info.file.originFileObj);
         const imageDataFormat = new ImageUploaderFormat(
-          imageUrl,
-          user.companyData.id,
-          "",
-          "",
-          "",
-          "",
-          "",
-          event.id,
-          ""
+          imageUrl, user.companyData.id, "", "", "", "", "", event.id, ""
         );
-
         const responseCloudinary = await devitrakApi.post(
           "/cloudinary/upload-image",
           imageDataFormat.event_uploader()
@@ -242,31 +203,31 @@ const MainPageQuickGlance = () => {
             })
           );
           message.success("Image uploaded successfully");
-          return setIsLoading(false);
         }
       } catch (error) {
+        message.error(`Upload failed: ${error.message}`);
+      } finally {
         setIsLoading(false);
-        return message.error(`Upload failed: ${error.message}`);
       }
-    };
-
-    const style = {
-      titleNavigation: {
-        textTransform: "none",
-        textAlign: "left",
-        fontWeight: 600,
-        fontSize: "18px",
-        fontFamily: "Inter",
-        lineHeight: "28px",
-        color: "var(--blue-dark-600, #155EEF)",
-      },
     };
 
     const breadcrumbItems = [
       {
         title: (
           <Link to="/events">
-            <p style={style.titleNavigation}>All events</p>
+            <p
+              style={{
+                textTransform: "none",
+                textAlign: "left",
+                fontWeight: 600,
+                fontSize: "18px",
+                fontFamily: "Inter",
+                lineHeight: "28px",
+                color: "var(--blue-dark-600, #155EEF)",
+              }}
+            >
+              All events
+            </p>
           </Link>
         ),
       },
@@ -274,9 +235,11 @@ const MainPageQuickGlance = () => {
     ];
 
     return (
-      <Grid style={{ ...CenteringGrid, padding: "5px", margin: 0 }} container>
+      <Grid container style={{ padding: "0 5px" }}>
+
+        {/* Notification banner */}
         {notificationStatus && event.active && (
-          <Grid margin={"0.5rem 0 1rem"} item xs={12} sm={12} md={12} lg={12}>
+          <Grid item xs={12} style={{ margin: "12px 0 16px" }}>
             <BannerNotificationTemplate
               setNotificationStatus={setNotificationStatus}
               title={"Reminder from Devitrak!"}
@@ -284,347 +247,227 @@ const MainPageQuickGlance = () => {
             />
           </Grid>
         )}
+
+        {/* Breadcrumb */}
+        <Grid item xs={12} style={{ paddingTop: "16px" }}>
+          <Breadcrumb separator=">" items={breadcrumbItems} />
+        </Grid>
+
+        {/* Page header: logo + event name + address + actions */}
         <Grid
-          style={{
-            display: `${(isLargeDevice || isExtraLargeDevice) && "none"}`,
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "3rem",
-          }}
           item
           xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          {checkStaffRoleToDisplayCashReportInfo() && (
-            // /event/new_subscription
-            <Link to="/create-event-page/event-detail">
-              <BlueButtonComponent
-                // icon={<WhitePlusIcon />}
-                title={"Add new event"}
-                func={null}
-                styles={{ width: "100%", margin: "0rem auto 1rem" }}
-              />
-            </Link>
-          )}
-          <BlueButtonComponent
-            func={() => setCreateUserButton(true)}
-            disabled={!event.active}
-            styles={{
-              border: "1px solid var(--gray-300, #D0D5DD)",
-              width: "100%",
-            }}
-            title={"Add new consumer"}
-            // icon={<PlusIcon />}
-          />
-        </Grid>
-        <Grid
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: "16px",
+            padding: "16px 0 0",
           }}
-          container
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"flex-start"}
-            marginY={0}
-            item
-            xs={12}
-            md={6}
-          >
-            <p
-              style={{
-                ...TextFontSize30LineHeight38,
-                fontWeight: 600,
-                padding: `${(isSmallDevice || isMediumDevice) && "5px"}`,
-                textAlign: "left",
-              }}
-            >
-              Events
-            </p>
-          </Grid>
-          <Grid
+          <div
             style={{
-              textAlign: "right",
-              display: `${isSmallDevice || isMediumDevice ? "none" : "flex"}`,
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: "1rem",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "16px",
+              flex: 1,
+              minWidth: 0,
             }}
-            item
-            md={6}
+          >
+            <Upload
+              name="avatar"
+              listType="picture-circle"
+              className="avatar-uploader"
+              showUploadList={false}
+              beforeUpload={beforeUpload}
+              onChange={handleUploadImage}
+            >
+              {event?.eventInfoDetail?.logo ? (
+                <img
+                  src={event?.eventInfoDetail?.logo}
+                  alt="event logo"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                  }}
+                />
+              ) : (
+                uploadButton
+              )}
+            </Upload>
+            <div style={{ paddingTop: "4px", minWidth: 0 }}>
+              <p
+                style={{
+                  ...TextFontSize30LineHeight38,
+                  fontWeight: 700,
+                  margin: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {event?.eventInfoDetail?.eventName}
+              </p>
+              <p
+                style={{
+                  ...TextFontSize14LineHeight20,
+                  color: "var(--gray-600, #475467)",
+                  marginTop: "4px",
+                }}
+              >
+                {event?.eventInfoDetail?.address}
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+              flexShrink: 0,
+            }}
           >
             {checkStaffRoleToDisplayCashReportInfo() && (
-              // /event/new_subscription
               <Link to="/create-event-page/event-detail">
-                <BlueButtonComponent
-                  // icon={<WhitePlusIcon />}
-                  title={"Add new event"}
-                  func={null}
-                  styles={{ alignSelf: "stretch" }}
-                />
+                <BlueButtonComponent title="Add new event" />
               </Link>
             )}
             <BlueButtonComponent
               func={() => setCreateUserButton(true)}
-              title={"Add new consumer"}
-              // icon={<WhiteCirclePlusIcon />}
+              disabled={!event.active}
+              title="Add new consumer"
             />
-          </Grid>
+          </div>
         </Grid>
-        <Grid
-          style={{
-            paddingTop: "0px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
-          marginTop={4}
-        >
-          <Grid marginY={0} item xs={12} sm={12} md={12} lg={12}>
-            <Grid
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <Breadcrumb separator=">" items={breadcrumbItems} />
-            </Grid>
-            <Grid
-              style={{
-                paddingTop: "1rem",
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-              item
-              xs={12}
-            >
-              <p style={TextFontSize14LineHeight20}>
-                {event?.eventInfoDetail?.address}{" "}
-              </p>
-            </Grid>
-          </Grid>
-        </Grid>
-        <Divider />
-        <Grid container>
-          <Grid
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              padding: "18px 0",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            <div
-              style={{
-                ...TextFontSize30LineHeight38,
-                textAlign: "left",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-                textWrap: "pretty",
-                textTransform: "none",
-              }}
-            >
-              <div
-                style={{
-                  alignSelf: "stretch",
-                  // width: "35%",
-                  margin: "0 1rem 0 0",
-                  height: "auto",
-                  overflow: "hidden",
-                  borderRadius: "50%",
-                  border: "1px solid var(--gray500)",
-                }}
-              >
-                <Upload
-                  name="avatar"
-                  listType="picture-circle"
-                  className="avatar-uploader"
-                  showUploadList={false}
-                  beforeUpload={beforeUpload}
-                  onChange={handleUploadImage}
-                  style={{
-                    backgroundColor: "var(--gray500)",
-                    width: "100%",
-                    aspectRatio: 1,
-                  }}
-                >
-                  {event?.eventInfoDetail?.logo ? (
-                    <img
-                      src={event?.eventInfoDetail?.logo}
-                      alt="avatar"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        zIndex: "-1",
-                        objectFit: "cover",
-                        objectPosition: "center",
-                      }}
-                    />
-                  ) : (
-                    uploadButton
-                  )}
-                </Upload>
-              </div>
-              <div style={{ width: "85%" }}>
-                {event?.eventInfoDetail?.eventName}
-              </div>
-            </div>
-          </Grid>
-          <Grid item xs={12} sm={12} md={12} lg={12}>
-            <FormatEventDetailInfo />
-          </Grid>
-          <Grid item xs={12}>
-            <FormatToDisplayDetail />
-          </Grid>
-          <Grid
-            style={{ padding: "8px 8px 8px 0px" }}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            <GraphicInventoryEventActivity />
-          </Grid>
-          {/* <Grid item xs={12} sm={12} md={6} lg={2}>
-            <InventoryEventValue />
-          </Grid> */}
-          <Grid
-            style={{ padding: `${isExtraLargeDevice && "0px 0px 0px 8px"}` }}
-            item
-            xs={12}
-            sm={12}
-            md={6}
-            lg={6}
-          >
-            <Report />
-          </Grid>
-          <Divider />
 
-          <Grid item xs={12}>
-            <AlInventoryEventAssigned
-              key={"AlInventoryEventAssigned"}
-              displayElementsBasedOnRole={displayElementsBasedOnRole}
-              setShowInventoryTypes={setShowInventoryTypes}
-              showInventoryTypes={showInventoryTypes}
-              inventoryEventAssignedCount={inventoryEventAssignedCount}
-              setEditingInventory={setEditingInventory}
-              setEditingServiceInEvent={setEditingServiceInEvent}
-              user={user}
-              AlInventoryEventAssigned
-              database={receiversPoolQuery?.data?.data}
-            />
+        <Grid item xs={12}>
+          <Divider style={{ margin: "16px 0" }} />
+        </Grid>
+
+        {/* Event detail columns: contact, dates, actions, QR */}
+        <Grid item xs={12} style={{ marginBottom: "16px" }}>
+          <FormatEventDetailInfo />
+        </Grid>
+
+        {/* Summary metric cards */}
+        <Grid item xs={12} style={{ marginBottom: "16px" }}>
+          <FormatToDisplayDetail />
+        </Grid>
+
+        {/* Activity chart + lost fee report */}
+        <Grid item xs={12} style={{ marginBottom: "16px" }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4} lg={4}>
+              <GraphicInventoryEventActivity />
+              </Grid>
+            <Grid item xs={12} md={8}>
+              <Report />
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <AllInventoryEventForCustomerOnly
-              key={"AllInventoryEventForCustomerOnly"}
-              displayElementsBasedOnRole={displayElementsBasedOnRole}
-              setShowInventoryTypes={setShowInventoryTypesForCustomersOnly}
-              showInventoryTypes={showInventoryTypesForCustomersOnly}
-              inventoryEventAssignedCount={
-                inventoryEventAssignedForCustomersCount
-              }
-              setEditingInventory={setEditingInventory}
-              setEditingServiceInEvent={setEditingServiceInEvent}
-              user={user}
-              AlInventoryEventAssigned
-              database={receiversPoolQuery?.data?.data}
-            />
-          </Grid>
-          <Divider />
+        </Grid>
+
+        <Grid item xs={12}>
+          <Divider style={{ margin: "8px 0 16px" }} />
+        </Grid>
+
+        {/* Inventory assigned to event */}
+        <Grid item xs={12}>
+          <AlInventoryEventAssigned
+            key="AlInventoryEventAssigned"
+            displayElementsBasedOnRole={displayElementsBasedOnRole}
+            setShowInventoryTypes={setShowInventoryTypes}
+            showInventoryTypes={showInventoryTypes}
+            inventoryEventAssignedCount={inventoryEventAssignedCount}
+            setEditingInventory={setEditingInventory}
+            setEditingServiceInEvent={setEditingServiceInEvent}
+            user={user}
+            database={receiversPoolQuery?.data?.data}
+          />
+        </Grid>
+
+        {/* Consumer-only inventory */}
+        <Grid item xs={12} style={{ marginTop: "16px" }}>
+          <AllInventoryEventForCustomerOnly
+            key="AllInventoryEventForCustomerOnly"
+            displayElementsBasedOnRole={displayElementsBasedOnRole}
+            setShowInventoryTypes={setShowInventoryTypesForCustomersOnly}
+            showInventoryTypes={showInventoryTypesForCustomersOnly}
+            inventoryEventAssignedCount={inventoryEventAssignedForCustomersCount}
+            setEditingInventory={setEditingInventory}
+            setEditingServiceInEvent={setEditingServiceInEvent}
+            user={user}
+            database={receiversPoolQuery?.data?.data}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <Divider style={{ margin: "16px 0" }} />
+        </Grid>
+
+        {/* Device-level table */}
+        <Grid item xs={12}>
           <DevicesInformationSection
             foundAllDevicesGivenInEvent={foundAllDevicesGivenInEvent}
             dataToRenderInComponent={parsingData}
           />
         </Grid>
+
+        {/* Consumers section */}
         <Grid
+          item
+          xs={12}
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            margin: "2rem auto 1rem",
+            margin: "24px 0 12px",
+            flexWrap: "wrap",
+            gap: "12px",
           }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
         >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              fontWeight: 500,
-              color: "#000",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            Consumers at the event:&nbsp;
+          <p style={sectionHeaderStyle}>
+            Consumers at the event
             <HighlightedPill
               props={`${foundAttendeesPerEvent()?.length} total`}
             />
           </p>
           <BlueButtonComponent
             func={() => setCreateUserButton(true)}
-            styles={{
-              width: "fit-content",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            title={"Add new consumer"}
+            title="Add new consumer"
           />
         </Grid>
-        <CustomerInformationSection
-          foundAttendeesPerEvent={foundAttendeesPerEvent}
-          isSmallDevice={isSmallDevice}
-          isMediumDevice={isMediumDevice}
-        />
-        <Divider />
+        <Grid item xs={12}>
+          <CustomerInformationSection
+            foundAttendeesPerEvent={foundAttendeesPerEvent}
+            isSmallDevice={isSmallDevice}
+            isMediumDevice={isMediumDevice}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <Divider style={{ margin: "16px 0" }} />
+        </Grid>
+
+        {/* Staff section */}
         <Grid
+          item
+          xs={12}
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            margin: "2rem auto 1rem",
+            margin: "24px 0 12px",
+            flexWrap: "wrap",
+            gap: "12px",
           }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
         >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              fontWeight: 500,
-              color: "#000",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "center",
-            }}
-          >
-            Staff at the event:&nbsp;
+          <p style={sectionHeaderStyle}>
+            Staff at the event
             <HighlightedPill
               props={`${sum(
                 event?.staff?.adminUser?.length ?? 0,
@@ -632,33 +475,33 @@ const MainPageQuickGlance = () => {
               )} total`}
             />
           </p>
-          <BlueButtonComponent
-            func={() => setEditingStaff(true)}
-            styles={{
-              width: "fit-content",
-              display: can(user.role, "events.editResources") ? "flex" : "none",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            title={"Update staff"}
-          />
+          {can(user.role, "events.editResources") && (
+            <BlueButtonComponent
+              func={() => setEditingStaff(true)}
+              title="Update staff"
+            />
+          )}
         </Grid>
-        <StaffMainPage />
+        <Grid item xs={12}>
+          <StaffMainPage />
+        </Grid>
+
+        {/* Modals */}
         {(editingInventory ||
           editingServiceInEvent ||
           editingStaff ||
           createUserButton) && (
-          <ModalsComponentsEventQuickGlance
-            editingInventory={editingInventory}
-            setEditingInventory={setEditingInventory}
-            editingServiceInEvent={editingServiceInEvent}
-            setEditingServiceInEvent={setEditingServiceInEvent}
-            editingStaff={editingStaff}
-            setEditingStaff={setEditingStaff}
-            createUserButton={createUserButton}
-            setCreateUserButton={setCreateUserButton}
-          />
-        )}
+            <ModalsComponentsEventQuickGlance
+              editingInventory={editingInventory}
+              setEditingInventory={setEditingInventory}
+              editingServiceInEvent={editingServiceInEvent}
+              setEditingServiceInEvent={setEditingServiceInEvent}
+              editingStaff={editingStaff}
+              setEditingStaff={setEditingStaff}
+              createUserButton={createUserButton}
+              setCreateUserButton={setCreateUserButton}
+            />
+          )}
       </Grid>
     );
   }

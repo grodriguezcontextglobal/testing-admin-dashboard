@@ -3,6 +3,7 @@ import { Card, message, Switch } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 const { Meta } = Card;
 
 const MainGridPosts = ({ data, refetch }) => {
@@ -39,6 +40,9 @@ const MainGridPosts = ({ data, refetch }) => {
 
   return (
     <>
+      <div style={{width:"100%", display:"flex", justifyContent:"flex-end"}}>
+        <BlueButtonComponent title={"Add new post"} func={() => navigate("/posts/new-post")} />
+      </div>
       <Grid container marginY={4} spacing={2}>
         {data.map((article) => (
           <Grid item xs={10} sm={6} md={4} lg={4} key={article.id}>

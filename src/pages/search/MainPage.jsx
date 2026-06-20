@@ -28,21 +28,21 @@ const SearchMainPage = () => {
       devitrakApi.get(
         `/search/searching_?variable=${searchParams}&company=${user.companyData.id}`
       ),
+    enabled: !!searchParams && !!user?.companyData?.id,
     refetchOnWindowFocus: false,
   });
   const styleSection = {
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
-    borderBottom: "solid 1px gray",
-    borderRadius: "0",
-    padding: "24px 0 24px 12px",
+    borderBottom: "1px solid var(--gray-200, #EAECF0)",
+    padding: "32px 0",
     width: "100%",
-    margin: "0.5rem 0",
   };
   useEffect(() => {
-    return setSearchParams(location.search.slice(8).replaceAll("%20", " "));
-  }, [location.key, location.search, searchParams]);
+    const params = new URLSearchParams(location.search);
+    setSearchParams(params.get("search") ?? "");
+  }, [location.key, location.search]);
 
   const searching_consumer = useId();
   const searching_staff = useId();
@@ -53,11 +53,9 @@ const SearchMainPage = () => {
   const consumersCount =
     generalSearch?.data?.data?.consumer?.consumers?.length ?? 0;
   const staffCount = generalSearch?.data?.data?.staff?.length ?? 0;
-  const activeDevices =
-    (generalSearch?.data?.data?.devicePool?.devicePool ?? []).filter(
-      (item) => item?.activity === true
-    );
-  const devicesCount = activeDevices.length;
+  const deviceTransactions =
+    generalSearch?.data?.data?.deviceTransaction?.deviceTransaction ?? [];
+  const devicesCount = deviceTransactions.length;
   const eventsCount = generalSearch?.data?.data?.event?.results?.length ?? 0;
   const sum = () => {
     return consumersCount + staffCount + devicesCount + eventsCount;
@@ -111,8 +109,8 @@ const SearchMainPage = () => {
               id={searching_device}
               searchParams={searchParams}
               data={{
-                pool: activeDevices,
-                device: generalSearch?.data?.data?.deviceTransaction,
+                pool: generalSearch?.data?.data?.devicePool?.devicePool ?? [],
+                device: deviceTransactions,
               }}
             />
           </section>

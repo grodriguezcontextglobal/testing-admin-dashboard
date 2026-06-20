@@ -26,38 +26,34 @@ const ReusableCardWithFooter = ({
       onClick={onClick}
       actions={actions}
     >
-      <Grid
-        display={"flex"}
-        justifyContent={"space-around"}
-        alignItems={"center"}
-        container
-      >
+      {title && (
         <Grid
           display={"flex"}
-          justifyContent={"flex-start"}
+          justifyContent={"space-around"}
           alignItems={"center"}
-          item
-          xs={12}
+          container
         >
-          <Typography
-            textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
-            style={{ ...subtitle, textWrap: "nowrap" }}
+          <Grid
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            item
+            xs={12}
           >
-            {title}
-          </Typography>
+            <Typography
+              textAlign={`${(isSmallDevice || isMediumDevice) && "left"}`}
+              style={{ ...subtitle, textWrap: "nowrap" }}
+            >
+              {title}
+            </Typography>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
       <Grid container>
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          item
-          xs={12}
-        >
+        <Grid item xs={12}>
           <Typography
-            paddingTop={"8px"}
-            style={{ ...textFontSize30LineHeight38 }}
+            component={"div"}
+            style={{ ...textFontSize30LineHeight38, width: "100%" }}
           >
             {children}
           </Typography>

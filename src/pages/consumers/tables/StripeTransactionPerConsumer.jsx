@@ -1,12 +1,13 @@
+import { Icon } from "@iconify/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, Badge } from "antd";
+import { Avatar } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Chip from "../../../components/UX/Chip/Chip";
 import TableHeader from "../../../components/UX/TableHeader";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
@@ -23,17 +24,34 @@ import {
 import { onAddPaymentIntentSelected } from "../../../store/slices/stripeSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import "../../../styles/global/ant-table.css";
 import ExpandedRow from "./ExpandedRow";
 
-const StripeTransactionPerConsumer = ({ data, searchValue }) => {
+const searchInputStyle = {
+  height: "36px",
+  padding: "0 32px 0 34px",
+  border: "1px solid var(--gray-300, #D0D5DD)",
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontFamily: "Inter",
+  color: "var(--gray-900, #101828)",
+  outline: "none",
+  width: "200px",
+  background: "#fff",
+  boxShadow: "0px 1px 2px rgba(16, 24, 40, 0.05)",
+};
+
+const StripeTransactionPerConsumer = ({ data, refetching }) => {
+  const { register, watch, setValue } = useForm();
+  const searchValue = watch("searchEvent") ?? "";
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
   const [paymentIntentInfoRetrieved, setPaymentIntentInfoRetrieved] = useState(
     {},
   );
   const [responseData, setResponseData] = useState([]);
+  const [stripeStatusMap, setStripeStatusMap] = useState({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -46,6 +64,24 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     return setPaymentIntentInfoRetrieved(props);
   };
 
+  const fetchStripeStatusesForPaymentIntents = async (paymentIntentIds) => {
+    await Promise.all(
+      paymentIntentIds
+        .filter((pi) => pi?.length >= 16 && !String(pi).includes("cash"))
+        .map(async (pi) => {
+          try {
+            const res = await devitrakApi.get(`/stripe/payment_intents/${pi}`);
+            const status = res?.data?.paymentIntent?.status;
+            if (status) {
+              setStripeStatusMap((prev) => ({ ...prev, [pi]: status }));
+            }
+          } catch {
+            // skip individual failures
+          }
+        })
+    );
+  };
+
   const fetchingAllTransactionPerConsumerRelatedToEvent = async () => {
     return data;
   };
@@ -55,11 +91,17 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       await fetchingAllTransactionPerConsumerRelatedToEvent();
     const result = new Map();
     const groupedData = groupBy(allTransactionFetching, "paymentIntent");
-    for (let [key, value] of Object.entries(groupedData)) {
-      const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
-        paymentIntent: key,
-      });
-      const transactionData = respo?.data?.listOfReceivers;
+    const paymentIntentList = [...Object.keys(groupedData)];
+    const respo = await devitrakApi.post("/receiver/all-transaction-by-event-and-consumer", {
+      paymentIntentList,
+      company: user.companyData.id
+    })
+
+    respo?.data?.listOfReceivers?.forEach((item) => {
+      const key = item.paymentIntent
+      const value = groupedData[key]
+
+      const transactionData = respo?.data?.listOfReceivers?.filter((item) => item.paymentIntent === key)
       if (!result.has(key)) {
         result.set(key, [
           {
@@ -102,7 +144,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
           },
         ]);
       }
-    }
+    })
     let final = [...result.values().map((item) => item)];
     return setResponseData(final);
   };
@@ -116,8 +158,9 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
   }, [customer.id, customer.uid, data]); // Add dependencies to trigger refresh
 
   const refetchingAfterReturnDeviceInRow = async () => {
-    await queryClient.invalidateQueries(["transactionsList"]);
-    await queryClient.invalidateQueries(["receiverList"]);
+    await queryClient.invalidateQueries({ queryKey: ["transactionsList"] });
+    await queryClient.invalidateQueries({ queryKey: ["receiverList"] });
+    if (refetching) refetching();
     return fetchingDataPerAllowed();
   };
 
@@ -154,6 +197,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     ) {
       return "none";
     } else {
+      fetchStripeStatusesForPaymentIntents(paymentIntent);
       return "flex";
     }
   };
@@ -285,36 +329,63 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
       dataIndex: "action",
       key: "action",
       responsive: ["xs", "sm", "md", "lg"],
-      width: "3%",
       render: (_, record) => {
-        const checkPaymentID = String(record.paymentIntent).split("_");
+        const paymentIntent = record.paymentIntent;
+
+        // Free transactions (pi_ auto-generated, length < 16): no buttons
+        if (!paymentIntent || paymentIntent.length < 16) return null;
+
+        const isCash = String(paymentIntent).includes("cash");
+
+        if (isCash) {
+          // Cash: hide buttons if transaction is inactive
+          if (record.eventInfo?.[0]?.active === false) return null;
+          return (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "flex-start",
+                width: "100%",
+                gap: "5px",
+              }}
+            >
+              <DangerButtonComponent title={"Capture"} func={() => null} />
+              <BlueButtonComponent title={"Release"} func={() => null} />
+              <button
+                style={{ background: "transparent", outline: "none" }}
+                onClick={() => moreDetailFn(record)}
+              >
+                <RightNarrowInCircle />
+              </button>
+            </div>
+          );
+        }
+
+        // Card (Stripe): gray out when status ≠ requires_capture
+        const stripeStatus = stripeStatusMap[paymentIntent];
+        const isActive = stripeStatus === "requires_capture";
+
         return (
           <div
             style={{
-              display: renderingOptionsBasedOnPaymentIntentStatus(
-                record.paymentIntent,
-              ),
+              display: "flex",
               justifyContent: "flex-end",
-              alignItems: "center",
+              alignItems: "flex-start",
               width: "100%",
               gap: "5px",
             }}
           >
             <DangerButtonComponent
-              disabled={
-                checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
-              }
+              disabled={!isActive}
               title={"Capture"}
               func={() => null}
             />
             <BlueButtonComponent
-              disabled={
-                checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
-              }
+              disabled={!isActive}
               title={"Release"}
               func={() => null}
             />
-
             <button
               style={{ background: "transparent", outline: "none" }}
               onClick={() => moreDetailFn(record)}
@@ -331,44 +402,31 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
 
   const customExpandIcon = (props) => {
     return (
-      <div
+      <button
         onClick={(e) => {
+          e.stopPropagation();
           props.onExpand(props.record, e);
         }}
-        key={props.expanded}
-        style={{ ...Subtitle, cursor: "pointer" }}
+        style={{
+          border: "1px solid #D0D5DD",
+          background: props.expanded ? "#344054" : "#fff",
+          borderRadius: "9999px",
+          padding: "6px 14px",
+          fontSize: "14px",
+          lineHeight: "20px",
+          color: props.expanded ? "#fff" : "#475467",
+          fontWeight: props.expanded ? 500 : 400,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          whiteSpace: "nowrap",
+          width: "fit-content"
+        }}
       >
-        <Badge>
-          <Chip
-            variant="filled"
-            color={props.expanded ? "default" : "success"}
-            style={{
-              width: "100%",
-            }}
-            label={
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <p
-                  style={{
-                    ...Subtitle,
-                    margin: 0,
-                    color: "inherit",
-                  }}
-                >
-                  {props.expanded ? "Close" : "Open"}
-                </p>
-                {props.expanded ? <UpNarrowIcon /> : <DownNarrow />}
-              </div>
-            }
-          />
-        </Badge>
-      </div>
+        {props.expanded ? "Close" : "Open"}
+        {props.expanded ? <UpNarrowIcon /> : <DownNarrow />}
+      </button>
     );
   };
 
@@ -413,22 +471,62 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
     });
   };
   const headerTitleStyle = {
-    ...TextFontSize20LineHeight30,
-    fontWeight: 500,
-    color: "#000",
+    ...TextFontsize18LineHeight28,
+    fontWeight: 600,
+    color: "#344054",
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
-    padding: "24px 12px",
+    margin: 0,
   };
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <TableHeader
-        leftCta={<p style={headerTitleStyle}>Transactions</p>}
+        leftCta={
+          <p style={headerTitleStyle}>Transactions</p>
+        }
         rightCta={
-          <span style={{ marginBottom: "-25px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ position: "relative" }}>
+              <Icon
+                icon="radix-icons:magnifying-glass"
+                color="#667085"
+                width={16}
+                height={16}
+                style={{
+                  position: "absolute",
+                  left: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                {...register("searchEvent")}
+                type="text"
+                placeholder="Search a transaction here"
+                data-testid="transaction-search"
+                style={searchInputStyle}
+              />
+              {searchValue.length > 0 && (
+                <Icon
+                  icon="ic:baseline-delete-forever"
+                  color="#667085"
+                  width={18}
+                  height={18}
+                  style={{
+                    position: "absolute",
+                    right: "8px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setValue("searchEvent", "")}
+                />
+              )}
+            </div>
             <RefreshButton propsFn={refetchingAfterReturnDeviceInRow} />
-          </span>
+          </div>
         }
       />
       <ExpandableTable
@@ -461,6 +559,7 @@ const StripeTransactionPerConsumer = ({ data, searchValue }) => {
 };
 
 StripeTransactionPerConsumer.propTypes = {
-  searchValue: PropTypes.string,
+  data: PropTypes.array,
+  refetching: PropTypes.func,
 };
 export default StripeTransactionPerConsumer;

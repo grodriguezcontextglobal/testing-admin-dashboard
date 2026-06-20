@@ -4,7 +4,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
@@ -227,18 +226,17 @@ const AssignLocationManager = () => {
       dataIndex: "location",
       key: "location",
       render: (text) => (
-        <Typography
+        <span
           style={{
             color: "var(--gray-900, #101828)",
             fontFamily: "Inter",
             fontSize: "14px",
-            fontStyle: "normal",
             fontWeight: 500,
             lineHeight: "20px",
           }}
         >
           {text}
-        </Typography>
+        </span>
       ),
     },
     {
@@ -305,16 +303,7 @@ const AssignLocationManager = () => {
   return (
     <>
       <ReusableCardWithHeaderAndFooter
-        title={
-          <Typography
-            variant="h6"
-            style={{
-              marginBottom: "16px",
-            }}
-          >
-            Assign Location/Permissions
-          </Typography>
-        }
+        title="Assign Location/Permissions"
         style={{ width: "100%" }}
         actions={[
           <Grid
@@ -352,10 +341,9 @@ const AssignLocationManager = () => {
           </Grid>,
         ]}
       >
-        <Typography paragraph style={Subtitle}>
-          Assign this staff member for specific locations and define
-          permissions.
-        </Typography>
+        <p style={{ ...Subtitle, marginBottom: "16px" }}>
+          Assign this staff member for specific locations and define permissions.
+        </p>
         <form id="assignLocationForm" onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
             <Grid
@@ -477,20 +465,7 @@ const AssignLocationManager = () => {
       </ReusableCardWithHeaderAndFooter>
       <ReusableCardWithHeaderAndFooter
         style={{ width: "100%", margin: "3dvh 0 0" }}
-        title={
-          <Typography
-            variant="h6"
-            style={{
-              marginBottom: "16px",
-              color: "var(--gray-900, #101828)",
-              fontFamily: "Inter",
-              fontSize: "18px",
-              fontWeight: 600,
-            }}
-          >
-            Assigned Locations
-          </Typography>
-        }
+        title="Assigned Locations"
       >
         <BaseTable
           columns={columns}

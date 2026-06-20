@@ -423,36 +423,6 @@ const useBulkActionLogic = () => {
     return setScannedSerialNumbers(result);
   };
 
-  const acceptAndGenerateImage = async () => {
-    try {
-      if (
-        imageUploadedValue?.length > 0 &&
-        imageUploadedValue[0].size > 5242880
-      ) {
-        return alert(
-          "Image is bigger than allow. Please resize the image or select a new one.",
-        );
-      }
-      if (!watch("category_name") || !watch("item_group")) {
-        return alert("Category name and item group are required.");
-      }
-      const data = {
-        category_name: watch("category_name"),
-        item_group: watch("item_group"),
-      };
-
-      const img_url = await storeAndGenerateImageUrl({
-        data,
-        imageUploadedValue,
-        user,
-      });
-
-      setImageUrlGenerated(img_url);
-      return message.success("Image was successfully accepted.");
-    } catch (error) {
-      message.error("Failed to upload image: " + error.message);
-    }
-  };
 
   const handleSearchByReference = () => {
     const categoryRef = watch("reference_category_name");
@@ -645,6 +615,33 @@ const useBulkActionLogic = () => {
         const base64 = await convertToBase64(imageUploadedValue[0]);
         setConvertImageTo64ForPreview(base64);
         setDisplayPreviewImage(true);
+
+        // Automatically generate image URL
+        try {
+          if (imageUploadedValue[0].size > 5242880) {
+            return alert(
+              "Image is bigger than allow. Please resize the image or select a new one."
+            );
+          }
+          if (!watch("category_name") || !watch("item_group")) {
+            return alert("Category name and item group are required.");
+          }
+          const data = {
+            category_name: watch("category_name"),
+            item_group: watch("item_group"),
+          };
+
+          const img_url = await storeAndGenerateImageUrl({
+            data,
+            imageUploadedValue,
+            user,
+          });
+
+          setImageUrlGenerated(img_url);
+          message.success("Image was successfully accepted.");
+        } catch (error) {
+          message.error("Failed to upload image: " + error.message);
+        }
       };
       triggerImageInto64();
     } else {
@@ -663,7 +660,7 @@ const useBulkActionLogic = () => {
   }, [watch("tax_location")]);
 
   return {
-    acceptAndGenerateImage,
+    // acceptAndGenerateImage,
     addingSubLocation,
     addSerialNumberField,
     allSerialNumbersOptions,

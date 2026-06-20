@@ -1,15 +1,13 @@
-import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "lodash";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
-// import CardEventDisplay from "../../events/components/CardEventDisplay";
-// import BannerMsg from "../../events/utils/BannerMsg";
 import { lazy, Suspense, useEffect } from "react";
 import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { can } from "../../../config/roleCapabilities";
+import EventsCarousel from "../../../components/UX/carousel/EventsCarousel";
 const CardEventDisplay = lazy(() => import("../../events/components/CardEventDisplay"));
 const BannerMsg = lazy(() => import("../../events/utils/BannerMsg"));
 const MainPage = () => {
@@ -112,6 +110,8 @@ const MainPage = () => {
       }
       return Array.from(result);
     };
+    const upcomingEvents = dataToBeRenderedInUpcomingSection();
+
     return (
       <Suspense
         fallback={
@@ -120,35 +120,14 @@ const MainPage = () => {
           </div>
         }
       >
-        <Grid container spacing={1}>
-          {renderingDataBasedOnStaffAndActiveEvent().length > 0 ? (
-            dataToBeRenderedInUpcomingSection()?.map((event) => {
-              return (
-                <Grid
-                  key={event.id}
-                  sx={{
-                    padding:{
-                      xs:0,
-                      sm:0,
-                      md:"8px",
-                      lg:"8px"
-                    }
-                  }}
-                  alignSelf={"flex-start"}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={6}
-                  lg={6}
-                >
-                  <CardEventDisplay props={event} />
-                </Grid>
-              );
-            })
-          ) : (
-            <BannerMsg />
-          )}
-        </Grid>
+        {renderingDataBasedOnStaffAndActiveEvent().length > 0 ? (
+          <EventsCarousel
+            items={upcomingEvents}
+            renderItem={(event) => <CardEventDisplay props={event} />}
+          />
+        ) : (
+          <BannerMsg />
+        )}
       </Suspense>
     );
   }

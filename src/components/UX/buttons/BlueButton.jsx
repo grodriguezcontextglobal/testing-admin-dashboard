@@ -17,7 +17,7 @@ import "./styles.css"
 const BlueButtonComponent = ({
   // ---- New (UntitledUI-like) props ----
   size = "md", // "sm" | "md" | "lg" | "xl"
-  // iconLeading = null,
+  iconLeading = null,
   iconTrailing = null,
   href = null,
   target,
@@ -59,11 +59,11 @@ const BlueButtonComponent = ({
 
   const content = (
     <span className="customized__blueButtonContent">
-      {/* {iconLeading ? (
+      {iconLeading ? (
         <span className="customized__blueButtonIcon" data-icon>
           {iconLeading}
         </span>
-      ) : null} */}
+      ) : null}
 
       {(title || showTextWhileLoading || !resolvedLoading) && (
         <span className="customized__blueButtonText" style={{ ...titleStyles }}>

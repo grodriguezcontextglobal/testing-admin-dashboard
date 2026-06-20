@@ -1,86 +1,40 @@
-import { Typography } from '@mui/material'
 import { Avatar, Card } from 'antd'
-import { Subtitle } from '../../../styles/global/Subtitle'
-const CardSearchStaffFound = ({ props, fn }) => {
-  return (
-    <Card onClick={() => fn(props)} style={{
-      borderRadius: '12px',
-      border: '1px solid #D0D5DD',
-      backgroundColor: '#FFF',
-      boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.05)',
-      display: 'flex',
-      padding: '5px',
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      gap: '20px',
-      cursor: "pointer",
-      height:"100%"
-    }}
-      styles={{
-        body: {
-          padding: '5px 20px 20px 20px',
-        }
-      }}
-    >
-      <div style={{ width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Avatar src={props?.other?.imageProfile} style={{ width: "5rem", height: "5rem", margin: "0 0 1rem 0" }}>
-          {
-            !props?.other &&
-            props?.name[0]}{props?.lastName[0]
-          }
-        </Avatar>
-        <Typography style={{...Subtitle, display:`${String(props?.other?.status).toLowerCase() !== "confirmed" ? "flex" :"none"}`, color:"red", textDecoration:"underline"}}>
-          {props?.status}
-        </Typography>
-      </div>
-      <div style={{
-        width: "100%",
-        textAlign: "left",
-        color: 'var(--Gray-900, #101828)',
-        fontFamily: 'Inter',
-        fontSize: '18px',
-        fontStyle: ' normal',
-        fontWeight: 600,
-        lineHeight: '28px', /* 155.556% */
-      }}>
-        {props?.name} {props?.lastName}
-      </div>
-      <div style={{
-        width: "100%",
-        textAlign: "left",
-        color: 'var(--Primary-700, #6941C6)',
-        fontFamily: 'Inter',
-        fontSize: '16px',
-        fontStyle: 'normal',
-        fontWeight: 400,
-        lineHeight: '24px', /* 150% */
-        textWrap: "pretty"
-      }}>
-        <p style={{
-          width: "100%",
-          textAlign: "left",
-          fontFamily: 'Inter',
-          fontSize: '16px',
-          fontStyle: 'normal',
-          fontWeight: 400,
-          lineHeight: '24px', /* 150% */
-          textWrap: "pretty",
-          overflowWrap: "anywhere",
+import { BadgeWithDot } from '../../../components/base/badges/badges'
 
-        }}>
-          {props?.email}
-        </p>
+const CARD_STYLE = {
+  borderRadius: '12px',
+  border: '1px solid var(--gray-200, #EAECF0)',
+  background: 'var(--base-white, #FFF)',
+  boxShadow: '0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)',
+  cursor: 'pointer',
+  height: '100%',
+}
+
+const CardSearchStaffFound = ({ props, fn }) => {
+  const isPending = String(props?.other?.status ?? '').toLowerCase() !== 'confirmed'
+  return (
+    <Card
+      onClick={() => fn(props)}
+      style={CARD_STYLE}
+      styles={{ body: { padding: '16px 20px 20px' } }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+        <Avatar src={props?.other?.imageProfile} style={{ width: '3.5rem', height: '3.5rem' }}>
+          {!props?.other?.imageProfile && `${props?.name?.[0] ?? ''}${props?.lastName?.[0] ?? ''}`}
+        </Avatar>
+        {isPending && (
+          <BadgeWithDot color="warning">{props?.status ?? 'Pending'}</BadgeWithDot>
+        )}
       </div>
-      <div style={{
-        width: "100%",
-        textAlign: "left",
-        color: 'var(--Gray-600, #475467)',
-        fontFamily: 'Inter',
-        fontSize: '16px',
-        fontStyle: 'normal',
-        fontWeight: 400,
-        lineHeight: '24px' /* 150% */
-      }}>{props?.phoneNumber ?? '000-000-0000'}</div>
+      <p style={{ fontFamily: 'Inter', fontSize: '16px', fontWeight: 600, lineHeight: '24px', color: 'var(--gray-900, #101828)', textWrap: 'pretty', marginBottom: '4px' }}>
+        {props?.name} {props?.lastName}
+      </p>
+      <p style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: 'var(--Primary-700, #6941C6)', overflowWrap: 'anywhere', textWrap: 'pretty', marginBottom: '4px' }}>
+        {props?.email}
+      </p>
+      <p style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 400, lineHeight: '20px', color: 'var(--gray-500, #667085)', margin: 0 }}>
+        {props?.phoneNumber ?? '—'}
+      </p>
     </Card>
   )
 }

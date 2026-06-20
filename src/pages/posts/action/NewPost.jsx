@@ -21,24 +21,51 @@ import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize3
 
 export const ImageUploaderContext = createContext();
 
-// Create a styled version of ReactQuill to customize its appearance
-const CustomReactQuill = styled(ReactQuill)(({ theme }) => ({
+const CustomReactQuill = styled(ReactQuill)(() => ({
+  width: "100%",
   "& .ql-toolbar": {
-    backgroundColor: "#f5f5f5",
-    borderBottom: "1px solid #ccc",
-    borderRadius: "12px 12px 0px 0px",
+    backgroundColor: "#f9fafb",
+    border: "1px solid #d0d5dd",
+    borderBottom: "1px solid #eaecf0",
+    borderRadius: "8px 8px 0 0",
+    padding: "8px 12px",
   },
   "& .ql-container": {
-    border: "1px solid #ccc",
-    // borderRadius: "4px",
-    borderRadius: "0 0 12px 12px",
-    // Add padding if desired
-    padding: theme,
+    border: "1px solid #d0d5dd",
+    borderTop: "none",
+    borderRadius: "0 0 8px 8px",
+    boxShadow: "0 1px 2px rgba(16, 24, 40, 0.05)",
   },
   "& .ql-editor": {
     minHeight: "200px",
-    fontSize: "1rem",
-    fontFamily: "Roboto, sans-serif",
+    fontSize: "0.875rem",
+    fontFamily: "Inter, sans-serif",
+    color: "#101828",
+    lineHeight: "1.5rem",
+    padding: "12px 14px",
+  },
+  "& .ql-editor.ql-blank::before": {
+    color: "#667085",
+    fontStyle: "normal",
+    fontSize: "0.875rem",
+  },
+  "& .ql-toolbar .ql-stroke": {
+    stroke: "#344054",
+  },
+  "& .ql-toolbar .ql-fill": {
+    fill: "#344054",
+  },
+  "& .ql-toolbar button:hover .ql-stroke, & .ql-toolbar button.ql-active .ql-stroke": {
+    stroke: "#155eef",
+  },
+  "& .ql-toolbar button:hover .ql-fill, & .ql-toolbar button.ql-active .ql-fill": {
+    fill: "#155eef",
+  },
+  "& .ql-toolbar .ql-picker-label": {
+    color: "#344054",
+  },
+  "& .ql-toolbar .ql-picker-label:hover": {
+    color: "#155eef",
   },
 }));
 

@@ -1,143 +1,81 @@
-import { Grid } from "@mui/material";
-import { message } from "antd";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import CenteringGrid from "../../styles/global/CenteringGrid";
-import { rolesWith } from "../../config/roleCapabilities";
-import { Title } from "../../styles/global/Title";
-import { Subtitle } from "../../styles/global/Subtitle";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import Home from "../../components/icons/Home";
+
 const ErrorLandingPage = () => {
-  const [messageApi, contextHolder] = message.useMessage();
-  const key = "updatable";
-  const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const openMessage = () => {
-    setTimeout(async () => {
-      await messageApi.open({
-        key,
-        type: "loading",
-        content: "processing information...",
-        duration: 2,
-      });
-      await messageApi.open({
-        key,
-        type: "success",
-        content: "Keep using Devitrak App!",
-        duration: 1,
-      });
-    }, 1000);
-  };
-  openMessage();
-  const options = [
-    {
-      title: "home",
-      route: "/",
-      permission: rolesWith("nav.home"),
-    },
-    {
-      title: "events",
-      route: "/events",
-      permission: rolesWith("nav.events"),
-    },
-    {
-      title: "inventory",
-      route: "/inventory",
-      permission: rolesWith("nav.inventory"),
-    },
-    {
-      title: "customers",
-      route: "/customers",
-      permission: rolesWith("nav.consumers"),
-    },
-    {
-      title: "staff",
-      route: "/staff",
-      permission: rolesWith("nav.staff"),
-    },
-  ];
   return (
-    <>
-      {contextHolder}
-      <Grid
-        container
+    <section
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "70vh",
+        padding: "64px 16px",
+      }}
+    >
+      <div
         style={{
-          ...CenteringGrid,
-          backgroundColor: "var(--blue700)",
-          borderRadius: "8px",
-          width:"30vw"
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "32px",
+          maxWidth: "480px",
+          textAlign: "center",
         }}
       >
-        <div style={{ ...CenteringGrid, flexDirection: "column",}}>
-          <div style={{ ...CenteringGrid }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <span
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "var(--blue700)",
+              }}
+            >
+              404 error
+            </span>
             <h1
               style={{
-                ...Title,
-                color: "var(--basewhite)",
-                borderRadius: "5px",
+                fontSize: "48px",
+                fontWeight: 600,
+                color: "var(--gray-900, #101828)",
+                margin: 0,
+                lineHeight: 1.2,
               }}
             >
-              404 page not found.
+              Page not found
             </h1>
           </div>
-          <div
+          <p
             style={{
-              ...Title,
-              display: "flex",
-              flexDirection: "column",
-              color: "var(--basewhite)",
-              borderRadius: "5px",
+              fontSize: "18px",
+              color: "var(--gray-600, #475467)",
+              margin: 0,
+              lineHeight: 1.6,
             }}
           >
-            <p style={{ ...Subtitle, color: "var(--basewhite)" }}>
-              Let me show you a few options that can help you to find the route
-              you want to go.
-            </p>
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              {options.map((item) => {
-                if (
-                  item.permission.some(
-                    (element) => element === Number(user.role)
-                  )
-                ) {
-                  return (
-                    <button
-                      key={item.title}
-                      onClick={() => navigate(item.route)}
-                      style={{
-                        width: "fit-content",
-                        outline: "none",
-                        margin: 0,
-                        padding: 0,
-                        backgroundColor: "transparent",
-                      }}
-                    >
-                      <p
-                        style={{
-                          ...Subtitle,
-                          color: "var(--basewhite)",
-                          textTransform: "capitalize",
-                          textDecoration:"underline"
-                        }}
-                      >
-                        {item.title}
-                      </p>
-                    </button>
-                  );
-                }
-              })}
-            </div>
-          </div>
+            Sorry, the page you are looking for doesn&apos;t exist or has been
+            moved.
+          </p>
         </div>
-      </Grid>
-    </>
+        <BlueButtonComponent
+          size="xl"
+          title="Take me home"
+          iconLeading={<Home />}
+          func={() => navigate("/")}
+        />
+      </div>
+    </section>
   );
 };
 

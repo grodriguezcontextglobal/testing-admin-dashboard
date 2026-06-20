@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { Divider, Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "antd";
 import { groupBy } from "lodash";
@@ -181,7 +181,7 @@ const ButtonSections = () => {
       <Card
         style={{
           borderRadius: "12px",
-          border: "none",
+          border: "1px solid var(--gray-200, #EAECF0)",
           background: "var(--main-background-color)",
           boxShadow: "none",
           textAlign: "left",
@@ -193,7 +193,7 @@ const ButtonSections = () => {
             display: "flex",
             justifyContent: "center",
             alignSelf: "stretch",
-            padding: "0 0 0px 10px",
+            padding: "16px",
           },
         }}
       >
@@ -220,7 +220,7 @@ const ButtonSections = () => {
                 lg={12}
               >
                 <GrayButtonComponent
-                  // icon={!item.disableStatus && item.icon}
+                  icon={item.icon}
                   disabled={item.disableStatus}
                   func={() => item.fn()}
                   title={item.text}
@@ -239,20 +239,16 @@ const ButtonSections = () => {
           <Grid item xs={12} sm={12} md={12} lg={12}>
             <SpreadSheet />
           </Grid>
-          <Grid
-            display={`${
-              (!event.active ||
-                (event.active && !can(user.role, "events.close"))) &&
-              "none"
-            }`}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <EndEventButton />
-          </Grid>
+          {event.active && can(user.role, "events.close") && (
+            <>
+              <Grid item xs={12} sm={12} md={12} lg={12}>
+                <Divider style={{ margin: "8px 0" }} />
+              </Grid>
+              <Grid item xs={12} sm={12} md={12} lg={12}>
+                <EndEventButton />
+              </Grid>
+            </>
+          )}
         </Grid>
       </Card>
       {customizedEmailNotificationModal && (

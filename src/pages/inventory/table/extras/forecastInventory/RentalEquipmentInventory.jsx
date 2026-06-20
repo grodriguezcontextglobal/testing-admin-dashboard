@@ -24,7 +24,6 @@ const RentalEquipmentInventory = ({ rentalAnalysis, navigate }) => {
     },
     { title: "Location", dataIndex: "location", key: "location" },
   ];
-  console.log(rentalAnalysis)
   return (
     <ReusableCardWithHeaderAndFooter
       style={{ width: "-webkit-fill-available" }}

@@ -1,4 +1,4 @@
-import { Button, FormControl, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import { FormControl, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Select, Tooltip } from "antd";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -10,11 +10,11 @@ import {
   onAddDevicesSelectionPaidTransactions,
 } from "../../../../../../../../store/slices/devicesHandleSlice";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { StripeElementChargeTransactionFromDashboard } from "../../../../../../../../components/stripe/elements/StripeElementChargeTransactionFromDashboard";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
+import BlueButton from "../../../../../../../../components/UX/buttons/BlueButton";
+import GrayButton from "../../../../../../../../components/UX/buttons/GrayButton";
 
 const MultipleDevices = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -239,11 +239,12 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
           </FormControl>
         </div>
         <Tooltip title="Please submit CC info after assign all devices.">
-          <Button style={{ ...BlueButton, width: "100%" }} type="submit">
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Credit Card Info
-            </Typography>
-          </Button>
+          <BlueButton
+            title="Credit Card Info"
+            buttonType="submit"
+            size="md"
+            styles={{ width: "100%" }}
+          />
         </Tooltip>
       </form>
       {clientSecret !== "" && (
@@ -253,7 +254,12 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
         />
       )}
       {clientSecret !== "" && (
-        <Button onClick={() => closeModal()}>Cancel</Button>
+        <GrayButton
+          title="Cancel"
+          func={() => closeModal()}
+          size="md"
+          styles={{ width: "100%" }}
+        />
       )}
     </>
   );

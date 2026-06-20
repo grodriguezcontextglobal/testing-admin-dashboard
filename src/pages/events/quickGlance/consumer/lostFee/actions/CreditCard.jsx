@@ -158,6 +158,7 @@ const CreditCard = () => {
           ...verifyPaymentIntentReceiversAssignedFormat()[0].device,
           status: "Lost",
         },
+        active:false
       };
       updateAssignedDeviceMutation.mutate(assignedDeviceProfile);
       if (

@@ -1,13 +1,10 @@
 import { Grid } from "@mui/material";
 import { Divider } from "antd";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 
 const Choice = ({ openModal, setOpenModal }) => {
   // const { customer } = useSelector((state) => state.stripe);
@@ -15,76 +12,25 @@ const Choice = ({ openModal, setOpenModal }) => {
   const handleClose = () => {
     setOpenModal(false);
   };
+  const navigate = useNavigate()
   const bodyModal = () => {
     return (
       <>
-        {/* <p
-          style={{
-            textTransform: "none",
-            textAlign: "left",
-            fontWeight: 400,
-            fontSize: "16px",
-            fontFamily: "Inter",
-            lineHeight: "24px",
-          }}
-        >
-          How the lost device fee will be collected?
-        </p> */}
         <Grid
           container
           marginY={2}
           display={"flex"}
-          flexDirection={"column"}
           justifyContent={"space-between"}
           alignItems={"center"}
           gap={2}
-        >
-          <Link
-            style={{ width: "100%", backgroundColor: "transparent" }}
-            to={`/consumers/${customerDetail?.uid}/lost-device-fee/credit_card`}
-          >
-            <button style={{ ...BlueButton, width: "100%" }}>
-              <p
-                style={{
-                  ...BlueButtonText,
-                  textTransform: "none",
-                  ...CenteringGrid,
-                }}
-              >
-                Credit card
-              </p>
-            </button>
-          </Link>
-          <Link
-            style={{ width: "100%", backgroundColor: "transparent" }}
-            to={`/consumers/${customerDetail?.uid}/lost-device-fee/cash`}
-          >
-            <button style={{ ...BlueButton, width: "100%" }}>
-              <p
-                style={{
-                  ...BlueButtonText,
-                  textTransform: "none",
-                  ...CenteringGrid,
-                }}
-              >
-                Cash
-              </p>
-            </button>
-          </Link>
+          wrap        >
+          <BlueButtonComponent title={"Credit card"} styles={{ width: "100%" }}
+            func={() => navigate(`/consumers/${customerDetail?.uid}/lost-device-fee/credit_card`)} />
+          <BlueButtonComponent title={"Cash"} styles={{ width: "100%" }}
+            func={() => navigate(`/consumers/${customerDetail?.uid}/lost-device-fee/cash`)} />
         </Grid>
-
         <Divider />
-        <button onClick={handleClose} style={{ ...GrayButton, width: "100%" }}>
-          <p
-            style={{
-              ...GrayButtonText,
-              ...CenteringGrid,
-              textTransform: "none",
-            }}
-          >
-            Go back
-          </p>
-        </button>
+        <GrayButtonComponent func={handleClose} title={"Go back"} />
       </>
     );
   };
@@ -95,13 +41,6 @@ const Choice = ({ openModal, setOpenModal }) => {
       closeModal={handleClose}
       body={bodyModal()}
     />
-    // <Modal
-    //   open={openModal}
-    //   centered
-    //   onCancel={() => handleClose()}
-    //   footer={[]}
-    //   style={{ zIndex: 30 }}
-    // ></Modal>
   );
 };
 

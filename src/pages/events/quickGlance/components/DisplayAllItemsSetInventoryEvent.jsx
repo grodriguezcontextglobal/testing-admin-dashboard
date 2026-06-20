@@ -9,7 +9,7 @@ import {
 } from "../../../../store/slices/eventSlice";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
-const DisplayAllItemsSetInventoryEvent = (database) => {
+const DisplayAllItemsSetInventoryEvent = ({ database }) => {
   const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const dispatch = useDispatch();

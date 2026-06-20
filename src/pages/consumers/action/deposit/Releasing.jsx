@@ -87,7 +87,7 @@ const Releasing = ({
         textOverflow={"ellipsis"}
         padding={"1rem 1.5rem"}
       >
-        Cancelling deposit
+        Release deposit
       </Typography>
     );
   };
@@ -264,7 +264,7 @@ const bodyModal = () => {
                     color={"var(--gray-600, #475467)"}
                   >
                     Please note that the displayed deposit amount will be
-                    cancelled. This action will result in the consumer observing
+                    released. This action will result in the consumer observing
                     the corresponding transaction being removed from their bank
                     statement. Kindly inform consumers that this adjustment may
                     take approximately 7 to 10 business days to reflect on their
@@ -290,7 +290,7 @@ const bodyModal = () => {
                       ...BlueButtonText,
                     }}
                   >
-                    Cancelling deposit
+                    Release deposit
                   </Typography>
                 </Button>
               </form>

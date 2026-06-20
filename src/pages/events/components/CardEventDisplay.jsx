@@ -20,6 +20,14 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import displayMonth from "../quickGlance/components/formatEventDetailInfo/displayMonth";
 import WeekdayDifference from "../utils/DateDifference";
+import {
+  countdownBadgeColors,
+  getCountdownLabel,
+  getEventMetrics,
+  getLogisticsStatus,
+  LOGISTICS_LEGEND,
+  LOGISTICS_TOTAL_STEPS
+} from "../utils/eventStatusHelpers";
 import convertMilitaryToRegularTime from "../utils/militaryTimeTransform";
 import renderingStatusUIComponent from "./renderingStatusUIComponent";
 
@@ -63,9 +71,9 @@ const CardEventDisplay = ({ props }) => {
       dispatch(
         onAddQRCodeLink(
           props.qrCodeLink ??
-            `https://app.devitrak.net/?event=${encodeURI(
-              props.eventInfoDetail.eventName,
-            )}&company=${encodeURI(props.company)}`,
+          `https://app.devitrak.net/?event=${encodeURI(
+            props.eventInfoDetail.eventName,
+          )}&company=${encodeURI(props.company)}`,
         ),
       );
       dispatch(onAddExtraServiceListSetup(props.extraServiceListSetup));
@@ -79,9 +87,9 @@ const CardEventDisplay = ({ props }) => {
     dispatch(
       onAddQRCodeLink(
         props.qrCodeLink ??
-          `https://app.devitrak.net/?event=${encodeURI(
-            props.eventInfoDetail.eventName,
-          )}&company=${encodeURI(props.company)}`,
+        `https://app.devitrak.net/?event=${encodeURI(
+          props.eventInfoDetail.eventName,
+        )}&company=${encodeURI(props.company)}`,
       ),
     );
     navigate("/events/event-quickglance");
@@ -133,7 +141,6 @@ const CardEventDisplay = ({ props }) => {
           justifyContent={"flex-start"}
           alignItems={"center"}
           marginX={"auto"}
-          marginTop={1}
           container
         >
           <Grid
@@ -145,12 +152,13 @@ const CardEventDisplay = ({ props }) => {
             sm={12}
             md={12}
             lg={12}
-            padding={"18px 0"}
           >
             <Typography
               textTransform={"none"}
               style={{
                 ...TextFontSize30LineHeight38,
+                fontSize: "20px",
+                lineHeight: "28px",
                 textAlign: "left",
                 display: "flex",
                 justifyContent: "space-between",
@@ -163,23 +171,51 @@ const CardEventDisplay = ({ props }) => {
                 style={{
                   alignSelf: "stretch",
                   width: "15%",
-                  display: `${(isSmallDevice || isMediumDevice) && "none"}`,
+                  display: `${(isSmallDevice || isMediumDevice || !props.eventInfoDetail.logo) && "none"}`,
                 }}
               >
-                <Avatar
-                  src={
-                    props.eventInfoDetail.logo ??
-                    props.eventInfoDetail.eventName
-                  }
-                  size={70}
-                ></Avatar>
+                {props.eventInfoDetail.logo && (
+                  <Avatar
+                    src={
+                      props.eventInfoDetail.logo
+                    }
+                    size={70}
+                  />
+                )}
               </div>
-              <div style={{ width: "85%" }}>
-                <Tooltip title={`${props.eventInfoDetail.eventName}`}>
-                  {" "}
-                  {props.eventInfoDetail.eventName}
-                </Tooltip>
-                <br />
+              <div style={{ width: props.eventInfoDetail.logo ? "85%" : "100%" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Tooltip title={`${props.eventInfoDetail.eventName}`}>
+                    {props.eventInfoDetail.eventName}
+                  </Tooltip>
+                  {(() => {
+                    const { text, tone } = getCountdownLabel(props);
+                    const { bg, fg } = countdownBadgeColors(tone);
+                    return (
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          lineHeight: "18px",
+                          padding: "2px 9px",
+                          borderRadius: "999px",
+                          background: bg,
+                          color: fg,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {text}
+                      </span>
+                    );
+                  })()}
+                </span>
                 <div
                   style={{
                     ...Subtitle,
@@ -205,6 +241,184 @@ const CardEventDisplay = ({ props }) => {
             </Typography>
           </Grid>
         </Grid>
+        {(() => {
+          const { totalDevices, deviceGroups, staff } = getEventMetrics(props);
+          const logistics = getLogisticsStatus(props);
+          const dicInventoryLogistic = {
+            "no_received_yet": "Not Received Yet",
+            "received": "Received",
+            "in-idle": "Received At Event",
+            "completed": "Returned to warehouse",
+            "in-transit": "In Transit back to warehouse",
+          }
+          const inventoryLogisticStatus = dicInventoryLogistic[props.logistic_inventory_status] ?? "No data";
+          // const inventoryBadge = getInventoryBadgeProps(props);
+          const stats = [
+            { value: totalDevices.toLocaleString(), label: "Devices" },
+            { value: deviceGroups, label: deviceGroups === 1 ? "Group" : "Groups" },
+            { value: staff, label: staff === 1 ? "Staff member" : "Staff" },
+            { value: inventoryLogisticStatus, label: "Inventory logistic status" },
+          ];
+          return (
+            <div
+              style={{
+                borderTop: "1px solid var(--gray-200, #EAECF0)",
+                marginTop: "16px",
+                paddingTop: "16px",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", gap: "32px", width: "100%" }}>
+                {stats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: "18px",
+                        fontWeight: 500,
+                        lineHeight: "24px",
+                        color: "var(--gray-900, #101828)",
+                      }}
+                    >
+                      {stat.value}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color: "var(--gray-500, #667085)",
+                      }}
+                    >
+                      {stat.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* {inventoryBadge && (
+                <div style={{ marginTop: "12px" }}>
+                  <BadgeWithDot color={inventoryBadge.color} size="sm">
+                    {inventoryBadge.label}
+                  </BadgeWithDot>
+                </div>
+              )} */}
+              {logistics && (
+                <div style={{ marginTop: "16px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontFamily: "Inter",
+                      fontSize: "12px",
+                      lineHeight: "16px",
+                      color: "var(--gray-500, #667085)",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Equipment location
+                    <Tooltip
+                      title={
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "6px",
+                            padding: "2px 0",
+                          }}
+                        >
+                          {LOGISTICS_LEGEND.map((stage) => (
+                            <div
+                              key={stage.label}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: "8px",
+                                  height: "8px",
+                                  borderRadius: "9999px",
+                                  background: stage.color,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span>
+                                <span style={{ fontWeight: 500 }}>
+                                  {stage.label}
+                                </span>{" "}
+                                — {stage.description}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      }
+                    >
+                      <span
+                        aria-label="Equipment location statuses"
+                        style={{
+                          display: "inline-flex",
+                          cursor: "help",
+                          color: "var(--gray-400, #98A2B3)",
+                        }}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="16" x2="12" y2="12" />
+                          <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", width: "100%" }}>
+                    {Array.from({ length: LOGISTICS_TOTAL_STEPS }, (_, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          flex: 1,
+                          height: "6px",
+                          borderRadius: "9999px",
+                          background:
+                            idx < logistics.step
+                              ? logistics.barColor
+                              : "var(--gray-200, #EAECF0)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "6px",
+                      fontFamily: "Inter",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      lineHeight: "16px",
+                      color: logistics.labelColor,
+                    }}
+                  >
+                    {logistics.label}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {
           <WeekdayDifference
             dateBegin={`${props.eventInfoDetail.dateBegin}`}

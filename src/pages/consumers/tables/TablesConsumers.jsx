@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Spin, Tooltip } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -35,6 +35,20 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     },
     enabled: !!user.companyData.id,
   });
+
+  const receiversQuery = useQuery({
+    queryKey: ["AssignedReceiversByCompany", user.companyData.id],
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-assigned-users-list", {
+        company: user.companyData.id,
+      }),
+    enabled: !!user.companyData.id,
+  });
+
+  const receiversByEmail = useMemo(() => {
+    const list = receiversQuery.data?.data?.listOfReceivers ?? [];
+    return groupBy(list, "user");
+  }, [receiversQuery.data]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
@@ -57,15 +71,6 @@ export default function TablesConsumers({ searching, data, getCounting }) {
         : data?.result?.usersList;
     setResponseData(dataRef.current);
   }, [getCounting]);
-
-  useEffect(() => {
-    if (eventInfoCompanyQuery.data) {
-      // console.log("Company events:", eventInfoCompanyQuery.data.data);
-    }
-    if (eventInfoCompanyQuery.error) {
-      // console.error("Error fetching company events:", eventInfoCompanyQuery.error);
-    }
-  }, [eventInfoCompanyQuery.data, eventInfoCompanyQuery.error]);
 
   const checkEventsPerCompany = () => {
     if (searching?.length > 0) {
@@ -101,11 +106,14 @@ export default function TablesConsumers({ searching, data, getCounting }) {
   const dataToRenderInTable = async () => {
     const result = new Set();
     for (let data of getInfoNeededToBeRenderedInTable()) {
+      const userTransactions = receiversByEmail[data.email] ?? [];
+      const activeDeviceCount = userTransactions.filter(
+        (t) => t.device?.status === true,
+      ).length;
       result.add({
         ...data,
-        currentActivity: data.entireData.totalDeviceRequested,
-        status: data.entireData.totalEventsActive,
-        currentConsumerActive: data.entireData.totalEventsActive,
+        currentActivity: activeDeviceCount,
+        transactions: userTransactions,
       });
     }
     setIsLoading(false);
@@ -114,7 +122,7 @@ export default function TablesConsumers({ searching, data, getCounting }) {
 
   useEffect(() => {
     dataToRenderInTable();
-  }, [dataRef.current]);
+  }, [dataRef.current, receiversByEmail]);
 
   const filterData = (data) => {
     if (!searching || searching.length < 1) return data;
@@ -147,23 +155,32 @@ export default function TablesConsumers({ searching, data, getCounting }) {
   );
 
   const renderingEventsPermittedForAdminBasedOnAdminAssignment = (record) => {
-    const active = eventsPerAdmin?.active.map((item) => item.id) ?? [];
-    const completed = eventsPerAdmin?.completed.map((item) => item.id) ?? [];
-    const adminPermitted = [...active, ...completed];
     if (!eventInfoCompanyQuery?.data?.data?.list) return [];
+
     const eventCompanyData = groupBy(
       eventInfoCompanyQuery?.data?.data?.list,
       "id",
     );
+
+    const active = eventsPerAdmin?.active?.map((item) => item.id) ?? [];
+    const completed = eventsPerAdmin?.completed?.map((item) => item.id) ?? [];
+    const adminPermitted = [...active, ...completed];
+
     const checked = new Map();
-    if (adminPermitted?.length > 0) {
-      for (let event of record.event_providers) {
-        if (adminPermitted.includes(event)) {
-          checked.set(event, ...eventCompanyData[event]);
-        }
+
+    for (let eventId of record.event_providers ?? []) {
+      const eventEntry = eventCompanyData[eventId];
+      if (!eventEntry) continue;
+
+      // Si el admin tiene eventos asignados, filtrar por sus permisos.
+      // Si no tiene ninguno cargado (ej. navegación directa a /consumers),
+      // mostrar todos los eventos del consumer.
+      if (adminPermitted.length === 0 || adminPermitted.includes(eventId)) {
+        checked.set(eventId, eventEntry[0]);
       }
     }
-    return Array.from(checked.values()).flat();
+
+    return Array.from(checked.values());
   };
   const columns = [
     {
@@ -190,7 +207,7 @@ export default function TablesConsumers({ searching, data, getCounting }) {
               display: isSmallDevice || isMediumDevice ? "none" : "flex",
             }}
           />
-          {user.map((detail, index) => {
+          {user?.map((detail, index) => {
             return (
               <div
                 key={`${detail}-${index}`}
@@ -218,25 +235,28 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           {renderingRowStyling("Status")}
         </div>
       ),
-      dataIndex: "currentConsumerActive",
+      dataIndex: "entireData",
       responsive: ["md", "lg"],
       width: "13%",
       sorter: {
-        compare: (a, b) => a.currentConsumerActive - b.currentConsumerActive,
+        compare: (a, b) => (a.currentActivity > 0 ? 1 : 0) - (b.currentActivity > 0 ? 1 : 0),
       },
-      render: (currentConsumerActive) => (
-        <Chip
-          label={currentConsumerActive === 0 ? "Inactive" : "Active"}
-          color={currentConsumerActive === 0 ? "info" : "success"}
-          icon={
-            <Icon
-              icon="tabler:point-filled"
-              rotate={3}
-              color={currentConsumerActive === 0 ? "#2E90FA" : "#12B76A"}
-            />
-          }
-        />
-      ),
+      render: (_, record) => {
+        const isActive = record.currentActivity > 0;
+        return (
+          <Chip
+            label={isActive ? "Active" : "Inactive"}
+            color={isActive ? "success" : "info"}
+            icon={
+              <Icon
+                icon="tabler:point-filled"
+                rotate={3}
+                color={isActive ? "#12B76A" : "#2E90FA"}
+              />
+            }
+          />
+        );
+      },
     },
     {
       title: (
@@ -287,23 +307,39 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           );
         }
 
-        const firstEventName = data[0]?.eventInfoDetail?.eventName || "";
+        const MAX_VISIBLE = 4;
+        const visible = data.slice(0, MAX_VISIBLE);
+        const overflow = data.length - MAX_VISIBLE;
+
+        const getInitials = (name = "") =>
+          name
+            .split(" ")
+            .slice(0, 2)
+            .map((w) => w[0]?.toUpperCase() ?? "")
+            .join("");
 
         return (
-          <div className="avatar-group-container">
-            <Tooltip title={firstEventName}>
-              <div className="event-name-chip">{firstEventName}</div>
-            </Tooltip>
-            {data.length > 1 && (
-              <Tooltip title={`${data.length - 1} more events`}>
-                <Avatar className="event-count-avatar">
-                  +{data.length - 1}
-                </Avatar>
+          <div className="event-badge-group">
+            {visible.map((event, idx) => {
+              const eventName = event.eventInfoDetail?.eventName ?? "";
+              return (
+                <Tooltip key={event.id ?? idx} title={eventName}>
+                  <Avatar className="event-badge-avatar">
+                    {getInitials(eventName)}
+                  </Avatar>
+                </Tooltip>
+              );
+            })}
+            {overflow > 0 && (
+              <Tooltip title={`+${overflow} more event${overflow > 1 ? "s" : ""}`}>
+                <Avatar className="event-badge-overflow">+{overflow}</Avatar>
               </Tooltip>
             )}
-          </div>);
+          </div>
+        );
       },
-    },];
+    },
+  ];
 
   return (
     <>

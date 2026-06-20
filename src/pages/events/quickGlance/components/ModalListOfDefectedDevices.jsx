@@ -1,10 +1,9 @@
-import { Modal } from "antd";
-import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
-import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { onAddDeviceToDisplayInQuickGlance } from "../../../../store/slices/devicesHandleSlice";
-import ExpandableTable from "../../../../components/UX/tables/ExpandableTable";
+import { Link } from "react-router-dom";
+import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
+import ModalUX from "../../../../components/UX/modal/ModalUX";
 import BaseTable from "../../../../components/UX/tables/BaseTable";
+import { onAddDeviceToDisplayInQuickGlance } from "../../../../store/slices/devicesHandleSlice";
 
 const ModalListOfDefectedDevices = ({
   defectedDeviceList,
@@ -126,7 +125,7 @@ const ModalListOfDefectedDevices = ({
       },
     ];
 
-    return <ExpandableTable columns={columns} dataSource={record.report} />;
+    return <BaseTable columns={columns} dataSource={record.report} enablePagination={true} pageSize={10} />;
   };
 
   const columns = [
@@ -141,28 +140,28 @@ const ModalListOfDefectedDevices = ({
       key: "qty",
     },
   ];
-  return (
-    <Modal
-      open={defectedDeviceList}
-      onCancel={() => closeModal()}
-      footer={null}
-      width={1000}
-      maskClosable={false}
-      title="List of Defected Devices"
-      style={{ zIndex: 30 }}
-    >
+
+  const bodyModal = () => {
+    return (
       <BaseTable
         columns={columns}
         dataSource={dataToRender()}
         expandable={{
           expandRowByClick: true,
-          expandedRowRender: (record) => internalRow(record),
+          expandedRowRender: (record) => {
+            return (<div style={{width:"-webkit-fill-available", margin:"0 auto", padding:"10px"}}>
+              {internalRow(record)}
+            </div>
+            )
+          },
         }}
-        style={{
-          cursor: "pointer",
-        }}
+        enablePagination={true}
+        pageSize={10}
       />
-    </Modal>
+    );
+  }
+  return (
+    <ModalUX title="List of Defected Devices" openDialog={defectedDeviceList} closeModal={() => closeModal()} body={bodyModal()} />
   );
 };
 

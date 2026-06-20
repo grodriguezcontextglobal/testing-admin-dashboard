@@ -17,8 +17,8 @@ import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import { can } from "../../config/roleCapabilities";
 import Loading from "../../components/animation/Loading";
 import FooterComponent from "../../components/general/FooterComponent";
-import HidenIcon from "../../components/icons/HidenIcon";
-import VisibleIcon from "../../components/icons/VisibleIcon";
+// import HidenIcon from "../../components/icons/HidenIcon";
+// import VisibleIcon from "../../components/icons/VisibleIcon";
 import { checkArray } from "../../components/utils/checkArray";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Input from "../../components/UX/inputs/Input";
@@ -47,6 +47,8 @@ import MFA from "./login/sections/MFA";
 import Password from "./login/sections/Password";
 import "./style/authStyle.css";
 import { setPermissions } from "../../store/slices/permissions";
+// import devitrakLoginLogo from "../../assets/devitrak_login.svg";
+import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -227,7 +229,7 @@ const Login = () => {
         email: props.email,
       });
     } catch (error) {
-      console.log("loginIntoOneCompanyAccount", error);
+      console.error("loginIntoOneCompanyAccount", error);
     }
   };
 
@@ -417,21 +419,8 @@ const Login = () => {
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width: 769px) and (max-width:992px)",
   );
-  const isLargeDevice = useMediaQuery(
-    "only screen and (min-width : 993px) and (max-width : 1200px)",
-  );
-  const isExtraLargeDevice = useMediaQuery(
-    "only screen and (min-width : 1201px)",
-  );
-  const formFittingTrigger = () => {
-    if (isSmallDevice || isMediumDevice) {
-      return "55vw";
-    } else if (isLargeDevice) {
-      return "40vw";
-    } else if (isExtraLargeDevice) {
-      return "30vw";
-    }
-  };
+  const isMobile = isSmallDevice || isMediumDevice;
+  const formFittingTrigger = () => "100%";
 
   const handleSendForceLogoutEmail = async () => {
     try {
@@ -488,140 +477,157 @@ const Login = () => {
       }
     >
       {contextHolder}
-      <Grid
-        container
+      <section
         style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          minHeight: "100dvh",
           backgroundColor: "var(--basewhite)",
-          height: "100dvh",
-          margin: "auto",
         }}
       >
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          margin={"auto"}
+        {/* Left column — form */}
+        <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            alignSelf: "stretch",
+            flexDirection: "column",
+            backgroundColor: "var(--basewhite)",
           }}
-          item
-          xs={12}
-          sm={12}
-          md={6}
-          lg={6}
         >
-          <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"center"}
-            alignSelf={"center"}
-            margin={"auto"}
-            id="checking"
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
+          {/* Logo header — hidden on mobile */}
+          {/* {!isMobile && (
+            <header style={{ padding: "32px" }}>
+              <DevitrakLogo />
+            </header>
+          )} */}
+
+          {/* Centered form content */}
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              padding: isMobile ? "48px 16px" : "0 32px",
+            }}
           >
-            <Header
-              currentStep={currentStep}
-              userEmail={userEmail}
-              TextFontSize30LineHeight38={TextFontSize30LineHeight38}
-            />
-            {/* Email Step */}
-            {currentStep === "email" && (
-              <Email
-                Checkbox={Checkbox}
-                handleSubmit={handleSubmit}
-                onSubmitEmail={onSubmitEmail}
-                formFittingTrigger={formFittingTrigger}
-                Grid={Grid}
-                FormLabel={FormLabel}
-                Input={Input}
-                BlueButtonComponent={BlueButtonComponent}
-                isLoading={isLoading}
-                forceLogin={forceLogin}
-                register={register}
-              />
-            )}
-
-            {/* Password Step */}
-            {currentStep === "password" && (
-              <Password
-                Checkbox={Checkbox}
-                handleSubmit={handleSubmit}
-                onSubmitLogin={onSubmitLogin}
-                formFittingTrigger={formFittingTrigger}
-                Grid={Grid}
-                FormLabel={FormLabel}
-                Input={Input}
-                BlueButtonComponent={BlueButtonComponent}
-                isLoading={isLoading}
-                forceLogin={forceLogin}
-                register={register}
-                showPassword={showPassword}
-                setShowPassword={setShowPassword}
-                setUpdatePasswordModalState={setUpdatePasswordModalState}
-                setRememberMe={setRememberMe}
-                handleBackToEmail={handleBackToEmail}
-              />
-            )}
-
-            {/* MFA Step */}
-            {currentStep === "mfa" && (
-              <MFA
-                handleSubmit={handleSubmit}
-                onSubmitLogin={onSubmitLogin}
-                formFittingTrigger={formFittingTrigger}
-                Grid={Grid}
-                FormLabel={FormLabel}
-                Input={Input}
-                BlueButtonComponent={BlueButtonComponent}
-                isLoading={isLoading}
-                forceLogin={forceLogin}
-                register={register}
-              />
-            )}
-
-            <div style={{ ...CenteringGrid, margin: ".8rem auto" }}>
-              <Typography
-                style={Subtitle}
-                onClick={() => navigate("/register")}
-              >
-                Don&apos;t have an account?{" "}
-                <span
-                  style={{
-                    cursor: "pointer",
-                    color: "#155eef",
-                    fontWeight: 700,
-                  }}
-                >
-                  Sign up
-                </span>
-              </Typography>
-            </div>
             <div
               style={{
-                position: "relative",
-                // bottom: "-10dvh",
+                display: "flex",
+                flexDirection: "column",
+                gap: "32px",
+                width: "100%",
+                maxWidth: "360px",
+              }}
+            >
+              {/* Logo shown only on mobile */}
+              {/* {isMobile && (
+                <DevitrakLogo />
+              )} */}
+
+              <Header
+                currentStep={currentStep}
+                userEmail={userEmail}
+                TextFontSize30LineHeight38={TextFontSize30LineHeight38}
+              />
+
+              {/* Email Step */}
+              {currentStep === "email" && (
+                <Email
+                  Checkbox={Checkbox}
+                  handleSubmit={handleSubmit}
+                  onSubmitEmail={onSubmitEmail}
+                  formFittingTrigger={formFittingTrigger}
+                  Grid={Grid}
+                  FormLabel={FormLabel}
+                  Input={Input}
+                  BlueButtonComponent={BlueButtonComponent}
+                  isLoading={isLoading}
+                  forceLogin={forceLogin}
+                  register={register}
+                />
+              )}
+
+              {/* Password Step */}
+              {currentStep === "password" && (
+                <Password
+                  Checkbox={Checkbox}
+                  handleSubmit={handleSubmit}
+                  onSubmitLogin={onSubmitLogin}
+                  formFittingTrigger={formFittingTrigger}
+                  Grid={Grid}
+                  FormLabel={FormLabel}
+                  Input={Input}
+                  BlueButtonComponent={BlueButtonComponent}
+                  isLoading={isLoading}
+                  forceLogin={forceLogin}
+                  register={register}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  setUpdatePasswordModalState={setUpdatePasswordModalState}
+                  setRememberMe={setRememberMe}
+                  handleBackToEmail={handleBackToEmail}
+                />
+              )}
+
+              {/* MFA Step */}
+              {currentStep === "mfa" && (
+                <MFA
+                  handleSubmit={handleSubmit}
+                  onSubmitLogin={onSubmitLogin}
+                  formFittingTrigger={formFittingTrigger}
+                  Grid={Grid}
+                  FormLabel={FormLabel}
+                  Input={Input}
+                  BlueButtonComponent={BlueButtonComponent}
+                  isLoading={isLoading}
+                  forceLogin={forceLogin}
+                  register={register}
+                />
+              )}
+
+              <div style={{ ...CenteringGrid }}>
+                <Typography
+                  style={Subtitle}
+                  onClick={() => navigate("/register")}
+                >
+                  Don&apos;t have an account?{" "}
+                  <span
+                    style={{
+                      cursor: "pointer",
+                      color: "#155eef",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Sign up
+                  </span>
+                </Typography>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer — hidden on mobile */}
+          {!isMobile && (
+            <footer
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "32px",
               }}
             >
               <FooterComponent />
-            </div>
-          </Grid>
-        </Grid>
-        <Grid
-          display={(isSmallDevice || isMediumDevice) && "none"}
-          id="section-img-login-component"
-          item
-          md={6}
-          lg={6}
-        ></Grid>
-      </Grid>
+            </footer>
+          )}
+        </div>
+
+        {/* Right column — image panel */}
+        {!isMobile && (
+          <div
+            id="section-img-login-component"
+            style={{ borderRadius: "80px 0 0 80px" }}
+          />
+        )}
+      </section>
+
       {openMultipleCompanies && (
         <ModalMultipleCompanies
           data={dataPassed.current}

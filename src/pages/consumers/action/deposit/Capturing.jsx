@@ -1,12 +1,11 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  Button,
   FormHelperText,
   Grid,
   InputAdornment,
   InputLabel,
   OutlinedInput,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
@@ -16,9 +15,8 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import * as yup from "yup";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 const schema = yup
   .object({
@@ -51,8 +49,7 @@ const Capturing = ({
     queryKey: ["transaction"],
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?paymentIntent=${
-          rowRecord?.paymentIntent
+        `/transaction/transaction?paymentIntent=${rowRecord?.paymentIntent
         }&active=${true}`
       ),
     refetchOnMount: false,
@@ -139,12 +136,10 @@ const Capturing = ({
             date: String(dateRef.slice(0, 4)).replaceAll(",", " "),
             time: dateRef[4],
             company: rowRecord?.eventInfo[0].provider,
-            link: `https://app.devitrak.net/authentication/${
-              rowRecord?.eventInfo[0]?.event_id
-            }/${user.companyData.id}/${
-              rowRecord?.eventInfo[0].consumerInfo.uid ??
+            link: `https://app.devitrak.net/authentication/${rowRecord?.eventInfo[0]?.event_id
+              }/${user.companyData.id}/${rowRecord?.eventInfo[0].consumerInfo.uid ??
               rowRecord?.eventInfo[0]?.consumerInfo.id
-            }`,
+              }`,
           });
           queryClient.invalidateQueries({
             queryKey: ["transactionPerConsumerListQuery"],
@@ -203,9 +198,8 @@ const Capturing = ({
                     value={rowRecord?.paymentIntent}
                     style={{
                       borderRadius: "12px",
-                      border: `${
-                        errors.serialNumberBase && "solid 1px #004EEB"
-                      }`,
+                      border: `${errors.serialNumberBase && "solid 1px #004EEB"
+                        }`,
                       margin: "0.1rem auto 1rem",
                       display: "flex",
                       justifyContent: "flex-start",
@@ -249,28 +243,16 @@ const Capturing = ({
                       desired value before submitting.
                     </p>
                   </FormHelperText>
-                  <Button
+                  <BlueButtonComponent
                     disabled={
                       stripeTransactionQuery?.data?.data?.paymentIntent
                         .status !== "requires_capture"
                     }
-                    type="submit"
+                    buttonType="submit"
                     style={{
-                      ...BlueButton,
-                      width: "100%",
                       display: transactionStatus ? "none" : "flex",
                     }}
-                  >
-                    <Typography
-                      textTransform={"none"}
-                      style={{
-                        ...BlueButtonText,
-                        width: "100%",
-                      }}
-                    >
-                      Capture deposit
-                    </Typography>
-                  </Button>
+                    title={"Capture deposit"} />
                 </form>
               </Grid>
             </Grid>{" "}
@@ -288,18 +270,6 @@ const Capturing = ({
           body={bodyModal()}
         />
       </>
-      // <Modal
-      //   open={openCapturingDepositModal}
-      //   title={renderingTitle()}
-      //   onOk={() => closeModal()}
-      //   onCancel={() => closeModal()}
-      //   footer={[]}
-      //   maskClosable={false}
-      //   centered
-      //   style={{ zIndex: 30 }}
-      // >
-      //   {contextHolder}
-      // </Modal>
     );
   }
 };

@@ -1,18 +1,25 @@
 import { useSelector } from "react-redux";
-import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
-// import { ChangeRoleStaffIcon } from "../../../../components/icons/ChangeRoleStaffIcon";
-// import { UpdatePasswordIcon } from "../../../../components/icons/UpdatePasswordIcon";
-import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { rolesWith } from "../../../../config/roleCapabilities";
 import AddNewMember from "../modals/AddNewMember";
 import MemberInfoHeader from "./Header";
+
+const pillNavLinkStyle = ({ isActive }) => ({
+  borderRadius: "9999px",
+  padding: "6px 14px",
+  fontSize: "13px",
+  fontWeight: isActive ? 500 : 400,
+  lineHeight: "1.4",
+  whiteSpace: "nowrap",
+  textDecoration: "none",
+  backgroundColor: isActive ? "#344054" : "transparent",
+  color: isActive ? "#fff" : "#475467",
+  transition: "background-color 0.15s, color 0.15s",
+});
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -22,162 +29,74 @@ const MainPage = () => {
   const groupNameReference = location.state?.referencing || "";
   const groupNameParams = String(groupNameReference || "").replace(/-/g, " ");
   const [membersData, setMembersData] = useState(null);
-  const [addingNewmember, setAddingNewMember] = useState(false)
-  const memberInfoRetrieveQuery = useQuery({
+  const [addingNewmember, setAddingNewMember] = useState(false);
+
+  useQuery({
     queryKey: ["memberInfoRetrieveQuery"],
     queryFn: () =>
       devitrakApi.post("/db_member/consulting-member", {
         member_id: Number(slug),
       }),
     enabled: !!slug,
+    onSuccess: (data) => {
+      if (data?.data?.members) {
+        setMembersData(data?.data?.members);
+      }
+    },
   });
 
-  useEffect(() => {
-    if (memberInfoRetrieveQuery?.data?.data?.members) {
-      setMembersData(memberInfoRetrieveQuery?.data?.data?.members);
-    }
-  }, [memberInfoRetrieveQuery.data]);
-
-  const tabOptions = [
-    {
-      label: "Home",
-      route: "main",
-      permission: rolesWith("member.detailTabs"),
-      disabled: false,
-      id: 0,
-      fn: () => null,
-      html: (
-        <BlueButtonComponent
-          title={"Home"}
-          func={() => null}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Assign devices",
-      route: "assignment",
-      permission: rolesWith("member.detailTabs"),
-      disabled: false,
-      id: 0,
-      fn: () => null,
-      html: (
-        <BlueButtonComponent
-          title={"Assign devices"}
-          func={() => null}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Update member info",
-      route: "update-member-information",
-      permission: rolesWith("member.detailTabs"),
-      disabled: false,
-      id: 1,
-      fn: () => null,
-      html: (
-        <LightBlueButtonComponent
-          title={"Update member info"}
-          func={() => null}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Reminders",
-      route: "reminders",
-      permission: rolesWith("member.detailTabs"),
-      disabled: user.email !== membersData?.email,
-      id: 2,
-      fn: () => null,
-      html: (
-        <GrayButtonComponent
-          title={"Reminders"}
-          func={() => null}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    }
+  const navTabs = [
+    { label: "Home", route: "main", permission: rolesWith("member.detailTabs"), id: 0 },
+    { label: "Assign devices", route: "assignment", permission: rolesWith("member.detailTabs"), id: 1 },
+    { label: "Update member info", route: "update-member-information", permission: rolesWith("member.detailTabs"), id: 2 },
+    { label: "Send email reminder", route: "reminders", permission: rolesWith("member.detailTabs"), id: 3 },
   ];
+
+  const visibleNavTabs = navTabs.filter(
+    (t) => t.permission.some((p) => p === Number(user.role))
+  );
+
   return (
     <>
       <MemberInfoHeader title={titleParams} memberInfo={membersData} groupName={groupNameParams} setAddingNewMember={setAddingNewMember} />
-      <nav style={{ display: "flex", width: "100%", gap: "24px", margin: "1.5rem 0" }}>
-        <Grid
+      <nav
+        style={{
+          display: "flex",
+          width: "100%",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          margin: "16px 0",
+        }}
+      >
+        <div
           style={{
-            display: "flex",
-            justifyContent: {
-              xs: "flex-start",
-              sm: "flex-start",
-              md: "space-between",
-              lg: "space-between",
-            },
-            alignSelf: {
-              xs: "flex-start",
-              sm: "flex-start",
-              md: "center",
-              lg: "center",
-            },
-            gap: "24px",
+            display: "inline-flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "2px",
+            border: "1px solid #D0D5DD",
+            borderRadius: "9999px",
+            padding: "4px",
+            backgroundColor: "#fff",
+            width: "fit-content",
           }}
-          container
         >
-          {tabOptions.map((option) => {
-            return (
-              <NavLink
-                key={option.label}
-                to={`${option.route}`}
-                style={{
-                  display: `${
-                    option.permission.some(
-                      (element) => element === Number(user.role)
-                    )
-                      ? "flex"
-                      : "none"
-                  }`,
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "10x 16px",
-                  gap: "8px",
-                }}
-              >
-                {option.html}
-              </NavLink>
-            );
-          })}
-        </Grid>
+          {visibleNavTabs.map((tab) => (
+            <NavLink key={tab.id} to={tab.route} style={pillNavLinkStyle}>
+              {tab.label}
+            </NavLink>
+          ))}
+        </div>
       </nav>
       <Divider />
       <Outlet />
-      {
-        AddNewMember && (
-          <AddNewMember
-            openModal={addingNewmember}
-            setOpenModal={setAddingNewMember}
-          />
-        )
-      }
+      {AddNewMember && (
+        <AddNewMember
+          openModal={addingNewmember}
+          setOpenModal={setAddingNewMember}
+        />
+      )}
     </>
   );
 };

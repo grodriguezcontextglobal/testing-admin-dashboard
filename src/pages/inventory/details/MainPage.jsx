@@ -3,19 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { Breadcrumb, Divider } from "antd";
 import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import { usePermission } from "../../../hooks/usePermission";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import ExtraInformation from "./detailComponent/components/ExtraInformation";
 import ExtraInformationItemComponent from "./detailComponent/components/ExtraInformationItemComponent";
 import MainHeaderContainingAllSections from "./UX/MainHeaderContainingAllSections";
-import { can } from "../../../config/roleCapabilities";
 const DeleteItem = lazy(() => import("./detailComponent/actions/DeleteItem"));
 const TableDetailPerDevice = lazy(() =>
   import("./detailComponent/TableDetailPerDevice")
@@ -31,7 +30,8 @@ const TotalReturnedDevice = lazy(() =>
 );
 const EditItem = lazy(() => import("./detailComponent/actions/EditItem"));
 const MainPage = () => {
-  const { user } = useSelector((state) => state.admin);
+  const canEditInventory = usePermission("inventory:update");
+  const canDeleteInventory = usePermission("inventory:delete");
   const item_id = new URLSearchParams(window.location.search).get("id");
   const trackingHistoryItemQuery = useQuery({
     queryKey: ["trackingItemActivity"],
@@ -98,10 +98,10 @@ const MainPage = () => {
       },
     ];
 
-    const headersActions = [can(user.role, "inventory.deleteItem") && dataFound[0].ownership !== "Rent" && (
+    const headersActions = [canDeleteInventory && dataFound[0].ownership !== "Rent" && (
       <DeleteItem dataFound={dataFound} />
     ),
-    can(user.role, "inventory.editItem") && (
+    canEditInventory && (
       <EditItem dataFound={dataFound} refetchingFn={refetchingFn} />
     )
     ]

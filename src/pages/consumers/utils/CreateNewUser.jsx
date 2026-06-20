@@ -3,7 +3,7 @@ import { InputLabel, MenuItem, OutlinedInput } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { notification, Select } from "antd";
 import { PropTypes } from "prop-types";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -18,29 +18,101 @@ import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import "../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
-// import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 
 const schema = yup.object({
-  firstName: yup.string().required("first name is required"),
-  lastName: yup.string().required("last name is required"),
+  firstName: yup.string().required("First name is required"),
+  lastName: yup.string().required("Last name is required"),
   email: yup
     .string()
-    .email("email has an invalid format")
-    .required("email is required"),
-  // eventAssignedTo: yup.string().required(),
+    .email("Email has an invalid format")
+    .required("Email is required"),
 });
+
+const formContainerStyle = {
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  gap: "1.5rem",
+  padding: "1rem 0",
+};
+
+const inputRowStyle = {
+  display: "flex",
+  gap: "1rem",
+  width: "100%",
+};
+
+const inputColumnStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  flex: 1,
+};
+
+const fullWidthInputStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  width: "100%",
+};
+
+const labelStyle = {
+  textTransform: "none",
+  textAlign: "left",
+  fontFamily: "Inter",
+  fontSize: "14px",
+  fontStyle: "normal",
+  fontWeight: 500,
+  lineHeight: "20px",
+  color: "var(--gray-700, #344054)",
+  margin: 0,
+};
+
+const requiredMarkStyle = { color: "#D92D20", marginLeft: "2px" };
+
+const errorTextStyle = {
+  color: "#D92D20",
+  fontSize: "12px",
+  fontFamily: "Inter",
+  margin: "2px 0 0 0",
+  lineHeight: "18px",
+};
+
+const phoneBaseStyle = {
+  ...OutlinedInputStyle,
+  padding: "0px 20px",
+  width: "90%",
+  boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px",
+  border: "solid 0.1px rgba(16,24,40,0.2)",
+};
+
+const RequiredLabel = ({ text }) => (
+  <p style={labelStyle}>
+    {text}
+    <span style={requiredMarkStyle} aria-hidden="true">
+      *
+    </span>
+  </p>
+);
+
+RequiredLabel.propTypes = { text: PropTypes.string.isRequired };
 
 export const CreateNewConsumer = ({
   createUserButton,
   setCreateUserButton,
 }) => {
-  const { register, handleSubmit, setValue } = useForm({
-    resolver: yupResolver(schema),
-  });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({ resolver: yupResolver(schema) });
+
   const [contactPhoneNumber, setContactPhoneNumber] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [eventAssignedTo, setEventAssignedTo] = useState("");
   const [loading, setLoading] = useState(false);
   const { event } = useSelector((state) => state.event);
@@ -51,82 +123,14 @@ export const CreateNewConsumer = ({
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const [api, contextHolder] = notification.useNotification();
   const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active];
-  // Memoized styles
-  const formContainerStyle = useMemo(
-    () => ({
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      gap: "1.5rem",
-      padding: "1rem 0",
-    }),
-    []
-  );
-
-  const inputRowStyle = useMemo(
-    () => ({
-      display: "flex",
-      gap: "1rem",
-      width: "100%",
-    }),
-    []
-  );
-
-  const inputColumnStyle = useMemo(
-    () => ({
-      display: "flex",
-      flexDirection: "column",
-      gap: "0.5rem",
-      flex: 1,
-    }),
-    []
-  );
-
-  const fullWidthInputStyle = useMemo(
-    () => ({
-      display: "flex",
-      flexDirection: "column",
-      gap: "0.5rem",
-      width: "100%",
-    }),
-    []
-  );
-
-  const labelStyle = useMemo(
-    () => ({
-      textTransform: "none",
-      textAlign: "left",
-      fontFamily: "Inter",
-      fontSize: "14px",
-      fontStyle: "normal",
-      fontWeight: 500,
-      lineHeight: "20px",
-      color: "var(--gray-700, #344054)",
-      margin: 0,
-    }),
-    []
-  );
-
-  const phoneInputStyle = useMemo(
-    () => ({
-      ...OutlinedInputStyle,
-      padding: "0px 20px",
-      width: "max-content",
-      boxShadow: "rgba(16, 24, 40, 0.05) 1px 1px 2px",
-      border: "solid 0.1px rgba(16,24,40,0.2)",
-    }),
-    []
-  );
 
   const openNotificationWithIcon = useCallback(
     (type, msg) => {
-      api.open({
-        message: type,
-        description: msg,
-      });
+      api.open({ message: type, description: msg });
     },
     [api]
   );
+
   useEffect(() => {
     const controller = new AbortController();
     if (location.pathname === "/events/event-quickglance") {
@@ -138,19 +142,14 @@ export const CreateNewConsumer = ({
     } else if (location.pathname === "/consumers") {
       setEventAssignedTo("");
     }
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [location.key, location.pathname, event?.eventInfoDetail?.eventName]);
 
   const queryClient = useQueryClient();
 
   const redirectingStaffBasedOnConsumerEventPage = (props) => {
     if (location.pathname === "/events/event-quickglance") {
-      let userFormatData = {
-        ...props,
-        uid: props.id ?? props.uid,
-      };
+      const userFormatData = { ...props, uid: props.id ?? props.uid };
       dispatch(onAddCustomerInfo(userFormatData));
       dispatch(onAddCustomer(userFormatData));
       queryClient.invalidateQueries([
@@ -158,19 +157,15 @@ export const CreateNewConsumer = ({
         "listOfDevicesAssigned",
         "listOfNoOperatingDevices",
       ]);
-
       return navigate(
         `/events/event-attendees/${userFormatData.uid}/transactions-details`
       );
     }
     return closeDeviceModal();
   };
+
   const newConsumerAfterBeingCheck = async (data) => {
     try {
-      if (contactPhoneNumber.length === 0) {
-        alert("Please enter a phone number");
-        return setLoading(false);
-      }
       const newEventToAddConsumer = eventAssignedTo
         ? JSON.parse(eventAssignedTo)
         : null;
@@ -214,32 +209,20 @@ export const CreateNewConsumer = ({
     }
   };
 
-  const zeroDuplications = (props) => {
-    const result = new Set();
-    for (let data of props) {
-      result.add(data);
-    }
-    return Array.from(result);
-  };
-
   const updateExistingUserInRecord = async (data) => {
     try {
       const newEventToAddConsumer = eventAssignedTo
         ? JSON.parse(eventAssignedTo)
         : null;
-      const {
-        event_providers,
-        company_providers,
-        eventSelected,
-        provider,
-        id,
-      } = data.consumersList.at(-1);
+      const { event_providers, company_providers, eventSelected, provider, id } =
+        data.consumersList.at(-1);
       if (
         newEventToAddConsumer &&
         event_providers.some((element) => element === newEventToAddConsumer.id)
       ) {
-        alert(
-          `${data.firstName} ${data.lastName} | email: ${data.email} is already in the event/company record.`
+        openNotificationWithIcon(
+          "Info",
+          `${data.firstName} ${data.lastName} (${data.email}) is already in the event/company record.`
         );
         setLoading(false);
         return redirectingStaffBasedOnConsumerEventPage(
@@ -247,21 +230,24 @@ export const CreateNewConsumer = ({
         );
       } else {
         const updateConsumerProfile = {
-          id: id,
-          eventSelected: zeroDuplications([
-            ...eventSelected,
-            newEventToAddConsumer &&
-              newEventToAddConsumer.eventInfoDetail.eventName,
-          ]),
-          provider: zeroDuplications([...provider, user.company]),
-          company_providers: zeroDuplications([
-            ...company_providers,
-            user.companyData.id,
-          ]),
-          event_providers: zeroDuplications([
-            ...data.consumersList.at(-1).event_providers,
-            newEventToAddConsumer && newEventToAddConsumer.id,
-          ]),
+          id,
+          eventSelected: [
+            ...new Set([
+              ...eventSelected,
+              newEventToAddConsumer &&
+                newEventToAddConsumer.eventInfoDetail.eventName,
+            ]),
+          ],
+          provider: [...new Set([...provider, user.company])],
+          company_providers: [
+            ...new Set([...company_providers, user.companyData.id]),
+          ],
+          event_providers: [
+            ...new Set([
+              ...data.consumersList.at(-1).event_providers,
+              newEventToAddConsumer && newEventToAddConsumer.id,
+            ]),
+          ],
           phoneNumber: contactPhoneNumber,
         };
         const updatingUserInfoQuery = await devitrakApi.patch(
@@ -285,13 +271,18 @@ export const CreateNewConsumer = ({
         }
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleNewConsumer = async (data) => {
+    if (!contactPhoneNumber) {
+      setPhoneError("Phone number is required");
+      return;
+    }
+    setPhoneError("");
     setLoading(true);
     try {
       const listOfConsumersQuery = await devitrakApi.post("/auth/user-query", {
@@ -319,148 +310,169 @@ export const CreateNewConsumer = ({
     setValue("email", "");
     setValue("eventAssignedTo", "");
     setContactPhoneNumber("");
+    setPhoneError("");
     setCreateUserButton(false);
   };
 
-  const titleRender = () => {
-    return (
-      <p style={{ ...TextFontsize18LineHeight28, textAlign: "center" }}>
-        Add new consumer.
-      </p>
-    );
-  };
+  const titleRender = () => (
+    <p style={{ ...TextFontsize18LineHeight28, textAlign: "center" }}>
+      Add new consumer.
+    </p>
+  );
 
-  const bodyModal = () => {
-    return (
-      <form
-        style={formContainerStyle}
-        onSubmit={handleSubmit(handleNewConsumer)}
-      >
-        <p style={Subtitle}>Enter all the user details for a consumer.</p>
+  const bodyModal = () => (
+    <form style={formContainerStyle} onSubmit={handleSubmit(handleNewConsumer)}>
+      <p style={Subtitle}>Enter all the user details for a consumer.</p>
 
-        <div style={inputRowStyle}>
-          <div style={inputColumnStyle}>
-            <InputLabel style={{ margin: 0, width: "100%" }}>
-              <p style={labelStyle}>First name</p>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("firstName")}
-              style={OutlinedInputStyle}
-              placeholder="First name"
-            />
-          </div>
-          <div style={inputColumnStyle}>
-            <InputLabel style={{ margin: 0, width: "100%" }}>
-              <p style={labelStyle}>Last name</p>
-            </InputLabel>
-            <OutlinedInput
-              required
-              {...register("lastName")}
-              style={OutlinedInputStyle}
-              placeholder="Last name"
-            />
-          </div>
-        </div>
-
-        <div style={fullWidthInputStyle}>
+      <div style={inputRowStyle}>
+        <div style={inputColumnStyle}>
           <InputLabel style={{ margin: 0, width: "100%" }}>
-            <p style={labelStyle}>Email</p>
+            <RequiredLabel text="First name" />
           </InputLabel>
           <OutlinedInput
-            required
-            type="email"
-            {...register("email", {
-              minLength: 10,
-              pattern: /^\S+@\S+$/i,
-            })}
-            style={OutlinedInputStyle}
-            placeholder="Enter your email"
+            {...register("firstName")}
+            style={{
+              ...OutlinedInputStyle,
+              ...(errors.firstName && { border: "solid 1px #D92D20" }),
+            }}
+            placeholder="First name"
+          />
+          {errors.firstName && (
+            <p style={errorTextStyle} role="alert">
+              {errors.firstName.message}
+            </p>
+          )}
+        </div>
+        <div style={inputColumnStyle}>
+          <InputLabel style={{ margin: 0, width: "100%" }}>
+            <RequiredLabel text="Last name" />
+          </InputLabel>
+          <OutlinedInput
+            {...register("lastName")}
+            style={{
+              ...OutlinedInputStyle,
+              ...(errors.lastName && { border: "solid 1px #D92D20" }),
+            }}
+            placeholder="Last name"
+          />
+          {errors.lastName && (
+            <p style={errorTextStyle} role="alert">
+              {errors.lastName.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div style={fullWidthInputStyle}>
+        <InputLabel style={{ margin: 0, width: "100%" }}>
+          <RequiredLabel text="Email" />
+        </InputLabel>
+        <OutlinedInput
+          type="email"
+          {...register("email", { minLength: 10, pattern: /^\S+@\S+$/i })}
+          style={{
+            ...OutlinedInputStyle,
+            ...(errors.email && { border: "solid 1px #D92D20" }),
+          }}
+          placeholder="Enter your email"
+          fullWidth
+        />
+        {errors.email && (
+          <p style={errorTextStyle} role="alert">
+            {errors.email.message}
+          </p>
+        )}
+      </div>
+
+      <div style={inputRowStyle}>
+        <div style={{ ...fullWidthInputStyle, width: "100%" }}>
+          <InputLabel style={{ margin: 0, width: "90%" }}>
+            <RequiredLabel text="Phone number" />
+          </InputLabel>
+          <PhoneInput
+            style={
+              phoneError
+                ? { ...phoneBaseStyle, border: "solid 1px #D92D20" }
+                : phoneBaseStyle
+            }
+            id="phone_input_check"
+            countrySelectProps={{ unicodeFlags: true }}
+            defaultCountry="US"
+            placeholder="(555) 000-0000"
+            value={contactPhoneNumber}
+            onChange={(value) => {
+              setContactPhoneNumber(value);
+              if (value) setPhoneError("");
+            }}
+          />
+          {phoneError && (
+            <p style={errorTextStyle} role="alert">
+              {phoneError}
+            </p>
+          )}
+        </div>
+        <div style={{ ...fullWidthInputStyle, width: "100%" }}>
+          <InputLabel style={{ margin: 0, width: "100%" }}>
+            <p style={labelStyle}>Event assigned to</p>
+          </InputLabel>
+
+          <Select
+            className="custom-autocomplete"
+            displayEmpty
+            name="eventAssignedTo"
+            value={eventAssignedTo}
+            onChange={(value) => setEventAssignedTo(value)}
+            style={{
+              ...AntSelectorStyle,
+              width: "100%",
+              display:
+                location.pathname === "/events/event-quickglance"
+                  ? "none"
+                  : "flex",
+            }}
+          >
+            <MenuItem disabled value="">
+              <em>Select event</em>
+            </MenuItem>
+            {listOfAvailableEventsPerAdmin?.map((event) => (
+              <MenuItem value={JSON.stringify(event)} key={event?.id}>
+                <p style={labelStyle}>{event?.eventInfoDetail?.eventName}</p>
+              </MenuItem>
+            ))}
+            <MenuItem value={null}>
+              <p style={labelStyle}>No event</p>
+            </MenuItem>
+          </Select>
+
+          <OutlinedInput
+            inputProps={{ readOnly: true }}
+            type="text"
+            style={{
+              ...OutlinedInputStyle,
+              display:
+                location.pathname === "/events/event-quickglance"
+                  ? "flex"
+                  : "none",
+            }}
+            defaultValue={
+              location.pathname === "/events/event-quickglance"
+                ? event.eventInfoDetail.eventName
+                : ""
+            }
             fullWidth
           />
         </div>
-        <div style={inputRowStyle}>
-          <div style={{ ...fullWidthInputStyle, width: "100%" }}>
-            <InputLabel style={{ margin: 0, width: "90%" }}>
-              <p style={labelStyle}>Phone number</p>
-            </InputLabel>
-            <PhoneInput
-              style={{ ...phoneInputStyle, width: "90%" }}
-              id="phone_input_check"
-              countrySelectProps={{ unicodeFlags: true }}
-              defaultCountry="US"
-              placeholder="(555) 000-0000"
-              value={contactPhoneNumber}
-              onChange={setContactPhoneNumber}
-            />
-          </div>
-          <div style={{ ...fullWidthInputStyle, width: "100%" }}>
-            <InputLabel style={{ margin: 0, width: "100%" }}>
-              <p style={labelStyle}>Event assigned to</p>
-            </InputLabel>
+      </div>
 
-            <Select
-              className="custom-autocomplete"
-              displayEmpty
-              name="eventAssignedTo"
-              value={eventAssignedTo}
-              onChange={(value) => setEventAssignedTo(value)}
-              style={{
-                ...AntSelectorStyle,
-                width: "100%",
-                display:
-                  location.pathname === "/events/event-quickglance"
-                    ? "none"
-                    : "flex",
-              }}
-            >
-              <MenuItem disabled value="">
-                <em>Select event</em>
-              </MenuItem>
-              {listOfAvailableEventsPerAdmin?.map((event) => (
-                <MenuItem value={JSON.stringify(event)} key={event?.id}>
-                  <p style={labelStyle}>{event?.eventInfoDetail?.eventName}</p>
-                </MenuItem>
-              ))}
-              <MenuItem value={null}>
-                <p style={labelStyle}>No event</p>
-              </MenuItem>
-            </Select>
-
-            <OutlinedInput
-              required
-              readOnly
-              type="text"
-              style={{
-                ...OutlinedInputStyle,
-                display:
-                  location.pathname === "/events/event-quickglance"
-                    ? "flex"
-                    : "none",
-              }}
-              defaultValue={
-                location.pathname === "/events/event-quickglance"
-                  ? event.eventInfoDetail.eventName
-                  : ""
-              }
-              fullWidth
-            />
-          </div>
-        </div>
-
-        <BlueButtonComponent
-          disabled={false}
-          loadingState={loading}
-          buttonType="submit"
-          title="Add new consumer"
-          styles={{
-            width: "100%",
-            marginTop: "1.5rem",
-          }}
-        />
-      </form>
-    );
-  };
+      <BlueButtonComponent
+        disabled={false}
+        loadingState={loading}
+        buttonType="submit"
+        title="Add new consumer"
+        styles={{ width: "100%", marginTop: "1.5rem" }}
+      />
+    </form>
+  );
 
   return (
     <>

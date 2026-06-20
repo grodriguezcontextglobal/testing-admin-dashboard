@@ -38,12 +38,8 @@ const MainHeaders = ({
         <div className="main-header-user-info">
           <Avatar size={isMobile ? 48 : 64} src={user.avatarUrl} />
           <div>
-            <h1 style={{ textAlign: "left" }} className="main-header-user-name">
-              {user.name}
-            </h1>
-            <p style={{ textAlign: "left" }} className="main-header-user-email">
-              {user.email}
-            </p>
+            <h1 className="main-header-user-name">{user.name}</h1>
+            <p className="main-header-user-email">{user.email}</p>
           </div>
         </div>
         <div className="main-header-actions">

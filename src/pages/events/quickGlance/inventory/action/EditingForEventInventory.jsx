@@ -229,7 +229,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     return (
       <div style={{ display: "grid", gap: "1rem" }}>
         <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory" style={{
-          backgroundColor: "var(--gray100, #F2F4F7) !important",
+          backgroundColor: "#F2F4F7",
         }}>
           <Grid container>
             <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
@@ -237,7 +237,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                 style={{
                   borderRadius: "8px",
                   // border: "1px solid var(--gray300, #D0D5DD)",
-                  backgroundColor: "var(--gray100, #F2F4F7)",
+                  backgroundColor: "#F2F4F7",
                   padding: "24px",
                   width: "100%",
                 }}

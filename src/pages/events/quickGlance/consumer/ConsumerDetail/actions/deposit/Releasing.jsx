@@ -1,5 +1,4 @@
 import {
-  Button,
   FormHelperText,
   Grid,
   InputAdornment,
@@ -11,11 +10,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, notification } from "antd";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import { BlueButtonText } from "../../../../../../../styles/global/BlueButtonText";
-import { BlueButton } from "../../../../../../../styles/global/BlueButton";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
+import BlueButton from "../../../../../../../components/UX/buttons/BlueButton";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -47,8 +45,7 @@ const Releasing = ({
     queryKey: ["transaction"],
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?paymentIntent=${
-          paymentIntentDetailSelected.paymentIntent
+        `/transaction/transaction?paymentIntent=${paymentIntentDetailSelected.paymentIntent
         }&active=${true}`
       ),
     refetchOnMount: false,
@@ -107,6 +104,19 @@ const Releasing = ({
         `/transaction/update-transaction/${transactionInfo.id}`,
         { active: false, id: transactionInfo.id }
       );
+      //change all receiver transactions attached to this transaction to inactive
+      const listOfReceivers = await devitrakApi.post(
+        `/receiver/receiver-assigned-list`,
+        { paymentIntent: paymentIntentDetailSelected.paymentIntent }
+      );
+      if (listOfReceivers.data.ok && listOfReceivers.data.list.length > 0) {
+        listOfReceivers.data.list.forEach(async (receiver) => {
+          await devitrakApi.patch(
+            `/receiver/receiver-update/${receiver.id}`,
+            { active: false }
+          );
+        });
+      }
       devitrakApi.post("/nodemailer/deposit-return-notification", {
         consumer: {
           name: `${customer.name}, ${customer.lastName}`,
@@ -273,31 +283,18 @@ const Releasing = ({
                   </Typography>
                 </FormHelperText>
 
-                <Button
-                  type="submit"
-                  disabled={
-                    stripeTransactionQuery?.data?.data?.paymentIntent
-                      ?.status === "canceled"
-                  }
-                  style={{
-                    ...BlueButton,
-                    width: "100%",
-                    display: transactionStatus ? "none" : "flex",
-                  }}
-                >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      ...BlueButtonText,
-                    }}
-                  >
-                    {/* {stripeTransactionQuery?.data?.data?.paymentIntent
-                      ?.status === "canceled"
-                      ? "Transaction released already"
-                      : "Cancelling deposit"} */}
-                    Release deposit
-                  </Typography>
-                </Button>
+                {!transactionStatus && (
+                  <BlueButton
+                    title="Release deposit"
+                    buttonType="submit"
+                    size="md"
+                    isDisabled={
+                      stripeTransactionQuery?.data?.data?.paymentIntent
+                        ?.status === "canceled"
+                    }
+                    styles={{ width: "100%" }}
+                  />
+                )}
               </form>
             </Grid>
           </Grid>{" "}

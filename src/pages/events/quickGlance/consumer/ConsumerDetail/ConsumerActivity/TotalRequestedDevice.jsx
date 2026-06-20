@@ -1,7 +1,6 @@
-import { Icon } from "@iconify/react";
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Card } from "antd";
+import { PackageCheck } from "lucide-react";
 
 const TotalRequestedDevice = ({ totalDevicesRequestedPerConsumer }) => {
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -19,87 +18,57 @@ const TotalRequestedDevice = ({ totalDevicesRequestedPerConsumer }) => {
       sm={12}
       md={12}
     >
-      <Grid padding={`${(isSmallDevice || isMediumDevice) ? "10px 0px" : "10px 10px 10px 0"}`} item xs={12}>
-        <Card
+      <Grid
+        padding={`${
+          isSmallDevice || isMediumDevice ? "10px 0px" : "10px 10px 10px 0"
+        }`}
+        item
+        xs={12}
+      >
+        <div
           style={{
-            borderRadius: "12px",
             border: "1px solid var(--gray-200, #EAECF0)",
-            background: "var(--base-white, #FFF)",
+            borderRadius: "12px",
+            padding: "20px",
+            background: "#fff",
             boxShadow:
-              "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
+              "0px 1px 2px rgba(16, 24, 40, 0.06), 0px 1px 3px rgba(16, 24, 40, 0.10)",
           }}
         >
-          <Grid
-            display={"flex"}
-            justifyContent={"space-around"}
-            alignItems={"center"}
-            container
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "8px",
+              background: "var(--blue-dark-100, #d1e0ff)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "12px",
+            }}
           >
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Typography
-                fontFamily={"Inter"}
-                fontSize={"14px"}
-                fontStyle={"normal"}
-                fontWeight={500}
-                lineHeight={"20px"}
-                color={"var(--gray-600, #475467)"}
-              >
-                Total devices requested
-              </Typography>
-            </Grid>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-end"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Grid item xs={12}>
-                <Typography
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={500}
-                  lineHeight={"20px"}
-                  textAlign={"right"}
-                  color={"var(--gray-600, #475467)"}
-                >
-                  <Icon
-                    icon="simple-line-icons:options-vertical"
-                    color="#98A2B3"
-                  />
-                </Typography>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid container>
-            <Grid
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              item
-              xs={12}
-            >
-              <Typography
-                paddingTop={"8px"}
-                fontFamily={"Inter"}
-                fontSize={"30px"}
-                fontStyle={"normal"}
-                fontWeight={600}
-                lineHeight={"38px"}
-                color={"var(--gray-900, #101828)"}
-              >
-                {totalDevicesRequestedPerConsumer}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Card>
+            <PackageCheck size={20} color="var(--blue-dark-600, #155eef)" />
+          </div>
+          <div
+            style={{
+              fontSize: "30px",
+              fontWeight: "700",
+              color: "var(--gray-900, #101828)",
+              fontFamily: "Inter",
+            }}
+          >
+            {totalDevicesRequestedPerConsumer}
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
+              color: "var(--gray-500, #667085)",
+              fontFamily: "Inter",
+            }}
+          >
+            Total devices requested
+          </div>
+        </div>
       </Grid>
     </Grid>
   );

@@ -47,100 +47,48 @@ const ContactInformation = () => {
           )
         }
         style={{
-          border: "none",
+          border: "1px solid var(--gray-200, #EAECF0)",
+          borderRadius: "12px",
+          width: "100%",
         }}
         styles={{
-          border: "none",
           header: {
-            borderBottom: "transparent",
+            borderBottom: "1px solid var(--gray-200, #EAECF0)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "0 24px 0 0",
+            padding: "12px 16px",
             background: "var(--main-background-color)",
-            border: "none",
           },
           body: {
-            borderRadius: "12px",
-            border: "none",
             background: "var(--main-background-color)",
-            boxShadow: "none",
             textAlign: "left",
             width: "100%",
-            padding: 0,
-          },
-          cover: {
-            border: "none",
+            padding: "16px",
           },
         }}
       >
-        <Grid
-          display={"flex"}
-          justifyContent={"space-around"}
-          alignItems={"center"}
-          container
-        >
-          <Grid
-            display={"flex"}
-            justifyContent={"left"}
-            textAlign={"left"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <Typography style={{ ...styling, fontWeight: 400 }}>
+        <Grid container>
+          <Grid item xs={12}>
+            <Typography style={{ ...styling, fontWeight: 500 }}>
               {event?.contactInfo?.name}
             </Typography>
           </Grid>
-          <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"flex-start"}
-            textAlign={"left"}
-            alignItems={"center"}
-            item
-            xs={12}
-          >
-            <Typography
-              style={{
-                width: "100%",
-                ...Subtitle,
-                fontWeight: 600,
-              }}
-              textAlign={"left"}
-              paddingTop={"8px"}
-            >
-              Contact
-            </Typography>
-            <Typography
-              style={{
-                width: "100%",
-                ...Subtitle,
-                fontWeight: 400,
-              }}
-              textAlign={"left"}
-              paddingTop={"8px"}
-            >
-              {event?.contactInfo?.email}
-            </Typography>
-            <Typography
-              style={{
-                width: "100%",
-                ...Subtitle,
-                fontWeight: 400,
-              }}
-              textAlign={"left"}
-              paddingTop={"8px"}
-            >
-              {event?.contactInfo?.phone?.map((item) => {
-                return (
-                  <span key={item}>
-                    m: {item}
-                    <br />
-                  </span>
-                );
-              })}
-            </Typography>{" "}
+          <Grid item xs={12} style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Icon icon="mdi:email-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0 }} />
+              <Typography style={{ ...Subtitle, fontWeight: 400 }}>
+                {event?.contactInfo?.email}
+              </Typography>
+            </div>
+            {event?.contactInfo?.phone?.map((item) => (
+              <div key={item} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Icon icon="mdi:phone-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0 }} />
+                <Typography style={{ ...Subtitle, fontWeight: 400 }}>
+                  {item}
+                </Typography>
+              </div>
+            ))}
           </Grid>
         </Grid>
       </Card>

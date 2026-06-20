@@ -1,7 +1,7 @@
 import { Space } from "antd";
-import DangerButtonConfirmationComponent from "../../../../../../components/UX/buttons/DangerButtonConfirmation";
+// import DangerButtonConfirmationComponent from "../../../../../../components/UX/buttons/DangerButtonConfirmation";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../../../components/ux/buttons/DangerButton";
+import DangerButtonComponent from "../../../../../../components/UX/buttons/DangerButton";
 
 const ExpandedTableButtons = ({
   record,
@@ -31,12 +31,12 @@ const ExpandedTableButtons = ({
               border: `${
                 String(record.status).toLowerCase() === "lost"
                   ? "1px solid var(--disabled-blue-button)"
-                  : "1px solid var(--blue-dark-600, #155EEF)"
+                  : "1px solid var(--blue-dark-600, #155eef)"
               }`,
               backgroundColor: `${
                 String(record.status).toLowerCase() === "lost"
                   ? "var(--disabled-blue-button)"
-                  : "var(--blue-dark-600, #155EEF)"
+                  : "var(--blue-dark-600, #155eef)"
               }`,
             }}
           />
@@ -64,9 +64,9 @@ const ExpandedTableButtons = ({
           event.staff.adminUser.some(
             (element) => element.email === user.email
           ) && (
-            <DangerButtonConfirmationComponent
+            <DangerButtonComponent
               confirmationTitle="Are you sure you want to return all items of this transaction?"
-              func={() => handleLostSingleDevice(record)}
+              func={() => {handleLostSingleDevice(record)}}//handleLostSingleDevice(record); 
               title={"Lost"}
             />
           )}

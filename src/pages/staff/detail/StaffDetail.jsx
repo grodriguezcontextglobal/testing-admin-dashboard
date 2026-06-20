@@ -1,16 +1,12 @@
-import { Grid } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Divider, notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import GrayButtonComponent from "../../../components/ux/buttons/GrayButton";
-import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
+import { hasActionPermission } from "../../../config/permissionActions";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { updateStaffMemberInList } from "../../../utils/staffUtils";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
-import { rolesWith } from "../../../config/roleCapabilities";
 
 const StaffDetail = () => {
   const { profile } = useSelector((state) => state.staffDetail);
@@ -73,208 +69,101 @@ const StaffDetail = () => {
     updateStaffStatusMutation.mutate();
   };
 
-  // const iconColor = "#0040C1";
-
-  const tabOptions = [
-    {
-      label: "Assign devices",
-      route: "assignment",
-      permission: rolesWith("staff.assignDevices"),
-      disabled: false,
-      id: 0,
-      fn: () => null,
-      html: (
-        <BlueButtonComponent
-          title={"Assign devices"}
-          func={() => null}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Assign user to event",
-      route: "assign-staff-events",
-      permission: rolesWith("staff.assignToEvent"),
-      disabled: false,
-      id: 1,
-      fn: () => null,
-      html: (
-        <LightBlueButtonComponent
-          title={"Assign user to event"}
-          func={() => null}
-          // icon={<WhiteCalendarIcon />}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Assign Location/Permission",
-      route: "assign-location-manager",
-      permission: rolesWith("staff.assignLocationPermission"),
-      disabled: user.email === profile.email,
-      id: 7,
-      fn: () => null,
-      html: (
-        <LightBlueButtonComponent
-          title={"Assign Location/Permission"}
-          func={() => null}
-          // icon={<RectanglePlusIcon stroke={iconColor} />}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Update contact info",
-      route: "update-contact-info",
-      permission: rolesWith("staff.updateContactInfo"),
-      disabled: user.email !== profile.email,
-      id: 2,
-      fn: () => null,
-      html: (
-        <GrayButtonComponent
-          title={"Update contact info"}
-          func={() => null}
-          // icon={<UpdateIcon />}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Change role",
-      route: "update-role-company",
-      permission: rolesWith("staff.changeRole"),
-      disabled: user.email === profile.email,
-      id: 3,
-      fn: () => null,
-      html: (
-        <GrayButtonComponent
-          title={"Change role"}
-          func={() => null}
-          // icon={<ChangeRoleStaffIcon />}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: "Send password reset email",
-      route: "reset-password-link",
-      permission: rolesWith("staff.sendPasswordReset"),
-      disabled: false,
-      id: 4,
-      fn: () => null,
-      html: (
-        <GrayButtonComponent
-          title={"Send password reset email"}
-          func={() => null}
-          // icon={<UpdatePasswordIcon />}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
-    {
-      label: `${profile.active ? "Remove" : "Grant"} access`,
-      route: `/staff/${profile.adminUserInfo.id}/main`,
-      permission: rolesWith("staff.grantRevokeAccess"),
-      disabled: user.email === profile.email,
-      id: 5,
-      fn: null,
-      html: (
-        <GrayButtonComponent
-          title={`${profile.active ? "Remove" : "Grant"} access`}
-          func={() => activeOrDesactiveStaffMemberInCompany()}
-          // icon={<UpdatePasswordIcon />}
-          loadingState={updateStaffStatusMutation.isPending}
-          buttonType="button"
-          titleStyles={{
-            textTransform: "none",
-            with: "100%",
-            gap: "2px",
-          }}
-        />
-      ),
-    },
+  const navTabs = [
+    { label: "Assign devices", route: "assignment", permission: "staff:assign_devices", disabled: false, id: 0 },
+    { label: "Assign user to event", route: "assign-staff-events", permission: "staff:assign_event", disabled: false, id: 1 },
+    { label: "Assign Location/Permission", route: "assign-location-manager", permission: "staff:assign_location", disabled: user.email === profile.email, id: 7 },
+    { label: "Update contact info", route: "update-contact-info", permission: "staff:update_contact", disabled: user.email !== profile.email, id: 2 },
+    { label: "Change role", route: "update-role-company", permission: "staff:change_role", disabled: user.email === profile.email, id: 3 },
+    { label: "Send password reset email", route: "reset-password-link", permission: "staff:reset_password", disabled: false, id: 4 },
   ];
+
+  const visibleNavTabs = navTabs.filter(
+    (t) => hasActionPermission(user, t.permission) && !t.disabled,
+  );
+
+  const showAccessToggle =
+    hasActionPermission(user, "staff:grant_access") &&
+    user.email !== profile.email;
+
+  const pillNavLinkStyle = ({ isActive }) => ({
+    borderRadius: "9999px",
+    padding: "6px 14px",
+    fontSize: "13px",
+    fontWeight: 500,
+    lineHeight: "1.4",
+    whiteSpace: "nowrap",
+    textDecoration: "none",
+    backgroundColor: isActive ? "#344054" : "transparent",
+    color: isActive ? "#fff" : "#475467",
+    transition: "background-color 0.15s, color 0.15s",
+  });
 
   return (
     <>
       <HeaderStaffDetail />
       <Divider />
-      <nav style={{ display: "flex", width: "100%", gap: "24px", marginY: 3 }}>
-        <Grid
+      <nav
+        style={{
+          display: "flex",
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "12px",
+          margin: "16px 0",
+        }}
+      >
+        <div
           style={{
-            display: "flex",
-            justifyContent: {
-              xs: "flex-start",
-              sm: "flex-start",
-              md: "space-between",
-              lg: "space-between",
-            },
-            alignSelf: {
-              xs: "flex-start",
-              sm: "flex-start",
-              md: "center",
-              lg: "center",
-            },
-            gap: "24px",
+            display: "inline-flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "2px",
+            border: "1px solid #D0D5DD",
+            borderRadius: "9999px",
+            padding: "4px",
+            backgroundColor: "#fff",
+            width: "fit-content",
           }}
-          container
         >
-          {tabOptions.map((option) => {
-            return (
-              <NavLink
-                key={option.label}
-                to={`${option.route}`}
-                style={{
-                  display: `${
-                    option.permission.some(
-                      (element) => element === Number(user.role),
-                    )
-                      ? option.disabled
-                        ? "none"
-                        : "flex"
-                      : "none"
-                  }`,
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "10x 16px",
-                  gap: "8px",
-                }}
-              >
-                {option.html}
-              </NavLink>
-            );
-          })}
-        </Grid>
+          <NavLink to="." end style={pillNavLinkStyle}>
+            Home
+          </NavLink>
+          {visibleNavTabs.map((tab) => (
+            <NavLink key={tab.id} to={tab.route} style={pillNavLinkStyle}>
+              {tab.label}
+            </NavLink>
+          ))}
+        </div>
+
+        {showAccessToggle && (
+          <NavLink
+            to={`/staff/${profile.adminUserInfo.id}/main`}
+            onClick={activeOrDesactiveStaffMemberInCompany}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              borderRadius: "9999px",
+              padding: "8px 18px",
+              fontSize: "13px",
+              fontWeight: 500,
+              lineHeight: "1.4",
+              whiteSpace: "nowrap",
+              textDecoration: "none",
+              border: "1px solid #D0D5DD",
+              backgroundColor: profile.active ? "#FEF3F2" : "#ECFDF3",
+              color: profile.active ? "#B42318" : "#027A48",
+              opacity: updateStaffStatusMutation.isPending ? 0.6 : 1,
+              pointerEvents: updateStaffStatusMutation.isPending ? "none" : "auto",
+              transition: "opacity 0.15s",
+            }}
+          >
+            {updateStaffStatusMutation.isPending
+              ? "Updating..."
+              : `${profile.active ? "Remove" : "Grant"} access`}
+          </NavLink>
+        )}
       </nav>
       <Divider />
       <Outlet />

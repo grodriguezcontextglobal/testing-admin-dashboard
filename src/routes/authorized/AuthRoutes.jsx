@@ -1,5 +1,7 @@
 import { lazy, Suspense, useRef } from "react";
-import { Route, Routes } from "react-router";
+import { Navigate, Outlet, Route, Routes } from "react-router";
+import { useSelector } from "react-redux";
+import { hasActionPermission } from "../../config/permissionActions";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
@@ -227,6 +229,13 @@ const AssignmentDeviceMembers = lazy(() =>
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
   )
 );
+// Redirects to "/" if the logged-in user's role is not allowed to perform `action`.
+const PermissionGuard = ({ action }) => {
+  const { user } = useSelector((state) => state.admin);
+  const allowed = hasActionPermission(user, action);
+  return allowed ? <Outlet /> : <Navigate to="/" replace />;
+};
+
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
@@ -315,12 +324,14 @@ const AuthRoutes = () => {
                 path="/inventory/event-inventory"
                 element={<InventoryEvent />}
               />
-              <Route path="/inventory/new-item" element={<AddNewItem />} />
-              <Route path="/inventory/edit-group" element={<EditGroup />} />
-              <Route
-                path="/inventory/new-bulk-items"
-                element={<AddNewBulkItems />}
-              />
+              <Route element={<PermissionGuard action="inventory:create" />}>
+                <Route path="/inventory/new-item" element={<AddNewItem />} />
+                <Route path="/inventory/edit-group" element={<EditGroup />} />
+                <Route
+                  path="/inventory/new-bulk-items"
+                  element={<AddNewBulkItems />}
+                />
+              </Route>
               <Route
                 path="/inventory/inventory-in-use"
                 element={<InventoryInUsePage />}
@@ -329,32 +340,34 @@ const AuthRoutes = () => {
                 path="/inventory/advance_search_result"
                 element={<AdvanceSearchResultPage />}
               />
-              <Route path="/consumers" element={<ConsumersMainPage />} />
-              <Route path="/consumers/:id" element={<ConsumerDetail />} />
-              <Route
-                path="/consumers/:id/payment-confirmation"
-                element={<AuthorizedDeposit />}
-              />
-              <Route
-                path="/consumers/:id/lost-device-fee/cash"
-                element={<ConsumerDeviceLostFeeCash />}
-              />
-              <Route
-                path="/consumers/:id/lost-device-fee/credit_card"
-                element={<ConsumerDeviceLostFeeCreditCard />}
-              />
-              <Route
-                path="/consumers/:id/charge-all-lost-devices/cash"
-                element={<ChargeAllListDeviceCash />}
-              />
-              <Route
-                path="/consumers/:id/charge-all-lost-devices/credit_card"
-                element={<ChargeAllListDeviceCreditCard />}
-              />
-              <Route
-                path="/consumers/:id/payment-confirmation"
-                element={<ConsumerConfirmationPayment />}
-              />
+              <Route element={<PermissionGuard action="nav:consumers" />}>
+                <Route path="/consumers" element={<ConsumersMainPage />} />
+                <Route path="/consumers/:id" element={<ConsumerDetail />} />
+                <Route
+                  path="/consumers/:id/payment-confirmation"
+                  element={<AuthorizedDeposit />}
+                />
+                <Route
+                  path="/consumers/:id/lost-device-fee/cash"
+                  element={<ConsumerDeviceLostFeeCash />}
+                />
+                <Route
+                  path="/consumers/:id/lost-device-fee/credit_card"
+                  element={<ConsumerDeviceLostFeeCreditCard />}
+                />
+                <Route
+                  path="/consumers/:id/charge-all-lost-devices/cash"
+                  element={<ChargeAllListDeviceCash />}
+                />
+                <Route
+                  path="/consumers/:id/charge-all-lost-devices/credit_card"
+                  element={<ChargeAllListDeviceCreditCard />}
+                />
+                <Route
+                  path="/consumers/:id/payment-confirmation"
+                  element={<ConsumerConfirmationPayment />}
+                />
+              </Route>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
                 <Route
@@ -372,31 +385,35 @@ const AuthRoutes = () => {
                   path="reset-password-link"
                   element={<ForgetPasswordLinkFromStaffPage />}
                 />
-                <Route
-                  key={"/staff/:id/assignment"}
-                  path="assignment"
-                  element={<Assignment />}
-                />
-                <Route
-                  key={"/staff/:id/update-role-company"}
-                  path="update-role-company"
-                  element={<UpdateRoleInCompany />}
-                />
-                <Route
-                  key={"/staff/:id/assign-staff-events"}
-                  path="assign-staff-events"
-                  element={<AssignStaffMemberToEvent />}
-                />
-                <Route
-                  key={"/staff/:id/assign-location"}
-                  path="assign-location"
-                  element={<AssignLocation />}
-                />
-                <Route
-                  key={"/staff/:id/assign-location-manager"}
-                  path="assign-location-manager"
-                  element={<AssignLocationManager />}
-                />
+                <Route element={<PermissionGuard action="staff:assign_devices" />}>
+                  <Route
+                    key={"/staff/:id/assignment"}
+                    path="assignment"
+                    element={<Assignment />}
+                  />
+                  <Route
+                    key={"/staff/:id/assign-staff-events"}
+                    path="assign-staff-events"
+                    element={<AssignStaffMemberToEvent />}
+                  />
+                  <Route
+                    key={"/staff/:id/assign-location"}
+                    path="assign-location"
+                    element={<AssignLocation />}
+                  />
+                  <Route
+                    key={"/staff/:id/assign-location-manager"}
+                    path="assign-location-manager"
+                    element={<AssignLocationManager />}
+                  />
+                </Route>
+                <Route element={<PermissionGuard action="staff:change_role" />}>
+                  <Route
+                    key={"/staff/:id/update-role-company"}
+                    path="update-role-company"
+                    element={<UpdateRoleInCompany />}
+                  />
+                </Route>
                 <Route
                   key={"/staff/:id/view_actions_staff_taken"}
                   path="view_actions_staff_taken"

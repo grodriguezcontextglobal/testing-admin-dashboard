@@ -1,43 +1,20 @@
-import { Grid, Typography } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
-import { Button, notification, Result } from "antd";
+import { Grid } from "@mui/material";
+import { Result } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Loading from "../../../components/animation/Loading";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { useEffect, useState } from "react";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import CustomerHeader from "./UI/header";
 
 const ConsumerConfirmationPayment = () => {
-  const [loadingStatus, setLoadingStatus] = useState(true);
   const { customer } = useSelector((state) => state.customer);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const payment_intent = new URLSearchParams(window.location.search).get(
     "payment_intent"
   );
-  const [api, contextHolder] = notification.useNotification();
-  const openNotification = (mess, descript) => {
-    api.open({
-      message: mess,
-      description: descript,
-      duration: 0,
-    });
-  };
-
   const handleBackAction = () => {
     navigate(`/consumers/${customer.id}`);
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoadingStatus(false);
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   return (
     <Grid
@@ -50,7 +27,6 @@ const ConsumerConfirmationPayment = () => {
       }}
       container
     >
-      {contextHolder}
       <Grid
         marginY={3}
         display={"flex"}
@@ -74,12 +50,6 @@ const ConsumerConfirmationPayment = () => {
           md={12}
           lg={12}
         >
-          {loadingStatus ? (
-            <div style={CenteringGrid}>
-              {" "}
-              <Loading />{" "}
-            </div>
-          ) : (
             <Result
               status="success"
               title="Successfully transaction!"
@@ -94,19 +64,14 @@ const ConsumerConfirmationPayment = () => {
                     gap: "2px",
                   }}
                 >
-                  <Button
-                    style={{ ...BlueButton, width: "100%" }}
-                    onClick={() => handleBackAction()}
-                    key="consumer"
-                  >
-                    <Typography textTransform={"none"} style={BlueButtonText}>
-                      Return to consumer page
-                    </Typography>
-                  </Button>
+                  <BlueButtonComponent
+                    text="Return to consumer page"
+                    func={() => handleBackAction()}
+                    key="return_consumer"
+                  />
                 </div>,
               ]}
             />
-          )}
         </Grid>
       </Grid>
     </Grid>

@@ -404,7 +404,8 @@ const EndEventButton = () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(
-          `Error processing device status batch ${Math.floor(i / deviceBatchSize) + 1
+          `Error processing device status batch ${
+            Math.floor(i / deviceBatchSize) + 1
           }:`,
           error,
         );
@@ -440,7 +441,8 @@ const EndEventButton = () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(
-          `Error processing returning item batch ${Math.floor(i / deviceBatchSize) + 1
+          `Error processing returning item batch ${
+            Math.floor(i / deviceBatchSize) + 1
           }:`,
           error,
         );
@@ -502,13 +504,6 @@ const EndEventButton = () => {
     return Array.from(totalResult);
   };
 
-  const completingEventConfigurationProcess = async () => {
-    await devitrakApi.post(`/db_event/update-event/${event.sql.event_id}`, {
-      configuration: "finished"
-    });
-  };
-
-
   const inactiveEventAfterEndIt = async () => {
     try {
       setProgress((prev) => ({ ...prev, step: "Deactivating event..." }));
@@ -526,7 +521,7 @@ const EndEventButton = () => {
       const requestData = {
         active: false,
         "staff.headsetAttendees": Array.from(result),
-        logistic_inventory_status: "in-transit"
+        logistic_inventory_status:"in-transit"
       };
 
       checkRequestSize(requestData);
@@ -537,7 +532,11 @@ const EndEventButton = () => {
 
       if (resp.data.ok) {
         dispatch(onAddEventData({ ...event, active: false }));
-        return await completingEventConfigurationProcess();
+        // return openNotificationWithIcon(
+        //   "success",
+        //   "Event inventory has been moved back to Company Inventory"
+        // );
+        return;
       }
     } catch (error) {
       openNotificationWithIcon("error", `${error.message}`);
@@ -631,9 +630,10 @@ const EndEventButton = () => {
       const results = [];
       for (let data of batch) {
         if (itemsPerCompany()[data.group]) {
-          const newQty = `${Number(itemsPerCompany()[data.group].at(-1).quantity) +
+          const newQty = `${
+            Number(itemsPerCompany()[data.group].at(-1).quantity) +
             Number(data.quantity)
-            }`;
+          }`;
 
           const result = await makeRequestWithRetry(() =>
             devitrakApi.patch(

@@ -1,36 +1,65 @@
-import { Grid, IconButton, Typography } from "@mui/material";
 import { Switch, Tooltip } from "antd";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import Loading from "../../../../components/animation/Loading";
-import ViewIcon from "../../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import ReusableCardWithHeaderAndFooter from "../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import ModalAllItemsBasedOnGroup from "./ModalAllItemsBasedOnGroup";
-import ReusableCardWithHeaderAndFooter from "../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
+import { ProgressBar } from "../../../../components/base/progress-indicators/progress-indicators";
 const ModalAddAndUpdateDeviceSetup = lazy(
   () => import("./ModalAddAndUpdateDeviceSetup"),
 );
+
 const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
   const [openModalDeviceSetup, setOpenModalDeviceSetup] = useState(false);
   const [openModalItemList, setOpenModalItemList] = useState(false);
-  const handleOpenModal = () => {
-    return setOpenModalDeviceSetup(true);
-  };
 
-  const renderingAddInventoryButton = () => {
-    return (
-      <>
-          <div style={{width:"-webkit-fit-content", padding:"0 24px"}}>
-            <BlueButtonComponent
-              key="allocate-device-type-button"
-              title={"Allocate device type to event"}
-              func={() => handleOpenModal()}
-            />
-          </div>
-      </>
-    );
-  };
+  const poolCount = useMemo(() => {
+    const raw = database?.receiversInventory;
+    if (!raw) return 0;
+    try {
+      const data = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return data.filter((inv) => inv.type === title).length;
+    } catch {
+      return 0;
+    }
+  }, [database, title]);
+
+  const poolPct =
+    props.quantity > 0 ? Math.min((poolCount / props.quantity) * 100, 100) : 0;
+
+  const hasSerialNumbers =
+    props.startingNumber !== null && props.endingNumber !== null;
+
+  const cardFooter = (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        gap: "8px",
+        width: "100%",
+      }}
+    >
+      {hasSerialNumbers && (
+        <GrayButtonComponent
+          size="sm"
+          title="View"
+          func={() => setOpenModalItemList(true)}
+        />
+      )}
+      <BlueButtonComponent
+        size="sm"
+        title="Allocate items"
+        func={() => setOpenModalDeviceSetup(true)}
+        styles={{ marginRight: "8px" }}
+      />
+    </div>
+  );
+
   return (
     <Suspense
       fallback={
@@ -41,65 +70,66 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
     >
       <ReusableCardWithHeaderAndFooter
         title={title}
-        actions={[renderingAddInventoryButton()]}
-        style={{ with: "100%" }}
+        actions={[cardFooter]}
+        style={{ minWidth: "260px", width: "100%" }}
       >
-        <Grid container>
-          <Grid
-            display={"flex"}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <Typography paddingTop={"8px"} style={TextFontSize30LineHeight38}>
-              {props.quantity}
-            </Typography>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <Tooltip
-                title={`${
-                  props.consumerUses ? "For consumers." : "For internal use."
-                }`}
-                style={{ width: "100%" }}
-              >
-                <div style={{ margin: "0 0 0 15px" }}>
-                  <Switch
-                    checked={props.consumerUses}
-                    loading={loadingStatus}
-                    onChange={onChange}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip
-                title={"View all serial numbers of this device type"}
-                style={{ width: "100%" }}
-              >
-                <div
-                  style={{
-                    margin: "0 0 0 15px",
-                    display:
-                      props.startingNumber !== null &&
-                      props.endingNumber !== null
-                        ? "flex"
-                        : "none",
-                  }}
-                >
-                  <IconButton
-                    size="small"
-                    onClick={() => setOpenModalItemList(true)}
-                    sx={{ mr: 1 }}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                </div>
-              </Tooltip>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            paddingTop: "8px",
+          }}
+        >
+          {/* Total set for event + pool count */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div>
+              <p style={TextFontSize30LineHeight38}>{props.quantity}</p>
+              <p style={{ ...Subtitle, marginTop: "2px" }}>Set for event</p>
             </div>
-          </Grid>
-        </Grid>
+            <div style={{ textAlign: "right" }}>
+              <p style={TextFontSize30LineHeight38}>{poolCount}</p>
+              <p style={{ ...Subtitle, marginTop: "2px" }}>In event pool</p>
+            </div>
+          </div>
+
+          {/* Pool assignment progress */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <p style={Subtitle}>Assigned to event</p>
+              <p style={{ ...Subtitle, fontWeight: 500, color: "var(--gray-900, #101828)" }}>
+                {poolCount}&nbsp;/&nbsp;{props.quantity}
+              </p>
+            </div>
+            <ProgressBar labelPosition="right" min={0} max={100} value={poolPct} />
+          </div>
+
+          {/* Consumer / internal toggle */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingTop: "4px",
+              borderTop: "1px solid var(--gray-100, #F2F4F7)",
+            }}
+          >
+            <p style={Subtitle}>
+              {props.consumerUses ? "Consumer use" : "Internal use"}
+            </p>
+            <Tooltip
+              title={`${props.consumerUses ? "For consumers." : "For internal use."}`}
+            >
+              <Switch
+                checked={props.consumerUses}
+                loading={loadingStatus}
+                onChange={onChange}
+              />
+            </Tooltip>
+          </div>
+        </div>
       </ReusableCardWithHeaderAndFooter>
+
       {openModalDeviceSetup && (
         <ModalAddAndUpdateDeviceSetup
           openModalDeviceSetup={openModalDeviceSetup}
@@ -109,7 +139,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
           category_name={props.item.category}
         />
       )}
-      {openModalItemList && props.startingNumber !== null && (
+      {openModalItemList && hasSerialNumbers && (
         <ModalAllItemsBasedOnGroup
           openModalItemList={openModalItemList}
           setOpenModalItemList={setOpenModalItemList}

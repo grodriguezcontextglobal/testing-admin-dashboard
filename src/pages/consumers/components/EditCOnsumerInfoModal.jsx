@@ -11,11 +11,28 @@ import Input from "../../../components/UX/inputs/Input";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-import ReusableTextArea from "../../../components/UX/inputs/TextArea";
+
+const fieldLabelStyle = {
+  display: "block",
+  fontFamily: "Inter",
+  fontSize: "14px",
+  fontWeight: 500,
+  lineHeight: "20px",
+  color: "var(--gray-700, #344054)",
+  marginBottom: "6px",
+};
+
+const sectionLabelStyle = {
+  fontFamily: "Inter",
+  fontSize: "12px",
+  fontWeight: 600,
+  letterSpacing: "0.05em",
+  textTransform: "uppercase",
+  color: "var(--gray-500, #667085)",
+};
+
 const EditConsumerInfoModal = ({
   openEditConsumerModal,
   setOpenEditConsumerModal,
@@ -23,47 +40,30 @@ const EditConsumerInfoModal = ({
   const { register, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
   const { customer } = useSelector((state) => state.customer);
-  const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: type,
-      description: msg,
-    });
-  };
   const queryClient = useQueryClient();
+
+  const openNotificationWithIcon = (type, msg) => {
+    api.open({ message: type, description: msg });
+  };
 
   const handleUpdateConsumerInfo = async (data) => {
     setLoading(true);
     try {
       const updatingUserInfoQuery = await devitrakApi.patch(
-        `/auth/${customer.data.id}`,
+        `/auth/${customer.uid}`,
         {
           name: data.name,
           lastName: data.lastName,
           email: data.email,
           phoneNumber: data.phoneNumber,
-          notes: [
-            ...customer.data.notes,
-            {
-              company: user.companyData.id,
-              notes: data.notes,
-              date: new Date().getTime(),
-            },
-          ],
         }
       );
       if (updatingUserInfoQuery.data) {
-        queryClient.invalidateQueries({
-          queryKey: ["listOfConsumers"],
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["consumersList"],
-          exact: true,
-        });
-        let userFormatData = {
+        queryClient.invalidateQueries({ queryKey: ["listOfConsumers"], exact: true });
+        queryClient.invalidateQueries({ queryKey: ["consumersList"], exact: true });
+        const userFormatData = {
           uid: customer.data.id,
           name: updatingUserInfoQuery.data.name,
           lastName: updatingUserInfoQuery.data.lastName,
@@ -73,173 +73,150 @@ const EditConsumerInfoModal = ({
         };
         dispatch(onAddCustomerInfo(userFormatData));
         dispatch(onAddCustomer(userFormatData));
-
         openNotificationWithIcon("Success", "Consumer information updated.");
         setLoading(false);
         closeDeviceModal();
-        setLoading(false);
       }
-    } catch (error) {
-      return setLoading(false);
+    } catch {
+      setLoading(false);
     }
   };
 
-  const closeDeviceModal = () => {
-    return setOpenEditConsumerModal(false);
-  };
-  const titleRender = () => {
-    return (
-      <p style={{ ...TextFontsize18LineHeight28, textAlign: "left" }}>
-        Editing consumer information
-      </p>
-    );
-  };
+  const closeDeviceModal = () => setOpenEditConsumerModal(false);
 
-  const structuringFieldsNeeded = [
-    {
-      title: "First name",
-      feature: "firstName",
-      type: "text",
-      textArea: false,
-      value: customer.name ?? "",
-    },
-    {
-      title: "Last name",
-      feature: "lastName",
-      type: "text",
-      textArea: false,
-      value: customer.lastName ?? "",
-    },
-    {
-      title: "Email",
-      feature: "email",
-      type: "text",
-      textArea: false,
-      value: customer.email ?? "",
-    },
-    {
-      title: "Phone",
-      feature: "phone",
-      type: "text",
-      textArea: false,
-      value: customer.phoneNumber ?? "",
-    },
-    {
-      title: "Add new Note",
-      feature: "notes",
-      type: "text",
-      textArea: true,
-      value: customer.notes ?? "",
-    },
-  ];
+  const titleRender = () => (
+    <p style={{ ...TextFontsize18LineHeight28, textAlign: "left" }}>
+      Edit consumer
+    </p>
+  );
 
-  const bodyModal = () => {
-    return (
-      <Grid
-        display={"flex"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        gap={2}
-        container
+  const bodyModal = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+      {/* Profile snapshot */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "12px 16px",
+          borderRadius: "10px",
+          background: "var(--gray-50, #F9FAFB)",
+          border: "1px solid var(--gray-200, #EAECF0)",
+        }}
       >
-        <Grid item xs={12} sm={12} md={12} lg={12}>
-          <p style={{ ...Subtitle, width: "100%", textAlign: "left" }}>
-            <Avatar size={60} src={customer?.data?.profile_picture}>{customer?.name.charAt(0)}{customer?.lastName.charAt(0)}</Avatar>&nbsp;
-            <span style={{alignSelf:"flex-start"}}>
-              Consumer information
-            </span>
-          </p>
-        </Grid>
-        <form
-          style={{
-            ...CenteringGrid,
-            margin: 0,
-            flexDirection: "column",
-            width: "100%",
-          }}
-          onSubmit={handleSubmit(handleUpdateConsumerInfo)}
+        <Avatar
+          size={48}
+          src={customer?.data?.profile_picture}
+          style={{ flexShrink: 0 }}
         >
-          {structuringFieldsNeeded.map((item) => {
-            if (item.textArea) {
-              return (
-                <Grid
-                  style={{
-                    ...CenteringGrid,
-                    margin: "0.5dvh 0",
-                    width: "100%",
-                  }}
-                  key={item.feature}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={12}
-                  lg={12}
-                >
-                  {" "}
-                  <label style={{ width: "100%" }}>
-                    <p style={Subtitle}>{item.title}</p>
-                    <ReusableTextArea
-                      multiline
-                      rows={6}
-                      fullWidth
-                      style={{
-                        ...OutlinedInputStyle,
-                        height: "auto",
-                        padding: 0,
-                      }}
-                      {...register(`${item.feature}`, { value: item.value })}
-                    />
-                  </label>
-                </Grid>
-              );
-            } else {
-              return (
-                <Grid
-                  style={{
-                    ...CenteringGrid,
-                    margin: "0.5dvh 0",
-                    width: "100%",
-                  }}
-                  key={item.feature}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={12}
-                  lg={12}
-                >
-                  <label style={{ width: "100%" }}>
-                    <p style={Subtitle}>{item.title}</p>
-                    <Input
-                      style={OutlinedInputStyle}
-                      fullWidth
-                      {...register(`${item.feature}`, { value: item.value })}
-                    />
-                  </label>
-                </Grid>
-              );
-            }
-          })}
-          <div style={{ width: "100%", display: "flex", justifyContent: "flex-end", gap: "15px" }}>
-            <GrayButtonComponent
-              func={() => closeDeviceModal()}
-              buttonType="reset"
-              title="Cancel"
-            />
-            <BlueButtonComponent
-              loadingState={loading}
-              buttonType="submit"
-              title="Update consumer information"
-            />
-          </div>
-        </form>
-      </Grid>
-    );
-  };
+          {!customer?.data?.profile_picture &&
+            `${customer?.name?.charAt(0) ?? ""}${customer?.lastName?.charAt(0) ?? ""}`}
+        </Avatar>
+        <div>
+          <p
+            style={{
+              fontFamily: "Inter",
+              fontSize: "15px",
+              fontWeight: 600,
+              lineHeight: "22px",
+              color: "var(--gray-900, #101828)",
+              margin: 0,
+              textTransform: "capitalize",
+            }}
+          >
+            {customer?.name} {customer?.lastName}
+          </p>
+          <p style={{ ...Subtitle, margin: 0 }}>{customer?.email}</p>
+        </div>
+      </div>
+
+      {/* Form */}
+      <form
+        style={{ display: "flex", flexDirection: "column", gap: "0" }}
+        onSubmit={handleSubmit(handleUpdateConsumerInfo)}
+      >
+        {/* Section: Personal information */}
+        <p style={sectionLabelStyle}>Personal information</p>
+
+        <Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
+          <Grid item xs={12} sm={6}>
+            <label style={{ display: "block" }}>
+              <span style={fieldLabelStyle}>First name</span>
+              <Input
+                fullWidth
+                {...register("firstName", { value: customer?.name ?? "" })}
+              />
+            </label>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <label style={{ display: "block" }}>
+              <span style={fieldLabelStyle}>Last name</span>
+              <Input
+                fullWidth
+                {...register("lastName", { value: customer?.lastName ?? "" })}
+              />
+            </label>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <label style={{ display: "block" }}>
+              <span style={fieldLabelStyle}>Email</span>
+              <Input
+                fullWidth
+                type="email"
+                {...register("email", { value: customer?.email ?? "" })}
+              />
+            </label>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <label style={{ display: "block" }}>
+              <span style={fieldLabelStyle}>Phone</span>
+              <Input
+                fullWidth
+                type="tel"
+                {...register("phoneNumber", { value: customer?.phoneNumber ?? "" })}
+              />
+            </label>
+          </Grid>
+        </Grid>
+
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            marginTop: "24px",
+          }}
+        >
+          <GrayButtonComponent
+            func={closeDeviceModal}
+            buttonType="reset"
+            title="Cancel"
+            size="lg"
+          />
+          <BlueButtonComponent
+            isLoading={loading}
+            buttonType="submit"
+            title="Save changes"
+            size="lg"
+          />
+        </div>
+      </form>
+    </div>
+  );
 
   return (
     <>
       {contextHolder}
-      <ModalUX closable={false} title={titleRender()} openDialog={openEditConsumerModal} closeModal={closeDeviceModal} body={bodyModal()} width={800} />
+      <ModalUX
+        closable={false}
+        title={titleRender()}
+        openDialog={openEditConsumerModal}
+        closeModal={closeDeviceModal}
+        body={bodyModal()}
+        width={600}
+      />
     </>
   );
 };

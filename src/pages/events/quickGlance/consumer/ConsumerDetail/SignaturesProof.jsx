@@ -1,7 +1,6 @@
 import { Table } from "antd";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import { CheckIcon } from "../../../../../components/icons/CheckIcon";
-import { CloseIcon } from "../../../../../components/icons/CloseIcon";
+import { Check, X } from "lucide-react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useState } from "react";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -48,7 +47,18 @@ const SignaturesProof = ({ data }) => {
       title: "Acceptance",
       dataIndex: "Agree",
       key: "Agree",
-      render: (agree) => (agree ? <CheckIcon stroke="green" /> : <CloseIcon stroke="red" />),
+      render: (agree) =>
+        agree ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "2px 8px", borderRadius: "9999px", background: "#ECFDF3", color: "var(--success-700, #067647)", fontSize: "12px", fontWeight: 500 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+            <Check size={16} />
+          </span>
+        ) : (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "2px 8px", borderRadius: "9999px", background: "#FEF3F2", color: "var(--danger-action, #b42318)", fontSize: "12px", fontWeight: 500 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+            <X size={16} />
+          </span>
+        ),
     },
     {
       title: "Url",

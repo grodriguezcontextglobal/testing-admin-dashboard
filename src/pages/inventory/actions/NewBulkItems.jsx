@@ -71,7 +71,7 @@ const AddNewBulkItems = () => {
     renderingOptionsForSubLocations,
     addingSubLocation,
     manuallyAddingSerialNumbers,
-    acceptAndGenerateImage,
+    // acceptAndGenerateImage,
     user,
     setMoreInfo,
     handleSearchByReference,
@@ -86,7 +86,7 @@ const AddNewBulkItems = () => {
       {contextHolder}
       {renderTitle()}
       <BulkItemForm
-        acceptImage={acceptAndGenerateImage}
+        // acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
         addSerialNumberField={addSerialNumberField}
         allSerialNumbersOptions={allSerialNumbersOptions}

@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { message, Modal, notification, Space } from "antd";
+import { message, notification, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,8 +10,10 @@ import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueBut
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import Chip from "../../../../../../components/UX/Chip/Chip";
 import Input from "../../../../../../components/UX/inputs/Input";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+
 const ExpressCheckInDevices = ({
   openReturnDeviceBulkModal,
   setOpenReturnDeviceInBulkModal,
@@ -119,6 +121,7 @@ const ExpressCheckInDevices = ({
       message.error(`There was an error. ${error}`);
     }
   };
+
   const handleAddDevices = async (data) => {
     try {
       let resultToReturn = new Map();
@@ -148,17 +151,8 @@ const ExpressCheckInDevices = ({
     }
   };
 
-  return (
-    <Modal
-      open={openReturnDeviceBulkModal}
-      title={renderingTitle()}
-      onOk={() => closeModal()}
-      onCancel={() => closeModal()}
-      footer={[]}
-      maskClosable={false}
-      width={1000}
-      style={{ zIndex: 30 }}
-    >
+  const modalBody = (
+    <>
       {contextHolder}
       <form
         style={{
@@ -199,27 +193,26 @@ const ExpressCheckInDevices = ({
         </Space>
         <BlueButtonConfirmationComponent
           title={`Confirm return | Total items to return: ${scannedDevice.length}`}
-          styles={{width:"100%"}}
+          styles={{ width: "100%" }}
           buttonType={"button"}
           func={(e) => handleReturnDevices(e)}
           loadingState={loadingStatus}
           confirmationTitle="Are you sure you want to return all scanned devices?"
         />
-        {/* <Popconfirm
-          title="Are you sure you want to return all scanned devices?"
-          onConfirm={(e) => handleReturnDevices(e)}
-        >
-          <Button
-            style={{ ...BlueButton, width: "100%" }}
-            loading={loadingStatus}
-          >
-            <p style={BlueButtonText}>
-              Confirm return | Total items to return: {scannedDevice.length}
-            </p>
-          </Button>
-        </Popconfirm> */}
       </div>
-    </Modal>
+    </>
+  );
+
+  return (
+    <ModalUX
+      title={renderingTitle()}
+      openDialog={openReturnDeviceBulkModal}
+      closeModal={closeModal}
+      body={modalBody}
+      width={1000}
+      footer={[]}
+      modalStyles={{ zIndex: 30 }}
+    />
   );
 };
 

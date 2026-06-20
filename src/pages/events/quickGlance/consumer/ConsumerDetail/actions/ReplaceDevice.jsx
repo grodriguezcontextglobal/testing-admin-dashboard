@@ -6,13 +6,14 @@ import {
   Typography
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { checkArray } from "../../../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import {
   onReceiverObjectToReplace,
   onTriggerModalToReplaceReceiver,
@@ -27,6 +28,7 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const ReplaceDevice = ({ refetching }) => {
   const { user } = useSelector((state) => state.admin);
@@ -37,7 +39,6 @@ export const ReplaceDevice = ({ refetching }) => {
   const { triggerModal, receiverToReplaceObject } = useSelector(
     (state) => state.helper
   );
-  // const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const stampTime = `${new Date()}`;
   const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
@@ -63,7 +64,6 @@ export const ReplaceDevice = ({ refetching }) => {
       !!receiverToReplaceObject.serialNumber &&
       !!receiverToReplaceObject.deviceType &&
       !!paymentIntentSelected,
-    // refetchOnMount: false,
   });
 
   const deviceInPoolQuery = useQuery({
@@ -80,7 +80,6 @@ export const ReplaceDevice = ({ refetching }) => {
       !!receiverToReplaceObject.serialNumber &&
       !!receiverToReplaceObject.deviceType &&
       !!user.companyData.id,
-    // refetchOnMount: false,
   });
 
   const deviceInPool = deviceInPoolQuery?.data?.data?.receiversInventory;
@@ -91,6 +90,7 @@ export const ReplaceDevice = ({ refetching }) => {
     dispatch(onAddPaymentIntentSelected(undefined));
     dispatch(onAddPaymentIntentDetailSelected([]));
   };
+
   function closeModal() {
     setValue("serialNumber", "");
     setValue("reason", "");
@@ -99,8 +99,7 @@ export const ReplaceDevice = ({ refetching }) => {
     dispatch(onReceiverObjectToReplace({}));
     handleClearRecord();
   }
-  //!refactoring functions based on new schema from DB
-  //*function to insert data of defected returned device
+
   const defectedDevice = async (props) => {
     const template = {
       device: receiverToReplaceObject.serialNumber,
@@ -116,7 +115,6 @@ export const ReplaceDevice = ({ refetching }) => {
     await devitrakApi.post("/receiver/receiver-returned-issue", template);
   };
 
-  //*function to create activity in repot document in DB
   const reportEventLog = async (props) => {
     const eventProfile = {
       user: user.email,
@@ -128,7 +126,6 @@ export const ReplaceDevice = ({ refetching }) => {
     await devitrakApi.post("/event-log/feed-event-log", eventProfile);
   };
 
-  //*function to update old device in pool
   const updateOldDeviceInPool = async (props) => {
     await devitrakApi.patch(
       `/receiver/receivers-pool-update/${checkArray(deviceInPool).id}`,
@@ -140,12 +137,11 @@ export const ReplaceDevice = ({ refetching }) => {
     );
   };
 
-  //*function to update new device in pool
   const updateNewDeviceInPool = async (props) => {
     const newDeviceToAssignData = await devitrakApi.post(
       "/receiver/receiver-pool-list",
       {
-        eventSelected: event.eventInfoDetail.eventName, //event.eventInfoDetail.eventName,
+        eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
         device: props.serialNumber,
         type: receiverToReplaceObject.deviceType,
@@ -165,7 +161,6 @@ export const ReplaceDevice = ({ refetching }) => {
     }
   };
 
-  //*function to update new device in transaction
   const updateNewDeviceInTransaction = async (props) => {
     await devitrakApi.patch(
       `/receiver/receiver-update/${assignedDeviceInTransaction.at(-1).id}`,
@@ -183,7 +178,6 @@ export const ReplaceDevice = ({ refetching }) => {
     });
   };
 
-  //*funtion to check if new device is assigned to another customer
   const checkIfNewDeviceIsAssignedToAnotherCustomer = async (props) => {
     const check = await devitrakApi.post("/receiver/receiver-pool-list", {
       eventSelected: event.eventInfoDetail.eventName,
@@ -228,111 +222,111 @@ export const ReplaceDevice = ({ refetching }) => {
     }
   };
 
-  return (
+  const modalBody = (
     <>
       {contextHolder}
-      <Modal
-        title={`Receiver to replace: ${receiverToReplaceObject?.serialNumber}`}
-        centered
-        open={triggerModal}
-        onOk={() => closeModal()}
-        onCancel={() => closeModal()}
-        footer={[]}
-        maskClosable={false}
-        style={{ zIndex: 30 }}
+      <form
+        style={{
+          ...CenteringGrid,
+          flexDirection: "column",
+          width: "100%",
+        }}
+        onSubmit={handleSubmit(replaceDevice)}
       >
-        <form
-          style={{
-            ...CenteringGrid,
-            flexDirection: "column",
-            width: "100%",
-          }}
-          onSubmit={handleSubmit(replaceDevice)}
-        >
-          <Grid container>
-            <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <label>
-                <p style={Subtitle}>New serial number</p>
+        <Grid container>
+          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
+            <label>
+              <p style={Subtitle}>New serial number</p>
+              <OutlinedInput
+                required
+                id="outlined-adornment-password"
+                placeholder="Serial number"
+                {...register("serialNumber")}
+                style={OutlinedInputStyle}
+                fullWidth
+              />
+            </label>
+          </Grid>
+          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
+            <label>
+              <p
+                style={{
+                  ...Subtitle,
+                  width: "100%",
+                  display: `${
+                    watch("serialNumber") !== "" ? "flex" : "none"
+                  }`,
+                }}
+              >
+                Reason
+              </p>
+              {watch("serialNumber") !== "" && (
+                <Select
+                  className="custom-autocomplete"
+                  {...register("reason", { required: true })}
+                  style={{ ...AntSelectorStyle, width: "100%" }}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {menuOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      <Typography>{option}</Typography>
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            </label>
+          </Grid>
+          <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
+            <label>
+              <p
+                style={{
+                  ...Subtitle,
+                  width: "100%",
+                  display: `${watch("reason") === "Other" ? "flex" : "none"}`,
+                }}
+              >
+                when Other Reason is selected, please add comment
+              </p>
+              {watch("reason") === "Other" && (
                 <OutlinedInput
-                  required
-                  id="outlined-adornment-password"
-                  placeholder="Serial number"
-                  {...register("serialNumber")}
-                  style={OutlinedInputStyle}
+                  multiline
+                  minRows={5}
+                  style={{ ...OutlinedInputStyle, height: "" }}
+                  type="text"
+                  {...register("otherComment", { required: true })}
+                  placeholder="Add comment..."
                   fullWidth
                 />
-              </label>
-            </Grid>
-            <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <label>
-                <p
-                  style={{
-                    ...Subtitle,
-                    width: "100%",
-                    display: `${
-                      watch("serialNumber") !== "" ? "flex" : "none"
-                    }`,
-                  }}
-                >
-                  Reason
-                </p>
-                {watch("serialNumber") !== "" && (
-                  <Select
-                    className="custom-autocomplete"
-                    {...register("reason", { required: true })}
-                    style={{ ...AntSelectorStyle, width: "100%" }}
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    {menuOptions.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        <Typography>{option}</Typography>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              </label>
-            </Grid>
-            <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-              <label>
-                <p
-                  style={{
-                    ...Subtitle,
-                    width: "100%",
-                    display: `${watch("reason") === "Other" ? "flex" : "none"}`,
-                  }}
-                >
-                  when Other Reason is selected, please add comment
-                </p>
-                {watch("reason") === "Other" && (
-                  <OutlinedInput
-                    multiline
-                    minRows={5}
-                    style={{ ...OutlinedInputStyle, height: "" }}
-                    type="text"
-                    {...register("otherComment", { required: true })}
-                    placeholder="Add comment..."
-                    fullWidth
-                  />
-                )}
-              </label>
-            </Grid>
-            {watch("reason") !== "" && (
-              <Grid display={"flex"} alignItems={"center"} gap={2} container>
-                <GrayButtonComponent
-                  title={"Cancel"}
-                  disabled={watch("reason") === ""}
-                  func={closeModal}
-                />
-                <BlueButtonComponent
-                  title={"Replace"}
-                  buttonType="submit"
-                  disabled={watch("reason") === ""}
-                />
-              </Grid>
-            )}{" "}
+              )}
+            </label>
           </Grid>
-        </form>
-      </Modal>
+          {watch("reason") !== "" && (
+            <Grid display={"flex"} alignItems={"center"} gap={2} container>
+              <GrayButtonComponent
+                title={"Cancel"}
+                disabled={watch("reason") === ""}
+                func={closeModal}
+              />
+              <BlueButtonComponent
+                title={"Replace"}
+                buttonType="submit"
+                disabled={watch("reason") === ""}
+              />
+            </Grid>
+          )}{" "}
+        </Grid>
+      </form>
     </>
+  );
+
+  return (
+    <ModalUX
+      title={`Receiver to replace: ${receiverToReplaceObject?.serialNumber}`}
+      openDialog={triggerModal}
+      closeModal={closeModal}
+      body={modalBody}
+      footer={[]}
+      modalStyles={{ zIndex: 30 }}
+    />
   );
 };

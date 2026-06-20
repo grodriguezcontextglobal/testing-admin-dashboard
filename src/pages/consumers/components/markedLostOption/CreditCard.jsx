@@ -1,9 +1,7 @@
 import {
   FormControl,
   Grid,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
+  InputAdornment
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
@@ -13,11 +11,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import CustomerLostItemFee from "../../../../components/stripe/elements/CustomerLostItemFee";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import Input from "../../../../components/UX/inputs/Input";
 import { onAddPaymentIntentSelected } from "../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import CustomerHeader from "../UI/header";
@@ -42,11 +39,12 @@ const ConsumerDeviceLostFeeCreditCard = () => {
     window.location.search
   ).get("payment_intent");
   const returnDeviceValue = () => {
+    if (!event?.deviceSetup) return { value: 0 };
     const { deviceSetup } = event;
     const result = deviceSetup.find(
       (element) => element.group === receiverToReplaceObject.deviceType
     );
-    return result;
+    return result ?? { value: 0 };
   };
 
   const { handleSubmit, register, watch } = useForm({
@@ -86,6 +84,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
   };
 
   const handleSubmitForm = async () => {
+    if (!event) return;
     let cashReportProfile = {
       attendee: customer?.email,
       admin: user.email,
@@ -218,10 +217,10 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                 md={4}
                 lg={3}
               >
-                <OutlinedInput
+                <Input
                   disabled
                   value={receiverToReplaceObject.serialNumber}
-                  style={{ ...OutlinedInputStyle, margin: "0 5px 0 0" }}
+                  style={{ margin: "0 5px 0 0" }}
                   fullWidth
                 />
               </Grid>
@@ -237,23 +236,8 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                 lg={2}
               >
                 <FormControl fullWidth>
-                  <InputLabel htmlFor="outlined-adornment-amount">
-                    <p
-                      style={{
-                        color: "#000",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        fontFamily: "Inter",
-                        lineHeight: "20px",
-                        textTransform: "none",
-                      }}
-                    >
-                      Amount
-                    </p>
-                  </InputLabel>
-                  <OutlinedInput
+                  <Input
                     disabled={blocking}
-                    label="Amount"
                     type="text"
                     required
                     id="outlined-adornment-amount"
@@ -263,6 +247,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                     }
                     {...register("total")}
                     name="total"
+                    placeholder="Total e.g. 55 | 650"
                   />
                 </FormControl>
               </Grid>
@@ -277,12 +262,8 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                 md={3}
                 lg={4}
               >
-                <button style={GrayButton} onClick={() => handleBackAction()}>
-                  <p style={GrayButtonText}>Cancel</p>
-                </button>
-                <button disabled={blocking} style={BlueButton} type="submit">
-                  <p style={BlueButtonText}>Add CC info</p>
-                </button>
+                <GrayButtonComponent func={() => handleBackAction()} title="Cancel" />
+                <BlueButtonComponent disabled={blocking} buttonType="submit" title="Add CC info" />
               </Grid>
             </Grid>
           </form>
@@ -294,6 +275,7 @@ const ConsumerDeviceLostFeeCreditCard = () => {
                 total={watch("total")}
                 customerStripeId={customer.uid}
                 customer={customer}
+                redirectUrl={`/consumers/${customer.uid}/payment-confirmation`}
               />
             )}
           </Grid>{" "}

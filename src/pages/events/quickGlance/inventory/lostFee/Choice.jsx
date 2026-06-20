@@ -1,17 +1,15 @@
 import {
   Box,
-  Typography,
-  Fade,
-  Modal,
-  Backdrop,
-  Button,
   Divider,
+  Fade,
   Grid,
+  Typography
 } from "@mui/material";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import { useNavigate } from "react-router-dom";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
 const style = {
   position: "absolute",
   top: "50%",
@@ -28,22 +26,9 @@ const Choice = ({ openModal, setOpenModal }) => {
   const handleClose = () => {
     setOpenModal(false);
   };
-
-  return (
-    <Modal
-      aria-labelledby="transition-modal-title"
-      aria-describedby="transition-modal-description"
-      open={openModal}
-      onClose={handleClose}
-      closeAfterTransition
-      slots={{ backdrop: Backdrop }}
-      slotProps={{
-        backdrop: {
-          timeout: 500,
-        },
-      }}
-      style={{zIndex:30}}
-    >
+  const navigate = useNavigate();
+  const bodyModal = () => {
+    return (
       <Fade in={openModal}>
         <Box sx={style}>
           <Typography
@@ -63,53 +48,37 @@ const Choice = ({ openModal, setOpenModal }) => {
             justifyContent={"space-between"}
             alignItems={"center"}
           >
-            <Link
-              to={`/events/event-attendees/${customer?.uid}/collect-lost-fee/credit-card-method`}
-            >
-              <Button
-                style={BlueButton}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
-                  Credit card
-                </Typography>
-              </Button>
-            </Link>
-            <Divider />
-            <Link
-              to={`/events/event-attendees/${customer?.uid}/collect-lost-fee/cash-method`}
-            >
-              <Button
-                style={BlueButton}
-              >
-                <Typography
-                  textTransform={"none"}
-                  style={BlueButtonText}
-                >
-                  Cash
-                </Typography>
-              </Button>
-            </Link>
+            <BlueButtonComponent
+              title={"Credit card"}
+              styles={{ width: "100%" }}
+              func={() => navigate(`/events/event-attendees/${customer?.uid}/collect-lost-fee/credit-card-method`)}
+            />
+            <BlueButtonComponent
+              title={"Cash"}
+              styles={{ width: "100%" }}
+              func={() => navigate(`/events/event-attendees/${customer?.uid}/collect-lost-fee/cash-method`)}
+            />
           </Grid>
 
           <Divider />
-          <Button onClick={handleClose}>
-            <Typography
-              textTransform={"none"}
-              textAlign={"left"}
-              fontWeight={400}
-              fontSize={"16px"}
-              fontFamily={"Inter"}
-              lineHeight={"24px"}
-            >
-              Go back
-            </Typography>
-          </Button>
+          <GrayButtonComponent
+            title={"Go back"}
+            func={handleClose}
+          />
         </Box>
       </Fade>
-    </Modal>
+
+    )
+  }
+  const closeModal = () => {
+    setOpenModal(false);
+  }
+  return (
+    <ModalUX
+      openDialog={openModal}
+      closeModal={closeModal}
+      bodyModal={bodyModal()}
+    />
   );
 };
 
