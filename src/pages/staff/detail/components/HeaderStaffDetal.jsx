@@ -211,7 +211,7 @@ const HeaderStaffDetail = () => {
                     md: "flex-end",
                     lg: "flex-end",
                   },
-                  display: Number(user.role) < 2 ? "flex" : "none",
+                  display: can(user.role, "staff.add") ? "flex" : "none",
                   gap: 1,
                   alignItems: "center",
                 }}

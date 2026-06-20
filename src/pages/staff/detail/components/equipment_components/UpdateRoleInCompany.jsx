@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { can } from "../../../../../config/roleCapabilities";
 import dicRole from "../../../../../components/general/dicRole";
 import renderingTitle from "../../../../../components/general/renderingTitle";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
@@ -119,7 +120,7 @@ const UpdateRoleInCompany = () => {
           />,
         ]}
       >
-        {Number(user.role) < 2 ? (
+        {can(user.role, "staff.changeRole") ? (
           <form
             style={{
               ...CenteringGrid,

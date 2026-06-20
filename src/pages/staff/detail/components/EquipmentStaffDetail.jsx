@@ -2,6 +2,7 @@ import { Grid, Typography } from "@mui/material";
 import { NavLink, Outlet } from "react-router-dom";
 import "../../../../styles/global/ant-select.css";
 import { useSelector } from "react-redux";
+import { can } from "../../../../config/roleCapabilities";
 const EquipmentStafDetail = () => {
     const { user } = useSelector((state) => state.admin)
     const tabOptions = [
@@ -31,7 +32,7 @@ const EquipmentStafDetail = () => {
                         {
                             tabOptions.map(option => {
                                 // if (user.role === "Administrator") {
-                                    if (Number(user.role) < 2) {
+                                    if (can(user.role, "staff.assignDevices")) {
                                     return (
                                         <NavLink key={option.label} to={`${option.route}`} style={({ isActive }) => {
                                             return {
