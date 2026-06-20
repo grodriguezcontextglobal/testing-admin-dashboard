@@ -14,6 +14,7 @@ import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
 import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
 import TrashIcon from "../../../components/icons/TrashIcon";
 import Vertical3Dots from "../../../components/icons/Vertical3Dots";
+import { can } from "../../../config/roleCapabilities";
 
 /**
  * HeaderInventaryComponent
@@ -36,7 +37,6 @@ import Vertical3Dots from "../../../components/icons/Vertical3Dots";
  * @param {Function} props.setOpenDeleteItemModal - Callback to open the delete-group modal.
  */
 const HeaderInventaryComponent = ({
-  user,
   TextFontSize30LineHeight38,
   setAddInventoryFromXLSXFileModal,
   setOpenCheckInDevicesFromEvent,
@@ -45,10 +45,10 @@ const HeaderInventaryComponent = ({
   const navigate = useNavigate();
   const { role, locations } = useSelector((state) => state.permission);
   // Check permissions
-  const canCreate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.create)
-  const canUpdate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.update)
+  const canCreate = can(role, "inventory.mode") === "all" ? true : locations.some(item => item.preference.managerLocation.actions.create)
+  const canUpdate = can(role, "inventory.mode") === "all" ? true : locations.some(item => item.preference.managerLocation.actions.update)
   const canManageDevices =
-    role === "0" ||
+    can(role, "inventory.mode") === "all" ||
     locations?.every(
       (location) =>
         location.actions?.create &&

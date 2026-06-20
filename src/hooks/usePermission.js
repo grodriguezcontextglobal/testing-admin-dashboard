@@ -1,10 +1,15 @@
 import { useSelector } from "react-redux";
-import { PERMISSIONS } from "../config/roles";
+import { hasActionPermission } from "../config/permissionActions";
 
 /**
  * Returns true if the current user's role is allowed to perform the given action.
  *
- * @param {string} action - A key from PERMISSIONS (e.g. 'staff:create')
+ * Action keys (e.g. 'staff:create') are resolved through roleCapabilities.js — the
+ * single source of truth — via the permissionActions bridge. This keeps the existing
+ * key vocabulary while routing every decision through `can()` (super_user-aware,
+ * latest policy).
+ *
+ * @param {string} action - A "resource:action" key (see permissionActions.js)
  * @returns {boolean}
  *
  * @example
@@ -13,7 +18,5 @@ import { PERMISSIONS } from "../config/roles";
  */
 export const usePermission = (action) => {
   const { user } = useSelector((state) => state.admin);
-  const allowedRoles = PERMISSIONS[action];
-  if (!allowedRoles) return false;
-  return allowedRoles.includes(Number(user.role));
+  return hasActionPermission(user, action);
 };

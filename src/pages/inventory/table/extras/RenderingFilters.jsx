@@ -1,5 +1,4 @@
 import { Grid, OutlinedInput } from "@mui/material";
-import { PERMISSIONS } from "../../../../config/roles";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
@@ -22,6 +21,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
+import { can } from "../../../../config/roleCapabilities";
 import {
   displayTotalDevicesAndTotalAvailablePerLocation,
   extractDataForRendering,
@@ -135,9 +135,6 @@ const RenderingFilters = ({
     Resale: "For resale",
   };
   const { isAdmin } = useStaffRoleAndLocations();
-  const canManageLocation =
-    Number(user.role) === 0 ||
-    PERMISSIONS["inventory:manage_location"]?.includes(Number(user.role));
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>
@@ -811,11 +808,11 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("location_1")}
-                disabled={!canManageLocation}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
-              {selectedLocations.size > 0 && (
+              {can(user.role, "inventory.deleteLocation") && selectedLocations.size > 0 && (
                 <DangerButtonComponent
                   func={handleDeleteSelectedLocations}
                   style={{ margin: "0 1.5rem" }}
@@ -883,7 +880,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("category_name")}
-                disabled={!canManageLocation}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -927,7 +924,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("item_group")}
-                disabled={!canManageLocation}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -969,7 +966,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("brand")}
-                disabled={!canManageLocation}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -1013,7 +1010,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("ownership")}
-                disabled={!canManageLocation}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -1061,7 +1058,7 @@ const RenderingFilters = ({
                   aspectRatio: "1/1",
                 }}
                 onClick={() => handleEditClick("assignedToStaffMember")}
-                disabled={!canManageLocation}
+                disabled={!can(user.role, "inventory.editStructure")}
               >
                 <EditIcon />
               </Button>
@@ -1287,7 +1284,8 @@ const RenderingFilters = ({
                       </button>
                     )} */}
                 </p>
-                {item.key === "location_1" && isAdmin && (
+                {item.key === "location_1" &&
+                  (isAdmin || can(user.role, "inventory.editStructure")) && (
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                     {/* <GrayButtonComponent
                       title={"Register Path"}

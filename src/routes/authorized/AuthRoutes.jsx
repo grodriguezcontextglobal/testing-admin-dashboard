@@ -1,7 +1,7 @@
 import { lazy, Suspense, useRef } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router";
 import { useSelector } from "react-redux";
-import { PERMISSIONS } from "../../config/roles";
+import { hasActionPermission } from "../../config/permissionActions";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
@@ -229,10 +229,10 @@ const AssignmentDeviceMembers = lazy(() =>
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
   )
 );
-// Redirects to "/" if the logged-in user's role is not in PERMISSIONS[action].
+// Redirects to "/" if the logged-in user's role is not allowed to perform `action`.
 const PermissionGuard = ({ action }) => {
   const { user } = useSelector((state) => state.admin);
-  const allowed = PERMISSIONS[action]?.includes(Number(user.role)) ?? false;
+  const allowed = hasActionPermission(user, action);
   return allowed ? <Outlet /> : <Navigate to="/" replace />;
 };
 

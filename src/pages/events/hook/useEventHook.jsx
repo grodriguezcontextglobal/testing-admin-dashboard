@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddContactInfo, onAddDeviceSetup, onAddEventInfoDetail, onAddEventStaff, onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
+import { can } from "../../../config/roleCapabilities";
 
 export const useEventHook = ({ eventList = [], searchValue = "" }) => {
     const { user } = useSelector((state) => state.admin);
@@ -52,7 +53,7 @@ export const useEventHook = ({ eventList = [], searchValue = "" }) => {
     }, [user]);
 
     const filterEventsByEmail = (events = [], key = null) => {
-        if (userRole < 1) return events;
+        if (can(userRole, "events.scope") === "all") return events;
 
         return events.filter((event) => {
             if (key) {

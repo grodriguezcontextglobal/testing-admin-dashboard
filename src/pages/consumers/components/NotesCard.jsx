@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import UpdateListOfNotesPerConsumer from "./ModalDeleteNote";
 import AddNoteModal from "./AddNoteModal";
+import { can } from "../../../config/roleCapabilities";
 
 const formatNoteDate = (dateStr) => {
   try {
@@ -23,9 +24,7 @@ const NotesRendering = ({ props, title }) => {
   const [openDeleteNoteModal, setOpenDeleteNoteModal] = useState(false);
   const [openAddNoteModal, setOpenAddNoteModal] = useState(false);
 
-  const isAdmin =
-    user.companyData.employees.filter((ele) => ele.user === user.email)[0]
-      ?.role < 1;
+  const canDeleteNotes = can(user, "consumers.deleteNotes");
 
   const notesForCompany = props
     .slice()
@@ -73,7 +72,7 @@ const NotesRendering = ({ props, title }) => {
                 style={{ cursor: "pointer", color: "var(--blue-dark-600, #155EEF)" }}
               />
             </Tooltip>
-            {isAdmin && (
+            {canDeleteNotes && (
               <Tooltip title="Manage notes">
                 <Icon
                   onClick={() => setOpenDeleteNoteModal(true)}

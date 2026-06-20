@@ -9,6 +9,7 @@ import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle"
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
+import { can } from "../../../../../config/roleCapabilities";
 import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
@@ -44,8 +45,10 @@ const MainBody = ({
   register,
   handleSubmit,
 }) => {
-  const { isAdmin, locationsCreatePermission, locationsAssignPermission } =
+  const { isAdmin, role, locationsCreatePermission, locationsAssignPermission } =
     useStaffRoleAndLocations();
+  // Owner / super_user (isAdmin) OR all-locations Admin → unrestricted inventory here
+  const hasAllInventory = isAdmin || can(role, "inventory.mode") === "all";
   const [openDrawer, setOpenDrawer] = useState(
     locationsAssignPermission.length === 0,
   );
@@ -99,9 +102,9 @@ const MainBody = ({
               style={{ ...AntSelectorStyle, width: "100%" }}
               onChange={onChange}
               options={selectOptions}
-              disabled={!isAdmin && locationsAssignPermission.length === 0}
+              disabled={!hasAllInventory && locationsAssignPermission.length === 0}
             />
-            {openDrawer && !isAdmin && locationsAssignPermission.length === 0 && (
+            {openDrawer && !hasAllInventory && locationsAssignPermission.length === 0 && (
               <BannerReusableComponentUntitleUI
                 title="Permission Denied"
                 description="You do not have permissions to take this action. Contact administrator"
@@ -178,7 +181,7 @@ const MainBody = ({
         2. locationsCreatePermission.length > 0 means the user has 'create' permission in at least one location.
         The button is shown if either condition is true.
       */}
-      {(isAdmin || locationsCreatePermission.length > 0) && (
+      {(hasAllInventory || locationsCreatePermission.length > 0) && (
         <LightBlueButtonComponent
           title={
             displayFormToCreateCategory

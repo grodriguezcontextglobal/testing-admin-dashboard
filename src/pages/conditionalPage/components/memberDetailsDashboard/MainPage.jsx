@@ -4,6 +4,7 @@ import { Divider } from "antd";
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { rolesWith } from "../../../../config/roleCapabilities";
 import AddNewMember from "../modals/AddNewMember";
 import MemberInfoHeader from "./Header";
 
@@ -45,10 +46,10 @@ const MainPage = () => {
   });
 
   const navTabs = [
-    { label: "Home", route: "main", permission: [0, 1, 2, 3], id: 0 },
-    { label: "Assign devices", route: "assignment", permission: [0, 1, 2, 3], id: 1 },
-    { label: "Update member info", route: "update-member-information", permission: [0, 1, 2, 3], id: 2 },
-    { label: "Send email reminder", route: "reminders", permission: [0, 1, 2, 3], id: 3 },
+    { label: "Home", route: "main", permission: rolesWith("member.detailTabs"), id: 0 },
+    { label: "Assign devices", route: "assignment", permission: rolesWith("member.detailTabs"), id: 1 },
+    { label: "Update member info", route: "update-member-information", permission: rolesWith("member.detailTabs"), id: 2 },
+    { label: "Send email reminder", route: "reminders", permission: rolesWith("member.detailTabs"), id: 3 },
   ];
 
   const visibleNavTabs = navTabs.filter(

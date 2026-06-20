@@ -4,6 +4,7 @@ import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueBut
 import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { useStaffRoleAndLocations } from "../../../../../../utils/checkStaffRoleAndLocations";
+import { can } from "../../../../../../config/roleCapabilities";
 import useSuppliersCompanyFetch from "./hook/useSuppliersCompanyFetch";
 import ReturnRentedItemModal from "./ReturnRentedItemModal";
 import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
@@ -31,7 +32,7 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
   };
 
   const checkingStaffRole = () => {
-    return role === "0";
+    return can(role, "inventory.mode") === "all";
   };
 
   return (

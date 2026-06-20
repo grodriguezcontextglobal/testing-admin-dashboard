@@ -4,7 +4,6 @@ import Home from "../../components/icons/Home";
 
 const ErrorLandingPage = () => {
   const navigate = useNavigate();
-
   return (
     <section
       style={{

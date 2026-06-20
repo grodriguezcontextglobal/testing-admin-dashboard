@@ -11,6 +11,7 @@ import DisplayDocumentsContainer from "./DisplayDocumentsContainer";
 import gettingInventoryTotalCount from "./gettingInventoryTotalCount";
 import ImportingXLSXFile from "./ImportingXLSXFile";
 import HighlightedPill from "./ux/HighlightedPill";
+import { can } from "../../../../config/roleCapabilities";
 
 const AllInventoryEventForCustomerOnly = ({
   displayElementsBasedOnRole,
@@ -83,7 +84,7 @@ const AllInventoryEventForCustomerOnly = ({
             justifyContent: "space-between",
             alignItems: "center",
             gap: "10px",
-            display: user.role === "4" ? "none" : "flex",
+            display: can(user.role, "events.editResources") ? "flex" : "none",
             margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
           }}
         >
@@ -98,7 +99,7 @@ const AllInventoryEventForCustomerOnly = ({
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
-              display: user.role === "4" ? "none" : "flex",
+              display: can(user.role, "events.editResources") ? "flex" : "none",
               margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
             }}
             titleStyles={{
@@ -111,7 +112,7 @@ const AllInventoryEventForCustomerOnly = ({
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
-              display: user.role === "4" ? "none" : "flex",
+              display: can(user.role, "events.editResources") ? "flex" : "none",
               margin: showInventoryTypes ? "auto" : 0, //"0 0 5dvh 0"
             }}
             title={"Update services"}
@@ -122,7 +123,7 @@ const AllInventoryEventForCustomerOnly = ({
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
-              display: user.role === "4" ? "none" : "flex",
+              display: can(user.role, "events.editResources") ? "flex" : "none",
               margin: showInventoryTypes ? "auto" : 0, //"0 0 5dvh 0"
             }}
             title={"Update inventory"}

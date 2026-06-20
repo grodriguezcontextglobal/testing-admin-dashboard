@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import Loading from "../../components/animation/Loading";
+import { can } from "../../config/roleCapabilities";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
@@ -66,7 +67,7 @@ const MainPage = () => {
           </p>
         </Grid>
         <Grid
-          display={Number(user.role) < 2 ? "flex" : "none"}
+          display={can(user, "member.manage") ? "flex" : "none"}
           gap={2}
           sx={{
             display: "flex",
@@ -90,7 +91,7 @@ const MainPage = () => {
           />
           <DangerButtonComponent
             style={{
-              display: `${Number(user.role) > 1 ? "none" : "flex"}`,
+              display: can(user, "member.manage") ? "flex" : "none",
               width: "fit-content",
             }}
             func={() => setRemovingMember(true)}

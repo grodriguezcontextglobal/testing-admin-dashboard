@@ -4,6 +4,7 @@ import Input from "../../../../components/UX/inputs/Input";
 import { Button as AntButton, Divider, Tag } from "antd";
 import { useContext, useState } from "react";
 import { useSelector } from "react-redux";
+import { can } from "../../../../config/roleCapabilities";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
 import FilterLinesIcon from "../../../../components/icons/FilterLinesIcon";
@@ -49,7 +50,7 @@ const InventorySearchBar = ({
   const clearAllFilters = () => setChosenOption?.([]);
 
   const canRenderButton =
-    role === "0" ||
+    can(role, "inventory.mode") === "all" ||
     locations?.every(
       (location) =>
         location.actions?.create &&

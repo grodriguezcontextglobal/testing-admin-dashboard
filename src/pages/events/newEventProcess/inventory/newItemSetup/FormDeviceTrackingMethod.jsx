@@ -13,6 +13,7 @@ import BulkItemForm from "../../../../inventory/actions/utils/BulkItemForm";
 // import { verifyAndCreateLocation } from "../../../../inventory/actions/utils/verifyLocationBeforeCreateNewInventory";
 // import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import { renderTitle } from "./components/BulkRentedItemsComponents";
+import { can } from "../../../../../config/roleCapabilities";
 // import checkIfItemExistsInEvent from "./components/BulkRentedItemsActions";
 import { bulkItemInsertAlphanumericWithEventCheck } from "./components/BulkRentedItemsActions";
 import "../../../../../styles/global/ant-select.css";
@@ -28,7 +29,7 @@ const FormDeviceTrackingMethod = ({
   eventInfoDetail,
 }) => {
   const { role } = useSelector((state) => state.permission);
-  const options = role === "0" ? ["Permanent", "Rent"] : ["Rent"];
+  const options = can(role, "events.createPermanentDevices") ? ["Permanent", "Rent"] : ["Rent"];
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
+import { can } from "../../../config/roleCapabilities";
 
 const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
   // Check permissions
@@ -11,8 +12,8 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
     isAdmin,locationsCreatePermission, locationsUpdatePermission
   } = useStaffRoleAndLocations();
   // Check permissions
-  const canCreate = isAdmin ? isAdmin : locationsCreatePermission.length > 0
-  const canUpdate = isAdmin ? isAdmin : locationsUpdatePermission.length > 0
+  const canCreate = isAdmin || can(user.role, "inventory.mode") === "all" || locationsCreatePermission.length > 0
+  const canUpdate = isAdmin || can(user.role, "inventory.mode") === "all" || locationsUpdatePermission.length > 0
 
 
   return (
@@ -24,7 +25,7 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
       }}
       container
     >
-              {canCreate && Number(user.companyData?.employees?.find((emp) => emp.user === user.email)?.role) === 0 && (
+              {canCreate && can(user.companyData?.employees?.find((emp) => emp.user === user.email)?.role, "inventory.editStructure") && (
                 <BlueButtonComponent
                   title={"Create Location"}
                   styles={{ with: "100%" }}

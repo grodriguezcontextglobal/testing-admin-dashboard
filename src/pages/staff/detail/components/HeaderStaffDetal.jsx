@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { can } from "../../../../config/roleCapabilities";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { BadgeWithDot } from "../../../../components/base/badges/badges";
 import Loading from "../../../../components/animation/Loading";
@@ -92,9 +93,8 @@ const HeaderStaffDetail = () => {
         ),
       },
     ];
-
     const actions = [
-      canManageStaff && (
+      can(user.role, "staff.viewActiveStatus") && (
         <BadgeWithDot key="status" color={profile.status ? "success" : "gray"}>
           {profile.status ? "Active" : "Inactive"}
         </BadgeWithDot>

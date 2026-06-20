@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { can } from "../../../../../config/roleCapabilities";
 import dicRole from "../../../../../components/general/dicRole";
 import renderingTitle from "../../../../../components/general/renderingTitle";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
@@ -88,11 +89,11 @@ const UpdateRoleInCompany = () => {
   };
 
   const options = [
-    { label: "Root administrator", value: 0 },
+    { label: "Owner", value: 0 },
     { label: "Administrator", value: 1 },
-    { label: "Manager", value: 2 },
-    { label: "Support", value: 3 },
-    { label: "Staff event assistant", value: 4 },
+    { label: "Location Manager", value: 2 },
+    { label: "Event Manager", value: 3 },
+    { label: "Assistant", value: 4 },
   ];
 
   const optionsBasedOnCurrentRolePermission = options.filter((option) => {
@@ -119,7 +120,7 @@ const UpdateRoleInCompany = () => {
           />,
         ]}
       >
-        {Number(user.role) < 2 ? (
+        {can(user.role, "staff.changeRole") ? (
           <form
             style={{
               ...CenteringGrid,

@@ -2,7 +2,6 @@ import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
 import { usePermission } from "../../hooks/usePermission";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
@@ -19,7 +18,6 @@ const MainPage = () => {
   const { register, watch, setValue } = useForm();
   const [modalState, setModalState] = useState(false);
   const [deleteModalState, setDeleteModalState] = useState(false);
-  const { user } = useSelector((state) => state.admin);
   const canManageStaff = usePermission("staff:create");
   const [loadingStatus, setLoadingStatus] = useState(false);
   useEffect(() => {

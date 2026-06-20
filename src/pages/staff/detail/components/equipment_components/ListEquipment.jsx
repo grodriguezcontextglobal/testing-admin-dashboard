@@ -13,6 +13,7 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
 import { useStaffEquipmentData } from "./useStaffEquipmentData";
+import { can } from "../../../../../config/roleCapabilities";
 
 const VerificationDetailsTable = ({
   verificationId,
@@ -76,7 +77,7 @@ const VerificationDetailsTable = ({
   const role = user.companyData.employees.find(
     (el) => el.user === user.email,
   )?.role;
-  const canSeeSignedColumnsBasedOnRole = [0, 1].includes(Number(role));
+  const canSeeSignedColumnsBasedOnRole = can(role, "staff.viewSignedContracts");
 
   const innerColumns = [
     { title: "Document Name", dataIndex: "title", key: "title" },
@@ -199,7 +200,7 @@ function ListEquipment() {
     )?.role;
     const isSameUser = (user?.id ?? user?.uid) === profile?.adminUserInfo?.id;
     setCanSeeSignedColumns(isSameUser);
-    setCanSeeSignedColumnsBasedOnRole([0, 1].includes(Number(role)));
+    setCanSeeSignedColumnsBasedOnRole(can(role, "staff.viewSignedContracts"));
     return () => {
       controller.abort();
     };

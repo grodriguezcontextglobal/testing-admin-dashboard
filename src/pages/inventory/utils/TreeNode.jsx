@@ -4,7 +4,6 @@ import { Checkbox, message } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { usePermission } from "../../../hooks/usePermission";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
@@ -15,6 +14,7 @@ import ViewIcon from "../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import { can } from "../../../config/roleCapabilities";
 import "../style/viewtree.css";
 
 const LOW_STOCK_RATIO = 0.25;
@@ -37,7 +37,9 @@ const TreeNode = ({
   const [editedName, setEditedName] = useState(nodeName);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const canManageLocation = usePermission("inventory:manage_location");
+  // Rename/edit a location's name (Owner + Admin); deleting a location is Owner-only.
+  const canEditStructure = can(user.role, "inventory.editStructure");
+  const canDeleteLocation = can(user.role, "inventory.deleteLocation");
 
   const { total, available, children, types } = nodeData;
   const nodeId = nodeData?.location_id || nodeData?._id || nodeData?.id;
@@ -257,7 +259,7 @@ const TreeNode = ({
         ) : (
           <span className="tree-row__chevron" aria-hidden="true" />
         )}
-        {canManageLocation && nodeId && onSelectLocation && isSelectable && (
+        {canDeleteLocation && nodeId && onSelectLocation && isSelectable && (
           <Checkbox
             checked={selectedLocations?.has(nodeId)}
             onChange={() => onSelectLocation(nodeId)}
@@ -330,15 +332,17 @@ const TreeNode = ({
             )}
           </div>
           <div className="tree-row__actions">
-            <button
-              type="button"
-              className="tree-row__action-btn"
-              onClick={handleEdit}
-              title="Rename location"
-              aria-label="Rename location"
-            >
-              <EditIcon />
-            </button>
+            {canEditStructure && (
+              <button
+                type="button"
+                className="tree-row__action-btn"
+                onClick={handleEdit}
+                title="Rename location"
+                aria-label="Rename location"
+              >
+                <EditIcon />
+              </button>
+            )}
             <button
               type="button"
               className="tree-row__action-btn"

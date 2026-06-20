@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { can } from "../../../../../config/roleCapabilities";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -135,7 +136,7 @@ const DeleteItemModal = ({
       if (respAfterDelete.data) {
         const employees = user.companyData.employees;
         for (let data of employees) {
-          if (Number(data.role) < 2) {
+          if (can(data.role, "inventory.deleteItem")) {
             const emailNotificationProfile = {
               staff: data.user,
               subject: "Device deleted in company records.",

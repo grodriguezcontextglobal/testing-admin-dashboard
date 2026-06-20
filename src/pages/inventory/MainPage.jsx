@@ -37,6 +37,7 @@ import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { can } from "../../config/roleCapabilities";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
@@ -86,7 +87,7 @@ const MainPage = () => {
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
-  const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
+  const { role, locationsViewPermission } = useStaffRoleAndLocations();
   const [currentTab, setCurrentTab] = useState(0);
   const [activeView, setActiveView] = useState("1");
   const [openShippingModal, setOpenShippingModal] = useState(false);
@@ -97,14 +98,17 @@ const MainPage = () => {
   });
 
   // Extract user preferences for inventory location filtering.
-  // isAdmin is true only for role 0 — they see all locations (null = no filter).
+  // Owner + all-locations Admin (inventory.mode === "all") see all locations (null = no filter).
   // All other roles see only the locations where their managerLocation preference has view: true.
   const userPreferences = useMemo(() => {
     return user?.companyData?.employees?.find((emp) => emp.user === user.email)
       ?.preference;
   }, [user]);
 
-  const allowedInventoryLocations = isAdmin ? null : locationsViewPermission;
+  // Full access (Owner + all-locations Admin): no location filter (null).
+  // Location-scoped roles: only the locations where they have view permission.
+  const allowedInventoryLocations =
+    can(role, "inventory.mode") === "all" ? null : locationsViewPermission;
 
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
@@ -355,7 +359,22 @@ const MainPage = () => {
                 refetchingQueriesFn: refetchingQueriesFn,
               }}
             >
-              {renderingOption[currentTab]}
+              {Array.isArray(allowedInventoryLocations) &&
+              allowedInventoryLocations.length === 0 ? (
+                <BannerMsg
+                  props={{
+                    title: "No locations assigned yet",
+                    message:
+                      "You haven't been granted any inventory locations yet. Ask an Owner or Administrator to assign you locations so you can view and manage their inventory.",
+                    link: "",
+                    button: { display: "none" },
+                    paragraphStyle: { display: "none" },
+                    paragraphText: "",
+                  }}
+                />
+              ) : (
+                renderingOption[currentTab]
+              )}
             </SearchItemContext.Provider>
           </Grid>
         </Grid>

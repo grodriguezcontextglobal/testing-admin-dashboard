@@ -1,3 +1,5 @@
+import { can } from "../../../../config/roleCapabilities";
+
 /**
  * permissionUtils.js
  * Centralized permission validation for inventory operations.
@@ -47,7 +49,7 @@ export const getUserPermissions = (user, companyData) => {
   // Role 0: Admin/Owner - Full Access
   // SPECIAL PERMISSION CHECK: Bypasses all location-based restrictions
   // Returns permittedLocations as null to indicate "ALL" (no filtering required)
-  if (role === 0 || role === "0") {
+  if (can(role, "inventory.mode") === "all") {
     return {
       hasFullAccess: true,
       permittedLocations: null, // null explicitly indicates unrestricted access

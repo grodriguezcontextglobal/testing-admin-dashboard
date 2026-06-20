@@ -3,7 +3,7 @@ import { Divider, notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { PERMISSIONS } from "../../../config/roles";
+import { hasActionPermission } from "../../../config/permissionActions";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { updateStaffMemberInList } from "../../../utils/staffUtils";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
@@ -79,11 +79,11 @@ const StaffDetail = () => {
   ];
 
   const visibleNavTabs = navTabs.filter(
-    (t) => PERMISSIONS[t.permission]?.includes(Number(user.role)) && !t.disabled,
+    (t) => hasActionPermission(user, t.permission) && !t.disabled,
   );
 
   const showAccessToggle =
-    PERMISSIONS["staff:grant_access"]?.includes(Number(user.role)) &&
+    hasActionPermission(user, "staff:grant_access") &&
     user.email !== profile.email;
 
   const pillNavLinkStyle = ({ isActive }) => ({
