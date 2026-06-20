@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
-import { checkArray } from "../../../components/utils/checkArray";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import { onAddEventData } from "../../../store/slices/eventSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
@@ -18,7 +17,7 @@ import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize1
 // import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import { can } from "../../../config/roleCapabilities";
+import { can, isAdmin } from "../../../config/roleCapabilities";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
@@ -158,9 +157,7 @@ const MainPageQuickGlance = () => {
     const displayElementsBasedOnRole = () => {
       if (
         event.staff.adminUser.some((element) => element.email === user.email) ||
-        checkArray(
-          user.companyData.employees.filter((ele) => ele.user === user.email)
-        ).role < 1
+        isAdmin(user)
       ) {
         return true;
       }

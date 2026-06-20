@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import { can } from "../../config/roleCapabilities";
 import Loading from "../../components/animation/Loading";
 import FooterComponent from "../../components/general/FooterComponent";
 import HidenIcon from "../../components/icons/HidenIcon";
@@ -136,7 +137,7 @@ const Login = () => {
 
   const navigateUserBasedOnRole = useCallback(
     async (props) => {
-      if (Number(props.role) === 4) {
+      if (!can(props.role, "nav.home")) {
         try {
           const response = await devitrakApi.post("/event/event-list", {
             "staff.headsetAttendees.email": props.email,

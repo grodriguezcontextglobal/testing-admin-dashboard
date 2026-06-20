@@ -41,7 +41,7 @@ import MenuIcon from "../icons/MenuIcon";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
-import { rolesWith } from "../../config/roleCapabilities";
+import { can, rolesWith } from "../../config/roleCapabilities";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
@@ -320,7 +320,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           >
             <NavLink
               key={"devitrakName"}
-              to={`${Number(user.role) === 4 ? "/events" : "/"}`}
+              to={`${can(user, "nav.home") ? "/" : "/events"}`}
               style={{ margin: "0 16px 0 0", width: "fit-content", padding: 0 }}
             >
               <DevitrakLogo />

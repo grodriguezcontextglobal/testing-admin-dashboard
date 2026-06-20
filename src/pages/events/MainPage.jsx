@@ -320,7 +320,7 @@ const MainPage = () => {
               })
             ) : (
               <>
-                {Number(user.role) < 4 ? (
+                {can(user, "nav.home") ? (
                   <BannerMsg />
                 ) : (
                   <BannerNoEventStaffOnly

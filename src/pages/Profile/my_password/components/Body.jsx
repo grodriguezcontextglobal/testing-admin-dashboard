@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { checkArray } from "../../../../components/utils/checkArray";
+import { can } from "../../../../config/roleCapabilities";
 import { onLogout } from "../../../../store/slices/adminSlice";
 import "./Body.css";
 import BodyForm from "./BodyForm";
@@ -34,7 +35,7 @@ const Body = () => {
     };
     foundAdminInfo();
     const triggerRoutes = () => {
-      if (Number(user.role) === Number("4")) {
+      if (!can(user, "nav.home")) {
         return navigate("/events");
       }
       return navigate("/");
