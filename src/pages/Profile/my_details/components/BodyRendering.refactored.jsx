@@ -136,7 +136,7 @@ const BodyRendering = ({
               <Input
                 type="text"
                 id="role"
-                value={dicRole[Number(user.role)]}
+                value={dicRole[user.roleType] ?? dicRole[Number(user.role)]}
                 readOnly
                 className="input input--readonly"
               />
