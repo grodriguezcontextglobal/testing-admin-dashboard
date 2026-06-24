@@ -18,6 +18,7 @@ import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
+import { isNotAssistant } from "../../../config/roles";
 import AlInventoryEventAssigned from "./components/AlInventoryEventAssigned";
 import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
@@ -477,7 +478,7 @@ const MainPageQuickGlance = () => {
               )} total`}
             />
           </p>
-          {user.role !== "4" && (
+          {isNotAssistant(user.roleType) && (
             <BlueButtonComponent
               func={() => setEditingStaff(true)}
               title="Update staff"
