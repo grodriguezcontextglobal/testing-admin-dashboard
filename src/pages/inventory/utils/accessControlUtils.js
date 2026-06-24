@@ -1,30 +1,38 @@
-/**
- * Utility functions for role-based and preference-based access control in Inventory.
- */
+const FULL_ACCESS_TYPES = ["root_admin", "admin", "sale_manager"];
+const INVENTORY_TYPES = [...FULL_ACCESS_TYPES, "inventory_manager"];
 
 /**
- * Checks if the user has admin privileges (Role "0").
- * @param {string|number} role - The user's role.
- * @returns {boolean} - True if admin (role "0"), false otherwise.
+ * Returns true if the roleType has unrestricted access to all inventory data.
+ *
+ * For inventory_manager the access is "general" (unrestricted) when no
+ * locations have been assigned to them. Once locations are assigned they
+ * become location-scoped and this returns false so filterDataByRoleAndPreference
+ * can apply the location filter.
+ *
+ * @param {string} roleType
+ * @param {Array}  [assignedLocations] - list of location names assigned to the user
  */
-export const checkRolePermission = (role) => {
-  return String(role) === "0";
+export const checkRolePermission = (roleType, assignedLocations) => {
+  if (FULL_ACCESS_TYPES.includes(roleType)) return true;
+  if (roleType === "inventory_manager") {
+    return !assignedLocations || assignedLocations.length === 0;
+  }
+  return false;
 };
 
 /**
- * Retrieves the user's preferred locations from their profile.
- * @param {Object} user - The user object from Redux state.
- * @returns {Array} - Array of preferred locations (IDs or names).
+ * Retrieves the user's assigned locations from their employee record.
+ *
+ * @param {Object} user - Redux admin state user object
+ * @returns {string[]} - Array of location names
  */
 export const getPreferenceLocation = (user) => {
   if (!user?.companyData?.employees) return [];
 
-  // Find the employee record for the current user
   const employeeRecord = user.companyData.employees.find(
     (element) => element.user === user.email
   );
 
-  // New logic: Check for managerLocation in preference
   if (
     employeeRecord?.preference?.managerLocation &&
     Array.isArray(employeeRecord.preference.managerLocation)
@@ -32,8 +40,6 @@ export const getPreferenceLocation = (user) => {
     return employeeRecord.preference.managerLocation.map((loc) => loc.location);
   }
 
-  // Fallback to legacy preference structure or user root preference
-  // If preference is just an array of strings (legacy)
   if (Array.isArray(employeeRecord?.preference)) {
     return employeeRecord.preference;
   }
@@ -42,64 +48,46 @@ export const getPreferenceLocation = (user) => {
 };
 
 /**
- * Filters data based on role and preferences.
+ * Filters inventory/location data based on the user's roleType and assigned locations.
  *
- * Logic:
- * 1. If Role is "0", return all data (where company_id matches, assumed implicit in data).
- * 2. If Role is NOT "0", filter by preference location.
+ * Rules:
+ * - root_admin / admin / sale_manager         → all data
+ * - inventory_manager (no locations assigned) → all data (general access)
+ * - inventory_manager (locations assigned)    → only items matching those locations
+ * - event_manager / assistant                 → no access (empty array)
  *
- * @param {Array} data - The dataset to filter.
- * @param {Object} user - The user object.
- * @returns {Array} - The filtered dataset.
+ * @param {Array}  data - Dataset to filter
+ * @param {Object} user - Redux admin state user object
+ * @returns {Array}
  */
 export const filterDataByRoleAndPreference = (data, user) => {
   if (!Array.isArray(data)) return [];
 
-  // 1. Role-based access: Role "0" sees all
-  if (checkRolePermission(user.role)) {
-    return data;
-  }
+  if (!INVENTORY_TYPES.includes(user.roleType)) return [];
 
-  // 2. Restricted access: Check preferences
-  const preferences = getPreferenceLocation(user);
+  const assignedLocations = getPreferenceLocation(user);
 
-  if (!preferences || preferences?.length === 0) {
-    console.warn(
-      "Restricted user has no location preferences set. Access denied to all items."
-    );
-    return [];
-  }
+  if (checkRolePermission(user.roleType, assignedLocations)) return data;
 
-  // Filter logic
-  return data?.filter((item) => {
-    // Check company_id matches current user's company
-    // Note: We perform a safe check. If item.company_id is missing, we assume it's valid if it came from the company-scoped API.
-    // But if it is present, it MUST match.
+  if (assignedLocations.length === 0) return [];
+
+  return data.filter((item) => {
     if (
       item.company_id &&
-      String(item.company_id) !== String(user.sqlInfo.company_id)
+      String(item.company_id) !== String(user.sqlInfo?.company_id)
     ) {
       return false;
     }
 
-    // Check location match
-    // We check against 'location' (name) or 'location_id' if available.
-    // Preferences might be names or IDs. We'll try to match both for robustness.
-
     const itemLocationName = item.location;
     const itemLocationId = item.location_id;
 
-    return preferences?.some((pref) => {
-      // Check if pref matches ID (if both are present)
-      if (itemLocationId && String(pref) === String(itemLocationId))
-        return true;
-
-      // Check if pref matches Name (exact or hierarchy start)
+    return assignedLocations.some((pref) => {
+      if (itemLocationId && String(pref) === String(itemLocationId)) return true;
       if (itemLocationName) {
         if (String(itemLocationName) === String(pref)) return true;
         if (String(itemLocationName).startsWith(`${pref} /`)) return true;
       }
-
       return false;
     });
   });
