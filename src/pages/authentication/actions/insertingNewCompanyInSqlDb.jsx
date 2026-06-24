@@ -14,12 +14,13 @@ const insertingNewCompanyInSqlDb = async ({
       company_name: companyValue,
     }
   );
-  if (checkingExistingCompany.data.company.length > 0) {
+  const existingCompanies = checkingExistingCompany.data?.company ?? [];
+  if (existingCompanies.length > 0) {
     ref.current = {
       ...ref.current,
-      companySQL: checkArray(checkingExistingCompany.data.company).company_id,
+      companySQL: checkArray(existingCompanies).company_id,
     };
-    return checkArray(checkingExistingCompany.data.company);
+    return checkArray(existingCompanies);
   } else {
     const insertingCompanyInfo = await devitrakApi.post(
       "/db_company/new_company",
