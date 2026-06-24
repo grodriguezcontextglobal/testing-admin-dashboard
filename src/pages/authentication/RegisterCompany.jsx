@@ -25,6 +25,7 @@ import insertingNewCompanyInSqlDb from "./actions/insertingNewCompanyInSqlDb";
 import insertingStripeAccountInSqlDb from "./actions/insertingStripeAccountInSqlDb";
 import insertingUserMemberInSqlBd from "./actions/insertingUserMemberInSqlBd";
 import userRegistrationProcess from "./actions/userRegistrationProcess";
+import updateExistingUserAssignedCompany from "./actions/updateExistingUserAssignedCompany";
 import CompanyRegistration from "./ux/CompanyRegistration";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
@@ -46,6 +47,7 @@ const RegisterCompany = () => {
   const { user } = useSelector((state) => state.admin);
   const [listCompany, setListCompany] = useState([]);
   const [companyValue, setCompanyValue] = useState();
+  const [companyExists, setCompanyExists] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [industry, setIndustry] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -100,22 +102,28 @@ const RegisterCompany = () => {
     return Array.from(result);
   }, [listCompany]);
   companies();
-  const matchCompany = useCallback(() => {
-    const foundCompany = companies()?.find(
-      (company) =>
-        String(company).toLowerCase() === String(companyValue).toLowerCase(),
+  useEffect(() => {
+    if (!companyValue) {
+      setCompanyExists(false);
+      return;
+    }
+    const found = listCompany.some(
+      (c) =>
+        String(c.company_name).toLowerCase() ===
+        String(companyValue).toLowerCase(),
     );
-    if (foundCompany) {
+    if (found) {
+      setCompanyExists(true);
       openNotificationWithIcon(
         "error",
         "Company exists!",
         "Company already exists in our records.",
-        0,
+        5,
       );
-      return true;
+    } else {
+      setCompanyExists(false);
     }
-    return false;
-  }, [companyValue]);
+  }, [companyValue, listCompany.length]);
   const retrieveIndustryOptions = () => {
     const result = new Set();
     if (industryListQuery.data) {
@@ -149,6 +157,7 @@ const RegisterCompany = () => {
     });
   };
   const onSubmitRegister = async (data) => {
+    if (companyExists) return;
     let base64 = "";
     if (locationList.length < 1) {
       return alert(
@@ -174,6 +183,7 @@ const RegisterCompany = () => {
         );
         if (user.existing) {
           await createStripeAccount({ companyValue, user, ref });
+          await updateExistingUserAssignedCompany({ user, companyValue, ref });
           await createCompany({
             props: { ...data, company_logo: base64 },
             ref,
@@ -264,7 +274,7 @@ const RegisterCompany = () => {
           `Please try again later. ${error}`,
           3,
         );
-        dispatch(onAddErrorMessage(error));
+        dispatch(onAddErrorMessage(error?.message ?? String(error)));
         setLoadingStatus(false);
       }
     }
@@ -300,7 +310,7 @@ const RegisterCompany = () => {
         setNewlocation={setNewlocation}
         handleAddLocation={handleAddLocation}
         handleDeleteLocation={handleDeleteLocation}
-        matchCompany={matchCompany}
+        companyExists={companyExists}
         retrieveIndustryOptions={retrieveIndustryOptions}
         register={register}
         Subtitle={Subtitle}
