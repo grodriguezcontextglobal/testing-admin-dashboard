@@ -46,6 +46,11 @@ import MFA from "./login/sections/MFA";
 import Password from "./login/sections/Password";
 import "./style/authStyle.css";
 import { setPermissions } from "../../store/slices/permissions";
+import {
+  buildActiveCompanies,
+  deriveRoleType,
+  normalizeLocations,
+} from "./utils/loginUtils";
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
@@ -138,7 +143,7 @@ const Login = () => {
 
   const navigateUserBasedOnRole = useCallback(
     async (props) => {
-      if (Number(props.role) === 4) {
+      if (props.roleType === "assistant") {
         try {
           const response = await devitrakApi.post("/event/event-list", {
             "staff.headsetAttendees.email": props.email,
@@ -185,9 +190,20 @@ const Login = () => {
           company_name: props.company_name,
         },
       );
+      const rawCompanyData = companyInfoTable.data.companies;
+      const companyRecord = Array.isArray(rawCompanyData)
+        ? rawCompanyData.at(-1)
+        : checkArray(rawCompanyData?.company);
+      if (!companyRecord?.company_id) {
+        throw new Error("Company SQL record not found. Please contact support.");
+      }
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: checkArray(companyInfoTable.data.company).company_id,
+        company_id: companyRecord.company_id,
       });
+      const employeeInfo = props.company_data[0].employees.find(
+        (emp) => emp.user === props.respo.email
+      );
+      const roleType = deriveRoleType(employeeInfo);
       dispatch(
         onLogin({
           data: {
@@ -199,6 +215,7 @@ const Login = () => {
           uid: props.respo.uid,
           email: props.respo.email,
           role: props.role,
+          roleType,
           phone: props.respo.phone,
           company: props.company_name,
           token: props.respo.token,
@@ -206,29 +223,35 @@ const Login = () => {
           companyData: props.company_data[0],
           sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
           sqlInfo: {
-            ...checkArray(companyInfoTable.data.company),
+            ...companyRecord,
             stripeID: checkArray(stripeSQL.data.stripe),
           },
           preference: props.respo.entire.preference,
           subscription: {},
         }),
       );
-      const employeeInfo = props.company_data[0].employees.find(emp => emp.user === props.respo.email)
-      dispatch(setPermissions({
-        role: employeeInfo.role,
-        companyName: props.company_data[0].company_name,
-        locations: employeeInfo.preference.managerLocation,
-      }))
+      dispatch(
+        setPermissions({
+          role: employeeInfo?.role,
+          roleType,
+          companyName: props.company_data[0].company_name,
+          locations: normalizeLocations(employeeInfo?.preference?.managerLocation),
+        })
+      );
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
       await navigateUserBasedOnRole({
-        role: props.role,
+        roleType: props.roleType,
         email: props.email,
       });
     } catch (error) {
       console.error("loginIntoOneCompanyAccount", error);
+      const errorMsg = error?.response?.data?.msg ?? error.message;
+      openNotificationWithIcon("error", errorMsg);
+      dispatch(onLogout("Incorrect credentials"));
+      dispatch(onAddErrorMessage(errorMsg));
     }
   };
 
@@ -315,6 +338,7 @@ const Login = () => {
             password: loginData.password,
             company_name: activeCompanies[0].company,
             role: activeCompanies[0].role,
+            roleType: activeCompanies[0].roleType,
             company_data: companyResponse.data.company,
             respo: loginResponse.data,
           },
@@ -388,22 +412,10 @@ const Login = () => {
     }
   };
 
-  const processCompanyData = useCallback(async (email, companies) => {
-    const activeCompanies = companies.reduce((acc, item) => {
-      const userInfo = item.employees.find(
-        (element) => element.user === email && element.active,
-      );
-      if (userInfo) {
-        acc.push({
-          company: item.company_name,
-          role: userInfo.role,
-        });
-      }
-      return acc;
-    }, []);
-
-    return activeCompanies;
-  }, []);
+  const processCompanyData = useCallback(
+    (email, companies) => buildActiveCompanies(email, companies),
+    []
+  );
 
   // Function to go back to email step
   const handleBackToEmail = () => {
