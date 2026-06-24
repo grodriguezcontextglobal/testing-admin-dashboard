@@ -1,12 +1,10 @@
-import { lazy, Suspense, useRef } from "react";
-import { Navigate, Outlet, Route, Routes } from "react-router";
-import { useSelector } from "react-redux";
-import { PERMISSIONS } from "../../config/roles";
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router";
+import PermissionGuard from "./PermissionGuard";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
-import ConsumerConfirmationPayment from "../../pages/consumers/components/ConsumerConfirmationPayment";
 import ChargeAllListDeviceCash from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCash";
 import ChargeAllListDeviceCreditCard from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCreditCard";
 import NewPost from "../../pages/posts/action/NewPost";
@@ -229,18 +227,10 @@ const AssignmentDeviceMembers = lazy(() =>
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
   )
 );
-// Redirects to "/" if the logged-in user's role is not in PERMISSIONS[action].
-const PermissionGuard = ({ action }) => {
-  const { user } = useSelector((state) => state.admin);
-  const allowed = PERMISSIONS[action]?.includes(Number(user.role)) ?? false;
-  return allowed ? <Outlet /> : <Navigate to="/" replace />;
-};
-
 const AuthRoutes = () => {
-  const navbarRef = useRef(null);
   return (
     <div style={{ width: "100%", margin: "auto", minHeight: "100dvh" }}>
-      <HeaderComponent ref={navbarRef} />
+      <HeaderComponent />
       <Suspense
         fallback={
           <div style={CenteringGrid}>
@@ -362,10 +352,6 @@ const AuthRoutes = () => {
                 <Route
                   path="/consumers/:id/charge-all-lost-devices/credit_card"
                   element={<ChargeAllListDeviceCreditCard />}
-                />
-                <Route
-                  path="/consumers/:id/payment-confirmation"
-                  element={<ConsumerConfirmationPayment />}
                 />
               </Route>
               <Route path="/staff" element={<Staff />} />
@@ -524,7 +510,7 @@ const AuthRoutes = () => {
       <div
         style={{ minWidth: "768px", maxWidth: "1400px", margin: "0 auto 15px" }}
       >
-        <FooterComponent ref={navbarRef} />
+        <FooterComponent />
       </div>
     </div>
   );
