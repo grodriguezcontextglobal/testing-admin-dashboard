@@ -16,6 +16,7 @@ import { onResetHelpers } from "../../store/slices/helperSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
+import { hasPermission } from "../../config/roles";
 import MainHeaders from "./ui/MainHeaders";
 
 const MainProfileSettings = () => {
@@ -46,61 +47,15 @@ const MainProfileSettings = () => {
     }
   };
   const tabOptions = [
-    {
-      label: "My details",
-      route: "my_details",
-      permission: [0, 1, 2, 3, 4],
-    },
-    {
-      label: "Password",
-      route: "password",
-      permission: [0, 1, 2, 3, 4],
-    },
-    {
-      label: "MFA Setup",
-      route: "mfa-setup",
-      permission: [0, 1, 2, 3, 4],
-    },
-    // {
-    //   label: "Billing",
-    //   route: "billing",
-    //   permission: [0,1,2]
-    // },
-    {
-      label: "Notifications",
-      route: "notifications",
-      permission: [0, 1],
-    },
-    // {
-    //   label: "Staff activity",
-    //   route: "staff-activity",
-    //   permission: [0, 1],
-    // },
-    {
-      label: "Company info",
-      route: "company-info",
-      permission: [0],
-    },
-    {
-      label: "Stripe account",
-      route: "stripe_connected_account",
-      permission: [0],
-    },
-    {
-      label: "Documents",
-      route: "documents",
-      permission: [0, 1], // Allowing access for admin and managers
-    },
-    {
-      label: "Suppliers",
-      route: "providers",
-      permission: [0, 1], // Allowing access for admin and managers
-    },
-    {
-      label: "Platform policies",
-      route: "platform_policies",
-      permission: [0, 1, 2, 3, 4],
-    },
+    { label: "My details",      route: "my_details",               permission: "nav:profile"            },
+    { label: "Password",        route: "password",                 permission: "nav:profile"            },
+    { label: "MFA Setup",       route: "mfa-setup",                permission: "nav:profile"            },
+    { label: "Notifications",   route: "notifications",            permission: "profile:staff_settings" },
+    { label: "Company info",    route: "company-info",             permission: "profile:company_settings"},
+    { label: "Stripe account",  route: "stripe_connected_account", permission: "profile:billing"        },
+    { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
+    { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
+    { label: "Platform policies",route: "platform_policies",       permission: "nav:profile"            },
   ];
   const pillStyle = {
     border: "none",
@@ -140,9 +95,7 @@ const MainProfileSettings = () => {
         }}
       >
         {tabOptions.map((option) => {
-          if (
-            option.permission.some((element) => element === Number(user.role))
-          ) {
+          if (hasPermission(option.permission, user.roleType)) {
             return (
               <NavLink
                 key={option.label}
