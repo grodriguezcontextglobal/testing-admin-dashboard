@@ -11,6 +11,7 @@ import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../styles/global/Title";
+import { isCoordinatorLevel } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
 import MainTable from "./tables/MainTable";
@@ -66,7 +67,7 @@ const MainPage = () => {
           </p>
         </Grid>
         <Grid
-          display={Number(user.role) < 2 ? "flex" : "none"}
+          display={isCoordinatorLevel(user.roleType) ? "flex" : "none"}
           gap={2}
           sx={{
             display: "flex",
@@ -90,7 +91,7 @@ const MainPage = () => {
           />
           <DangerButtonComponent
             style={{
-              display: `${Number(user.role) > 1 ? "none" : "flex"}`,
+              display: isCoordinatorLevel(user.roleType) ? "flex" : "none",
               width: "fit-content",
             }}
             func={() => setRemovingMember(true)}
