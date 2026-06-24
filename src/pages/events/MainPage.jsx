@@ -16,6 +16,7 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { Subtitle } from "../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
+import { isNotAssistant } from "../../config/roles";
 import { useEventHook } from "./hook/useEventHook";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
 const PastEventsTable = lazy(() => import("./components/PastEventsTable"));
@@ -306,7 +307,7 @@ const MainPage = () => {
                 </Grid>
               ) : noActiveEvents ? (
                 <>
-                  {Number(user.role) < 4 ? (
+                  {isNotAssistant(user.roleType) ? (
                     <BannerMsg />
                   ) : (
                     <BannerNoEventStaffOnly
