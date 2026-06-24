@@ -10,6 +10,7 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import { useNavigate } from "react-router-dom";
 import StaffMemberStructure from "../../../../../classes/staffMemberStructure";
+import { isNotAssistant } from "../../../../../config/roles";
 import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
 
 const StaffTable = ({ searching }) => {
@@ -217,7 +218,7 @@ const StaffTable = ({ searching }) => {
       onRow={(record) => {
         return {
           onClick: () =>
-            record.id && user.role < 4 && handleDataStaffMember(record),
+            record.id && isNotAssistant(user.roleType) && handleDataStaffMember(record),
         };
       }}
       enablePagination={true}
