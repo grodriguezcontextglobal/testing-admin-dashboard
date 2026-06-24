@@ -33,6 +33,7 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
       newAdminUserTemplate
     );
     if (resp.data) {
+      let imageProfile = "";
       if (user.imageProfile.length > 0) {
         const templateImageUpload = new ImageUploaderFormat(
           user.imageProfile,
@@ -54,22 +55,8 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
             imageProfile: uploadingProfileImage.data.secure_url,
             imageID: resp.data.uid,
           });
+          imageProfile = uploadingProfileImage.data.secure_url;
         }
-        ref.current = {
-          ...ref.current,
-          userRegistration: {
-            data: resp.data.entire,
-            uid: resp.data.uid,
-            name: user.name,
-            lastName: user.lastName,
-            email: user.email,
-            phone: resp.data.entire.phone,
-            role: "0",
-            company: user.company,
-            imageProfile: uploadingProfileImage.data.secure_url,
-            // token: resp.data.token,
-          },
-        };
       }
       return (ref.current = {
         ...ref.current,
@@ -82,8 +69,7 @@ const userRegistrationProcess = async ({ user, companyValue, ref }) => {
           phone: resp.data.entire.phone,
           role: "0",
           company: user.company,
-          imageProfile: "",
-          // token: resp.data.token,
+          imageProfile,
         },
       });
     }
