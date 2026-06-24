@@ -11,6 +11,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { Title } from "../../../../styles/global/Title";
+import { isAssistant } from "../../../../config/roles";
 import ActionsMainPage from "./action/MainPage";
 // import DeviceDescriptionTags from "./detailComponent/DeviceDescriptionTags";
 import DeviceInformationDetail from "./detailComponent/DeviceInformationDetail";
@@ -51,7 +52,7 @@ const DeviceDetail = () => {
             </Typography>
             <BlueButtonComponent
               style={{
-                display: user.role === "4" && "none",
+                display: isAssistant(user.roleType) && "none",
                 width:"fit-content"
               }}
               func={() => navigate("/inventory/new-bulk-items")}
