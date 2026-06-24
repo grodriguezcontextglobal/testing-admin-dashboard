@@ -10,6 +10,7 @@ import {
   notification,
 } from "antd";
 import { useState } from "react";
+import { isCoordinatorLevel } from "../../../config/roles";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
@@ -19,7 +20,6 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
   const { user } = useAdminStore();
   const [permissionStatus, setPermissionStatus] = useState(false);
   const [permissionUpdated, setPermissionUpdated] = useState("");
-  const adminUserRole = Number(user.role);
   const handleEditAdminPermission = async () => {
     setPermissionStatus(!permissionStatus);
   };
@@ -74,9 +74,7 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
           <EditOutlined
             onClick={handleEditAdminPermission}
             size={50}
-            disabled={
-              adminUserRole === "Approver" || adminUserRole === "Administrator"
-            }
+            disabled={!isCoordinatorLevel(user.roleType)}
             key="edit"
           />,
           <Popconfirm
