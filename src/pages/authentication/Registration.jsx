@@ -1,12 +1,14 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { FormLabel, Grid, TextField } from "@mui/material";
+import { FormLabel, Grid, InputAdornment, TextField, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, notification } from "antd";
+import { Avatar, notification, Progress } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import FooterComponent from "../../components/general/FooterComponent";
 import { convertToBase64 } from "../../components/utils/convertToBase64";
+import HidenIcon from "../../components/icons/HidenIcon";
+import VisibleIcon from "../../components/icons/VisibleIcon";
 import { onLogin } from "../../store/slices/adminSlice";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
@@ -20,7 +22,7 @@ import Input from "../../components/UX/inputs/Input";
 // import "./style/authStyle.css";
 const Registration = () => {
   const { user } = useSelector((state) => state.admin);
-  const { register, handleSubmit, watch, setValue } = useForm({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       firstName: user.name,
       lastName: user.lastName,
@@ -32,6 +34,14 @@ const Registration = () => {
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordMatch, setPasswordMatch] = useState(true);
+
+  const watchPassword = watch("password");
+  const watchPassword2 = watch("password2");
 
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, title, msg) => {
@@ -61,17 +71,17 @@ const Registration = () => {
   const [userExists, setUserExists] = useState([]);
   const checkExistingUser = useCallback(
     async () => {
-      if (isValidEmail(watch("email"))) {
-        const response = await devitrakApi.post(`/staff/__staff-search`, {
-          email: watch("email"),
-        });
-        if (response.data) {
-          const result = [...response.data.adminUsers];
-          return setUserExists(result);
-        }
+      const email = watch("email");
+      if (!isValidEmail(email)) {
+        setUserExists([]);
+        return;
+      }
+      const response = await devitrakApi.post(`/staff/__staff-search`, { email });
+      if (response.data) {
+        setUserExists([...response.data.adminUsers]);
       }
     },
-    isValidEmail(watch("email")),
+    [watch("email")],
   );
 
   useEffect(() => {
@@ -80,7 +90,7 @@ const Registration = () => {
     return () => {
       controller.abort();
     };
-  }, [isValidEmail(watch("email"))]);
+  }, [watch("email")]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -91,7 +101,7 @@ const Registration = () => {
       setValue("password2", userExists[0].password);
       setValue("firstName", userExists[0].name);
       setValue("lastName", userExists[0].lastName);
-      return openNotificationWithIcon(
+      openNotificationWithIcon(
         "success",
         "Email already exists in our record.",
         "Please proceed to set up a company account.",
@@ -100,7 +110,40 @@ const Registration = () => {
     return () => {
       controller.abort();
     };
-  }, [userExists.length > 0]);
+  }, [userExists.length]);
+
+  const calculatePasswordStrength = (password) => {
+    if (!password) return 0;
+    const checks = [
+      password.length >= 8,
+      /[a-z]/.test(password),
+      /[A-Z]/.test(password),
+      /\d/.test(password),
+      /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  };
+
+  const getStrengthInfo = (strength) => {
+    if (strength < 40) return { text: "Weak", color: "#ff4d4f" };
+    if (strength < 70) return { text: "Fair", color: "#faad14" };
+    if (strength < 90) return { text: "Good", color: "#52c41a" };
+    return { text: "Strong", color: "#389e0d" };
+  };
+
+  const strengthInfo = getStrengthInfo(passwordStrength);
+
+  useEffect(() => {
+    setPasswordStrength(watchPassword ? calculatePasswordStrength(watchPassword) : 0);
+  }, [watchPassword]);
+
+  useEffect(() => {
+    if (watchPassword && watchPassword2) {
+      setPasswordMatch(watchPassword === watchPassword2);
+    } else {
+      setPasswordMatch(true);
+    }
+  }, [watchPassword, watchPassword2]);
 
   const onSubmitRegister = async (data) => {
     if (data.password !== data.password2)
@@ -284,32 +327,180 @@ const Registration = () => {
             </Grid>
             <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
-                Password <span style={{ fontWeight: 800 }}>*</span>
+                Password{" "}
+                {userExists.length < 1 && <span style={{ fontWeight: 800 }}>*</span>}
               </FormLabel>
               <Input
                 disabled={userExists.length > 0}
+                {...register(
+                  "password",
+                  userExists.length > 0
+                    ? {}
+                    : {
+                        required: "Password is required",
+                        minLength: {
+                          value: 8,
+                          message: "Password must be at least 8 characters",
+                        },
+                        pattern: {
+                          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/,
+                          message:
+                            "Password must contain uppercase, lowercase, number, and special character",
+                        },
+                      },
+                )}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                placeholder="Enter a strong password"
                 required={userExists.length < 1}
-                {...register("password")}
-                placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 fullWidth
+                endAdornment={
+                  userExists.length < 1 && (
+                    <InputAdornment position="end">
+                      <button
+                        type="button"
+                        style={{
+                          padding: 0,
+                          backgroundColor: "transparent",
+                          outline: "none",
+                          margin: 0,
+                          width: "fit-content",
+                          aspectRatio: "1",
+                          borderRadius: "50%",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <VisibleIcon fill={"var(--blue-dark-600)"} />
+                        ) : (
+                          <HidenIcon stroke={"var(--blue-dark-600)"} />
+                        )}
+                      </button>
+                    </InputAdornment>
+                  )
+                }
               />
+              {userExists.length < 1 && watchPassword && (
+                <div style={{ marginTop: "8px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <Typography style={{ fontSize: "12px", color: "#667085" }}>
+                      Password strength
+                    </Typography>
+                    <Typography
+                      style={{
+                        fontSize: "12px",
+                        color: strengthInfo.color,
+                        fontWeight: "500",
+                      }}
+                    >
+                      {strengthInfo.text}
+                    </Typography>
+                  </div>
+                  <Progress
+                    percent={passwordStrength}
+                    strokeColor={strengthInfo.color}
+                    showInfo={false}
+                    size="small"
+                  />
+                  <Typography style={{ fontSize: "11px", color: "#667085", marginTop: "4px" }}>
+                    Use 8+ characters with uppercase, lowercase, numbers, and symbols
+                  </Typography>
+                </div>
+              )}
             </Grid>
             <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
-                Repeat password <span style={{ fontWeight: 800 }}>*</span>
+                Repeat password{" "}
+                {userExists.length < 1 && <span style={{ fontWeight: 800 }}>*</span>}
               </FormLabel>
               <Input
                 disabled={userExists.length > 0}
                 required={userExists.length < 1}
-                {...register("password2")}
-                // value={password2}
-                // onChange={(e) => setPassword2(e.target.value)}
-
-                placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
-                type="password"
+                {...register(
+                  "password2",
+                  userExists.length > 0
+                    ? {}
+                    : {
+                        required: "Please confirm your password",
+                        validate: (value) =>
+                          value === watchPassword || "Passwords do not match",
+                      },
+                )}
+                error={
+                  userExists.length < 1 &&
+                  ((!passwordMatch && watchPassword2) || !!errors.password2)
+                }
+                helperText={
+                  userExists.length < 1 && errors.password2?.message
+                }
+                placeholder="Confirm your password"
+                type={showConfirmPassword ? "text" : "password"}
                 fullWidth
+                endAdornment={
+                  userExists.length < 1 && (
+                    <InputAdornment position="end">
+                      <button
+                        type="button"
+                        style={{
+                          padding: 0,
+                          backgroundColor: "transparent",
+                          outline: "none",
+                          margin: 0,
+                          width: "fit-content",
+                          aspectRatio: "1",
+                          borderRadius: "50%",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <VisibleIcon fill={"var(--blue-dark-600)"} />
+                        ) : (
+                          <HidenIcon stroke={"var(--blue-dark-600)"} />
+                        )}
+                      </button>
+                    </InputAdornment>
+                  )
+                }
               />
+              {userExists.length < 1 && watchPassword2 && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginTop: "4px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: passwordMatch ? "#52c41a" : "#ff4d4f",
+                      marginRight: "6px",
+                    }}
+                  />
+                  <Typography
+                    style={{
+                      fontSize: "12px",
+                      color: passwordMatch ? "#52c41a" : "#ff4d4f",
+                    }}
+                  >
+                    {passwordMatch ? "Passwords match" : "Passwords do not match"}
+                  </Typography>
+                </div>
+              )}
             </Grid>
             <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
