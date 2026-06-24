@@ -11,6 +11,7 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../../store/slices/adminSlice";
+import { isCoordinatorLevel, LEGACY_ROLE_MAP, ROLE_LEVELS, resolveRoleType } from "../../../../../config/roles";
 import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -50,7 +51,8 @@ const UpdateRoleInCompany = () => {
         dispatch(
           onLogin({
             ...user,
-            role: newRole,
+            role: String(newRole),
+            roleType: LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant",
           }),
         );
       }
@@ -77,7 +79,11 @@ const UpdateRoleInCompany = () => {
       const updatedEmployees = profile.companyData.employees.toSpliced(
         foundStaffToUpdate,
         1,
-        { ...profile.companyData.employees[foundStaffToUpdate], role: newRole },
+        {
+          ...profile.companyData.employees[foundStaffToUpdate],
+          role: String(newRole),
+          roleType: LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant",
+        },
       );
 
       updateRole({
@@ -88,19 +94,18 @@ const UpdateRoleInCompany = () => {
   };
 
   const options = [
-    { label: "Root administrator", value: 0 },
-    { label: "Administrator", value: 1 },
-    { label: "Manager", value: 2 },
-    { label: "Support", value: 3 },
-    { label: "Staff event assistant", value: 4 },
+    { label: "Root Administrator",  value: 0 },
+    { label: "Administrator",       value: 1 },
+    { label: "Sale Manager",        value: 2 },
+    { label: "Event Manager",       value: 3 },
+    { label: "Inventory Manager",   value: 4 },
+    { label: "Assistant",           value: 5 },
   ];
 
   const optionsBasedOnCurrentRolePermission = options.filter((option) => {
-    const currentUserRole = Number(user.role);
-    const optionRoleValue = Number(option.value);
-    if (currentUserRole === 0) return true; // Root admin can assign all roles
-    if (currentUserRole === 1) return optionRoleValue >= 2; // Admin can assign roles 2 and up
-    return false; // Other roles cannot assign
+    const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
+    if (userLevel === 0) return true;
+    return option.value > userLevel;
   });
 
   const bodyModal = () => {
@@ -119,7 +124,7 @@ const UpdateRoleInCompany = () => {
           />,
         ]}
       >
-        {Number(user.role) < 2 ? (
+        {isCoordinatorLevel(user.roleType) ? (
           <form
             style={{
               ...CenteringGrid,
