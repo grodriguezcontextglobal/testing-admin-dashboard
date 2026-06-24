@@ -41,67 +41,20 @@ import MenuIcon from "../icons/MenuIcon";
 import { SendIcon } from "../icons/SendIcon";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
+import { hasPermission, isAssistant, resolveRoleType } from "../../config/roles";
 import ConditionalButton from "./component/ConditionalButton";
 import "./style/style.css";
 const { PropTypes } = pkg;
 const drawerWidth = 240;
 const navItems = [
-  {
-    title: "home",
-    route: "/",
-    permission: [0, 1, 2, 3],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "inventory",
-    route: "/inventory",
-    permission: [0, 1, 2],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "events",
-    route: "/events",
-    permission: [0, 1, 2, 3, 4],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "consumers",
-    route: "/consumers",
-    permission: [0, 1],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "Posts",
-    route: "/posts",
-    permission: [0, 1, 2, 3],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "staff",
-    route: "/staff",
-    permission: [0, 1, 2, 3],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: 0,
-    route: 0,
-    permission: [0, 1, 2, 3, 4],
-    mobile: false,
-    desktop: true,
-  },
-  {
-    title: "profile",
-    route: "/profile/my_details",
-    permission: [0, 1, 2, 3, 4],
-    mobile: true,
-    desktop: false,
-  },
+  { title: "home",     route: "/",                  permission: "nav:home",      mobile: true,  desktop: true  },
+  { title: "inventory",route: "/inventory",          permission: "nav:inventory", mobile: true,  desktop: true  },
+  { title: "events",   route: "/events",             permission: "nav:events",    mobile: true,  desktop: true  },
+  { title: "consumers",route: "/consumers",          permission: "nav:consumers", mobile: true,  desktop: true  },
+  { title: "Posts",    route: "/posts",              permission: "nav:posts",     mobile: true,  desktop: true  },
+  { title: "staff",    route: "/staff",              permission: "nav:staff",     mobile: true,  desktop: true  },
+  { title: 0,          route: 0,                    permission: "nav:profile",   mobile: false, desktop: true  },
+  { title: "profile",  route: "/profile/my_details", permission: "nav:profile",   mobile: true,  desktop: false },
 ];
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
@@ -328,7 +281,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           >
             <NavLink
               key={"devitrakName"}
-              to={`${Number(user.role) === 4 ? "/events" : "/"}`}
+              to={`${isAssistant(resolveRoleType(user)) ? "/events" : "/"}`}
               style={{ margin: "0 16px 0 0", width: "fit-content", padding: 0 }}
             >
               <DevitrakLogo />
@@ -336,11 +289,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </NavLink>
 
             {navItems.map((item) => {
-              if (
-                item.permission.some(
-                  (element) => element === Number(user.role) && item.desktop,
-                )
-              ) {
+              if (hasPermission(item.permission, resolveRoleType(user)) && item.desktop) {
                 if (item.route === 0) {
                   return (
                     <ConditionalButton
