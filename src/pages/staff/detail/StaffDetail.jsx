@@ -3,7 +3,7 @@ import { Divider, notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { PERMISSIONS } from "../../../config/roles";
+import { hasPermission, resolveRoleType } from "../../../config/roles";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { updateStaffMemberInList } from "../../../utils/staffUtils";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
@@ -78,12 +78,14 @@ const StaffDetail = () => {
     { label: "Send password reset email", route: "reset-password-link", permission: "staff:reset_password", disabled: false, id: 4 },
   ];
 
+  const roleType = resolveRoleType(user);
+
   const visibleNavTabs = navTabs.filter(
-    (t) => PERMISSIONS[t.permission]?.includes(Number(user.role)) && !t.disabled,
+    (t) => hasPermission(t.permission, roleType) && !t.disabled,
   );
 
   const showAccessToggle =
-    PERMISSIONS["staff:grant_access"]?.includes(Number(user.role)) &&
+    hasPermission("staff:grant_access", roleType) &&
     user.email !== profile.email;
 
   const pillNavLinkStyle = ({ isActive }) => ({
