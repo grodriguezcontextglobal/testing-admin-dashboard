@@ -20,16 +20,11 @@ import MainBody from "./components/MainBody";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
-const FormDeviceTrackingMethod = lazy(() =>
-  import("./newItemSetup/FormDeviceTrackingMethod")
-);
 const Form = () => {
   const { setValue, register, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { deviceSetup, staff, eventInfoDetail, extraServiceListSetup } =
     useSelector((state) => state.event);
-  const [displayFormToCreateCategory, setDisplayFormToCreateCategory] =
-    useState(false);
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [selectedItem, setSelectedItem] = useState(deviceSetup);
   const [extraServiceAdded, setExtraServiceAdded] = useState(
@@ -322,9 +317,7 @@ const Form = () => {
     >
       <MainBody
         AddingEventCreated={AddingEventCreated}
-        FormDeviceTrackingMethod={FormDeviceTrackingMethod}
         assignAllDevices={assignAllDevices}
-        displayFormToCreateCategory={displayFormToCreateCategory}
         eventInfoDetail={eventInfoDetail}
         extraServiceAdded={extraServiceAdded}
         filled={filled}
@@ -339,11 +332,9 @@ const Form = () => {
         onChange={onChange}
         removeItemSelected={removeItemSelected}
         removeServiceAdded={removeServiceAdded}
-        renderingStyle={renderingStyle}
         selectedItem={selectedItem}
         selectOptions={selectOptions()}
         setAssignAllDevices={setAssignAllDevices}
-        setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
         setSelectedItem={setSelectedItem}
         setValue={setValue}
         staff={staff}
