@@ -14,7 +14,7 @@ const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const [loading, setLoading] = useState(false);
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
-  const roleDefinition = dicRole[Number(user.role)];
+  const roleDefinition = dicRole[user.roleType] ?? dicRole[Number(user.role)];
   const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       name: user.name,
