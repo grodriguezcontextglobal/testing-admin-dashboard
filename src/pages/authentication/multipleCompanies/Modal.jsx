@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import dicRole from "../../../components/general/dicRole";
+import { isAssistant } from "../../../config/roles";
+import { deriveRoleType, normalizeLocations } from "../utils/loginUtils";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -82,13 +84,23 @@ const ModalMultipleCompanies = ({
           company_name: selection,
         },
       );
+      const rawCompanyData = companyInfoTable.data.companies;
+      const companyRecord = Array.isArray(rawCompanyData)
+        ? rawCompanyData.at(-1)
+        : checkArray(rawCompanyData?.company);
+      if (!companyRecord?.company_id) {
+        throw new Error("Company SQL record not found. Please contact support.");
+      }
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: checkArray(companyInfoTable.data.companies).company_id,
+        company_id: companyRecord.company_id,
       });
 
-      const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
-        selection,
-      ).employees.find((item) => item.user === dataPassed.respo.email).role;
+      const selectedCompanyData = findingCompanyInfoBasedOnSelection(selection);
+      const employeeInfo = selectedCompanyData.employees.find(
+        (item) => item.user === dataPassed.respo.email,
+      );
+      const employeeRole = employeeInfo?.role ?? "";
+      const employeeRoleType = deriveRoleType(employeeInfo);
 
       dispatch(
         onLogin({
@@ -100,32 +112,33 @@ const ModalMultipleCompanies = ({
           lastName: dataPassed.respo.lastName,
           uid: dataPassed.respo.uid,
           email: dataPassed.respo.email,
-          role: employeeRoleBasedOnCompany,
+          role: employeeRole,
+          roleType: employeeRoleType,
           phone: dataPassed.respo.phone,
           company: selection,
-          companyData: findingCompanyInfoBasedOnSelection(selection),
+          companyData: selectedCompanyData,
           token: dataPassed.respo.token,
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
-            ...checkArray(companyInfoTable.data.companies),
+            ...companyRecord,
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,
         }),
       );
-      const employeeInfo = findingCompanyInfoBasedOnSelection(selection,).employees.find((item) => item.user === dataPassed.respo.email)
-            dispatch(setPermissions({
-              role:employeeInfo.role,
-              companyName:findingCompanyInfoBasedOnSelection(selection).company_name,
-              locations:employeeInfo.preference.managerLocation,
-            }))
-      
+      dispatch(setPermissions({
+        role: employeeRole,
+        roleType: employeeRoleType,
+        companyName: selectedCompanyData.company_name,
+        locations: normalizeLocations(employeeInfo?.preference?.managerLocation),
+      }));
+
       setIsLoading(false);
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
-      navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
+      navigate(isAssistant(employeeRoleType) ? "/events" : "/");
       // }
     } catch (error) {
       console.log(
@@ -153,7 +166,7 @@ const ModalMultipleCompanies = ({
     );
     return {
       company_logo: result[0]?.company_logo,
-      employeeRoleInCompany: employeeRoleInCompany?.role,
+      employeeRoleInCompany: employeeRoleInCompany?.roleType,
     };
   };
 
@@ -337,8 +350,8 @@ const ModalMultipleCompanies = ({
                   >
                     {
                       dicRole[
-                        renderingExtraCompanyInfo(item.company)
-                          .employeeRoleInCompany
+                      renderingExtraCompanyInfo(item.company)
+                        .employeeRoleInCompany
                       ]
                     }
                   </span>
