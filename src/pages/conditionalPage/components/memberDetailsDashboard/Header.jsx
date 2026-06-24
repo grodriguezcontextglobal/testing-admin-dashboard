@@ -6,6 +6,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import RefactoredHeaderUntitledUiReact from "../../../../components/UX/header/DynamicHeaderCompnent";
 import Loading from "../../../../components/animation/Loading";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
+import { isCoordinatorLevel } from "../../../../config/roles";
 import { onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
 
 const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
@@ -49,13 +50,13 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
   ];
 
   const actions = {
-    desktop: Number(user.role) < 2 ? (
+    desktop: isCoordinatorLevel(user.roleType) ? (
       <BlueButtonComponent
         title={"Add new member"}
         func={() => setAddingNewMember(true)}
       />
     ) : null,
-    mobile: Number(user.role) < 2 ? (
+    mobile: isCoordinatorLevel(user.roleType) ? (
       <BlueButtonComponent
         title={"Add new"}
         func={() => setAddingNewMember(true)}
