@@ -29,7 +29,7 @@ const CompanyRegistration = ({
   setNewlocation,
   handleAddLocation,
   handleDeleteLocation,
-  matchCompany,
+  companyExists,
   retrieveIndustryOptions,
   register,
   Subtitle,
@@ -142,7 +142,7 @@ const CompanyRegistration = ({
                   Main phone number <span style={{ fontWeight: 800 }}>*</span>
                   <Input
                     required
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("main_phone", { required: true })}
                     placeholder="+1 (123) 456-7890"
                     type="text"
@@ -165,7 +165,7 @@ const CompanyRegistration = ({
                   <span style={{ fontWeight: 800 }}></span>
                 </FormLabel>
                 <Input
-                  disabled={loadingStatus || matchCompany()}
+                  disabled={loadingStatus || companyExists}
                   {...register("alternative_phone", { required: false })}
                   placeholder=""
                   type="text"
@@ -178,7 +178,7 @@ const CompanyRegistration = ({
                 </FormLabel>
                 <Input
                   required
-                  disabled={loadingStatus || matchCompany()}
+                  disabled={loadingStatus || companyExists}
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
                   placeholder=""
@@ -202,7 +202,7 @@ const CompanyRegistration = ({
                   Country <span style={{ fontWeight: 800 }}>*</span>
                   <Input
                     required
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("country", { required: true })}
                     placeholder="Country name"
                     type="text"
@@ -227,7 +227,7 @@ const CompanyRegistration = ({
                   <span style={{ fontWeight: 800 }}>*</span>
                   <Input
                     required
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("street", { required: true })}
                     style={{ margin: "0 0 20px" }}
                     placeholder="Address line 1"
@@ -235,7 +235,7 @@ const CompanyRegistration = ({
                     fullWidth
                   />
                   <Input
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("street2")}
                     placeholder="Address line 2"
                     type="text"
@@ -261,7 +261,7 @@ const CompanyRegistration = ({
                   City <span style={{ fontWeight: 800 }}>*</span>
                   <Input
                     required
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("city", { required: true })}
                     placeholder="City name"
                     type="text"
@@ -289,7 +289,7 @@ const CompanyRegistration = ({
                   State <span style={{ fontWeight: 800 }}>*</span>
                   <Input
                     required
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("state", { required: true })}
                     placeholder=""
                     type="text"
@@ -300,7 +300,7 @@ const CompanyRegistration = ({
                   Zip code <span style={{ fontWeight: 800 }}>*</span>
                   <Input
                     required
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     {...register("postal_code", { required: true })}
                     placeholder=""
                     type="text"
@@ -332,7 +332,7 @@ const CompanyRegistration = ({
                   Industry <span style={{ fontWeight: 800 }}>*</span>
                   <AutoComplete
                     className="custom-autocomplete" // Add a custom className here
-                    disabled={loadingStatus || matchCompany()}
+                    disabled={loadingStatus || companyExists}
                     variant="outlined"
                     style={{
                       ...AntSelectorStyle,
@@ -388,11 +388,11 @@ const CompanyRegistration = ({
                   <BlueButtonComponent
                     buttonType="button"
                     func={() => handleAddLocation()}
-                    disabled={matchCompany()}
+                    disabled={companyExists}
                     title="Add"
                     styles={{
                       background: `${
-                        matchCompany()
+                        companyExists
                           ? "var(--disabled-blue-button)"
                           : "var(--blue-dark-600)"
                       }`,
@@ -596,13 +596,13 @@ const CompanyRegistration = ({
               >
                 <BlueButtonComponent
                   loadingState={loadingStatus}
-                  disabled={loadingStatus || matchCompany()}
+                  disabled={loadingStatus || companyExists}
                   buttonType="submit"
                   title={!loadingStatus ? "Register" : "Loading"}
                   styles={{
                     width: "100%",
                     background: `${
-                      matchCompany()
+                      companyExists
                         ? "var(--disabled-blue-button)"
                         : "var(--blue-dark-600)"
                     }`,
