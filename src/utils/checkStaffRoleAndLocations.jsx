@@ -1,5 +1,14 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
+import { deriveRoleType } from "../pages/authentication/utils/loginUtils";
+
+// Roles with full inventory access regardless of location assignments.
+// Mirrors the SQL company_staff table: roles 0 (root_admin), 1 (admin), 4 (inventory_manager).
+const FULL_INVENTORY_ACCESS_ROLES = new Set([
+  "root_admin",
+  "admin",
+  "inventory_manager",
+]);
 
 /**
  * A hook to process the current user's role and location-based permissions.
@@ -51,14 +60,14 @@ export const useStaffRoleAndLocations = () => {
     }
 
     const { role = "2", super_user = false, preference } = employeeRecord;
-    const isAdmin = role === "0" || super_user === true;
+    const roleType = deriveRoleType(employeeRecord);
+    const isAdmin = FULL_INVENTORY_ACCESS_ROLES.has(roleType) || super_user === true;
 
-    // Admins have all permissions; we don't need to parse the locations.
-    // The consuming component should use the `isAdmin` flag to bypass location-based checks.
     if (isAdmin) {
       return {
-        ...defaultState, // Start with default empty permission arrays
+        ...defaultState,
         role,
+        roleType,
         isAdmin: true,
         employee: employeeRecord,
       };
@@ -89,8 +98,19 @@ export const useStaffRoleAndLocations = () => {
         }
       }
     }
+
+    // Backward-compat fallback: records saved before view defaulted to true
+    // will have view:false, leaving locationsViewPermission empty. If the user
+    // has assigned locations but none have view:true, grant view to all of them.
+    if (locationPermissions.view.length === 0 && managerLocations.length > 0) {
+      locationPermissions.view = managerLocations
+        .filter((loc) => loc.location)
+        .map((loc) => loc.location);
+    }
+
     return {
       role,
+      roleType,
       isAdmin: false,
       employee: employeeRecord,
       permissionsByLocation,
