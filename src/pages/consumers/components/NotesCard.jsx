@@ -3,6 +3,7 @@ import { Grid } from "@mui/material";
 import { Card, Tooltip } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { resolveRoleType } from "../../../config/roles";
 import UpdateListOfNotesPerConsumer from "./ModalDeleteNote";
 import AddNoteModal from "./AddNoteModal";
 
@@ -23,9 +24,7 @@ const NotesRendering = ({ props, title }) => {
   const [openDeleteNoteModal, setOpenDeleteNoteModal] = useState(false);
   const [openAddNoteModal, setOpenAddNoteModal] = useState(false);
 
-  const isAdmin =
-    user.companyData.employees.filter((ele) => ele.user === user.email)[0]
-      ?.role < 1;
+  const isAdmin = resolveRoleType(user) === "root_admin";
 
   const notesForCompany = props
     .slice()
