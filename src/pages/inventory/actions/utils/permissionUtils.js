@@ -1,3 +1,6 @@
+import { isCoordinatorLevel } from "../../../../config/roles";
+import { deriveRoleType } from "../../../authentication/utils/loginUtils";
+
 /**
  * permissionUtils.js
  * Centralized permission validation for inventory operations.
@@ -42,15 +45,12 @@ export const getUserPermissions = (user, companyData) => {
     };
   }
 
-  const role = employee.role;
+  const roleType = deriveRoleType(employee);
 
-  // Role 0: Admin/Owner - Full Access
-  // SPECIAL PERMISSION CHECK: Bypasses all location-based restrictions
-  // Returns permittedLocations as null to indicate "ALL" (no filtering required)
-  if (role === 0 || role === "0") {
+  if (isCoordinatorLevel(roleType)) {
     return {
       hasFullAccess: true,
-      permittedLocations: null, // null explicitly indicates unrestricted access
+      permittedLocations: null,
       managerLocation: null,
     };
   }
