@@ -33,81 +33,100 @@ export const LEGACY_ROLE_MAP = {
 };
 
 // ─── Role groups (internal — not exported) ───────────────────────────────────
-const FULL_ACCESS = ["root_admin", "admin", "sale_manager"];
-const EVENT_ACCESS = [...FULL_ACCESS, "event_manager"];
-const INVENTORY_ACCESS = [...FULL_ACCESS, "inventory_manager"];
-const TRANSACTION_ACCESS = [...EVENT_ACCESS, "assistant"];
 const ALL_ROLES = Object.values(ROLE_TYPES);
+
+// Full administrative access: root_admin + admin only
+const ADMIN_FULL = ["root_admin", "admin"];
+
+// Event domain:
+//   CRU — assistant can Create/Read/Update but not Delete
+//   D   — Delete requires event_manager or higher
+const EVENT_CRU = ["root_admin", "admin", "event_manager", "assistant"];
+const EVENT_D   = ["root_admin", "admin", "event_manager"];
+
+// sale_manager has Read + Update on events (no Create/Delete)
+const EVENT_RU  = ["root_admin", "admin", "sale_manager", "event_manager", "assistant"];
+
+// Inventory domain:
+//   CD — Create/Delete: inventory_manager + admins (no sale_manager)
+//   RU — Read/Update: also includes sale_manager
+const INVENTORY_CD = ["root_admin", "admin", "inventory_manager"];
+const INVENTORY_RU = ["root_admin", "admin", "sale_manager", "inventory_manager"];
+
+// Posts: event_manager + inventory_manager
+const POSTS_ACCESS = ["root_admin", "admin", "event_manager", "inventory_manager"];
 
 // ─── Permission matrix ────────────────────────────────────────────────────────
 // Key:   "domain:action"
 // Value: array of roleType strings allowed to perform that action.
-//
-// inventory_manager access to inventory/locations can be further scoped to
-// specific locations via staff_location_access (SQL) — this matrix controls
-// whether the user can access the domain at all; location filtering is applied
-// separately in accessControlUtils.filterDataByRoleAndPreference.
 export const PERMISSIONS = {
-  // Staff
-  "staff:create": FULL_ACCESS,
+  // Staff — CRUD only for root_admin + admin
+  "staff:create": ADMIN_FULL,
   "staff:read": ALL_ROLES,
-  "staff:update": FULL_ACCESS,
-  "staff:delete": FULL_ACCESS,
-  "staff:assign_role": FULL_ACCESS,
-  "staff:assign_devices": FULL_ACCESS,
-  "staff:assign_event": FULL_ACCESS,
-  "staff:assign_location": FULL_ACCESS,
-  "staff:change_role": FULL_ACCESS,
+  "staff:update": ADMIN_FULL,
+  "staff:delete": ADMIN_FULL,
+  "staff:assign_role": ADMIN_FULL,
+  "staff:assign_devices": ADMIN_FULL,
+  "staff:assign_event": ADMIN_FULL,
+  "staff:assign_location": ADMIN_FULL,
+  "staff:change_role": ADMIN_FULL,
   "staff:reset_password": ALL_ROLES,
   "staff:update_contact": ALL_ROLES,
-  "staff:grant_access": FULL_ACCESS,
+  "staff:grant_access": ADMIN_FULL,
 
-  // Inventory
-  "inventory:create": INVENTORY_ACCESS,
-  "inventory:read": INVENTORY_ACCESS,
-  "inventory:update": INVENTORY_ACCESS,
-  "inventory:delete": INVENTORY_ACCESS,
-  "inventory:assign_location": INVENTORY_ACCESS,
-  "inventory:manage_location": INVENTORY_ACCESS,
+  // Inventory — sale_manager: R/U only (no Create/Delete)
+  "inventory:create": INVENTORY_CD,
+  "inventory:read": INVENTORY_RU,
+  "inventory:update": INVENTORY_RU,
+  "inventory:delete": INVENTORY_CD,
+  "inventory:assign_location": INVENTORY_CD,
+  "inventory:manage_location": INVENTORY_CD,
 
-  // Locations
-  "location:create": INVENTORY_ACCESS,
-  "location:read": INVENTORY_ACCESS,
-  "location:update": INVENTORY_ACCESS,
-  "location:delete": INVENTORY_ACCESS,
+  // Locations — inventory_manager + admins only (sale_manager has no location access)
+  "location:create": INVENTORY_CD,
+  "location:read": INVENTORY_CD,
+  "location:update": INVENTORY_CD,
+  "location:delete": INVENTORY_CD,
 
-  // Events
-  "event:create": EVENT_ACCESS,
-  "event:read": EVENT_ACCESS,
-  "event:update": EVENT_ACCESS,
-  "event:delete": EVENT_ACCESS,
+  // Events — sale_manager: R/U only; assistant: C/R/U (no Delete)
+  "event:create": EVENT_CRU,
+  "event:read": EVENT_RU,
+  "event:update": EVENT_RU,
+  "event:delete": EVENT_D,
 
-  // Consumers
-  "consumer:create": EVENT_ACCESS,
-  "consumer:read": EVENT_ACCESS,
-  "consumer:update": EVENT_ACCESS,
-  "consumer:delete": EVENT_ACCESS,
+  // Consumers — event_manager: CRUD; assistant: C/R/U (no Delete)
+  "consumer:create": EVENT_CRU,
+  "consumer:read": EVENT_CRU,
+  "consumer:update": EVENT_CRU,
+  "consumer:delete": EVENT_D,
 
-  // Transactions
-  "transaction:create": TRANSACTION_ACCESS,
-  "transaction:read": TRANSACTION_ACCESS,
-  "transaction:update": TRANSACTION_ACCESS,
-  "transaction:delete": [...FULL_ACCESS, "assistant"],
+  // Transactions — event_manager: CRUD; assistant: C/R/U (no Delete)
+  "transaction:create": EVENT_CRU,
+  "transaction:read": EVENT_CRU,
+  "transaction:update": EVENT_CRU,
+  "transaction:delete": EVENT_D,
+
+  // Posts — event_manager + inventory_manager: CRUD
+  "post:create": POSTS_ACCESS,
+  "post:read": POSTS_ACCESS,
+  "post:update": POSTS_ACCESS,
+  "post:delete": POSTS_ACCESS,
 
   // Navigation
   "nav:home": ALL_ROLES,
-  "nav:inventory": INVENTORY_ACCESS,
-  "nav:events": TRANSACTION_ACCESS,
-  "nav:consumers": EVENT_ACCESS,
-  "nav:staff": [...FULL_ACCESS, "event_manager", "inventory_manager"],
-  "nav:posts": ALL_ROLES,
+  "nav:inventory": INVENTORY_RU,
+  "nav:events": EVENT_RU,
+  "nav:consumers": EVENT_CRU,
+  "nav:staff": ADMIN_FULL,
+  "nav:posts": POSTS_ACCESS,
+  "nav:dynamic_section": EVENT_D,
   "nav:profile": ALL_ROLES,
 
   // Profile settings
-  "profile:company_settings": FULL_ACCESS,
+  "profile:company_settings": ADMIN_FULL,
   "profile:billing": ["root_admin"],
   "profile:subscription": ["root_admin"],
-  "profile:staff_settings": FULL_ACCESS,
+  "profile:staff_settings": ADMIN_FULL,
 };
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
@@ -150,9 +169,9 @@ export const getRoleLabel = (roleType) => {
   return ROLE_LABELS[roleType] ?? roleType;
 };
 
-/** True for root_admin, admin, sale_manager (levels 0–2 — full CRUD access). */
+/** True for root_admin and admin (levels 0–1) — full administrative access. */
 export const isCoordinatorLevel = (roleType) =>
-  (ROLE_LEVELS[roleType] ?? 99) <= 2;
+  (ROLE_LEVELS[roleType] ?? 99) <= 1;
 
 /** True only for assistant (lowest privilege). */
 export const isAssistant = (roleType) => roleType === "assistant";
