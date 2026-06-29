@@ -80,12 +80,14 @@ export const buildSetPermissionsPayload = ({ company, role, roleType, locations 
  */
 export const buildActiveCompaniesFromSQL = (sqlCompanies) => {
   if (!Array.isArray(sqlCompanies)) return [];
-  return sqlCompanies.map(({ company_name, role_level, roleType, locations }) => ({
-    company: company_name,
-    role: role_level,
-    roleType,
-    locations: locations ?? [],
-  }));
+  return sqlCompanies
+    .filter(({ company_name }) => company_name)
+    .map(({ company_name, role_level, roleType, locations }) => ({
+      company: company_name,
+      role: role_level,
+      roleType,
+      locations: locations ?? [],
+    }));
 };
 
 /**
