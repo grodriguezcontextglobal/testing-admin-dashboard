@@ -1,28 +1,45 @@
 // ─── Role type discriminators ─────────────────────────────────────────────────
 export const ROLE_TYPES = {
+  // Legacy strings — kept for backward compat with existing DB records
   ROOT_ADMIN: "root_admin",
   ADMIN: "admin",
   SALE_MANAGER: "sale_manager",
   EVENT_MANAGER: "event_manager",
   INVENTORY_MANAGER: "inventory_manager",
   ASSISTANT: "assistant",
+  // F-01: new canonical strings
+  ROOT_ADMINISTRATOR: "root_administrator",
+  SALES_ASSOCIATE: "sales_associate",
+  MANAGER_EVENT: "manager_event",
+  MANAGER_INVENTORY: "manager_inventory",
+  ASSOCIATE_INVENTORY: "associate_inventory",
+  EVENT_ASSISTANT: "event_assistant",
 };
 
 // ─── Role levels ─────────────────────────────────────────────────────────────
 // Unique numeric identifier per role, mirroring the DB enum ordinal.
 export const ROLE_LEVELS = {
+  // Legacy strings
   root_admin: 0,
   admin: 1,
   sale_manager: 2,
   event_manager: 3,
   inventory_manager: 4,
   assistant: 5,
+  // F-01: new canonical strings (same levels as their legacy counterparts)
+  root_administrator: 0,
+  sales_associate: 2,
+  manager_event: 3,
+  manager_inventory: 4,
+  associate_inventory: 5,
+  event_assistant: 6,
 };
 
 // ─── Legacy numeric map ───────────────────────────────────────────────────────
 // Direct 1:1 mapping: numeric role value → roleType string.
 // Used by deriveRoleType (login) and resolveRoleType (runtime fallback) to handle
 // DB records that have a numeric role but no roleType string yet.
+// DO NOT change these values — they mirror existing DB records.
 export const LEGACY_ROLE_MAP = {
   0: "root_admin",
   1: "admin",
@@ -30,6 +47,19 @@ export const LEGACY_ROLE_MAP = {
   3: "event_manager",
   4: "inventory_manager",
   5: "assistant",
+};
+
+// ─── Role upgrade map (F-01) ─────────────────────────────────────────────────
+// Maps legacy roleType strings → new canonical strings.
+// Used in F-06 migration to upgrade individual staff records.
+// Not used by resolveRoleType — old strings remain valid during the transition.
+export const ROLE_UPGRADE_MAP = {
+  root_admin: "root_administrator",
+  admin: "admin",
+  sale_manager: "sales_associate",
+  event_manager: "manager_event",
+  inventory_manager: "manager_inventory",
+  assistant: "associate_inventory",
 };
 
 // ─── Role groups (internal — not exported) ───────────────────────────────────
@@ -127,6 +157,23 @@ export const PERMISSIONS = {
   "profile:billing": ["root_admin"],
   "profile:subscription": ["root_admin"],
   "profile:staff_settings": ADMIN_FULL,
+
+  // ── F-01: new permission keys — no roles assigned yet ───────────────────────
+  // Members domain (F-02 will assign roles)
+  "member:create": [],
+  "member:read": [],
+  "member:update": [],
+  "member:delete": [],
+  "nav:members": [],
+
+  // Events — quickGlance scope (F-04 will assign event_assistant)
+  "event:quickGlance_read": [],
+  "event:quickGlance_update": [],
+
+  // Transactions — Stripe scope (F-04 will assign event_assistant)
+  "transaction:stripe_create": [],
+  "transaction:stripe_read": [],
+  "transaction:stripe_update": [],
 };
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
@@ -156,12 +203,20 @@ export const hasPermission = (action, roleType) => {
 
 // ─── Display labels ───────────────────────────────────────────────────────────
 export const ROLE_LABELS = {
+  // Legacy strings
   root_admin: "Root Administrator",
   admin: "Administrator",
   sale_manager: "Sale Manager",
   event_manager: "Event Manager",
   inventory_manager: "Inventory Manager",
   assistant: "Assistant",
+  // F-01: new canonical strings
+  root_administrator: "Root Administrator",
+  sales_associate: "Sales Associate",
+  manager_event: "Event Manager",
+  manager_inventory: "Inventory Manager",
+  associate_inventory: "Inventory Associate",
+  event_assistant: "Event Assistant",
 };
 
 export const getRoleLabel = (roleType) => {
