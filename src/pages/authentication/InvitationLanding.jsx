@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { FormLabel, Grid, InputAdornment, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -14,9 +15,9 @@ import FooterComponent from "../../components/general/FooterComponent";
 import HidenIcon from "../../components/icons/HidenIcon";
 import VisibleIcon from "../../components/icons/VisibleIcon";
 import { onLogin } from "../../store/slices/adminSlice";
-
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
+import { LEGACY_ROLE_MAP } from "../../config/roles";
 import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
 import "./style/authStyle.css";
 
@@ -27,331 +28,180 @@ const InvitationLanding = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMatch, setPasswordMatch] = useState(true);
+  const [acceptanceTermsAndPoliciesResult, setAcceptanceTermsAndPoliciesResult] = useState(null);
 
   // URL parameters
-  const firstName = new URLSearchParams(window.location.search).get("first");
-  const lastName = new URLSearchParams(window.location.search).get("last");
-  const email = new URLSearchParams(window.location.search).get("email");
-  const company = new URLSearchParams(window.location.search).get("company");
-  const role = new URLSearchParams(window.location.search).get("role");
-  const [
-    acceptanceTermsAndPoliciesResult,
-    setAcceptanceTermsAndPoliciesResult,
-  ] = useState(null);
-  // Form setup with proper destructuring
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      firstName,
-      lastName,
-      email,
-      role,
-      password: "",
-      password2: "",
-    },
+  const params    = new URLSearchParams(window.location.search);
+  const firstName = params.get("first");
+  const lastName  = params.get("last");
+  const email     = params.get("email");
+  const company   = params.get("company");
+  const role      = params.get("role"); // numérico legado — mantener para compatibilidad
+  // roleType: preferir el string explícito; si no existe, convertir el numérico con LEGACY_ROLE_MAP
+  const roleType  = params.get("roleType") ?? LEGACY_ROLE_MAP[Number(role)] ?? "assistant";
+
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+    defaultValues: { firstName, lastName, email, role, password: "", password2: "" },
   });
 
-  // Watch password fields for validation
-  const watchPassword = watch("password");
+  const watchPassword  = watch("password");
   const watchPassword2 = watch("password2");
 
-  // Media queries
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)",
-  );
+  const isMediumDevice = useMediaQuery("only screen and (min-width : 769px) and (max-width : 992px)");
 
-  // Hooks
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const newUser = useRef(null);
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
+  const newUser   = useRef(null);
   const [messageApi, contextHolder] = message.useMessage();
 
-  // API queries
+  // ── API queries ─────────────────────────────────────────────────────────────
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
-    queryFn: () => devitrakApi.post("/staff/__staff-search", { email: email }),
-    enabled: !!email,
-    staleTime: 60 * 60,
-  });
-
-  const sqlSavedStaffQuery = useQuery({
-    queryKey: ["sqlStaffMember"],
-    queryFn: () =>
-      devitrakApi.post("/db_staff/consulting-member", { email: email }),
+    queryFn: () => devitrakApi.post("/staff/__staff-search", { email }),
     enabled: !!email,
     staleTime: 60 * 60,
   });
 
   const companiesQuery = useQuery({
     queryKey: ["companyListQuery"],
-    queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: company,
-      }),
+    queryFn: () => devitrakApi.post("/company/search-company", { _id: company }),
     enabled: !!email,
     staleTime: 60 * 60,
   });
 
-  // Password strength calculation
+  // ── Derivaciones ────────────────────────────────────────────────────────────
+  const existingUser = useMemo(() => {
+    const users = allStaffSavedQuery.data?.data?.adminUsers ?? [];
+    if (users.length === 0) return null;
+    const found = users.at(-1);
+    newUser.current = found;
+    return found;
+  }, [allStaffSavedQuery.data]);
+
+  const isNewUser = allStaffSavedQuery.isSuccess && existingUser === null;
+
+  // T&C modal solo para usuario nuevo
+  const shouldShowDrawer = useMemo(() => {
+    return first && isNewUser && !!companiesQuery.data;
+  }, [first, isNewUser, companiesQuery.data]);
+
+  // ── Password helpers ─────────────────────────────────────────────────────────
   const calculatePasswordStrength = (password) => {
     if (!password) return 0;
-
-    let strength = 0;
     const checks = [
-      password.length >= 8, // Length check
-      /[a-z]/.test(password), // Lowercase
-      /[A-Z]/.test(password), // Uppercase
-      /\d/.test(password), // Numbers
-      /[!@#$%^&*(),.?":{}|<>]/.test(password), // Special characters
+      password.length >= 8,
+      /[a-z]/.test(password),
+      /[A-Z]/.test(password),
+      /\d/.test(password),
+      /[!@#$%^&*(),.?":{}|<>]/.test(password),
     ];
-
-    strength = (checks.filter(Boolean).length / checks.length) * 100;
-    return Math.round(strength);
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   };
 
-  // Password strength info
   const getStrengthInfo = (strength) => {
-    if (strength < 40) {
-      return { text: "Weak", color: "#ff4d4f" };
-    } else if (strength < 70) {
-      return { text: "Fair", color: "#faad14" };
-    } else if (strength < 90) {
-      return { text: "Good", color: "#52c41a" };
-    } else {
-      return { text: "Strong", color: "#389e0d" };
-    }
+    if (strength < 40) return { text: "Weak",   color: "#ff4d4f" };
+    if (strength < 70) return { text: "Fair",   color: "#faad14" };
+    if (strength < 90) return { text: "Good",   color: "#52c41a" };
+    return               { text: "Strong", color: "#389e0d" };
   };
 
   const strengthInfo = getStrengthInfo(passwordStrength);
 
-  // Update password strength when password changes
   useEffect(() => {
-    if (watchPassword) {
-      const strength = calculatePasswordStrength(watchPassword);
-      setPasswordStrength(strength);
-    } else {
-      setPasswordStrength(0);
-    }
+    setPasswordStrength(watchPassword ? calculatePasswordStrength(watchPassword) : 0);
   }, [watchPassword]);
 
-  // Update password match when passwords change
   useEffect(() => {
-    if (watchPassword && watchPassword2) {
-      setPasswordMatch(watchPassword === watchPassword2);
-    } else {
-      setPasswordMatch(true);
-    }
+    if (watchPassword && watchPassword2) setPasswordMatch(watchPassword === watchPassword2);
+    else setPasswordMatch(true);
   }, [watchPassword, watchPassword2]);
 
-  // Determine if drawer should show
-  const shouldShowDrawer = useMemo(() => {
-    if (!allStaffSavedQuery.data || !companiesQuery.data) {
-      return false;
-    }
-
-    const userExistsInOtherCompany =
-      allStaffSavedQuery.data.data.adminUsers &&
-      allStaffSavedQuery.data.data.adminUsers.length > 0;
-
-    return first && !userExistsInOtherCompany;
-  }, [first, allStaffSavedQuery.data, companiesQuery.data]);
-
-  // Warning message function
+  // ── Helpers de API ───────────────────────────────────────────────────────────
   const warning = (type, content) => {
-    messageApi.open({
-      type: type,
-      content: content,
-      onClose: () => {
-        setValue("password", "");
-        setValue("password2", "");
-      },
-    });
+    messageApi.open({ type, content });
   };
 
-  // Helper functions
-  const displayMaskedPassword = (password) => {
-    return "*".repeat(password.length);
-  };
-
-  const checkIfUserExistsInOtherCompany = () => {
-    if (
-      allStaffSavedQuery.data?.data?.adminUsers &&
-      allStaffSavedQuery.data.data.adminUsers.length > 0
-    ) {
-      const existingUser = allStaffSavedQuery.data.data.adminUsers.at(-1);
-      newUser.current = existingUser;
-      return existingUser;
-    }
-    return null;
-  };
-
-  // Set password values for existing users - moved to useEffect to prevent infinite re-renders
-  useEffect(() => {
-    const existingUser = checkIfUserExistsInOtherCompany();
-    if (existingUser) {
-      setValue("password", displayMaskedPassword(existingUser.password));
-      setValue("password2", displayMaskedPassword(existingUser.password));
-    }
-  }, [allStaffSavedQuery.data, setValue]);
-
-  const createNewStaffSQL = async () => {
-    return await devitrakApi.post("/db_staff/new_member", {
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
-      phone_number: "000-000-0000",
-    });
-  };
-
-  const checkStaffInSQLDatabase = () => {
-    if (sqlSavedStaffQuery.data?.data?.member?.length === 0) {
-      return createNewStaffSQL();
-    }
-  };
-
-  const updateExistingUser = async () => {
-    if (!companiesQuery.data?.data?.company) return;
-
+  // Endpoint consolidado: maneja MongoDB + SQL (staff_member + company_staff) en un solo call
+  const callAcceptInvitation = async (password = undefined) => {
     const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
-    const resp = await devitrakApi.patch(
-      `/staff/edit-admin/${newUser.current.id}`,
-      {
-        multipleCompanies: true,
-        companiesAssigned: [
-          ...newUser.current.companiesAssigned,
-          {
-            company: hostCompanyInfo.company_name,
-            active: true,
-            super_user: false,
-            role: role,
-          },
-        ],
+    const payload = {
+      user: {
+        name: firstName,
+        lastName,
+        email,
+        ...(password ? { password } : {}),
       },
-    );
-    if (resp.data.ok) {
-      const findInvitedStaff = hostCompanyInfo.employees.findIndex(
-        (element) => element.user === email,
-      );
-      const employeesInCompany = [...hostCompanyInfo.employees];
-      employeesInCompany[findInvitedStaff] = {
-        ...employeesInCompany[findInvitedStaff],
-        status: "Confirmed",
-      };
-      const t = await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
-        employees: employeesInCompany,
-      });
-      console.log(t)
-      return;
-    }
-  };
-
-  const createNewUser = async (props) => {
-    if (!companiesQuery.data?.data?.company) return;
-
-    const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
-    const templateNewUser = {
-      name: firstName,
-      lastName: lastName,
-      email: email,
-      password: props.password,
-      question: "What is the name of the company",
-      answer: hostCompanyInfo.company_name,
-      role: role,
-      company: hostCompanyInfo.company_name,
-      companiesAssigned: [
-        {
-          company: hostCompanyInfo.company_name,
-          active: true,
-          super_user: false,
-          role: role,
-        },
-      ],
+      company: { company_name: hostCompanyInfo.company_name },
+      roleType,
     };
-
-    const resp = await devitrakApi.post(
-      "/admin/new_admin_user",
-      templateNewUser,
-    );
-
-    if (resp.data.ok) {
-      await devitrakApi.patch(
-        `/devitrak/${acceptanceTermsAndPoliciesResult.acceptanceInfo.id}`,
-        {
-          staff_id: resp.data.uid,
-          email: email,
-        },
-      );
-      const findInvitedStaff = hostCompanyInfo.employees.findIndex(
-        (element) => element.user === email,
-      );
-      const employeesInCompany = [...hostCompanyInfo.employees];
-      employeesInCompany[findInvitedStaff] = {
-        ...employeesInCompany[findInvitedStaff],
-        email: resp.data.email,
-        employee_id: resp.data.uid,
-        status: "Confirmed",
-      };
-      await devitrakApi.patch(`/company/update-company/${hostCompanyInfo.id}`, {
-        employees: employeesInCompany,
-      });
-      await createNewStaffSQL();
-    }
+    const resp = await devitrakApi.post("/registration/accept-invitation", payload);
+    return resp.data;
   };
 
-  const completeSubmitInfo = async (data) => {
+  // Para usuario existente: también actualiza companiesAssigned en MongoDB
+  const linkExistingUserToCompany = async () => {
+    const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
+    await devitrakApi.patch(`/staff/edit-admin/${existingUser.id}`, {
+      multipleCompanies: true,
+      companiesAssigned: [
+        ...(existingUser.companiesAssigned ?? []),
+        { company: hostCompanyInfo.company_name, active: true, super_user: false, role },
+      ],
+    });
+  };
+
+  // ── Submit ───────────────────────────────────────────────────────────────────
+  const handleAcceptInvitation = async () => {
     try {
       setLoadingStatus(true);
-
-      if (checkIfUserExistsInOtherCompany()) {
-        await updateExistingUser();
-      } else {
-        if (data.password !== data.password2) {
-          setLoadingStatus(false);
-          return warning("error", "Passwords must match.");
-        }
-        await createNewUser(data);
-      }
-
-      await checkStaffInSQLDatabase();
-      warning(
-        "success",
-        "Process completed successfully. Please go to log in to log in into your account.",
-      );
-      return navigate("/login", { replace: true });
+      await Promise.all([
+        callAcceptInvitation(),        // MongoDB employees + SQL staff_member + company_staff
+        linkExistingUserToCompany(),   // companiesAssigned en AdminUser MongoDB
+      ]);
+      warning("success", "Invitation accepted. Please sign in to access your account.");
+      navigate("/login", { replace: true });
     } catch (error) {
-      console.error("Registration error:", error);
-      warning("error", "Something went wrong. Please try later.");
+      console.error("Invitation accept error:", error);
+      warning("error", error?.response?.data?.msg ?? "Something went wrong. Please try later.");
       setLoadingStatus(false);
     }
   };
 
-  const closingModal = () => {
-    return setFirst(false);
+  const handleNewUserSubmit = async (data) => {
+    if (data.password !== data.password2) {
+      return warning("error", "Passwords must match.");
+    }
+    try {
+      setLoadingStatus(true);
+      const result = await callAcceptInvitation(data.password);
+      // Actualizar T&C si aplica
+      if (acceptanceTermsAndPoliciesResult?.acceptanceInfo?.id && result.user?.uid) {
+        await devitrakApi.patch(`/devitrak/${acceptanceTermsAndPoliciesResult.acceptanceInfo.id}`, {
+          staff_id: result.user.uid,
+          email,
+        }).catch(() => {});
+      }
+      warning("success", "Registration complete. Please sign in to access your account.");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Registration error:", error);
+      warning("error", error?.response?.data?.msg ?? "Something went wrong. Please try later.");
+      setLoadingStatus(false);
+    }
   };
 
-  // Loading state
-  if (!allStaffSavedQuery.data || !companiesQuery.data) {
+  // ── Loading ──────────────────────────────────────────────────────────────────
+  if (!allStaffSavedQuery.isSuccess || !companiesQuery.isSuccess) {
     return (
       <>
         {contextHolder}
-        <Grid
-          style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
-          container
-        >
-          <Grid
-            item
-            xs={12}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Typography>Loading...</Typography>
+        <Grid style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }} container>
+          <Grid item xs={12} display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap={2}>
+            <Icon icon="svg-spinners:ring-resize" width={40} height={40} color="#155eef" />
+            <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter" }}>
+              Verifying your invitation...
+            </Typography>
           </Grid>
         </Grid>
       </>
@@ -360,417 +210,260 @@ const InvitationLanding = () => {
 
   const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
 
+  // ── Existing user: pantalla de confirmación ──────────────────────────────────
+  if (existingUser) {
+    return (
+      <>
+        {contextHolder}
+        <Grid style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }} container>
+          <Grid
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            item
+            xs={12}
+            sm={12}
+            md={6}
+            lg={6}
+            style={{ padding: isSmallDevice ? "2rem 1rem" : "0 3rem" }}
+          >
+            <div style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* Header */}
+              <div>
+                <Typography style={{ color: "#101828", fontSize: "30px", fontFamily: "Inter", fontWeight: 600, lineHeight: "38px", marginBottom: "8px" }}>
+                  Welcome back!
+                </Typography>
+                <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
+                  You have been invited to join a new company.
+                </Typography>
+              </div>
+
+              {/* User info card */}
+              <div style={{ border: "1px solid #EAECF0", borderRadius: "12px", padding: "20px", backgroundColor: "#F9FAFB", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#EFF4FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon icon="mdi:account-outline" width={22} height={22} color="#155eef" />
+                  </div>
+                  <div>
+                    <Typography style={{ fontSize: "14px", fontWeight: 600, color: "#101828", fontFamily: "Inter" }}>
+                      {existingUser.name} {existingUser.lastName}
+                    </Typography>
+                    <Typography style={{ fontSize: "13px", color: "#667085", fontFamily: "Inter" }}>
+                      {email}
+                    </Typography>
+                  </div>
+                </div>
+
+                <div style={{ height: "1px", backgroundColor: "#EAECF0" }} />
+
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#EFF4FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon icon="mdi:office-building-outline" width={22} height={22} color="#155eef" />
+                  </div>
+                  <div>
+                    <Typography style={{ fontSize: "12px", color: "#667085", fontFamily: "Inter" }}>
+                      Invited to
+                    </Typography>
+                    <Typography style={{ fontSize: "14px", fontWeight: 600, color: "#101828", fontFamily: "Inter" }}>
+                      {hostCompanyInfo?.company_name}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info note */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", backgroundColor: "#EFF8FF", borderRadius: "8px", padding: "12px 16px", border: "1px solid #B2DDFF" }}>
+                <Icon icon="mdi:information-outline" width={18} height={18} color="#0086C9" style={{ marginTop: "2px", flexShrink: 0 }} />
+                <Typography style={{ fontSize: "13px", color: "#026AA2", fontFamily: "Inter", lineHeight: "20px" }}>
+                  Your existing account will be linked to this company. No password change required.
+                </Typography>
+              </div>
+
+              {/* Accept button */}
+              <BlueButtonComponent
+                title="Accept invitation"
+                func={handleAcceptInvitation}
+                disabled={loadingStatus}
+                loadingState={loadingStatus}
+                styles={{ width: "100%" }}
+              />
+
+              <Typography style={{ ...Subtitle, textAlign: "center" }}>
+                Not you?{" "}
+                <Link to="/login" style={{ color: "#004EEB", fontWeight: 600, fontSize: "14px", fontFamily: "Inter" }}>
+                  Sign in with a different account
+                </Link>
+              </Typography>
+            </div>
+          </Grid>
+
+          <Grid display={(isSmallDevice || isMediumDevice) ? "none" : "block"} id="section-img-login-component" item md={6} lg={6} />
+        </Grid>
+        <div style={{ position: "absolute", left: "50px", bottom: "25px" }}>
+          <FooterComponent />
+        </div>
+      </>
+    );
+  }
+
+  // ── New user: formulario de registro ─────────────────────────────────────────
   return (
     <>
       {contextHolder}
       {shouldShowDrawer && (
         <DevitrakTermsAndConditions
           open={shouldShowDrawer}
-          setOpen={() => closingModal()}
+          setOpen={() => setFirst(false)}
           navigate={navigate}
           company_id={company}
           staffMember={`${firstName} ${lastName}`}
-          setAcceptanceTermsAndPoliciesResult={
-            setAcceptanceTermsAndPoliciesResult
-          }
+          setAcceptanceTermsAndPoliciesResult={setAcceptanceTermsAndPoliciesResult}
           staffEmail={email}
         />
       )}
-      <Grid
-        style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
-        container
-      >
-        <Grid
-          display={"flex"}
-          flexDirection={"column"}
-          item
-          xs={12}
-          sm={12}
-          md={6}
-          lg={6}
-        >
+      <Grid style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }} container>
+        <Grid display="flex" flexDirection="column" item xs={12} sm={12} md={6} lg={6}>
           <Grid
             container
-            display={"flex"}
-            flexDirection={"column"}
-            justifyContent={"space-around"}
-            alignItems={"center"}
-            overflow={"auto"}
-            paddingBottom={0}
-            style={{
-              overflow: "auto",
-              height: "auto",
-            }}
+            display="flex"
+            flexDirection="column"
+            justifyContent="space-around"
+            alignItems="center"
+            style={{ overflow: "auto", height: "auto" }}
           >
             <Grid
               className="register-container"
-              display={"flex"}
-              flexDirection={"column"}
-              style={{ padding: `${isSmallDevice ? "0.5rem" : "0.5rem 2rem"}` }}
+              display="flex"
+              flexDirection="column"
+              style={{ padding: isSmallDevice ? "0.5rem" : "0.5rem 2rem" }}
               container
             >
-              <form
-                className="register-form-container"
-                onSubmit={handleSubmit(completeSubmitInfo)}
-              >
-                <Grid
-                  item
-                  xs={12}
-                  display={"flex"}
-                  flexDirection={"column"}
-                  justifyContent={"space-around"}
-                  alignItems={"center"}
-                >
-                  <Typography
-                    style={{
-                      color: "var(--gray900, #101828)",
-                      fontSize: "30px",
-                      fontFamily: "Inter",
-                      fontWeight: "600",
-                      lineHeight: "38px",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    {checkIfUserExistsInOtherCompany() !== null
-                      ? `Welcome back to devitrak App`
-                      : `Welcome to devitrak App`}
+              <form className="register-form-container" onSubmit={handleSubmit(handleNewUserSubmit)}>
+                {/* Header */}
+                <Grid item xs={12} display="flex" flexDirection="column" justifyContent="space-around" alignItems="center">
+                  <Typography style={{ color: "#101828", fontSize: "30px", fontFamily: "Inter", fontWeight: 600, lineHeight: "38px", marginBottom: "1rem" }}>
+                    Complete your registration
                   </Typography>
-                  <Typography
-                    style={{
-                      color: "var(--gray-500, #667085)",
-                      fontSize: "16px",
-                      fontFamily: "Inter",
-                      lineHeight: "24px",
-                    }}
-                  >
-                    Please enter your information
+                  <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
+                    You have been invited to <strong>{hostCompanyInfo?.company_name}</strong>. Set a password to finish.
                   </Typography>
                 </Grid>
 
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Email
-                  </FormLabel>
-                  <Input
-                    disabled
-                    value={email}
-                    placeholder="Enter your email"
-                    type="email"
-                    fullWidth
-                  />
-                  <Typography style={{ ...Subtitle, marginTop: "0.5rem" }}>
-                    You need to enter a password to complete registration
-                    process with the company invitation.
-                  </Typography>
+                {/* Email — disabled, from URL */}
+                <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
+                  <FormLabel style={{ marginBottom: "0.5rem" }}>Email</FormLabel>
+                  <Input disabled value={email} placeholder="Enter your email" type="email" fullWidth />
                 </Grid>
 
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
+                {/* Name — disabled, from URL */}
+                <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>Name</FormLabel>
-                  <Input
-                    disabled
-                    type="text"
-                    value={firstName}
-                    placeholder="Enter your name"
-                    fullWidth
-                  />
+                  <Input disabled value={firstName} type="text" placeholder="Enter your name" fullWidth />
                 </Grid>
 
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Last name
-                  </FormLabel>
-                  <Input
-                    disabled
-                    type="text"
-                    value={lastName}
-                    placeholder="Enter your last name"
-                    fullWidth
-                  />
+                {/* Last name — disabled, from URL */}
+                <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
+                  <FormLabel style={{ marginBottom: "0.5rem" }}>Last name</FormLabel>
+                  <Input disabled value={lastName} type="text" placeholder="Enter your last name" fullWidth />
                 </Grid>
 
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Company
-                  </FormLabel>
-                  <Grid
-                    item
-                    xs={12}
-                    display={"flex"}
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Input
-                      disabled
-                      type="text"
-                      value={hostCompanyInfo?.company_name || ""}
-                      placeholder="Company name"
-                      fullWidth
-                    />
-                  </Grid>
+                {/* Company — disabled */}
+                <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
+                  <FormLabel style={{ marginBottom: "0.5rem" }}>Company</FormLabel>
+                  <Input disabled value={hostCompanyInfo?.company_name || ""} type="text" placeholder="Company name" fullWidth />
                 </Grid>
 
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  {/* Password field: apply rules only if user does not exist */}
+                {/* Password */}
+                <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Password{" "}
-                    {!checkIfUserExistsInOtherCompany() && (
-                      <span style={{ fontWeight: 800 }}>*</span>
-                    )}
+                    Password <span style={{ fontWeight: 800 }}>*</span>
                   </FormLabel>
                   <Input
-                    disabled={
-                      loadingStatus ||
-                      checkIfUserExistsInOtherCompany() !== null
-                    }
-                    {...register(
-                      "password",
-                      checkIfUserExistsInOtherCompany()
-                        ? {}
-                        : {
-                          required: "Password is required",
-                          minLength: {
-                            value: 8,
-                            message: "Password must be at least 8 characters",
-                          },
-                          pattern: {
-                            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                            message:
-                              "Password must contain uppercase, lowercase, and number",
-                          },
-                        },
-                    )}
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: { value: 8, message: "Password must be at least 8 characters" },
+                      pattern: {
+                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/,
+                        message: "Password must contain uppercase, lowercase, number, and special character",
+                      },
+                    })}
                     error={!!errors.password}
                     helperText={errors.password?.message}
                     placeholder="Enter a strong password"
-                    required={!checkIfUserExistsInOtherCompany()}
+                    required
+                    disabled={loadingStatus}
                     type={showPassword ? "text" : "password"}
                     fullWidth
                     endAdornment={
-                      !checkIfUserExistsInOtherCompany() && (
-                        <InputAdornment position="end">
-                          <button
-                            type="button"
-                            style={{
-                              padding: 0,
-                              backgroundColor: "transparent",
-                              outline: "none",
-                              margin: 0,
-                              width: "fit-content",
-                              aspectRatio: "1",
-                              borderRadius: "50%",
-                              border: "none",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <VisibleIcon fill={"var(--blue-dark-600)"} />
-                            ) : (
-                              <HidenIcon stroke={"var(--blue-dark-600)"} />
-                            )}
-                          </button>
-                        </InputAdornment>
-                      )
+                      <InputAdornment position="end">
+                        <button
+                          type="button"
+                          style={{ padding: 0, backgroundColor: "transparent", outline: "none", margin: 0, width: "fit-content", aspectRatio: "1", borderRadius: "50%", border: "none", cursor: "pointer" }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <VisibleIcon fill="var(--blue-dark-600)" /> : <HidenIcon stroke="var(--blue-dark-600)" />}
+                        </button>
+                      </InputAdornment>
                     }
                   />
-                  {/* Password strength indicator only for new users */}
-                  {!checkIfUserExistsInOtherCompany() && watchPassword && (
+                  {watchPassword && (
                     <div style={{ marginTop: "8px" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        <Typography
-                          style={{
-                            fontSize: "12px",
-                            color: "#667085",
-                          }}
-                        >
-                          Password strength
-                        </Typography>
-                        <Typography
-                          style={{
-                            fontSize: "12px",
-                            color: strengthInfo.color,
-                            fontWeight: "500",
-                          }}
-                        >
-                          {strengthInfo.text}
-                        </Typography>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <Typography style={{ fontSize: "12px", color: "#667085" }}>Password strength</Typography>
+                        <Typography style={{ fontSize: "12px", color: strengthInfo.color, fontWeight: 500 }}>{strengthInfo.text}</Typography>
                       </div>
-                      <Progress
-                        percent={passwordStrength}
-                        strokeColor={strengthInfo.color}
-                        showInfo={false}
-                        size="small"
-                      />
-                      <div style={{ marginTop: "4px" }}>
-                        <Typography
-                          style={{
-                            fontSize: "11px",
-                            color: "#667085",
-                          }}
-                        >
-                          Use 8+ characters with uppercase, lowercase, numbers,
-                          and symbols
-                        </Typography>
-                      </div>
-                    </div>
-                  )}
-                </Grid>
-
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  item
-                  xs={12}
-                >
-                  {/* // Confirm password field: apply rules only if user does not exist */}
-                  <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Confirm password{" "}
-                    {!checkIfUserExistsInOtherCompany() && (
-                      <span style={{ fontWeight: 800 }}>*</span>
-                    )}
-                  </FormLabel>
-                  <Input
-                    required={!checkIfUserExistsInOtherCompany()}
-                    disabled={
-                      loadingStatus ||
-                      checkIfUserExistsInOtherCompany() !== null
-                    }
-                    {...register(
-                      "password2",
-                      checkIfUserExistsInOtherCompany()
-                        ? {}
-                        : {
-                          required: "Please confirm your password",
-                          validate: (value) =>
-                            value === watchPassword ||
-                            "Passwords do not match",
-                        },
-                    )}
-                    error={
-                      !checkIfUserExistsInOtherCompany() &&
-                      ((!passwordMatch && watchPassword2) || !!errors.password2)
-                    }
-                    helperText={
-                      !checkIfUserExistsInOtherCompany() &&
-                      errors.password2?.message
-                    }
-                    placeholder="Confirm your password"
-                    type={showConfirmPassword ? "text" : "password"}
-                    fullWidth
-                    endAdornment={
-                      !checkIfUserExistsInOtherCompany() && (
-                        <InputAdornment position="end">
-                          <button
-                            type="button"
-                            style={{
-                              padding: 0,
-                              backgroundColor: "transparent",
-                              outline: "none",
-                              margin: 0,
-                              width: "fit-content",
-                              aspectRatio: "1",
-                              borderRadius: "50%",
-                              border: "none",
-                              cursor: "pointer",
-                            }}
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                          >
-                            {showConfirmPassword ? (
-                              <VisibleIcon fill={"var(--blue-dark-600)"} />
-                            ) : (
-                              <HidenIcon stroke={"var(--blue-dark-600)"} />
-                            )}
-                          </button>
-                        </InputAdornment>
-                      )
-                    }
-                  />
-                  {/* Password match indicator only for new users */}
-                  {!checkIfUserExistsInOtherCompany() && watchPassword2 && (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginTop: "4px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          backgroundColor: passwordMatch
-                            ? "#52c41a"
-                            : "#ff4d4f",
-                          marginRight: "6px",
-                        }}
-                      />
-                      <Typography
-                        style={{
-                          fontSize: "12px",
-                          color: passwordMatch ? "#52c41a" : "#ff4d4f",
-                        }}
-                      >
-                        {passwordMatch
-                          ? "Passwords match"
-                          : "Passwords do not match"}
+                      <Progress percent={passwordStrength} strokeColor={strengthInfo.color} showInfo={false} size="small" />
+                      <Typography style={{ fontSize: "11px", color: "#667085", marginTop: "4px" }}>
+                        Use 8+ characters with uppercase, lowercase, numbers, and symbols
                       </Typography>
                     </div>
                   )}
                 </Grid>
 
-                <Grid
-                  marginY={"20px"}
-                  marginX={0}
-                  textAlign={"left"}
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  alignItems={"center"}
-                  item
-                  xs={12}
-                >
+                {/* Confirm password */}
+                <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
+                  <FormLabel style={{ marginBottom: "0.5rem" }}>
+                    Confirm password <span style={{ fontWeight: 800 }}>*</span>
+                  </FormLabel>
+                  <Input
+                    required
+                    disabled={loadingStatus}
+                    {...register("password2", {
+                      required: "Please confirm your password",
+                      validate: (value) => value === watchPassword || "Passwords do not match",
+                    })}
+                    error={(!passwordMatch && !!watchPassword2) || !!errors.password2}
+                    helperText={errors.password2?.message}
+                    placeholder="Confirm your password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    fullWidth
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <button
+                          type="button"
+                          style={{ padding: 0, backgroundColor: "transparent", outline: "none", margin: 0, width: "fit-content", aspectRatio: "1", borderRadius: "50%", border: "none", cursor: "pointer" }}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? <VisibleIcon fill="var(--blue-dark-600)" /> : <HidenIcon stroke="var(--blue-dark-600)" />}
+                        </button>
+                      </InputAdornment>
+                    }
+                  />
+                  {watchPassword2 && (
+                    <div style={{ display: "flex", alignItems: "center", marginTop: "4px" }}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: passwordMatch ? "#52c41a" : "#ff4d4f", marginRight: "6px" }} />
+                      <Typography style={{ fontSize: "12px", color: passwordMatch ? "#52c41a" : "#ff4d4f" }}>
+                        {passwordMatch ? "Passwords match" : "Passwords do not match"}
+                      </Typography>
+                    </div>
+                  )}
+                </Grid>
+
+                {/* Submit */}
+                <Grid marginY="20px" marginX={0} textAlign="left" display="flex" justifyContent="space-between" alignItems="center" item xs={12}>
                   <BlueButtonComponent
-                    title={"Submit registration"}
+                    title="Complete registration"
                     buttonType="submit"
                     disabled={loadingStatus}
                     styles={{ width: "100%" }}
@@ -778,48 +471,14 @@ const InvitationLanding = () => {
                   />
                 </Grid>
 
-                <Grid
-                  item
-                  xs={12}
-                  justifyContent={"center"}
-                  alignItems={"center"}
-                >
-                  <Typography
-                    style={{
-                      color: "var(--gray-600, #475467)",
-                      fontSize: "14px",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                    }}
-                  >
-                    Do you have an account already?{" "}
+                <Grid item xs={12} justifyContent="center" alignItems="center">
+                  <Typography style={{ color: "#475467", fontSize: "14px", fontFamily: "Inter", lineHeight: "20px" }}>
+                    Already have an account?{" "}
                     <Link to="/login">
                       <button
                         type="button"
-                        onClick={() =>
-                          dispatch(
-                            onLogin({
-                              name: "",
-                              lastName: "",
-                              email: "",
-                              password: "",
-                              company: "",
-                              role: "",
-                            }),
-                          )
-                        }
-                        style={{
-                          color: "#004EEB",
-                          fontSize: "14px",
-                          fontFamily: "Inter",
-                          fontWeight: "600",
-                          lineHeight: "20px",
-                          cursor: "pointer",
-                          backgroundColor: "transparent",
-                          border: "none",
-                          padding: "0",
-                          margin: "0",
-                        }}
+                        onClick={() => dispatch(onLogin({ name: "", lastName: "", email: "", password: "", company: "", role: "" }))}
+                        style={{ color: "#004EEB", fontSize: "14px", fontFamily: "Inter", fontWeight: 600, lineHeight: "20px", cursor: "pointer", backgroundColor: "transparent", border: "none", padding: 0, margin: 0 }}
                       >
                         Sign in
                       </button>
@@ -829,24 +488,11 @@ const InvitationLanding = () => {
               </form>
             </Grid>
           </Grid>
-          <div
-            style={{
-              position: "absolute",
-              left: "50px",
-              bottom: "25px",
-              width: "100%",
-            }}
-          >
+          <div style={{ position: "absolute", left: "50px", bottom: "25px", width: "100%" }}>
             <FooterComponent />
           </div>
         </Grid>
-        <Grid
-          display={(isSmallDevice || isMediumDevice) && "none"}
-          id="section-img-login-component"
-          item
-          md={6}
-          lg={6}
-        ></Grid>
+        <Grid display={(isSmallDevice || isMediumDevice) ? "none" : "block"} id="section-img-login-component" item md={6} lg={6} />
       </Grid>
     </>
   );
