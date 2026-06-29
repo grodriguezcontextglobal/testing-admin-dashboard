@@ -55,8 +55,16 @@ const MainAdminSettingPage = ({
     };
   }, []); //location.key, user.company, modalState, deletingStaffMembers
 
-  const handleDetailStaff = (record) => {
-    dispatch(onAddStaffProfile(record.entireData));
+  const handleDetailStaff = async (record) => {
+    const sqlStaff = await devitrakApi.post("/db_staff/consulting-member", {
+      email: record.email
+    })
+    const profile = sqlStaff.data.member.at(-1) ?? {}
+    const combinedData = {
+      ...record.entireData,
+      sql:profile,
+    }
+    dispatch(onAddStaffProfile(combinedData));
     return navigate(`/staff/${record.entireData.adminUserInfo.id}/main`);
   };
 
