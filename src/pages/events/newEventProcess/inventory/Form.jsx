@@ -6,12 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import Loading from "../../../../components/animation/Loading";
+import { isCoordinatorLevel } from "../../../../config/roles";
 import {
   onAddDeviceSetup,
   onAddExtraServiceListSetup,
 } from "../../../../store/slices/eventSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import "../../../../styles/global/ant-select.css";
@@ -35,14 +34,14 @@ const Form = () => {
   const [filled, setFilled] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { role, locationsAssignPermission } = useStaffRoleAndLocations();
+  const { roleType, locationsAssignPermission } = useStaffRoleAndLocations();
   const bodyFetchRequest = () => {
-    if (role === "0" || role === 0) {
+    if (isCoordinatorLevel(roleType)) {
       return {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
-        logistic_status:"in-stock"
+        logistic_status: "in-stock",
       };
     }
     return {
@@ -50,7 +49,7 @@ const Form = () => {
       warehouse: 1,
       enableAssignFeature: 1,
       location: locationsAssignPermission,
-      logistic_status:"in-stock"
+      logistic_status: "in-stock",
     };
   };
   // const itemQuery = useQuery({
@@ -189,35 +188,35 @@ const Form = () => {
     return navigate("/create-event-page/review-submit");
   };
 
-  const renderingStyle = () => {
-    if (filled) {
-      return {
-        button: {
-          ...BlueButton,
-          background: "var(--disabled-blue-button)",
-          width: "100%",
-          border: "transparent",
-        },
-        text: {
-          ...BlueButtonText,
-          color: "var(--danger-action)",
-          textTransform: "none",
-          textWrap: "balance",
-        },
-      };
-    } else {
-      return {
-        button: {
-          ...BlueButton,
-          width: "100%",
-        },
-        text: {
-          ...BlueButtonText,
-          textTransform: "none",
-        },
-      };
-    }
-  };
+  // const renderingStyle = () => {
+  //   if (filled) {
+  //     return {
+  //       button: {
+  //         ...BlueButton,
+  //         background: "var(--disabled-blue-button)",
+  //         width: "100%",
+  //         border: "transparent",
+  //       },
+  //       text: {
+  //         ...BlueButtonText,
+  //         color: "var(--danger-action)",
+  //         textTransform: "none",
+  //         textWrap: "balance",
+  //       },
+  //     };
+  //   } else {
+  //     return {
+  //       button: {
+  //         ...BlueButton,
+  //         width: "100%",
+  //       },
+  //       text: {
+  //         ...BlueButtonText,
+  //         textTransform: "none",
+  //       },
+  //     };
+  //   }
+  // };
 
   const handleExtraService = (data) => {
     const resulting = [...extraServiceAdded, data];
