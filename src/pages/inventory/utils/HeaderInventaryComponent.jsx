@@ -1,6 +1,5 @@
-import {
-  Grid,
-} from "@mui/material";
+import { Grid } from "@mui/material";
+import { isCoordinatorLevel } from "../../../config/roles";
 import { Dropdown } from "antd";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
@@ -43,19 +42,14 @@ const HeaderInventaryComponent = ({
   setOpenDeleteItemModal,
 }) => {
   const navigate = useNavigate();
-  const { role, locations } = useSelector((state) => state.permission);
-  // Check permissions
-  const canCreate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.create)
-  const canUpdate = role === "0" ? true : locations.some(item => item.preference.managerLocation.actions.update)
+  const { roleType, locations } = useSelector((state) => state.permission);
+  const fullAccess = isCoordinatorLevel(roleType);
+  const canCreate = fullAccess || locations.some((loc) => loc.can_create);
+  const canUpdate = fullAccess || locations.some((loc) => loc.can_update);
   const canManageDevices =
-    role === "0" ||
-    locations?.every(
-      (location) =>
-        location.actions?.create &&
-        location.actions?.assign &&
-        location.actions?.delete &&
-        location.actions?.transfer,
-    );
+    fullAccess ||
+    (locations.length > 0 &&
+      locations.every((loc) => loc.can_create && loc.can_update && loc.can_delete));
 
   const overflowMenuLabel = (icon, text) => (
     <span
