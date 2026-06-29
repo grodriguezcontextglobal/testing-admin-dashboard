@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
@@ -117,9 +116,9 @@ const ItemTable = ({
       devitrakApi.post(`/db_inventory/check-item`, {
         company_id: user.sqlInfo.company_id,
         role: Number(role),
-        preference: employee.preference,
+        preference: employee?.preference,
       }),
-    enabled: !!user.sqlInfo.company_id,
+    enabled: !!user.sqlInfo.company_id && !!employee,
     staleTime: 5 * 60 * 1000, // 50 minutes
     keepPreviousData: true,
   });
