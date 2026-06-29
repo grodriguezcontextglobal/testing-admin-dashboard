@@ -3,13 +3,14 @@ import { useState } from "react";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import "../../../../../../styles/global/ant-select.css";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
+import { isCoordinatorLevel } from "../../../../../../config/roles";
 import { useStaffRoleAndLocations } from "../../../../../../utils/checkStaffRoleAndLocations";
 import useSuppliersCompanyFetch from "./hook/useSuppliersCompanyFetch";
 import ReturnRentedItemModal from "./ReturnRentedItemModal";
 import useSuppliersFetch from "./SuppliersInfoFiltersComponent";
 
 const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
-  const { role } = useStaffRoleAndLocations();
+  const { roleType } = useStaffRoleAndLocations();
   const [returnRentedItemsToRenter, setReturnRentedItemsToRenter] =
     useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState(null);
@@ -30,9 +31,7 @@ const FilterBody = ({ setSearchedValueItem, setValue, resultedData }) => {
     return setValue("searchDevice", props);
   };
 
-  const checkingStaffRole = () => {
-    return role === "0";
-  };
+  const checkingStaffRole = () => isCoordinatorLevel(roleType);
 
   return (
     <div
