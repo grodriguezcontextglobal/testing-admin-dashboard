@@ -154,11 +154,11 @@ const ModalMultipleCompanies = ({
     const result = dataPassed.company_data.filter(
       (item) => item.company_name === props,
     );
-    const employeeRoleInCompany = result[0]?.employees.find(
+    const employeeRoleInCompany = result[0]?.employees?.find(
       (item) => item.user === dataPassed.respo.email,
     );
     return {
-      company_logo: result[0]?.company_logo,
+      company_logo: result[0]?.company_logo ?? "",
       employeeRoleInCompany: employeeRoleInCompany?.roleType,
     };
   };
@@ -293,7 +293,7 @@ const ModalMultipleCompanies = ({
           }}
           onChange={handleChange}
           options={[
-            ...dataPassed.companyInfo.map((item) => ({
+            ...dataPassed.companyInfo.filter((item) => item.company).map((item) => ({
               value: item.company,
               label: (
                 <p
@@ -313,8 +313,7 @@ const ModalMultipleCompanies = ({
                       objectPosition: "center",
                     }}
                     src={
-                      renderingExtraCompanyInfo(item.company).company_logo
-                        .length > 0
+                      renderingExtraCompanyInfo(item.company).company_logo?.length > 0
                         ? renderingExtraCompanyInfo(item.company).company_logo
                         : "https://res.cloudinary.com/dsuynhcgd/image/upload/c_thumb,w_200,g_face/v1738169822/material-symbols--enterprise-outline_vmmi7y.svg"
                     }
