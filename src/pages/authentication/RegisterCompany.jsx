@@ -182,6 +182,7 @@ const RegisterCompany = () => {
           0,
         );
         if (user.existing) {
+          const existingUserToken = localStorage.getItem("admin-token") ?? undefined;
           await createStripeAccount({ companyValue, user, ref });
           await updateExistingUserAssignedCompany({ user, companyValue, ref });
           await createCompany({
@@ -199,10 +200,11 @@ const RegisterCompany = () => {
             ref,
             industry,
             websiteUrl,
+            token: existingUserToken,
           });
-          await insertingStripeAccountInSqlDb(ref);
-          await consultingUserMemberInSqlDb({ ref, user });
-          await consultingCompanyInSqDb(ref);
+          await insertingStripeAccountInSqlDb(ref, existingUserToken);
+          await consultingUserMemberInSqlDb({ ref, user, token: existingUserToken });
+          await consultingCompanyInSqDb(ref, existingUserToken);
           await agreementTermsAndConditions();
           queryClient.clear();
           setLoadingStatus(false);
