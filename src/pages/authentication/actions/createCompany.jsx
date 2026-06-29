@@ -44,6 +44,7 @@ const createCompany = async ({
         status: "confirmed",
         super_user: true,
         role: "0",
+        roleType: "root_admin",
         preference: { inventory_location: [] },
       },
     ],
