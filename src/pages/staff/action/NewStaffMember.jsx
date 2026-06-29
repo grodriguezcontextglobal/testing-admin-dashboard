@@ -146,11 +146,12 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
       ],
     });
 
+    const roleType = LEGACY_ROLE_MAP[Number(role)] ?? "assistant";
     await devitrakApi.post("/nodemailer/new_invitation", {
       consumer: email,
       subject: "Invitation",
       company: user.company,
-      link: `https://admin.devitrak.net/invitation?first=${encodeURIComponent(name)}&last=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&question=${encodeURIComponent("company name")}&answer=${encodeURIComponent(user.company)}&role=${encodeURIComponent(role)}&company=${encodeURIComponent(user.companyData.id)}`,
+      link: `https://admin.devitrak.net/invitation?first=${encodeURIComponent(name)}&last=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&question=${encodeURIComponent("company name")}&answer=${encodeURIComponent(user.company)}&role=${encodeURIComponent(role)}&roleType=${encodeURIComponent(roleType)}&company=${encodeURIComponent(user.companyData.id)}`,
     });
 
     queryClient.invalidateQueries({ queryKey: ["listAdminUsers"], exact: true });
