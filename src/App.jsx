@@ -44,7 +44,11 @@ const App = () => {
   const isTokenValid = (token) => {
     if (token) {
       const decodedToken = jwtDecode(token);
-      return new Date().getTime() < decodedToken.exp * 1000;
+      if (new Date().getTime() >= decodedToken.exp * 1000) return false;
+      // Tokens issued before the sqlStaffId backend fix lack this field.
+      // Treat them as invalid so the user re-authenticates and gets a fresh token.
+      if (typeof decodedToken.sqlStaffId !== "number") return false;
+      return true;
     }
     return false;
   };
