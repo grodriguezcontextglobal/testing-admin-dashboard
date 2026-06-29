@@ -8,7 +8,7 @@ import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
 import Loading from "../../../components/animation/Loading";
 import dicRole from "../../../components/general/dicRole";
 import { isAssistant } from "../../../config/roles";
-import { deriveRoleType, normalizeLocations } from "../utils/loginUtils";
+import { buildSetPermissionsPayload } from "../utils/loginUtils";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -96,11 +96,9 @@ const ModalMultipleCompanies = ({
       });
 
       const selectedCompanyData = findingCompanyInfoBasedOnSelection(selection);
-      const employeeInfo = selectedCompanyData.employees.find(
-        (item) => item.user === dataPassed.respo.email,
+      const selectedCompanySQL = dataPassed.companyInfo.find(
+        (item) => item.company === selection,
       );
-      const employeeRole = employeeInfo?.role ?? "";
-      const employeeRoleType = deriveRoleType(employeeInfo);
 
       dispatch(
         onLogin({
@@ -112,8 +110,8 @@ const ModalMultipleCompanies = ({
           lastName: dataPassed.respo.lastName,
           uid: dataPassed.respo.uid,
           email: dataPassed.respo.email,
-          role: employeeRole,
-          roleType: employeeRoleType,
+          role: selectedCompanySQL.role,
+          roleType: selectedCompanySQL.roleType,
           phone: dataPassed.respo.phone,
           company: selection,
           companyData: selectedCompanyData,
@@ -127,18 +125,13 @@ const ModalMultipleCompanies = ({
           preference: dataPassed.respo.entire.preference,
         }),
       );
-      dispatch(setPermissions({
-        role: employeeRole,
-        roleType: employeeRoleType,
-        companyName: selectedCompanyData.company_name,
-        locations: normalizeLocations(employeeInfo?.preference?.managerLocation),
-      }));
+      dispatch(setPermissions(buildSetPermissionsPayload(selectedCompanySQL)));
 
       setIsLoading(false);
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
-      navigate(isAssistant(employeeRoleType) ? "/events" : "/");
+      navigate(isAssistant(selectedCompanySQL.roleType) ? "/events" : "/");
       // }
     } catch (error) {
       console.log(
