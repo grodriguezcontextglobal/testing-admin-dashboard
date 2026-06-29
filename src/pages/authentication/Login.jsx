@@ -47,9 +47,8 @@ import Password from "./login/sections/Password";
 import "./style/authStyle.css";
 import { setPermissions } from "../../store/slices/permissions";
 import {
-  buildActiveCompanies,
-  deriveRoleType,
-  normalizeLocations,
+  buildActiveCompaniesFromSQL,
+  buildSetPermissionsPayload,
 } from "./utils/loginUtils";
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
@@ -178,12 +177,6 @@ const Login = () => {
           online: true,
         },
       );
-      const respoFindMemberInfo = await devitrakApi.post(
-        "/db_staff/consulting-member",
-        {
-          email: props.email,
-        },
-      );
       const companyInfoTable = await devitrakApi.post(
         "/db_company/consulting-company",
         {
@@ -200,10 +193,6 @@ const Login = () => {
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyRecord.company_id,
       });
-      const employeeInfo = props.company_data[0].employees.find(
-        (emp) => emp.user === props.respo.email
-      );
-      const roleType = deriveRoleType(employeeInfo);
       dispatch(
         onLogin({
           data: {
@@ -215,13 +204,13 @@ const Login = () => {
           uid: props.respo.uid,
           email: props.respo.email,
           role: props.role,
-          roleType,
+          roleType: props.roleType,
           phone: props.respo.phone,
           company: props.company_name,
           token: props.respo.token,
           online: updatingOnlineStatusResponse.data.entire.online,
           companyData: props.company_data[0],
-          sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
+          sqlMemberInfo: props.sqlMemberInfo,
           sqlInfo: {
             ...companyRecord,
             stripeID: checkArray(stripeSQL.data.stripe),
@@ -230,14 +219,12 @@ const Login = () => {
           subscription: {},
         }),
       );
-      dispatch(
-        setPermissions({
-          role: employeeInfo?.role,
-          roleType,
-          companyName: props.company_data[0].company_name,
-          locations: normalizeLocations(employeeInfo?.preference?.managerLocation),
-        })
-      );
+      dispatch(setPermissions(buildSetPermissionsPayload({
+        company: props.company_name,
+        role: props.role,
+        roleType: props.roleType,
+        locations: props.locations,
+      })));
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
       queryClient.clear();
@@ -296,8 +283,7 @@ const Login = () => {
         mfaCode: data.mfaCode,
       };
 
-      // Parallel API calls for better performance
-      const [loginResponse, companyResponse] = await Promise.all([
+      const [loginResponse, mongoCompanyResponse] = await Promise.all([
         devitrakApiAdmin.post("/login", {
           email: loginData.email,
           password: loginData.password,
@@ -305,30 +291,40 @@ const Login = () => {
           forceLogin: forceLogin,
           mfaCode: loginData.mfaCode,
         }),
-        devitrakApi.post("/company/search-company", {
-          "employees.user": loginData.email,
-        }),
+        devitrakApi.post("/company/search-company", { "employees.user": loginData.email }),
       ]);
 
-      if (!loginResponse.data || !companyResponse.data) {
+      if (!loginResponse.data) {
         throw new Error("Authentication failed");
       }
 
-      // Check if email exists in company employees
-      if (!companyResponse.data || companyResponse.data.company.length === 0) {
+      if (!mongoCompanyResponse.data || mongoCompanyResponse.data.company.length === 0) {
         throw new Error("Email not found in any company");
       }
 
-      const activeCompanies = await processCompanyData(
-        loginData.email,
-        companyResponse.data.company,
+      const authHeaders = {
+        headers: {
+          "x-token": loginResponse.data.token,
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache",
+        },
+      };
+
+      const [staffMemberResponse, sqlCompaniesResponse] = await Promise.all([
+        devitrakApi.post("/db_staff/consulting-member", { email: loginData.email }, authHeaders),
+        devitrakApi.get("/db_staff/companies", authHeaders),
+      ]);
+
+      const activeCompanies = buildActiveCompaniesFromSQL(
+        sqlCompaniesResponse.data.companies ?? [],
       );
 
       if (activeCompanies.length > 1) {
         await handleMulitpleCompanyLogin({
           ...loginData,
           companyInfo: activeCompanies,
-          company_data: companyResponse.data.company,
+          company_data: mongoCompanyResponse.data.company,
+          sqlMemberInfo: checkArray(staffMemberResponse.data.member),
           respo: loginResponse.data,
         });
       } else if (activeCompanies.length === 1) {
@@ -339,7 +335,9 @@ const Login = () => {
             company_name: activeCompanies[0].company,
             role: activeCompanies[0].role,
             roleType: activeCompanies[0].roleType,
-            company_data: companyResponse.data.company,
+            locations: activeCompanies[0].locations,
+            company_data: mongoCompanyResponse.data.company,
+            sqlMemberInfo: checkArray(staffMemberResponse.data.member),
             respo: loginResponse.data,
           },
         });
@@ -357,6 +355,19 @@ const Login = () => {
         responseData?.mfa_required ||
         responseData?.error === "mfa_required" ||
         responseData?.msg === "mfa_required";
+
+      // 401 on the companies endpoint means the token lacks sqlStaffId (legacy token).
+      // Skip this handler if it's an MFA-required 401 from the login endpoint itself.
+      if (error.response?.status === 401 && !isMfaRequired) {
+        localStorage.removeItem("admin-token");
+        dispatch(onLogout());
+        setCurrentStep("email");
+        openNotificationWithIcon(
+          "error",
+          "Session expired or token is outdated. Please log in again.",
+        );
+        return;
+      }
 
       if (
         (error.response?.status === 403 || error.response?.status === 401) &&
@@ -411,11 +422,6 @@ const Login = () => {
       dispatch(clearErrorMessage());
     }
   };
-
-  const processCompanyData = useCallback(
-    (email, companies) => buildActiveCompanies(email, companies),
-    []
-  );
 
   // Function to go back to email step
   const handleBackToEmail = () => {
