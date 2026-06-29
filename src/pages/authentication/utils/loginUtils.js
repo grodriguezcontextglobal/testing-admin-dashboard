@@ -42,6 +42,53 @@ export const normalizeLocations = (managerLocation) => {
 };
 
 /**
+ * Safely extracts staff_id from a /db_staff/consulting-member API response.
+ * Handles both array and single-object member shapes.
+ *
+ * @param {{ member: Array|Object }|null|undefined} memberApiData
+ * @returns {number|null}
+ */
+export const extractStaffId = (memberApiData) => {
+  if (!memberApiData) return null;
+  const member = Array.isArray(memberApiData.member)
+    ? memberApiData.member.at(-1)
+    : memberApiData.member;
+  return member?.staff_id ?? null;
+};
+
+/**
+ * Builds the setPermissions dispatch payload from an active company entry.
+ * Works with both buildActiveCompaniesFromSQL output (SQL path) and
+ * buildActiveCompanies output (legacy MongoDB path).
+ *
+ * @param {{ company, role, roleType, locations? }} activeCompany
+ * @returns {{ role, roleType, companyName, locations }}
+ */
+export const buildSetPermissionsPayload = ({ company, role, roleType, locations }) => ({
+  role,
+  roleType,
+  companyName: company,
+  locations: locations ?? [],
+});
+
+/**
+ * Maps the SQL /db_staff/companies response to the shape consumed by Login.jsx.
+ * Locations are already normalized by the backend — no client-side transformation needed.
+ *
+ * @param {Array|null|undefined} sqlCompanies
+ * @returns {Array<{ company, role, roleType, locations }>}
+ */
+export const buildActiveCompaniesFromSQL = (sqlCompanies) => {
+  if (!Array.isArray(sqlCompanies)) return [];
+  return sqlCompanies.map(({ company_name, role_level, roleType, locations }) => ({
+    company: company_name,
+    role: role_level,
+    roleType,
+    locations: locations ?? [],
+  }));
+};
+
+/**
  * Builds the list of active company assignments for the logging-in user,
  * enriched with a derived roleType.
  *
