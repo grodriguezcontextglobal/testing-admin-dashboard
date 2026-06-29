@@ -31,7 +31,7 @@ const MainBody = ({
   selectedItem,
   selectOptions,
   setAssignAllDevices,
-  setSelectedItem,
+  // setSelectedItem,
   setValue,
   staff,
   triggerAddingAdminStaff,
@@ -46,9 +46,11 @@ const MainBody = ({
     <Grid
       container
       display={"flex"}
-      justifyContent={"center"}
-      alignItems={"center"}
+      // justifyContent={"center"}
+      // alignItems={"flex-start"}
+      selfAlign={"flex-start"}
       key={"settingUp-deviceList-event"}
+      height={"100%"}
     >
       {triggerAddingAdminStaff && <AddingEventCreated />}
       <Grid
@@ -158,7 +160,7 @@ const MainBody = ({
             staff.adminUser.length === 0
           }
           func={() => navigate("/create-event-page/review-submit")}
-          styles={{ width: "100%" }}
+          styles={{ width: "100%", maxHeight:"35px" }}
         />}
         {!filled && <BlueButtonComponent
           title={"Next step"}
