@@ -1,12 +1,14 @@
 import { devitrakApi } from "../../../api/devitrakApi";
 
-const insertingStripeAccountInSqlDb = async (ref) => {
+const insertingStripeAccountInSqlDb = async (ref, token) => {
+        const config = token ? { headers: { "x-token": token } } : {};
         const checkingExistingData = await devitrakApi.post(
           "/db_stripe/consulting-stripe",
           {
             stripe_id: ref.current.stripeAccount.stripeID,
             company_id: ref.current.companySQL,
-          }
+          },
+          config
         );
         if (checkingExistingData.data.stripe.length > 0) {
           return null;
@@ -16,7 +18,8 @@ const insertingStripeAccountInSqlDb = async (ref) => {
           {
             stripe_id: ref.current.stripeAccount.stripeID,
             company_id: ref.current.companySQL,
-          }
+          },
+          config
         );
         if (insertingStripeCompanyInfo.data) {
           ref.current = {
