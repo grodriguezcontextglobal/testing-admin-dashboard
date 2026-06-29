@@ -4,6 +4,7 @@ import { Card } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { resolveRoleType } from "../../../../../config/roles";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import Loading from "../../../../../components/animation/Loading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
@@ -171,11 +172,7 @@ const ButtonSections = () => {
   const checkUserIsAssignedAsAdminInEvent = () => {
     const staffList = [...event.staff.adminUser];
     if (!staffList.some((element) => element.email === user.email)) {
-      const companyEmployees = [...user.companyData.employees];
-      const checkRoleInCompany = companyEmployees.findIndex(
-        (element) => element.user === user.email
-      );
-      return companyEmployees[checkRoleInCompany].role < 2;
+      return ["root_admin", "admin"].includes(resolveRoleType(user));
     }
     const check = staffList.findIndex(
       (element) => element.email === user.email
