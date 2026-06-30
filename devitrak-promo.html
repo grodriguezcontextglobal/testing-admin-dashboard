@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devitrak — Device Management, Simplified</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:       #0C1A35;
+  --blue:       #155EEF;
+  --blue-nav:   #175CD3;
+  --blue-dark:  #0040C1;
+  --blue-light: #D1E0FF;
+  --blue-soft:  #EFF4FF;
+  --gray-900:   #101828;
+  --gray-700:   #344054;
+  --gray-600:   #475467;
+  --gray-500:   #667085;
+  --gray-300:   #D0D5DD;
+  --gray-200:   #EAECF0;
+  --gray-100:   #F2F4F7;
+  --bg:         #F9FAFB;
+  --white:      #FFFFFF;
+  --green:      #027A48;
+  --green-bg:   #ECFDF3;
+  --green-dot:  #12B76A;
+  --amber:      #B54708;
+  --amber-bg:   #FFFAEB;
+  --red:        #B42318;
+  --red-bg:     #FEF3F2;
+  --font:       'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--navy); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+
+/* ── Container ── */
+#vc { position:relative; width:100vw; height:100vh; overflow:hidden; }
+
+/* ── Progress ── */
+#prog { position:absolute; top:0; left:0; right:0; height:3px; background:rgba(255,255,255,0.12); z-index:100; }
+#prog-fill { height:100%; background:var(--blue-light); width:0%; transition:width 0.1s linear; }
+
+/* ── Controls ── */
+#ctrl { position:absolute; bottom:20px; right:24px; z-index:100; display:flex; align-items:center; gap:10px; }
+#pp {
+  width:38px; height:38px; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.3);
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(8px);
+  color:white; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+#pp:hover { background:rgba(255,255,255,0.18); }
+#pp:focus { outline:2px solid var(--blue-light); outline-offset:3px; }
+#sctr { font-size:11px; font-weight:500; color:rgba(255,255,255,0.4); letter-spacing:.06em; min-width:36px; text-align:right; }
+
+/* ── Slides ── */
+.slide { position:absolute; inset:0; opacity:0; pointer-events:none; display:flex; transition:opacity .5s ease; }
+.slide.active { opacity:1; pointer-events:auto; }
+.slide.exit { opacity:0; transition:opacity .35s ease; }
+
+/* ── Animations ── */
+@keyframes fadeUp  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+@keyframes slideL  { from{opacity:0;transform:translateX(36px)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideR  { from{opacity:0;transform:translateX(-36px)} to{opacity:1;transform:translateX(0)} }
+@keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+@media (prefers-reduced-motion:reduce) { .slide,[class*="anim"]{animation:none!important;transition:opacity .15s!important} }
+
+/* ═══════════════════════════════════════
+   SHARED LAYOUT — split slides
+═══════════════════════════════════════ */
+.split { width:100%; display:flex; align-items:center; }
+.col-copy {
+  flex:0 0 40%;
+  padding:0 0 0 64px;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.col-mock {
+  flex:1;
+  display:flex; align-items:center; justify-content:center;
+  padding:32px 36px 32px 16px;
+}
+
+/* Text tokens — dark bg */
+.ey-dark  { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--blue-light); margin-bottom:12px; }
+.h2-dark  { font-size:clamp(24px,2.8vw,36px); font-weight:800; letter-spacing:-.025em; line-height:1.15; color:var(--white); margin-bottom:14px; text-wrap:balance; }
+.p-dark   { font-size:14px; font-weight:400; line-height:1.65; color:rgba(255,255,255,.58); margin-bottom:24px; }
+
+/* Text tokens — light bg */
+.ey-light { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--blue); margin-bottom:12px; }
+.h2-light { font-size:clamp(24px,2.8vw,36px); font-weight:800; letter-spacing:-.025em; line-height:1.15; color:var(--gray-900); margin-bottom:14px; text-wrap:balance; }
+.p-light  { font-size:14px; font-weight:400; line-height:1.65; color:var(--gray-600); margin-bottom:24px; }
+
+/* Bullet list */
+.blist { list-style:none; display:flex; flex-direction:column; gap:9px; }
+.blist li { display:flex; align-items:flex-start; gap:9px; font-size:13px; line-height:1.5; }
+.blist.dk li { color:rgba(255,255,255,.68); }
+.blist.lt li { color:var(--gray-700); }
+.bchk {
+  flex-shrink:0; width:17px; height:17px; border-radius:50%; margin-top:2px;
+  display:flex; align-items:center; justify-content:center;
+}
+.bchk.dk { background:rgba(46,125,255,.22); }
+.bchk.lt { background:var(--blue-soft); }
+.bchk svg { width:9px; height:9px; }
+
+/* ═══════════════════════════════════════
+   REAL-UI COMPONENT PRIMITIVES
+═══════════════════════════════════════ */
+
+/* — App navbar (real) — */
+.app-navbar {
+  height:52px;
+  background:var(--blue-nav);
+  display:flex; align-items:center;
+  padding:0 20px;
+  gap:0;
+  flex-shrink:0;
+}
+.nav-brand { display:flex; align-items:center; gap:10px; margin-right:28px; }
+.nav-items { display:flex; align-items:center; gap:2px; flex:1; }
+.nav-item {
+  padding:6px 10px; border-radius:6px;
+  font-size:12px; font-weight:600; color:rgba(255,255,255,.75);
+  white-space:nowrap;
+}
+.nav-item.active { background:rgba(255,255,255,.15); color:var(--white); }
+.nav-search {
+  margin-left:auto;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;
+  padding:5px 10px;
+  font-size:11px; color:rgba(255,255,255,.5);
+  display:flex; align-items:center; gap:6px;
+  min-width:160px;
+}
+.nav-avatar {
+  width:30px; height:30px; border-radius:50%;
+  background:rgba(255,255,255,.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:white;
+  flex-shrink:0; margin-left:10px;
+}
+
+/* — Page shell — */
+.page-shell {
+  background:var(--bg);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.38);
+  display:flex; flex-direction:column;
+  width:100%; max-width:540px;
+}
+.page-shell.dark-shell {
+  background:#1C2B46;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+
+/* — Page header bar — */
+.page-hdr {
+  padding:14px 18px 12px;
+  border-bottom:1px solid var(--gray-200);
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--white);
+}
+.page-hdr.dk {
+  background:#162338;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.page-title { font-size:15px; font-weight:700; color:var(--gray-900); }
+.page-title.wt { color:var(--white); }
+.page-sub { font-size:11px; color:var(--gray-500); margin-top:1px; }
+.page-sub.wt { color:rgba(255,255,255,.45); }
+.btn-primary {
+  font-size:11px; font-weight:600; padding:6px 12px; border-radius:6px;
+  background:var(--blue); color:white;
+  display:flex; align-items:center; gap:5px;
+  box-shadow:0 1px 2px rgba(16,24,40,.05);
+}
+.btn-secondary {
+  font-size:11px; font-weight:600; padding:6px 12px; border-radius:6px;
+  background:var(--white); color:var(--gray-700);
+  border:1px solid var(--gray-300);
+  display:flex; align-items:center; gap:5px;
+}
+.btn-danger {
+  font-size:11px; font-weight:600; padding:6px 12px; border-radius:6px;
+  background:var(--red); color:white;
+  display:flex; align-items:center; gap:5px;
+}
+.hdr-btns { display:flex; gap:6px; align-items:center; }
+
+/* — Ant table — */
+.ant-tbl { width:100%; border-collapse:collapse; font-size:11px; }
+.ant-tbl thead th {
+  background:var(--bg); padding:9px 12px;
+  font-size:10px; font-weight:600; color:var(--gray-600);
+  text-align:left; white-space:nowrap;
+  border-bottom:1px solid var(--gray-200);
+}
+.ant-tbl tbody td {
+  padding:10px 12px; color:var(--gray-600);
+  border-bottom:1px solid var(--gray-200);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:120px;
+}
+.ant-tbl tbody tr:last-child td { border-bottom:none; }
+.ant-tbl tbody tr:nth-child(odd) td { background:var(--bg); }
+.ant-tbl tbody tr:nth-child(even) td { background:var(--white); }
+.ant-tbl-wrap { overflow:hidden; }
+
+/* dark table */
+.ant-tbl.dark thead th { background:#162338; color:rgba(255,255,255,.4); border-bottom:1px solid rgba(255,255,255,.07); }
+.ant-tbl.dark tbody tr:nth-child(odd) td { background:#1C2B46; color:rgba(255,255,255,.65); border-bottom:1px solid rgba(255,255,255,.06); }
+.ant-tbl.dark tbody tr:nth-child(even) td { background:#182038; color:rgba(255,255,255,.65); border-bottom:1px solid rgba(255,255,255,.06); }
+
+/* — Pills / chips — */
+.pill {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:2px 8px; border-radius:9999px;
+  font-size:10px; font-weight:600; white-space:nowrap;
+}
+.pill-green  { background:var(--green-bg); color:var(--green); border:1px solid #ABEFC6; }
+.pill-blue   { background:var(--blue-soft); color:var(--blue); border:1px solid var(--blue-light); }
+.pill-gray   { background:var(--gray-100); color:var(--gray-700); border:1px solid var(--gray-300); }
+.pill-amber  { background:var(--amber-bg); color:var(--amber); border:1px solid #FEDF89; }
+.pill-red    { background:var(--red-bg); color:var(--red); border:1px solid #FECDCA; }
+.pill-dot { width:5px; height:5px; border-radius:50%; }
+.pill-green .pill-dot  { background:var(--green-dot); }
+.pill-blue  .pill-dot  { background:#2E90FA; }
+.pill-gray  .pill-dot  { background:var(--gray-500); }
+.pill-amber .pill-dot  { background:#F79009; }
+.pill-red   .pill-dot  { background:#F04438; }
+
+/* — Avatar — */
+.av {
+  width:26px; height:26px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; flex-shrink:0;
+}
+.av-blue { background:var(--blue-light); color:var(--blue-dark); }
+.av-green{ background:var(--green-bg); color:var(--green); }
+.av-gray { background:var(--gray-100); color:var(--gray-700); }
+
+/* — Stat card — */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:14px 16px 0; }
+.stat-card {
+  background:var(--white); border:1px solid var(--gray-200); border-radius:10px;
+  padding:12px 14px;
+}
+.stat-val  { font-size:20px; font-weight:700; color:var(--gray-900); font-variant-numeric:tabular-nums; line-height:1; }
+.stat-lbl  { font-size:10px; font-weight:500; color:var(--gray-600); margin-top:4px; text-transform:uppercase; letter-spacing:.05em; }
+
+/* — Filter pills row — */
+.filter-row { display:flex; gap:6px; padding:10px 16px; }
+.f-pill {
+  padding:4px 12px; border-radius:9999px;
+  font-size:11px; font-weight:600;
+  border:1px solid var(--gray-300); color:var(--gray-700);
+  background:var(--white);
+}
+.f-pill.on { background:var(--blue-dark); color:white; border-color:var(--blue-dark); }
+
+/* — Search bar — */
+.search-bar {
+  margin:0 16px 10px;
+  background:var(--white);
+  border:1px solid var(--gray-300); border-radius:8px;
+  padding:7px 12px; font-size:11px; color:var(--gray-500);
+  display:flex; align-items:center; gap:7px;
+}
+
+/* — Section heading inside page — */
+.sec-hdr { padding:12px 16px 4px; }
+.sec-title { font-size:12px; font-weight:700; color:var(--gray-900); }
+.sec-sub   { font-size:10px; color:var(--gray-500); margin-top:2px; }
+
+/* — User row (table cell) — */
+.user-cell { display:flex; align-items:center; gap:8px; }
+.user-name { font-size:11px; font-weight:600; color:var(--gray-900); }
+.user-email{ font-size:10px; color:var(--gray-500); }
+
+/* — Section badge — */
+.count-badge {
+  display:inline-flex; align-items:center;
+  padding:1px 7px; border-radius:9999px;
+  font-size:10px; font-weight:600;
+  background:var(--blue-soft); color:var(--blue);
+  border:1px solid var(--blue-light);
+  margin-left:6px;
+}
+
+/* — Quick glance cards (Home) — */
+.ql-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 14px; }
+.ql-card {
+  background:var(--white); border:1px solid var(--gray-200); border-radius:10px;
+  padding:12px; display:flex; flex-direction:column; gap:6px;
+}
+.ql-num { font-size:22px; font-weight:700; color:var(--gray-900); font-variant-numeric:tabular-nums; }
+.ql-label { font-size:10px; font-weight:500; color:var(--gray-600); text-transform:uppercase; letter-spacing:.05em; }
+.ql-sub { font-size:10px; color:var(--gray-500); }
+
+/* — Chart bar sparkline — */
+.sparkbar { display:flex; align-items:flex-end; gap:3px; height:32px; margin-top:6px; }
+.sp { border-radius:2px 2px 0 0; flex:1; }
+.sp.lo { background:var(--blue-light); }
+.sp.hi { background:var(--blue); }
+
+/* — Event card — */
+.ev-card {
+  background:var(--white); border:1px solid var(--gray-200); border-radius:10px;
+  padding:12px 14px; margin:0 14px 8px;
+  display:flex; align-items:center; gap:12px;
+}
+.ev-dot { width:9px; height:9px; border-radius:50%; background:var(--green-dot); flex-shrink:0; animation:pulse 2s infinite; }
+.ev-name { font-size:12px; font-weight:600; color:var(--gray-900); }
+.ev-date { font-size:10px; color:var(--gray-500); margin-top:2px; }
+.ev-badge { margin-left:auto; }
+
+/* — Dark stat cards — */
+.dstat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 14px 0; }
+.dstat {
+  background:rgba(255,255,255,.06); border-radius:9px;
+  padding:10px 12px;
+}
+.dstat-val { font-size:18px; font-weight:700; color:white; font-variant-numeric:tabular-nums; }
+.dstat-lbl { font-size:9px; font-weight:500; color:rgba(255,255,255,.4); margin-top:3px; text-transform:uppercase; letter-spacing:.06em; }
+
+/* ═══════════════════════════════════════
+   SLIDE 1 — Hero
+═══════════════════════════════════════ */
+#s1 {
+  background:var(--navy);
+  flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:50px 40px;
+}
+#s1.active .s1-logo  { animation:scaleIn .7s cubic-bezier(.34,1.3,.64,1) both; }
+#s1.active .s1-ey    { animation:fadeUp .6s ease both .5s; }
+#s1.active .s1-h1    { animation:fadeUp .7s ease both .7s; }
+#s1.active .s1-sub   { animation:fadeUp .6s ease both 1s; }
+#s1.active .s1-badge { animation:fadeUp .5s ease both 1.3s; }
+
+.s1-logo  { display:flex; align-items:center; gap:13px; margin-bottom:44px; opacity:0; }
+.s1-ey    { font-size:11px; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--blue-light); margin-bottom:18px; opacity:0; }
+.s1-h1    { font-size:clamp(42px,5.5vw,68px); font-weight:900; letter-spacing:-.035em; line-height:1.02; color:var(--white); max-width:760px; text-wrap:balance; margin-bottom:22px; opacity:0; }
+.s1-h1 em { font-style:normal; color:#7BB3FF; }
+.s1-sub   { font-size:17px; font-weight:400; color:rgba(255,255,255,.58); max-width:460px; line-height:1.65; margin-bottom:34px; opacity:0; }
+.s1-badge { display:inline-flex; align-items:center; gap:7px; padding:7px 16px; border-radius:9999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.07); font-size:12px; font-weight:500; color:rgba(255,255,255,.7); opacity:0; }
+.dot-live { width:7px; height:7px; border-radius:50%; background:#4ADE80; animation:pulse 2s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════
+   SLIDE 2 — Problem
+═══════════════════════════════════════ */
+#s2 {
+  background:var(--bg);
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:50px 72px; gap:40px;
+}
+#s2.active .s2-hdr          { animation:fadeUp .6s ease both .2s; }
+#s2.active .pc:nth-child(1) { animation:fadeUp .55s ease both .4s; }
+#s2.active .pc:nth-child(2) { animation:fadeUp .55s ease both .56s; }
+#s2.active .pc:nth-child(3) { animation:fadeUp .55s ease both .72s; }
+#s2.active .pc:nth-child(4) { animation:fadeUp .55s ease both .88s; }
+.s2-hdr { text-align:center; opacity:0; }
+.s2-ey  { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--blue); margin-bottom:10px; }
+.s2-h2  { font-size:clamp(26px,3.2vw,38px); font-weight:800; color:var(--gray-900); letter-spacing:-.025em; line-height:1.15; text-wrap:balance; }
+.pgrid  { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; width:100%; max-width:1040px; }
+.pc     { background:var(--white); border:1px solid var(--gray-200); border-radius:14px; padding:24px 20px; opacity:0; }
+.pc-ico { font-size:26px; margin-bottom:12px; display:block; }
+.pc-ttl { font-size:13px; font-weight:700; color:var(--gray-900); margin-bottom:7px; letter-spacing:-.01em; }
+.pc-bod { font-size:12px; color:var(--gray-600); line-height:1.55; }
+
+/* ═══════════════════════════════════════
+   SLIDE 3 — Home / Dashboard
+═══════════════════════════════════════ */
+#s3 { background:var(--bg); align-items:center; }
+#s3.active .col-copy { animation:slideR .65s ease both .3s; }
+#s3.active .col-mock { animation:slideL .65s ease both .48s; }
+#s3 .col-copy, #s3 .col-mock { opacity:0; }
+
+/* ═══════════════════════════════════════
+   SLIDE 4 — Inventory
+═══════════════════════════════════════ */
+#s4 { background:var(--navy); align-items:center; }
+#s4.active .col-copy { animation:slideR .65s ease both .3s; }
+#s4.active .col-mock { animation:slideL .65s ease both .48s; }
+#s4 .col-copy, #s4 .col-mock { opacity:0; }
+
+/* ═══════════════════════════════════════
+   SLIDE 5 — Events
+═══════════════════════════════════════ */
+#s5 { background:var(--bg); align-items:center; }
+#s5.active .col-copy { animation:slideR .65s ease both .3s; }
+#s5.active .col-mock { animation:slideL .65s ease both .48s; }
+#s5 .col-copy, #s5 .col-mock { opacity:0; }
+
+/* ═══════════════════════════════════════
+   SLIDE 6 — Consumers
+═══════════════════════════════════════ */
+#s6 { background:var(--navy); align-items:center; }
+#s6.active .col-copy { animation:slideR .65s ease both .3s; }
+#s6.active .col-mock { animation:slideL .65s ease both .48s; }
+#s6 .col-copy, #s6 .col-mock { opacity:0; }
+
+/* ═══════════════════════════════════════
+   SLIDE 7 — Staff + Roles
+═══════════════════════════════════════ */
+#s7 { background:var(--bg); align-items:center; }
+#s7.active .col-copy { animation:slideR .65s ease both .3s; }
+#s7.active .col-mock { animation:slideL .65s ease both .48s; }
+#s7 .col-copy, #s7 .col-mock { opacity:0; }
+
+/* ═══════════════════════════════════════
+   SLIDE 8 — CTA
+═══════════════════════════════════════ */
+#s8 {
+  background:var(--navy);
+  flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:50px 40px;
+}
+#s8.active .s8-ey  { animation:fadeUp .5s ease both .3s; }
+#s8.active .s8-h2  { animation:fadeUp .6s ease both .5s; }
+#s8.active .s8-sub { animation:fadeUp .6s ease both .75s; }
+#s8.active .s8-cta { animation:fadeUp .5s ease both .95s; }
+#s8.active .s8-lg  { animation:fadeIn .6s ease both 1.25s; }
+
+.s8-ey  { font-size:11px; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--blue-light); margin-bottom:16px; opacity:0; }
+.s8-h2  { font-size:clamp(36px,4.8vw,58px); font-weight:900; letter-spacing:-.032em; line-height:1.05; color:var(--white); max-width:680px; text-wrap:balance; margin-bottom:18px; opacity:0; }
+.s8-sub { font-size:16px; font-weight:400; color:rgba(255,255,255,.55); max-width:420px; line-height:1.65; margin-bottom:38px; opacity:0; }
+.s8-cta { display:inline-flex; align-items:center; gap:8px; padding:13px 30px; border-radius:8px; background:var(--white); color:var(--blue); font-size:14px; font-weight:700; letter-spacing:-.01em; margin-bottom:52px; opacity:0; box-shadow:0 4px 20px rgba(21,94,239,.28); }
+.s8-lg  { opacity:0; display:flex; align-items:center; gap:10px; }
+.s8-url { font-size:12px; color:rgba(255,255,255,.32); letter-spacing:.05em; margin-top:14px; }
+</style>
+</head>
+<body>
+<div id="vc">
+
+<!-- Progress -->
+<div id="prog"><div id="prog-fill"></div></div>
+
+<!-- Controls -->
+<div id="ctrl">
+  <span id="sctr">1 / 8</span>
+  <button id="pp" aria-label="Pause">⏸</button>
+</div>
+
+<!-- ══ S1 — HERO ══ -->
+<div class="slide active" id="s1">
+  <div class="s1-logo">
+    <svg width="40" height="18" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="white"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="white"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="white"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="white"/></svg>
+    <svg width="130" height="27" viewBox="0 0 105 22" fill="none"><path d="M12.9381 19.689C11.6309 20.8276 9.90993 21.5 8.00795 21.5C3.72995 21.5 0.494873 18.0815 0.494873 13.7588C0.494873 9.43623 3.73282 6.01769 8.00795 6.01769C9.90993 6.01769 11.6309 6.6901 12.9381 7.85692V2.97208C12.9381 1.29389 13.6478 0.5 15.1763 0.5H16.2048V21.4717L12.9381 21.5V19.689ZM12.9381 13.7588V13.5554C12.8203 10.9562 10.858 8.99832 8.36421 8.99832C5.87039 8.99832 3.79029 11.0438 3.79029 13.7588C3.79029 16.4739 5.81005 18.5194 8.36421 18.5194C10.9184 18.5194 12.9381 16.4739 12.9381 13.7588Z" fill="white"/><path d="M25.8181 18.5194C23.2352 18.5194 21.2442 16.3863 21.2442 13.7589C21.2442 11.1314 23.2639 8.99833 25.8181 8.99833C26.4703 8.99833 27.2747 9.17349 27.7775 9.52382C27.292 10.0832 25.8439 11.5382 25.3584 12.0976C24.6028 12.9678 23.7207 13.7278 24.0655 14.9963C24.1057 15.1432 24.3241 15.5501 24.5855 15.8156C24.847 16.0812 25.4503 16.5417 25.4503 16.5417L25.6859 16.2903C25.6859 16.2903 25.9359 15.9993 26.0278 15.8891C27.3897 14.2985 29.7111 11.8151 31.0729 10.2245C31.4292 9.81482 31.547 9.46449 31.547 9.05483C31.547 8.58867 31.3085 8.15076 30.9523 7.82868C29.9409 6.9246 28.1309 6.0177 25.8152 6.0177C21.3016 6.0177 17.943 9.43624 17.943 13.7589C17.943 18.0815 21.3303 21.5 25.8152 21.5C28.3406 21.5 30.3891 20.4179 31.5183 19.076L28.9641 17.2056C28.2516 17.9346 27.2115 18.5194 25.8152 18.5194H25.8181Z" fill="white"/><path d="M33.6214 7.65633V6.04877H36.8795L36.8881 7.65633V15.8043L44.3466 7.18734C45.1108 6.43582 45.5475 6.04877 46.9611 6.04877H49.0986L47.076 8.47282L36.4715 20.9152C36.1152 21.3248 35.7877 21.4689 35.2533 21.4689C34.3311 21.4689 33.6185 20.74 33.6185 19.8331V7.65633H33.6214Z" fill="white"/><path d="M47.3115 7.94733C47.3115 6.89634 48.1734 6.04877 49.2422 6.04877C50.311 6.04877 51.1729 6.89634 51.1729 7.94733C51.1729 8.99832 50.311 9.84589 49.2422 9.84589C48.1734 9.84589 47.3115 8.97006 47.3115 7.94733ZM47.6074 13.1458V11.1088H50.8741V19.6749C50.8741 20.579 50.1616 21.3107 49.2394 21.3107C48.3171 21.3107 47.6046 20.5818 47.6046 19.6749V13.1458H47.6074Z" fill="white"/><path d="M53.1726 9.29498V6.3087H54.6867L55.7555 6.31153V4.12197C55.7555 3.21789 55.7498 2.5144 55.7498 2.5144C58.2781 2.5144 59.0222 3.56257 59.0222 5.03169V6.31153H62.4986C63.3289 6.31153 64.0127 6.95285 64.0127 7.80043C64.0127 8.648 63.3289 9.28933 62.4986 9.28933H59.0222V14.5753C59.0222 17.1463 60.4788 18.4601 62.4986 18.4601L64.0127 18.4742V21.4689H62.4986C58.6659 21.4689 55.7555 18.8104 55.7555 14.5753V9.28933H54.6867L53.1726 9.29498Z" fill="white"/><path d="M66.1445 12.8548C66.1445 8.70731 68.9659 6.02051 72.8273 6.02051C73.6576 6.02051 74.3414 6.66184 74.3414 7.50941C74.3414 8.35698 73.6576 8.99831 72.8273 8.99831C70.8679 8.99831 69.4112 10.2838 69.4112 12.8548V19.8359L69.4227 21.4717H66.1445V12.8548Z" fill="white"/><path d="M86.46 19.689C85.1527 20.8276 83.4318 21.5 81.5298 21.5C77.2518 21.5 74.0167 18.0815 74.0167 13.7589C74.0167 9.43624 77.2547 6.0177 81.5298 6.0177C83.4318 6.0177 85.1527 6.69011 86.46 7.85693V7.65351C86.46 6.74944 87.1725 6.04595 88.0948 6.04595H89.7296V21.4972H86.4629V19.6862L86.46 19.689ZM86.46 13.7589V13.5554C86.3422 10.9562 84.3799 8.99833 81.8861 8.99833C79.3922 8.99833 77.3121 11.0438 77.3121 13.7589C77.3121 16.4739 79.3319 18.5194 81.8861 18.5194C84.4402 18.5194 86.46 16.4739 86.46 13.7589Z" fill="white"/><path d="M98.2569 13.5272L102.564 8.47564L103.454 7.42182C103.454 7.42182 103.305 7.28621 103.084 7.06584C102.138 6.13634 100.438 6.38214 99.4894 7.4642C98.6505 8.42478 95.1367 12.5638 95.1367 12.5638C94.8695 12.8548 94.6914 13.3237 94.6914 13.6741C94.6914 14.1402 94.8983 14.5499 95.1367 14.872L100.305 20.8897C100.601 21.2683 101.078 21.4746 101.524 21.4746H105L102.802 18.816L98.2569 13.53V13.5272Z" fill="white"/><path d="M94.6167 0.5H92.9819V21.4717H96.2486V2.10756C96.2486 1.20066 95.5361 0.5 94.6138 0.5H94.6167Z" fill="white"/></svg>
+  </div>
+  <p class="s1-ey">Admin Dashboard</p>
+  <h1 class="s1-h1">Your devices.<br>Every location.<br><em>Always in control.</em></h1>
+  <p class="s1-sub">The platform built for teams that manage physical devices across events, staff, and consumers — at any scale.</p>
+  <div class="s1-badge"><span class="dot-live"></span>Live at admin.devitrak.net</div>
+</div>
+
+<!-- ══ S2 — PROBLEM ══ -->
+<div class="slide" id="s2">
+  <div class="s2-hdr">
+    <p class="s2-ey">The Challenge</p>
+    <h2 class="s2-h2">Managing devices without the right tools<br>costs time, money, and accountability</h2>
+  </div>
+  <div class="pgrid">
+    <div class="pc"><span class="pc-ico">📊</span><p class="pc-ttl">Spreadsheet chaos</p><p class="pc-bod">Manual tracking breaks the moment a device moves between locations or staff members.</p></div>
+    <div class="pc"><span class="pc-ico">🔍</span><p class="pc-ttl">Zero real-time visibility</p><p class="pc-bod">No way to know which devices are in use, where they are, or who has them right now.</p></div>
+    <div class="pc"><span class="pc-ico">🔓</span><p class="pc-ttl">No access control</p><p class="pc-bod">Everyone sees everything. No role boundaries means sensitive data is exposed to the wrong people.</p></div>
+    <div class="pc"><span class="pc-ico">💸</span><p class="pc-ttl">Lost devices, lost revenue</p><p class="pc-bod">Devices go missing without accountability. Deposits and loss fees fall through the cracks.</p></div>
+  </div>
+</div>
+
+<!-- ══ S3 — HOME / QUICK GLANCE ══ -->
+<div class="slide" id="s3">
+  <div class="split">
+    <div class="col-copy">
+      <p class="ey-light">Home</p>
+      <h2 class="h2-light">Quick glance — your entire operation at a glance</h2>
+      <p class="p-light">The Home dashboard surfaces device counts, staff totals, asset value, and upcoming events the moment you log in.</p>
+      <ul class="blist lt">
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"In stock" vs "Checked out" — live device split</li>
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Total staff members and total device value</li>
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Upcoming and active events with one-click access</li>
+      </ul>
+    </div>
+    <div class="col-mock">
+      <div class="page-shell" style="max-width:500px;">
+        <!-- Navbar -->
+        <div class="app-navbar">
+          <div class="nav-brand">
+            <svg width="22" height="10" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="white"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="white"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="white"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="white"/></svg>
+          </div>
+          <div class="nav-items">
+            <span class="nav-item active">Home</span>
+            <span class="nav-item">Events</span>
+            <span class="nav-item">Inventory</span>
+            <span class="nav-item">Consumers</span>
+            <span class="nav-item">Staff</span>
+          </div>
+          <div class="nav-search"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="rgba(255,255,255,0.5)" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.4" stroke-linecap="round"/></svg> Search…</div>
+          <div class="nav-avatar">GR</div>
+        </div>
+        <!-- Page header -->
+        <div class="page-hdr">
+          <div><div class="page-title">Home</div></div>
+          <div class="hdr-btns">
+            <span class="btn-secondary">+ Create new event</span>
+            <span class="btn-primary">+ Add to inventory</span>
+          </div>
+        </div>
+        <!-- Quick glance -->
+        <div class="sec-hdr">
+          <div class="sec-title">Quick glance</div>
+          <div class="sec-sub">Some general stats of your devices.</div>
+        </div>
+        <div class="ql-grid">
+          <div class="ql-card">
+            <div class="ql-num" style="color:var(--blue);">1,203</div>
+            <div class="ql-label">In stock</div>
+            <div class="sparkbar">
+              <div class="sp lo" style="height:60%"></div><div class="sp hi" style="height:75%"></div><div class="sp lo" style="height:50%"></div><div class="sp hi" style="height:90%"></div><div class="sp lo" style="height:65%"></div><div class="sp hi" style="height:80%"></div><div class="sp lo" style="height:55%"></div>
+            </div>
+          </div>
+          <div class="ql-card">
+            <div class="ql-num" style="color:var(--amber);">1,644</div>
+            <div class="ql-label">Checked out</div>
+          </div>
+          <div class="ql-card">
+            <div class="ql-num">28</div>
+            <div class="ql-label">Total staff members</div>
+          </div>
+          <div class="ql-card">
+            <div class="ql-num" style="font-size:16px;">$142,800</div>
+            <div class="ql-label">Total device value</div>
+          </div>
+        </div>
+        <!-- Upcoming events -->
+        <div class="sec-hdr" style="margin-top:8px;">
+          <div class="sec-title">Upcoming and active events</div>
+          <div class="sec-sub">Select the event to view its metrics.</div>
+        </div>
+        <div class="ev-card">
+          <div class="ev-dot"></div>
+          <div><div class="ev-name">Tech Summit 2025 — San Francisco</div><div class="ev-date">Mar 15 – Mar 17, 2025</div></div>
+          <div class="ev-badge"><span class="pill pill-green"><span class="pill-dot"></span>Live</span></div>
+        </div>
+        <div class="ev-card" style="margin-bottom:14px;">
+          <div style="width:9px;height:9px;border-radius:50%;background:var(--blue-light);flex-shrink:0;"></div>
+          <div><div class="ev-name">Annual Logistics Conference</div><div class="ev-date">Apr 2 – Apr 4, 2025</div></div>
+          <div class="ev-badge"><span class="pill pill-blue"><span class="pill-dot"></span>Upcoming</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S4 — INVENTORY ══ -->
+<div class="slide" id="s4">
+  <div class="split">
+    <div class="col-copy">
+      <p class="ey-dark">Inventory</p>
+      <h2 class="h2-dark">Every device — category, group, location, serial number</h2>
+      <p class="p-dark">Full CRUD on device groups. Filter by Device category, Ownership (Leased / Owned / Sale / Resale), Location, and Status. Bulk import via Excel.</p>
+      <ul class="blist dk">
+        <li><span class="bchk dk"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#7BB3FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"Add inventory" and "Import inventory (.xlsx)"</li>
+        <li><span class="bchk dk"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#7BB3FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Columns: Device category · Device name · Status · Ownership · Location · Main Serial Number</li>
+        <li><span class="bchk dk"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#7BB3FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"Check in devices from events" with one click</li>
+      </ul>
+    </div>
+    <div class="col-mock">
+      <div class="page-shell dark-shell" style="max-width:510px;">
+        <div class="app-navbar">
+          <div class="nav-brand">
+            <svg width="22" height="10" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="white"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="white"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="white"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="white"/></svg>
+          </div>
+          <div class="nav-items">
+            <span class="nav-item">Home</span><span class="nav-item">Events</span><span class="nav-item active">Inventory</span><span class="nav-item">Consumers</span><span class="nav-item">Staff</span>
+          </div>
+          <div class="nav-avatar">GR</div>
+        </div>
+        <div class="page-hdr dk">
+          <div><div class="page-title wt">Inventory</div></div>
+          <div class="hdr-btns">
+            <span class="btn-secondary" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.75);">Import inventory (.xlsx)</span>
+            <span class="btn-primary">+ Add inventory</span>
+          </div>
+        </div>
+        <div class="ant-tbl-wrap">
+          <table class="ant-tbl dark" style="min-width:100%;">
+            <thead><tr>
+              <th>Device category</th>
+              <th>Device name</th>
+              <th>Status</th>
+              <th>Ownership</th>
+              <th>Location</th>
+              <th>Main Serial Number</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>Laptop</td><td>MacBook Pro 14"</td><td><span class="pill pill-green"><span class="pill-dot"></span>Available</span></td><td><span class="pill pill-blue"><span class="pill-dot"></span>Owned</span></td><td>Warehouse SF</td><td>MBP-0291-A</td></tr>
+              <tr><td>Tablet</td><td>iPad Mini 6th Gen</td><td><span class="pill pill-amber"><span class="pill-dot"></span>In Use</span></td><td><span class="pill pill-gray"><span class="pill-dot"></span>Leased</span></td><td>Event: Summit</td><td>IPD-0847-B</td></tr>
+              <tr><td>Monitor</td><td>Dell 27" 4K</td><td><span class="pill pill-green"><span class="pill-dot"></span>Available</span></td><td><span class="pill pill-blue"><span class="pill-dot"></span>Owned</span></td><td>Office NYC</td><td>DLL-1102-C</td></tr>
+              <tr><td>Peripheral</td><td>Magic Keyboard</td><td><span class="pill pill-gray"><span class="pill-dot"></span>Inactive</span></td><td><span class="pill pill-blue"><span class="pill-dot"></span>Owned</span></td><td>Warehouse LA</td><td>MKB-0034-D</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S5 — EVENTS ══ -->
+<div class="slide" id="s5">
+  <div class="split">
+    <div class="col-copy">
+      <p class="ey-light">Events</p>
+      <h2 class="h2-light">Live now · Upcoming · Past — all your events in one place</h2>
+      <p class="p-light">Create events, allocate inventory, assign staff, and track every device check-in and check-out with a full history log and Stripe payment collection.</p>
+      <ul class="blist lt">
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Filter by All · Live · Upcoming · Past</li>
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Status badges: Active / Closed per event</li>
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Deposit and lost-fee collection via Stripe</li>
+      </ul>
+    </div>
+    <div class="col-mock">
+      <div class="page-shell" style="max-width:500px;">
+        <div class="app-navbar">
+          <div class="nav-brand"><svg width="22" height="10" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="white"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="white"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="white"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="white"/></svg></div>
+          <div class="nav-items"><span class="nav-item">Home</span><span class="nav-item active">Events</span><span class="nav-item">Inventory</span><span class="nav-item">Consumers</span><span class="nav-item">Staff</span></div>
+          <div class="nav-avatar">GR</div>
+        </div>
+        <div class="page-hdr">
+          <div><div class="page-title">Events</div></div>
+          <span class="btn-primary">+ Add new event</span>
+        </div>
+        <!-- Filter pills -->
+        <div class="filter-row">
+          <span class="f-pill on">All</span>
+          <span class="f-pill">Live</span>
+          <span class="f-pill">Upcoming</span>
+          <span class="f-pill">Past</span>
+        </div>
+        <div class="search-bar"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="#667085" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="#667085" stroke-width="1.4" stroke-linecap="round"/></svg>Search events</div>
+        <!-- Live now -->
+        <div class="sec-hdr"><div class="sec-title">Live now</div><div class="sec-sub">Events happening right now.</div></div>
+        <div class="ev-card"><div class="ev-dot"></div><div><div class="ev-name">Tech Summit 2025 — San Francisco</div><div class="ev-date">Mar 15 – Mar 17, 2025</div></div><span class="pill pill-green" style="margin-left:auto;"><span class="pill-dot"></span>Active</span></div>
+        <!-- Upcoming -->
+        <div class="sec-hdr"><div class="sec-title">Upcoming</div><div class="sec-sub">Scheduled events that have not started yet.</div></div>
+        <div class="ev-card"><div style="width:9px;height:9px;border-radius:50%;background:var(--blue-light);flex-shrink:0;"></div><div><div class="ev-name">Annual Logistics Conference</div><div class="ev-date">Apr 2 – Apr 4, 2025</div></div><span class="pill pill-blue" style="margin-left:auto;"><span class="pill-dot"></span>Upcoming</span></div>
+        <!-- Past table -->
+        <div class="sec-hdr"><div class="sec-title">Past events</div><div class="sec-sub">Here are all the past events that have now concluded.</div></div>
+        <div class="ant-tbl-wrap">
+          <table class="ant-tbl" style="min-width:100%;">
+            <thead><tr><th>Event</th><th>Status</th><th>Date</th><th>Year</th></tr></thead>
+            <tbody>
+              <tr><td><div class="user-cell"><div class="av av-blue">WD</div><span class="user-name">Winter Demo Day</span></div></td><td><span class="pill pill-gray"><span class="pill-dot"></span>Closed</span></td><td>Dec 10</td><td>2024</td></tr>
+              <tr><td><div class="user-cell"><div class="av av-gray">Q4</div><span class="user-name">Q4 Ops Review</span></div></td><td><span class="pill pill-gray"><span class="pill-dot"></span>Closed</span></td><td>Nov 28</td><td>2024</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S6 — CONSUMERS ══ -->
+<div class="slide" id="s6">
+  <div class="split">
+    <div class="col-copy">
+      <p class="ey-dark">Consumers</p>
+      <h2 class="h2-dark">Manage and review your customer base</h2>
+      <p class="p-dark">Full consumer profiles — device assignment history, deposit tracking, lost-fee collection, and event participation — all in one table.</p>
+      <ul class="blist dk">
+        <li><span class="bchk dk"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#7BB3FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Stats: Total consumers · Active · Inactive · From events</li>
+        <li><span class="bchk dk"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#7BB3FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Columns: User · Status · Email · Devices · Events</li>
+        <li><span class="bchk dk"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#7BB3FF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Deposit + lost-fee recovery via Stripe payments</li>
+      </ul>
+    </div>
+    <div class="col-mock">
+      <div class="page-shell dark-shell" style="max-width:520px;">
+        <div class="app-navbar">
+          <div class="nav-brand"><svg width="22" height="10" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="white"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="white"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="white"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="white"/></svg></div>
+          <div class="nav-items"><span class="nav-item">Home</span><span class="nav-item">Events</span><span class="nav-item">Inventory</span><span class="nav-item active">Consumers</span><span class="nav-item">Staff</span></div>
+          <div class="nav-avatar">GR</div>
+        </div>
+        <div class="page-hdr dk">
+          <div>
+            <div class="page-title wt">Consumers</div>
+            <div class="page-sub wt">Manage and review your customer base.</div>
+          </div>
+          <span class="btn-primary">+ Add new consumer</span>
+        </div>
+        <!-- Stats -->
+        <div class="sec-hdr"><div class="sec-title" style="color:white;">Quick glance</div><div class="sec-sub wt">Overview of your consumer base.</div></div>
+        <div class="dstat-grid">
+          <div class="dstat"><div class="dstat-val">486</div><div class="dstat-lbl">Total consumers</div></div>
+          <div class="dstat"><div class="dstat-val" style="color:#4ADE80;">391</div><div class="dstat-lbl">Active</div></div>
+          <div class="dstat"><div class="dstat-val" style="color:rgba(255,255,255,.45);">95</div><div class="dstat-lbl">Inactive</div></div>
+        </div>
+        <!-- Search -->
+        <div class="search-bar" style="margin-top:10px;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.35);">
+          <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="rgba(255,255,255,0.4)" stroke-width="1.4" stroke-linecap="round"/></svg>Search consumer here
+        </div>
+        <div style="padding:4px 16px 2px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;font-weight:700;color:white;">Consumers</span>
+          <span class="count-badge">486 total</span>
+        </div>
+        <div class="ant-tbl-wrap">
+          <table class="ant-tbl dark">
+            <thead><tr><th>User</th><th>Status</th><th>Email</th><th>Devices</th><th>Events</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="user-cell"><div class="av av-blue">JR</div><div><div class="user-name" style="color:white;">Jordan Rivera</div></div></div></td>
+                <td><span class="pill pill-green"><span class="pill-dot"></span>Active</span></td>
+                <td style="color:rgba(255,255,255,.5);">j.rivera@…</td>
+                <td style="color:white;">2</td>
+                <td><div class="user-cell"><div class="av av-blue" style="font-size:8px;">TS</div><div class="av av-green" style="font-size:8px;margin-left:-6px;">LC</div></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="av av-gray">ML</div><div><div class="user-name" style="color:white;">Morgan Lee</div></div></div></td>
+                <td><span class="pill pill-gray"><span class="pill-dot"></span>Inactive</span></td>
+                <td style="color:rgba(255,255,255,.5);">m.lee@…</td>
+                <td style="color:white;">0</td>
+                <td><span class="pill pill-blue" style="font-size:9px;">No event assigned</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="av" style="background:#F4F3FF;color:#5925DC;">AS</div><div><div class="user-name" style="color:white;">Alex Smith</div></div></div></td>
+                <td><span class="pill pill-green"><span class="pill-dot"></span>Active</span></td>
+                <td style="color:rgba(255,255,255,.5);">a.smith@…</td>
+                <td style="color:white;">1</td>
+                <td><div class="user-cell"><div class="av av-blue" style="font-size:8px;">TS</div></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S7 — STAFF + PERMISSIONS ══ -->
+<div class="slide" id="s7">
+  <div class="split">
+    <div class="col-copy">
+      <p class="ey-light">Staff &amp; Access Control</p>
+      <h2 class="h2-light">The right people see the right things — nothing more</h2>
+      <p class="p-light">6 role types enforce granular permissions across every section. Every route is guarded. Every action is logged with MFA support.</p>
+      <ul class="blist lt">
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"Add new staff" · "Delete staff members"</li>
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Roles: Root Admin · Admin · Event Manager · Inventory Manager · Sale Manager · Assistant</li>
+        <li><span class="bchk lt"><svg viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2 2L8 1" stroke="#155EEF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Per-route PermissionGuard — automatic redirect on violation</li>
+      </ul>
+    </div>
+    <div class="col-mock">
+      <div class="page-shell" style="max-width:500px;">
+        <div class="app-navbar">
+          <div class="nav-brand"><svg width="22" height="10" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="white"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="white"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="white"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="white"/></svg></div>
+          <div class="nav-items"><span class="nav-item">Home</span><span class="nav-item">Events</span><span class="nav-item">Inventory</span><span class="nav-item">Consumers</span><span class="nav-item active">Staff</span></div>
+          <div class="nav-avatar">GR</div>
+        </div>
+        <div class="page-hdr">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="page-title">Staff:</span>
+            <div class="nav-search" style="background:var(--bg);border-color:var(--gray-300);color:var(--gray-500);min-width:130px;padding:5px 10px;">
+              <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="#667085" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="#667085" stroke-width="1.4" stroke-linecap="round"/></svg>Search
+            </div>
+          </div>
+          <div class="hdr-btns">
+            <span class="btn-danger">Delete staff members</span>
+            <span class="btn-primary">+ Add new staff</span>
+          </div>
+        </div>
+        <div class="ant-tbl-wrap">
+          <table class="ant-tbl">
+            <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="user-cell"><div class="av" style="background:#F4F3FF;color:#5925DC;">GR</div><div class="user-name">G. Rodriguez</div></div></td>
+                <td><span class="pill" style="background:#F4F3FF;color:#5925DC;border:1px solid #D9D6FE;"><span class="pill-dot" style="background:#7A5AF8;"></span>Root Admin</span></td>
+                <td>g.rodriguez@…</td>
+                <td><span class="pill pill-green"><span class="pill-dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="av av-blue">ML</div><div class="user-name">M. Lee</div></div></td>
+                <td><span class="pill pill-blue"><span class="pill-dot"></span>Event Manager</span></td>
+                <td>m.lee@…</td>
+                <td><span class="pill pill-green"><span class="pill-dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="av av-green">AS</div><div class="user-name">A. Smith</div></div></td>
+                <td><span class="pill pill-green"><span class="pill-dot"></span>Inv. Manager</span></td>
+                <td>a.smith@…</td>
+                <td><span class="pill pill-green"><span class="pill-dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="av" style="background:#FFF6ED;color:#C4320A;">JR</div><div class="user-name">J. Rivera</div></div></td>
+                <td><span class="pill pill-amber"><span class="pill-dot"></span>Assistant</span></td>
+                <td>j.rivera@…</td>
+                <td><span class="pill pill-gray"><span class="pill-dot"></span>Inactive</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S8 — CTA ══ -->
+<div class="slide" id="s8">
+  <p class="s8-ey">Devitrak Admin Platform</p>
+  <h2 class="s8-h2">Stop losing track.<br>Start running tight.</h2>
+  <p class="s8-sub">Built for operations teams who need real visibility, real accountability, and real control over their physical assets.</p>
+  <a class="s8-cta" href="https://admin.devitrak.net" target="_blank">
+    Open Dashboard
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M9 4l3.5 3.5L9 11" stroke="#155EEF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+  <div class="s8-lg">
+    <svg width="32" height="14" viewBox="0 0 29 13" fill="none"><path d="M20.9298 4.539C20.8764 4.3763 20.8173 4.21439 20.7509 4.05484C20.5024 3.45986 20.1681 2.91046 19.7537 2.41372L17.17 4.92255C17.9066 6.07715 17.7592 7.61687 16.728 8.6182C15.6968 9.61953 14.1111 9.76258 12.922 9.04734L10.3382 11.5562C10.849 11.9586 11.4148 12.2832 12.0284 12.5245C12.8305 12.8404 13.678 13.0008 14.5465 13.0008C15.4151 13.0008 16.2626 12.8404 17.0647 12.5245C17.896 12.1967 18.6415 11.7165 19.2802 11.0972L25.6586 4.90369C22.3172 8.14819 20.9298 4.539 20.9298 4.539Z" fill="rgba(255,255,255,0.4)"/><path d="M29 1.6584C27.5908 0.290024 25.3057 0.290024 23.8964 1.6584L20.9298 4.539C20.9298 4.539 22.3172 8.14819 25.6586 4.90369L29 1.6584Z" fill="rgba(255,255,255,0.4)"/><path d="M8.07017 8.461C8.12359 8.6237 8.18268 8.78561 8.24906 8.94516C8.49756 9.54015 8.83186 10.0895 9.2463 10.5863L11.83 8.07745C11.0934 6.92285 11.2408 5.38313 12.272 4.3818C13.3032 3.38047 14.8889 3.23742 16.078 3.95266L18.6618 1.44383C18.151 1.04141 17.5852 0.716808 16.9716 0.475514C16.1687 0.160339 15.322 0 14.4535 0C13.5849 0 12.7374 0.160339 11.9353 0.4763C11.104 0.804051 10.3585 1.28428 9.71982 1.90363L3.34139 8.0971C6.68278 4.8526 8.07017 8.461 8.07017 8.461Z" fill="rgba(255,255,255,0.4)"/><path d="M0 11.3416C1.40924 12.71 3.69431 12.71 5.10355 11.3416L8.07017 8.461C8.07017 8.461 6.68278 4.8526 3.34139 8.0971L0 11.3416Z" fill="rgba(255,255,255,0.4)"/></svg>
+    <span style="font-size:12px;color:rgba(255,255,255,.3);letter-spacing:.05em;">admin.devitrak.net</span>
+  </div>
+  <p class="s8-url">© 2025 Devitrak · Device Management, Simplified</p>
+</div>
+
+</div><!-- /vc -->
+
+<script>
+const SLIDES = [
+  { id:'s1', duration:10000 },
+  { id:'s2', duration:14000 },
+  { id:'s3', duration:15000 },
+  { id:'s4', duration:14000 },
+  { id:'s5', duration:14000 },
+  { id:'s6', duration:14000 },
+  { id:'s7', duration:14000 },
+  { id:'s8', duration:11000 },
+];
+const TOTAL = SLIDES.reduce((s,x)=>s+x.duration,0);
+const CUM   = SLIDES.reduce((a,s,i)=>{ a.push((a[i-1]||0)+s.duration); return a; },[]);
+
+let current=0, elapsed=0, lastTs=null, paused=false, rafId=null;
+const fill  = document.getElementById('prog-fill');
+const ppBtn = document.getElementById('pp');
+const sctr  = document.getElementById('sctr');
+
+function showSlide(i){
+  SLIDES.forEach((s,j)=>{
+    const el=document.getElementById(s.id);
+    el.classList.toggle('active', i===j);
+    el.classList.toggle('exit',   i!==j);
+  });
+  sctr.textContent=`${i+1} / ${SLIDES.length}`;
+}
+
+function tick(ts){
+  if(paused){ lastTs=null; return; }
+  if(lastTs!==null) elapsed=Math.min(elapsed+(ts-lastTs), TOTAL);
+  lastTs=ts;
+  fill.style.width=(elapsed/TOTAL*100)+'%';
+  const idx=CUM.findIndex(t=>elapsed<t);
+  const ni=idx===-1?SLIDES.length-1:idx;
+  if(ni!==current){ current=ni; showSlide(current); }
+  if(elapsed<TOTAL) rafId=requestAnimationFrame(tick);
+  else { fill.style.width='100%'; ppBtn.textContent='↺'; ppBtn.setAttribute('aria-label','Replay'); }
+}
+
+function start(){ paused=false; ppBtn.textContent='⏸'; ppBtn.setAttribute('aria-label','Pause'); rafId=requestAnimationFrame(tick); }
+function pause(){ paused=true; lastTs=null; ppBtn.textContent='▶'; ppBtn.setAttribute('aria-label','Play'); if(rafId) cancelAnimationFrame(rafId); }
+function replay(){ elapsed=0; current=0; lastTs=null; showSlide(0); start(); }
+
+ppBtn.addEventListener('click',()=>{ if(elapsed>=TOTAL){replay();return;} paused?start():pause(); });
+document.addEventListener('keydown',e=>{ if(e.code==='Space'){e.preventDefault(); if(elapsed>=TOTAL){replay();return;} paused?start():pause();} });
+
+showSlide(0);
+start();
+</script>
+</body>
+</html>
