@@ -47,6 +47,7 @@ const RedirectionPage = () => {
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
     localStorage.removeItem("admin-token", "");
+    localStorage.removeItem("sqlStaffId");
     dispatch(onLogout());
     return navigate("/login");
   };
