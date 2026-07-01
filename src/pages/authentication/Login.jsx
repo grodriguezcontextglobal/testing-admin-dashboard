@@ -240,6 +240,8 @@ const Login = () => {
     } catch (error) {
       console.error("loginIntoOneCompanyAccount", error);
       const errorMsg = error?.response?.data?.msg ?? error.message;
+      localStorage.removeItem("sqlStaffId");
+      localStorage.removeItem("s-token-lq");
       openNotificationWithIcon("error", errorMsg);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(errorMsg));
@@ -319,9 +321,7 @@ const Login = () => {
       const staffMemberResponse = await devitrakApi.post(
         "/db_staff/consulting-member",
         { email: loginData.email });
-        console.log(staffMemberResponse)
       const staffId = extractStaffId(staffMemberResponse.data);
-      console.log(staffId)
       if (staffId) localStorage.setItem("s-token-lq", String(staffId));
 
       // 2. Now call companies with sqlStaffId available
@@ -378,6 +378,7 @@ const Login = () => {
       if (error.response?.status === 401 && !isMfaRequired) {
         localStorage.removeItem("admin-token");
         localStorage.removeItem("sqlStaffId");
+        localStorage.removeItem("s-token-lq");
         dispatch(onLogout());
         setCurrentStep("email");
         openNotificationWithIcon(
@@ -427,6 +428,8 @@ const Login = () => {
         return; // Stay on MFA step
       }
 
+      localStorage.removeItem("sqlStaffId");
+      localStorage.removeItem("s-token-lq");
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
 
