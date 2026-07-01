@@ -56,6 +56,7 @@ const InactivityLogout = ({ children }) => {
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
     localStorage.removeItem("admin-token", "");
+    localStorage.removeItem("sqlStaffId");
     dispatch(onLogout());
     openNotification();
     return navigate("/login");
