@@ -65,6 +65,7 @@ const App = () => {
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       localStorage.removeItem("admin-token");
+      localStorage.removeItem("sqlStaffId");
       dispatch(onLogout());
       openNotificationWithIcon("Session has expired. Please sign in again.");
       return window.location.reload(true);
