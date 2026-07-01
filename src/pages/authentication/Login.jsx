@@ -8,6 +8,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Checkbox, notification, Typography } from "antd";
+import { jwtDecode } from "jwt-decode";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -49,6 +50,7 @@ import { setPermissions } from "../../store/slices/permissions";
 import {
   buildActiveCompaniesFromSQL,
   buildSetPermissionsPayload,
+  extractStaffId,
 } from "./utils/loginUtils";
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
@@ -171,6 +173,8 @@ const Login = () => {
   const loginIntoOneCompanyAccount = async ({ props }) => {
     try {
       localStorage.setItem("admin-token", props.respo.token);
+      const _decoded = jwtDecode(props.respo.token);
+      if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
       const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
         `/profile/${props.respo.uid}`,
         {
@@ -302,7 +306,8 @@ const Login = () => {
         throw new Error("Email not found in any company");
       }
 
-      const authHeaders = {
+
+      const tokenHeaders = {
         headers: {
           "x-token": loginResponse.data.token,
           "Cache-Control": "no-cache",
@@ -310,10 +315,22 @@ const Login = () => {
         },
       };
 
-      const [staffMemberResponse, sqlCompaniesResponse] = await Promise.all([
-        devitrakApi.post("/db_staff/consulting-member", { email: loginData.email }, authHeaders),
-        devitrakApi.get("/db_staff/companies", authHeaders),
-      ]);
+      // 1. Get staff_id first — this endpoint does NOT need sqlStaffId
+      const staffMemberResponse = await devitrakApi.post(
+        "/db_staff/consulting-member",
+        { email: loginData.email });
+        console.log(staffMemberResponse)
+      const staffId = extractStaffId(staffMemberResponse.data);
+      console.log(staffId)
+      if (staffId) localStorage.setItem("s-token-lq", String(staffId));
+
+      // 2. Now call companies with sqlStaffId available
+      const sqlCompaniesResponse = await devitrakApi.get("/db_staff/companies", {
+        headers: {
+          ...tokenHeaders.headers,
+          ...(staffId ? { sqlStaffId: String(staffId) } : {}),
+        },
+      });
 
       const activeCompanies = buildActiveCompaniesFromSQL(
         sqlCompaniesResponse.data.companies ?? [],
@@ -360,6 +377,7 @@ const Login = () => {
       // Skip this handler if it's an MFA-required 401 from the login endpoint itself.
       if (error.response?.status === 401 && !isMfaRequired) {
         localStorage.removeItem("admin-token");
+        localStorage.removeItem("sqlStaffId");
         dispatch(onLogout());
         setCurrentStep("email");
         openNotificationWithIcon(
