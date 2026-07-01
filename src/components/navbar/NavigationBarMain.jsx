@@ -90,6 +90,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
     localStorage.removeItem("admin-token", "");
+    localStorage.removeItem("sqlStaffId");
     dispatch(onLogout());
     return navigate("/login");
   };
