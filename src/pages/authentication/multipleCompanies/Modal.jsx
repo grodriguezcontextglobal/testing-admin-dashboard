@@ -1,4 +1,5 @@
 import { Grid } from "@mui/material";
+import { jwtDecode } from "jwt-decode";
 import { useQueryClient } from "@tanstack/react-query";
 import { Select, Spin, message, notification } from "antd";
 import { useState } from "react";
@@ -69,6 +70,8 @@ const ModalMultipleCompanies = ({
     try {
       setIsLoading(true);
       localStorage.setItem("admin-token", dataPassed.respo.token);
+      const _decoded = jwtDecode(dataPassed.respo.token);
+      if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
       await devitrakApiAdmin.patch(`/profile/${dataPassed.respo.uid}`, {
         online: true,
       });
@@ -183,12 +186,14 @@ const ModalMultipleCompanies = ({
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       localStorage.removeItem("admin-token", "");
+      localStorage.removeItem("sqlStaffId");
       dispatch(onLogout());
     }
   };
 
   const handleCancel = async () => {
     localStorage.removeItem("admin-token");
+    localStorage.removeItem("sqlStaffId");
     await logout();
     setOpenMultipleCompanies(false);
   };
