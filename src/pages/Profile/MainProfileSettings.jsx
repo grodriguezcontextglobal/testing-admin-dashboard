@@ -43,6 +43,7 @@ const MainProfileSettings = () => {
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       localStorage.removeItem("admin-token", "");
+      localStorage.removeItem("sqlStaffId");
       dispatch(onLogout());
     }
   };
