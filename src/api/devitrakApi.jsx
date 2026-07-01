@@ -60,8 +60,14 @@ const createDevitrakApiInstance = (suffix = "") => {
           "X-Request-Timestamp": clientInfo.timestamp,
           "X-Request-ID": `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
+        // Remove headers that the server's CORS policy does not allow
+        delete config.headers["pragma"];
+        delete config.headers["Pragma"];
         if (localStorage.getItem("admin-token")) {
             config.headers["x-token"] = localStorage.getItem("admin-token");
+        }
+        if (localStorage.getItem("s-token-lq")) {
+            config.headers["s-token-lq"] = localStorage.getItem("s-token-lq");
         }
         return config;
     });
