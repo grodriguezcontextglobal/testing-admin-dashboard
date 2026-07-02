@@ -6,6 +6,10 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
+import {
+  clearSessionStorage,
+  persistCompanyHeaders,
+} from "../../../api/sessionHeaders";
 import Loading from "../../../components/animation/Loading";
 import dicRole from "../../../components/general/dicRole";
 import { isAssistant } from "../../../config/roles";
@@ -94,6 +98,7 @@ const ModalMultipleCompanies = ({
       if (!companyRecord?.company_id) {
         throw new Error("Company SQL record not found. Please contact support.");
       }
+      localStorage.setItem("s-company-lq", companyRecord.company_id);
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyRecord.company_id,
       });
@@ -102,6 +107,12 @@ const ModalMultipleCompanies = ({
       const selectedCompanySQL = dataPassed.companyInfo.find(
         (item) => item.company === selection,
       );
+
+      // Set the company-scoped default headers for subsequent requests.
+      persistCompanyHeaders({
+        companyId: selectedCompanyData?.id,
+        companySqlId: companyRecord.company_id,
+      });
 
       dispatch(
         onLogin({
@@ -185,15 +196,13 @@ const ModalMultipleCompanies = ({
       dispatch(onResetHelpers());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      localStorage.removeItem("admin-token", "");
-      localStorage.removeItem("sqlStaffId");
+      clearSessionStorage();
       dispatch(onLogout());
     }
   };
 
   const handleCancel = async () => {
-    localStorage.removeItem("admin-token");
-    localStorage.removeItem("sqlStaffId");
+    clearSessionStorage();
     await logout();
     setOpenMultipleCompanies(false);
   };
