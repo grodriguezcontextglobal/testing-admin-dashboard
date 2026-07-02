@@ -3,7 +3,7 @@ import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, Typography, notification } from "antd";
 import { PropTypes } from "prop-types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -40,7 +40,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
-  const employeeListRef = useRef([]);
+  const [employeeList, setEmployeeList] = useState([]);
   const [api, contextHolder] = notification.useNotification();
 
   const companiesEmployees = useQuery({
@@ -72,38 +72,40 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
   }, [location.key, user.company, modalState]);
 
   const fetchEmployees = async () => {
-    const result = new Set();
-    const companiesData =
-      companiesEmployees?.data?.data?.company[0]?.employees ?? [];
-    for (let data of companiesData) {
-      const individual = await devitrakApi.post("/staff/admin-users", {
-        email: data.user,
-      });
-      if (individual.data) {
-        result.add({
+    const company = companiesEmployees?.data?.data?.company?.[0];
+    const companiesData = company?.employees ?? [];
+    // Parallelize the per-employee lookups instead of awaiting one at a time.
+    const detailed = await Promise.all(
+      companiesData.map(async (data) => {
+        const base = {
           ...data,
           email: data.user,
           status: data.status === "Pending" ? data.status : data.active,
-          adminUserInfo: individual.data.adminUsers[0],
-          companyData: companiesEmployees.data.data.company[0],
-        });
-      } else {
-        result.add({
-          ...data,
-          status: data.status === "Pending" ? data.status : data.active,
-          companyData: companiesEmployees.data.data.company[0],
-          adminUserInfo: null,
-        });
-      }
-    }
-    employeeListRef.current = Array.from(result);
+          companyData: company,
+        };
+        try {
+          const individual = await devitrakApi.post("/staff/admin-users", {
+            email: data.user,
+          });
+          return {
+            ...base,
+            adminUserInfo: individual?.data?.adminUsers?.[0] ?? null,
+          };
+        } catch {
+          return { ...base, adminUserInfo: null };
+        }
+      }),
+    );
+    // setState (not a ref) so the table actually re-renders on mount.
+    setEmployeeList(detailed);
   };
 
   useEffect(() => {
     const controller = new AbortController();
     fetchEmployees();
     return () => controller.abort();
-  }, [location.key, companiesEmployees.data]); // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, companiesEmployees.data]);
 
   const renderStatus = (active) => {
     if (typeof active === "string") return active;
@@ -231,24 +233,16 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
     },
   ];
 
-  const getTableData = () => {
-    const list = employeeListRef.current;
-    const result = [];
-    let index = list.length - 1;
-    for (let data of list) {
-      result.splice(index, 0, {
-        name: `${data.firstName} ${data.lastName}`,
-        email: data.email,
-        phone: data.phone,
-        role: data.role,
-        active: data.status,
-        entireData: data,
-        key: data.email,
-      });
-      index--;
-    }
-    return result;
-  };
+  const getTableData = () =>
+    employeeList.map((data) => ({
+      name: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      phone: data.phone,
+      role: data.role,
+      active: data.status,
+      entireData: data,
+      key: data.email,
+    }));
 
   const tableData = getTableData();
 
