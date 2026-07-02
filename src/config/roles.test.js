@@ -396,25 +396,77 @@ const F01_NAV_ACTIONS    = ["nav:members"];
 const F01_QG_ACTIONS     = ["event:quickGlance_read", "event:quickGlance_update"];
 const F01_STRIPE_ACTIONS = ["transaction:stripe_create", "transaction:stripe_read", "transaction:stripe_update"];
 const F01_ALL_NEW_ACTIONS = [...F01_MEMBER_ACTIONS, ...F01_NAV_ACTIONS, ...F01_QG_ACTIONS, ...F01_STRIPE_ACTIONS];
+// Acciones que siguen pendientes de asignación de roles (F-04).
+const F01_STILL_EMPTY_ACTIONS = [...F01_QG_ACTIONS, ...F01_STRIPE_ACTIONS];
 const ALL_CURRENT_ROLES  = ["root_admin", "admin", "sale_manager", "event_manager", "inventory_manager", "assistant"];
 
-describe("F-01 — PERMISSIONS: nuevas claves existen como arrays vacíos", () => {
+describe("F-01 — PERMISSIONS: nuevas claves existen como arrays", () => {
   F01_ALL_NEW_ACTIONS.forEach((action) => {
-    it(`"${action}" existe en PERMISSIONS y es array vacío`, () => {
+    it(`"${action}" existe en PERMISSIONS y es array`, () => {
       expect(PERMISSIONS[action]).toBeDefined();
       expect(Array.isArray(PERMISSIONS[action])).toBe(true);
+    });
+  });
+});
+
+describe("F-01 — PERMISSIONS: acciones aún sin roles (QG + stripe) siguen vacías", () => {
+  F01_STILL_EMPTY_ACTIONS.forEach((action) => {
+    it(`"${action}" sigue siendo array vacío`, () => {
       expect(PERMISSIONS[action]).toHaveLength(0);
     });
   });
 });
 
-describe("F-01 — PERMISSIONS: ningún rol actual tiene las nuevas acciones", () => {
-  F01_ALL_NEW_ACTIONS.forEach((action) => {
+describe("F-01 — PERMISSIONS: ningún rol tiene las acciones aún pendientes", () => {
+  F01_STILL_EMPTY_ACTIONS.forEach((action) => {
     ALL_CURRENT_ROLES.forEach((role) => {
-      it(`"${role}" no puede "${action}" en F-01`, () => {
+      it(`"${role}" no puede "${action}"`, () => {
         expect(hasPermission(action, role)).toBe(false);
       });
     });
+  });
+});
+
+// ─── F-02: PERMISSIONS — dominio member accesible a EVENT_CRU ─────────────────
+// La barra de opciones de la página del miembro (Home, Assign devices,
+// Update member info, Send email reminder) debe verse para:
+//   root_admin, admin, event_manager, assistant.
+// member:delete queda reservado a EVENT_D (sin assistant), igual que el resto
+// de dominios con patrón CRU.
+
+describe("F-02 — PERMISSIONS: dominio member (CRU) visible para root_admin/admin/event_manager/assistant", () => {
+  const MEMBER_ALLOWED_ROLES = ["root_admin", "admin", "event_manager", "assistant"];
+  const MEMBER_CRU_ACTIONS = [
+    "member:create",
+    "member:read",
+    "member:update",
+    "member:assign_devices",
+    "member:notify",
+    "nav:members",
+  ];
+  const MEMBER_DENIED_ROLES = ["sale_manager", "inventory_manager"];
+
+  MEMBER_CRU_ACTIONS.forEach((action) => {
+    MEMBER_ALLOWED_ROLES.forEach((role) => {
+      it(`"${role}" puede "${action}"`, () => {
+        expect(hasPermission(action, role)).toBe(true);
+      });
+    });
+    MEMBER_DENIED_ROLES.forEach((role) => {
+      it(`"${role}" no puede "${action}"`, () => {
+        expect(hasPermission(action, role)).toBe(false);
+      });
+    });
+  });
+
+  it("member:delete permitido solo para root_admin, admin, event_manager (EVENT_D)", () => {
+    ["root_admin", "admin", "event_manager"].forEach((role) => {
+      expect(hasPermission("member:delete", role)).toBe(true);
+    });
+  });
+
+  it("member:delete denegado para assistant", () => {
+    expect(hasPermission("member:delete", "assistant")).toBe(false);
   });
 });
 
