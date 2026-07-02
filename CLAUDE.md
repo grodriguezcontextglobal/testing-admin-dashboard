@@ -112,7 +112,16 @@ On logout, every slice is individually reset — see `App.jsx::dispatchActionBas
 | `devitrakApiArticle`| `/article`  | Inventory item endpoints   |
 | `devitrakAWSApi`    | AWS base    | AWS-specific endpoints     |
 
-All three share a request interceptor that attaches `x-token` from `localStorage`, plus locale/timezone headers. On `Network Error` or timeout they auto-retry on the next healthy server via `src/api/serverManager.js`.
+All three share a request interceptor that attaches `x-token` and `s-token-lq` (staff SQL id) from `localStorage`, plus locale/timezone headers, plus the route-scoped company headers (see below). On `Network Error` or timeout they auto-retry on the next healthy server via `src/api/serverManager.js`.
+
+**Session headers (`src/api/sessionHeaders.js`)** is the single source of truth for the localStorage-backed auth/session keys. It exposes `persistCompanyHeaders` (called at login in `Login.jsx` and `multipleCompanies/Modal.jsx`), `clearSessionStorage` (called at every logout/session-teardown site), and the pure helpers `buildRequestPath` + `buildRouteScopedHeaders` used by the interceptor. Route-scoped defaults:
+
+| Header         | Value                          | Source (Redux)                | Routes                              |
+|----------------|--------------------------------|-------------------------------|-------------------------------------|
+| `x-company-id` | Mongo ObjectId of the company  | `admin.user.companyData.id`   | `/api/staff` `/api/admin` `/api/company` `/api/stripe` |
+| `s-company-lq` | SQL `company_id` (integer)     | `admin.user.sqlInfo.company_id` | `/api/db_*`                         |
+
+When adding a new localStorage session key, add it to `SESSION_STORAGE_KEYS` so it is cleared on logout everywhere.
 
 Server selection (`serverManager.js`): on startup, `configureApi()` checks `VITE_APP_DEVITRACK_API` (primary) and `VITE_APP_DEVITRACK_API_BACKUP` via a `/health` endpoint. The active server is cached in `localStorage` under `activeApiServer`.
 
