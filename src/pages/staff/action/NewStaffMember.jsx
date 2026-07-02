@@ -1,78 +1,47 @@
 /* eslint-disable react/prop-types */
 import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  Grid,
-  InputLabel,
-  MenuItem,
-  OutlinedInput,
-  Select,
-} from "@mui/material";
+import { MenuItem, Select } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import * as yup from "yup";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { LEGACY_ROLE_MAP, ROLE_LABELS, ROLE_LEVELS, resolveRoleType } from "../../../config/roles";
+import { ROLE_LEVELS, resolveRoleType } from "../../../config/roles";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import Input from "../../../components/UX/inputs/Input";
+import Label from "../../../components/UX/inputs/Label";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
-import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
-import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
 import "../detail/components/equipment_components/assingmentComponents/style.css";
+import {
+  buildEmployeeEntry,
+  buildInvitationLink,
+  buildRoleOptions,
+  newStaffSchema,
+  roleTypeFromRole,
+} from "./utils/newStaffMemberUtils";
 
-const labelStyle = {
-  marginTop: "0.5rem",
-  marginBottom: "0px",
-  width: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-start",
-  textAlign: "left",
+const titleStyle = {
+  color: "var(--gray-900, #101828)",
+  fontFamily: "Inter",
+  fontSize: "18px",
+  fontWeight: 600,
+  lineHeight: "28px",
+  margin: 0,
 };
 
-const errorStyle = {
+const errorCaption = {
   fontSize: "12px",
   fontFamily: "Inter",
-  color: "var(--error-500, #F04438)",
+  color: "var(--error, #B42318)",
   marginTop: "4px",
   display: "block",
 };
 
-const ALL_ROLE_OPTIONS = [
-  { label: ROLE_LABELS.root_admin,        value: 0 },
-  { label: ROLE_LABELS.admin,             value: 1 },
-  { label: ROLE_LABELS.sale_manager,      value: 2 },
-  { label: ROLE_LABELS.event_manager,     value: 3 },
-  { label: ROLE_LABELS.inventory_manager, value: 4 },
-  { label: ROLE_LABELS.assistant,         value: 5 },
-];
-
-const schema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Email format is not valid")
-    .required("Email is required"),
-  role: yup.number().required("Role is required"),
-  name: yup.string().when("$needCreate", {
-    is: true,
-    then: (s) => s.required("Name is required"),
-    otherwise: (s) => s.optional(),
-  }),
-  lastName: yup.string().when("$needCreate", {
-    is: true,
-    then: (s) => s.required("Last name is required"),
-    otherwise: (s) => s.optional(),
-  }),
-  phoneNumber: yup.string().when("$needCreate", {
-    is: true,
-    then: (s) => s.required("Phone number is required"),
-    otherwise: (s) => s.optional(),
-  }),
-});
+const fieldWrapper = { display: "flex", flexDirection: "column", gap: "6px", width: "100%" };
 
 export const NewStaffMember = ({ modalState, setModalState }) => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -83,9 +52,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   const [messageApi, contextHolder] = message.useMessage();
 
   const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
-  const roleOptions = userLevel === 0
-    ? ALL_ROLE_OPTIONS
-    : ALL_ROLE_OPTIONS.filter((o) => o.value > userLevel);
+  const roleOptions = buildRoleOptions(userLevel);
 
   const {
     register,
@@ -94,30 +61,22 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     watch,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(schema, { context: { needCreate } }),
-  });
-
-  const allStaffSavedQuery = useQuery({
-    queryKey: ["staff"],
-    queryFn: () => devitrakApi.get("/staff/admin-users"),
-    refetchOnMount: false,
+    resolver: yupResolver(newStaffSchema, { context: { needCreate } }),
   });
 
   const companiesQuery = useQuery({
     queryKey: ["companyListQuery"],
     queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id,
-      }),
+      devitrakApi.post("/company/search-company", { _id: user.companyData.id }),
     refetchOnMount: false,
   });
 
   useEffect(() => {
     const controller = new AbortController();
-    allStaffSavedQuery.refetch();
     companiesQuery.refetch();
     return () => controller.abort();
-  }, [user.company]); // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.company]);
 
   const notify = (type, content) => {
     messageApi.open({ type, content, onClose: () => setValue("email", "") });
@@ -133,25 +92,23 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     await devitrakApi.patch(`/company/update-company/${companyInfo.id}`, {
       employees: [
         ...companyInfo.employees,
-        {
-          user: email,
-          firstName: name,
-          lastName: lastName,
-          status: "Pending",
-          super_user: false,
-          role: String(role),
-          roleType: LEGACY_ROLE_MAP[Number(role)] ?? "assistant",
-          active: true,
-        },
+        buildEmployeeEntry({ name, lastName, email, role }),
       ],
     });
 
-    const roleType = LEGACY_ROLE_MAP[Number(role)] ?? "assistant";
     await devitrakApi.post("/nodemailer/new_invitation", {
       consumer: email,
       subject: "Invitation",
       company: user.company,
-      link: `https://admin.devitrak.net/invitation?first=${encodeURIComponent(name)}&last=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&question=${encodeURIComponent("company name")}&answer=${encodeURIComponent(user.company)}&role=${encodeURIComponent(role)}&roleType=${encodeURIComponent(roleType)}&company=${encodeURIComponent(user.companyData.id)}`,
+      link: buildInvitationLink({
+        name,
+        lastName,
+        email,
+        company: user.company,
+        companyId: user.companyData.id,
+        role,
+        roleType: roleTypeFromRole(role),
+      }),
     });
 
     queryClient.invalidateQueries({ queryKey: ["listAdminUsers"], exact: true });
@@ -231,101 +188,74 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     }
   };
 
-  if (!allStaffSavedQuery.data) return null;
-
   const bodyModal = () => (
-    <form onSubmit={handleSubmit(onSubmitRegister)} style={{ width: "100%" }}>
-      <Grid marginY={"20px"} marginX={0} item xs={12}>
-        <InputLabel style={labelStyle}>Email</InputLabel>
-        <OutlinedInput
+    <form onSubmit={handleSubmit(onSubmitRegister)} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px", marginTop: "8px" }}>
+      <div style={fieldWrapper}>
+        <Label>Email</Label>
+        <Input
           {...register("email", { required: true })}
-          style={OutlinedInputStyle}
           placeholder="Enter staff email"
-          type="text"
-          fullWidth
+          error={!!errors.email}
+          helperText={errors.email?.message}
         />
-        {errors?.email?.message && (
-          <span style={errorStyle}>{errors.email.message}</span>
-        )}
-      </Grid>
+      </div>
 
       {needCreate && (
         <>
-          <Grid marginY={"20px"} marginX={0} item xs={12}>
-            <InputLabel style={labelStyle}>Name</InputLabel>
-            <OutlinedInput
-              type="text"
-              {...register("name")}
-              aria-invalid={!!errors.name}
-              style={OutlinedInputStyle}
-              placeholder="Enter name"
-              fullWidth
-            />
-            {errors?.name?.message && (
-              <span style={errorStyle}>{errors.name.message}</span>
-            )}
-          </Grid>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <div style={fieldWrapper}>
+              <Label>Name</Label>
+              <Input
+                {...register("name")}
+                placeholder="Enter name"
+                error={!!errors.name}
+                helperText={errors.name?.message}
+              />
+            </div>
+            <div style={fieldWrapper}>
+              <Label>Last name</Label>
+              <Input
+                {...register("lastName")}
+                placeholder="Enter last name"
+                error={!!errors.lastName}
+                helperText={errors.lastName?.message}
+              />
+            </div>
+          </div>
 
-          <Grid marginY={"20px"} marginX={0} item xs={12}>
-            <InputLabel style={labelStyle}>Last name</InputLabel>
-            <OutlinedInput
-              type="text"
-              {...register("lastName")}
-              aria-invalid={!!errors.lastName}
-              style={OutlinedInputStyle}
-              placeholder="Enter last name"
-              fullWidth
-            />
-            {errors?.lastName?.message && (
-              <span style={errorStyle}>{errors.lastName.message}</span>
-            )}
-          </Grid>
-
-          <Grid marginY={"20px"} marginX={0} item xs={12}>
-            <InputLabel style={labelStyle}>Phone number</InputLabel>
-            <OutlinedInput
-              type="text"
+          <div style={fieldWrapper}>
+            <Label>Phone number</Label>
+            <Input
               {...register("phoneNumber")}
-              aria-invalid={!!errors.phoneNumber}
-              style={OutlinedInputStyle}
               placeholder="Enter phone number"
-              fullWidth
+              error={!!errors.phoneNumber}
+              helperText={errors.phoneNumber?.message}
             />
-            {errors?.phoneNumber?.message && (
-              <span style={errorStyle}>{errors.phoneNumber.message}</span>
-            )}
-          </Grid>
+          </div>
         </>
       )}
 
-      <Grid marginY={"20px"} marginX={0} item xs={12}>
-        <InputLabel style={labelStyle}>Role</InputLabel>
-        <Select
-          {...register("role")}
-          displayEmpty
-          fullWidth
-          style={AntSelectorStyle}
-        >
+      <div style={fieldWrapper}>
+        <Label>Role</Label>
+        <Select {...register("role")} displayEmpty fullWidth style={AntSelectorStyle}>
           {roleOptions.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>
           ))}
         </Select>
-        {errors?.role?.message && (
-          <span style={errorStyle}>{errors.role.message}</span>
-        )}
-      </Grid>
+        {errors?.role?.message && <span style={errorCaption}>{errors.role.message}</span>}
+      </div>
 
-      <Grid
-        marginY={"20px"}
-        marginX={0}
-        display={"flex"}
-        justifyContent={"space-between"}
-        alignItems={"center"}
-        gap={1}
-        item
-        xs={12}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "12px",
+          paddingTop: "16px",
+          borderTop: "1px solid var(--gray-200, #EAECF0)",
+        }}
       >
         <GrayButtonComponent
           title="Cancel"
@@ -339,18 +269,19 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
             title="Save"
             buttonType="submit"
             styles={{ width: "100%" }}
-            disabled={loadingStatus || verifying}
+            isDisabled={loadingStatus || verifying}
+            isLoading={loadingStatus}
           />
         ) : (
           <GrayButtonComponent
-            title={verifying ? "Verifying..." : "Verify Email"}
+            title={verifying ? "Verifying..." : "Verify email"}
             func={verifyEmailExists}
             buttonType="button"
             styles={{ width: "100%" }}
             disabled={verifying || loadingStatus}
           />
         )}
-      </Grid>
+      </div>
     </form>
   );
 
@@ -358,9 +289,11 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     <>
       {contextHolder}
       <ModalUX
-        title={<p style={TextFontSize30LineHeight38}>New staff</p>}
+        title={<p style={titleStyle}>New staff</p>}
         openDialog={modalState}
         closeModal={() => setModalState(false)}
+        width={480}
+        footer={null}
         body={bodyModal()}
       />
     </>
