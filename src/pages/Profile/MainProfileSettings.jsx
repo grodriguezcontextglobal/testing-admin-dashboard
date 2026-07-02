@@ -2,6 +2,7 @@ import { Grid } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import { clearSessionStorage } from "../../api/sessionHeaders";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import { persistor } from "../../store/Store";
 import { onLogout } from "../../store/slices/adminSlice";
@@ -42,8 +43,7 @@ const MainProfileSettings = () => {
       dispatch(onResetHelpers());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      localStorage.removeItem("admin-token", "");
-      localStorage.removeItem("sqlStaffId");
+      clearSessionStorage();
       dispatch(onLogout());
     }
   };
