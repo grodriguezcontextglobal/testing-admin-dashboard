@@ -158,13 +158,20 @@ export const PERMISSIONS = {
   "profile:subscription": ["root_admin"],
   "profile:staff_settings": ADMIN_FULL,
 
+  // ── F-02: Members domain ─────────────────────────────────────────────────
+  // Same CRU/D shape as events/consumers: root_admin, admin, event_manager and
+  // assistant can Create/Read/Update; Delete is reserved for EVENT_D (no assistant).
+  // assign_devices + notify back the member options bar (assign devices,
+  // update member info, send email reminder) — visible to the CRU roles.
+  "member:create": EVENT_CRU,
+  "member:read": EVENT_CRU,
+  "member:update": EVENT_CRU,
+  "member:delete": EVENT_D,
+  "member:assign_devices": EVENT_CRU,
+  "member:notify": EVENT_CRU,
+  "nav:members": EVENT_CRU,
+
   // ── F-01: new permission keys — no roles assigned yet ───────────────────────
-  // Members domain (F-02 will assign roles)
-  "member:create": [],
-  "member:read": [],
-  "member:update": [],
-  "member:delete": [],
-  "nav:members": [],
 
   // Events — quickGlance scope (F-04 will assign event_assistant)
   "event:quickGlance_read": [],
