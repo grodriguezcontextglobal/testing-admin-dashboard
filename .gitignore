@@ -8,6 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 .env
 env
+.env.dev
+.env.local
+.env.production
+# .env.dev.example SÍ se commitea — es la plantilla para el equipo
 
 node_modules
 dist
