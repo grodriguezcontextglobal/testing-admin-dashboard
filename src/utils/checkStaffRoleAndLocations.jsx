@@ -3,11 +3,14 @@ import { useSelector } from "react-redux";
 import { deriveRoleType } from "../pages/authentication/utils/loginUtils";
 
 // Roles with full inventory access regardless of location assignments.
-// Mirrors the SQL company_staff table: roles 0 (root_admin), 1 (admin), 3 (event_manager), 4 (inventory_manager).
+// Mirrors the SQL company_staff table: roles 0 (root_admin), 1 (admin), 4 (inventory_manager).
+// event_manager is intentionally NOT here: like sale_manager, it gets
+// location-scoped inventory access (isAdmin:false) so its access in the
+// events / consumers / member (conditionalPage) assignment flows is restricted
+// to the locations assigned to that staff member.
 const FULL_INVENTORY_ACCESS_ROLES = new Set([
   "root_admin",
   "admin",
-  "event_manager",
   "inventory_manager",
 ]);
 
