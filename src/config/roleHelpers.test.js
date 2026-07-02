@@ -43,13 +43,13 @@ describe("getRoleLabel", () => {
 // ─── isCoordinatorLevel ───────────────────────────────────────────────────────
 
 describe("isCoordinatorLevel", () => {
-  it("retorna true para root_admin, admin y sale_manager (niveles 0-2)", () => {
+  it("retorna true para root_admin y admin (niveles 0-1 — acceso administrativo completo)", () => {
     expect(isCoordinatorLevel("root_admin")).toBe(true);
     expect(isCoordinatorLevel("admin")).toBe(true);
-    expect(isCoordinatorLevel("sale_manager")).toBe(true);
   });
 
-  it("retorna false para event_manager, inventory_manager y assistant (niveles 3-5)", () => {
+  it("retorna false para sale_manager, event_manager, inventory_manager y assistant (niveles 2-5)", () => {
+    expect(isCoordinatorLevel("sale_manager")).toBe(false);
     expect(isCoordinatorLevel("event_manager")).toBe(false);
     expect(isCoordinatorLevel("inventory_manager")).toBe(false);
     expect(isCoordinatorLevel("assistant")).toBe(false);
