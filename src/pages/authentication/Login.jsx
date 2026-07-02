@@ -15,6 +15,10 @@ import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import {
+  clearSessionStorage,
+  persistCompanyHeaders,
+} from "../../api/sessionHeaders";
 import Loading from "../../components/animation/Loading";
 import FooterComponent from "../../components/general/FooterComponent";
 // import HidenIcon from "../../components/icons/HidenIcon";
@@ -197,6 +201,13 @@ const Login = () => {
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyRecord.company_id,
       });
+      console.log("company info sql", companyRecord);
+      console.log("company info nosql", props.company_data);
+      // Set the company-scoped default headers for subsequent requests.
+      persistCompanyHeaders({
+        companyId: props.company_data?.[0]?.id,
+        companySqlId: companyRecord.company_id,
+      });
       dispatch(
         onLogin({
           data: {
@@ -240,8 +251,7 @@ const Login = () => {
     } catch (error) {
       console.error("loginIntoOneCompanyAccount", error);
       const errorMsg = error?.response?.data?.msg ?? error.message;
-      localStorage.removeItem("sqlStaffId");
-      localStorage.removeItem("s-token-lq");
+      clearSessionStorage();
       openNotificationWithIcon("error", errorMsg);
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(errorMsg));
@@ -376,9 +386,7 @@ const Login = () => {
       // 401 on the companies endpoint means the token lacks sqlStaffId (legacy token).
       // Skip this handler if it's an MFA-required 401 from the login endpoint itself.
       if (error.response?.status === 401 && !isMfaRequired) {
-        localStorage.removeItem("admin-token");
-        localStorage.removeItem("sqlStaffId");
-        localStorage.removeItem("s-token-lq");
+        clearSessionStorage();
         dispatch(onLogout());
         setCurrentStep("email");
         openNotificationWithIcon(
@@ -428,8 +436,7 @@ const Login = () => {
         return; // Stay on MFA step
       }
 
-      localStorage.removeItem("sqlStaffId");
-      localStorage.removeItem("s-token-lq");
+      clearSessionStorage();
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
 
