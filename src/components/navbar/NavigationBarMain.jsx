@@ -14,6 +14,7 @@ import { forwardRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import { clearSessionStorage } from "../../api/sessionHeaders";
 import { persistor } from "../../store/Store";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
@@ -89,8 +90,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     dispatch(onResetHelpers());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
-    localStorage.removeItem("admin-token", "");
-    localStorage.removeItem("sqlStaffId");
+    clearSessionStorage();
     dispatch(onLogout());
     return navigate("/login");
   };
