@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ConfigEnvExport } from "../config/ConfigEnvExport";
 import { getActiveServerSynchronously, switchServer, initializeActiveServer } from "./serverManager";
+import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
 
 const { aws_api, header_auth_token } = ConfigEnvExport;
 
@@ -69,6 +70,17 @@ const createDevitrakApiInstance = (suffix = "") => {
         if (localStorage.getItem("s-token-lq")) {
             config.headers["s-token-lq"] = localStorage.getItem("s-token-lq");
         }
+        // Route-scoped company headers:
+        //   x-company-id → /api/staff|admin|company|stripe
+        //   s-company-lq → /api/db_*
+        const requestPath = buildRequestPath(config.baseURL, config.url);
+        Object.assign(
+            config.headers,
+            buildRouteScopedHeaders(requestPath, {
+                companyId: localStorage.getItem("x-company-id"),
+                companySqlId: localStorage.getItem("s-company-lq"),
+            }),
+        );
         return config;
     });
 
