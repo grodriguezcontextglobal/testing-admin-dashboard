@@ -18,7 +18,7 @@ import { onResetHelpers } from "./store/slices/helperSlice";
 import { onResetStaffProfile } from "./store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
-import Loading from "./components/animation/Loading";
+import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage } from "./api/sessionHeaders";
 // const InactivityLogout = lazy(() =>
@@ -116,7 +116,7 @@ const App = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >
