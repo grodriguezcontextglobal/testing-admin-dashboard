@@ -2,6 +2,7 @@ import { notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import { clearSessionStorage } from "../../api/sessionHeaders";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
 import { onResetCustomer } from "../../store/slices/customerSlice";
@@ -46,8 +47,7 @@ const RedirectionPage = () => {
     dispatch(onResetHelpers());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
-    localStorage.removeItem("admin-token", "");
-    localStorage.removeItem("sqlStaffId");
+    clearSessionStorage();
     dispatch(onLogout());
     return navigate("/login");
   };
