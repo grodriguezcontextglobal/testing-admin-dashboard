@@ -20,6 +20,7 @@ import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import Loading from "./components/animation/Loading";
 import CenteringGrid from "./styles/global/CenteringGrid";
+import { clearSessionStorage } from "./api/sessionHeaders";
 // const InactivityLogout = lazy(() =>
 //   import("./utils/CheckingInactivityAndTakeAction")
 // );
@@ -64,8 +65,7 @@ const App = () => {
       dispatch(onResetHelpers());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      localStorage.removeItem("admin-token");
-      localStorage.removeItem("sqlStaffId");
+      clearSessionStorage();
       dispatch(onLogout());
       openNotificationWithIcon("Session has expired. Please sign in again.");
       return window.location.reload(true);
