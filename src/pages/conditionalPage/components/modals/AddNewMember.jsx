@@ -244,28 +244,40 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
         )}
       </div>
     );
-  }, [choose, openTour]);
+  }, [choose, setOpenModal]);
   const renderingTitleWithOptions = () => {
+    const AddButton = choose === 0 ? BlueButtonComponent : GrayButtonComponent;
+    const ImportButton = choose === 1 ? BlueButtonComponent : GrayButtonComponent;
     return (
       <>
-        <h2 style={{ marginBottom: 24 }}>Choose option to add new member(s)</h2>
+        <p
+          style={{
+            fontFamily: "Inter",
+            fontSize: "18px",
+            fontWeight: 600,
+            lineHeight: "28px",
+            color: "var(--gray-900, #101828)",
+            margin: "0 0 24px",
+          }}
+        >
+          Choose option to add new member(s)
+        </p>
         <div
           style={{
             width: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 10,
+            gap: 12,
           }}
         >
-          <BlueButtonComponent
+          <AddButton
             key="add"
-            buttonType="submit"
             title={"Add new member"}
             styles={{ width: "50%" }}
             func={() => setChoose(0)}
           />
-          <BlueButtonComponent
+          <ImportButton
             key="import"
             title={"Import (.xlsx)"}
             styles={{ width: "50%" }}
