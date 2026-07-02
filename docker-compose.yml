@@ -1,0 +1,23 @@
+services:
+  devitrak-client:
+    # Imagen publicada en GitHub Container Registry.
+    # Los devs no necesitan construir nada — Docker la descarga automáticamente.
+    image: ghcr.io/grodriguezcontextglobal/devitrak-client-dev:latest
+
+    ports:
+      - "5522:5522"
+
+    volumes:
+      # El código fuente del host se monta en el contenedor.
+      # Vite detecta cambios y recarga el browser (hot-reload).
+      - .:/app
+
+      # Volumen anónimo para node_modules: protege los binarios
+      # compilados para Linux dentro del contenedor, evitando que
+      # el node_modules del host (Windows/macOS) los sobreescriba.
+      - /app/node_modules
+
+    env_file:
+      - .env.dev
+
+    restart: unless-stopped
