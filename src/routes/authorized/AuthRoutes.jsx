@@ -296,20 +296,36 @@ const AuthRoutes = () => {
                 />
               </Route>
               <Route path="/device-quick-glance" element={<DeviceDetail />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/inventory/location" element={<MainPage />} />
-              <Route path="/inventory/group" element={<MainPageGrouping />} />
-              <Route
-                path="/inventory/category_name"
-                element={<MainPageCategory />}
-              />
-              <Route path="/inventory/brand" element={<MainPageBrand />} />
-              <Route
-                path="/inventory/ownership"
-                element={<MainPageOwnership />}
-              />
-              {/* <Route path="/inventory/warehouse" element={<MainPageWarehouse />} /> */}
-              <Route path="/inventory/:id" element={<InventoryDetail />} />
+              {/* Global inventory views — restricted to inventory:read roles
+                  (root_admin, admin, sale_manager, inventory_manager).
+                  event_manager / assistant are blocked here; they only see
+                  location-scoped inventory inside the assignment flows
+                  (events / consumers / member) to know what to assign. */}
+              <Route element={<PermissionGuard action="inventory:read" />}>
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/inventory/location" element={<MainPage />} />
+                <Route path="/inventory/group" element={<MainPageGrouping />} />
+                <Route
+                  path="/inventory/category_name"
+                  element={<MainPageCategory />}
+                />
+                <Route path="/inventory/brand" element={<MainPageBrand />} />
+                <Route
+                  path="/inventory/ownership"
+                  element={<MainPageOwnership />}
+                />
+                {/* <Route path="/inventory/warehouse" element={<MainPageWarehouse />} /> */}
+                <Route path="/inventory/:id" element={<InventoryDetail />} />
+                <Route
+                  path="/inventory/inventory-in-use"
+                  element={<InventoryInUsePage />}
+                />
+                <Route
+                  path="/inventory/advance_search_result"
+                  element={<AdvanceSearchResultPage />}
+                />
+              </Route>
+              {/* Event-creation inventory selection — part of the events flow. */}
               <Route
                 path="/inventory/event-inventory"
                 element={<InventoryEvent />}
@@ -322,14 +338,6 @@ const AuthRoutes = () => {
                   element={<AddNewBulkItems />}
                 />
               </Route>
-              <Route
-                path="/inventory/inventory-in-use"
-                element={<InventoryInUsePage />}
-              />
-              <Route
-                path="/inventory/advance_search_result"
-                element={<AdvanceSearchResultPage />}
-              />
               <Route element={<PermissionGuard action="nav:consumers" />}>
                 <Route path="/consumers" element={<ConsumersMainPage />} />
                 <Route path="/consumers/:id" element={<ConsumerDetail />} />
