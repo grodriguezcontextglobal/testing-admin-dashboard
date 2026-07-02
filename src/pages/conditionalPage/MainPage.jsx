@@ -67,7 +67,7 @@ const MainPage = () => {
 
         <Grid
           display={"flex"}
-          justifyContent={"flex-start"}
+          justifyContent={"space-between"}
           alignItems={"center"}
           gap={"12px"}
           flexWrap={"wrap"}
@@ -89,7 +89,7 @@ const MainPage = () => {
           </p>
           <OutlinedInput
             {...register("searchMember")}
-            style={{ ...OutlinedInputStyle, flex: "1 1 260px", maxWidth: "360px" }}
+            style={{ ...OutlinedInputStyle, flex: "1 1 auto", minWidth: "240px" }}
             placeholder="Search"
             startAdornment={
               <InputAdornment position="start">
