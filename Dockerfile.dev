@@ -1,0 +1,18 @@
+FROM node:20.11.1-alpine
+
+# Herramientas para compilar binarios nativos (esbuild, etc.)
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Copiar manifests primero — la capa de dependencias queda
+# cacheada si package.json no cambia entre builds.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# El código fuente NO se copia aquí.
+# Se monta como volumen en docker-compose.yml para hot-reload.
+
+EXPOSE 5522
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
