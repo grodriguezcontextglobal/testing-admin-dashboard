@@ -10,7 +10,7 @@ import { persistor, store } from "./store/Store.js";
 import { configureApi } from "./api/devitrakApi.jsx";
 // import { ErrorBoundary } from "react-error-boundary";
 // import { ErrorBoundaryComponent, ErrorLogFetch } from "./components/utils/ErrorBoundaryComponent.jsx";
-import Loading from "./components/animation/Loading.jsx";
+import DevitrakLoading from "./components/animation/DevitrakLoading.jsx";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,7 @@ if (container && !container._reactRootContainer) {
           <PersistGate persistor={persistor}>
             <QueryClientProvider client={queryClient}>
               {/* <ErrorBoundary FallbackComponent={ErrorBoundaryComponent} onError={ErrorLogFetch}> */}
-              <Suspense fallback={<Loading />}>
+              <Suspense fallback={<DevitrakLoading />}>
                 <AppLoader />
               </Suspense>
               {/* </ErrorBoundary> */}
@@ -43,5 +43,5 @@ function AppLoader() {
     configureApi().then(() => setConfigured(true));
   }, []);
 
-  return configured ? <App /> : <Loading />;
+  return configured ? <App /> : <DevitrakLoading />;
 }
