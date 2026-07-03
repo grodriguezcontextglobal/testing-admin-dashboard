@@ -1,5 +1,6 @@
 import { Box, Grid, Paper, Stack, Typography } from "@mui/material";
-import { Button, Form, Input, message, Select, Spin } from "antd";
+import { Button, Form, Input, message, Select } from "antd";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -48,7 +49,7 @@ const EditDocument = () => {
         alignItems="center"
         minHeight="400px"
       >
-        <Spin size="large" />
+        <DevitrakLoading />
       </Box>
     );
   }

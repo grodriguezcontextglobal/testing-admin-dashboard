@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { checkArray } from "../../../components/utils/checkArray";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../store/slices/devicesHandleSlice";
@@ -149,7 +149,7 @@ const SearchDeviceRef = ({ searchParams, data }) => {
 
   const ternaryRender = (props) => {
     if (props) {
-      return <Loading />;
+      return <DevitrakLoading />;
     }
     return <NoDataFound />;
   };

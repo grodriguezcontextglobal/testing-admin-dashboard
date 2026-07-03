@@ -1,9 +1,8 @@
-import { Spin } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { DoubleRightChevronIcon } from "../../../../../components/icons/DoubleRightChevronIcon.jsx";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon.jsx";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
@@ -26,7 +25,7 @@ const VerificationDetailsTable = ({
   if (queryResult?.isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
-        <Spin tip="Loading verification documents..." />
+        <DevitrakLoading />
       </div>
     );
   }
@@ -306,7 +305,7 @@ function ListEquipment() {
             const queryResult = verificationMap[verificationId];
             const allSigned = queryResult?.data?.allSigned;
 
-            if (queryResult?.isLoading) return <Spin size="small" />;
+            if (queryResult?.isLoading) return <DevitrakLoading size="small" />;
             return renderStatusBadge(!!allSigned);
           },
         },
@@ -387,7 +386,7 @@ function ListEquipment() {
   )
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (

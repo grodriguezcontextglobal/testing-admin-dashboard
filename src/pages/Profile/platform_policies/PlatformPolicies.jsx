@@ -7,8 +7,8 @@ import Card from "./Card";
 import document1 from "../../../assets/pdf/document_1.pdf";
 import document2 from "../../../assets/pdf/document_2.pdf";
 import document3 from "../../../assets/pdf/document_3.pdf";
-import { Spin } from "antd";
-import Loading from "../../../components/animation/Loading";
+
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 
 const PlatformPolicies = () => {
   const [loading, setLoading] = useState(false);
@@ -52,7 +52,7 @@ const PlatformPolicies = () => {
 
   if (loading) {
     return (
-      <Spin fullscreen={true} indicator={<Loading />} />
+      <DevitrakLoading fullscreen />
     );
   }
 

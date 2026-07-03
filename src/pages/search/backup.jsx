@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from '../../api/devitrakApi'
-import Loading from '../../components/animation/Loading'
+import DevitrakLoading from '../../components/animation/DevitrakLoading'
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { onAddCustomerInfo } from "../../store/slices/customerSlice";
 import { onAddCustomer, onAddPaymentIntentDetailSelected, onAddPaymentIntentSelected } from "../../store/slices/stripeSlice";
@@ -243,7 +243,7 @@ const SearchMainPage = () => {
     return (
         <>
 
-            {transactionsListQuery.isLoading && deviceInPoolQuery.isLoading && <div style={CenteringGrid}><Loading /></div>}
+            {transactionsListQuery.isLoading && deviceInPoolQuery.isLoading && <div style={CenteringGrid}><DevitrakLoading /></div>}
             <Grid
                 display={`${transactionsListQuery.isLoading && deviceInPoolQuery.isLoading ? "none" : "flex" || loadingStatus && "none"}`}
                 justifyContent={"center"}
@@ -279,7 +279,7 @@ const SearchMainPage = () => {
                         </Typography>
                     </Grid>
                 </Grid>
-                {loadingStatus && <div style={CenteringGrid}><Loading /></div>}
+                {loadingStatus && <div style={CenteringGrid}><DevitrakLoading /></div>}
                 {resultToDisplay.length > 0 ?
                     <Grid
                         style={{

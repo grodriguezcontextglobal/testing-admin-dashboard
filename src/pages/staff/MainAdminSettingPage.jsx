@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import dicRole from "../../components/general/dicRole";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
@@ -290,7 +290,7 @@ const MainAdminSettingPage = ({
   if (employeesQuery.isLoading) {
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   }

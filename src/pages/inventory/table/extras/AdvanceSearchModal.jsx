@@ -18,7 +18,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { AdvanceSearchContext } from "./RenderingFilters";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 const { RangePicker } = DatePicker;
 
 const AdvanceSearchModal = ({
@@ -78,7 +78,7 @@ const AdvanceSearchModal = ({
     reset();
     return setOpenAdvanceSearchModal(false);
   };
-  if (!values) return <Loading />
+  if (!values) return <DevitrakLoading />
   const handleSearchQuery = async (data) => {
     if (!data.date) {
       return message.error("Please select a date");

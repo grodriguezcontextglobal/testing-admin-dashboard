@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import Loading from "../../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { checkArray } from "../../../../../../components/utils/checkArray";
@@ -532,7 +532,7 @@ const AssignmentFromExistingInventory = () => {
     <>
       {itemsInInventoryQuery.isLoading || staffMemberQuery.isLoading ? (
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       ) : (
         <Grid

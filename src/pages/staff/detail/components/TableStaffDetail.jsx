@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { BadgeWithDot } from "../../../../components/base/badges/badges";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import BaseTable from "../../../../components/ux/tables/BaseTable";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import ListEquipment from "./equipment_components/ListEquipment";
@@ -88,7 +88,7 @@ const TableStaffDetail = () => {
   if (eventQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
 

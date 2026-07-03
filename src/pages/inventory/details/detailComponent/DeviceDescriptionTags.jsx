@@ -5,7 +5,7 @@ import { CardStyle } from "../../../../styles/global/CardStyle";
 import { TextFontSize14LineHeight20 } from "../../../../styles/global/TextFontSize14LineHeight20";
 // import ReturningLeasedEquipModal from "./components/ReturningLeasedEquipModal";
 import { lazy, Suspense, useEffect, useState } from "react";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { checkArray } from "../../../../components/utils/checkArray";
 const ReturningLeasedEquipModal = lazy(() =>
@@ -65,7 +65,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

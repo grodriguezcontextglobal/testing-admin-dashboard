@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useEffect } from "react";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 
 const useFetchingDeviceInfoBasedOnFeature = (props) => {
   const { variableName, value } = props;
@@ -27,7 +27,7 @@ const useFetchingDeviceInfoBasedOnFeature = (props) => {
   if (consultingDeviceInfoQuery.isLoading)
     return (
       <div>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   return consultingDeviceInfoQuery?.data?.data;

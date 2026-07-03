@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import { BlueButton } from "../../styles/global/BlueButton";
@@ -332,7 +332,7 @@ const Confirmation = () => {
             {loadingStatus ? (
               <div style={CenteringGrid}>
                 {" "}
-                <Loading />{" "}
+                <DevitrakLoading />{" "}
               </div>
             ) : (
               <Result

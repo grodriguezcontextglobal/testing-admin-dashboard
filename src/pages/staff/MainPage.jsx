@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { usePermission } from "../../hooks/usePermission";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import "../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -134,7 +134,7 @@ const MainPage = () => {
 
         <Grid item xs={12}>
           {loadingStatus ? (
-            <Loading />
+            <DevitrakLoading />
           ) : (
             <MainAdminSettingPage
               searchAdmin={watch("searchAdmin")}

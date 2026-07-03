@@ -1,4 +1,5 @@
-import { message, Modal, Spin } from "antd";
+import { message, Modal } from "antd";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -94,7 +95,7 @@ const ViewDocument = () => {
   if (loading) {
     return (
       <div className="loading-container">
-        <Spin size="large" />
+        <DevitrakLoading />
       </div>
     );
   }

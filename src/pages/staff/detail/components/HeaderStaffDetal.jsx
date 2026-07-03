@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { BadgeWithDot } from "../../../../components/base/badges/badges";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { usePermission } from "../../../../hooks/usePermission";
 import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
@@ -43,7 +43,7 @@ const HeaderStaffDetail = () => {
   if (eventQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import {
   onAddEventData,
   onAddQRCodeLink,
@@ -153,7 +153,7 @@ const SearchEvents = ({ searchParams, setCountingResult, countingResults }) => {
   if (staffMembersQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (staffMembersQuery.data) {

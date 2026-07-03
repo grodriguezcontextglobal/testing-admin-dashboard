@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
 import { Navigate } from "react-router-dom";
-// import Loading from "../../components/animation/Loading";
+// import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import ResetPassword from "../../pages/authentication/ResetPassword";
 // import CenteringGrid from "../../styles/global/CenteringGrid";
 import InvitationLanding from "../../pages/authentication/InvitationLanding";
