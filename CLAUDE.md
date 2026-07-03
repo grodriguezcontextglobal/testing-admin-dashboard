@@ -4,6 +4,74 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Entorno de desarrollo — Docker (obligatorio)
+
+**Todo el equipo trabaja dentro de la misma imagen Docker.** No se instala Node localmente. El entorno de desarrollo está definido en `Dockerfile.dev` y orquestado por `docker-compose.yml`.
+
+La imagen está publicada en GitHub Container Registry:
+`ghcr.io/grodriguezcontextglobal/devitrak-client-dev:latest`
+
+### Primera vez (onboarding)
+
+**Requisito único:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado.
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/grodriguezcontextglobal/testing-admin-dashboard
+cd testing-admin-dashboard
+
+# 2. Crear el archivo de variables de entorno
+cp .env.dev.example .env.dev
+# Abrir .env.dev y completar los valores (pedir al equipo las URLs y claves de dev)
+
+# 3. Levantar el contenedor
+docker compose up
+```
+
+La app queda disponible en `http://localhost:5522`. El hot-reload funciona igual que fuera de Docker: edita archivos en tu editor y el browser recarga automáticamente.
+
+### Flujo diario
+
+```bash
+docker compose up          # levantar
+docker compose down        # apagar
+```
+
+### Cuando alguien agrega o actualiza dependencias
+
+Si un `git pull` trae cambios en `package.json` o `package-lock.json`, reconstruir la imagen local:
+
+```bash
+docker compose up --build
+```
+
+Alternativamente, descargar la imagen actualizada que GitHub Actions publica automáticamente en GHCR:
+
+```bash
+docker compose pull
+docker compose up
+```
+
+### Correr comandos dentro del contenedor
+
+```bash
+# Shell interactivo
+docker compose exec devitrak-client sh
+
+# Correr un comando puntual
+docker compose exec devitrak-client npm run test:unit
+docker compose exec devitrak-client npm run lint
+```
+
+### Para Claude: contexto del entorno
+
+- El servidor de desarrollo corre en el **puerto 5522** dentro del contenedor, mapeado al mismo puerto del host.
+- `node_modules` vive en un volumen anónimo dentro del contenedor — no es visible desde el explorador de archivos del host. No sugerir instalar paquetes con `npm install` directamente; el workflow correcto es editar `package.json` y reconstruir la imagen.
+- Las variables de entorno provienen de `.env.dev` (no commiteado). La plantilla es `.env.dev.example`.
+- No hay Node.js instalado en el host. Todos los comandos de Node/npm se ejecutan dentro del contenedor.
+
+---
+
 ## Commands
 
 ```bash
@@ -127,7 +195,7 @@ Server selection (`serverManager.js`): on startup, `configureApi()` checks `VITE
 
 ### Environment Variables
 
-Configured in `src/config/ConfigEnvExport.jsx` (all prefixed `VITE_APP_`). Copy `.env.example` to `.env`.
+Configured in `src/config/ConfigEnvExport.jsx` (all prefixed `VITE_APP_`). Copy `.env.dev.example` to `.env.dev` (see Docker setup above).
 
 Key variables: `VITE_APP_DEVITRACK_API`, `VITE_APP_DEVITRACK_API_BACKUP`, `VITE_APP_PUBLIC_STRIPE_KEY`, `VITE_APP_RECAPTCHA_SITEKEY`, `VITE_APP_AWS_API`.
 
