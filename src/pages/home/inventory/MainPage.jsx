@@ -1,6 +1,6 @@
-import { Spin } from "antd";
+
 import { lazy, Suspense } from "react";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 
 const CategoryInventory = lazy(
@@ -35,7 +35,7 @@ const MainPage = () => {
       <Suspense
         fallback={
           <div style={CenteringGrid}>
-            <Spin indicator={<Loading />} fullscreen />
+            <DevitrakLoading fullscreen />
           </div>
         }
       >

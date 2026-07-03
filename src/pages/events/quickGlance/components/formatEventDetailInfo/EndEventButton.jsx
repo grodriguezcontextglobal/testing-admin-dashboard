@@ -5,7 +5,7 @@ import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
@@ -697,7 +697,7 @@ const EndEventButton = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

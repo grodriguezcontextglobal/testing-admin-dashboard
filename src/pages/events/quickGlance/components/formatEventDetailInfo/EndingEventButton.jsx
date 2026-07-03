@@ -4,7 +4,7 @@ import { groupBy } from "lodash";
 import { Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
@@ -450,7 +450,7 @@ const EndingEventButton = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

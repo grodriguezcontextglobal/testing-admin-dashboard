@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Spin } from "antd";
+
 import BaseTable from "../../../../components/UX/tables/BaseTable";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 const TableCategories = () => {
   const { user } = useSelector((state) => state.admin);
@@ -62,7 +62,7 @@ const TableCategories = () => {
       />
     );
   }
-  return <Spin indicator={<Loading />} />;
+  return <DevitrakLoading />;
 };
 
 export default TableCategories;

@@ -1,11 +1,11 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Spin } from "antd";
+
 import { lazy, Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import EventsCarousel from "../../components/UX/carousel/EventsCarousel";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
@@ -61,7 +61,7 @@ const MainPage = () => {
   });
   if (isLoading || isRefetching) {
     return (
-      <Spin indicator={<Loading />} fullscreen />
+      <DevitrakLoading fullscreen />
     )
   }
   const liveEvents = dataToBeRenderedInLiveSection();
@@ -108,7 +108,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

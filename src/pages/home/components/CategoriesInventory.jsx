@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import TableHeader from "../../../components/UX/TableHeader";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
@@ -94,7 +94,7 @@ const CategoryInventory = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

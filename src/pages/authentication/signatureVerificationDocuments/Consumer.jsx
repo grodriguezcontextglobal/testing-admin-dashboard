@@ -1,10 +1,10 @@
 import { FormLabel, Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, Spin, Tooltip } from "antd";
+import { message, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { InformationIcon } from "../../../components/icons/InformationIcon";
 import { checkArray } from "../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -142,7 +142,7 @@ const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
   }, [consumerMemberInfoQuery.data]);
 
   if (consumerMemberInfoQuery.isLoading)
-    return <Spin fullscreen indicator={<Loading />} />;
+    return <DevitrakLoading fullscreen />;
   if (consumerMemberInfoQuery.data) {
     const addSignatureToDocument = async () => {
       return await devitrakApi.patch(
@@ -187,7 +187,7 @@ const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
 
     return (
       <>
-        {isLoading ? <Spin indicator={<Loading />} fullscreen /> : null}
+        {isLoading ? <DevitrakLoading fullscreen /> : null}
         <Grid
           style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
           container

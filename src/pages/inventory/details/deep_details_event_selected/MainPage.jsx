@@ -6,7 +6,7 @@ import { Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -36,7 +36,7 @@ const MainPage = () => {
     const isExtraLargeDevice = useMediaQuery(
         "only screen and (min-width : 1201px)"
     );
-    if (trackingHistoryItemQuery.isLoading) return <div style={CenteringGrid}><Loading /></div>
+    if (trackingHistoryItemQuery.isLoading) return <div style={CenteringGrid}><DevitrakLoading /></div>
     if (trackingHistoryItemQuery.data) {
         const dataFound = trackingHistoryItemQuery?.data?.data?.result
         return (

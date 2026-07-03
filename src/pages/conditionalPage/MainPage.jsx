@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
@@ -116,7 +116,7 @@ const MainPage = () => {
         </Grid>
 
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          {loadingStatus ? <Loading /> : <MainTable state={titleParams} />}
+          {loadingStatus ? <DevitrakLoading /> : <MainTable state={titleParams} />}
         </Grid>
       </Grid>
       {addingNewMember && (

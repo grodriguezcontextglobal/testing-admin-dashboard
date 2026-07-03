@@ -1,5 +1,6 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
-import { notification, Spin } from "antd";
+import { notification } from "antd";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -66,7 +67,7 @@ const ForceLogout = () => {
     if (!email) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-                <Spin size="large" />
+                <DevitrakLoading />
             </Box>
         );
     }

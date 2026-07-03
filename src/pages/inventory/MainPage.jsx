@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, Spin } from "antd";
+import { Divider } from "antd";
 import {
   createContext,
   lazy,
@@ -14,7 +14,7 @@ import {
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 // import CalendarIcon from "../../components/icons/CalendarIcon";
 import "../../styles/global/ant-select.css";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -273,7 +273,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >
@@ -364,8 +364,8 @@ const MainPage = () => {
           </Grid>
         </Grid>
       </Grid>
-      {isLoadingState && <Spin indicator={<Loading />} fullscreen={true} />}
-      {renderingData && <Spin indicator={<Loading />} fullscreen={true} />}
+      {isLoadingState && <DevitrakLoading fullscreen />}
+      {renderingData && <DevitrakLoading fullscreen />}
       {openDetails && (
         <DisplayItemTypesPerLocationModal
           id_key={typePerLocationInfoModal.id_key}

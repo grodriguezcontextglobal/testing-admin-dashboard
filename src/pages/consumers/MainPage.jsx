@@ -2,13 +2,13 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Spin } from "antd";
+
 import { useCallback, useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import BannerReusableComponentUntitleUI from "../../components/UX/banner/BannerReusableComponentUntitleUI";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
@@ -198,7 +198,7 @@ const MainPage = () => {
         />
         <div>
           {allConsumersBasedOnEventsPerCompany.isLoading ? (
-            <Loading />
+            <DevitrakLoading />
           ) : (
             <TablesConsumers
               key={componentLocator}
@@ -246,7 +246,7 @@ const MainPage = () => {
         />
       )}
       {(counting === null || allConsumersBasedOnEventsPerCompany.isLoading) && (
-        <Spin indicator={<Loading />} fullscreen />
+        <DevitrakLoading fullscreen />
       )}
     </Grid>
   );

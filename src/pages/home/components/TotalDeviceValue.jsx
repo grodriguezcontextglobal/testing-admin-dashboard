@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 // import CardRendered from "../../events/quickGlance/components/CardRendered"
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 const ReusableCard = lazy(() =>
   import("../../../components/UX/cards/ReusableCard")
@@ -46,7 +46,7 @@ const TotalDevice = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

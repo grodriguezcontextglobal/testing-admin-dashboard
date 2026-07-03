@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Spin } from "antd";
+
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import BaseTable from "../../../../components/ux/tables/BaseTable";
@@ -69,7 +69,7 @@ const TableLocations = () => {
       />
     );
   }
-  return <Spin indicator={<Loading />} />;
+  return <DevitrakLoading />;
 };
 
 export default TableLocations;

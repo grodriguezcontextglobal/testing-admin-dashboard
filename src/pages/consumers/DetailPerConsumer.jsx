@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import Breadcrumb from "../../components/UX/breadcrumbs/Breadcrumb";
 import RefactoredHeaderUntitledUiReact from "../../components/UX/header/DynamicHeaderCompnent";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -103,7 +103,7 @@ const DetailPerConsumer = () => {
   if (transactionsConsumerQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
 

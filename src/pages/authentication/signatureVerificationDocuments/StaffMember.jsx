@@ -6,14 +6,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, Spin, Tooltip } from "antd";
+import { message, Tooltip } from "antd";
 import { compareSync } from "bcryptjs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import "../style/authStyle.css";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { InformationIcon } from "../../../components/icons/InformationIcon";
@@ -164,7 +164,7 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
   }, [adminStaffQuery.data]);
 
   if (adminStaffQuery.isLoading)
-    return <Spin fullscreen indicator={<Loading />} />;
+    return <DevitrakLoading fullscreen />;
   if (adminStaffQuery.data) {
     const addSignatureToDocument = async () => {
       return await devitrakApi.patch(
@@ -258,7 +258,7 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
     };
     return (
       <>
-        {isLoading ? <Spin indicator={<Loading />} fullscreen /> : null}
+        {isLoading ? <DevitrakLoading fullscreen /> : null}
         <Grid
           style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }}
           container

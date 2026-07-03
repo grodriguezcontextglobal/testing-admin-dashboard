@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { onAddSubscriptionRecord } from "../../../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import DescriptionFormat from "./components/DescriptionFormat";
@@ -145,7 +145,7 @@ const Main = () => {
     return (
       <div style={CenteringGrid} onClick={success()}>
         {contextHolder}
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   } else {

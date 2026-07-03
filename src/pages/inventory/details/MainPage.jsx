@@ -5,7 +5,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { usePermission } from "../../../hooks/usePermission";
@@ -61,7 +61,7 @@ const MainPage = () => {
   if (trackingHistoryItemQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (trackingHistoryItemQuery.data) {
@@ -109,7 +109,7 @@ const MainPage = () => {
       <Suspense
         fallback={
           <div style={CenteringGrid}>
-            <Loading />
+            <DevitrakLoading />
           </div>
         }
       >

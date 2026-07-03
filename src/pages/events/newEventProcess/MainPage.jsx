@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { lazy, Suspense } from "react";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 
 const StepsLine = lazy(() => import("../newEventProcess/components/StepsLine"));
 
@@ -15,7 +15,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

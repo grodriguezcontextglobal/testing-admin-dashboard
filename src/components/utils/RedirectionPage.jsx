@@ -17,7 +17,7 @@ import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import { persistor } from "../../store/Store";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import Loading from "../animation/Loading";
+import DevitrakLoading from "../animation/DevitrakLoading";
 import { useEffect } from "react";
 
 const RedirectionPage = () => {
@@ -57,7 +57,7 @@ useEffect(() => {
 
   return (
     <div style={CenteringGrid}>
-      <Loading />
+      <DevitrakLoading />
       {contextHolder}
       {location.pathname === "/register/company-setup" &&
         setTimeout(() => {

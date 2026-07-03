@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
@@ -344,7 +344,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
     <>
       {itemsInInventoryQuery.isLoading ? (
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       ) : (
         <Grid

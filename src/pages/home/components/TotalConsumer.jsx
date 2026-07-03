@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
 // import CardRendered from "../../events/quickGlance/components/CardRendered";
 import { useNavigate } from "react-router-dom";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 const ReusableCard = lazy(() =>
   import("../../../components/UX/cards/ReusableCard")
@@ -14,7 +14,7 @@ const TotalConsumer = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

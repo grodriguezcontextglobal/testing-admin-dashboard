@@ -6,7 +6,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { resolveRoleType } from "../../../../../config/roles";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
@@ -184,7 +184,7 @@ const ButtonSections = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

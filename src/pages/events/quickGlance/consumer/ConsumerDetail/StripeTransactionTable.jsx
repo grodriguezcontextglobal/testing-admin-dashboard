@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Spin } from "antd";
+import { Button, message, Popconfirm } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,7 +23,7 @@ import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAd
 import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import { groupBy } from "lodash";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
@@ -476,7 +476,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 pageSize={10}
               />
             ) : (
-              <Spin indicator={<Loading />} />
+              <DevitrakLoading />
             ),
         }}
       />

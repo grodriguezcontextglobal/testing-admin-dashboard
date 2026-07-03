@@ -1,11 +1,11 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
-import { notification, Spin } from "antd";
+import { notification } from "antd";
 import { lazy, Suspense, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
@@ -180,7 +180,7 @@ const ReviewAndSubmitEvent = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >
@@ -228,7 +228,7 @@ const ReviewAndSubmitEvent = () => {
               }`,
           }}
         />
-        {loadingStatus && <Spin indicator={<Loading />} fullscreen />}
+        {loadingStatus && <DevitrakLoading fullscreen />}
         {/* </Grid> */}
         {loadingStatus && (
           <ModalCreatingEventInProgress openEndingEventModal={loadingStatus} />

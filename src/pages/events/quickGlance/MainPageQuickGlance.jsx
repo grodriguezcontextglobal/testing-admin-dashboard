@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -102,7 +102,7 @@ const MainPageQuickGlance = () => {
   )
     return (
       <div style={{ ...CenteringGrid, width: "100%" }}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
 
@@ -162,7 +162,7 @@ const MainPageQuickGlance = () => {
         style={{ border: 0, background: "none", width: "100%", aspectRatio: 1 }}
         type="button"
       >
-        {isLoading ? <Loading /> : null}
+        {isLoading ? <DevitrakLoading /> : null}
         <p
           style={{
             ...Subtitle,

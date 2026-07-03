@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
@@ -476,7 +476,7 @@ export const CreateNewConsumer = ({
 
   return (
     <>
-      {loading && <Loading />}
+      {loading && <DevitrakLoading />}
       {contextHolder}
       <ModalUX
         title={titleRender()}

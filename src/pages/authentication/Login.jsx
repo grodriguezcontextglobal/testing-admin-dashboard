@@ -19,7 +19,7 @@ import {
   clearSessionStorage,
   persistCompanyHeaders,
 } from "../../api/sessionHeaders";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import FooterComponent from "../../components/general/FooterComponent";
 // import HidenIcon from "../../components/icons/HidenIcon";
 // import VisibleIcon from "../../components/icons/VisibleIcon";
@@ -517,7 +517,7 @@ const Login = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

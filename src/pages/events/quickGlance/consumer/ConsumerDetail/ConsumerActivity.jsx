@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { useEffect } from "react";
 import TotalDevicesDistributed from "./ConsumerActivity/TotalDeviceDistributed";
 import TotalRequestedDevice from "./ConsumerActivity/TotalRequestedDevice";
@@ -72,7 +72,7 @@ const ConsumerActivity = () => {
   if (stripeTransactionsSavedQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (

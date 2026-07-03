@@ -4,7 +4,7 @@ import { Card, Tooltip } from "antd";
 import { useSelector } from "react-redux";
 import { Icon } from "@iconify/react";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 // import UpdateEventContactInfo from "../../updateEvent/UpdateEventContactInfo";
 const UpdateEventContactInfo = lazy(() =>
@@ -29,7 +29,7 @@ const ContactInformation = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

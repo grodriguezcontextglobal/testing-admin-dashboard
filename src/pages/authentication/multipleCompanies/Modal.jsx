@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import { useQueryClient } from "@tanstack/react-query";
-import { Select, Spin, message, notification } from "antd";
+import { Select, message, notification } from "antd";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,7 @@ import {
   clearSessionStorage,
   persistCompanyHeaders,
 } from "../../../api/sessionHeaders";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import dicRole from "../../../components/general/dicRole";
 import { isAssistant } from "../../../config/roles";
 import { buildSetPermissionsPayload } from "../utils/loginUtils";
@@ -388,7 +388,7 @@ const ModalMultipleCompanies = ({
           />
         </div>
 
-        {isLoading && <Spin indicator={<Loading />} fullscreen />}
+        {isLoading && <DevitrakLoading fullscreen />}
       </Grid>
     );
   };
