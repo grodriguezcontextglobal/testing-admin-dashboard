@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
@@ -233,8 +233,8 @@ const AuthRoutes = () => {
       <HeaderComponent />
       <Suspense
         fallback={
-          <div style={CenteringGrid}>
-            <Loading />
+          <div style={{ ...CenteringGrid, minHeight: "60dvh" }}>
+            <DevitrakLoading />
           </div>
         }
       >
