@@ -1,8 +1,12 @@
 services:
   devitrak-client:
     # Imagen publicada en GitHub Container Registry.
-    # Los devs no necesitan construir nada — Docker la descarga automáticamente.
+    # Los devs hacen: docker compose pull + docker compose up
+    # El maintainer puede reconstruir localmente con: docker compose build
     image: ghcr.io/grodriguezcontextglobal/devitrak-client-dev:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
 
     ports:
       - "5522:5522"
