@@ -1,14 +1,19 @@
 import {
   Badge,
   Box,
-  Divider,
   Drawer,
   Grid,
-  List,
-  ListItem,
-  ListItemButton
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
+import {
+  Calendar,
+  Home as HomeLine,
+  Newspaper,
+  Package,
+  User,
+  UserCog,
+  Users,
+} from "lucide-react";
 import pkg from "prop-types";
 import { forwardRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -34,7 +39,6 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 // import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
-import { LogoutIcon } from "../icons/LogoutIcon";
 // import { ProfileIcon } from "../icons/ProfileIcon";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import Input from "../UX/inputs/Input";
@@ -43,18 +47,19 @@ import MenuIcon from "../icons/MenuIcon";
 import MagnifyIcon from "../icons/search-lg.svg";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
+import MobileSidebarNav from "./component/MobileSidebarNav";
 import "./style/style.css";
 const { PropTypes } = pkg;
-const drawerWidth = 240;
+const drawerWidth = 280;
 const navItems = [
-  { title: "home", route: "/", permission: "nav:home", mobile: true, desktop: true },
-  { title: "inventory", route: "/inventory", permission: "nav:inventory", mobile: true, desktop: true },
-  { title: "events", route: "/events", permission: "nav:events", mobile: true, desktop: true },
-  { title: "consumers", route: "/consumers", permission: "nav:consumers", mobile: true, desktop: true },
-  { title: "Posts", route: "/posts", permission: "nav:posts", mobile: true, desktop: true },
-  { title: "staff", route: "/staff", permission: "nav:staff", mobile: true, desktop: true },
-  { title: 0, route: 0, permission: "nav:dynamic_section", mobile: false, desktop: true },
-  { title: "profile", route: "/profile/my_details", permission: "nav:profile", mobile: true, desktop: false },
+  { title: "home", route: "/", permission: "nav:home", mobile: true, desktop: true, icon: HomeLine },
+  { title: "inventory", route: "/inventory", permission: "nav:inventory", mobile: true, desktop: true, icon: Package },
+  { title: "events", route: "/events", permission: "nav:events", mobile: true, desktop: true, icon: Calendar },
+  { title: "consumers", route: "/consumers", permission: "nav:consumers", mobile: true, desktop: true, icon: Users },
+  { title: "Posts", route: "/posts", permission: "nav:posts", mobile: true, desktop: true, icon: Newspaper },
+  { title: "staff", route: "/staff", permission: "nav:staff", mobile: true, desktop: true, icon: UserCog },
+  { title: 0, route: 0, permission: "nav:dynamic_section", mobile: false, desktop: true, icon: Users },
+  { title: "profile", route: "/profile/my_details", permission: "nav:profile", mobile: true, desktop: false, icon: User },
 ];
 
 const getHomeRoute = (roleType) => {
@@ -133,85 +138,12 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
   const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
-      <Divider />
-      <List>
-        <NavLink
-          to={"/"}
-          style={{
-            margin: "0 3px 0 0",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "var(--blue700)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "12px 0",
-          }}
-        >
-          <DevitrakLogo />
-          <DevitrakName />{" "}
-        </NavLink>
-        {navItems.map((item) => {
-          if (!hasPermission(item.permission, resolveRoleType(user)) || !item.mobile) return null;
-          if (item.route === 0) {
-            return <ConditionalButton key={item.title} user={user} />;
-          } else {
-            return (
-              <ListItem key={item.title} disablePadding>
-                <ListItemButton
-                  component={NavLink}
-                  to={item.route}
-                  sx={{
-                    textAlign: "center",
-                    backgroundColor: "var(--blue700)",
-                  }}
-                >
-                  <div className="content-main-navbar-updated">
-                    <article className={"nav-item-base-main-navbar-updated"}>
-                      <div className="content-2-main-navbar-updated">
-                        <div className="text-1-main-navbar-updated text-mdsemibold">
-                          <p style={{ textTransform: "capitalize" }}>
-                            {item.title}
-                          </p>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
-                </ListItemButton>
-              </ListItem>
-            );
-          }
-        })}
-        <ListItem key={`log-out`} disablePadding>
-          <ListItemButton
-            onClick={() => logout()}
-            sx={{
-              textAlign: "center",
-              backgroundColor: "var(--blue700)",
-            }}
-          >
-            <NavLink
-              to={"/login"}
-              style={{ margin: "0 3px 0 0", width: "100%" }}
-            >
-              <div className="content-main-navbar-updated">
-                <article className={"nav-item-base-main-navbar-updated"}>
-                  <div className="content-2-main-navbar-updated">
-                    <div className="text-1-main-navbar-updated text-mdsemibold">
-                      <p style={{ textTransform: "capitalize" }}>
-                        <LogoutIcon />
-                        &nbsp;Log out
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </NavLink>
-          </ListItemButton>
-        </ListItem>
-      </List>
-    </Box>
+    <MobileSidebarNav
+      navItems={navItems}
+      user={user}
+      onLogout={logout}
+      onNavigate={handleDrawerToggle}
+    />
   );
 
   const container =

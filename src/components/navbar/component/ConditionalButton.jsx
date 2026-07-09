@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import industries from "./industriesList.json";
 
-const ConditionalButton = ({ user }) => {
+const ConditionalButton = ({ user, icon: Icon, variant = "desktop" }) => {
+  const location = useLocation();
   const [conditionalInfo, setConditionalInfo] = useState({
     title: null,
     route: null,
@@ -36,9 +37,29 @@ const ConditionalButton = ({ user }) => {
     }
   }, [user?.companyData?.industry]);
 
+  const isActive = location.pathname === `${conditionalInfo.route}`;
+
+  if (variant === "sidebar") {
+    return (
+      <NavLink
+        to={`${conditionalInfo.route}`}
+        style={{ display: conditionalInfo.title ? "flex" : "none" }}
+        state={conditionalInfo.state}
+        preventScrollReset
+        className={
+          isActive
+            ? "mobile-sidebar-nav__item mobile-sidebar-nav__item--active"
+            : "mobile-sidebar-nav__item"
+        }
+      >
+        {Icon && <Icon className="mobile-sidebar-nav__icon" size={20} strokeWidth={2} />}
+        <span className="mobile-sidebar-nav__label">{conditionalInfo.title}</span>
+      </NavLink>
+    );
+  }
+
   return (
     <NavLink
-      key={conditionalInfo.title}
       to={`${conditionalInfo.route}`}
       style={{ display: conditionalInfo.title ? "block" : "none" }}
       state={conditionalInfo.state}
@@ -47,7 +68,7 @@ const ConditionalButton = ({ user }) => {
       <div className="content-main-navbar-updated">
         <article
           className={
-            location.pathname === `${conditionalInfo.route}`
+            isActive
               ? "nav-item-base-main-navbar-updated"
               : "nav-item-base-1-main-navbar-updated"
           }

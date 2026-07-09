@@ -61,7 +61,7 @@ const ForgotPassword = ({ open, close }) => {
       devitrakApi.post("/nodemailer/reset-admin-password", data),
     onSuccess: (_, variables) => {
       setLoading(false);
-      openNotification("success", `Email sent to ${variables.contactInfo.email}`);
+      openNotification("success", `Password reset email queued for ${variables.contactInfo.email}`);
       setTimeout(handleClose, 1500);
     },
     onError: (error) => {

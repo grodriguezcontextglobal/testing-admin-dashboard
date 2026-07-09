@@ -2,7 +2,7 @@ import { Box, Typography } from "@mui/material";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
 import GrayButtonComponent from "../../UX/buttons/GrayButton";
 
-const SectionHeader = ({ title, subtitle, cancelButton, saveButton }) => {
+const SectionHeader = ({ title, subtitle, cancelButton, saveButton, saveLoading = false }) => {
   return (
     <Box
       sx={{
@@ -26,8 +26,8 @@ const SectionHeader = ({ title, subtitle, cancelButton, saveButton }) => {
         </Typography>
       </Box>
       <Box sx={{ display: "flex", gap: "12px" }}>
-      <GrayButtonComponent title="Cancel" func={cancelButton} />      
-      <BlueButtonComponent title="Save" func={saveButton} />
+      <GrayButtonComponent title="Cancel" func={cancelButton} disabled={saveLoading} />
+      <BlueButtonComponent title="Save" func={saveButton} isLoading={saveLoading} />
       </Box>
     </Box>
   );

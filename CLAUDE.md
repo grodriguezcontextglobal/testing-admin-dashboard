@@ -1,243 +1,1682 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ---
 
-## Entorno de desarrollo — Docker (obligatorio)
+## Critical Tooling Rules
 
-**Todo el equipo trabaja dentro de la misma imagen Docker.** No se instala Node localmente. El entorno de desarrollo está definido en `Dockerfile.dev` y orquestado por `docker-compose.yml`.
+These rules override any generic package-manager or repository-discovery habit:
 
-La imagen está publicada en GitHub Container Registry:
-`ghcr.io/grodriguezcontextglobal/devitrak-client-dev:latest`
+* Graphify is already installed and available as the native `graphify` CLI in this environment.
+* Always invoke Graphify directly as `graphify ...`.
+* Never invoke Graphify through `npx`, including `npx --no-install graphify`.
+* Never invoke Graphify through `npm exec`, `pnpm exec`, `yarn`, `python -m`, `pipx run`, or any package runner.
+* Do not probe for Graphify with `which graphify`, `where graphify`, `Get-Command graphify`, or similar commands before first use.
+* Do not list, inspect, or probe `graphify-out/` before first use when repository instructions already establish that `graphify-out/graph.json` exists.
+* For a known exact symbol, the first repository-discovery command must be:
+  `graphify explain "<exact symbol>"`
+* Only investigate Graphify installation or graph availability after a direct `graphify ...` command actually fails.
+* A failure from `npx`, npm, or another package runner is not evidence that Graphify is unavailable; those invocation methods are prohibited.
 
-### Primera vez (onboarding)
 
-**Requisito único:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado.
+## Core Operating Principle
+
+For repository-specific work, minimize context acquisition before reasoning.
+
+Use this order:
+
+```text
+Graphify first.
+Targeted filesystem verification second.
+Claude reasoning third.
+Code changes fourth.
+Narrow tests fifth.
+Graph update last.
+```
+
+Do not begin repository work by broadly scanning the codebase when a local Graphify knowledge graph exists.
+
+The objective is to identify the smallest relevant subgraph and the minimum source-file set required to complete the task correctly.
+
+---
+
+## Development Environment — Docker Required
+
+**The entire team works inside the same Docker image.**
+
+Do not install or run Node.js tooling directly on the host.
+
+The development environment is defined by:
+
+```text
+Dockerfile.dev
+docker-compose.yml
+```
+
+The image is published at:
+
+```text
+ghcr.io/grodriguezcontextglobal/devitrak-client-dev:latest
+```
+
+### First-time onboarding
+
+**Only requirement:** Docker Desktop.
 
 ```bash
-# 1. Clonar el repositorio
+# 1. Clone repository
 git clone https://github.com/grodriguezcontextglobal/testing-admin-dashboard
 cd testing-admin-dashboard
 
-# 2. Crear el archivo de variables de entorno
+# 2. Create environment file
 cp .env.dev.example .env.dev
-# Abrir .env.dev y completar los valores (pedir al equipo las URLs y claves de dev)
 
-# 3. Levantar el contenedor
+# Complete .env.dev with the development URLs and keys provided by the team.
+
+# 3. Start container
 docker compose up
 ```
 
-La app queda disponible en `http://localhost:5522`. El hot-reload funciona igual que fuera de Docker: edita archivos en tu editor y el browser recarga automáticamente.
+The application is available at:
 
-### Flujo diario
-
-```bash
-docker compose up          # levantar
-docker compose down        # apagar
+```text
+http://localhost:5522
 ```
 
-### Cuando alguien agrega o actualiza dependencias
+Hot reload works normally. Edit files on the host and the browser reloads automatically.
 
-Si un `git pull` trae cambios en `package.json` o `package-lock.json`, reconstruir la imagen local:
+### Daily workflow
+
+```bash
+docker compose up
+docker compose down
+```
+
+### When dependencies change
+
+If `package.json` or `package-lock.json` changes after a pull:
 
 ```bash
 docker compose up --build
 ```
 
-Alternativamente, descargar la imagen actualizada que GitHub Actions publica automáticamente en GHCR:
+Alternatively:
 
 ```bash
 docker compose pull
 docker compose up
 ```
 
-### Correr comandos dentro del contenedor
+### Run commands inside the container
+
+Interactive shell:
 
 ```bash
-# Shell interactivo
 docker compose exec devitrak-client sh
+```
 
-# Correr un comando puntual
+Single command:
+
+```bash
 docker compose exec devitrak-client npm run test:unit
 docker compose exec devitrak-client npm run lint
 ```
 
-### Para Claude: contexto del entorno
+### Mandatory environment rules for Claude
 
-- El servidor de desarrollo corre en el **puerto 5522** dentro del contenedor, mapeado al mismo puerto del host.
-- `node_modules` vive en un volumen anónimo dentro del contenedor — no es visible desde el explorador de archivos del host. No sugerir instalar paquetes con `npm install` directamente; el workflow correcto es editar `package.json` y reconstruir la imagen.
-- Las variables de entorno provienen de `.env.dev` (no commiteado). La plantilla es `.env.dev.example`.
-- No hay Node.js instalado en el host. Todos los comandos de Node/npm se ejecutan dentro del contenedor.
+* The development server runs on port `5522` inside the container and is mapped to port `5522` on the host.
+* `node_modules` lives in an anonymous Docker volume.
+* `node_modules` is not expected to be available from the host filesystem.
+* Do not suggest `npm install` directly on the host.
+* Do not suggest `npx` commands directly on the host for project tooling.
+* When a dependency must be added, modify the appropriate package manifest and rebuild the Docker image.
+* Environment variables come from `.env.dev`.
+* `.env.dev` is not committed.
+* `.env.dev.example` is the template.
+* All Node.js, npm, Vitest, Vite, ESLint, and Cypress commands must run inside the container unless the user explicitly instructs otherwise.
 
 ---
 
 ## Commands
 
+All Node/npm commands below are intended to run inside the Docker container.
+
+### Development
+
 ```bash
-# Development
-npm run dev              # start dev server at http://localhost:5522
+npm run dev
+```
 
-# Build
-npm run build            # production build (single bundle, no chunk splitting)
+Development server:
 
-# Lint
-npm run lint             # ESLint — max-warnings 0 (zero warnings allowed)
+```text
+http://localhost:5522
+```
 
-# Unit tests (Vitest + happy-dom)
-npm run test:unit        # run all unit tests once
-npm run test:unit:watch  # watch mode
+### Build
+
+```bash
+npm run build
+```
+
+Production build uses a single bundle with chunk splitting disabled.
+
+### Lint
+
+```bash
+npm run lint
+```
+
+ESLint policy:
+
+```text
+max-warnings = 0
+```
+
+Zero warnings are allowed.
+
+### Unit tests
+
+```bash
+npm run test:unit
+npm run test:unit:watch
 npm run test:unit:coverage
+```
 
-# E2E tests (Cypress — requires dev server on port 5523)
-npm run test:e2e                  # all specs
-npm run test:inventory            # inventory CRUD only
-npm run test:consumers            # consumers CRUD only
-npm run test:events               # events CRUD only
-npm run test:staff                # staff CRUD only
-npm run test:consumer-detail      # consumer detail CRUD
-npm run test:consumer-all         # all consumer specs
+### E2E tests
 
-# Run a single unit test file
+```bash
+npm run test:e2e
+npm run test:inventory
+npm run test:consumers
+npm run test:events
+npm run test:staff
+npm run test:consumer-detail
+npm run test:consumer-all
+```
+
+### Run a single unit test file
+
+Inside the container:
+
+```bash
 npx vitest run src/config/roles.test.js
 ```
 
-**E2E note:** Cypress base URL is `http://localhost:5523`, not 5522. Run a separate dev server on that port before executing Cypress.
+From the host, use Docker:
+
+```bash
+docker compose exec devitrak-client npx vitest run src/config/roles.test.js
+```
+
+### E2E note
+
+Cypress base URL is:
+
+```text
+http://localhost:5523
+```
+
+not:
+
+```text
+http://localhost:5522
+```
+
+Run a separate development server on port `5523` before executing Cypress.
 
 ---
 
 ## Development Methodology
 
-**test → code → refactor** (loop — never skip the order).
+Use this loop strictly:
 
-1. Write the failing test first (Vitest for unit/integration, Cypress for E2E).
-2. Implement only what's needed to make the test pass.
-3. Refactor without breaking tests.
-4. Repeat.
+```text
+test → code → refactor
+```
 
-Unit test coverage scope is intentionally narrow: `src/config/**`, `src/hooks/**`, `src/store/**`, `src/pages/**/utils/**`. Keep new tests within these boundaries unless there is a strong reason to expand.
+Never skip the order.
+
+1. Write the failing test first.
+2. Use Vitest for unit/integration tests.
+3. Use Cypress for E2E tests.
+4. Implement only what is required to make the test pass.
+5. Refactor without breaking tests.
+6. Repeat.
+
+### Unit-test coverage scope
+
+The intentionally narrow test scope is:
+
+```text
+src/config/**
+src/hooks/**
+src/store/**
+src/pages/**/utils/**
+```
+
+Keep new tests within these boundaries unless there is a strong reason to expand coverage.
 
 ---
 
-## Architecture
+# Architecture
 
-### Entry Point & App Shell
+## Entry Point and App Shell
 
-`src/main.jsx` bootstraps Redux (`Provider`), persistence (`PersistGate`), routing (`BrowserRouter`), and React Query (`QueryClientProvider`), then calls `configureApi()` before rendering `<App />`. This async init selects the healthy API server before the first render.
+`src/main.jsx` bootstraps:
 
-`src/App.jsx` reads `state.admin.status` from Redux to decide between `<AuthRoutes />` and `<NoAuthRoutes />`. It also validates the JWT on every route change and expires sessions automatically.
+* Redux `Provider`
+* Redux persistence via `PersistGate`
+* `BrowserRouter`
+* React Query `QueryClientProvider`
 
-### Routing
+It calls:
 
-All authenticated routes live in `src/routes/authorized/AuthRoutes.jsx`. Routes that require elevated permissions are wrapped in `<PermissionGuard action="domain:action" />`, which reads the current user from Redux and calls `hasPermission` + `resolveRoleType` from `src/config/roles.js`. Unauthorized users are redirected to `/`.
-
-Every page is lazy-loaded (`React.lazy`) with a `<Suspense>` Lottie fallback. Max content width: `1400px`, centered, `minHeight: 100dvh`.
-
-### Permission System
-
-**The single source of truth is `src/config/roles.js`.** Do not add role logic anywhere else.
-
-Key exports:
-- `PERMISSIONS` — permission matrix, keyed `"domain:action"`, value is an array of allowed `roleType` strings.
-- `hasPermission(action, roleType)` — pure function; use in tests, guards, and utils.
-- `resolveRoleType(user)` — extracts the effective roleType from a Redux user object; falls back to `LEGACY_ROLE_MAP` if `roleType` is absent (handles legacy DB records with numeric `role`).
-- `ROLE_TYPES` — canonical role string constants.
-
-**roleType strings (canonical):** `root_admin`, `admin`, `sale_manager`, `event_manager`, `inventory_manager`, `assistant`. Legacy aliases exist for backward compat — always resolve through `resolveRoleType`.
-
-The `permission` Redux slice (`src/store/slices/permissions.js`) mirrors the active user's role/roleType for convenience but is not the authority for access decisions.
-
-### State Management (Redux)
-
-Store is at `src/store/Store.js`. All state is persisted to `localStorage` via `redux-persist`.
-
-| Slice key      | Slice file              | Purpose                                      |
-|---------------|-------------------------|----------------------------------------------|
-| `admin`        | `adminSlice.js`         | Auth status, user profile, JWT, MFA          |
-| `permission`   | `permissions.js`        | Active role/roleType + company locations      |
-| `event`        | `eventSlice.js`         | Selected event context                       |
-| `devicesHandle`| `devicesHandleSlice.js` | Device selection and quick-glance state      |
-| `article`      | `articleSlide.js`       | Inventory item (article) editing context     |
-| `customer`     | `customerSlice.js`      | Selected consumer                            |
-| `staffDetail`  | `staffDetailSlide.js`   | Selected staff member                        |
-| `member`       | `memberSlice.js`        | Member (conditional page) context            |
-| `helper`       | `helperSlice.js`        | Shared UI state / misc helpers               |
-| `searchResult` | `searchBarResultSlice.js`| Global search results                       |
-| `staffActivity`| `staffActivitySlice.js` | Staff activity log                           |
-| `stripe`       | `stripeSlice.js`        | Stripe account info                          |
-| `subscription` | `subscriptionSlice.js`  | Subscription plan state                      |
-
-On logout, every slice is individually reset — see `App.jsx::dispatchActionBasedOnTokenValidation`.
-
-### API Layer
-
-`src/api/devitrakApi.jsx` exports three pre-configured Axios instances:
-
-| Instance            | Path suffix | Usage                      |
-|--------------------|-------------|----------------------------|
-| `devitrakApi`       | (none)      | General endpoints          |
-| `devitrakApiAdmin`  | `/admin`    | Admin-only endpoints       |
-| `devitrakApiArticle`| `/article`  | Inventory item endpoints   |
-| `devitrakAWSApi`    | AWS base    | AWS-specific endpoints     |
-
-All three share a request interceptor that attaches `x-token` and `s-token-lq` (staff SQL id) from `localStorage`, plus locale/timezone headers, plus the route-scoped company headers (see below). On `Network Error` or timeout they auto-retry on the next healthy server via `src/api/serverManager.js`.
-
-**Session headers (`src/api/sessionHeaders.js`)** is the single source of truth for the localStorage-backed auth/session keys. It exposes `persistCompanyHeaders` (called at login in `Login.jsx` and `multipleCompanies/Modal.jsx`), `clearSessionStorage` (called at every logout/session-teardown site), and the pure helpers `buildRequestPath` + `buildRouteScopedHeaders` used by the interceptor. Route-scoped defaults:
-
-| Header         | Value                          | Source (Redux)                | Routes                              |
-|----------------|--------------------------------|-------------------------------|-------------------------------------|
-| `x-company-id` | Mongo ObjectId of the company  | `admin.user.companyData.id`   | `/api/staff` `/api/admin` `/api/company` `/api/stripe` |
-| `s-company-lq` | SQL `company_id` (integer)     | `admin.user.sqlInfo.company_id` | `/api/db_*`                         |
-
-When adding a new localStorage session key, add it to `SESSION_STORAGE_KEYS` so it is cleared on logout everywhere.
-
-Server selection (`serverManager.js`): on startup, `configureApi()` checks `VITE_APP_DEVITRACK_API` (primary) and `VITE_APP_DEVITRACK_API_BACKUP` via a `/health` endpoint. The active server is cached in `localStorage` under `activeApiServer`.
-
-### Environment Variables
-
-Configured in `src/config/ConfigEnvExport.jsx` (all prefixed `VITE_APP_`). Copy `.env.dev.example` to `.env.dev` (see Docker setup above).
-
-Key variables: `VITE_APP_DEVITRACK_API`, `VITE_APP_DEVITRACK_API_BACKUP`, `VITE_APP_PUBLIC_STRIPE_KEY`, `VITE_APP_RECAPTCHA_SITEKEY`, `VITE_APP_AWS_API`.
-
-### Pages
-
-`src/pages/` contains one folder per domain. Each domain follows the same internal pattern:
-
+```text
+configureApi()
 ```
+
+before rendering `<App />`.
+
+This asynchronous initialization selects a healthy API server before the first render.
+
+`src/App.jsx` reads:
+
+```text
+state.admin.status
+```
+
+from Redux to choose between:
+
+```text
+<AuthRoutes />
+<NoAuthRoutes />
+```
+
+It also validates the JWT on route changes and expires sessions automatically.
+
+---
+
+## Routing
+
+Authenticated routes live in:
+
+```text
+src/routes/authorized/AuthRoutes.jsx
+```
+
+Routes requiring elevated permissions use:
+
+```jsx
+<PermissionGuard action="domain:action" />
+```
+
+`PermissionGuard` reads the current user from Redux and uses:
+
+```text
+hasPermission
+resolveRoleType
+```
+
+from:
+
+```text
+src/config/roles.js
+```
+
+Unauthorized users are redirected to:
+
+```text
+/
+```
+
+Every page is lazy-loaded with:
+
+```text
+React.lazy
+Suspense
+```
+
+The loading fallback uses Lottie.
+
+Layout constraints:
+
+```text
+max-width: 1400px
+centered
+min-height: 100dvh
+```
+
+---
+
+## Permission System
+
+The single source of truth is:
+
+```text
+src/config/roles.js
+```
+
+Do not add role logic elsewhere.
+
+### Key exports
+
+#### `PERMISSIONS`
+
+Permission matrix keyed by:
+
+```text
+domain:action
+```
+
+Values are arrays of allowed `roleType` strings.
+
+#### `hasPermission(action, roleType)`
+
+Pure function.
+
+Use it in:
+
+* tests
+* route guards
+* utilities
+* permission checks
+
+#### `resolveRoleType(user)`
+
+Extracts the effective `roleType` from a Redux user object.
+
+Falls back to:
+
+```text
+LEGACY_ROLE_MAP
+```
+
+when `roleType` is absent.
+
+This supports legacy database records containing numeric `role`.
+
+#### `ROLE_TYPES`
+
+Canonical role string constants.
+
+### Canonical role types
+
+```text
+root_admin
+admin
+sale_manager
+event_manager
+inventory_manager
+assistant
+```
+
+Legacy aliases exist for backward compatibility.
+
+Always resolve through:
+
+```text
+resolveRoleType
+```
+
+Never compare legacy numeric roles directly in new code.
+
+The Redux permission slice:
+
+```text
+src/store/slices/permissions.js
+```
+
+mirrors active role information for convenience but is not the authority for access decisions.
+
+---
+
+## State Management — Redux
+
+Store:
+
+```text
+src/store/Store.js
+```
+
+State is persisted to `localStorage` through `redux-persist`.
+
+| Slice key       | Slice file                | Purpose                                    |
+| --------------- | ------------------------- | ------------------------------------------ |
+| `admin`         | `adminSlice.js`           | Auth status, user profile, JWT, MFA        |
+| `permission`    | `permissions.js`          | Active role/roleType and company locations |
+| `event`         | `eventSlice.js`           | Selected event context                     |
+| `devicesHandle` | `devicesHandleSlice.js`   | Device selection and quick-glance state    |
+| `article`       | `articleSlide.js`         | Inventory item editing context             |
+| `customer`      | `customerSlice.js`        | Selected consumer                          |
+| `staffDetail`   | `staffDetailSlide.js`     | Selected staff member                      |
+| `member`        | `memberSlice.js`          | Member/conditional-page context            |
+| `helper`        | `helperSlice.js`          | Shared UI state and miscellaneous helpers  |
+| `searchResult`  | `searchBarResultSlice.js` | Global search results                      |
+| `staffActivity` | `staffActivitySlice.js`   | Staff activity log                         |
+| `stripe`        | `stripeSlice.js`          | Stripe account information                 |
+| `subscription`  | `subscriptionSlice.js`    | Subscription plan state                    |
+
+On logout, every slice is individually reset.
+
+See:
+
+```text
+App.jsx::dispatchActionBasedOnTokenValidation
+```
+
+---
+
+## API Layer
+
+API module:
+
+```text
+src/api/devitrakApi.jsx
+```
+
+It exports preconfigured Axios instances:
+
+| Instance             | Path suffix | Usage                    |
+| -------------------- | ----------- | ------------------------ |
+| `devitrakApi`        | none        | General endpoints        |
+| `devitrakApiAdmin`   | `/admin`    | Admin-only endpoints     |
+| `devitrakApiArticle` | `/article`  | Inventory item endpoints |
+| `devitrakAWSApi`     | AWS base    | AWS-specific endpoints   |
+
+All instances share request behavior that attaches:
+
+```text
+x-token
+s-token-lq
+locale
+timezone
+route-scoped company headers
+```
+
+Auth/session values come from `localStorage`.
+
+On:
+
+```text
+Network Error
+timeout
+```
+
+requests retry against the next healthy server through:
+
+```text
+src/api/serverManager.js
+```
+
+---
+
+## Session Headers
+
+Single source of truth:
+
+```text
+src/api/sessionHeaders.js
+```
+
+Key exports include:
+
+```text
+persistCompanyHeaders
+clearSessionStorage
+buildRequestPath
+buildRouteScopedHeaders
+```
+
+`persistCompanyHeaders` is called during login flows, including:
+
+```text
+Login.jsx
+multipleCompanies/Modal.jsx
+```
+
+`clearSessionStorage` must be used at every logout/session-teardown location.
+
+### Route-scoped defaults
+
+| Header         | Value                  | Redux source                    | Routes                                                    |
+| -------------- | ---------------------- | ------------------------------- | --------------------------------------------------------- |
+| `x-company-id` | Mongo company ObjectId | `admin.user.companyData.id`     | `/api/staff`, `/api/admin`, `/api/company`, `/api/stripe` |
+| `s-company-lq` | SQL integer company id | `admin.user.sqlInfo.company_id` | `/api/db_*`                                               |
+
+When adding a localStorage-backed session key, add it to:
+
+```text
+SESSION_STORAGE_KEYS
+```
+
+so it is cleared everywhere on logout.
+
+---
+
+## Server Selection
+
+Implemented in:
+
+```text
+src/api/serverManager.js
+```
+
+At startup, `configureApi()` checks:
+
+```text
+VITE_APP_DEVITRACK_API
+VITE_APP_DEVITRACK_API_BACKUP
+```
+
+through:
+
+```text
+/health
+```
+
+The selected server is cached in localStorage under:
+
+```text
+activeApiServer
+```
+
+---
+
+## Environment Variables
+
+Configured in:
+
+```text
+src/config/ConfigEnvExport.jsx
+```
+
+All variables use prefix:
+
+```text
+VITE_APP_
+```
+
+Copy:
+
+```text
+.env.dev.example
+```
+
+to:
+
+```text
+.env.dev
+```
+
+Key variables:
+
+```text
+VITE_APP_DEVITRACK_API
+VITE_APP_DEVITRACK_API_BACKUP
+VITE_APP_PUBLIC_STRIPE_KEY
+VITE_APP_RECAPTCHA_SITEKEY
+VITE_APP_AWS_API
+```
+
+---
+
+## Pages
+
+`src/pages/` contains one folder per domain.
+
+Typical structure:
+
+```text
 pages/<domain>/
-  MainPage.jsx          # list/landing view
-  action/               # create / edit flows
-  detail/               # drill-down views
-  components/           # domain-specific UI
-  utils/                # pure helpers (unit-tested)
+  MainPage.jsx
+  action/
+  detail/
+  components/
+  utils/
 ```
 
-Domains: `authentication`, `consumers`, `events`, `inventory`, `staff`, `home`, `search`, `payment`, `Profile`, `posts`, `subscription`, `conditionalPage` (members/patients), `error`.
+Domains include:
 
-### Component Library
-
-`src/components/UX/` is the internal design-system layer (see `design.md`). All exports are re-exported from `src/components/UX/index.js`.
-
-Primary building blocks:
-- **Buttons:** `BlueButton`, `GrayButton`, `DangerButton`, `LightBlueButton` — each has a `*Confirmation` variant with an Ant Design Popconfirm.
-- **Tables:** `BaseTable`, `ExpandableTable`, `SelectableTable`, `SelectedRowBaseTable` — all wrap Ant Design `Table` with the `table-ant-customized` CSS class.
-- **Modals:** `ModalUX` wraps `antd` Modal with `centered`, `maskClosable: false`, `destroyOnHidden: true`.
-- **Badges/Pills:** `BadgeWithDot` (11 color schemes), `PillUIComponent`.
-- **Inputs:** `Input`, `Label`, `TextArea` — MUI `OutlinedInput` base.
-
-Always use these components. Do not introduce raw Ant Design or MUI primitives directly in page code.
-
-### Build
-
-Vite 5 with [Million.js](https://million.dev) compiler (`auto: true`) for React performance. Production build outputs a single bundle (chunk splitting disabled) to avoid deployment issues with partial uploads.
+```text
+authentication
+consumers
+events
+inventory
+staff
+home
+search
+payment
+Profile
+posts
+subscription
+conditionalPage
+error
+```
 
 ---
 
-## Key Conventions
+## Component Library
 
-- **Permissions:** Always use `hasPermission(action, resolveRoleType(user))` — never compare `user.role` as a number directly.
-- **API calls:** Import from `src/api/devitrakApi.jsx` — never create ad-hoc Axios instances.
-- **Forms:** `react-hook-form` + `yup` for all form state and validation.
-- **Server data fetching:** `@tanstack/react-query` for all remote data; local Redux slices for cross-page context only.
-- **Icons:** Lucide React (`lucide-react`) as default; custom SVG icons in `src/components/icons/` for brand assets.
-- **Styling:** Inline styles for component-level overrides; CSS files for global patterns. All colors from CSS variables in `src/index.css`. See `design.md` for the full token reference.
+Internal design system:
+
+```text
+src/components/UX/
+```
+
+Exports are re-exported from:
+
+```text
+src/components/UX/index.js
+```
+
+### Buttons
+
+```text
+BlueButton
+GrayButton
+DangerButton
+LightBlueButton
+```
+
+Each may have a confirmation variant using Ant Design Popconfirm.
+
+### Tables
+
+```text
+BaseTable
+ExpandableTable
+SelectableTable
+SelectedRowBaseTable
+```
+
+These wrap Ant Design `Table` and use:
+
+```text
+table-ant-customized
+```
+
+### Modals
+
+`ModalUX` wraps Ant Design Modal with:
+
+```text
+centered
+maskClosable: false
+destroyOnHidden: true
+```
+
+### Badges and pills
+
+```text
+BadgeWithDot
+PillUIComponent
+```
+
+### Inputs
+
+```text
+Input
+Label
+TextArea
+```
+
+MUI `OutlinedInput` is the base.
+
+### Mandatory component rule
+
+Prefer internal UX components.
+
+Do not introduce raw Ant Design or MUI primitives directly into page code when an equivalent internal UX component already exists.
+
+---
+
+## Build
+
+Vite 5 with Million.js compiler:
+
+```text
+auto: true
+```
+
+Production build emits a single bundle.
+
+Chunk splitting is disabled to reduce deployment issues caused by partial uploads.
+
+---
+
+# Key Conventions
+
+## Permissions
+
+Always use:
+
+```js
+hasPermission(action, resolveRoleType(user))
+```
+
+Never compare:
+
+```text
+user.role
+```
+
+as a raw numeric value in new code.
+
+---
+
+## API calls
+
+Import API clients from:
+
+```text
+src/api/devitrakApi.jsx
+```
+
+Never create ad hoc Axios instances.
+
+---
+
+## Forms
+
+Use:
+
+```text
+react-hook-form
+yup
+```
+
+for form state and validation.
+
+---
+
+## Server Data
+
+Use:
+
+```text
+@tanstack/react-query
+```
+
+for remote server data.
+
+Use Redux only for cross-page application context and persistent shared client state.
+
+---
+
+## Icons
+
+Default:
+
+```text
+lucide-react
+```
+
+Custom brand assets:
+
+```text
+src/components/icons/
+```
+
+---
+
+## Styling
+
+Use:
+
+* inline styles for component-level overrides
+* CSS files for reusable/global patterns
+* CSS variables from `src/index.css`
+
+See:
+
+```text
+design.md
+```
+
+for design tokens.
+
+---
+
+# Graphify Knowledge Graph Policy
+
+This repository has a local knowledge graph at:
+
+```text
+graphify-out/
+```
+
+Primary graph:
+
+```text
+graphify-out/graph.json
+```
+
+The graph contains:
+
+* code symbols
+* structural relationships
+* callers and callees where extracted
+* import relationships
+* communities
+* cross-file relationships
+
+Graphify is a context-discovery mechanism, not an infallible source of runtime truth.
+
+---
+
+## Native Graphify CLI Rule
+
+Graphify is installed as a native CLI in this environment.
+
+Always invoke it directly:
+
+```bash
+graphify explain "<symbol>"
+graphify path "<A>" "<B>"
+graphify query "<question>" --budget 800
+graphify affected "<symbol>"
+graphify update .
+```
+
+Never invoke Graphify through:
+
+```text
+npx graphify
+npm exec graphify
+pnpm exec graphify
+yarn graphify
+python -m graphify
+pipx run graphify
+```
+
+Do not use another package runner around Graphify.
+
+---
+
+## Do Not Probe an Already-Known Graph
+
+When repository instructions already establish that:
+
+```text
+graphify-out/graph.json
+```
+
+exists, do not spend a tool call listing or probing:
+
+```text
+graphify-out/
+```
+
+before using Graphify.
+
+Do not start with:
+
+```bash
+ls graphify-out/
+```
+
+or equivalent checks unless a Graphify command actually fails because the graph is unavailable.
+
+Run the relevant Graphify command directly.
+
+---
+
+## Mandatory Context Acquisition Order
+
+For repository-specific work, use this hierarchy.
+
+### 1. Exact symbol known → `explain`
+
+If the task names an exact:
+
+* component
+* function
+* hook
+* class
+* module
+* file
+* utility
+* Redux slice
+* symbol
+
+first run:
+
+```bash
+graphify explain "<exact symbol>"
+```
+
+Examples:
+
+```bash
+graphify explain "EmailReturnRentalItems"
+graphify explain "SingleEmailNotification"
+graphify explain "useBulkActionLogic"
+graphify explain "resolveRoleType"
+```
+
+Prefer exact symbol names over partial names.
+
+---
+
+## Verify What Graphify Resolved
+
+Before drawing conclusions, inspect whether Graphify resolved:
+
+```text
+FileName.jsx
+```
+
+or:
+
+```text
+FunctionName()
+ComponentName()
+HookName()
+ClassName
+```
+
+A file node and a contained symbol node are not interchangeable.
+
+Example:
+
+```text
+SingleEmail.jsx
+```
+
+is different from:
+
+```text
+SingleEmailNotification()
+```
+
+When the functional symbol is known, prefer the exact symbol.
+
+---
+
+## 2. Known relationship → resolve both sides first
+
+When investigating how two known symbols interact:
+
+First run:
+
+```bash
+graphify explain "<A>"
+```
+
+Then:
+
+```bash
+graphify explain "<B>"
+```
+
+Only after both symbols are resolved should you run:
+
+```bash
+graphify path "<A>" "<B>"
+```
+
+Do not begin with `path` when either endpoint is ambiguous.
+
+---
+
+## Path Ambiguity Policy
+
+If Graphify emits an ambiguity warning such as:
+
+```text
+warning: target match was ambiguous
+```
+
+treat the path as non-conclusive.
+
+Do not infer:
+
+* functional coupling
+* runtime execution flow
+* business-flow interaction
+* direct invocation
+* causal dependency
+
+from an ambiguous path.
+
+Resolve exact symbols first or use targeted filesystem verification.
+
+---
+
+## Structural Connectivity Is Not Functional Connectivity
+
+A graph path proves only that graph edges connect nodes.
+
+It does not automatically prove:
+
+```text
+A calls B
+A executes before B
+A belongs to the same business workflow as B
+A triggers B at runtime
+```
+
+For example:
+
+```text
+FeatureA → BlueButton ← FeatureB
+```
+
+does not prove:
+
+```text
+FeatureA → FeatureB
+```
+
+Shared dependencies are often weak connectors.
+
+---
+
+## Weak Connector Policy
+
+Do not treat paths through generic shared infrastructure as evidence of direct feature interaction.
+
+Examples of weak connectors:
+
+* shared buttons
+* generic UX primitives
+* style modules
+* API clients
+* Redux stores
+* configuration modules
+* generic utilities
+* shared layouts
+* common hooks
+* generic modal components
+
+Examples:
+
+```text
+BlueButton
+ModalUX
+OutlinedInputStyle
+devitrakApi
+eventSlice
+adminSlice
+```
+
+A path through these nodes requires additional evidence.
+
+---
+
+## Meaningful Edge Preference
+
+Prefer paths and explanations containing stronger relationships such as:
+
+```text
+calls
+direct imports
+caller/callee
+domain-specific dependency
+explicit invocation
+```
+
+Treat paths composed mainly of:
+
+```text
+contains
+imports_from
+shared infrastructure
+generic UI dependencies
+```
+
+with caution.
+
+---
+
+## Low-Degree and Incomplete Graph Results
+
+If:
+
+```bash
+graphify explain "<symbol>"
+```
+
+returns:
+
+* only containment
+* very low degree
+* no expected caller
+* no expected callee
+* no expected imports
+* obviously incomplete relationships
+
+do not conclude that no integration exists.
+
+Treat the graph result as incomplete.
+
+Then use targeted filesystem verification.
+
+Example:
+
+```text
+Degree: 1
+
+Connections:
+  <-- File.jsx [contains]
+```
+
+means only that Graphify extracted containment.
+
+It does not prove the symbol is unused.
+
+---
+
+## 3. Broader context required → scoped query
+
+Use:
+
+```bash
+graphify query "<specific question>" --budget 800
+```
+
+only when:
+
+* the exact symbol is unknown
+* several related symbols must be identified
+* broader context is genuinely required
+
+Default budget:
+
+```text
+800
+```
+
+Do not use the default 2000-token budget automatically.
+
+Increase the budget only if the scoped result is insufficient.
+
+Possible escalation:
+
+```text
+800
+1200
+1500
+```
+
+Avoid immediately jumping to large context budgets.
+
+---
+
+## Query Precision Policy
+
+Prefer narrow queries.
+
+Good:
+
+```bash
+graphify query "rental return email notification flow" --budget 800
+```
+
+Avoid generic terms such as:
+
+```text
+Event
+Email
+User
+Button
+Main
+Data
+Handler
+Component
+```
+
+unless unavoidable.
+
+Generic high-degree concepts can produce hundreds of irrelevant nodes.
+
+---
+
+## 4. Flow tracing → DFS
+
+When tracing:
+
+* execution flow
+* dependency chain
+* workflow path
+* feature progression
+
+use:
+
+```bash
+graphify query "<specific flow question>" --dfs --budget 800
+```
+
+Example:
+
+```bash
+graphify query "trace rental item return notification flow" --dfs --budget 800
+```
+
+Use DFS for narrow tracing.
+
+Do not assume BFS is always appropriate.
+
+---
+
+## 5. Impact analysis → `affected`
+
+When investigating what may be impacted by changing a known symbol, prefer:
+
+```bash
+graphify affected "<exact symbol>"
+```
+
+Use relation filters or depth controls when useful.
+
+Do not begin by recursively scanning all references across the repository.
+
+---
+
+# Targeted Filesystem Fallback
+
+Graphify is the first context mechanism, not the only mechanism.
+
+Use targeted filesystem search when:
+
+* `explain` is incomplete
+* a path is ambiguous
+* expected callers/callees are missing
+* dynamic usage may not be captured
+* runtime behavior requires source verification
+
+---
+
+## Exact-Symbol Search First
+
+Search for the exact symbol.
+
+Do not immediately search broad concepts.
+
+On systems where `rg` exists:
+
+```bash
+rg -n "ExactSymbol" src
+```
+
+On this Windows environment, `rg` may be unavailable.
+
+Use PowerShell fallback:
+
+```powershell
+Get-ChildItem .\src -Recurse -File -Include *.js,*.jsx,*.ts,*.tsx |
+  Select-String -Pattern "ExactSymbol"
+```
+
+Prefer a narrower directory whenever possible:
+
+```powershell
+Get-ChildItem .\src\pages\inventory -Recurse -File -Include *.js,*.jsx,*.ts,*.tsx |
+  Select-String -Pattern "ExactSymbol"
+```
+
+Narrow directory search is preferred over full `src` search.
+
+---
+
+## Filesystem Search Escalation
+
+Use this escalation order:
+
+```text
+exact file
+↓
+exact symbol
+↓
+known domain directory
+↓
+src subtree
+↓
+broader repository search only if necessary
+```
+
+Do not begin with:
+
+```text
+recursive repository-wide grep
+recursive repository-wide Glob
+recursive repository-wide Find
+mass file reads
+full directory traversal
+```
+
+when narrower evidence is available.
+
+---
+
+## Reading Policy
+
+After Graphify or targeted search identifies relevant files:
+
+Read only:
+
+1. the primary implementation file
+2. direct callers when needed
+3. direct callees when needed
+4. immediate dependencies required to understand behavior
+
+Do not automatically read every imported module.
+
+Do not read generic UI primitives unless their implementation is directly relevant to the task.
+
+Do not read shared infrastructure merely because it appears on a graph path.
+
+---
+
+## Minimum Source-File Set
+
+Before editing or explaining code, identify:
+
+```text
+smallest relevant subgraph
+minimum source-file set
+```
+
+Prefer:
+
+```text
+2–5 highly relevant files
+```
+
+over:
+
+```text
+20 loosely related files
+```
+
+Expand only when evidence requires it.
+
+---
+
+# Broad Navigation
+
+If:
+
+```text
+graphify-out/wiki/index.md
+```
+
+exists, use it for broad repository navigation before raw source browsing.
+
+Do not use the wiki for exact-symbol questions when `graphify explain` is more appropriate.
+
+---
+
+## GRAPH_REPORT Policy
+
+Read:
+
+```text
+graphify-out/GRAPH_REPORT.md
+```
+
+only for:
+
+* architecture-wide review
+* broad subsystem mapping
+* repository-level structural analysis
+* cases where focused Graphify commands and targeted searches remain insufficient
+
+Do not read `GRAPH_REPORT.md` for routine:
+
+* debugging
+* feature implementation
+* exact-symbol explanation
+* small refactors
+* localized code review
+
+---
+
+# Before Editing Code
+
+Before making changes:
+
+1. Identify the exact task.
+2. Identify exact symbols when possible.
+3. Run `graphify explain` for known symbols.
+4. Resolve both endpoints before `graphify path`.
+5. Treat ambiguity warnings as non-conclusive.
+6. Identify the smallest relevant subgraph.
+7. Identify the minimum source-file set.
+8. Verify weak or incomplete graph results with targeted search.
+9. Read only the files required.
+10. Understand existing tests before implementing.
+
+Do not edit first and investigate later.
+
+---
+
+# After Editing Code
+
+After code changes:
+
+1. Run the narrowest relevant tests first.
+2. Run targeted lint where practical.
+3. Expand test scope only if necessary.
+4. Run:
+
+```bash
+graphify update .
+```
+
+to keep the graph current.
+
+`graphify update .` is AST-based and does not require an LLM API.
+
+Do not rebuild the entire graph unless structurally necessary.
+
+---
+
+## Graph Update Policy
+
+Use:
+
+```bash
+graphify update .
+```
+
+after code changes.
+
+Do not automatically run:
+
+```bash
+graphify extract . --code-only
+```
+
+after every modification.
+
+A full extraction is not the default post-edit workflow.
+
+Use a full extraction only when:
+
+* the graph is missing
+* the graph is corrupted
+* major repository restructuring occurred
+* `graphify update .` is insufficient
+* explicitly requested
+
+---
+
+# Repository Scan Prohibition
+
+When:
+
+```text
+graphify-out/graph.json
+```
+
+exists, do not begin repository tasks with broad:
+
+```text
+Glob
+Grep
+Find
+Get-ChildItem -Recurse across repository
+recursive directory traversal
+mass file reads
+```
+
+unless:
+
+* Graphify is insufficient
+* targeted search is insufficient
+* the user explicitly requests a repository-wide audit
+
+Even then, narrow scope as much as possible.
+
+---
+
+# Reasoning Discipline
+
+Do not overstate Graphify results.
+
+Use evidence categories mentally:
+
+```text
+Graph-extracted fact
+Direct source-code fact
+Filesystem reference fact
+Inference
+Unknown
+```
+
+When making an inference, distinguish it from a directly observed fact.
+
+Examples:
+
+```text
+Graphify shows A imports B.
+```
+
+is stronger than:
+
+```text
+A and B appear to be part of the same workflow.
+```
+
+Do not convert structural proximity into functional certainty.
+
+---
+
+# Code Modification Discipline
+
+When changing code:
+
+* preserve existing architecture
+* reuse internal UX components
+* use existing API clients
+* preserve permission conventions
+* preserve Docker workflow
+* avoid unrelated refactors
+* keep changes scoped
+* write tests first
+* run narrow tests first
+* update Graphify afterward
+
+Do not modify unrelated files merely because they appeared in a broad graph result.
+
+---
+
+# Git Safety
+
+Do not automatically run destructive or state-altering Git commands.
+
+Never run without explicit user instruction:
+
+```text
+git reset --hard
+git clean -fd
+git stash
+git stash pop
+git stash drop
+git checkout -- <file>
+git restore .
+```
+
+Do not discard uncommitted changes.
+
+Before code modifications, inspect relevant working-tree state when necessary.
+
+Prefer:
+
+```bash
+git status --short
+git diff -- <relevant-file>
+```
+
+Do not assume existing modifications were created by Claude.
+
+---
+
+# Context and Quota Optimization
+
+The primary optimization rule is:
+
+```text
+Graphify first.
+Filesystem second.
+Claude reasons last.
+```
+
+More precisely:
+
+```text
+Exact symbol
+→ graphify explain
+→ minimal files
+→ reasoning
+
+Known relationship
+→ explain A
+→ explain B
+→ path A B
+→ inspect edge quality
+→ minimal files
+→ reasoning
+
+Unknown broader context
+→ scoped query --budget 800
+→ minimal files
+→ reasoning
+
+Flow tracing
+→ scoped DFS query --budget 800
+→ minimal files
+→ reasoning
+
+Weak graph result
+→ exact targeted search
+→ minimal files
+→ reasoning
+```
+
+Do not spend context reading the whole repository before understanding what is relevant.
+
+---
+
+# Final Working Rule
+
+For repository work:
+
+```text
+1. Graphify
+2. Resolve exact symbols
+3. Verify graph quality
+4. Targeted filesystem fallback only if needed
+5. Read minimum source files
+6. Reason
+7. Test first
+8. Implement
+9. Refactor
+10. Run narrow tests
+11. graphify update .
+```
+
+Never reverse this order without a concrete reason.

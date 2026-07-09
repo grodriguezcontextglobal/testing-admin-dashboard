@@ -9,15 +9,53 @@ import SectionHeader from "./new_form_components/SectionHeader";
 import SectionLabel from "./new_form_components/SectionLabel";
 import industries from "../navbar/component/industriesList.json";
 
+const JOB_POLL_INTERVAL_MS = 1500;
+const JOB_POLL_TIMEOUT_MS = 60000;
+
+const generateIdempotencyKey = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const DocumentUpload = ({ activeTab, refetch }) => {
   const [form] = Form.useForm();
   const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
+
+  const pollJobStatus = (jobId) =>
+    new Promise((resolve, reject) => {
+      const startedAt = Date.now();
+      const poll = async () => {
+        try {
+          const { data } = await devitrakApi.get(`/jobs/owned/${jobId}`);
+          if (data.status === "done") {
+            return resolve(data.result?.document);
+          }
+          if (data.status === "dead" || data.status === "failed") {
+            return reject(
+              new Error(data.lastError || "Document upload failed.")
+            );
+          }
+          if (Date.now() - startedAt > JOB_POLL_TIMEOUT_MS) {
+            return reject(
+              new Error("Timed out waiting for the document to be processed.")
+            );
+          }
+          setTimeout(poll, JOB_POLL_INTERVAL_MS);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      poll();
+    });
 
   const handleSubmit = async (values) => {
     if (!file) {
@@ -49,25 +87,44 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       }
     });
 
+    setUploading(true);
     try {
       const response = await devitrakApi.post(
         "/document/upload",
-        formDataToSend
+        formDataToSend,
+        { headers: { "Idempotency-Key": generateIdempotencyKey() } }
       );
 
       const data = await response.data;
-      if (data.ok) {
-        form.resetFields();
-        setFile(null);
-        activeTab("1");
-        return refetch();
-      } else {
+      if (!data.ok) {
         console.error("Upload failed:", data.msg);
         throw Error(data.msg);
       }
+
+      message.loading({
+        content: "Document queued — processing upload...",
+        key: "document-upload",
+        duration: 0,
+      });
+      await pollJobStatus(data.jobId);
+
+      message.success({
+        content: "Document uploaded successfully.",
+        key: "document-upload",
+      });
+      form.resetFields();
+      setFile(null);
+      activeTab("1");
+      return refetch();
     } catch (error) {
       console.error("Error uploading document:", error);
+      message.error({
+        content: error.message || "Failed to upload document.",
+        key: "document-upload",
+      });
       throw error;
+    } finally {
+      setUploading(false);
     }
   };
   const industry = String(user.companyData.industry);
@@ -79,6 +136,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
         subtitle="Update your document details here."
         cancelButton={() => form.resetFields()}
         saveButton={() => form.submit()}
+        saveLoading={uploading}
       />
       <Grid container spacing={3} mt={2}>
         <Grid item xs={12} lg={3}>
@@ -205,6 +263,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       <SectionFooter
         cancelButton={() => form.resetFields()}
         saveButton={() => form.submit()}
+        saveLoading={uploading}
       />
     </Form>
   );
