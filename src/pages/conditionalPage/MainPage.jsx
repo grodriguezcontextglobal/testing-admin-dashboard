@@ -11,7 +11,7 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../styles/global/Title";
-import { isCoordinatorLevel } from "../../config/roles";
+import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
 import MainTable from "./tables/MainTable";
@@ -26,7 +26,10 @@ const MainPage = () => {
   const { register, setValue } = useForm();
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const canManageMembers = isCoordinatorLevel(user.roleType);
+  const roleType = resolveRoleType(user);
+  const canAddMembers = hasPermission("member:create", roleType);
+  const canDeleteMembers = hasPermission("member:delete", roleType);
+  const canManageMembers = canAddMembers || canDeleteMembers;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -45,6 +48,8 @@ const MainPage = () => {
     titleParams,
     onAdd: () => setAddingNewMember(true),
     onDelete: () => setRemovingMember(true),
+    canAdd: canAddMembers,
+    canDelete: canDeleteMembers,
   });
 
   return (

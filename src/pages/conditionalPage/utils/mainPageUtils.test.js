@@ -41,4 +41,25 @@ describe("buildManageMembersMenu", () => {
     expect(() => items[0].onClick()).not.toThrow();
     expect(() => items[2].onClick()).not.toThrow();
   });
+
+  it("omite el item add cuando canAdd es false", () => {
+    const items = buildManageMembersMenu({ titleParams: "members", canAdd: false });
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ key: "delete" });
+  });
+
+  it("omite el item delete cuando canDelete es false", () => {
+    const items = buildManageMembersMenu({ titleParams: "members", canDelete: false });
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ key: "add" });
+  });
+
+  it("retorna lista vacía cuando canAdd y canDelete son false", () => {
+    const items = buildManageMembersMenu({
+      titleParams: "members",
+      canAdd: false,
+      canDelete: false,
+    });
+    expect(items).toHaveLength(0);
+  });
 });
