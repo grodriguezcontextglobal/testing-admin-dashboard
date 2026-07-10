@@ -470,6 +470,33 @@ describe("F-02 — PERMISSIONS: dominio member (CRU) visible para root_admin/adm
   });
 });
 
+// ─── PERMISSIONS — event:notify_push (enviar notificación push del evento) ───
+// Mismo grupo de roles que ya puede editar el evento (EVENT_CRU): sale_manager
+// e inventory_manager quedan fuera, igual que para el resto de acciones de
+// event:* que no son de solo lectura.
+
+describe("PERMISSIONS — event:notify_push (EVENT_CRU)", () => {
+  const ALLOWED = ["root_admin", "admin", "event_manager", "assistant"];
+  const DENIED = ["sale_manager", "inventory_manager"];
+
+  it('"event:notify_push" existe en PERMISSIONS y es array', () => {
+    expect(PERMISSIONS["event:notify_push"]).toBeDefined();
+    expect(Array.isArray(PERMISSIONS["event:notify_push"])).toBe(true);
+  });
+
+  ALLOWED.forEach((role) => {
+    it(`"${role}" puede enviar notificaciones push del evento`, () => {
+      expect(hasPermission("event:notify_push", role)).toBe(true);
+    });
+  });
+
+  DENIED.forEach((role) => {
+    it(`"${role}" no puede enviar notificaciones push del evento`, () => {
+      expect(hasPermission("event:notify_push", role)).toBe(false);
+    });
+  });
+});
+
 // ─── F-01: resolveRoleType — reconoce nuevos strings ─────────────────────────
 
 describe("F-01 — resolveRoleType: reconoce nuevos roleType strings como válidos", () => {
