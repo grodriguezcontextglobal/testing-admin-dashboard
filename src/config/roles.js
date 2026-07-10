@@ -81,7 +81,7 @@ const EVENT_RU  = ["root_admin", "admin", "sale_manager", "event_manager", "assi
 //   CD — Create/Delete: inventory_manager + admins (no sale_manager)
 //   RU — Read/Update: also includes sale_manager
 const INVENTORY_CD = ["root_admin", "admin", "inventory_manager"];
-const INVENTORY_RU = ["root_admin", "admin", "sale_manager", "inventory_manager", "event_manager"];
+const INVENTORY_RU = ["root_admin", "admin", "sale_manager", "inventory_manager"];
 
 // Posts: event_manager + inventory_manager
 const POSTS_ACCESS = ["root_admin", "admin", "event_manager", "inventory_manager"];
