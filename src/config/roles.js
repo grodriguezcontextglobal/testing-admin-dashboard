@@ -123,6 +123,7 @@ export const PERMISSIONS = {
   "event:read": EVENT_RU,
   "event:update": EVENT_RU,
   "event:delete": EVENT_D,
+  "event:notify_push": EVENT_CRU,
 
   // Consumers — event_manager: CRUD; assistant: C/R/U (no Delete)
   "consumer:create": EVENT_CRU,
