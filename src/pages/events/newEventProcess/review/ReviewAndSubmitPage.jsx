@@ -149,6 +149,7 @@ const ReviewAndSubmitEvent = () => {
       active: true,
       contactInfo: contactInfo,
       contract_for: "event",
+      configuration: "completed",
     });
     await completingEventConfigurationProcess(event.idSql);
     return await lockedItemsInWarehouseForEventShipping();
