@@ -960,6 +960,142 @@ Prefer exact symbol names over partial names.
 
 ---
 
+### Automatic Graphify Command Selection
+
+The user must not be required to mention Graphify, select a Graphify command, provide Graphify keywords, or translate the task into a repository-search query.
+
+The user communicates only the desired engineering outcome in natural language.
+
+Claude is responsible for automatically selecting the correct Graphify strategy before repository exploration.
+
+Use this decision order:
+
+```text
+Exact implementation symbol explicitly known
+→ graphify explain "<exact symbol>"
+
+Exact file known but contained symbol uncertain
+→ graphify explain "<exact file>"
+→ inspect the resolved file node
+→ identify and explain the functional symbol when necessary
+
+Feature, workflow, bug, or business behavior described without an exact symbol
+→ graphify query "<specific engineering question>" --budget 800
+→ select the strongest concrete candidates
+→ graphify explain "<candidate symbol>"
+→ verify the resolved file and symbol
+
+Two known symbols whose relationship must be understood
+→ graphify explain "<A>"
+→ graphify explain "<B>"
+→ graphify path "<A>" "<B>"
+
+Potential change impact around a known symbol
+→ graphify affected "<exact symbol>"
+```
+
+Claude must make this selection automatically.
+
+The user should be able to write requests such as:
+
+```text
+Fix the visibility of the Manage Members dropdown for managers.
+Add supplier filtering to inventory.
+Review the device assignment workflow.
+Correct the event registration validation.
+```
+
+Claude must not require the user to write:
+
+```text
+graphify query ...
+graphify explain ...
+graphify path ...
+graphify affected ...
+```
+
+Graphify commands are internal implementation details.
+
+#### Mandatory validation after `query`
+
+Never edit code or make a final architectural conclusion directly from `graphify query` output.
+
+After a query:
+
+1. Identify the highest-confidence concrete symbols or files.
+2. Run `graphify explain` for the selected candidate.
+3. Verify that Graphify resolved the expected file and functional symbol.
+4. Reject candidates that resolve to unrelated modules or duplicate generic names.
+5. Inspect the minimum necessary source files.
+6. Only then reason about or modify the implementation.
+
+For duplicated names such as:
+
+```text
+MainPage
+Handler
+Modal
+Index
+Utils
+```
+
+the query result is not sufficient evidence.
+
+Resolve the exact file or contained symbol before continuing.
+
+#### Natural-language query construction
+
+When no exact symbol is known, Claude must derive a narrow engineering question from the user's request.
+
+The query should include available anchors such as:
+
+* business feature
+* visible UI text
+* route
+* endpoint
+* role
+* permission
+* error message
+* expected behavior
+* affected entity
+
+Do not use the user's entire message verbatim when it contains unrelated context.
+
+Do not reduce the request to generic terms such as:
+
+```text
+Main
+User
+Data
+Handler
+Component
+Button
+Event
+```
+
+#### Failure and ambiguity recovery
+
+If Graphify returns:
+
+* an ambiguous match
+* an unrelated duplicate symbol
+* only weak shared-infrastructure connections
+* a large noisy subgraph
+* incomplete containment-only information
+
+Claude must narrow or verify the result automatically.
+
+Use this recovery order:
+
+```text
+more specific Graphify query
+→ exact candidate explain
+→ targeted exact-symbol filesystem verification
+→ minimal source inspection
+```
+
+Do not ask the user to choose the Graphify command or provide search keywords unless essential business information is genuinely missing.
+
 ## Verify What Graphify Resolved
 
 Before drawing conclusions, inspect whether Graphify resolved:
