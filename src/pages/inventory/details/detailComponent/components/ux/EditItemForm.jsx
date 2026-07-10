@@ -25,7 +25,6 @@ import editItemFields from "./EditItemFields";
 const EditItemForm = ({
   acceptImage,
   addingSubLocation,
-  allSerialNumbersOptions,
   control,
   displayContainerSplotLimitField,
   displayPreviewImage,
@@ -67,7 +66,6 @@ const EditItemForm = ({
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {editItemFields({
-          allSerialNumbersOptions,
           displayContainerSplotLimitField,
           displayPreviewImage,
           displaySublocationFields,
@@ -403,6 +401,84 @@ const EditItemForm = ({
                     setReturningDate,
                   })
                 )}{" "}
+                {item.children &&
+                  item.children.map((child) => {
+                    if (!child.displayField) return null;
+                    return (
+                      <Grid
+                        key={child.name || child.label}
+                        style={{
+                          textAlign: "left",
+                        }}
+                        marginY={1}
+                        item
+                        xs={12}
+                        sm={12}
+                        md={12}
+                        lg={12}
+                      >
+                        <InputLabel
+                          style={{ marginBottom: "0.2rem", width: "100%" }}
+                        >
+                          <Tooltip
+                            placement="top"
+                            title={child.tooltipMessage}
+                            style={{
+                              width: "100%",
+                            }}
+                          >
+                            <Typography
+                              style={
+                                stylingComponents({
+                                  loadingStatus,
+                                }).styling
+                              }
+                            >
+                              {child.label} {child.tooltip && <QuestionIcon />}
+                            </Typography>
+                          </Tooltip>
+                        </InputLabel>
+                        {child.htmlElement.length < 1 ? (
+                          <Controller
+                            control={control}
+                            name={child.name}
+                            render={({ field: { value, onChange } }) => (
+                              <AutoComplete
+                                aria-required={true}
+                                className="custom-autocomplete"
+                                variant="outlined"
+                                style={{
+                                  ...AntSelectorStyle,
+                                  border: "solid 0.3 var(--gray600)",
+                                  fontFamily: "Inter",
+                                  fontSize: "14px",
+                                  width: "100%",
+                                }}
+                                value={value}
+                                onChange={(value) => onChange(value)}
+                                options={child?.options?.map((x) =>
+                                  typeof x === "string"
+                                    ? { value: x }
+                                    : { value: x.value },
+                                )}
+                                placeholder={child.placeholder}
+                                allowClear
+                              />
+                            )}
+                          />
+                        ) : (
+                          renderOptional({
+                            props: child.htmlElement,
+                            watch,
+                            register,
+                            errors,
+                            returningDate,
+                            setReturningDate,
+                          })
+                        )}
+                      </Grid>
+                    );
+                  })}
               </Grid>
             );
           }
