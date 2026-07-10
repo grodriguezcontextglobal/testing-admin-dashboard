@@ -91,17 +91,7 @@ const MainBody = ({
           style={{ ...AntSelectorStyle, width: "100%" }}
           onChange={onChange}
           options={selectOptions}
-          disabled={!isAdmin && locationsAssignPermission.length === 0}
         />
-        {openDrawer && !isAdmin && locationsAssignPermission.length === 0 && (
-          <BannerReusableComponentUntitleUI
-            title="Permission Denied"
-            description="You do not have permissions to take this action. Contact administrator"
-            linkText=""
-            linkHref="#"
-            onDismiss={() => setOpenDrawer(false)}
-          />
-        )}
         {eventInfoDetail.merchant ? (
           <MerchantService
             assignAllDevices={assignAllDevices}
