@@ -36,4 +36,15 @@ describe('Unified global search', () => {
     cy.get('input[name="searchValue"]').type('hello', { force: true })
     cy.get('input[name="searchValue"]').should('have.value', '')
   })
+
+  it('magnifier button opens the palette WITHOUT navigating to search results', () => {
+    cy.location('pathname').then((start) => {
+      cy.get('button[data-open-cmdk]').click()
+      cy.get('input[placeholder="Search commands, pages, actions..."]', { timeout: 10000 })
+        .should('be.visible')
+      // must NOT have navigated to the empty search results page
+      cy.location('pathname').should('eq', start)
+      cy.location('pathname').should('not.include', 'search-result-page')
+    })
+  })
 })

@@ -499,6 +499,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           )}
           <button
             data-open-cmdk="true"
+            onClick={toggleSearch}
+            aria-label="Open search"
             style={{
               outline: "none",
               border: "transparent",
@@ -508,8 +510,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               display: "flex",
               cursor: "pointer",
             }}
-            type="submit"
-            form="search-form"
+            type="button"
           >
             <div className="content-main-navbar-updated">
               <article
