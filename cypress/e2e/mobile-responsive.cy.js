@@ -52,6 +52,21 @@ describe('Mobile responsiveness', () => {
           'document scrollWidth vs viewport'
         ).to.be.at.most(doc.documentElement.clientWidth + 1)
       })
+
+      // 4. command palette opens fully inside the viewport
+      cy.get('input[name="searchValue"]').click()
+      cy.get('.cmdk-panel', { timeout: 10000 }).should('be.visible').then(($el) => {
+        const r = $el[0].getBoundingClientRect()
+        expect(r.right, 'palette right edge').to.be.at.most(w + 1)
+        expect(r.left, 'palette left edge').to.be.at.least(-1)
+      })
+      cy.document().then((doc) => {
+        expect(
+          doc.documentElement.scrollWidth,
+          'scrollWidth with palette open'
+        ).to.be.at.most(doc.documentElement.clientWidth + 1)
+      })
+      cy.get('body').type('{esc}')
     })
   })
 })

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@iconify/react";
 import "./CommandMenu.css";
 
@@ -96,7 +97,10 @@ const CommandMenu = ({ open, onClose, groups = [], searchScopes = [], onSearchAl
 
   let runningIndex = -1;
 
-  return (
+  // Portal to <body>: ancestors with transform/filter (Million-compiled
+  // navbar, MUI transitions) turn position:fixed into "fixed relative to
+  // that ancestor", which pushed the panel off-viewport on small screens.
+  return createPortal(
     <div className="cmdk-overlay" onMouseDown={onClose}>
       <div className="cmdk-panel" onMouseDown={(e) => e.stopPropagation()}>
         <div className="cmdk-input-row">
@@ -173,7 +177,8 @@ const CommandMenu = ({ open, onClose, groups = [], searchScopes = [], onSearchAl
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
