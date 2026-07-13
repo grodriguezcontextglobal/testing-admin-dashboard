@@ -17,6 +17,7 @@ import StaffKpiSection from "./components/StaffKpiSection";
 
 const MainPage = () => {
   const { register, watch } = useForm();
+  const { user } = useSelector((state) => state.admin);
   const [modalState, setModalState] = useState(false);
   const location = useLocation();
   // command-menu quick action: open the add-staff modal on arrival (once)

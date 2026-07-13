@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
+import Loading from "../../../components/animation/Loading";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";

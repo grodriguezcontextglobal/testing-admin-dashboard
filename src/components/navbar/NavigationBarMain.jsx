@@ -77,6 +77,12 @@ const navItems = [
   { title: "profile", route: "/profile/my_details", permission: "nav:profile", mobile: true, desktop: false, icon: User },
 ];
 
+const getHomeRoute = (roleType) => {
+  if (roleType === "inventory_manager") return "/inventory";
+  if (roleType === "event_manager" || roleType === "assistant") return "/events";
+  return "/";
+};
+
 // million-ignore — Million's block compiler broke event handlers in this
 // component (search button onClick silently dead); keep it un-optimized.
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
@@ -200,9 +206,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           if (item.route === 0) {
             return <ConditionalButton key={item.title} user={user} />;
           }
-          if (
-            !item.permission.some((element) => element === Number(user.role))
-          ) {
+          if (!hasPermission(item.permission, resolveRoleType(user)) || !item.mobile) {
             return null;
           }
           const active = location.pathname === `${item.route}`;

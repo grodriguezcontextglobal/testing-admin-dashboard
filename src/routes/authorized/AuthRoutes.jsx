@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useRef } from "react";
 import { Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
@@ -231,6 +231,7 @@ const AssignmentDeviceMembers = lazy(() =>
   )
 );
 const AuthRoutes = () => {
+  const navbarRef = useRef(null);
   return (
     <div
       style={{
