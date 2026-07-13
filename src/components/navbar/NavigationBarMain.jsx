@@ -407,15 +407,31 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             action="/search-result-page?search="
             id="search-form"
           >
+            {/* Read-only trigger: clicking (or Enter/Space) opens the ⌘K
+                command palette instead of editing text, so the navbar input
+                and the magnifier button share one unified global-search UX. */}
             <Input
               placeholder="Search"
-              required
-              style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
-              onChange={(e) => onChange(e)}
+              readOnly
+              data-open-cmdk="true"
+              role="button"
+              tabIndex={0}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toggleSearch}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleSearch();
+                }
+              }}
+              style={{
+                ...OutlinedInputStyle,
+                boxSizing: "border-box",
+                cursor: "pointer",
+              }}
               name={"searchValue"}
               value={searchValue}
               fullWidth
-              autoFocus
             // endAdornment={
             //   <div>
             //     <button style={{
