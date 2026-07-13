@@ -287,7 +287,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             alignItems: "center",
           }}
           item
-          xs={12}
+          xs={2}
           sm={2}
           md={8}
           lg={8}
@@ -383,14 +383,19 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
 
         <Grid
           item
+          xs={10}
           sm={10}
           md={4}
           lg={4}
           sx={{
-            display: { xs: "none", sm: "flex", md: "flex", lg: "flex" },
+            // search stays visible on every breakpoint; on phones it shares
+            // the row with the hamburger (left grid) and must not overflow
+            display: { xs: "flex", sm: "flex", md: "flex", lg: "flex" },
             justifyContent: "flex-end",
             alignItems: "center",
             margin: 0,
+            minWidth: 0,
+            paddingRight: { xs: "12px", sm: "12px", md: 0 },
           }}
         >
           {/* {showSearch && ( */}
@@ -398,6 +403,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             style={{
               margin: "0 5px 0 0",
               width: "100%",
+              minWidth: 0,
               display: "flex",
               alignItems: "center",
               gap: "6px",

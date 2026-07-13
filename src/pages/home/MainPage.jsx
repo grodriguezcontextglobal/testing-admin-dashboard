@@ -219,6 +219,9 @@ const MainPage = () => {
         <Grid
           sx={{
             display: "flex",
+            // stack the action buttons instead of bleeding off-screen when
+            // the row is too narrow for them side by side
+            flexWrap: "wrap",
             justifyContent: {
               xs: "flex-start",
               sm: "flex-start",
