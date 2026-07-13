@@ -15,7 +15,11 @@ const EditDocument = () => {
     const fetchDocument = async () => {
       try {
         const response = await devitrakApi.get(`/document/${id}`);
-        form.setFieldsValue(response.data.document);
+        if (response?.data?.document) {
+          form.setFieldsValue(response.data.document);
+        } else {
+          message.error("Document not found.");
+        }
       } catch (error) {
         message.error("Error fetching document. Please try again later.");
       } finally {
@@ -62,10 +66,29 @@ const EditDocument = () => {
             icon={<img src={ArrowBackIcon} alt="back" />}
             onClick={handleBack}
           />
-          <Typography variant="h5">Edit Document</Typography>
+          <Typography
+            variant="h5"
+            sx={{
+              fontFamily: "Inter",
+              fontSize: "20px",
+              lineHeight: "30px",
+              fontWeight: 600,
+              color: "var(--gray-900, #171d1a)",
+            }}
+          >
+            Edit Document
+          </Typography>
         </Box>
 
-        <Paper sx={{ p: 3 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            border: "1px solid var(--gray-200, #ddded6)",
+            borderRadius: "12px",
+            boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
+          }}
+        >
           <Form
             form={form}
             layout="vertical"
@@ -97,6 +120,7 @@ const EditDocument = () => {
                   rules={[{ required: true, message: "Please select document type" }]}
                 >
                   <Select>
+                    <Select.Option value="document">Document</Select.Option>
                     <Select.Option value="policy">Policy</Select.Option>
                     <Select.Option value="procedure">Procedure</Select.Option>
                     <Select.Option value="form">Form</Select.Option>
@@ -111,6 +135,11 @@ const EditDocument = () => {
                   rules={[{ required: true, message: "Please select when to display" }]}
                 >
                   <Select>
+                    {/* Values used by the upload flow */}
+                    <Select.Option value="onboarding">Staff</Select.Option>
+                    <Select.Option value="event">Event</Select.Option>
+                    <Select.Option value="consumer">Consumer</Select.Option>
+                    {/* Legacy values kept for older documents */}
                     <Select.Option value="on_login">On Login</Select.Option>
                     <Select.Option value="on_request">On Request</Select.Option>
                     <Select.Option value="scheduled">Scheduled</Select.Option>

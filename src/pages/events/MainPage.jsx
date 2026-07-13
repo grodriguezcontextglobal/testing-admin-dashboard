@@ -1,6 +1,5 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Spin } from "antd";
 import { lazy, Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -17,6 +16,7 @@ import { Subtitle } from "../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { useEventHook } from "./hook/useEventHook";
+import PageSpinner from "../../components/utils/PageSpinner";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
 const PastEventsTable = lazy(() => import("./components/PastEventsTable"));
 const BannerMsg = lazy(() => import("./utils/BannerMsg"));
@@ -24,22 +24,23 @@ const BannerNoEventStaffOnly = lazy(() =>
   import("../../components/utils/BannerNoEventStaffOnly")
 );
 const MainPage = () => {
-  const [eventList, setEventList] = useState([]);
   const [searchEvent, setSearchEvent] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
-  const { isLoading, isRefetching } = useQuery({
+  // eventList derives from the query cache (not local state): revisits render
+  // the cached list instantly while the refetch runs in the background —
+  // gating the page on isRefetching swapped content back to a spinner on
+  // every navigation, which read as a flicker mid page-transition.
+  const { isLoading, data: eventsData } = useQuery({
     queryKey: ["events"],
     queryFn: () =>
       devitrakApi.get(
         `/event/event-list-per-company?company=${user.company}&type=event`
       ),
     enabled: !!user.companyData.id,
-    onSuccess: (data) => {
-      setEventList(data?.data?.list);
-    },
   });
+  const eventList = eventsData?.data?.list ?? [];
   const companyAccountStripeQuery = useQuery({
     queryKey: ["stripe_company_account"],
     queryFn: () =>
@@ -58,10 +59,8 @@ const MainPage = () => {
     eventList,
     searchValue: searchEvent,
   });
-  if (isLoading || isRefetching) {
-    return (
-      <Spin indicator={<Loading />} fullscreen />
-    )
+  if (isLoading) {
+    return <PageSpinner />;
   }
   const liveEvents = dataToBeRenderedInLiveSection();
   const upcomingEvents = dataToBeRenderedInUpcomingSection();
@@ -80,22 +79,26 @@ const MainPage = () => {
     { key: "past", label: "Past" },
   ];
   const pillStyle = {
-    border: "none",
-    background: "transparent",
-    borderRadius: "9999px",
-    padding: "6px 14px",
-    fontSize: "13px",
-    lineHeight: "20px",
-    color: "#475467",
-    fontWeight: 400,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-  };
+  border: "none",
+  background: "transparent",
+  borderRadius: "var(--radius-sm, 6px)",
+  padding: "8px 12px",
+  fontSize: "14px",
+  lineHeight: "20px",
+  color: "var(--gray-500, #777b73)",
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  transition: "background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease",
+};
   const pillActiveStyle = {
-    background: "#344054",
-    color: "#fff",
-    fontWeight: 500,
-  };
+  background: "var(--base-white, #fff)",
+  color: "var(--gray-700, #484d47)",
+  boxShadow: "var(--shadow-sm)",
+};
   const sectionHeaderStyle = {
     ...TextFontSize20LineHeight30,
     textAlign: "left",
@@ -221,10 +224,10 @@ const MainPage = () => {
               display: "inline-flex",
               alignItems: "center",
               gap: "2px",
-              border: "1px solid #D0D5DD",
-              borderRadius: "9999px",
+              border: "1px solid var(--gray-200, #ddded6)",
+              borderRadius: "var(--radius-md, 8px)",
               padding: "4px",
-              backgroundColor: "#fff",
+              backgroundColor: "var(--gray-50, #f7f7f4)",
               width: "fit-content",
             }}
           >

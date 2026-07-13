@@ -218,8 +218,10 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             }
 
             if (templatesForApi.length > 0) {
-                message.warning(`Items were successfully imported. ${templatesForApi.length} item groups were created.`);
-                return closeModal();
+                message.success(`Items were successfully imported. ${templatesForApi.length} item groups were created.`);
+                clearStateAndClose();
+                if (typeof closeModal === "function") closeModal();
+                return;
             } else {
                 message.warning("No item groups could be formed from the processed items.");
             }
@@ -258,7 +260,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 maskClosable={false}
             >
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ ...Subtitle, color: "#667085" }}>
+                    <div style={{ ...Subtitle, color: "var(--gray-600, #5d615a)" }}>
                         Select an Excel file to import inventory items. Ensure the columns
                         match the template.
                     </div>
@@ -287,7 +289,9 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
 
                     <div
                         style={{
-                            background: "#F9FAFB",
+                            background: "var(--gray-50, #f7f7f4)",
+                            border: "1px solid var(--gray-200, #ddded6)",
+                            color: "var(--gray-600, #5d615a)",
                             padding: 12,
                             borderRadius: 8,
                             fontSize: 13,

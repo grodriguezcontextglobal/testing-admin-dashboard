@@ -109,7 +109,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
     return (
       <Typography
         style={{
-          color: "var(--gray900, #101828)",
+          color: "var(--gray-900, #171d1a)",
           textAlign: "center",
           fontFamily: "Inter",
           fontSize: "18px",

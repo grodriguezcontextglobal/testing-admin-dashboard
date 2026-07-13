@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { PERMISSIONS } from "../../config/roles";
 import Loading from "../../components/animation/Loading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import ErrorBoundary from "../../components/utils/ErrorBoundary";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
 import ConsumerConfirmationPayment from "../../pages/consumers/components/ConsumerConfirmationPayment";
@@ -198,6 +199,8 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
 );
 const Providers = lazy(() => import("../../pages/Profile/providers/Main"));
 const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
+const DesignLab = lazy(() => import("../../pages/designLab/DesignLab"));
+import GlobalCommandMenu from "../../components/UX/commandMenu/GlobalCommandMenu";
 const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
 const ConditionalMainPage = lazy(() =>
   import("../../pages/conditionalPage/MainPage")
@@ -239,8 +242,17 @@ const PermissionGuard = ({ action }) => {
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   return (
-    <div style={{ width: "100%", margin: "auto", minHeight: "100dvh" }}>
+    <div
+      style={{
+        width: "100%",
+        margin: "auto",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <HeaderComponent ref={navbarRef} />
+      <GlobalCommandMenu />
       <Suspense
         fallback={
           <div style={CenteringGrid}>
@@ -251,6 +263,9 @@ const AuthRoutes = () => {
         <div
           style={{
             // minWidth: "768px",
+            // width:100% so this flex-column child stretches to maxWidth
+            // instead of shrinking to content (footer flex change regressed it)
+            width: "100%",
             maxWidth: "1400px",
             margin: "auto auto 0",
             minHeight: "100dvh",
@@ -261,9 +276,14 @@ const AuthRoutes = () => {
               <Route path="/" element={<Home />} />
               <Route path="/" element={<Home />} />
               <Route path="/events" element={<EventMainPage />} />
+              <Route path="/design-lab" element={<DesignLab />} />
               <Route
                 path="/events/event-quickglance"
-                element={<EventQuickGlanceMainPage />}
+                element={
+                  <ErrorBoundary>
+                    <EventQuickGlanceMainPage />
+                  </ErrorBoundary>
+                }
               />
               <Route
                 path="/events/event-attendees/:id"
@@ -521,10 +541,9 @@ const AuthRoutes = () => {
           </Routes>
         </div>
       </Suspense>
-      <div
-        style={{ minWidth: "768px", maxWidth: "1400px", margin: "0 auto 15px" }}
-      >
-        <FooterComponent ref={navbarRef} />
+      {/* full-bleed footer, pinned to the viewport bottom (flex column + auto margin) */}
+      <div style={{ width: "100%", marginTop: "auto" }}>
+        <FooterComponent full ref={navbarRef} />
       </div>
     </div>
   );

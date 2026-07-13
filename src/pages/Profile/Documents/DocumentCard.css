@@ -1,8 +1,8 @@
 .document-card {
     border-radius: 12px;
-    border: 1px solid var(--gray-200, #EAECF0);
-    background: var(--basewhite, #FFF);
-    box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10);
+    border: 1px solid var(--gray-200, #ddded6);
+    background: var(--base-white, #FFF);
+    box-shadow: var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05));
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -11,7 +11,7 @@
 }
 
 .document-card-content {
-    padding: 1rem;
+    padding: 24px 24px 0;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -22,7 +22,7 @@
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.5rem;
-    color: var(--gray-900, #101828);
+    color: var(--gray-900, #171d1a);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -36,7 +36,7 @@
     font-size: 0.875rem;
     font-weight: 400;
     line-height: 1.25rem;
-    color: var(--gray-600, #475467);
+    color: var(--gray-600, #5d615a);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -44,15 +44,15 @@
 }
 
 .document-card-actions {
-    border-top: 1px solid var(--gray-200, #EAECF0);
-    padding: 1rem;
+    border-top: 1px solid var(--gray-200, #ddded6);
+    padding: 16px 24px;
     margin-top: auto;
     display: flex;
     justify-content: flex-end;
 }
 
 .document-card-link {
-    color: #004EEB;
+    color: var(--action-600, #155eef);
     text-decoration: none;
     font-family: "Inter", sans-serif;
     font-size: 0.875rem;

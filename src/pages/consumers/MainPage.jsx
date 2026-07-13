@@ -1,15 +1,15 @@
+import { useLocation } from "react-router-dom";
 /* eslint-disable no-unused-vars */
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Spin } from "antd";
 import { useCallback, useEffect, useId, useState } from "react";
+import { useDebounce } from "@uidotdev/usehooks";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Loading from "../../components/animation/Loading";
-import { WhiteCirclePlusIcon } from "../../components/icons/WhiteCirclePlusIcon";
 import BannerReusableComponentUntitleUI from "../../components/UX/banner/BannerReusableComponentUntitleUI";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
 import "../../styles/global/OutlineInput.css";
@@ -19,6 +19,7 @@ import ConsumerStatsSection from "./components/ConsumerStatsSection";
 import TablesConsumers from "./tables/TablesConsumers";
 import { CreateNewConsumer } from "./utils/CreateNewUser";
 import TableHeader from "../../components/UX/TableHeader";
+import PageSpinner from "../../components/utils/PageSpinner";
 
 const searchInputStyle = {
   height: "36px",
@@ -36,11 +37,22 @@ const searchInputStyle = {
 
 const MainPage = () => {
   const [createUserButton, setCreateUserButton] = useState(false);
+  const location = useLocation();
+  // command-menu quick action: land here with the create modal open (once)
+  useEffect(() => {
+    if (location.state?.quickAction === "create") {
+      setCreateUserButton(true);
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
   const [counting, setCounting] = useState(null);
   const [consumersList, setConsumersList] = useState([]);
+  const [resultCount, setResultCount] = useState(null);
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
-  const searching = watch("searchEvent");
+  const searchingRaw = watch("searchEvent");
+  const searching = useDebounce(searchingRaw, 250);
+  const isSearching = Boolean(searching?.trim());
   const queryClient = useQueryClient();
   const allConsumersBasedOnEventsPerCompany = useQuery({
     queryKey: ["allConsumersBasedOnEventsPerCompany"],
@@ -151,7 +163,9 @@ const MainPage = () => {
                   color: "var(--blue-dark-700, #004EEB)",
                 }}
               >
-                {counting} total
+                {isSearching
+                  ? `${resultCount ?? 0} of ${counting}`
+                  : `${counting} total`}
               </span>
             </p>
           }
@@ -205,6 +219,7 @@ const MainPage = () => {
               getCounting={counting}
               searching={searching}
               getActiveAndInactiveCount={renderActiveAndInactiveCount}
+              onResultCount={setResultCount}
               data={consumersList}
               statePage={null}
             />
@@ -234,7 +249,6 @@ const MainPage = () => {
           <BlueButtonComponent
             func={() => setCreateUserButton(true)}
             title={"Add new consumer"}
-            icon={<WhiteCirclePlusIcon />}
           />
         </div>
       </Grid>
@@ -246,7 +260,7 @@ const MainPage = () => {
         />
       )}
       {(counting === null || allConsumersBasedOnEventsPerCompany.isLoading) && (
-        <Spin indicator={<Loading />} fullscreen />
+        <PageSpinner />
       )}
     </Grid>
   );

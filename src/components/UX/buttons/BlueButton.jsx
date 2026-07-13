@@ -1,22 +1,20 @@
 import { useMemo } from "react";
 import { Button } from "antd";
+import inferButtonIcons from "./inferButtonIcon";
 import "./blue_button.css";
-import "./styles.css"
+import "./styles.css";
 
 /**
- * UntitledUI-like API (without changing your blue background)
+ * Untitled UI primary button.
  * - size: sm | md | lg | xl
- * - iconLeading / iconTrailing
- * - href (renders like a link-button)
- * - isLoading + showTextWhileLoading
- * - isDisabled
+ * - iconTrailing, href, isLoading + showTextWhileLoading, isDisabled
  *
- * Backward compatible:
- * - title, styles, buttonType, func, loadingState, titleStyles
+ * Backward compatible: title, styles, buttonType, func, loadingState, titleStyles, disabled
+ * Drop-in friendly:    children (used when no title), onClick (used when no func)
  */
 const BlueButtonComponent = ({
-  // ---- New (UntitledUI-like) props ----
-  size = "md", // "sm" | "md" | "lg" | "xl"
+  size = "md",
+  icon = null, // legacy antd-style prop — folded into iconLeading (never both)
   iconLeading = null,
   iconTrailing = null,
   href = null,
@@ -36,14 +34,26 @@ const BlueButtonComponent = ({
   loadingState = false,
   titleStyles = {},
 
+  // ---- Drop-in migration props ----
+  children,
+  onClick,
+
   // Any extra props go to antd Button (e.g., id, data-testid)
   ...rest
 }) => {
   const resolvedDisabled = Boolean(isDisabled ?? disabled);
   const resolvedLoading = Boolean(isLoading ?? loadingState);
+  const resolvedOnClick = func ?? onClick;
+  const label = children ?? title;
+
+  // Contextual icon from the label (Untitled UI pattern) unless the caller
+  // passed explicit icons. String labels only — JSX labels are left alone.
+  const inferred =
+    !iconLeading && !icon && !iconTrailing ? inferButtonIcons(label) : null;
+  const effIconLeading = iconLeading ?? icon ?? inferred?.leading ?? null;
+  const effIconTrailing = iconTrailing ?? inferred?.trailing ?? null;
 
   const sizeClass = useMemo(() => {
-    // keep your background from .customized__blueButton, only adjust spacing/height
     switch (size) {
       case "sm":
         return "customized__blueButton--sm";
@@ -59,28 +69,26 @@ const BlueButtonComponent = ({
 
   const content = (
     <span className="customized__blueButtonContent">
-      {iconLeading ? (
+      {effIconLeading ? (
         <span className="customized__blueButtonIcon" data-icon>
-          {iconLeading}
+          {effIconLeading}
         </span>
       ) : null}
 
-      {(title || showTextWhileLoading || !resolvedLoading) && (
+      {(label || showTextWhileLoading || !resolvedLoading) && (
         <span className="customized__blueButtonText" style={{ ...titleStyles }}>
-          {title}
+          {label}
         </span>
       )}
 
-      {iconTrailing ? (
+      {effIconTrailing ? (
         <span className="customized__blueButtonIcon" data-icon>
-          {iconTrailing}
+          {effIconTrailing}
         </span>
       ) : null}
     </span>
   );
 
-  // “Hybrid” link-button behavior (UntitledUI style)
-  // If you already wrap with <Link>, just ignore href usage.
   if (href) {
     return (
       <a
@@ -95,7 +103,7 @@ const BlueButtonComponent = ({
           disabled={resolvedDisabled || resolvedLoading}
           loading={resolvedLoading}
           htmlType={buttonType}
-          onClick={func}
+          onClick={resolvedOnClick}
           style={{ ...styles }}
           className={`customized__blueButton ${sizeClass}`}
         >
@@ -112,7 +120,7 @@ const BlueButtonComponent = ({
       disabled={resolvedDisabled}
       loading={resolvedLoading}
       htmlType={buttonType}
-      onClick={func}
+      onClick={resolvedOnClick}
       style={{ ...styles }}
       className={`customized__blueButton ${sizeClass}`}
     >

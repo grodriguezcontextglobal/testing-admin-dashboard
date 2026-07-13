@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from "react-redux";
-import { Space } from "antd";
 import CardRendered from "./CardRenderedDeviceSetup";
 import { useState } from "react";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -37,7 +36,16 @@ const DisplayAllItemsSetInventoryEventForCustomers = ({ database }) => {
   };
 
   return (
-    <Space size={[16, 12]} wrap>
+    // Auto-fit grid: cards expand to fill the row and wrap into new columns
+    // as more are added (1-2 cards stretch across the full width).
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: "16px 16px",
+        width: "100%",
+      }}
+    >
       {event?.deviceSetup?.map((item, index) => {
         if (item.consumerUses) {
           return (
@@ -59,7 +67,7 @@ const DisplayAllItemsSetInventoryEventForCustomers = ({ database }) => {
           );
         }
       })}
-    </Space>
+    </div>
   );
 };
 

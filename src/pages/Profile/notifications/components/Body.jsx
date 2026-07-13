@@ -2,7 +2,7 @@ import {
   Grid,
   Typography
 } from "@mui/material";
-import { notification } from "antd";
+import { message, notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,16 +13,23 @@ import "./Body.css";
 import BodyForm from "./BodyForm";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
-  const { register, handleSubmit } = useForm();
+  const emailNotifications = user?.data?.emailNotifications;
+  const { register, handleSubmit } = useForm({
+    defaultValues: {
+      newsAndUpdates: emailNotifications?.newsAndUpdates ?? false,
+      tipsAndTutorials: emailNotifications?.tipsAndTutorials ?? false,
+      userResearch: emailNotifications?.userResearch ?? false,
+    },
+  });
   const navigate = useNavigate();
   const [subscriptions, setSubscriptions] = useState(
-    user.data.subscriptionRenewals
+    user?.data?.subscriptionRenewals ?? ""
   );
   const [eventsReminders, setEventsReminders] = useState(
-    user.data.eventReminder
+    user?.data?.eventReminder ?? ""
   );
   const [dailySummaries, setDailySummaries] = useState(
-    user.data.dailySummaries
+    user?.data?.dailySummaries ?? ""
   );
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
@@ -46,7 +53,7 @@ const Body = () => {
         <Typography
           textTransform={"none"}
           style={{
-            color: "#344054",
+            color: "var(--gray-700, #484d47)",
             textAlign: "left",
             fontSize: "14px",
             fontWeight: "500",
@@ -60,7 +67,7 @@ const Body = () => {
         <Typography
           textTransform={"none"}
           style={{
-            color: "var(--gray-600, #475467)",
+            color: "var(--gray-600, #5d615a)",
             textAlign: "left",
             fontSize: "14px",
             fontWeight: "400",
@@ -74,29 +81,38 @@ const Body = () => {
     );
   };
   const handleUpdatePersonalInfo = async (data) => {
-    const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
-      emailNotifications: {
-        newsAndUpdates: data.newsAndUpdates,
-        tipsAndTutorials: data.tipsAndTutorials,
-        userResearch: data.userResearch,
-      },
-      dailySummaries: dailySummaries,
-      subscriptionRenewals: subscriptions,
-      eventReminder: eventsReminders,
-    });
-    if (resp.data) {
-      openNotificationWithIcon("Success");
-      dispatch(
-        onLogin({
-          ...user,
-          data: {
-            ...user.data,
-            emailNotifications: resp.data.adminUpdated.emailNotifications,
-            dailySummaries: resp.data.adminUpdated.dailySummaries,
-            subscriptionRenewals: resp.data.adminUpdated.subscriptionRenewals,
-            eventReminder: resp.data.adminUpdated.eventReminder,
-          },
-        })
+    try {
+      const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
+        emailNotifications: {
+          newsAndUpdates: data.newsAndUpdates,
+          tipsAndTutorials: data.tipsAndTutorials,
+          userResearch: data.userResearch,
+        },
+        dailySummaries: dailySummaries,
+        subscriptionRenewals: subscriptions,
+        eventReminder: eventsReminders,
+      });
+      if (resp?.data?.adminUpdated) {
+        openNotificationWithIcon("Success");
+        dispatch(
+          onLogin({
+            ...user,
+            data: {
+              ...user.data,
+              emailNotifications: resp.data.adminUpdated.emailNotifications,
+              dailySummaries: resp.data.adminUpdated.dailySummaries,
+              subscriptionRenewals: resp.data.adminUpdated.subscriptionRenewals,
+              eventReminder: resp.data.adminUpdated.eventReminder,
+            },
+          })
+        );
+      } else {
+        message.error("Failed to update notification settings.");
+      }
+    } catch (error) {
+      message.error(
+        error?.response?.data?.msg ||
+          "Failed to update notification settings. Please try again."
       );
     }
   };
@@ -107,6 +123,7 @@ const Body = () => {
         handleUpdatePersonalInfo={handleUpdatePersonalInfo}
         handleSubmit={handleSubmit}
         register={register}
+        emailNotifications={emailNotifications}
         renderLabel={renderLabel}
         setDailySummaries={setDailySummaries}
         setEventsReminders={setEventsReminders}

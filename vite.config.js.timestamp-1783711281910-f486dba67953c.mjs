@@ -1,0 +1,27 @@
+// vite.config.js
+import { defineConfig } from "file:///Users/cesar/Library/CloudStorage/OneDrive-Devitrak/Devitrak%20App/Local/testing-admin-dashboard/node_modules/vite/dist/node/index.js";
+import react from "file:///Users/cesar/Library/CloudStorage/OneDrive-Devitrak/Devitrak%20App/Local/testing-admin-dashboard/node_modules/@vitejs/plugin-react/dist/index.js";
+import million from "file:///Users/cesar/Library/CloudStorage/OneDrive-Devitrak/Devitrak%20App/Local/testing-admin-dashboard/node_modules/million/dist/packages/compiler.mjs";
+var vite_config_default = defineConfig({
+  plugins: [million.vite({ auto: true }), react()],
+  build: {
+    brotliSize: false,
+    // Ensures Vite doesn't create multiple chunks that can break static loading if not all chunks are uploaded
+    rollupOptions: {
+      output: {
+        manualChunks: void 0
+        // disables chunk splitting for simpler deployment
+      }
+    },
+    chunkSizeWarningLimit: 600,
+    terserOptions: {
+      compress: {
+        drop_console: true
+      }
+    }
+  }
+});
+export {
+  vite_config_default as default
+};
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsidml0ZS5jb25maWcuanMiXSwKICAic291cmNlc0NvbnRlbnQiOiBbImNvbnN0IF9fdml0ZV9pbmplY3RlZF9vcmlnaW5hbF9kaXJuYW1lID0gXCIvVXNlcnMvY2VzYXIvTGlicmFyeS9DbG91ZFN0b3JhZ2UvT25lRHJpdmUtRGV2aXRyYWsvRGV2aXRyYWsgQXBwL0xvY2FsL3Rlc3RpbmctYWRtaW4tZGFzaGJvYXJkXCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ZpbGVuYW1lID0gXCIvVXNlcnMvY2VzYXIvTGlicmFyeS9DbG91ZFN0b3JhZ2UvT25lRHJpdmUtRGV2aXRyYWsvRGV2aXRyYWsgQXBwL0xvY2FsL3Rlc3RpbmctYWRtaW4tZGFzaGJvYXJkL3ZpdGUuY29uZmlnLmpzXCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ltcG9ydF9tZXRhX3VybCA9IFwiZmlsZTovLy9Vc2Vycy9jZXNhci9MaWJyYXJ5L0Nsb3VkU3RvcmFnZS9PbmVEcml2ZS1EZXZpdHJhay9EZXZpdHJhayUyMEFwcC9Mb2NhbC90ZXN0aW5nLWFkbWluLWRhc2hib2FyZC92aXRlLmNvbmZpZy5qc1wiO2ltcG9ydCB7IGRlZmluZUNvbmZpZyB9IGZyb20gXCJ2aXRlXCI7XG5pbXBvcnQgcmVhY3QgZnJvbSBcIkB2aXRlanMvcGx1Z2luLXJlYWN0XCI7XG5pbXBvcnQgbWlsbGlvbiBmcm9tIFwibWlsbGlvbi9jb21waWxlclwiO1xuXG5leHBvcnQgZGVmYXVsdCBkZWZpbmVDb25maWcoe1xuICBwbHVnaW5zOiBbbWlsbGlvbi52aXRlKHsgYXV0bzogdHJ1ZSB9KSwgcmVhY3QoKV0sXG4gIGJ1aWxkOiB7XG4gICAgYnJvdGxpU2l6ZTogZmFsc2UsXG4gICAgLy8gRW5zdXJlcyBWaXRlIGRvZXNuJ3QgY3JlYXRlIG11bHRpcGxlIGNodW5rcyB0aGF0IGNhbiBicmVhayBzdGF0aWMgbG9hZGluZyBpZiBub3QgYWxsIGNodW5rcyBhcmUgdXBsb2FkZWRcbiAgICByb2xsdXBPcHRpb25zOiB7XG4gICAgICBvdXRwdXQ6IHtcbiAgICAgICAgbWFudWFsQ2h1bmtzOiB1bmRlZmluZWQsIC8vIGRpc2FibGVzIGNodW5rIHNwbGl0dGluZyBmb3Igc2ltcGxlciBkZXBsb3ltZW50XG4gICAgICB9LFxuICAgIH0sXG4gICAgY2h1bmtTaXplV2FybmluZ0xpbWl0OiA2MDAsXG4gICAgdGVyc2VyT3B0aW9uczoge1xuICAgICAgY29tcHJlc3M6IHtcbiAgICAgICAgZHJvcF9jb25zb2xlOiB0cnVlLFxuICAgICAgfSxcbiAgICB9LFxuICB9LFxufSk7XG4iXSwKICAibWFwcGluZ3MiOiAiO0FBQThjLFNBQVMsb0JBQW9CO0FBQzNlLE9BQU8sV0FBVztBQUNsQixPQUFPLGFBQWE7QUFFcEIsSUFBTyxzQkFBUSxhQUFhO0FBQUEsRUFDMUIsU0FBUyxDQUFDLFFBQVEsS0FBSyxFQUFFLE1BQU0sS0FBSyxDQUFDLEdBQUcsTUFBTSxDQUFDO0FBQUEsRUFDL0MsT0FBTztBQUFBLElBQ0wsWUFBWTtBQUFBO0FBQUEsSUFFWixlQUFlO0FBQUEsTUFDYixRQUFRO0FBQUEsUUFDTixjQUFjO0FBQUE7QUFBQSxNQUNoQjtBQUFBLElBQ0Y7QUFBQSxJQUNBLHVCQUF1QjtBQUFBLElBQ3ZCLGVBQWU7QUFBQSxNQUNiLFVBQVU7QUFBQSxRQUNSLGNBQWM7QUFBQSxNQUNoQjtBQUFBLElBQ0Y7QUFBQSxFQUNGO0FBQ0YsQ0FBQzsiLAogICJuYW1lcyI6IFtdCn0K

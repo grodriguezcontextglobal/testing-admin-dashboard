@@ -87,16 +87,19 @@ const StaffDetail = () => {
     user.email !== profile.email;
 
   const pillNavLinkStyle = ({ isActive }) => ({
-    borderRadius: "9999px",
-    padding: "6px 14px",
-    fontSize: "13px",
-    fontWeight: 500,
+    borderRadius: "var(--radius-sm, 6px)",
+    padding: "8px 12px",
+    fontSize: "14px",
+    fontWeight: 600,
     lineHeight: "1.4",
     whiteSpace: "nowrap",
     textDecoration: "none",
-    backgroundColor: isActive ? "#344054" : "transparent",
-    color: isActive ? "#fff" : "#475467",
-    transition: "background-color 0.15s, color 0.15s",
+    backgroundColor: isActive ? "var(--base-white, #fff)" : "transparent",
+    color: isActive
+      ? "var(--gray-700, #484d47)"
+      : "var(--gray-500, #777b73)",
+    boxShadow: isActive ? "var(--shadow-sm)" : "none",
+    transition: "background-color 0.15s, color 0.15s, box-shadow 0.15s",
   });
 
   return (
@@ -120,10 +123,10 @@ const StaffDetail = () => {
             alignItems: "center",
             flexWrap: "wrap",
             gap: "2px",
-            border: "1px solid #D0D5DD",
-            borderRadius: "9999px",
+            border: "1px solid var(--gray-200, #ddded6)",
+            borderRadius: "var(--radius-md, 8px)",
             padding: "4px",
-            backgroundColor: "#fff",
+            backgroundColor: "var(--gray-50, #f7f7f4)",
             width: "fit-content",
           }}
         >
@@ -151,9 +154,15 @@ const StaffDetail = () => {
               lineHeight: "1.4",
               whiteSpace: "nowrap",
               textDecoration: "none",
-              border: "1px solid #D0D5DD",
-              backgroundColor: profile.active ? "#FEF3F2" : "#ECFDF3",
-              color: profile.active ? "#B42318" : "#027A48",
+              border: profile.active
+                ? "1px solid var(--error-200, #fecdca)"
+                : "1px solid var(--success-300, #75e0a7)",
+              backgroundColor: profile.active
+                ? "var(--error-50, #fef3f2)"
+                : "var(--success-50, #ecfdf3)",
+              color: profile.active
+                ? "var(--error-700, #b42318)"
+                : "var(--success-700, #067647)",
               opacity: updateStaffStatusMutation.isPending ? 0.6 : 1,
               pointerEvents: updateStaffStatusMutation.isPending ? "none" : "auto",
               transition: "opacity 0.15s",

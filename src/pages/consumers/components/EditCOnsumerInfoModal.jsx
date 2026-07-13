@@ -52,7 +52,7 @@ const EditConsumerInfoModal = ({
     setLoading(true);
     try {
       const updatingUserInfoQuery = await devitrakApi.patch(
-        `/auth/${customer.data.id}`,
+        `/auth/${customer.uid}`,
         {
           name: data.name,
           lastName: data.lastName,

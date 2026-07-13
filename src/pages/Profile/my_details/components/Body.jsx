@@ -15,7 +15,7 @@ const Body = () => {
   const [loading, setLoading] = useState(false);
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const roleDefinition = dicRole[Number(user.role)];
-  const { register, handleSubmit, watch, setValue } = useForm({
+  const { register, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues: {
       name: user.name,
       lastName: user.lastName,
@@ -118,7 +118,7 @@ const Body = () => {
   }
 
   const updatingEmployeesCompany = (props) => {
-    let employeeCompanyDataCopy = [...user.companyData.employees];
+    let employeeCompanyDataCopy = [...(user?.companyData?.employees ?? [])];
     const employeeUpdating = employeeCompanyDataCopy.findIndex(
       (element) => element.user === user.email
     );
@@ -139,7 +139,8 @@ const Body = () => {
     try {
       let base64;
       if (imageUploadedValue?.length > 0 && imageUploadedValue[0].size > 1048576) {
-        return alert(
+        setLoading(false);
+        return message.error(
           "Image is bigger than 1mb. Please resize the image or select a new one."
         );
       } else if (imageUploadedValue?.length > 0) {
@@ -218,8 +219,7 @@ const Body = () => {
           email: data.email,
           phone: data.phone,
         });
-        console.log(resp?.data);
-        if (resp.data.ok) {
+        if (resp?.data?.ok) {
           const newDataUpdatedEmployeeCompany = {
             firstName: data.name,
             lastName: data.lastName,
@@ -244,8 +244,16 @@ const Body = () => {
       }
     } catch (error) {
       setLoading(false);
-      throw new Error(error);
+      message.error(
+        error?.response?.data?.msg ||
+          "Failed to update personal info. Please try again."
+      );
     }
+  };
+
+  const handleCancelEdits = () => {
+    reset(originalDataRef.current);
+    setImageUploadedValue(null);
   };
 
   const removeUploadedProfileImage = async () => {
@@ -280,6 +288,7 @@ const Body = () => {
         setImageUploadedValue={setImageUploadedValue}
         user={user}
         removeUploadedProfileImage={removeUploadedProfileImage}
+        onCancel={handleCancelEdits}
       />
     </>
   );

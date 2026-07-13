@@ -1,16 +1,14 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Modal } from "antd";
+import { message, Modal } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import Loading from "../../../../../../../components/animation/Loading";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../../../../components/UX/buttons/DangerButton";
 import BaseTable from "../../../../../../../components/UX/tables/BaseTable";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
-import { DangerButton } from "../../../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
 import { useDeviceStatus } from "../hooks/useDeviceStatus";
@@ -179,13 +177,12 @@ const ModalAddingDeviceFromSearchbar = () => {
         key: "key",
         width: "10%",
         render: (record) => (
-          <Button
-            loading={isUnassigning}
-            style={DangerButton}
-            onClick={() => removeDeviceFromTransaction(record)}
-          >
-            {isUnassigning ? <Loading /> : <p style={DangerButtonText}>X</p>}
-          </Button>
+          <DangerButtonComponent
+            isLoading={isUnassigning}
+            title={isUnassigning ? null : "X"}
+            func={() => removeDeviceFromTransaction(record)}
+            size="sm"
+          />
         ),
       },
     ];

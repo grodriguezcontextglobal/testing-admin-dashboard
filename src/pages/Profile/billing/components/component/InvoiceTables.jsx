@@ -1,27 +1,35 @@
 import { Table } from "antd";
-import 
-{ useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Chip, Typography } from "@mui/material";
 import { Icon } from "@iconify/react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
 
 const InvoiceTables = () => {
   const { companyAccountStripe } = useSelector((state) => state.admin);
   const [listOfInvoices, setListOfInvoices] = useState([]);
   const generateInvoicesHistoryPerSubscription = useCallback(async () => {
-    if (companyAccountStripe) {
-      if (companyAccountStripe?.subscriptionHistory.length > 0) {
+    try {
+      if (companyAccountStripe?.subscriptionHistory?.length > 0) {
         const respInvoicesList = await devitrakApi.get("/stripe/invoices", {
-          subscriptionID:
-            companyAccountStripe.subscriptionHistory.at(-1).subscription,
+          params: {
+            subscriptionID:
+              companyAccountStripe.subscriptionHistory.at(-1)?.subscription,
+          },
         });
-        if (respInvoicesList.data.ok) {
-          setListOfInvoices(respInvoicesList.data.invoices.data);
+        if (respInvoicesList?.data?.ok) {
+          setListOfInvoices(respInvoicesList.data.invoices?.data ?? []);
         }
       }
+    } catch (error) {
+      setListOfInvoices([]);
     }
   }, []);
+
+  useEffect(() => {
+    generateInvoicesHistoryPerSubscription();
+  }, [generateInvoicesHistoryPerSubscription]);
 
   const structuringDataToDisplayIntable = useMemo(() => {
     const resultPerIteration = new Set();
@@ -29,7 +37,7 @@ const InvoiceTables = () => {
       for (let data of listOfInvoices) {
         if (
           data.subscription ===
-          companyAccountStripe.subscriptionHistory.at(-1).subscription
+          companyAccountStripe?.subscriptionHistory?.at(-1)?.subscription
         ) {
           resultPerIteration.add({
             key: data.charge,
@@ -55,7 +63,7 @@ const InvoiceTables = () => {
       render: (receiptNumber) => (
         <Typography
           textTransform={"capitalize"}
-          color={"#475467"}
+          color={"var(--gray-600, #5d615a)"}
           fontFamily={"Inter"}
           fontWeight={400}
           fontSize={"14px"}
@@ -71,7 +79,7 @@ const InvoiceTables = () => {
       render: (billingDate) => (
         <Typography
           textTransform={"capitalize"}
-          color={"#475467"}
+          color={"var(--gray-600, #5d615a)"}
           fontFamily={"Inter"}
           fontWeight={400}
           fontSize={"14px"}
@@ -89,7 +97,7 @@ const InvoiceTables = () => {
           label={
             <Typography
               textTransform={"capitalize"}
-              color={"#12B76A"}
+              color={"var(--success-700, #027a48)"}
               fontFamily={"Inter"}
               fontWeight={500}
               fontSize={"12px"}
@@ -99,9 +107,11 @@ const InvoiceTables = () => {
             </Typography>
           }
           style={{
-            background: "#ECFDF3",
+            background: "var(--success-50, #ecfdf3)",
           }}
-          icon={<Icon icon="uit:check" width={20} color="#12B76A" />}
+          icon={
+            <Icon icon="uit:check" width={20} color="var(--success-500, #12b76a)" />
+          }
         />
       ),
     },
@@ -111,13 +121,13 @@ const InvoiceTables = () => {
       render: (amount) => (
         <Typography
           textTransform={"capitalize"}
-          color={"#475467"}
+          color={"var(--gray-600, #5d615a)"}
           fontFamily={"Inter"}
           fontWeight={400}
           fontSize={"14px"}
           lineHeight={"20px"}
         >
-          ${amount.toString().slice(0, -2)}
+          ${String(amount ?? 0).slice(0, -2) || "0"}
         </Typography>
       ),
     },
@@ -132,7 +142,7 @@ const InvoiceTables = () => {
       render: (action) => (
         <Typography
           textTransform={"capitalize"}
-          color={"#004EEB"}
+          color={"var(--action-600, #155eef)"}
           fontFamily={"Inter"}
           fontWeight={600}
           fontSize={"14px"}
@@ -157,12 +167,22 @@ const InvoiceTables = () => {
     <Table
       style={{
         width: "100%",
-        border: "1px solid var(--gray-200, #EAECF0)",
+        border: "1px solid var(--gray-200, #ddded6)",
         borderRadius: "12px",
       }}
       rowSelection={rowSelection}
       columns={columns}
       dataSource={structuringDataToDisplayIntable}
+      locale={{
+        emptyText: (
+          <EmptyState
+            icon="tabler:file-invoice"
+            title="No invoices yet"
+            description="Invoices for your subscription will appear here once they are issued."
+            compact
+          />
+        ),
+      }}
     />
   );
 };

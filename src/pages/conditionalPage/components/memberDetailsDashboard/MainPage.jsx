@@ -7,17 +7,19 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import AddNewMember from "../modals/AddNewMember";
 import MemberInfoHeader from "./Header";
 
+// Untitled UI segmented tab item (active lifts to white with shadow)
 const pillNavLinkStyle = ({ isActive }) => ({
-  borderRadius: "9999px",
-  padding: "6px 14px",
-  fontSize: "13px",
-  fontWeight: isActive ? 500 : 400,
-  lineHeight: "1.4",
+  borderRadius: "var(--radius-sm, 6px)",
+  padding: "8px 12px",
+  fontSize: "14px",
+  fontWeight: 600,
+  lineHeight: "20px",
   whiteSpace: "nowrap",
   textDecoration: "none",
-  backgroundColor: isActive ? "#344054" : "transparent",
-  color: isActive ? "#fff" : "#475467",
-  transition: "background-color 0.15s, color 0.15s",
+  backgroundColor: isActive ? "var(--base-white, #fff)" : "transparent",
+  color: isActive ? "var(--gray-700, #484d47)" : "var(--gray-500, #777b73)",
+  boxShadow: isActive ? "var(--shadow-sm)" : "none",
+  transition: "background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease",
 });
 
 const MainPage = () => {
@@ -74,10 +76,10 @@ const MainPage = () => {
             alignItems: "center",
             flexWrap: "wrap",
             gap: "2px",
-            border: "1px solid #D0D5DD",
-            borderRadius: "9999px",
+            border: "1px solid var(--gray-200, #ddded6)",
+            borderRadius: "var(--radius-md, 8px)",
             padding: "4px",
-            backgroundColor: "#fff",
+            backgroundColor: "var(--gray-50, #f7f7f4)",
             width: "fit-content",
           }}
         >

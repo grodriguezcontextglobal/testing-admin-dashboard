@@ -3,6 +3,7 @@ import { Grid } from "@mui/material";
 import { Card, Tooltip } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import UpdateListOfNotesPerConsumer from "./ModalDeleteNote";
 import AddNoteModal from "./AddNoteModal";
 
@@ -38,10 +39,9 @@ const NotesRendering = ({ props, title }) => {
         data-testid="notes-card"
         style={{
           borderRadius: "12px",
-          border: "1px solid var(--gray-200, #EAECF0)",
+          border: "1px solid var(--gray-200, #ddded6)",
           background: "var(--base-white, #FFF)",
-          boxShadow:
-            "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
+          boxShadow: "var(--shadow-xs)",
           height: "100%",
         }}
         styles={{ body: { padding: "16px 20px" } }}
@@ -58,7 +58,7 @@ const NotesRendering = ({ props, title }) => {
               fontFamily: "Inter",
               fontSize: "13px",
               fontWeight: 600,
-              color: "var(--gray-700, #344054)",
+              color: "var(--gray-700, #484d47)",
               lineHeight: "18px",
             }}
           >
@@ -98,16 +98,12 @@ const NotesRendering = ({ props, title }) => {
           }}
         >
           {notesForCompany.length === 0 ? (
-            <p
-              style={{
-                fontFamily: "Inter",
-                fontSize: "13px",
-                color: "var(--gray-400, #98A2B3)",
-                textAlign: "left",
-              }}
-            >
-              No notes yet. Click &apos;+&apos; to add one.
-            </p>
+            <EmptyState
+              compact
+              icon="tabler:notes"
+              title="No notes yet"
+              description="Use the + button to add a note about this consumer."
+            />
           ) : (
             notesForCompany.map((item, idx) => (
               <div
@@ -125,7 +121,7 @@ const NotesRendering = ({ props, title }) => {
                     display: "block",
                     fontFamily: "Inter",
                     fontSize: "11px",
-                    color: "var(--gray-400, #98A2B3)",
+                    color: "var(--gray-400, #9fa39b)",
                     lineHeight: "16px",
                     marginBottom: "2px",
                   }}
@@ -136,7 +132,7 @@ const NotesRendering = ({ props, title }) => {
                   style={{
                     fontFamily: "Inter",
                     fontSize: "13px",
-                    color: "var(--gray-700, #344054)",
+                    color: "var(--gray-700, #484d47)",
                     lineHeight: "18px",
                     textAlign: "left",
                     margin: 0,

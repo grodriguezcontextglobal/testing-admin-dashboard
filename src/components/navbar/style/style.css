@@ -2,17 +2,17 @@
 @import url("https://fonts.googleapis.com/css?family=Inter:500,400,600");
 :root {
   --baseblack: rgba(0, 0, 0, 1);
-  --blue-dark--800: rgba(0, 64, 193, 1);
-  --blue-dark--700: rgba(0, 78, 234, 1);
+  --blue-dark--800: var(--brand-800);
+  --blue-dark--700: var(--brand-700);
   --success700: rgba(2, 121, 71, 1);
   --gray900: rgba(15, 23, 40, 1);
-  --blue-dark--600: rgba(21, 93, 238, 1);
-  --blue700: rgba(23, 92, 211, 1);
+  --blue-dark--600: var(--brand-600); /* Deep Blue */
+  --blue700: var(--brand-600);
   --gray700: rgba(52, 64, 83, 1);
   --gray600: rgba(71, 84, 102, 1);
   --gray500: rgba(102, 112, 132, 1);
   --gray300: rgba(207, 212, 220, 1);
-  --blue-dark--100: rgba(209, 224, 255, 1);
+  --blue-dark--100: var(--brand-100);
   --gray200: rgba(234, 236, 240, 1);
   --success50: rgba(235, 253, 242, 1);
   --gray100: rgba(242, 243, 246, 1);
@@ -34,7 +34,16 @@
 } */
 .header-navigation-main-navbar-updated {
   align-items: center;
-  background: var(--blue-700, #175cd3);
+  /* Lighter Deep Blue tint (brand-500) for the main bar — the UpperBanner
+     ribbon above stays darkest. Scoping --blue700 here makes the nav pills
+     (inline var(--blue700) backgrounds) blend into the bar without changing
+     --blue700 elsewhere in the app. */
+  --blue700: var(--brand-500);
+  /* Hover/active pills go DARKER (Deep Blue) against the lighter bar —
+     brand-700 is a tint that would match the bar and make hover invisible. */
+  --blue-dark--700: var(--brand-600);
+  --blue-dark--600: var(--brand-600);
+  background: var(--brand-500, #35465c);
   /* border-bottom: 1px solid var(--blue-dark-600, #155eef); */
   display: flex;
   position: relative;

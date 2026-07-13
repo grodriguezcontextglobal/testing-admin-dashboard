@@ -1,15 +1,16 @@
 import { Box } from "@mui/material";
-import { Divider, Modal, Typography } from "antd";
+import { Divider, Typography } from "antd";
 import { useState } from "react";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../../../../../components/UX/buttons/LigthBlueButton";
+import ModalUX from "../../../../../../../components/UX/modal/ModalUX";
 import MultipleDevices from "./cash_transaction_options/MultipleDevices";
 import SingleDevice from "./cash_transaction_options/SingleDevice";
 
 const CashTransaction = ({ openCashTransaction, setOpenCashTransaction }) => {
   const [optionToRender, setOptionToRender] = useState(0);
-  
+
   const closeModal = () => {
     setOpenCashTransaction(false);
   };
@@ -30,100 +31,97 @@ const CashTransaction = ({ openCashTransaction, setOpenCashTransaction }) => {
     setOptionToRender(option);
   };
 
-  return (
-    <Modal
-      title={renderTitle()}
-      open={openCashTransaction}
-      onOk={() => closeModal()}
-      onCancel={() => closeModal()}
-      centered
-      footer={[]}
-      width={1000}
-      maskClosable={false}
+  const modalBody = (
+    <div
       style={{
-        top: "5dvh",
-        zIndex:30
+        minWidth: "fit-content",
+        backgroundColor: "#ffffff",
+        padding: "20px",
       }}
     >
-      <div
+      <Typography
+        textTransform={"none"}
+        color={"var(--gray-900, #101828)"}
+        lineHeight={"26px"}
+        textAlign={"left"}
+        fontWeight={400}
+        fontFamily={"Inter"}
+        fontSize={"18px"}
+        marginY={2}
+      >
+        Please scan device for a cash deposit transaction:
+      </Typography>
+      <Divider />
+      <Box
         style={{
-          minWidth: "fit-content",
-          backgroundColor: "#ffffff",
-          padding: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "5px",
         }}
       >
-        <Typography
-          textTransform={"none"}
-          color={"var(--gray-900, #101828)"}
-          lineHeight={"26px"}
-          textAlign={"left"}
-          fontWeight={400}
-          fontFamily={"Inter"}
-          fontSize={"18px"}
-          marginY={2}
-        >
-          Please scan device for a cash deposit transaction:
-        </Typography>
-        <Divider />
-        <Box
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "5px",
-          }}
-        >
-          {optionToRender === 0 ? (
-            <BlueButtonComponent
-              title="Single Device"
-              func={() => handleOptionChange(0)}
-              styles={{ 
-                width: "100%",
-                textTransform: "uppercase",
-                textDecoration: "underline"
-              }}
-            />
-          ) : (
-            <LightBlueButtonComponent
-              title="Single Device"
-              func={() => handleOptionChange(0)}
-              styles={{ width: "100%" }}
-            />
-          )}
-          
-          {optionToRender === 1 ? (
-            <BlueButtonComponent
-              title="Multiple Devices"
-              func={() => handleOptionChange(1)}
-              styles={{ 
-                width: "100%",
-                textTransform: "uppercase",
-                textDecoration: "underline"
-              }}
-            />
-          ) : (
-            <LightBlueButtonComponent
-              title="Multiple Devices"
-              func={() => handleOptionChange(1)}
-              styles={{ width: "100%" }}
-            />
-          )}
-        </Box>
-        <Divider />
-        <Typography>
-          {optionToRender === 0 ? "Single device" : "Multiple devices"}
-        </Typography>
         {optionToRender === 0 ? (
-          <SingleDevice
-            setCreateTransactionForNoRegularUser={setOpenCashTransaction}
+          <BlueButtonComponent
+            title="Single Device"
+            func={() => handleOptionChange(0)}
+            styles={{
+              width: "100%",
+              textTransform: "uppercase",
+              textDecoration: "underline",
+            }}
           />
         ) : (
-          <MultipleDevices
-            setCreateTransactionForNoRegularUser={setOpenCashTransaction}
+          <LightBlueButtonComponent
+            title="Single Device"
+            func={() => handleOptionChange(0)}
+            styles={{ width: "100%" }}
           />
         )}
-      </div>
-    </Modal>
+
+        {optionToRender === 1 ? (
+          <BlueButtonComponent
+            title="Multiple Devices"
+            func={() => handleOptionChange(1)}
+            styles={{
+              width: "100%",
+              textTransform: "uppercase",
+              textDecoration: "underline",
+            }}
+          />
+        ) : (
+          <LightBlueButtonComponent
+            title="Multiple Devices"
+            func={() => handleOptionChange(1)}
+            styles={{ width: "100%" }}
+          />
+        )}
+      </Box>
+      <Divider />
+      <Typography>
+        {optionToRender === 0 ? "Single device" : "Multiple devices"}
+      </Typography>
+      {optionToRender === 0 ? (
+        <SingleDevice
+          setCreateTransactionForNoRegularUser={setOpenCashTransaction}
+        />
+      ) : (
+        <MultipleDevices
+          setCreateTransactionForNoRegularUser={setOpenCashTransaction}
+        />
+      )}
+    </div>
+  );
+
+  return (
+    <ModalUX
+      title={renderTitle()}
+      openDialog={openCashTransaction}
+      closeModal={closeModal}
+      body={modalBody}
+      width={1000}
+      footer={[]}
+      modalStyles={{ top: "5dvh", zIndex: 30 }}
+    />
   );
 };
 

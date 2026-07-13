@@ -1,8 +1,10 @@
+import { Icon } from "@iconify/react";
 import { Grid, Pagination, PaginationItem } from "@mui/material";
 import { Card, message, Switch } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 const { Meta } = Card;
 
 const MainGridPosts = ({ data, refetch }) => {
@@ -34,11 +36,11 @@ const MainGridPosts = ({ data, refetch }) => {
     }
   };
 
-  const urlImageDefault =
-    "https://res.cloudinary.com/dsuynhcgd/image/upload/v1744215579/xdvbbekjz1uebexwopx3.png";
-
   return (
     <>
+      <div style={{width:"100%", display:"flex", justifyContent:"flex-end"}}>
+        <BlueButtonComponent title={"Add new post"} func={() => navigate("/posts/new-post")} />
+      </div>
       <Grid container marginY={4} spacing={2}>
         {data.map((article) => (
           <Grid item xs={10} sm={6} md={4} lg={4} key={article.id}>
@@ -71,21 +73,59 @@ const MainGridPosts = ({ data, refetch }) => {
                     })
                   }
                 >
-                  <img
-                    src={
-                      article.media.cover.length > 0
-                        ? article.media.cover
-                        : urlImageDefault
-                    }
-                    alt={
-                      article.media.cover.length > 0
-                        ? article.media.cover
-                        : urlImageDefault
-                    }
-                    width={"100%"}
-                    height={"100%"}
-                    style={{ objectFit: "cover", objectPosition: "center" }}
-                  />
+                  {article.media.cover.length > 0 ? (
+                    <img
+                      src={article.media.cover}
+                      alt={article.title || "Post cover"}
+                      width={"100%"}
+                      height={"100%"}
+                      style={{ objectFit: "cover", objectPosition: "center" }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        background: "var(--gray-50, #f7f7f4)",
+                        borderBottom: "1px solid var(--gray-200, #ddded6)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "10px",
+                          background: "var(--base-white, #fff)",
+                          border: "1px solid var(--gray-200, #ddded6)",
+                          boxShadow: "var(--shadow-xs)",
+                        }}
+                      >
+                        <Icon
+                          icon="tabler:photo"
+                          width={20}
+                          color="var(--gray-500, #777b73)"
+                        />
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "Inter, sans-serif",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: "var(--gray-500, #777b73)",
+                        }}
+                      >
+                        No image yet
+                      </span>
+                    </div>
+                  )}
                 </button>
               }
               actions={[

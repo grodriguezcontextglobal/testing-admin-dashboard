@@ -2,20 +2,17 @@
 import { useMemo } from "react";
 import { Button } from "antd";
 import "./gray_button.css";
-import "./styles.css"
+import "./styles.css";
+
 /**
- * UntitledUI-like API (without changing your gray background)
+ * Untitled UI secondary (gray) button.
  * - size: sm | md | lg | xl
- * - iconLeading / iconTrailing
- * - href (renders like a link-button)
- * - isLoading + showTextWhileLoading
- * - isDisabled
+ * - iconTrailing, href, isLoading + showTextWhileLoading, isDisabled
  *
- * Backward compatible:
- * - title, styles, buttonType, func, loadingState, titleStyles, disabled
+ * Backward compatible: title, styles, buttonType, func, loadingState, titleStyles, disabled
+ * Drop-in friendly:    children (used when no title), onClick (used when no func)
  */
 const GrayButtonComponent = ({
-  // ---- New (UntitledUI-like) props ----
   size = "md",
   iconLeading = null,
   iconTrailing = null,
@@ -36,11 +33,17 @@ const GrayButtonComponent = ({
   loadingState = false,
   titleStyles = {},
 
+  // ---- Drop-in migration props ----
+  children,
+  onClick,
+
   // Any extra props go to antd Button
   ...rest
 }) => {
   const resolvedDisabled = Boolean(isDisabled ?? disabled);
   const resolvedLoading = Boolean(isLoading ?? loadingState);
+  const resolvedOnClick = func ?? onClick;
+  const label = children ?? title;
 
   const sizeClass = useMemo(() => {
     switch (size) {
@@ -64,9 +67,9 @@ const GrayButtonComponent = ({
         </span>
       ) : null}
 
-      {(title || showTextWhileLoading || !resolvedLoading) && (
+      {(label || showTextWhileLoading || !resolvedLoading) && (
         <span className="customized__grayButtonText" style={{ ...titleStyles }}>
-          {title}
+          {label}
         </span>
       )}
 
@@ -92,7 +95,7 @@ const GrayButtonComponent = ({
           disabled={resolvedDisabled || resolvedLoading}
           loading={resolvedLoading}
           htmlType={buttonType}
-          onClick={func}
+          onClick={resolvedOnClick}
           style={{ ...styles }}
           className={`customized__grayButton ${sizeClass}`}
         >
@@ -109,7 +112,7 @@ const GrayButtonComponent = ({
       disabled={resolvedDisabled}
       loading={resolvedLoading}
       htmlType={buttonType}
-      onClick={func}
+      onClick={resolvedOnClick}
       style={{ ...styles }}
       className={`customized__grayButton ${sizeClass}`}
     >

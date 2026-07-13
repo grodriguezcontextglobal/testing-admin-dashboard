@@ -44,14 +44,11 @@ const ConsumerDeviceLostFeeCash = () => {
   };
 
   const findDeviceInfo = () => {
+    if (!event?.deviceSetup) return { value: 0 };
     const result = event.deviceSetup.find(
       (element) => element.group === receiverToReplaceObject.deviceType
     );
-    // if (Array.isArray(result)) {
-    //   return result.at(-1);
-    // } else {
-    // }
-    return checkArray(result);
+    return checkArray(result) ?? { value: 0 };
   };
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -70,6 +67,7 @@ const ConsumerDeviceLostFeeCash = () => {
     "only screen and (min-width : 769px) and (max-width : 992px)"
   );
   const handleLostDeviceCashLostFee = async (data) => {
+    if (!event) return;
     const id = nanoid();
     const transactionGenerated =
       `pi_cash_amount:$${data.total}_received_by:**${user.email}**&` + id;

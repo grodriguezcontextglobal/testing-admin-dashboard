@@ -13,6 +13,7 @@ const BodyRendering = ({
   setImageUploadedValue,
   user,
   removeUploadedProfileImage,
+  onCancel,
 }) => {
   return (
     <form className="profile-form" onSubmit={handleSubmit(handleUpdatePersonalInfo)}>
@@ -24,7 +25,7 @@ const BodyRendering = ({
           </p>
         </div>
         <div className="profile-form__actions">
-          <button type="button" className="btn btn--secondary">
+          <button type="button" className="btn btn--secondary" onClick={onCancel}>
             Cancel
           </button>
           <button
@@ -136,7 +137,7 @@ const BodyRendering = ({
               <Input
                 type="text"
                 id="role"
-                value={dicRole[Number(user.role)]}
+                value={dicRole[Number(user?.role)] ?? ""}
                 readOnly
                 className="input input--readonly"
               />
@@ -168,7 +169,7 @@ const BodyRendering = ({
         </div>
       </div>
       <div className="profile-form__footer">
-        <button type="button" className="btn btn--secondary">
+        <button type="button" className="btn btn--secondary" onClick={onCancel}>
           Cancel
         </button>
         <button

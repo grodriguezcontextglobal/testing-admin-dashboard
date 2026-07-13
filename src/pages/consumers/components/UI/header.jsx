@@ -224,7 +224,7 @@ const CustomerHeader = () => {
               <InputAdornment position="start">
                 <Icon
                   icon="radix-icons:magnifying-glass"
-                  color="#344054"
+                  color="var(--gray-700, #484d47)"
                   width={20}
                   height={19}
                 />

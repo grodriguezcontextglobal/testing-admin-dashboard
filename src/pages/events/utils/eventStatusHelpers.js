@@ -84,7 +84,7 @@ export const getLogisticsStatus = (event) => {
         progress: 8,
         barColor: "var(--warning-500, #F79009)",
       };
-    case "in-idle":
+    case "completed":
       return {
         label: "Returned",
         tone: "ready",
@@ -100,7 +100,7 @@ export const getLogisticsStatus = (event) => {
         barColor: "var(--blue-500, #2E90FA)",
         labelColor: "var(--blue-700, #175CD3)",
       };
-    case "completed":
+    case "in-idle":
       return {
         label: "At event",
         tone: "pending",

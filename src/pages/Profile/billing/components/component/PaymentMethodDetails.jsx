@@ -94,7 +94,7 @@ const PaymentMethodDetails = () => {
           style={{
             height: "20rem",
             borderRadius: "12px",
-            border: "1px solid var(--gray-200, #EAECF0)",
+            border: "1px solid var(--gray-200, #ddded6)",
             background: "var(--base-white, #FFF)",
             boxShadow:
               "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
@@ -189,7 +189,7 @@ const PaymentMethodDetails = () => {
                         <Typography
                           width={"100%"}
                           textTransform={"none"}
-                          color="var(--gray-600, #475467)"
+                          color="var(--gray-600, #5d615a)"
                           lineHeight={"20px"}
                           textAlign={"left"}
                           fontWeight={400}
@@ -205,7 +205,7 @@ const PaymentMethodDetails = () => {
                         <Typography
                           width={"100%"}
                           textTransform={"none"}
-                          color="var(--gray-600, #475467)"
+                          color="var(--gray-600, #5d615a)"
                           lineHeight={"20px"}
                           textAlign={"left"}
                           fontWeight={400}
@@ -221,7 +221,7 @@ const PaymentMethodDetails = () => {
                         <Typography
                           width={"100%"}
                           textTransform={"none"}
-                          color="var(--gray-600, #475467)"
+                          color="var(--gray-600, #5d615a)"
                           lineHeight={"20px"}
                           textAlign={"left"}
                           fontWeight={400}
@@ -240,7 +240,7 @@ const PaymentMethodDetails = () => {
                         style={{
                           width: "fit-content",
                           borderRadius: "8px",
-                          border: "1px solid var(--gray-300, #D0D5DD)",
+                          border: "1px solid var(--gray-300, #c6c7bb)",
                           background: "var(--base-white, #FFF)",
 
                           /* Shadow/xs */
@@ -250,7 +250,7 @@ const PaymentMethodDetails = () => {
                         <Typography
                           width={"100%"}
                           textTransform={"none"}
-                          color="var(--gray-600, #475467)"
+                          color="var(--gray-600, #5d615a)"
                           lineHeight={"20px"}
                           textAlign={"left"}
                           fontWeight={400}
@@ -267,7 +267,7 @@ const PaymentMethodDetails = () => {
                 <Typography
                   width={"100%"}
                   textTransform={"none"}
-                  color="var(--gray-600, #475467)"
+                  color="var(--gray-600, #5d615a)"
                   lineHeight={"20px"}
                   textAlign={"left"}
                   fontWeight={400}

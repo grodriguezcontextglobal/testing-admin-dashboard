@@ -1,21 +1,21 @@
-:root {
-  --primary-color: #7f56d9;
-  --primary-color-light: #f9f5ff;
-  --text-color: #344054;
-  --text-color-light: #667085;
-  --border-color: #d0d5dd;
-  --border-color-focus: var(--primary-color);
-  --background-color: #ffffff;
-  --disabled-bg-color: #f2f4f7;
-  --disabled-text-color: #d0d5dd;
-  --tag-bg-color: #f9f5ff;
-  --tag-text-color: #53389e;
-  --tag-remove-hover: #e9d7fe;
-  --hint-color: #667085;
-  --supporting-text-color: #475467;
-  --error-color: #d92d20;
-  --dropdown-shadow: 0px 4px 6px -2px rgba(16, 24, 40, 0.03),
-    0px 12px 16px -4px rgba(16, 24, 40, 0.08);
+.multiselect-container {
+  --primary-color: var(--action-600, #155eef);
+  --primary-color-light: var(--action-50, #eff4ff);
+  --text-color: var(--gray-700, #484d47);
+  --text-color-light: var(--gray-600, #5d615a);
+  --border-color: var(--gray-300, #c6c7bb);
+  --border-color-focus: var(--action-300, #84adff);
+  --background-color: var(--base-white, #ffffff);
+  --disabled-bg-color: var(--gray-100, #f1f1f1);
+  --disabled-text-color: var(--gray-300, #c6c7bb);
+  --tag-bg-color: var(--action-50, #eff4ff);
+  --tag-text-color: var(--action-800, #0040c1);
+  --tag-remove-hover: var(--action-100, #d1e0ff);
+  --hint-color: var(--gray-600, #5d615a);
+  --supporting-text-color: var(--gray-600, #5d615a);
+  --error-color: var(--error-500, #d15334);
+  --dropdown-shadow: var(--shadow-lg, 0 12px 16px -4px rgba(23, 29, 26, 0.08),
+    0 4px 6px -2px rgba(23, 29, 26, 0.03));
 }
 
 .multiselect-container {
@@ -83,7 +83,7 @@
 
 .multiselect-input-wrapper:focus-within {
   border-color: var(--border-color-focus);
-  box-shadow: 0 0 0 3px var(--primary-color-light);
+  box-shadow: var(--focus-ring-action, 0 0 0 4px var(--action-100, #d1e0ff));
 }
 
 .tags-container {
@@ -184,9 +184,10 @@
   left: 0;
   right: 0;
   background-color: var(--background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-md, 8px);
   margin-top: 4px;
+  padding: 4px;
   box-shadow: var(--dropdown-shadow);
   z-index: 100;
   max-height: 280px;
@@ -197,7 +198,7 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--gray-200, #ddded6);
 }
 
 .dropdown-actions button {
@@ -212,13 +213,14 @@
 .multiselect-item {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm, 6px);
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .multiselect-item:hover {
-  background-color: var(--primary-color-light);
+  background-color: var(--gray-50, #f7f7f4);
 }
 
 .multiselect-item.disabled {

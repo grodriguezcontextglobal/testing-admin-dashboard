@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, Spin } from "antd";
+import { Divider } from "antd";
 import {
   createContext,
   lazy,
@@ -41,6 +41,7 @@ import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 import { ShipmentRecord } from "./actions/ShipmentRecord";
+import PageSpinner from "../../components/utils/PageSpinner";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -360,8 +361,7 @@ const MainPage = () => {
           </Grid>
         </Grid>
       </Grid>
-      {isLoadingState && <Spin indicator={<Loading />} fullscreen={true} />}
-      {renderingData && <Spin indicator={<Loading />} fullscreen={true} />}
+      {(isLoadingState || renderingData) && <PageSpinner />}
       {openDetails && (
         <DisplayItemTypesPerLocationModal
           id_key={typePerLocationInfoModal.id_key}

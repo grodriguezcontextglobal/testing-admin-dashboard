@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Spin, Tooltip } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -17,7 +17,12 @@ import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18Lin
 import "../../../styles/global/ant-table.css";
 import "./TablesConsumers.css";
 
-export default function TablesConsumers({ searching, data, getCounting }) {
+export default function TablesConsumers({
+  searching,
+  data,
+  getCounting,
+  onResultCount,
+}) {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const dataRef = useRef(null);
@@ -35,6 +40,20 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     },
     enabled: !!user.companyData.id,
   });
+
+  const receiversQuery = useQuery({
+    queryKey: ["AssignedReceiversByCompany", user.companyData.id],
+    queryFn: () =>
+      devitrakApi.post("/receiver/receiver-assigned-users-list", {
+        company: user.companyData.id,
+      }),
+    enabled: !!user.companyData.id,
+  });
+
+  const receiversByEmail = useMemo(() => {
+    const list = receiversQuery.data?.data?.listOfReceivers ?? [];
+    return groupBy(list, "user");
+  }, [receiversQuery.data]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleDataDetailUser = (record) => {
@@ -58,52 +77,33 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     setResponseData(dataRef.current);
   }, [getCounting]);
 
-  useEffect(() => {
-    if (eventInfoCompanyQuery.data) {
-      // console.log("Company events:", eventInfoCompanyQuery.data.data);
-    }
-    if (eventInfoCompanyQuery.error) {
-      // console.error("Error fetching company events:", eventInfoCompanyQuery.error);
-    }
-  }, [eventInfoCompanyQuery.data, eventInfoCompanyQuery.error]);
-
-  const checkEventsPerCompany = () => {
-    if (searching?.length > 0) {
-      const check = responseData?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searching).toLowerCase()),
-      );
-      return check;
-    }
-    return responseData;
-  };
-  checkEventsPerCompany();
-
   const getInfoNeededToBeRenderedInTable = useCallback(() => {
-    let result = new Set();
-    let mapTemplate = {};
-    if (checkEventsPerCompany()?.length > 0) {
-      for (let data of checkEventsPerCompany()) {
-        mapTemplate = {
+    const result = [];
+    if (Array.isArray(responseData)) {
+      for (let data of responseData) {
+        result.push({
           company: user.company,
           user: [data.name, data.lastName],
           email: data.email,
           key: data.id ?? data._id,
           entireData: data,
-        };
-        result.add(mapTemplate);
+        });
       }
     }
-    return Array.from(result).reverse();
-  }, [responseData?.length, dataRef.current]);
+    return result.reverse();
+  }, [responseData, user.company]);
 
   const dataToRenderInTable = async () => {
     const result = new Set();
     for (let data of getInfoNeededToBeRenderedInTable()) {
+      const userTransactions = receiversByEmail[data.email] ?? [];
+      const activeDeviceCount = userTransactions.filter(
+        (t) => t.device?.status === true,
+      ).length;
       result.add({
         ...data,
-        currentActivity: data.entireData.totalDeviceRequested,
+        currentActivity: activeDeviceCount,
+        transactions: userTransactions,
       });
     }
     setIsLoading(false);
@@ -112,20 +112,32 @@ export default function TablesConsumers({ searching, data, getCounting }) {
 
   useEffect(() => {
     dataToRenderInTable();
-  }, [dataRef.current]);
+  }, [dataRef.current, receiversByEmail]);
 
-  const filterData = (data) => {
-    if (!searching || searching.length < 1) return data;
+  const filteredData = useMemo(() => {
+    const term = searching?.trim().toLowerCase();
+    if (!term) return dataSortedAndFilterToRender;
 
-    return data.filter((item) => {
-      const searchLower = searching.toLowerCase();
-      const fullDetailItem = JSON.stringify(item);
-
-      return fullDetailItem.toLowerCase().includes(searchLower);
+    return dataSortedAndFilterToRender.filter((item) => {
+      const consumer = item.entireData ?? {};
+      const haystack = [
+        consumer.name,
+        consumer.lastName,
+        consumer.email,
+        consumer.phoneNumber,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(term);
     });
-  };
+  }, [dataSortedAndFilterToRender, searching]);
 
-  const filteredData = filterData(dataSortedAndFilterToRender);
+  useEffect(() => {
+    if (typeof onResultCount === "function") {
+      onResultCount(filteredData.length);
+    }
+  }, [filteredData.length, onResultCount]);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -172,6 +184,17 @@ export default function TablesConsumers({ searching, data, getCounting }) {
 
     return Array.from(checked.values());
   };
+
+  const eventFilterOptions = useMemo(() => {
+    const list = eventInfoCompanyQuery?.data?.data?.list ?? [];
+    const seen = new Map();
+    for (const ev of list) {
+      const name = ev.eventInfoDetail?.eventName ?? "";
+      if (name && !seen.has(ev.id)) seen.set(ev.id, name);
+    }
+    return Array.from(seen, ([value, text]) => ({ text, value }));
+  }, [eventInfoCompanyQuery?.data]);
+
   const columns = [
     {
       title: renderingRowStyling("User"),
@@ -228,24 +251,19 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       dataIndex: "entireData",
       responsive: ["md", "lg"],
       width: "13%",
+      filters: [
+        { text: "Active", value: "active" },
+        { text: "Inactive", value: "inactive" },
+      ],
+      onFilter: (value, record) =>
+        value === "active"
+          ? record.currentActivity > 0
+          : record.currentActivity < 1,
       sorter: {
-        compare: (a, b) => {
-          const toActive = (d) =>
-            d.entireData.currentActivity?.some(
-              (item) => item.device.status === true,
-            )
-              ? 1
-              : 0;
-          return toActive(a) - toActive(b);
-        },
+        compare: (a, b) => (a.currentActivity > 0 ? 1 : 0) - (b.currentActivity > 0 ? 1 : 0),
       },
-      render: (entireData) => {
-        const devicesByStatus = new Map();
-        entireData.currentActivity?.forEach((item) => {
-          const s = item.device.status;
-          devicesByStatus.set(s, [...(devicesByStatus.get(s) ?? []), item.device]);
-        });
-        const isActive = (devicesByStatus.get(true)?.length ?? 0) > 0;
+      render: (_, record) => {
+        const isActive = record.currentActivity > 0;
         return (
           <Chip
             label={isActive ? "Active" : "Inactive"}
@@ -295,6 +313,10 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       dataIndex: "entireData",
       width: "fit-content",
       responsive: ["md", "lg"],
+      filters: eventFilterOptions,
+      filterSearch: true,
+      onFilter: (value, record) =>
+        (record.entireData?.event_providers ?? []).includes(value),
       render: (entireData) => {
         const data =
           renderingEventsPermittedForAdminBasedOnAdminAssignment(entireData) ??
@@ -310,23 +332,39 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           );
         }
 
-        const firstEventName = data[0]?.eventInfoDetail?.eventName || "";
+        const MAX_VISIBLE = 4;
+        const visible = data.slice(0, MAX_VISIBLE);
+        const overflow = data.length - MAX_VISIBLE;
+
+        const getInitials = (name = "") =>
+          name
+            .split(" ")
+            .slice(0, 2)
+            .map((w) => w[0]?.toUpperCase() ?? "")
+            .join("");
 
         return (
-          <div className="avatar-group-container">
-            <Tooltip title={firstEventName}>
-              <div className="event-name-chip">{firstEventName}</div>
-            </Tooltip>
-            {data.length > 1 && (
-              <Tooltip title={`${data.length - 1} more events`}>
-                <Avatar className="event-count-avatar">
-                  +{data.length - 1}
-                </Avatar>
+          <div className="event-badge-group">
+            {visible.map((event, idx) => {
+              const eventName = event.eventInfoDetail?.eventName ?? "";
+              return (
+                <Tooltip key={event.id ?? idx} title={eventName}>
+                  <Avatar className="event-badge-avatar">
+                    {getInitials(eventName)}
+                  </Avatar>
+                </Tooltip>
+              );
+            })}
+            {overflow > 0 && (
+              <Tooltip title={`+${overflow} more event${overflow > 1 ? "s" : ""}`}>
+                <Avatar className="event-badge-overflow">+{overflow}</Avatar>
               </Tooltip>
             )}
-          </div>);
+          </div>
+        );
       },
-    },];
+    },
+  ];
 
   return (
     <>
@@ -347,15 +385,24 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           pagination={{
             position: ["bottomCenter"],
           }}
+          locale={{
+            emptyText: searching?.trim()
+              ? `No consumers match "${searching.trim()}"`
+              : "No consumers",
+          }}
           className="table-ant-customized"
         />
       ) : (
-        <Spin
-          spinning={isLoading}
-          indicator={<Loading />}
-          percent={0}
-          fullscreen
-        />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "48px 0",
+          }}
+        >
+          <Spin spinning={isLoading} indicator={<Loading />} percent={0} />
+        </div>
       )}
     </>
   );

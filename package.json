@@ -7,7 +7,15 @@
     "dev": "vite --port=5522",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "cypress run",
+    "test:open": "cypress open",
+    "test:inventory": "cypress run --spec cypress/e2e/inventory/inventory-crud.cy.js",
+    "test:consumers": "cypress run --spec cypress/e2e/consumers/consumers-crud.cy.js",
+    "test:events": "cypress run --spec cypress/e2e/events/events-crud.cy.js",
+    "test:staff": "cypress run --spec cypress/e2e/staff/staff-crud.cy.js",
+    "test:consumer-detail": "cypress run --spec cypress/e2e/consumers/consumer-detail-crud.cy.js",
+    "test:consumer-all": "cypress run --spec cypress/e2e/consumers/**/*.cy.js"
   },
   "dependencies": {
     "@azure/msal-browser": "^3.26.0",
@@ -39,6 +47,7 @@
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "lottie-web": "^5.10.2",
+    "lucide-react": "^1.20.0",
     "million": "^3.0.5",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",

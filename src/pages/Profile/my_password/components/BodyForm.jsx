@@ -93,7 +93,7 @@ const BodyForm = ({
             <InputLabel>
               <Typography
                 sx={{
-                  color: "#344054",
+                  color: "var(--gray-700, #484d47)",
                   fontSize: { xs: "13px", sm: "14px" },
                   fontWeight: "500",
                   fontFamily: "Inter",
@@ -125,7 +125,7 @@ const BodyForm = ({
             <InputLabel>
               <Typography
                 sx={{
-                  color: "#344054",
+                  color: "var(--gray-700, #484d47)",
                   fontSize: { xs: "13px", sm: "14px" },
                   fontWeight: "500",
                   fontFamily: "Inter",
@@ -153,7 +153,7 @@ const BodyForm = ({
             <InputLabel>
               <Typography
                 sx={{
-                  color: "#344054",
+                  color: "var(--gray-700, #484d47)",
                   fontSize: { xs: "13px", sm: "14px" },
                   fontWeight: "500",
                   fontFamily: "Inter",

@@ -1,5 +1,4 @@
 import {
-  Button,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -18,12 +17,12 @@ import {
   onAddDevicesSelectionPaidTransactions,
 } from "../../../../../../../../store/slices/devicesHandleSlice";
 import { AntSelectorStyle } from "../../../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../../../styles/global/BlueButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import "../../../../../../../../styles/global/ant-select.css";
 import TextFontsize18LineHeight28 from "../../../../../../../../styles/global/TextFontSize18LineHeight28";
 import { groupBy } from "lodash";
+import BlueButton from "../../../../../../../../components/UX/buttons/BlueButton";
+import GrayButton from "../../../../../../../../components/UX/buttons/GrayButton";
 
 const MultipleDevices = ({ setCreateTransactionPaid }) => {
   const { register, handleSubmit, setValue } = useForm();
@@ -240,11 +239,12 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
           </FormControl>
         </div>
         <Tooltip title="Please submit CC info after assign all devices.">
-          <Button style={{ ...BlueButton, width: "100%" }} type="submit">
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Credit Card Info
-            </Typography>
-          </Button>
+          <BlueButton
+            title="Credit Card Info"
+            buttonType="submit"
+            size="md"
+            styles={{ width: "100%" }}
+          />
         </Tooltip>
       </form>
       {clientSecret !== "" && (
@@ -254,12 +254,12 @@ const MultipleDevices = ({ setCreateTransactionPaid }) => {
         />
       )}
       {clientSecret !== "" && (
-        <Button
-          style={{ ...BlueButton, width: "100%" }}
-          onClick={() => closeModal()}
-        >
-          <p style={BlueButtonText}>Cancel</p>
-        </Button>
+        <GrayButton
+          title="Cancel"
+          func={() => closeModal()}
+          size="md"
+          styles={{ width: "100%" }}
+        />
       )}
     </>
   );

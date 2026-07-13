@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { Button } from "antd";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import EmptyState from "../../../../components/UX/emptyState/EmptyState";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 
 const HistoryDocumentProvider = ({
@@ -34,30 +35,36 @@ const HistoryDocumentProvider = ({
             onClick={() =>
               setDocumentSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
             }
-            startIcon={documentSortOrder === "desc" ? "↓" : "↑"}
           >
-            Sort by Date
+            {documentSortOrder === "desc" ? "↓" : "↑"} Sort by Date
           </Button>
         </DialogTitle>
         <DialogContent>
           {selectedProvider?.documents?.length > 0 ? (
             <List>
-              {sortDocuments(selectedProvider.documents).map((doc) => (
+              {sortDocuments(selectedProvider.documents).map((doc, index) => (
                 <ListItem
-                  key={doc.id}
+                  key={doc?.id || doc?._id || `${doc?.name}-${index}`}
                   sx={{
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "4px",
+                    border: "1px solid var(--gray-200, #ddded6)",
+                    borderRadius: "8px",
                     mb: 1,
                     "&:last-child": { mb: 0 },
                   }}
                 >
                   <ListItemText
                     primary={
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                        {doc.name}
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 500,
+                          color: "var(--gray-900, #171d1a)",
+                        }}
+                      >
+                        {doc?.name || doc?.title || "Untitled document"}
                       </Typography>
                     }
+                    secondaryTypographyProps={{ component: "div" }}
                     secondary={
                       <Box
                         sx={{
@@ -67,11 +74,22 @@ const HistoryDocumentProvider = ({
                           mt: 0.5,
                         }}
                       >
-                        <Typography variant="body2" color="text.secondary">
-                          Uploaded: {new Date(doc.uploadDate).toLocaleString()}
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "var(--gray-600, #5d615a)" }}
+                        >
+                          Uploaded:{" "}
+                          {doc?.uploadDate
+                            ? new Date(doc.uploadDate).toLocaleString()
+                            : "Unknown"}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Size: {(doc.size / 1024).toFixed(2)} KB
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "var(--gray-600, #5d615a)" }}
+                        >
+                          {typeof doc?.size === "number"
+                            ? `Size: ${(doc.size / 1024).toFixed(2)} KB`
+                            : ""}
                         </Typography>
                       </Box>
                     }
@@ -80,9 +98,12 @@ const HistoryDocumentProvider = ({
               ))}
             </List>
           ) : (
-            <Typography variant="body1" sx={{ textAlign: "center", py: 3 }}>
-              No documents uploaded yet
-            </Typography>
+            <EmptyState
+              icon="tabler:file-off"
+              title="No documents uploaded yet"
+              description="Documents uploaded for this supplier will appear here."
+              compact
+            />
           )}
         </DialogContent>
       </>

@@ -3,13 +3,14 @@ import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import Loading from "../../../../../components/animation/Loading";
 import { DoubleRightChevronIcon } from "../../../../../components/icons/DoubleRightChevronIcon.jsx";
 import DownDoubleArrowIcon from "../../../../../components/icons/DownDoubleArrowIcon.jsx";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton.jsx";
+import PageSpinner from "../../../../../components/utils/PageSpinner";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import Chip from "../../../../../components/UX/Chip/Chip";
+import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
 import BaseTable from "../../../../../components/UX/tables/BaseTable.jsx";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import ModalReturnDeviceFromStaff from "./ModalReturnDeviceFromStaff";
 import { useStaffEquipmentData } from "./useStaffEquipmentData";
@@ -33,7 +34,13 @@ const VerificationDetailsTable = ({
 
   if (queryResult?.isError) {
     return (
-      <div style={{ padding: "20px", textAlign: "center", color: "red" }}>
+      <div
+        style={{
+          padding: "20px",
+          textAlign: "center",
+          color: "var(--error-600, #d92d20)",
+        }}
+      >
         Error loading documents.
       </div>
     );
@@ -54,21 +61,11 @@ const VerificationDetailsTable = ({
       : "";
 
   const renderStatusBadge = (isSigned) => (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "12px",
-        fontSize: "12px",
-        lineHeight: 1.6,
-        fontWeight: 600,
-        color: isSigned ? "#155724" : "#8a2a2a",
-        background: isSigned ? "#d4edda" : "#f8d7da",
-        border: `1px solid ${isSigned ? "#c3e6cb" : "#f5c6cb"}`,
-      }}
-    >
-      {isSigned ? "Signed" : "Pending"}
-    </span>
+    <Chip
+      size="small"
+      color={isSigned ? "success" : "warning"}
+      label={isSigned ? "Signed" : "Pending"}
+    />
   );
 
   const canSeeSignedColumns =
@@ -227,21 +224,11 @@ function ListEquipment() {
   };
 
   const renderStatusBadge = (isSigned) => (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "12px",
-        fontSize: "12px",
-        lineHeight: 1.6,
-        fontWeight: 600,
-        color: isSigned ? "#155724" : "#8a2a2a",
-        background: isSigned ? "#d4edda" : "#f8d7da",
-        border: `1px solid ${isSigned ? "#c3e6cb" : "#f5c6cb"}`,
-      }}
-    >
-      {isSigned ? "Signed" : "Pending"}
-    </span>
+    <Chip
+      size="small"
+      color={isSigned ? "success" : "warning"}
+      label={isSigned ? "Signed" : "Pending"}
+    />
   );
 
   const columns = [
@@ -385,11 +372,7 @@ function ListEquipment() {
     listImagePerItemQuery.isLoading ||
     staffMemberQuery.isLoading
   )
-    return (
-      <div style={CenteringGrid}>
-        <Loading />
-      </div>
-    );
+    return <PageSpinner />;
   if (
     itemsInInventoryQuery.data &&
     listImagePerItemQuery.data &&
@@ -422,6 +405,16 @@ function ListEquipment() {
           dataSource={assignedEquipmentList}
           className="table-ant-customized"
           rowKey={getRowKey}
+          locale={{
+            emptyText: (
+              <EmptyState
+                compact
+                icon="tabler:devices-off"
+                title="No devices assigned"
+                description="Assign a device to this staff member from the New assignment tab."
+              />
+            ),
+          }}
           expandable={{
             expandedRowRender,
             expandedRowKeys: expandedRowKey ? [expandedRowKey] : [],

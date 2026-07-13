@@ -1,15 +1,16 @@
+import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
-import { Card } from "antd";
 import { useQuery } from "@tanstack/react-query";
+import { Avatar, Card } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
 import Breadcrumb from "../../components/UX/breadcrumbs/Breadcrumb";
-import RefactoredHeaderUntitledUiReact from "../../components/UX/header/DynamicHeaderCompnent";
-import CenteringGrid from "../../styles/global/CenteringGrid";
+import Chip from "../../components/UX/Chip/Chip";
+import PageSpinner from "../../components/utils/PageSpinner";
+import { Subtitle } from "../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import CardActionsButton from "./components/CardActionsButton";
 import NotesRendering from "./components/NotesCard";
@@ -17,10 +18,15 @@ import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer"
 
 const cardTokens = {
   borderRadius: "12px",
-  border: "1px solid var(--gray-200, #EAECF0)",
+  border: "1px solid var(--gray-200, #ddded6)",
   background: "var(--base-white, #FFF)",
-  boxShadow:
-    "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
+  boxShadow: "var(--shadow-xs)",
+};
+
+const contactRowStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
 };
 
 const StatTile = ({ value, label, accentColor, testId }) => (
@@ -36,18 +42,18 @@ const StatTile = ({ value, label, accentColor, testId }) => (
         fontSize: "28px",
         fontWeight: 600,
         lineHeight: "38px",
-        color: accentColor ?? "var(--gray-900, #101828)",
+        color: accentColor ?? "var(--gray-900, #171d1a)",
       }}
     >
       {value ?? 0}
     </span>
     <span
       style={{
+        ...Subtitle,
         display: "block",
-        fontFamily: "Inter",
         fontSize: "13px",
         lineHeight: "18px",
-        color: "var(--gray-500, #667085)",
+        color: "var(--gray-500, #777b73)",
         marginTop: "4px",
       }}
     >
@@ -78,46 +84,31 @@ const DetailPerConsumer = () => {
 
   const refetchTransactions = () => transactionsConsumerQuery.refetch();
 
-  const [eventsAttendedForCustomer, setEventsAttendedForCustomer] = useState(0);
-
-  const renderingNumberOfEventsConsumerAttended = async () => {
-    const result = new Map();
-    if (transactionsConsumerQuery.data) {
-      const dataPerEvent = groupBy(
-        transactionsConsumerQuery?.data?.data?.list,
-        "eventSelected"
-      );
-      for (let [key, value] of Object.entries(dataPerEvent)) {
-        if (!result.has(key)) result.set(key, value);
-      }
-    }
-    return setEventsAttendedForCustomer(result.size);
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    renderingNumberOfEventsConsumerAttended();
-    return () => controller.abort();
-  }, [user.id, user.companyData.id, transactionsConsumerQuery.data, customer.email]);
-
-  if (transactionsConsumerQuery.isLoading)
-    return (
-      <div style={CenteringGrid}>
-        <Loading />
-      </div>
-    );
+  if (transactionsConsumerQuery.isLoading) return <PageSpinner />;
 
   if (transactionsConsumerQuery.data) {
+    const transactionsList =
+      transactionsConsumerQuery.data?.data?.list ?? [];
+
+    const eventsAttendedForCustomer = Object.keys(
+      groupBy(transactionsList, "eventSelected"),
+    ).length;
+
+    const activeTransactionsCount = transactionsList.filter(
+      (item) => item.active === true,
+    ).length;
+
     const substractingNotesAddedForCompany = () => {
       const result = customer?.data?.notes?.filter(
-        (ele) => ele.company === user.companyData.id
+        (ele) => ele.company === user.companyData.id,
       );
       if (result?.length > 0) return [...result];
       return [];
     };
 
-    const renderingTransactions = () =>
-      transactionsConsumerQuery.data?.data?.list?.length ?? 0;
+    const fullName = `${customer?.name ?? ""} ${customer?.lastName ?? ""}`.trim();
+    const initials =
+      `${customer?.name?.at(0) ?? ""}${customer?.lastName?.at(0) ?? ""}`.toUpperCase();
 
     const breadcrumbItems = [
       {
@@ -148,7 +139,7 @@ const DetailPerConsumer = () => {
               textTransform: "capitalize",
             }}
           >
-            {customer?.name} {customer?.lastName}
+            {fullName}
           </p>
         ),
       },
@@ -167,17 +158,100 @@ const DetailPerConsumer = () => {
           <Breadcrumb path={breadcrumbItems} />
         </Grid>
 
-        {/* Consumer profile header — avatar + info + actions unificados */}
+        {/* Identity header — avatar, name, status, contact + actions */}
         <Grid item xs={12} sx={{ mb: 3 }}>
-          <Card style={cardTokens} styles={{ body: { padding: "20px 24px" } }}>
-            <RefactoredHeaderUntitledUiReact
-              image={customer?.data?.profile_picture}
-              title={`${customer?.name ?? ""} ${customer?.lastName ?? ""}`.trim()}
-              subtitle="Consumer"
-              email={customer?.email}
-              phone={customer?.phoneNumber || "—"}
-              actions={<CardActionsButton refetching={refetchTransactions} />}
-            />
+          <Card style={cardTokens} styles={{ body: { padding: "24px" } }}>
+            <div
+              data-testid="consumer-header"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "24px",
+                width: "100%",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  minWidth: 0,
+                  flex: "1 1 320px",
+                }}
+              >
+                <Avatar
+                  size={80}
+                  src={customer?.data?.profile_picture}
+                  shape="circle"
+                >
+                  {customer?.data?.profile_picture ? "" : initials}
+                </Avatar>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                    minWidth: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
+                    <h1
+                      data-testid="consumer-name"
+                      style={{
+                        ...TextFontsize18LineHeight28,
+                        color: "var(--gray-900, #171d1a)",
+                        textTransform: "capitalize",
+                        margin: 0,
+                      }}
+                    >
+                      {fullName}
+                    </h1>
+                    <Chip
+                      size="small"
+                      color={activeTransactionsCount > 0 ? "success" : "default"}
+                      label={
+                        activeTransactionsCount > 0
+                          ? "Active devices"
+                          : "No active devices"
+                      }
+                    />
+                  </div>
+                  <p style={{ ...Subtitle, margin: 0 }}>Consumer</p>
+                  <div style={contactRowStyle}>
+                    <Icon
+                      icon="tabler:mail"
+                      width={16}
+                      color="var(--gray-500, #777b73)"
+                    />
+                    <span style={{ ...Subtitle, color: "var(--gray-700, #484d47)" }}>
+                      {customer?.email ?? "—"}
+                    </span>
+                  </div>
+                  <div style={contactRowStyle}>
+                    <Icon
+                      icon="tabler:phone"
+                      width={16}
+                      color="var(--gray-500, #777b73)"
+                    />
+                    <span style={{ ...Subtitle, color: "var(--gray-700, #484d47)" }}>
+                      {customer?.phoneNumber || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ flex: "0 1 320px", minWidth: "240px" }}>
+                <CardActionsButton refetching={refetchTransactions} />
+              </div>
+            </div>
           </Card>
         </Grid>
 
@@ -186,7 +260,7 @@ const DetailPerConsumer = () => {
           <Grid container spacing={2} alignItems="stretch">
             <Grid item xs={12} sm={6} md={3}>
               <StatTile
-                value={renderingTransactions()}
+                value={transactionsList.length}
                 label="Transactions"
                 testId="stat-transactions"
               />
@@ -209,10 +283,12 @@ const DetailPerConsumer = () => {
 
         {/* Transactions table */}
         <Grid item xs={12}>
-          <StripeTransactionPerConsumer
-            data={transactionsConsumerQuery?.data?.data?.list}
-            refetching={refetchTransactions}
-          />
+          <Card style={cardTokens} styles={{ body: { padding: "24px" } }}>
+            <StripeTransactionPerConsumer
+              data={transactionsList}
+              refetching={refetchTransactions}
+            />
+          </Card>
         </Grid>
       </Grid>
     );

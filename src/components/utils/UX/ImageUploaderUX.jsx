@@ -130,7 +130,7 @@ const ImageUploaderUX = ({
                 fontSize: "14px",
                 fontWeight: 600,
                 lineHeight: "20px",
-                color: isDisabled ? "var(--gray-300, #D0D5DD)" : "var(--primary-700, #6941C6)",
+                color: isDisabled ? "var(--gray-300, #c6c7bb)" : "var(--action-600, #155eef)",
               }}
             >
               {label}

@@ -168,7 +168,7 @@ const UpdateCreditCard = ({
       <Typography
         width={"100%"}
         textTransform={"none"}
-        color="var(--gray-900, #101828)"
+        color="var(--gray-900, #171d1a)"
         lineHeight={"28px"}
         textAlign={"center"}
         fontWeight={600}

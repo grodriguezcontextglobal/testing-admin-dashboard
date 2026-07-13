@@ -2,18 +2,27 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { BadgeWithDot } from "../../../../components/base/badges/badges";
-import Loading from "../../../../components/animation/Loading";
-import BaseTable from "../../../../components/ux/tables/BaseTable";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
+import Chip from "../../../../components/UX/Chip/Chip";
+import EmptyState from "../../../../components/UX/emptyState/EmptyState";
+import PageSpinner from "../../../../components/utils/PageSpinner";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
+import { Subtitle } from "../../../../styles/global/Subtitle";
+import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import ListEquipment from "./equipment_components/ListEquipment";
 
+const sectionCardStyle = {
+  background: "var(--base-white, #fff)",
+  border: "1px solid var(--gray-200, #ddded6)",
+  borderRadius: "12px",
+  boxShadow: "var(--shadow-xs)",
+  padding: "24px",
+  width: "100%",
+};
+
 const sectionHeadingStyle = {
-  fontSize: "15px",
-  fontWeight: 600,
-  color: "#101828",
-  margin: "2rem 0 0.75rem",
-  lineHeight: "24px",
+  ...TextFontsize18LineHeight28,
+  color: "var(--gray-900, #171d1a)",
+  margin: "0 0 16px",
   padding: 0,
 };
 
@@ -49,11 +58,9 @@ const TableStaffDetail = () => {
       render: (event) => (
         <span
           style={{
-            fontSize: "14px",
-            fontFamily: "Inter",
-            lineHeight: "20px",
+            ...Subtitle,
             textTransform: "capitalize",
-            color: "#101828",
+            color: "var(--gray-900, #171d1a)",
           }}
         >
           {event}
@@ -67,9 +74,11 @@ const TableStaffDetail = () => {
       responsive: ["lg"],
       sorter: { compare: (a, b) => ("" + a.role).localeCompare(b.role) },
       render: (role) => (
-        <BadgeWithDot color={role === "Administrator" ? "blue" : "indigo"}>
-          {role}
-        </BadgeWithDot>
+        <Chip
+          size="small"
+          color={role === "Administrator" ? "info" : "default"}
+          label={role}
+        />
       ),
     },
     {
@@ -78,19 +87,16 @@ const TableStaffDetail = () => {
       width: "25%",
       sorter: { compare: (a, b) => ("" + a.status).localeCompare(b.status) },
       render: (status) => (
-        <BadgeWithDot color={status ? "brand" : "success"}>
-          {status ? "Active" : "Completed"}
-        </BadgeWithDot>
+        <Chip
+          size="small"
+          color={status ? "info" : "success"}
+          label={status ? "Active" : "Completed"}
+        />
       ),
     },
   ];
 
-  if (eventQuery.isLoading)
-    return (
-      <div style={CenteringGrid}>
-        <Loading />
-      </div>
-    );
+  if (eventQuery.isLoading) return <PageSpinner />;
 
   if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
     const sortData = () => {
@@ -108,25 +114,45 @@ const TableStaffDetail = () => {
       return result;
     };
 
-    const dataToRenderInTable = () =>
-      sortData().map((item) => ({
-        event: item.eventInfoDetail.eventName,
-        status: item.active,
-        role: item.role,
-        entireData: item,
-      }));
+    const dataToRenderInTable = sortData().map((item) => ({
+      event: item.eventInfoDetail.eventName,
+      status: item.active,
+      role: item.role,
+      entireData: item,
+    }));
 
     return (
-      <div style={{ padding: "4px 0", width: "100%" }}>
-        <h3 style={sectionHeadingStyle}>Current assigned devices</h3>
-        <ListEquipment />
-        <h3 style={sectionHeadingStyle}>Events assigned</h3>
-        <BaseTable
-          enablePagination={true}
-          columns={columns}
-          dataSource={dataToRenderInTable()}
-          pageSize={10}
-        />
+      <div
+        style={{
+          padding: "4px 0",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+        }}
+      >
+        <section style={sectionCardStyle}>
+          <h3 style={sectionHeadingStyle}>Current assigned devices</h3>
+          <ListEquipment />
+        </section>
+        <section style={sectionCardStyle}>
+          <h3 style={sectionHeadingStyle}>Events assigned</h3>
+          {dataToRenderInTable.length === 0 ? (
+            <EmptyState
+              compact
+              icon="tabler:calendar-off"
+              title="No events assigned"
+              description="This staff member has not been assigned to any event yet."
+            />
+          ) : (
+            <BaseTable
+              enablePagination={true}
+              columns={columns}
+              dataSource={dataToRenderInTable}
+              pageSize={10}
+            />
+          )}
+        </section>
       </div>
     );
   }

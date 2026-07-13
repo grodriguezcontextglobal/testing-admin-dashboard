@@ -5,11 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import { BadgeWithDot } from "../../../../components/base/badges/badges";
-import Loading from "../../../../components/animation/Loading";
+import Chip from "../../../../components/UX/Chip/Chip";
+import PageSpinner from "../../../../components/utils/PageSpinner";
 import { usePermission } from "../../../../hooks/usePermission";
 import { onResetStaffProfile } from "../../../../store/slices/staffDetailSlide";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { NewStaffMember } from "../../action/NewStaffMember";
 import RefactoredHeaderUntitledUiReact from "./RefactoredHeaderUntitledUiReact";
@@ -40,12 +39,7 @@ const HeaderStaffDetail = () => {
     };
   }, [profile.activeInCompany]);
 
-  if (eventQuery.isLoading)
-    return (
-      <div style={CenteringGrid}>
-        <Loading />
-      </div>
-    );
+  if (eventQuery.isLoading) return <PageSpinner />;
 
   if (eventQuery.data || eventQuery.isFetched || eventQuery.isRefetching) {
     const filterActiveEventsPerStaffMember = () => {
@@ -93,21 +87,26 @@ const HeaderStaffDetail = () => {
       },
     ];
 
+    const statusChip = canManageStaff ? (
+      <Chip
+        size="small"
+        color={profile.status ? "success" : "default"}
+        label={profile.status ? "Active" : "Inactive"}
+      />
+    ) : null;
+
     const actions = [
-      canManageStaff && (
-        <BadgeWithDot key="status" color={profile.status ? "success" : "gray"}>
-          {profile.status ? "Active" : "Inactive"}
-        </BadgeWithDot>
-      ),
-      <BadgeWithDot
+      <Chip
         key="event"
-        color={activeEvents.length > 0 ? "brand" : "warning"}
-      >
-        {activeEvents.length > 0
-          ? activeEvents.at(-1).eventName
-          : "No active event"}
-      </BadgeWithDot>,
-    ].filter(Boolean);
+        size="small"
+        color={activeEvents.length > 0 ? "info" : "warning"}
+        label={
+          activeEvents.length > 0
+            ? activeEvents.at(-1).eventName
+            : "No active event"
+        }
+      />,
+    ];
 
     return (
       <>
@@ -138,7 +137,10 @@ const HeaderStaffDetail = () => {
             items={breadcrumbItems}
           />
           <Divider style={{ margin: "0 0 16px" }} />
-          <RefactoredHeaderUntitledUiReact actions={actions} />
+          <RefactoredHeaderUntitledUiReact
+            actions={actions}
+            statusChip={statusChip}
+          />
         </div>
         {modalState && (
           <NewStaffMember
