@@ -18,6 +18,7 @@
 .cmdk-panel {
   width: min(640px, 100%);
   max-width: 100%;
+  min-width: 0; /* flex item: allow shrinking below content min-width */
   box-sizing: border-box;
   background: var(--base-white, #fff);
   border: 1px solid var(--gray-200, #ddded6);
@@ -39,6 +40,7 @@
 }
 .cmdk-input {
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
   font-family: Inter, sans-serif;
@@ -96,7 +98,8 @@
 }
 .cmdk-footer {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   padding: 10px 16px;
   border-top: 1px solid var(--gray-200, #ddded6);
   background: var(--gray-25, #fbfbfa);

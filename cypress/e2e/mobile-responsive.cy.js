@@ -17,6 +17,8 @@ const login = () => {
 }
 
 const VIEWPORTS = [
+  { w: 280, h: 847, name: 'Galaxy Fold cover (narrowest real device)' },
+  { w: 282, h: 847, name: 'very small phone' },
   { w: 307, h: 847, name: 'tiny phone' },
   { w: 375, h: 812, name: 'iPhone' },
   { w: 768, h: 1024, name: 'tablet' },
