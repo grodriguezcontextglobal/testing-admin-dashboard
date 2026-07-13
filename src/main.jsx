@@ -13,6 +13,7 @@ import { configureApi } from "./api/devitrakApi.jsx";
 // import { ErrorBoundary } from "react-error-boundary";
 // import { ErrorBoundaryComponent, ErrorLogFetch } from "./components/utils/ErrorBoundaryComponent.jsx";
 import Loading from "./components/animation/Loading.jsx";
+import DevitrakLoading from "./components/animation/DevitrakLoading.jsx";
 import { ConfigProvider } from "antd";
 import EmptyState from "./components/UX/emptyState/EmptyState.jsx";
 

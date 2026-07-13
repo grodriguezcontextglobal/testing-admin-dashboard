@@ -1,3 +1,4 @@
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo } from "react";
 import { useSelector } from "react-redux";
