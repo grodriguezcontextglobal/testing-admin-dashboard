@@ -11,6 +11,7 @@ const adminSlice = createSlice({
       password: undefined,
       company: undefined,
       role: undefined,
+      roleType: undefined,
       imageProfile: undefined,
       rowImageProfile: undefined,
     },
@@ -41,6 +42,7 @@ const adminSlice = createSlice({
         password: "",
         company: "",
         role: "",
+        roleType: "",
         imageProfile: "",
         rowImageProfile: undefined,
       };

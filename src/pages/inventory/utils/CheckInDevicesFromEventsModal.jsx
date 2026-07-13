@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Col, Row, Spin, Tree, Empty, message } from "antd";
+import { Col, Row, Tree, Empty, message } from "antd";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -11,7 +12,6 @@ import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import Input from "../../../components/UX/inputs/Input";
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
-import Loading from "../../../components/animation/Loading";
 import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
 import Chip from "../../../components/UX/Chip/Chip";
 
@@ -312,7 +312,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
         <Row gutter={[16, 16]} align="bottom">
           <Col span={8}>
             {isLoadingLocations ? (
-              <Loading />
+              <DevitrakLoading />
             ) : (
               <SelectComponent
                 label="Location"
@@ -330,7 +330,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
 
           <Col span={8}>
             {isLoadingSubLocations ? (
-              <Loading />
+              <DevitrakLoading />
             ) : (
               itemsToDisplay.length > 0 && (
                 <MultiSelectComponent
@@ -361,7 +361,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
 
           <Col span={8}>
             {isLoadingEvents ? (
-              <Loading />
+              <DevitrakLoading />
             ) : (
               <SelectComponent
                 label="Event"
@@ -412,7 +412,7 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                     alignItems: "center",
                   }}
                 >
-                  <Spin />
+                  <DevitrakLoading />
                 </div>
               ) : treeData?.length > 0 ? (
                 <Tree treeData={treeData} height={280} defaultExpandAll />

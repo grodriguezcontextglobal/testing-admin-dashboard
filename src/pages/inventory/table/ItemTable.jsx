@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
@@ -16,7 +15,7 @@ import {
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -117,9 +116,9 @@ const ItemTable = ({
       devitrakApi.post(`/db_inventory/check-item`, {
         company_id: user.sqlInfo.company_id,
         role: Number(role),
-        preference: employee.preference,
+        preference: employee?.preference,
       }),
-    enabled: !!user.sqlInfo.company_id,
+    enabled: !!user.sqlInfo.company_id && !!employee,
     staleTime: 5 * 60 * 1000, // 50 minutes
     keepPreviousData: true,
   });
@@ -389,7 +388,7 @@ const ItemTable = ({
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

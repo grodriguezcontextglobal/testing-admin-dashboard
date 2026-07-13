@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux";
+import { hasPermission, resolveRoleType } from "../../../../config/roles";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useState } from "react";
@@ -47,14 +48,15 @@ const MainPage = () => {
   });
 
   const navTabs = [
-    { label: "Home", route: "main", permission: [0, 1, 2, 3], id: 0 },
-    { label: "Assign devices", route: "assignment", permission: [0, 1, 2, 3], id: 1 },
-    { label: "Update member info", route: "update-member-information", permission: [0, 1, 2, 3], id: 2 },
-    { label: "Send email reminder", route: "reminders", permission: [0, 1, 2, 3], id: 3 },
+    { label: "Home",                route: "main",                       permission: "nav:members",            id: 0 },
+    { label: "Assign devices",      route: "assignment",                 permission: "member:assign_devices",  id: 1 },
+    { label: "Update member info",  route: "update-member-information",  permission: "member:update",          id: 2 },
+    { label: "Send email reminder", route: "reminders",                  permission: "member:notify",          id: 3 },
   ];
 
+  const roleType = resolveRoleType(user);
   const visibleNavTabs = navTabs.filter(
-    (t) => t.permission.some((p) => p === Number(user.role))
+    (t) => hasPermission(t.permission, roleType)
   );
 
   return (

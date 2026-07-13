@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import Loading from "../../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../../components/animation/DevitrakLoading";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
@@ -100,7 +100,7 @@ const Cash = () => {
   if (listOfDeviceInPool.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (listOfDeviceInPool.data) {

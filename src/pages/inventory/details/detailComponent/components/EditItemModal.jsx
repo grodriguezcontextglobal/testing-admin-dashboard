@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, message, notification } from "antd";
-import { groupBy, orderBy } from "lodash";
+import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
@@ -49,7 +49,6 @@ const EditItemModal = ({
     useState(null);
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [removeImage, setRemoveImage] = useState(null);
-  const [allSerialNumbersOptions, setAllSerialNumbersOptions] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const {
     dicSuppliers,
@@ -91,21 +90,35 @@ const EditItemModal = ({
   });
 
   const editingItemMutation = useMutation({
-    mutationFn: (data) =>
-      devitrakApi.post("/db_item/edit-item", {
-        ...data,
-        company_id: user.sqlInfo.company_id,
-      }),
+    mutationFn: (template) =>
+      devitrakApi.post(
+        "/db_company/update-items-based-on-alphanumeric-serial-number",
+        template,
+      ),
     onSuccess: () => {
-      const template = {
-        item_id: "",
+      queryClient.invalidateQueries({
+        queryKey: ["listOfItemsInStock"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["ItemsInInventoryCheckingQuery"],
+        exact: true,
+        refetchType: "active",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["RefactoredListInventoryCompany"],
+        exact: true,
+        refetchType: "active",
+      });
+
+      const resetTemplate = {
         category_name: "",
         item_group: "",
         cost: "",
         brand: "",
         descript_item: "",
         ownership: "",
-        serial_number: "",
         warehouse: "",
         main_warehouse: "",
         update_at: "",
@@ -118,12 +131,11 @@ const EditItemModal = ({
         container: "",
         containerSpotLimit: "",
         image_url: "",
-        status: "",
         supplier_info: "",
         enableAssignFeature: "",
       };
 
-      Object.keys(template).map((key) => {
+      Object.keys(resetTemplate).map((key) => {
         setValue(key, "");
       });
 
@@ -164,6 +176,40 @@ const EditItemModal = ({
     return [];
   };
 
+  const existingExtraInfoEntries = () => {
+    try {
+      const raw = dataFound[0]?.extra_serial_number;
+      if (!raw) return [];
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!Array.isArray(parsed)) return [];
+      const wrapped = parsed.find(
+        (entry) => entry && typeof entry === "object" && !("keyObject" in entry),
+      );
+      const entries = wrapped
+        ? wrapped[String(dataFound[0].serial_number)]
+        : parsed;
+      return Array.isArray(entries)
+        ? entries.filter((entry) => entry?.keyObject !== "item_id")
+        : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const mergedExtraInfoEntries = () => {
+    const merged = new Map();
+    existingExtraInfoEntries().forEach(({ keyObject, valueObject }) =>
+      merged.set(keyObject, valueObject),
+    );
+    moreInfo.forEach(({ keyObject, valueObject }) =>
+      merged.set(keyObject, valueObject),
+    );
+    return Array.from(merged, ([keyObject, valueObject]) => ({
+      keyObject,
+      valueObject,
+    }));
+  };
+
   const savingNewItem = async (data) => {
     if (
       !data.tax_location ||
@@ -177,32 +223,39 @@ const EditItemModal = ({
     try {
       setLoadingStatus(true);
       const template = {
-        item_id: dataFound[0].item_id,
+        updateAll: false,
+        list: [dataFound[0].serial_number],
         category_name: data.category_name,
         item_group: data.item_group,
         cost: data.cost,
         brand: data.brand,
         descript_item: data.descript_item,
         ownership: data.ownership,
-        serial_number: data.serial_number,
-        warehouse: data.warehouse,
+        warehouse: true,
         main_warehouse: data.tax_location,
         update_at: formatDate(new Date()),
         company: user.company,
         location: data.location,
-        sub_location: subLocationsSubmitted,
         current_location: data.location,
-        extra_serial_number: JSON.stringify(moreInfo),
+        sub_location: JSON.stringify(subLocationsSubmitted),
+        extra_serial_number: JSON.stringify(
+          moreInfo.length > 0
+            ? [{ [dataFound[0].serial_number]: mergedExtraInfoEntries() }]
+            : [],
+        ),
+        company_id: user.sqlInfo.company_id,
         return_date:
           data.ownership === "Rent" ? formatDate(returningDate) : null,
-        container: String(data.container).includes("Yes") ? 1 : 0,
+        returnedRentedInfo: JSON.stringify([]),
+        container: String(data.container).includes("Yes"),
         containerSpotLimit: data.containerSpotLimit,
+        display_item: 1,
+        enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
         image_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-        status: data.status ? data.status : "Operational",
         supplier_info: data.supplier
           ? dicSuppliers.find(([key]) => key === data.supplier)[1]
           : null,
-        enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
+        reference: {},
       };
       return await editingItemMutation.mutateAsync(template);
     } catch (error) {
@@ -339,22 +392,6 @@ const EditItemModal = ({
         }
         setValue(key, value);
         setValue("quantity", 0);
-        const grouping = groupBy(
-          itemsInInventoryQuery?.data?.data?.items,
-          "item_group",
-        );
-        if (grouping[watch("item_group")]) {
-          const dataToRetrieve = orderBy(
-            grouping[watch("item_group")],
-            "serial_number",
-            "asc",
-          );
-          setAllSerialNumbersOptions([
-            ...dataToRetrieve.map((x) => {
-              return x.serial_number;
-            }),
-          ]);
-        }
         if (key === "sub_location") {
           setValue("sub_location", "");
           const checkType =
@@ -434,7 +471,6 @@ const EditItemModal = ({
         <EditItemForm
           acceptImage={acceptAndGenerateImage}
           addingSubLocation={addingSubLocation}
-          allSerialNumbersOptions={allSerialNumbersOptions}
           control={control}
           displayContainerSplotLimitField={displayContainerSplotLimitField}
           displayPreviewImage={displayPreviewImage}

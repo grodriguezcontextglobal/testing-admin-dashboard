@@ -85,6 +85,24 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     );
   };
 
+  const fetchStripeStatusesForPaymentIntents = async (paymentIntentIds) => {
+    await Promise.all(
+      paymentIntentIds
+        .filter((pi) => pi?.length >= 16 && !String(pi).includes("cash"))
+        .map(async (pi) => {
+          try {
+            const res = await devitrakApi.get(`/stripe/payment_intents/${pi}`);
+            const status = res?.data?.paymentIntent?.status;
+            if (status) {
+              setStripeStatusMap((prev) => ({ ...prev, [pi]: status }));
+            }
+          } catch {
+            // skip individual failures
+          }
+        })
+    );
+  };
+
   const fetchingAllTransactionPerConsumerRelatedToEvent = async () => {
     return data;
   };

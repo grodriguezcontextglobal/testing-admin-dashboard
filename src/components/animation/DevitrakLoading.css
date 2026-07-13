@@ -1,0 +1,149 @@
+/* Devitrak branded loading animation
+   Used as a Suspense fallback and for React Query loading states. */
+
+.dv-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  margin: auto;
+}
+
+/* Fullscreen overlay variant (fetch / query loading over the whole view) */
+.dv-loading--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(249, 250, 251, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.dv-loading__mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: dv-breathe 1.8s ease-in-out infinite;
+}
+
+/* Compact variant: bracket mark only, sized to sit inline (e.g. table cells) */
+.dv-loading--small {
+  display: inline-flex;
+  gap: 0;
+  margin: 0;
+}
+.dv-loading--small .dv-loading__mark {
+  gap: 0;
+}
+.dv-loading--small .dv-loading__logo {
+  height: 18px;
+}
+
+/* The bracket mark: main strokes in brand blue, accents in slate */
+.dv-loading__logo {
+  height: 44px;
+  width: auto;
+}
+.dv-loading__logo .dv-logo-main {
+  fill: var(--main-navbar-color, #1e73be);
+}
+.dv-loading__logo .dv-logo-accent {
+  fill: #8a9dad;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.dv-loading__logo .dv-logo-accent--left {
+  animation: dv-pulse-accent 1.8s ease-in-out infinite;
+}
+.dv-loading__logo .dv-logo-accent--right {
+  animation: dv-pulse-accent 1.8s ease-in-out infinite;
+  animation-delay: 0.9s;
+}
+
+/* The wordmark: brand blue, gentle shimmer via opacity sweep */
+.dv-loading__name {
+  height: 22px;
+  width: auto;
+}
+.dv-loading__name path {
+  fill: var(--main-navbar-color, #1e73be);
+  animation: dv-name-shimmer 2.4s ease-in-out infinite;
+}
+
+/* Progress dots */
+.dv-loading__dots {
+  display: flex;
+  gap: 8px;
+}
+.dv-loading__dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--main-navbar-color, #1e73be);
+  animation: dv-dot-bounce 1.2s ease-in-out infinite;
+}
+.dv-loading__dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.dv-loading__dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dv-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes dv-pulse-accent {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes dv-name-shimmer {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes dv-dot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-7px);
+    opacity: 1;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .dv-loading__mark,
+  .dv-loading__logo .dv-logo-accent,
+  .dv-loading__name path,
+  .dv-loading__dots span {
+    animation: none;
+  }
+  .dv-loading__name path {
+    opacity: 1;
+  }
+}

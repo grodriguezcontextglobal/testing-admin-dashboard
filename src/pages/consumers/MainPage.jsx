@@ -212,7 +212,7 @@ const MainPage = () => {
         />
         <div>
           {allConsumersBasedOnEventsPerCompany.isLoading ? (
-            <Loading />
+            <DevitrakLoading />
           ) : (
             <TablesConsumers
               key={componentLocator}

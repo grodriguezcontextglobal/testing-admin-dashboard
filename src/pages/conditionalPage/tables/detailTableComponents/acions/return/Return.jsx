@@ -117,7 +117,7 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
     );
     if (response.data && response.data.ok) {
       return message.success(
-        `Return device success and an email notification sent to ${memberInfo?.email}`
+        `Return device success. An email notification to ${memberInfo?.email} has been queued.`
       );
     }
   };

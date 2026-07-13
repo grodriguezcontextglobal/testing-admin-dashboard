@@ -1,13 +1,11 @@
-import { lazy, Suspense, useRef } from "react";
-import { Navigate, Outlet, Route, Routes } from "react-router";
-import { useSelector } from "react-redux";
-import { PERMISSIONS } from "../../config/roles";
-import Loading from "../../components/animation/Loading";
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router";
+import PermissionGuard from "./PermissionGuard";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import ErrorBoundary from "../../components/utils/ErrorBoundary";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
-import ConsumerConfirmationPayment from "../../pages/consumers/components/ConsumerConfirmationPayment";
 import ChargeAllListDeviceCash from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCash";
 import ChargeAllListDeviceCreditCard from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCreditCard";
 import NewPost from "../../pages/posts/action/NewPost";
@@ -232,15 +230,7 @@ const AssignmentDeviceMembers = lazy(() =>
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
   )
 );
-// Redirects to "/" if the logged-in user's role is not in PERMISSIONS[action].
-const PermissionGuard = ({ action }) => {
-  const { user } = useSelector((state) => state.admin);
-  const allowed = PERMISSIONS[action]?.includes(Number(user.role)) ?? false;
-  return allowed ? <Outlet /> : <Navigate to="/" replace />;
-};
-
 const AuthRoutes = () => {
-  const navbarRef = useRef(null);
   return (
     <div
       style={{
@@ -255,8 +245,8 @@ const AuthRoutes = () => {
       <GlobalCommandMenu />
       <Suspense
         fallback={
-          <div style={CenteringGrid}>
-            <Loading />
+          <div style={{ ...CenteringGrid, minHeight: "60dvh" }}>
+            <DevitrakLoading />
           </div>
         }
       >
@@ -326,20 +316,36 @@ const AuthRoutes = () => {
                 />
               </Route>
               <Route path="/device-quick-glance" element={<DeviceDetail />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/inventory/location" element={<MainPage />} />
-              <Route path="/inventory/group" element={<MainPageGrouping />} />
-              <Route
-                path="/inventory/category_name"
-                element={<MainPageCategory />}
-              />
-              <Route path="/inventory/brand" element={<MainPageBrand />} />
-              <Route
-                path="/inventory/ownership"
-                element={<MainPageOwnership />}
-              />
-              {/* <Route path="/inventory/warehouse" element={<MainPageWarehouse />} /> */}
-              <Route path="/inventory/:id" element={<InventoryDetail />} />
+              {/* Global inventory views — restricted to inventory:read roles
+                  (root_admin, admin, sale_manager, inventory_manager).
+                  event_manager / assistant are blocked here; they only see
+                  location-scoped inventory inside the assignment flows
+                  (events / consumers / member) to know what to assign. */}
+              <Route element={<PermissionGuard action="inventory:read" />}>
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/inventory/location" element={<MainPage />} />
+                <Route path="/inventory/group" element={<MainPageGrouping />} />
+                <Route
+                  path="/inventory/category_name"
+                  element={<MainPageCategory />}
+                />
+                <Route path="/inventory/brand" element={<MainPageBrand />} />
+                <Route
+                  path="/inventory/ownership"
+                  element={<MainPageOwnership />}
+                />
+                {/* <Route path="/inventory/warehouse" element={<MainPageWarehouse />} /> */}
+                <Route path="/inventory/:id" element={<InventoryDetail />} />
+                <Route
+                  path="/inventory/inventory-in-use"
+                  element={<InventoryInUsePage />}
+                />
+                <Route
+                  path="/inventory/advance_search_result"
+                  element={<AdvanceSearchResultPage />}
+                />
+              </Route>
+              {/* Event-creation inventory selection — part of the events flow. */}
               <Route
                 path="/inventory/event-inventory"
                 element={<InventoryEvent />}
@@ -352,14 +358,6 @@ const AuthRoutes = () => {
                   element={<AddNewBulkItems />}
                 />
               </Route>
-              <Route
-                path="/inventory/inventory-in-use"
-                element={<InventoryInUsePage />}
-              />
-              <Route
-                path="/inventory/advance_search_result"
-                element={<AdvanceSearchResultPage />}
-              />
               <Route element={<PermissionGuard action="nav:consumers" />}>
                 <Route path="/consumers" element={<ConsumersMainPage />} />
                 <Route path="/consumers/:id" element={<ConsumerDetail />} />
@@ -382,10 +380,6 @@ const AuthRoutes = () => {
                 <Route
                   path="/consumers/:id/charge-all-lost-devices/credit_card"
                   element={<ChargeAllListDeviceCreditCard />}
-                />
-                <Route
-                  path="/consumers/:id/payment-confirmation"
-                  element={<ConsumerConfirmationPayment />}
                 />
               </Route>
               <Route path="/staff" element={<Staff />} />

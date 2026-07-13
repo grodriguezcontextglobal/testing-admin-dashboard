@@ -1,0 +1,178 @@
+{
+  "consumer": {
+    "uid": "test-consumer-event-001",
+    "id": "test-consumer-event-001",
+    "name": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "phoneNumber": "+15551234567",
+    "data": { "notes": [], "profile_picture": null }
+  },
+
+  "transactionList": {
+    "ok": true,
+    "list": [
+      {
+        "_id": "txn-authorized-001",
+        "paymentIntent": "pi_authorized001",
+        "device": [
+          {
+            "serialNumber": "SN-TAB-001",
+            "deviceType": "Tablet",
+            "status": "In-use",
+            "deviceNeeded": 1
+          }
+        ],
+        "stripeResponse": {
+          "id": "pi_authorized001",
+          "status": "requires_capture",
+          "amount": 10000,
+          "currency": "usd",
+          "created": 1748649600
+        },
+        "consumerInfo": {
+          "uid": "test-consumer-event-001",
+          "name": "John",
+          "lastName": "Doe",
+          "email": "john.doe@example.com"
+        },
+        "type": "authorized",
+        "eventSelected": "Test Event 2025",
+        "company": "test-company-id",
+        "active": true,
+        "dateTimestamp": 1748649600
+      },
+      {
+        "_id": "txn-cash-001",
+        "paymentIntent": "cash-pi-001",
+        "device": [
+          {
+            "serialNumber": "SN-TAB-002",
+            "deviceType": "Tablet",
+            "status": "Returned",
+            "deviceNeeded": 1
+          }
+        ],
+        "stripeResponse": null,
+        "consumerInfo": {
+          "uid": "test-consumer-event-001",
+          "name": "John",
+          "lastName": "Doe",
+          "email": "john.doe@example.com"
+        },
+        "type": "cash",
+        "eventSelected": "Test Event 2025",
+        "company": "test-company-id",
+        "active": true,
+        "dateTimestamp": 1748563200
+      }
+    ]
+  },
+
+  "transactionListEmpty": {
+    "ok": true,
+    "list": []
+  },
+
+  "assignedDevices": {
+    "ok": true,
+    "listOfReceivers": [
+      {
+        "_id": "dev-assigned-001",
+        "serialNumber": "SN-TAB-001",
+        "deviceType": "Tablet",
+        "status": "In-use",
+        "paymentIntent": "pi_authorized001",
+        "user": "john.doe@example.com",
+        "eventSelected": "Test Event 2025",
+        "company": "test-company-id"
+      }
+    ]
+  },
+
+  "assignedDevicesEmpty": {
+    "ok": true,
+    "listOfReceivers": []
+  },
+
+  "returnedDevices": {
+    "ok": true,
+    "listOfReceivers": [
+      {
+        "_id": "dev-returned-001",
+        "serialNumber": "SN-TAB-002",
+        "deviceType": "Tablet",
+        "status": "Returned",
+        "paymentIntent": "cash-pi-001",
+        "user": "john.doe@example.com",
+        "eventSelected": "Test Event 2025",
+        "company": "test-company-id"
+      }
+    ]
+  },
+
+  "returnedDevicesEmpty": {
+    "ok": true,
+    "listOfReceivers": []
+  },
+
+  "receiverByTransaction": {
+    "ok": true,
+    "listOfReceivers": [
+      {
+        "_id": "dev-assigned-001",
+        "serialNumber": "SN-TAB-001",
+        "deviceType": "Tablet",
+        "status": "In-use",
+        "paymentIntent": "pi_authorized001"
+      }
+    ]
+  },
+
+  "receiverByTransactionEmpty": {
+    "ok": true,
+    "listOfReceivers": []
+  },
+
+  "signatures": {
+    "ok": true,
+    "list": [
+      {
+        "_id": "sig-001",
+        "paymentIntent": "pi_authorized001",
+        "signerName": "John Doe",
+        "acceptance": true,
+        "timestamp": "2025-06-01T10:00:00Z",
+        "eventSelected": "Test Event 2025"
+      }
+    ]
+  },
+
+  "signaturesEmpty": {
+    "ok": true,
+    "list": []
+  },
+
+  "captureDepositSuccess": {
+    "ok": true,
+    "paymentIntent": { "id": "pi_authorized001", "status": "succeeded", "amount_received": 10000 }
+  },
+
+  "releaseDepositSuccess": {
+    "ok": true,
+    "paymentIntent": { "id": "pi_authorized001", "status": "canceled" }
+  },
+
+  "deviceReturnSuccess": {
+    "ok": true
+  },
+
+  "createTransactionSuccess": {
+    "ok": true,
+    "transaction": {
+      "_id": "txn-new-001",
+      "paymentIntent": "pi_new001",
+      "type": "authorized"
+    }
+  }
+}

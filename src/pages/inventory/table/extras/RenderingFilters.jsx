@@ -1,5 +1,5 @@
 import { Grid, OutlinedInput } from "@mui/material";
-import { PERMISSIONS } from "../../../../config/roles";
+import { hasPermission } from "../../../../config/roles";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, message, Switch } from "antd";
 import { PropTypes } from "prop-types";
@@ -139,9 +139,7 @@ const RenderingFilters = ({
     Resale: "For resale",
   };
   const { isAdmin } = useStaffRoleAndLocations();
-  const canManageLocation =
-    Number(user.role) === 0 ||
-    PERMISSIONS["inventory:manage_location"]?.includes(Number(user.role));
+  const canManageLocation = hasPermission("inventory:manage_location", user.roleType);
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>

@@ -1,4 +1,3 @@
-import { Spin } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -27,7 +26,7 @@ const VerificationDetailsTable = ({
   if (queryResult?.isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
-        <Spin tip="Loading verification documents..." />
+        <DevitrakLoading />
       </div>
     );
   }
@@ -293,7 +292,7 @@ function ListEquipment() {
             const queryResult = verificationMap[verificationId];
             const allSigned = queryResult?.data?.allSigned;
 
-            if (queryResult?.isLoading) return <Spin size="small" />;
+            if (queryResult?.isLoading) return <DevitrakLoading size="small" />;
             return renderStatusBadge(!!allSigned);
           },
         },

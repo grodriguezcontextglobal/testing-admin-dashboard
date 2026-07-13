@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, Typography } from "antd";
 import { PropTypes } from "prop-types";
 import { useMemo } from "react";

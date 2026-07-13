@@ -1,0 +1,10 @@
+node_modules
+dist
+.env*
+!.env.dev.example
+.git
+.gitignore
+cypress/videos
+cypress/screenshots
+coverage
+*.log

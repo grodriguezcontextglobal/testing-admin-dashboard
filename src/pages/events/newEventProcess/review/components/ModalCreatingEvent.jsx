@@ -1,4 +1,4 @@
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { DevitrakLogo } from "../../../../../components/icons/DevitrakLogo";
 import { DevitrakName } from "../../../../../components/icons/DevitrakName";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
@@ -43,7 +43,7 @@ const ModalCreatingEventInProgress = ({ openEndingEventModal }) => {
             margin: "0 0 1rem",
           }}
         >
-          <Loading />
+          <DevitrakLoading />
           <div style={{ width: "100%", textAlign: "left" }}>
             <h4 style={{ ...TextFontSize20LineHeight30, width: "100%" }}>
               Creating event...

@@ -1,6 +1,7 @@
 import { Alert } from "antd";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { isCoordinatorLevel } from "../../../config/roles";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import TourModal from "../utils/TourModal";
@@ -27,18 +28,14 @@ import DocumentInventoryXLSXUpload from "../../../components/documents/DocumentI
  */
 const AddInventoryFromXLSXFile = ({ openModal, closeModal }) => {
   const [tourModal, setTourModal] = useState(false);
-  const { role, locations } = useSelector(state => state.permission)
+  const { roleType, locations } = useSelector((state) => state.permission);
   const canCreate = useMemo(() => {
-    if (role === "0") {
-      return true;
-    }
+    if (isCoordinatorLevel(roleType)) return true;
     if (Array.isArray(locations)) {
-      return locations.some(
-        (location) => location.assign || location.create || location.update
-      );
+      return locations.some((loc) => loc.can_create || loc.can_update);
     }
     return false;
-  }, [role, locations]);
+  }, [roleType, locations]);
 
   const closingModal = () => {
     return closeModal(false);

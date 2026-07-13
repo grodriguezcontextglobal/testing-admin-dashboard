@@ -1,12 +1,19 @@
 import { Grid } from "@mui/material";
+import { jwtDecode } from "jwt-decode";
 import { useQueryClient } from "@tanstack/react-query";
-import { Select, Spin, message, notification } from "antd";
+import { Select, message, notification } from "antd";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import {
+  clearSessionStorage,
+  persistCompanyHeaders,
+} from "../../../api/sessionHeaders";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import dicRole from "../../../components/general/dicRole";
+import { isAssistant } from "../../../config/roles";
+import { buildSetPermissionsPayload } from "../utils/loginUtils";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -67,6 +74,8 @@ const ModalMultipleCompanies = ({
     try {
       setIsLoading(true);
       localStorage.setItem("admin-token", dataPassed.respo.token);
+      const _decoded = jwtDecode(dataPassed.respo.token);
+      if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
       await devitrakApiAdmin.patch(`/profile/${dataPassed.respo.uid}`, {
         online: true,
       });
@@ -82,13 +91,28 @@ const ModalMultipleCompanies = ({
           company_name: selection,
         },
       );
+      const rawCompanyData = companyInfoTable.data.companies;
+      const companyRecord = Array.isArray(rawCompanyData)
+        ? rawCompanyData.at(-1)
+        : checkArray(rawCompanyData?.company);
+      if (!companyRecord?.company_id) {
+        throw new Error("Company SQL record not found. Please contact support.");
+      }
+      localStorage.setItem("s-company-lq", companyRecord.company_id);
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: checkArray(companyInfoTable.data.companies).company_id,
+        company_id: companyRecord.company_id,
       });
 
-      const employeeRoleBasedOnCompany = findingCompanyInfoBasedOnSelection(
-        selection,
-      ).employees.find((item) => item.user === dataPassed.respo.email).role;
+      const selectedCompanyData = findingCompanyInfoBasedOnSelection(selection);
+      const selectedCompanySQL = dataPassed.companyInfo.find(
+        (item) => item.company === selection,
+      );
+
+      // Set the company-scoped default headers for subsequent requests.
+      persistCompanyHeaders({
+        companyId: selectedCompanyData?.id,
+        companySqlId: companyRecord.company_id,
+      });
 
       dispatch(
         onLogin({
@@ -100,32 +124,28 @@ const ModalMultipleCompanies = ({
           lastName: dataPassed.respo.lastName,
           uid: dataPassed.respo.uid,
           email: dataPassed.respo.email,
-          role: employeeRoleBasedOnCompany,
+          role: selectedCompanySQL.role,
+          roleType: selectedCompanySQL.roleType,
           phone: dataPassed.respo.phone,
           company: selection,
-          companyData: findingCompanyInfoBasedOnSelection(selection),
+          companyData: selectedCompanyData,
           token: dataPassed.respo.token,
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
-            ...checkArray(companyInfoTable.data.companies),
+            ...companyRecord,
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,
         }),
       );
-      const employeeInfo = findingCompanyInfoBasedOnSelection(selection,).employees.find((item) => item.user === dataPassed.respo.email)
-            dispatch(setPermissions({
-              role:employeeInfo.role,
-              companyName:findingCompanyInfoBasedOnSelection(selection).company_name,
-              locations:employeeInfo.preference.managerLocation,
-            }))
-      
+      dispatch(setPermissions(buildSetPermissionsPayload(selectedCompanySQL)));
+
       setIsLoading(false);
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
-      navigate(`${Number(employeeRoleBasedOnCompany) === 4 ? "/events" : "/"}`);
+      navigate(isAssistant(selectedCompanySQL.roleType) ? "/events" : "/");
       // }
     } catch (error) {
       console.log(
@@ -148,12 +168,12 @@ const ModalMultipleCompanies = ({
     const result = dataPassed.company_data.filter(
       (item) => item.company_name === props,
     );
-    const employeeRoleInCompany = result[0]?.employees.find(
+    const employeeRoleInCompany = result[0]?.employees?.find(
       (item) => item.user === dataPassed.respo.email,
     );
     return {
-      company_logo: result[0]?.company_logo,
-      employeeRoleInCompany: employeeRoleInCompany?.role,
+      company_logo: result[0]?.company_logo ?? "",
+      employeeRoleInCompany: employeeRoleInCompany?.roleType,
     };
   };
 
@@ -176,13 +196,13 @@ const ModalMultipleCompanies = ({
       dispatch(onResetHelpers());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      localStorage.removeItem("admin-token", "");
+      clearSessionStorage();
       dispatch(onLogout());
     }
   };
 
   const handleCancel = async () => {
-    localStorage.removeItem("admin-token");
+    clearSessionStorage();
     await logout();
     setOpenMultipleCompanies(false);
   };
@@ -287,7 +307,7 @@ const ModalMultipleCompanies = ({
           }}
           onChange={handleChange}
           options={[
-            ...dataPassed.companyInfo.map((item) => ({
+            ...dataPassed.companyInfo.filter((item) => item.company).map((item) => ({
               value: item.company,
               label: (
                 <p
@@ -307,8 +327,7 @@ const ModalMultipleCompanies = ({
                       objectPosition: "center",
                     }}
                     src={
-                      renderingExtraCompanyInfo(item.company).company_logo
-                        .length > 0
+                      renderingExtraCompanyInfo(item.company).company_logo?.length > 0
                         ? renderingExtraCompanyInfo(item.company).company_logo
                         : "https://res.cloudinary.com/dsuynhcgd/image/upload/c_thumb,w_200,g_face/v1738169822/material-symbols--enterprise-outline_vmmi7y.svg"
                     }
@@ -337,8 +356,8 @@ const ModalMultipleCompanies = ({
                   >
                     {
                       dicRole[
-                        renderingExtraCompanyInfo(item.company)
-                          .employeeRoleInCompany
+                      renderingExtraCompanyInfo(item.company)
+                        .employeeRoleInCompany
                       ]
                     }
                   </span>
@@ -369,7 +388,7 @@ const ModalMultipleCompanies = ({
           />
         </div>
 
-        {isLoading && <Spin indicator={<Loading />} fullscreen />}
+        {isLoading && <DevitrakLoading fullscreen />}
       </Grid>
     );
   };

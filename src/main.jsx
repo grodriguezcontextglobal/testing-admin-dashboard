@@ -108,5 +108,5 @@ function AppLoader() {
     configureApi().then(() => setConfigured(true));
   }, []);
 
-  return configured ? <App /> : <Loading />;
+  return configured ? <App /> : <DevitrakLoading />;
 }

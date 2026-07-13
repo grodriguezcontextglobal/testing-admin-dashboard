@@ -48,7 +48,7 @@ const Remainders = () => {
       emailNotificationProfile
     );
     if (resp.data.ok) {
-      openNotificationWithIcon("Success", "Email sent!", "Email was sent");
+      openNotificationWithIcon("Success", "Email queued!", "Email will be sent shortly");
       // Reset form fields and local state to original defaults
       reset();
       setMessage("");

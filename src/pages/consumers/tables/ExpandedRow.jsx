@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Space, Spin, message } from "antd";
+import { Space, message } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import Lost from "../../../components/icons/credit-card-x_whitebase.svg";
 import ReverseRightArrow from "../../../components/icons/reverse-right.svg";
 import { checkArray } from "../../../components/utils/checkArray";
@@ -559,7 +559,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           rowRecord={rowRecord}
         />
       )}
-      {actionInProgress && <Spin indicator={<Loading />} fullscreen />}
+      {actionInProgress && <DevitrakLoading fullscreen />}
     </div>
   );
 };

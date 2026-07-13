@@ -27,7 +27,6 @@ const MainPage = () => {
     }
   }, [location.state]);
   const [deleteModalState, setDeleteModalState] = useState(false);
-  const { user } = useSelector((state) => state.admin);
   const canManageStaff = usePermission("staff:create");
 
   return (
@@ -67,9 +66,6 @@ const MainPage = () => {
           margin={"12px 0 0.5rem"}
           item
           xs={12}
-          sm={12}
-          md={12}
-          lg={12}
         >
           <OutlinedInput
             {...register("searchAdmin")}
@@ -90,6 +86,7 @@ const MainPage = () => {
           />
         </Grid>
       </Grid>
+
       {modalState && (
         <NewStaffMember
           modalState={modalState}

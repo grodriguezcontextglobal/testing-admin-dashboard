@@ -1,0 +1,51 @@
+name: Publish Dev Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Solo reconstruir cuando cambien las dependencias, no el código fuente.
+      # Los cambios de código fuente llegan a los devs vía git pull + hot-reload.
+      - package.json
+      - package-lock.json
+      - Dockerfile.dev
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: grodriguezcontextglobal/devitrak-client-dev
+
+jobs:
+  build-and-push:
+    name: Build & push dev image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.dev
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          # Cache entre builds: usa la capa de dependencias del push anterior
+          # para evitar npm ci completo en cada ejecución.
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max

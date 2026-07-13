@@ -6,32 +6,51 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
 import Input from "../../../../../components/UX/inputs/Input";
+import Label from "../../../../../components/UX/inputs/Label";
+import {
+  EMPTY_SINGLE_MEMBER_FORM,
+  buildSingleMemberPayload,
+  validateSingleMemberForm,
+} from "../../../utils/singleMemberUtils";
+
+const fieldWrapper = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "6px",
+  width: "100%",
+};
+
+const gridTwoCol = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "16px",
+};
+
+const optionalHint = {
+  fontFamily: "Inter",
+  fontSize: "12px",
+  fontWeight: 400,
+  color: "var(--gray-500, #667085)",
+};
+
+const errorCaption = {
+  fontSize: "12px",
+  fontFamily: "Inter",
+  color: "var(--error, #B42318)",
+  display: "block",
+};
 
 const Single = ({ closingModal }) => {
   const { user } = useSelector((state) => state.admin);
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    address_street: "",
-    address_city: "",
-    address_state: "",
-    address_zip: "",
+    ...EMPTY_SINGLE_MEMBER_FORM,
     company_id: user.sqlInfo.company_id,
-    minor: false,
-    parent_guardian_first_name: "",
-    parent_guardian_last_name: "",
-    parent_guardian_email: "",
-    parent_guardian_phone_number: "",
   });
   const [errors, setErrors] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      company_id: user.sqlInfo.company_id,
-    }));
+    setForm((prev) => ({ ...prev, company_id: user.sqlInfo.company_id }));
   }, [user.sqlInfo.company_id]);
 
   const update = (key) => (e) => {
@@ -41,231 +60,138 @@ const Single = ({ closingModal }) => {
   };
 
   const clear = () => {
-    setForm({
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      address_street: "",
-      address_city: "",
-      address_state: "",
-      address_zip: "",
-      company_id: user.sqlInfo.company_id,
-      minor: false,
-      parent_guardian_first_name: "",
-      parent_guardian_last_name: "",
-      parent_guardian_email: "",
-      parent_guardian_phone_number: "",
-    });
+    setForm({ ...EMPTY_SINGLE_MEMBER_FORM, company_id: user.sqlInfo.company_id });
     setErrors([]);
   };
 
   const handleSubmit = async () => {
+    const errs = validateSingleMemberForm(form);
+    if (errs.length) return setErrors(errs);
     try {
-      const combinedAddress = `${form.address_street}, ${form.address_city}, ${form.address_state} ${form.address_zip}`;
-
-      const errs = [];
-      if (!form.first_name) errs.push("First name is required.");
-      if (!form.last_name) errs.push("Last name is required.");
-      if (!form.email) errs.push("Email is required.");
-      if (!form.phone) errs.push("Phone is required.");
-      if (form.minor) {
-        if (!form.parent_guardian_first_name)
-          errs.push("Guardian first name is required for minors.");
-        if (!form.parent_guardian_last_name)
-          errs.push("Guardian last name is required for minors.");
-        if (!form.parent_guardian_email)
-          errs.push("Guardian email is required for minors.");
-        if (!form.parent_guardian_phone_number)
-          errs.push("Guardian phone number is required for minors.");
-      }
-
-      if (errs.length) {
-        setErrors(errs);
-        return;
-      }
-
-      const payload = {
-        ...form,
-        address: combinedAddress,
-      };
-
-      const fetching = await devitrakApi.post("/db_member/new-member", payload);
+      setSaving(true);
+      const fetching = await devitrakApi.post(
+        "/db_member/new-member",
+        buildSingleMemberPayload(form)
+      );
       if (fetching.data) {
         clear();
         closingModal(false);
       }
     } catch (error) {
       setErrors([error.message || "An unexpected error occurred."]);
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontWeight: "bold" }}>
-            First Name <span style={{ color: "red" }}>*</span>
-          </span>
-          <Input
-            
-            value={form.first_name}
-            onChange={update("first_name")}
-            required
-          />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontWeight: "bold" }}>
-            Last Name <span style={{ color: "red" }}>*</span>
-          </span>
-          <Input
-            
-            value={form.last_name}
-            onChange={update("last_name")}
-            required
-          />
-        </label>
-
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontWeight: "bold" }}>
-            Email <span style={{ color: "red" }}>*</span>
-          </span>
-          <Input
-            
-            type="email"
-            value={form.email}
-            onChange={update("email")}
-            required
-          />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontWeight: "bold" }}>
-            Phone <span style={{ color: "red" }}>*</span>
-          </span>
-          <Input
-            
-            value={form.phone}
-            onChange={update("phone")}
-            required
-          />
-        </label>
-
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>
-            Street{" "}
-            <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
-          </span>
-          <Input
-            
-            value={form.address_street}
-            onChange={update("address_street")}
-          />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>
-            City{" "}
-            <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
-          </span>
-          <Input
-            
-            value={form.address_city}
-            onChange={update("address_city")}
-          />
-        </label>
-
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>
-            State{" "}
-            <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
-          </span>
-          <Input
-            
-            value={form.address_state}
-            onChange={update("address_state")}
-          />
-        </label>
-        <label style={{ display: "flex", flexDirection: "column" }}>
-          <span>
-            Zip{" "}
-            <span style={{ color: "gray", fontSize: "0.9em" }}>(Optional)</span>
-          </span>
-          <Input
-            
-            value={form.address_zip}
-            onChange={update("address_zip")}
-          />
-        </label>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={gridTwoCol}>
+        <div style={fieldWrapper}>
+          <Label>First name *</Label>
+          <Input value={form.first_name} onChange={update("first_name")} required />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>Last name *</Label>
+          <Input value={form.last_name} onChange={update("last_name")} required />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>Email *</Label>
+          <Input type="email" value={form.email} onChange={update("email")} required />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>Phone *</Label>
+          <Input value={form.phone} onChange={update("phone")} required />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>
+            Street <span style={optionalHint}>(Optional)</span>
+          </Label>
+          <Input value={form.address_street} onChange={update("address_street")} />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>
+            City <span style={optionalHint}>(Optional)</span>
+          </Label>
+          <Input value={form.address_city} onChange={update("address_city")} />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>
+            State <span style={optionalHint}>(Optional)</span>
+          </Label>
+          <Input value={form.address_state} onChange={update("address_state")} />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>
+            Zip <span style={optionalHint}>(Optional)</span>
+          </Label>
+          <Input value={form.address_zip} onChange={update("address_zip")} />
+        </div>
       </div>
+
       <FormControlLabel
-      control={<CheckboxReusableComponent name="minor" checked={form.minor} onChange={update("minor")} />}
-        // control={<Checkbox checked={form.minor} onChange={update("minor")} />}
+        control={
+          <CheckboxReusableComponent
+            name="minor"
+            checked={form.minor}
+            onChange={update("minor")}
+          />
+        }
         label="Is the member a minor?"
       />
 
       {form.minor && (
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 12,
-            border: "1px solid #ccc",
-            borderRadius: 4,
-            padding: 12,
-            marginTop: 12,
+            ...gridTwoCol,
+            border: "1px solid var(--gray-200, #EAECF0)",
+            borderRadius: "12px",
+            padding: "16px",
+            background: "var(--gray-50, #F9FAFB)",
           }}
         >
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: "bold" }}>
-              Guardian&lsquo;s First Name <span style={{ color: "red" }}>*</span>
-            </span>
+          <div style={fieldWrapper}>
+            <Label>Guardian&apos;s first name *</Label>
             <Input
-              
               value={form.parent_guardian_first_name}
               onChange={update("parent_guardian_first_name")}
               required
             />
-          </label>
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: "bold" }}>
-              Guardian&lsquo;s Last Name <span style={{ color: "red" }}>*</span>
-            </span>
+          </div>
+          <div style={fieldWrapper}>
+            <Label>Guardian&apos;s last name *</Label>
             <Input
-              
               value={form.parent_guardian_last_name}
               onChange={update("parent_guardian_last_name")}
               required
             />
-          </label>
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: "bold" }}>
-              Guardian&lsquo;s Email <span style={{ color: "red" }}>*</span>
-            </span>
+          </div>
+          <div style={fieldWrapper}>
+            <Label>Guardian&apos;s email *</Label>
             <Input
-              
               type="email"
               value={form.parent_guardian_email}
               onChange={update("parent_guardian_email")}
               required
             />
-          </label>
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: "bold" }}>
-              Guardian&lsquo;s Phone <span style={{ color: "red" }}>*</span>
-            </span>
+          </div>
+          <div style={fieldWrapper}>
+            <Label>Guardian&apos;s phone *</Label>
             <Input
-              
               value={form.parent_guardian_phone_number}
               onChange={update("parent_guardian_phone_number")}
               required
             />
-          </label>
+          </div>
         </div>
       )}
 
       {errors.length > 0 && (
-        <div style={{ color: "crimson", marginTop: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           {errors.map((e, i) => (
-            <div key={i}>{e}</div>
+            <span key={i} style={errorCaption}>
+              {e}
+            </span>
           ))}
         </div>
       )}
@@ -273,13 +199,27 @@ const Single = ({ closingModal }) => {
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
-          gap: 8,
-          marginTop: 12,
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "12px",
+          paddingTop: "16px",
+          borderTop: "1px solid var(--gray-200, #EAECF0)",
         }}
       >
-        <GrayButtonComponent func={clear} title="Clear" />
-        <BlueButtonComponent func={handleSubmit} title="Create Member" />
+        <GrayButtonComponent
+          title="Clear"
+          func={clear}
+          buttonType="reset"
+          styles={{ width: "100%" }}
+          disabled={saving}
+        />
+        <BlueButtonComponent
+          title="Create member"
+          func={handleSubmit}
+          styles={{ width: "100%" }}
+          isDisabled={saving}
+          isLoading={saving}
+        />
       </div>
     </div>
   );

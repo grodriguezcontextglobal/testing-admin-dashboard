@@ -1,11 +1,11 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Select, Spin, Tooltip } from "antd";
+import { Avatar, Select, Tooltip } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import { QuestionIcon } from "../../../components/icons/QuestionIcon";
 import { StripeCheckoutElementFromConsumerPage } from "../../../components/stripe/elements/StripeCheckoutElementFromConsumerPage";
@@ -531,7 +531,7 @@ const ModalAssignDeviceInEvent = ({
             }
           />
         </div>
-        {isLoadingState && <Spin indicator={<Loading />} fullscreen />}
+        {isLoadingState && <DevitrakLoading fullscreen />}
         {clientSecret !== "" && (
           <div style={{ width: "100%", margin: "20px 0px" }}>
             <StripeCheckoutElementFromConsumerPage

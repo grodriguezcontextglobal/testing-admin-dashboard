@@ -2,6 +2,7 @@ import { notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import { clearSessionStorage } from "../../api/sessionHeaders";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
 import { onResetCustomer } from "../../store/slices/customerSlice";
@@ -16,7 +17,7 @@ import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import { persistor } from "../../store/Store";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import Loading from "../animation/Loading";
+import DevitrakLoading from "../animation/DevitrakLoading";
 import { useEffect } from "react";
 
 const RedirectionPage = () => {
@@ -46,7 +47,7 @@ const RedirectionPage = () => {
     dispatch(onResetHelpers());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
-    localStorage.removeItem("admin-token", "");
+    clearSessionStorage();
     dispatch(onLogout());
     return navigate("/login");
   };
@@ -56,7 +57,7 @@ useEffect(() => {
 
   return (
     <div style={CenteringGrid}>
-      <Loading />
+      <DevitrakLoading />
       {contextHolder}
       {location.pathname === "/register/company-setup" &&
         setTimeout(() => {

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 
 const CategoryInventory = lazy(

@@ -18,6 +18,7 @@ import { bulkItemInsertAlphanumericWithEventCheck } from "./components/BulkRente
 import "../../../../../styles/global/ant-select.css";
 import "../../../../../styles/global/reactInput.css";
 import "./style.css";
+import { isCoordinatorLevel } from "../../../../../config/roles";
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 
@@ -27,8 +28,8 @@ const FormDeviceTrackingMethod = ({
   setDisplayFormToCreateCategory,
   eventInfoDetail,
 }) => {
-  const { role } = useSelector((state) => state.permission);
-  const options = role === "0" ? ["Permanent", "Rent"] : ["Rent"];
+  const { roleType } = useSelector((state) => state.permission);
+  const options = isCoordinatorLevel(roleType) ? ["Permanent", "Rent"] : ["Rent"];
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),

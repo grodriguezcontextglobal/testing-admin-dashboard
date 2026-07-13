@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "company": [
+    {
+      "_id": "test-company-id",
+      "id": "test-company-id",
+      "company_name": "Test Company",
+      "employees": [
+        {
+          "user": "alice@test.com",
+          "firstName": "Alice",
+          "lastName": "Johnson",
+          "role": "1",
+          "active": true,
+          "status": "Active",
+          "super_user": false
+        },
+        {
+          "user": "bob@test.com",
+          "firstName": "Bob",
+          "lastName": "Smith",
+          "role": "2",
+          "active": true,
+          "status": "Active",
+          "super_user": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,55 +1,51 @@
-/* eslint-disable no-useless-escape */
-import { useCallback, useMemo, useState, useEffect } from "react";
-import { Select } from "antd";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 import { read, utils } from "xlsx";
+import { devitrakApi } from "../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import { devitrakApi } from "../../../../../api/devitrakApi";
-import { useSelector } from "react-redux";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
+import { validateAndNormalizeRows } from "../../../utils/xlsxImportUtils";
 
-// Helper to normalize header names to snake_case
-const normalizeHeader = (key) =>
-  String(key || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/-+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
-
-// Map various header variants to target schema keys
-const headerAliasMap = {
-  "first name": ["first_name", "firstname", "first"],
-  "last name": ["last_name", "lastname", "last"],
-  email: ["email", "e_mail"],
-  phone: ["phone", "phone_number", "phonenumber", "mobile"],
-  "external id": ["external_id", "external id", "id"],
-  address: ["address", "addr"],
-  street: ["address_street", "street", "addr_street", "addres_street"],
-  city: ["address_city", "city", "addr_city"],
-  state: ["address_state", "state", "addr_state", "province"],
-  zip: ["address_zip", "zip", "zip_code", "zipcode", "postal_code"],
-  minor: ["minor", "is_minor"],
-  "parent guardian first name": [
-    "parent_guardian_first_name",
-    "guardian_first_name",
-  ],
-  "parent guardian last name": [
-    "parent_guardian_last_name",
-    "guardian_last_name",
-  ],
-  "parent guardian email": ["parent_guardian_email", "guardian_email"],
-  "parent guardian phone number": [
-    "parent_guardian_phone_number",
-    "guardian_phone",
-  ],
+const sectionText = {
+  fontFamily: "Inter",
+  fontSize: "14px",
+  fontWeight: 400,
+  color: "var(--gray-600, #475467)",
+  margin: 0,
 };
 
-const resolveKey = (normalizedKey) => {
-  for (const target in headerAliasMap) {
-    if (headerAliasMap[target].includes(normalizedKey)) return target;
-  }
-  return null;
+const cellStyle = {
+  fontFamily: "Inter",
+  fontSize: "12px",
+  fontWeight: 400,
+  color: "var(--gray-600, #475467)",
 };
+
+const columns = [
+  { title: "First Name", dataIndex: "first_name", key: "first_name" },
+  { title: "Last Name", dataIndex: "last_name", key: "last_name" },
+  { title: "Email", dataIndex: "email", key: "email", responsive: ["lg"] },
+  { title: "Phone", dataIndex: "phone", key: "phone", responsive: ["lg"] },
+  { title: "External ID", dataIndex: "external_id", key: "external_id", responsive: ["lg"] },
+  { title: "Address", dataIndex: "address", key: "address", responsive: ["lg"] },
+  {
+    title: "Minor",
+    dataIndex: "minor",
+    key: "minor",
+    render: (minor) => (minor ? "Yes" : "No"),
+  },
+  {
+    title: "Guardian",
+    key: "guardian",
+    responsive: ["lg"],
+    render: (_, r) =>
+      `${r.parent_guardian_first_name} ${r.parent_guardian_last_name}`.trim(),
+  },
+].map((c) => ({
+  ...c,
+  render: c.render || ((v) => <span style={cellStyle}>{v}</span>),
+}));
 
 const MultipleFromXLSX = ({ companyId = null }) => {
   const [fileName, setFileName] = useState("");
@@ -59,92 +55,6 @@ const MultipleFromXLSX = ({ companyId = null }) => {
   const [importing, setImporting] = useState(false);
   const { user } = useSelector((state) => state.admin);
 
-  const requiredCore = useMemo(
-    () => ["first name", "last name", "email", "phone"],
-    []
-  );
-
-  const validateAndNormalize = useCallback(
-    (inputRows) => {
-      const errs = [];
-      const normalized = [];
-      const detectedSet = new Set();
-
-      inputRows.forEach((row, idx) => {
-        const normalizedRow = {};
-
-        Object.entries(row).forEach(([k, v]) => {
-          const nk = normalizeHeader(k);
-          const target = resolveKey(nk);
-          if (target) {
-            normalizedRow[target] = v;
-            detectedSet.add(target);
-          }
-        });
-
-        const missingCore = requiredCore.filter((k) => !normalizedRow[k]);
-        if (missingCore.length) {
-          errs.push(
-            `Row ${idx + 1}: missing required field(s): ${missingCore.join(
-              ", "
-            )}`
-          );
-        }
-
-        const isMinor = /true|1|yes/i.test(String(normalizedRow.minor));
-        if (isMinor) {
-          if (!normalizedRow["parent guardian first name"])
-            errs.push(`Row ${idx + 1}: Guardian first name is required for minors.`);
-          if (!normalizedRow["parent guardian last name"])
-            errs.push(`Row ${idx + 1}: Guardian last name is required for minors.`);
-          if (!normalizedRow["parent guardian email"])
-            errs.push(`Row ${idx + 1}: Guardian email is required for minors.`);
-          if (!normalizedRow["parent guardian phone number"])
-            errs.push(
-              `Row ${idx + 1}: Guardian phone number is required for minors.`
-            );
-        }
-
-        const hasParts = ["street", "city", "state", "zip"].every((k) =>
-          Boolean(normalizedRow[k])
-        );
-
-        const out = {
-          first_name: normalizedRow["first name"] || "",
-          last_name: normalizedRow["last name"] || "",
-          email: normalizedRow.email || "",
-          phone: normalizedRow.phone || "",
-          external_id: String(normalizedRow["external id"] || ""),
-          address:
-            normalizedRow.address ||
-            (hasParts
-              ? `${normalizedRow.street}, ${normalizedRow.city}, ${normalizedRow.state} ${normalizedRow.zip}`
-              : ""),
-          address_street: normalizedRow.street || "",
-          address_city: normalizedRow.city || "",
-          address_state: normalizedRow.state || "",
-          address_zip: normalizedRow.zip || "",
-          company_id: user?.sqlInfo?.company_id || companyId,
-          minor: isMinor,
-          parent_guardian_first_name:
-            normalizedRow["parent guardian first name"] || "",
-          parent_guardian_last_name:
-            normalizedRow["parent guardian last name"] || "",
-          parent_guardian_email: normalizedRow["parent guardian email"] || "",
-          parent_guardian_phone_number:
-            normalizedRow["parent guardian phone number"] || "",
-        };
-
-        normalized.push(out);
-      });
-
-      setErrors(errs);
-      setColumnsDetected(Array.from(detectedSet));
-      setRows(normalized);
-    },
-    [companyId, requiredCore, user?.sqlInfo?.company_id]
-  );
-
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -152,10 +62,15 @@ const MultipleFromXLSX = ({ companyId = null }) => {
     try {
       const buf = await file.arrayBuffer();
       const wb = read(buf, { type: "array" });
-      const wsName = wb.SheetNames[0];
-      const ws = wb.Sheets[wsName];
+      const ws = wb.Sheets[wb.SheetNames[0]];
       const json = utils.sheet_to_json(ws, { defval: "" });
-      validateAndNormalize(json);
+      const result = validateAndNormalizeRows(
+        json,
+        user?.sqlInfo?.company_id || companyId
+      );
+      setErrors(result.errors);
+      setColumnsDetected(result.columnsDetected);
+      setRows(result.rows);
     } catch (err) {
       setErrors([`Failed to read file: ${err?.message || String(err)}`]);
       setRows([]);
@@ -187,52 +102,42 @@ const MultipleFromXLSX = ({ companyId = null }) => {
     }
   };
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(rows.length / pageSize)),
-    [rows, pageSize]
-  );
-  const pagedRows = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return rows.slice(start, start + pageSize);
-  }, [rows, page, pageSize]);
-
-  const goPrev = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
-  const goNext = useCallback(
-    () => setPage((p) => Math.min(totalPages, p + 1)),
-    [totalPages]
-  );
-  const onPageSizeChange = useCallback((val) => {
-    setPageSize(parseInt(val, 10) || 10);
-    setPage(1);
-  }, []);
-
-  useEffect(() => {
-    setPage(1);
-  }, [rows]);
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", flex: 1, alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          flexWrap: "wrap",
+          border: "1px solid var(--gray-200, #EAECF0)",
+          borderRadius: "12px",
+          padding: "12px 16px",
+          background: "var(--gray-50, #F9FAFB)",
+        }}
+      >
         <input
           type="file"
           accept=".xlsx,.xls,.csv"
           onChange={handleFileChange}
+          style={{ fontFamily: "Inter", fontSize: "14px" }}
         />
-        {fileName && <span>{fileName}</span>}
+        {fileName && <span style={sectionText}>{fileName}</span>}
         <GrayButtonComponent
           func={handleClear}
           style={{ marginLeft: "auto", width: "fit-content" }}
           title="Clear"
+          size="sm"
         />
       </div>
 
       <div>
-        <div>Mandatory columns:</div>
-        <ul>
-          <li>first name, last name, email, phone</li>
-          <li>
+        <p style={{ ...sectionText, fontWeight: 600, color: "var(--gray-700, #344054)" }}>
+          Mandatory columns
+        </p>
+        <ul style={{ margin: "4px 0 0", paddingLeft: "20px" }}>
+          <li style={sectionText}>first name, last name, email, phone</li>
+          <li style={sectionText}>
             If minor is true, guardian first name, last name, email, and phone
             are required.
           </li>
@@ -240,119 +145,61 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       </div>
 
       {columnsDetected.length > 0 && (
-        <div>
-          <div>Detected columns: {columnsDetected.join(", ")}</div>
-        </div>
+        <p style={sectionText}>Detected columns: {columnsDetected.join(", ")}</p>
       )}
 
       {errors.length > 0 && (
-        <div style={{ color: "crimson" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           {errors.map((e, i) => (
-            <div key={i}>{e}</div>
+            <span
+              key={i}
+              style={{ ...cellStyle, color: "var(--error, #B42318)" }}
+            >
+              {e}
+            </span>
           ))}
         </div>
       )}
 
       {rows.length > 0 && (
         <div>
-          <div
+          <p
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 8,
+              ...sectionText,
+              fontWeight: 600,
+              color: "var(--gray-900, #101828)",
+              marginBottom: "8px",
             }}
           >
-            <strong>Preview ({rows.length} rows)</strong>
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span>Rows per page</span>
-              <Select
-                value={pageSize}
-                onChange={onPageSizeChange}
-                options={[
-                  { value: 5, label: "5" },
-                  { value: 10, label: "10" },
-                  { value: 20, label: "20" },
-                  { value: 50, label: "50" },
-                ]}
-                size="small"
-                style={{ minWidth: 100 }}
-              />
-            </label>
-            <div
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <BlueButtonComponent
-                title="Prev"
-                func={goPrev}
-                disabled={page === 1}
-              />
-              <span>
-                Page {page} / {totalPages}
-              </span>
-              <BlueButtonComponent
-                title={"Next"}
-                func={goNext}
-                disabled={page === totalPages}
-              />
-            </div>
-          </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th>First Name</th>
-                  <th>Last Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>External ID</th>
-                  <th>Address</th>
-                  <th>Minor</th>
-                  <th>Guardian Name</th>
-                  <th>Guardian Email</th>
-                  <th>Guardian Phone</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedRows.map((r, i) => (
-                  <tr key={i}>
-                    <td style={{ borderTop: "1px solid #ddd" }}>{r.first_name}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>{r.last_name}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>{r.email}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>{r.phone}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>{r.external_id}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>{r.address}</td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.minor ? "Yes" : "No"}
-                    </td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.parent_guardian_first_name} {r.parent_guardian_last_name}
-                    </td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.parent_guardian_email}
-                    </td>
-                    <td style={{ borderTop: "1px solid #ddd" }}>
-                      {r.parent_guardian_phone_number}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            Preview ({rows.length} row{rows.length !== 1 ? "s" : ""})
+          </p>
+          <BaseTable
+            style={{ width: "100%" }}
+            dataSource={rows.map((r, i) => ({ ...r, key: i }))}
+            columns={columns}
+            rowClassName="editable-row"
+            className="table-ant-customized"
+            enablePagination={true}
+            pageSize={5}
+          />
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "12px",
+          paddingTop: "16px",
+          borderTop: "1px solid var(--gray-200, #EAECF0)",
+        }}
+      >
         <BlueButtonComponent
-          disabled={!rows.length || importing}
-          loadingState={importing}
+          isDisabled={!rows.length || importing}
+          isLoading={importing}
           func={handleImport}
           title="Import"
+          styles={{ width: "fit-content" }}
         />
       </div>
     </div>

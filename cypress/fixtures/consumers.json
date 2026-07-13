@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "result": {
+    "totalConsumers": 2,
+    "activeTransactions": 1,
+    "inactiveTransactions": 1,
+    "total": 2,
+    "totalConsumersFromEvents": 1,
+    "lease": 1,
+    "usersList": [
+      {
+        "_id": "consumer001",
+        "id": "consumer001",
+        "name": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "phoneNumber": "+15551234567",
+        "uid": "uid-001",
+        "totalDeviceRequested": 2,
+        "totalEventsActive": 1,
+        "event_providers": [],
+        "data": { "notes": [] }
+      },
+      {
+        "_id": "consumer002",
+        "id": "consumer002",
+        "name": "Jane",
+        "lastName": "Smith",
+        "email": "jane.smith@example.com",
+        "phoneNumber": "+15555678901",
+        "uid": "uid-002",
+        "totalDeviceRequested": 0,
+        "totalEventsActive": 0,
+        "event_providers": [],
+        "data": { "notes": [] }
+      }
+    ]
+  }
+}

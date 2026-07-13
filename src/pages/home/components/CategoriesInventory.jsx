@@ -31,7 +31,7 @@ const CategoryInventory = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

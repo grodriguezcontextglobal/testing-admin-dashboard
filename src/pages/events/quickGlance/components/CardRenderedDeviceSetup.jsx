@@ -1,6 +1,6 @@
 import { Switch, Tooltip } from "antd";
 import { lazy, Suspense, useMemo, useState } from "react";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ReusableCardWithHeaderAndFooter from "../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
@@ -64,7 +64,7 @@ const CardRendered = ({ props, title, onChange, loadingStatus, database }) => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

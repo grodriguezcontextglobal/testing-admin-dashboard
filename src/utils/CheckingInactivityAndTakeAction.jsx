@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom"; // Assuming you're using react-router
 import { onLogout } from "../store/slices/adminSlice";
 import { devitrakApi } from "../api/devitrakApi";
+import { clearSessionStorage } from "../api/sessionHeaders";
 import { onResetArticleEdited } from "../store/slices/articleSlide";
 import { onResetCustomer } from "../store/slices/customerSlice";
 import { onResetDeviceInQuickGlance, onResetDevicesHandle } from "../store/slices/devicesHandleSlice";
@@ -55,7 +56,7 @@ const InactivityLogout = ({ children }) => {
     dispatch(onResetHelpers());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
-    localStorage.removeItem("admin-token", "");
+    clearSessionStorage();
     dispatch(onLogout());
     openNotification();
     return navigate("/login");

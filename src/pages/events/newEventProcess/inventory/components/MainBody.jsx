@@ -3,10 +3,8 @@ import { Select } from "antd";
 import { useState } from "react";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
 import Services from "../extra/Services";
@@ -17,9 +15,7 @@ import BannerReusableComponentUntitleUI from "../../../../../components/UX/banne
 
 const MainBody = ({
   AddingEventCreated,
-  FormDeviceTrackingMethod,
   assignAllDevices,
-  displayFormToCreateCategory,
   eventInfoDetail,
   extraServiceAdded,
   filled,
@@ -32,20 +28,17 @@ const MainBody = ({
   onChange,
   removeItemSelected,
   removeServiceAdded,
-  // renderingStyle,
   selectedItem,
   selectOptions,
   setAssignAllDevices,
-  setDisplayFormToCreateCategory,
-  setSelectedItem,
+  // setSelectedItem,
   setValue,
   staff,
   triggerAddingAdminStaff,
   register,
   handleSubmit,
 }) => {
-  const { isAdmin, locationsCreatePermission, locationsAssignPermission } =
-    useStaffRoleAndLocations();
+  const { isAdmin, locationsAssignPermission } = useStaffRoleAndLocations();
   const [openDrawer, setOpenDrawer] = useState(
     locationsAssignPermission.length === 0,
   );
@@ -53,165 +46,78 @@ const MainBody = ({
     <Grid
       container
       display={"flex"}
-      justifyContent={"center"}
-      alignItems={"center"}
+      // justifyContent={"center"}
+      // alignItems={"flex-start"}
+      selfAlign={"flex-start"}
       key={"settingUp-deviceList-event"}
+      height={"100%"}
     >
       {triggerAddingAdminStaff && <AddingEventCreated />}
-      {!displayFormToCreateCategory && (
-        <>
-          {" "}
-          <Grid
-            style={{
-              borderRadius: "8px",
-              border: "1px solid var(--gray300, #D0D5DD)",
-              background: "var(--gray100, #F2F4F7)",
-              padding: "24px",
-              width: "100%",
-            }}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <InputLabel
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Typography
-                textTransform="none"
-                style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
-              >
-                Select from existing inventory
-              </Typography>
-              <RefreshButton propsFn={handleRefresh} />
-            </InputLabel>
-            <Select
-              className="custom-autocomplete"
-              showSearch
-              placeholder="Search item to add to inventory."
-              optionFilterProp="children"
-              style={{ ...AntSelectorStyle, width: "100%" }}
-              onChange={onChange}
-              options={selectOptions}
-              disabled={!isAdmin && locationsAssignPermission.length === 0}
-            />
-            {openDrawer && !isAdmin && locationsAssignPermission.length === 0 && (
-              <BannerReusableComponentUntitleUI
-                title="Permission Denied"
-                description="You do not have permissions to take this action. Contact administrator"
-                linkText=""
-                linkHref="#"
-                onDismiss={() => setOpenDrawer(false)}
-              />
-            )}
-            {eventInfoDetail.merchant ? (
-              <MerchantService
-                assignAllDevices={assignAllDevices}
-                setAssignAllDevices={setAssignAllDevices}
-                handleAddingNewItemToDeviceSetupEvent={
-                  handleAddingNewItemToDeviceSetupEvent
-                }
-                register={register}
-                handleSubmit={handleSubmit}
-              />
-            ) : (
-              <NoMerchantService
-                assignAllDevices={assignAllDevices}
-                setAssignAllDevices={setAssignAllDevices}
-                handleAddingNewItemToDeviceSetupEvent={
-                  handleAddingNewItemToDeviceSetupEvent
-                }
-                register={register}
-                handleSubmit={handleSubmit}
-              />
-            )}
-            <SelectedItemsRendered
-              selectedItem={selectedItem}
-              removeItemSelected={removeItemSelected}
-            />
-          </Grid>
-        </>
-      )}{" "}
-      <InputLabel
+      <Grid
         style={{
+          borderRadius: "8px",
+          border: "1px solid var(--gray300, #D0D5DD)",
+          background: "var(--gray100, #F2F4F7)",
+          padding: "24px",
           width: "100%",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          margin: "2rem auto 0.5rem",
         }}
+        item
+        xs={12}
+        sm={12}
+        md={12}
+        lg={12}
       >
-        <Typography
-          textTransform="none"
-          style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
-          color="var(--gray600)"
+        <InputLabel
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
-          Add new inventory for company
-        </Typography>
-      </InputLabel>
-      <Typography
-        style={{
-          ...Subtitle,
-          wordWrap: "break-word",
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-        }}
-      >
-        Use this section to create new company inventory that can be used in
-        this event. Inventory created here is classified as Rental equipment
-        (not owned company equipment) and will be available to be assigned to
-        the event. If you need to create owned company inventory, please go to
-        the Inventory page, add the new owned inventory there, and then assign
-        it to this event.
-      </Typography>
-      {/* 
-        Permission Check Logic:
-        1. isAdmin (role === "0") has global permission.
-        2. locationsCreatePermission.length > 0 means the user has 'create' permission in at least one location.
-        The button is shown if either condition is true.
-      */}
-      {(isAdmin || locationsCreatePermission.length > 0) && (
-        <LightBlueButtonComponent
-          title={
-            displayFormToCreateCategory
-              ? "Close form for new inventory"
-              : "Add new category or group"
-          }
-          buttonType="button"
-          func={() =>
-            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
-          }
-          styles={{ width: "100%", margin: "1rem auto" }}
+          <Typography
+            textTransform="none"
+            style={{ ...TextFontSize20LineHeight30, fontWeight: 600 }}
+          >
+            Select from existing inventory
+          </Typography>
+          <RefreshButton propsFn={handleRefresh} />
+        </InputLabel>
+        <Select
+          className="custom-autocomplete"
+          showSearch
+          placeholder="Search item to add to inventory."
+          optionFilterProp="children"
+          style={{ ...AntSelectorStyle, width: "100%" }}
+          onChange={onChange}
+          options={selectOptions}
         />
-      )}
-      {displayFormToCreateCategory && (
-        <FormDeviceTrackingMethod
-          // existingData={optionsToRenderInSelector()}
+        {eventInfoDetail.merchant ? (
+          <MerchantService
+            assignAllDevices={assignAllDevices}
+            setAssignAllDevices={setAssignAllDevices}
+            handleAddingNewItemToDeviceSetupEvent={
+              handleAddingNewItemToDeviceSetupEvent
+            }
+            register={register}
+            handleSubmit={handleSubmit}
+          />
+        ) : (
+          <NoMerchantService
+            assignAllDevices={assignAllDevices}
+            setAssignAllDevices={setAssignAllDevices}
+            handleAddingNewItemToDeviceSetupEvent={
+              handleAddingNewItemToDeviceSetupEvent
+            }
+            register={register}
+            handleSubmit={handleSubmit}
+          />
+        )}
+        <SelectedItemsRendered
           selectedItem={selectedItem}
-          setSelectedItem={setSelectedItem}
-          setDisplayFormToCreateCategory={setDisplayFormToCreateCategory}
-          eventInfoDetail={eventInfoDetail}
+          removeItemSelected={removeItemSelected}
         />
-      )}
-      {
-        displayFormToCreateCategory && <LightBlueButtonComponent
-          title={"Close form for new inventory"}
-          buttonType="button"
-          func={() =>
-            setDisplayFormToCreateCategory(!displayFormToCreateCategory)
-          }
-          styles={{ width: "100%", margin: "1rem auto" }}
-        />
-
-      }
+      </Grid>
       {/* other services component */}
       {eventInfoDetail.merchant && (
         <Services
@@ -225,7 +131,7 @@ const MainBody = ({
       <Grid
         style={{
           width: "100%",
-          display: `${displayFormToCreateCategory ? "none" : "flex"}`,
+          display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           gap: "0.5rem",
@@ -244,7 +150,7 @@ const MainBody = ({
             staff.adminUser.length === 0
           }
           func={() => navigate("/create-event-page/review-submit")}
-          styles={{ width: "100%" }}
+          styles={{ width: "100%", maxHeight:"35px" }}
         />}
         {!filled && <BlueButtonComponent
           title={"Next step"}

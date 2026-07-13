@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -142,7 +142,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

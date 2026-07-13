@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { checkArray } from "../../../components/utils/checkArray";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { groupBy } from "lodash";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { Button, Table } from "antd";
@@ -89,7 +89,7 @@ const LeasesTable = () => {
   if (itemsInInventoryQuery.isLoading && listImagePerItemQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (itemsInInventoryQuery.data && listImagePerItemQuery.data) {
@@ -224,7 +224,7 @@ const LeasesTable = () => {
     )
       return (
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       );
     if (

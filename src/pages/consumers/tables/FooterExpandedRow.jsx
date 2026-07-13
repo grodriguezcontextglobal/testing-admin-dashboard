@@ -1,10 +1,10 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { message, Spin } from "antd";
+import { message } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 // import Lost from "../../../components/icons/credit-card-x.svg";
 // import ReverseRightArrow from "../../../components/icons/flip-forward.svg";
 // import PaymentIcon from "../../../components/icons/paymentIcon";
@@ -506,7 +506,7 @@ const FooterExpandedRow = ({
         rowHoverable={false}
         style={{ width: "100%", padding: 0 }}
       />
-      {isLoadingState && <Spin indicator={<Loading />} fullscreen />}
+      {isLoadingState && <DevitrakLoading fullscreen />}
       {expressCheckoutModal && (
         <ExpressCheckoutItems
           openReturnDeviceBulkModal={expressCheckoutModal}

@@ -8,13 +8,18 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Checkbox, notification, Typography } from "antd";
+import { jwtDecode } from "jwt-decode";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import {
+  clearSessionStorage,
+  persistCompanyHeaders,
+} from "../../api/sessionHeaders";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import FooterComponent from "../../components/general/FooterComponent";
 // import HidenIcon from "../../components/icons/HidenIcon";
 // import VisibleIcon from "../../components/icons/VisibleIcon";
@@ -46,6 +51,11 @@ import MFA from "./login/sections/MFA";
 import Password from "./login/sections/Password";
 import "./style/authStyle.css";
 import { setPermissions } from "../../store/slices/permissions";
+import {
+  buildActiveCompaniesFromSQL,
+  buildSetPermissionsPayload,
+  extractStaffId,
+} from "./utils/loginUtils";
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
@@ -138,7 +148,7 @@ const Login = () => {
 
   const navigateUserBasedOnRole = useCallback(
     async (props) => {
-      if (Number(props.role) === 4) {
+      if (props.roleType === "assistant") {
         try {
           const response = await devitrakApi.post("/event/event-list", {
             "staff.headsetAttendees.email": props.email,
@@ -167,16 +177,12 @@ const Login = () => {
   const loginIntoOneCompanyAccount = async ({ props }) => {
     try {
       localStorage.setItem("admin-token", props.respo.token);
+      const _decoded = jwtDecode(props.respo.token);
+      if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
       const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
         `/profile/${props.respo.uid}`,
         {
           online: true,
-        },
-      );
-      const respoFindMemberInfo = await devitrakApi.post(
-        "/db_staff/consulting-member",
-        {
-          email: props.email,
         },
       );
       const companyInfoTable = await devitrakApi.post(
@@ -185,8 +191,22 @@ const Login = () => {
           company_name: props.company_name,
         },
       );
+      const rawCompanyData = companyInfoTable.data.companies;
+      const companyRecord = Array.isArray(rawCompanyData)
+        ? rawCompanyData.at(-1)
+        : checkArray(rawCompanyData?.company);
+      if (!companyRecord?.company_id) {
+        throw new Error("Company SQL record not found. Please contact support.");
+      }
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
-        company_id: checkArray(companyInfoTable.data.company).company_id,
+        company_id: companyRecord.company_id,
+      });
+      console.log("company info sql", companyRecord);
+      console.log("company info nosql", props.company_data);
+      // Set the company-scoped default headers for subsequent requests.
+      persistCompanyHeaders({
+        companyId: props.company_data?.[0]?.id,
+        companySqlId: companyRecord.company_id,
       });
       dispatch(
         onLogin({
@@ -199,36 +219,42 @@ const Login = () => {
           uid: props.respo.uid,
           email: props.respo.email,
           role: props.role,
+          roleType: props.roleType,
           phone: props.respo.phone,
           company: props.company_name,
           token: props.respo.token,
           online: updatingOnlineStatusResponse.data.entire.online,
           companyData: props.company_data[0],
-          sqlMemberInfo: checkArray(respoFindMemberInfo.data.member),
+          sqlMemberInfo: props.sqlMemberInfo,
           sqlInfo: {
-            ...checkArray(companyInfoTable.data.company),
+            ...companyRecord,
             stripeID: checkArray(stripeSQL.data.stripe),
           },
           preference: props.respo.entire.preference,
           subscription: {},
         }),
       );
-      const employeeInfo = props.company_data[0].employees.find(emp => emp.user === props.respo.email)
-      dispatch(setPermissions({
-        role: employeeInfo.role,
-        companyName: props.company_data[0].company_name,
-        locations: employeeInfo.preference.managerLocation,
-      }))
+      dispatch(setPermissions(buildSetPermissionsPayload({
+        company: props.company_name,
+        role: props.role,
+        roleType: props.roleType,
+        locations: props.locations,
+      })));
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
       await navigateUserBasedOnRole({
-        role: props.role,
+        roleType: props.roleType,
         email: props.email,
       });
     } catch (error) {
       console.error("loginIntoOneCompanyAccount", error);
+      const errorMsg = error?.response?.data?.msg ?? error.message;
+      clearSessionStorage();
+      openNotificationWithIcon("error", errorMsg);
+      dispatch(onLogout("Incorrect credentials"));
+      dispatch(onAddErrorMessage(errorMsg));
     }
   };
 
@@ -273,8 +299,7 @@ const Login = () => {
         mfaCode: data.mfaCode,
       };
 
-      // Parallel API calls for better performance
-      const [loginResponse, companyResponse] = await Promise.all([
+      const [loginResponse, mongoCompanyResponse] = await Promise.all([
         devitrakApiAdmin.post("/login", {
           email: loginData.email,
           password: loginData.password,
@@ -282,30 +307,51 @@ const Login = () => {
           forceLogin: forceLogin,
           mfaCode: loginData.mfaCode,
         }),
-        devitrakApi.post("/company/search-company", {
-          "employees.user": loginData.email,
-        }),
+        devitrakApi.post("/company/search-company", { "employees.user": loginData.email }),
       ]);
 
-      if (!loginResponse.data || !companyResponse.data) {
+      if (!loginResponse.data) {
         throw new Error("Authentication failed");
       }
 
-      // Check if email exists in company employees
-      if (!companyResponse.data || companyResponse.data.company.length === 0) {
+      if (!mongoCompanyResponse.data || mongoCompanyResponse.data.company.length === 0) {
         throw new Error("Email not found in any company");
       }
 
-      const activeCompanies = await processCompanyData(
-        loginData.email,
-        companyResponse.data.company,
+
+      const tokenHeaders = {
+        headers: {
+          "x-token": loginResponse.data.token,
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache",
+        },
+      };
+
+      // 1. Get staff_id first — this endpoint does NOT need sqlStaffId
+      const staffMemberResponse = await devitrakApi.post(
+        "/db_staff/consulting-member",
+        { email: loginData.email });
+      const staffId = extractStaffId(staffMemberResponse.data);
+      if (staffId) localStorage.setItem("s-token-lq", String(staffId));
+
+      // 2. Now call companies with sqlStaffId available
+      const sqlCompaniesResponse = await devitrakApi.get("/db_staff/companies", {
+        headers: {
+          ...tokenHeaders.headers,
+          ...(staffId ? { sqlStaffId: String(staffId) } : {}),
+        },
+      });
+
+      const activeCompanies = buildActiveCompaniesFromSQL(
+        sqlCompaniesResponse.data.companies ?? [],
       );
 
       if (activeCompanies.length > 1) {
         await handleMulitpleCompanyLogin({
           ...loginData,
           companyInfo: activeCompanies,
-          company_data: companyResponse.data.company,
+          company_data: mongoCompanyResponse.data.company,
+          sqlMemberInfo: checkArray(staffMemberResponse.data.member),
           respo: loginResponse.data,
         });
       } else if (activeCompanies.length === 1) {
@@ -315,7 +361,10 @@ const Login = () => {
             password: loginData.password,
             company_name: activeCompanies[0].company,
             role: activeCompanies[0].role,
-            company_data: companyResponse.data.company,
+            roleType: activeCompanies[0].roleType,
+            locations: activeCompanies[0].locations,
+            company_data: mongoCompanyResponse.data.company,
+            sqlMemberInfo: checkArray(staffMemberResponse.data.member),
             respo: loginResponse.data,
           },
         });
@@ -333,6 +382,19 @@ const Login = () => {
         responseData?.mfa_required ||
         responseData?.error === "mfa_required" ||
         responseData?.msg === "mfa_required";
+
+      // 401 on the companies endpoint means the token lacks sqlStaffId (legacy token).
+      // Skip this handler if it's an MFA-required 401 from the login endpoint itself.
+      if (error.response?.status === 401 && !isMfaRequired) {
+        clearSessionStorage();
+        dispatch(onLogout());
+        setCurrentStep("email");
+        openNotificationWithIcon(
+          "error",
+          "Session expired or token is outdated. Please log in again.",
+        );
+        return;
+      }
 
       if (
         (error.response?.status === 403 || error.response?.status === 401) &&
@@ -374,6 +436,7 @@ const Login = () => {
         return; // Stay on MFA step
       }
 
+      clearSessionStorage();
       dispatch(onLogout("Incorrect credentials"));
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
 
@@ -387,23 +450,6 @@ const Login = () => {
       dispatch(clearErrorMessage());
     }
   };
-
-  const processCompanyData = useCallback(async (email, companies) => {
-    const activeCompanies = companies.reduce((acc, item) => {
-      const userInfo = item.employees.find(
-        (element) => element.user === email && element.active,
-      );
-      if (userInfo) {
-        acc.push({
-          company: item.company_name,
-          role: userInfo.role,
-        });
-      }
-      return acc;
-    }, []);
-
-    return activeCompanies;
-  }, []);
 
   // Function to go back to email step
   const handleBackToEmail = () => {
@@ -471,7 +517,7 @@ const Login = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

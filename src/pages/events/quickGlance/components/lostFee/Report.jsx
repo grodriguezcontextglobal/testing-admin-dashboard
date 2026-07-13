@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { lazy, Suspense, useEffect, useState } from "react";
 import "../../../../../styles/global/ant-table.css";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
 const ReportDetailModal = lazy(() => import("./ReportDetailModal"));
 
@@ -85,7 +85,7 @@ const Report = () => {
       <Suspense
         fallback={
           <div style={CenteringGrid}>
-            <Loading />
+            <DevitrakLoading />
           </div>
         }
       >

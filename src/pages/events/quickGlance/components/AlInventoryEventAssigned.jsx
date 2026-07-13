@@ -1,6 +1,7 @@
 import { Grid } from "@mui/material";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { isAssistant } from "../../../../config/roles";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
 import { RightSingleChevronIcon } from "../../../../components/icons/RightSingleChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
@@ -83,7 +84,7 @@ const AllInventoryEventForCustomerOnly = ({
             justifyContent: "space-between",
             alignItems: "center",
             gap: "10px",
-            display: user.role === "4" ? "none" : "flex",
+            display: isAssistant(user.roleType) ? "none" : "flex",
             margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
           }}
         >
@@ -98,7 +99,7 @@ const AllInventoryEventForCustomerOnly = ({
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
-              display: user.role === "4" ? "none" : "flex",
+              display: isAssistant(user.roleType) ? "none" : "flex",
               margin: showInventoryTypes ? "0px" : 0, //"0 0 5dvh 0"
             }}
             titleStyles={{
@@ -111,7 +112,7 @@ const AllInventoryEventForCustomerOnly = ({
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
-              display: user.role === "4" ? "none" : "flex",
+              display: isAssistant(user.roleType) ? "none" : "flex",
               margin: showInventoryTypes ? "auto" : 0, //"0 0 5dvh 0"
             }}
             title={"Update services"}
@@ -122,7 +123,7 @@ const AllInventoryEventForCustomerOnly = ({
               width: "fit-content",
               justifyContent: "space-between",
               alignItems: "center",
-              display: user.role === "4" ? "none" : "flex",
+              display: isAssistant(user.roleType) ? "none" : "flex",
               margin: showInventoryTypes ? "auto" : 0, //"0 0 5dvh 0"
             }}
             title={"Update inventory"}

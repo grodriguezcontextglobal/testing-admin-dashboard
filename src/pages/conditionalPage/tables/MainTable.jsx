@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import BaseTable from "../../../components/UX/tables/BaseTable";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
@@ -200,7 +200,7 @@ const MainTable = ({ state }) => {
         leftCta={<RefreshButton propsFn={() => membersDataQuery.refetch()} />}
       />
       {membersDataQuery.isLoading ? (
-        <Loading />
+        <DevitrakLoading />
       ) : (
         <BaseTable
           style={{ width: "100%", cursor: "pointer", ...tableStyle }}

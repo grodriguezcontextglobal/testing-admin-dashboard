@@ -6,11 +6,21 @@ import {
   List
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
+import {
+  Calendar,
+  Home as HomeLine,
+  Newspaper,
+  Package,
+  User,
+  UserCog,
+  Users,
+} from "lucide-react";
 import pkg from "prop-types";
 import { forwardRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import { clearSessionStorage } from "../../api/sessionHeaders";
 import { persistor } from "../../store/Store";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
@@ -31,6 +41,7 @@ import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 // import { ProfileIcon } from "../icons/ProfileIcon";
+import { hasPermission, resolveRoleType } from "../../config/roles";
 import Input from "../UX/inputs/Input";
 import { CircleDeleteIcon } from "../icons/CircleDeleteIcon";
 import MenuIcon from "../icons/MenuIcon";
@@ -41,6 +52,7 @@ import colorMark from "../../assets/maskable_icon_white_background.png";
 import DevitrakWordmark from "../icons/DevitrakWordmark";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
+import MobileSidebarNav from "./component/MobileSidebarNav";
 import "./style/style.css";
 const { PropTypes } = pkg;
 // Same icons as the command menu navigation group (tabler set)
@@ -55,62 +67,14 @@ const NAV_ICONS = {
 };
 
 const navItems = [
-  {
-    title: "home",
-    route: "/",
-    permission: [0, 1, 2, 3],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "inventory",
-    route: "/inventory",
-    permission: [0, 1, 2],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "events",
-    route: "/events",
-    permission: [0, 1, 2, 3, 4],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "consumers",
-    route: "/consumers",
-    permission: [0, 1],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "Posts",
-    route: "/posts",
-    permission: [0, 1, 2, 3],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: "staff",
-    route: "/staff",
-    permission: [0, 1, 2, 3],
-    mobile: true,
-    desktop: true,
-  },
-  {
-    title: 0,
-    route: 0,
-    permission: [0, 1, 2, 3, 4],
-    mobile: false,
-    desktop: true,
-  },
-  {
-    title: "profile",
-    route: "/profile/my_details",
-    permission: [0, 1, 2, 3, 4],
-    mobile: true,
-    desktop: false,
-  },
+  { title: "home", route: "/", permission: "nav:home", mobile: true, desktop: true, icon: HomeLine },
+  { title: "inventory", route: "/inventory", permission: "nav:inventory", mobile: true, desktop: true, icon: Package },
+  { title: "events", route: "/events", permission: "nav:events", mobile: true, desktop: true, icon: Calendar },
+  { title: "consumers", route: "/consumers", permission: "nav:consumers", mobile: true, desktop: true, icon: Users },
+  { title: "Posts", route: "/posts", permission: "nav:posts", mobile: true, desktop: true, icon: Newspaper },
+  { title: "staff", route: "/staff", permission: "nav:staff", mobile: true, desktop: true, icon: UserCog },
+  { title: 0, route: 0, permission: "nav:dynamic_section", mobile: false, desktop: true, icon: Users },
+  { title: "profile", route: "/profile/my_details", permission: "nav:profile", mobile: true, desktop: false, icon: User },
 ];
 
 // million-ignore — Million's block compiler broke event handlers in this
@@ -142,7 +106,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     dispatch(onResetHelpers());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
-    localStorage.removeItem("admin-token", "");
+    clearSessionStorage();
     dispatch(onLogout());
     return navigate("/login");
   };
@@ -350,7 +314,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           >
             <NavLink
               key={"devitrakName"}
-              to={`${Number(user.role) === 4 ? "/events" : "/"}`}
+              to={getHomeRoute(resolveRoleType(user))}
               style={{ margin: "0 16px 0 0", width: "fit-content", padding: 0 }}
             >
               <DevitrakLogo />
@@ -358,11 +322,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </NavLink>
 
             {navItems.map((item) => {
-              if (
-                item.permission.some(
-                  (element) => element === Number(user.role) && item.desktop,
-                )
-              ) {
+              if (hasPermission(item.permission, resolveRoleType(user)) && item.desktop) {
                 if (item.route === 0) {
                   return (
                     <ConditionalButton
@@ -429,45 +389,64 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             margin: 0,
           }}
         >
-          {showSearch && (
-            <form
-              style={{
-                margin: "0 5px 0 0",
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-              onSubmit={handleSearch}
-              method="get"
-              action="/search-result-page?search="
-            >
-              <Input
-                placeholder="Search"
-                required
-                style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
-                onChange={(e) => onChange(e)}
-                name={"searchValue"}
-                value={searchValue}
-                fullWidth
-                autoFocus
-                endAdornment={<button style={{
-                  outline: "none",
-                  border: "transparent",
-                  margin: 0,
-                  padding: "4.5px",
-                  backgroundColor: "#0040C1", display: showSearch && searchValue?.length > 0 ? "flex" : "none",
-                  borderRadius:"25%",
-                  width:"25px",
-                  height:"25px",
-                }} type="submit">
-                  <SendIcon size="15" stroke="#fff" strokeWidth="2.5" />
-                </button>
-                }
-              />
-            </form>
-          )}
-          {showSearch && searchValue?.length > 0 && (
+          {/* {showSearch && ( */}
+          <form
+            style={{
+              margin: "0 5px 0 0",
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+            onSubmit={handleSearch}
+            method="get"
+            action="/search-result-page?search="
+            id="search-form"
+          >
+            <Input
+              placeholder="Search"
+              required
+              style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
+              onChange={(e) => onChange(e)}
+              name={"searchValue"}
+              value={searchValue}
+              fullWidth
+              autoFocus
+            // endAdornment={
+            //   <div>
+            //     <button style={{
+            //       outline: "none",
+            //       border: "transparent",
+            //       margin: 0,
+            //       padding: "4.5px",
+            //       backgroundColor: "#0040C1", display: showSearch && searchValue?.length > 0 ? "flex" : "none",
+            //       borderRadius: "25%",
+            //       width: "25px",
+            //       height: "25px",
+            //     }} type="submit"
+            //       form="search-form">
+            //       {/* <SendIcon size="15" stroke="#fff" strokeWidth="2.5" /> */}
+            //       <img src={MagnifyIcon} alt="search-icon" />
+            //     </button>
+            //     <button style={{
+            //       outline: "none",
+            //       border: "transparent",
+            //       margin: 0,
+            //       padding: "4.5px",
+            //       backgroundColor: "#0040C1", display: showSearch && searchValue?.length > 0 ? "flex" : "none",
+            //       borderRadius: "25%",
+            //       width: "25px",
+            //       height: "25px",
+            //     }} type="button" onClick={() => handleResetSearchValue()}>
+            //       {/* <SendIcon size="15" stroke="#fff" strokeWidth="2.5" /> */}
+            //       <CircleDeleteIcon width="20" height="20" />
+            //     </button>
+            //   </div>
+            // }
+            />
+          </form>
+          {/* )} */}
+          {searchValue?.length > 0 && (
             <button
               style={{
                 outline: "none",
@@ -503,15 +482,12 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               display: "flex",
               cursor: "pointer",
             }}
-            onClick={toggleSearch}
+            type="submit"
+            form="search-form"
           >
             <div className="content-main-navbar-updated">
               <article
-                className={
-                  showSearch
-                    ? "nav-item-base-main-navbar-updated"
-                    : "nav-item-base-1-main-navbar-updated"
-                }
+                className={"nav-item-base-main-navbar-updated"}
               >
                 <div className="content-2-main-navbar-updated">
                   <div className="text-1-main-navbar-updated text-mdsemibold">

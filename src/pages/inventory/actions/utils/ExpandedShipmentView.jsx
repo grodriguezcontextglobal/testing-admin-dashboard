@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Spin } from "antd";
+import { Button, message } from "antd";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { saveAs } from "file-saver";
 import { useCallback, useState } from "react";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -113,7 +114,7 @@ const ExpandedShipmentView = ({ package_list, record }) => {
     ];
 
     if (itemsQuery.isLoading) {
-        return <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><Spin tip="Loading items..." /></div>;
+        return <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><DevitrakLoading /></div>;
     }
 
     if (itemsQuery.isError) {

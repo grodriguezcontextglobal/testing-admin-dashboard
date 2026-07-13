@@ -65,7 +65,7 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
       emailNotificationProfile,
     );
     if (resp) {
-      openNotificationWithIcon("Success", "Email sent!", "Link of this event!");
+      openNotificationWithIcon("Success", "Email queued!", "Link of this event will be sent shortly");
       setValue("message", "");
       closeModal();
     }

@@ -14,7 +14,7 @@ import {
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 // import CalendarIcon from "../../components/icons/CalendarIcon";
 import "../../styles/global/ant-select.css";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -105,7 +105,11 @@ const MainPage = () => {
       ?.preference;
   }, [user]);
 
-  const allowedInventoryLocations = isAdmin ? null : locationsViewPermission;
+  // null = no filter (see all). [] = explicitly restricted to zero locations.
+  // Users with no managerLocation assignments have no location-based restrictions,
+  // so they also get null (same as admin) rather than an empty array that hides everything.
+  const hasAssignedLocations = (userPreferences?.managerLocation?.length ?? 0) > 0;
+  const allowedInventoryLocations = (isAdmin || !hasAssignedLocations) ? null : locationsViewPermission;
 
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
@@ -270,7 +274,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

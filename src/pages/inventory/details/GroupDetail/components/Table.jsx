@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import TableHeader from "../../../../../components/UX/TableHeader";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
@@ -239,7 +239,7 @@ const TableItemGroup = ({
   if (isLoadingComponent) {
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   }
@@ -248,7 +248,7 @@ const TableItemGroup = ({
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >
@@ -302,7 +302,7 @@ const TableItemGroup = ({
             <DownloadingXlslFile props={dataRenderingMemo} />
           </div>
         </Grid> */}
-        {isLoadingComponent && <Loading />}
+        {isLoadingComponent && <DevitrakLoading />}
         {!isLoadingComponent && (
           <>
             <TableHeader

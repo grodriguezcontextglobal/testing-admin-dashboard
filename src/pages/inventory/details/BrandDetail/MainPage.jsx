@@ -3,7 +3,7 @@ import { Divider } from "antd";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router-dom";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 import CardInfo from "../UX/CardInfo";
@@ -54,7 +54,7 @@ const MainPageBrand = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

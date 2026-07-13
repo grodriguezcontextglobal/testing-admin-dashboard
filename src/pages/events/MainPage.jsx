@@ -4,7 +4,7 @@ import { lazy, Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import EventsCarousel from "../../components/UX/carousel/EventsCarousel";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
@@ -15,6 +15,7 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { Subtitle } from "../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
+import { isNotAssistant } from "../../config/roles";
 import { useEventHook } from "./hook/useEventHook";
 import PageSpinner from "../../components/utils/PageSpinner";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
@@ -110,7 +111,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >
@@ -309,7 +310,7 @@ const MainPage = () => {
                 </Grid>
               ) : noActiveEvents ? (
                 <>
-                  {Number(user.role) < 4 ? (
+                  {isNotAssistant(user.roleType) ? (
                     <BannerMsg />
                   ) : (
                     <BannerNoEventStaffOnly

@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "total": 5,
+  "items": [
+    {
+      "_id": "item001",
+      "serial_number": "SN-001",
+      "category_name": "Tablets",
+      "item_group": "iPad Pro",
+      "brand": "Apple",
+      "cost": "800",
+      "location": "Warehouse A",
+      "ownership": "Permanent",
+      "warehouse": true,
+      "enableAssignFeature": true
+    },
+    {
+      "_id": "item002",
+      "serial_number": "SN-002",
+      "category_name": "Tablets",
+      "item_group": "iPad Pro",
+      "brand": "Apple",
+      "cost": "800",
+      "location": "Warehouse A",
+      "ownership": "Permanent",
+      "warehouse": true,
+      "enableAssignFeature": true
+    },
+    {
+      "_id": "item003",
+      "serial_number": "SN-003",
+      "category_name": "Scanners",
+      "item_group": "Zebra DS2208",
+      "brand": "Zebra",
+      "cost": "400",
+      "location": "Warehouse B",
+      "ownership": "Rent",
+      "warehouse": false,
+      "enableAssignFeature": true
+    }
+  ]
+}

@@ -7,19 +7,23 @@ const insertingNewCompanyInSqlDb = async ({
   ref,
   industry,
   websiteUrl,
+  token,
 }) => {
+  const config = token ? { headers: { "x-token": token } } : {};
   const checkingExistingCompany = await devitrakApi.post(
     `/db_company/consulting-company`,
     {
       company_name: companyValue,
-    }
+    },
+    config
   );
-  if (checkingExistingCompany.data.company.length > 0) {
+  const existingCompanies = checkingExistingCompany.data?.company ?? [];
+  if (existingCompanies.length > 0) {
     ref.current = {
       ...ref.current,
-      companySQL: checkArray(checkingExistingCompany.data.company).company_id,
+      companySQL: checkArray(existingCompanies).company_id,
     };
-    return checkArray(checkingExistingCompany.data.company);
+    return checkArray(existingCompanies);
   } else {
     const insertingCompanyInfo = await devitrakApi.post(
       "/db_company/new_company",
@@ -32,7 +36,8 @@ const insertingNewCompanyInSqlDb = async ({
         phone_number: props.main_phone,
         email_company: websiteUrl,
         industry: industry,
-      }
+      },
+      config
     );
     if (insertingCompanyInfo.data) {
       ref.current = {

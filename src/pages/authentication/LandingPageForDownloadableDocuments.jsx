@@ -1,6 +1,6 @@
-import { Spin } from "antd";
+
 import { useEffect, useMemo, useState } from "react";
-import Loading from "../../components/animation/Loading";
+import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import "./style/authStyle.css";
 import StaffMemberVerificationSignatureAndSignatureStampComponent from "./signatureVerificationDocuments/StaffMember";
 import ConsumerMemberVerificationSignatureAndSignatureStampComponent from "./signatureVerificationDocuments/Consumer";
@@ -25,7 +25,7 @@ const LandingPageForDownloadableDocuments = () => {
   
   return (
     <>
-      {isLoading ? <Spin indicator={<Loading />} fullscreen /> : null}
+      {isLoading ? <DevitrakLoading fullscreen /> : null}
       {staffMember ? (
         <StaffMemberVerificationSignatureAndSignatureStampComponent />
       ) : (

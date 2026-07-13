@@ -18,8 +18,9 @@ import { onResetHelpers } from "./store/slices/helperSlice";
 import { onResetStaffProfile } from "./store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
-import Loading from "./components/animation/Loading";
+import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
+import { clearSessionStorage } from "./api/sessionHeaders";
 // const InactivityLogout = lazy(() =>
 //   import("./utils/CheckingInactivityAndTakeAction")
 // );
@@ -44,7 +45,11 @@ const App = () => {
   const isTokenValid = (token) => {
     if (token) {
       const decodedToken = jwtDecode(token);
-      return new Date().getTime() < decodedToken.exp * 1000;
+      if (new Date().getTime() >= decodedToken.exp * 1000) return false;
+      // Tokens issued before the sqlStaffId backend fix lack this field.
+      // Treat them as invalid so the user re-authenticates and gets a fresh token.
+      if (typeof decodedToken.sqlStaffId !== "number") return false;
+      return true;
     }
     return false;
   };
@@ -60,7 +65,7 @@ const App = () => {
       dispatch(onResetHelpers());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      localStorage.removeItem("admin-token");
+      clearSessionStorage();
       dispatch(onLogout());
       openNotificationWithIcon("Session has expired. Please sign in again.");
       return window.location.reload(true);
@@ -111,7 +116,7 @@ const App = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 // import CardSearchFound from "../utils/CardSearchFound";
 import NoDataFound from "../utils/NoDataFound";
@@ -53,7 +53,7 @@ const SearchPosts = ({ searchParams }) => {
   if (staffMembersQuery.isLoading)
     return (
       <div style={CenteringGrid}>
-        <Loading />
+        <DevitrakLoading />
       </div>
     );
   if (staffMembersQuery.data) {

@@ -4,7 +4,7 @@ import { lazy, Suspense, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 import Input from "../../../../components/UX/inputs/Input";
@@ -116,7 +116,7 @@ const MainPage = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

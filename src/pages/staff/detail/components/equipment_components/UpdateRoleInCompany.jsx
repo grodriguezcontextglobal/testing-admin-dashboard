@@ -11,7 +11,9 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../../store/slices/adminSlice";
+import { isCoordinatorLevel, LEGACY_ROLE_MAP, ROLE_LEVELS, resolveRoleType } from "../../../../../config/roles";
 import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
+import { extractStaffId } from "../../../../authentication/utils/loginUtils";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const UpdateRoleInCompany = () => {
@@ -36,21 +38,43 @@ const UpdateRoleInCompany = () => {
     isError,
     error,
   } = useMutation({
-    mutationFn: (data) =>
-      devitrakApi.patch(`/company/update-company/${data.id}`, data),
-    onSuccess: (result) => {
+    mutationFn: async ({ role_level, roleType, employees }) => {
+      // 1. Fetch staff_id by email from SQL staff table
+      const staffResponse = await devitrakApi.post("/db_staff/consulting-member", {
+        email: profile.user,
+      });
+      const staff_id = extractStaffId(staffResponse.data);
+      if (!staff_id) throw new Error("Staff member not found in SQL database.");
+
+      // 2. Update SQL company_staff table
+      await devitrakApi.patch("/db_staff/company-staff", {
+        company_id: user.sqlInfo.company_id,
+        staff_id,
+        role_level,
+        role_type: roleType,
+      });
+
+      // 3. Keep MongoDB employees array in sync
+      return devitrakApi.patch(`/company/update-company/${profile.companyData.id}`, {
+        employees,
+      });
+    },
+    onSuccess: (mongoResult) => {
+      const roleType = LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant";
       dispatch(
         onAddStaffProfile({
           ...profile,
           role: newRole,
-          companyData: result.data.company,
+          roleType,
+          companyData: mongoResult.data.company,
         }),
       );
       if (user.email === profile.user) {
         dispatch(
           onLogin({
             ...user,
-            role: newRole,
+            role: String(newRole),
+            roleType,
           }),
         );
       }
@@ -69,38 +93,36 @@ const UpdateRoleInCompany = () => {
 
   const handleSubmitNewRole = (e) => {
     e.preventDefault();
-    const foundStaffToUpdate = profile.companyData.employees.findIndex(
-      (element) => element.user === profile.user,
+    if (!newRole && newRole !== 0) return;
+    const roleType = LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant";
+    const foundStaffIdx = profile.companyData.employees.findIndex(
+      (el) => el.user === profile.user,
     );
+    const employees =
+      foundStaffIdx > -1
+        ? profile.companyData.employees.toSpliced(foundStaffIdx, 1, {
+            ...profile.companyData.employees[foundStaffIdx],
+            role: String(newRole),
+            roleType,
+          })
+        : profile.companyData.employees;
 
-    if (foundStaffToUpdate > -1) {
-      const updatedEmployees = profile.companyData.employees.toSpliced(
-        foundStaffToUpdate,
-        1,
-        { ...profile.companyData.employees[foundStaffToUpdate], role: newRole },
-      );
-
-      updateRole({
-        id: profile.companyData.id,
-        employees: updatedEmployees,
-      });
-    }
+    updateRole({ role_level: Number(newRole), roleType, employees });
   };
 
   const options = [
-    { label: "Root administrator", value: 0 },
-    { label: "Administrator", value: 1 },
-    { label: "Manager", value: 2 },
-    { label: "Support", value: 3 },
-    { label: "Staff event assistant", value: 4 },
+    { label: "Root Administrator",  value: 0 },
+    { label: "Administrator",       value: 1 },
+    { label: "Sale Manager",        value: 2 },
+    { label: "Event Manager",       value: 3 },
+    { label: "Inventory Manager",   value: 4 },
+    { label: "Assistant",           value: 5 },
   ];
 
   const optionsBasedOnCurrentRolePermission = options.filter((option) => {
-    const currentUserRole = Number(user.role);
-    const optionRoleValue = Number(option.value);
-    if (currentUserRole === 0) return true; // Root admin can assign all roles
-    if (currentUserRole === 1) return optionRoleValue >= 2; // Admin can assign roles 2 and up
-    return false; // Other roles cannot assign
+    const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
+    if (userLevel === 0) return true;
+    return option.value > userLevel;
   });
 
   const bodyModal = () => {
@@ -119,7 +141,7 @@ const UpdateRoleInCompany = () => {
           />,
         ]}
       >
-        {Number(user.role) < 2 ? (
+        {isCoordinatorLevel(user.roleType) ? (
           <form
             style={{
               ...CenteringGrid,

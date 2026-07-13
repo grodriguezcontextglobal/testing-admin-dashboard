@@ -4,7 +4,7 @@ import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 // import FormatQuickGlanceCardGraphRender from "./graphic_components/FormatQuickGlanceCardGraphRender";
 const FormatQuickGlanceCardGraphRender = lazy(() =>
@@ -75,7 +75,7 @@ const Graphic = () => {
 
   const dataToMap = [dataToExport];
   return (
-    <Suspense fallback={<div style={CenteringGrid}><Loading /></div>}>
+    <Suspense fallback={<div style={CenteringGrid}><DevitrakLoading /></div>}>
     {/* <Grid
       display={"flex"}
       justifyContent={"space-between"}

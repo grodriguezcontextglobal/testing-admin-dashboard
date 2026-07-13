@@ -24,9 +24,7 @@ const NotesRendering = ({ props, title }) => {
   const [openDeleteNoteModal, setOpenDeleteNoteModal] = useState(false);
   const [openAddNoteModal, setOpenAddNoteModal] = useState(false);
 
-  const isAdmin =
-    user.companyData.employees.filter((ele) => ele.user === user.email)[0]
-      ?.role < 1;
+  const isAdmin = resolveRoleType(user) === "root_admin";
 
   const notesForCompany = props
     .slice()

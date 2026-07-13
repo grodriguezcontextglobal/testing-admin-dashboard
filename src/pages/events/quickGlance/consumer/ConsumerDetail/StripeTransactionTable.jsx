@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Spin } from "antd";
+import { Button, message, Popconfirm } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -476,7 +476,7 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 pageSize={10}
               />
             ) : (
-              <Spin indicator={<Loading />} />
+              <DevitrakLoading />
             ),
         }}
       />

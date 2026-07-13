@@ -3,7 +3,7 @@ import { Divider } from "antd";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router-dom";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
@@ -56,7 +56,7 @@ const MainPageGrouping = () => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

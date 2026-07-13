@@ -3,7 +3,7 @@ import { Card } from "antd";
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 const dicRole = lazy(() => import("../../../components/general/dicRole"));
 
 const InfrmationCard = ({ props }) => {
@@ -12,7 +12,7 @@ const InfrmationCard = ({ props }) => {
       fallback={
         <div style={CenteringGrid}>
           {" "}
-          <Loading />{" "}
+          <DevitrakLoading />{" "}
         </div>
       }
     >

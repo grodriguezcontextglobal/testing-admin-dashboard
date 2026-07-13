@@ -9,6 +9,16 @@ import SectionHeader from "./new_form_components/SectionHeader";
 import SectionLabel from "./new_form_components/SectionLabel";
 import industries from "../navbar/component/industriesList.json";
 
+const JOB_POLL_INTERVAL_MS = 1500;
+const JOB_POLL_TIMEOUT_MS = 60000;
+
+const generateIdempotencyKey = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const DocumentUpload = ({ activeTab, refetch }) => {
   const [form] = Form.useForm();
   const [file, setFile] = useState(null);
@@ -20,6 +30,33 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       setFile(selected);
     }
   };
+
+  const pollJobStatus = (jobId) =>
+    new Promise((resolve, reject) => {
+      const startedAt = Date.now();
+      const poll = async () => {
+        try {
+          const { data } = await devitrakApi.get(`/jobs/owned/${jobId}`);
+          if (data.status === "done") {
+            return resolve(data.result?.document);
+          }
+          if (data.status === "dead" || data.status === "failed") {
+            return reject(
+              new Error(data.lastError || "Document upload failed.")
+            );
+          }
+          if (Date.now() - startedAt > JOB_POLL_TIMEOUT_MS) {
+            return reject(
+              new Error("Timed out waiting for the document to be processed.")
+            );
+          }
+          setTimeout(poll, JOB_POLL_INTERVAL_MS);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      poll();
+    });
 
   const handleSubmit = async (values) => {
     if (!file) {
@@ -52,10 +89,12 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       }
     });
 
+    setUploading(true);
     try {
       const response = await devitrakApi.post(
         "/document/upload",
-        formDataToSend
+        formDataToSend,
+        { headers: { "Idempotency-Key": generateIdempotencyKey() } }
       );
 
       const data = response?.data;

@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "list": [
+    {
+      "id": "event001",
+      "active": true,
+      "company": "Test Company",
+      "eventInfoDetail": {
+        "eventName": "Summer Tech Conference",
+        "eventLocation": "Convention Center",
+        "address": "123 Main St",
+        "dateBegin": "2026-06-14T09:00:00.000Z",
+        "dateEnd": "2026-06-16T23:59:00.000Z",
+        "phoneNumber": []
+      },
+      "staff": { "adminUser": [], "headsetAttendees": [] },
+      "deviceSetup": []
+    },
+    {
+      "id": "event002",
+      "active": true,
+      "company": "Test Company",
+      "eventInfoDetail": {
+        "eventName": "Fall Product Launch",
+        "eventLocation": "Grand Ballroom",
+        "address": "456 Oak Ave",
+        "dateBegin": "2026-07-01T09:00:00.000Z",
+        "dateEnd": "2026-07-03T18:00:00.000Z",
+        "phoneNumber": []
+      },
+      "staff": { "adminUser": [], "headsetAttendees": [] },
+      "deviceSetup": []
+    },
+    {
+      "id": "event003",
+      "active": false,
+      "company": "Test Company",
+      "eventInfoDetail": {
+        "eventName": "Spring Meetup 2026",
+        "eventLocation": "Community Hall",
+        "address": "789 Pine Rd",
+        "dateBegin": "2026-05-01T09:00:00.000Z",
+        "dateEnd": "2026-05-03T18:00:00.000Z",
+        "phoneNumber": []
+      },
+      "staff": { "adminUser": [], "headsetAttendees": [] },
+      "deviceSetup": []
+    }
+  ]
+}

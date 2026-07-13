@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "lodash";
 import { useDispatch, useSelector } from "react-redux";
+import { resolveRoleType } from "../../../config/roles";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
 import { lazy, Suspense, useEffect } from "react";
-import Loading from "../../../components/animation/Loading";
+import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import EventsCarousel from "../../../components/UX/carousel/EventsCarousel";
 const CardEventDisplay = lazy(() => import("../../events/components/CardEventDisplay"));
@@ -50,11 +51,7 @@ const MainPage = () => {
       if (!companyData) return [];
       const groupByActive = groupBy(companyData, "active");
       const filterEventsByEmail = (events, key = null) => {
-        if (
-          user.companyData.employees.filter(
-            (employee) => employee.user === user.email
-          )[0].role < 1
-        ) {
+        if (resolveRoleType(user) === "root_admin") {
           return events ?? [];
         }
         if (key) {
@@ -112,7 +109,7 @@ const MainPage = () => {
       <Suspense
         fallback={
           <div style={CenteringGrid}>
-            <Loading />
+            <DevitrakLoading />
           </div>
         }
       >

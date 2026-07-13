@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ConfigEnvExport } from "../config/ConfigEnvExport";
 import { getActiveServerSynchronously, switchServer, initializeActiveServer } from "./serverManager";
+import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
 
 const { aws_api, header_auth_token } = ConfigEnvExport;
 
@@ -60,9 +61,26 @@ const createDevitrakApiInstance = (suffix = "") => {
           "X-Request-Timestamp": clientInfo.timestamp,
           "X-Request-ID": `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
+        // Remove headers that the server's CORS policy does not allow
+        delete config.headers["pragma"];
+        delete config.headers["Pragma"];
         if (localStorage.getItem("admin-token")) {
             config.headers["x-token"] = localStorage.getItem("admin-token");
         }
+        if (localStorage.getItem("s-token-lq")) {
+            config.headers["s-token-lq"] = localStorage.getItem("s-token-lq");
+        }
+        // Route-scoped company headers:
+        //   x-company-id → /api/staff|admin|company|stripe
+        //   s-company-lq → /api/db_*
+        const requestPath = buildRequestPath(config.baseURL, config.url);
+        Object.assign(
+            config.headers,
+            buildRouteScopedHeaders(requestPath, {
+                companyId: localStorage.getItem("x-company-id"),
+                companySqlId: localStorage.getItem("s-company-lq"),
+            }),
+        );
         return config;
     });
 

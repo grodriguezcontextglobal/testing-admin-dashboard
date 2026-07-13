@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import TableHeader from "../../../../../components/UX/TableHeader";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
-import Loading from "../../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import DownloadingXlslFile from "../../../actions/DownloadXlsx";
@@ -130,7 +130,7 @@ const TableItemOwnership = ({
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >
@@ -194,7 +194,7 @@ const TableItemOwnership = ({
             <DownloadingXlslFile props={dataRenderingMemo} />
           </div>
         </Grid> */}
-        {isLoadingComponent && <Loading />}
+        {isLoadingComponent && <DevitrakLoading />}
         {!isLoadingComponent && (
           <>
             <TableHeader

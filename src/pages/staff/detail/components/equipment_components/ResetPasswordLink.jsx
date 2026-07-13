@@ -72,7 +72,7 @@ const ForgetPasswordLinkFromStaffPage = () => {
       devitrakApi.post("/nodemailer/reset-admin-password", data),
     onSuccess: (resp) => {
       if (resp.data.ok) {
-        openNotificationWithIcon("Success", "Email was sent to email address.");
+        openNotificationWithIcon("Success", "Email queued and will be sent to the email address shortly.");
         handleClose();
       }
     },

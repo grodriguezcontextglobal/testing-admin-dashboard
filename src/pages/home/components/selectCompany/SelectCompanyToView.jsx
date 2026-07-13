@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { onSwitchingCompany } from "../../../../store/slices/helperSlice";
 import { lazy, Suspense } from "react";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import Loading from "../../../../components/animation/Loading";
+import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 const renderingTitle = lazy(() =>
   import("../../../../components/general/renderingTitle")
 );
@@ -20,7 +20,7 @@ const SelectCompanyToView = ({ data }) => {
     <Suspense
       fallback={
         <div style={CenteringGrid}>
-          <Loading />
+          <DevitrakLoading />
         </div>
       }
     >

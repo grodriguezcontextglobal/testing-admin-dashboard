@@ -1,4 +1,5 @@
 import { Grid, Typography } from "@mui/material";
+import { isCoordinatorLevel } from "../../../../config/roles";
 import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
 import { Button as AntButton, Divider, Tag } from "antd";
@@ -24,7 +25,7 @@ const InventorySearchBar = ({
   setOpenShippingModal,
   setShipmentRecordModal,
 }) => {
-  const { role, locations } = useSelector((state) => state.permission);
+  const { roleType, locations } = useSelector((state) => state.permission);
   const filterContext = useContext(FilterOptionsContext);
   const chosen = Array.isArray(filterContext?.chosen)
     ? filterContext.chosen
@@ -49,14 +50,9 @@ const InventorySearchBar = ({
   const clearAllFilters = () => setChosenOption?.([]);
 
   const canRenderButton =
-    role === "0" ||
-    locations?.every(
-      (location) =>
-        location.actions?.create &&
-        location.actions?.assign &&
-        location.actions?.delete &&
-        location.actions?.transfer,
-    );
+    isCoordinatorLevel(roleType) ||
+    (locations?.length > 0 &&
+      locations.every((loc) => loc.can_create && loc.can_update && loc.can_delete));
 
   return (
     <Grid
