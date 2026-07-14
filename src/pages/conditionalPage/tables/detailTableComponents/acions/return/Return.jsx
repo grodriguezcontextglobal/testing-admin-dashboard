@@ -49,6 +49,7 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
       const response = await devitrakApi.post(
         "/db_member/delete-member-assigned-device-lease",
         {
+          company_id: storedRecord.company_id,
           where: {
             company_id: storedRecord.company_id,
             member_id: storedRecord.member_id,

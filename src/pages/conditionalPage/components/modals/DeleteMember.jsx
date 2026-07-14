@@ -58,7 +58,9 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
 
   const deleteMembersMutation = useMutation({
     mutationFn: async (payload) => {
-      const body = Array.isArray(payload) ? { member_ids: payload } : payload;
+      const body = Array.isArray(payload)
+        ? { member_ids: payload, company_id: user?.sqlInfo?.company_id }
+        : { company_id: user?.sqlInfo?.company_id, ...payload };
       const res = await devitrakApi.post("/db_member/delete-member-info", body);
       return res?.data;
     },

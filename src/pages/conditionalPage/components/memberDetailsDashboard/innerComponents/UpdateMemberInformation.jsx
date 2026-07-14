@@ -32,13 +32,17 @@ const UpdateMemberInformation = () => {
     queryFn: () =>
       devitrakApi.post("/db_member/consulting-member", {
         member_id: Number(slug),
+        company_id: user?.sqlInfo?.company_id,
       }),
     enabled: !!slug,
   });
   const updateMemberInfoMutation = useMutation({
     mutationKey: ["updateMemberInformationData"],
     mutationFn: async (data) =>
-      await devitrakApi.patch("/db_member/update-member-info", data),
+      await devitrakApi.patch("/db_member/update-member-info", {
+        company_id: user?.sqlInfo?.company_id,
+        ...data,
+      }),
     onSuccess: () => {
       openNotificationWithIcon(
         "success",

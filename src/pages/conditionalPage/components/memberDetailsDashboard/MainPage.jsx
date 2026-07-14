@@ -1,5 +1,6 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { hasPermission, resolveRoleType } from "../../../../config/roles";
+import { onAddMemberInfo } from "../../../../store/slices/memberSlice";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useState } from "react";
@@ -25,6 +26,7 @@ const pillNavLinkStyle = ({ isActive }) => ({
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
+  const dispatch = useDispatch();
   const location = useLocation();
   const slug = location.pathname.split("/").filter(Boolean)?.at(-2);
   const titleParams = String(slug || "").replace(/-/g, " ");
@@ -38,11 +40,18 @@ const MainPage = () => {
     queryFn: () =>
       devitrakApi.post("/db_member/consulting-member", {
         member_id: Number(slug),
+        company_id: user?.sqlInfo?.company_id,
       }),
-    enabled: !!slug,
+    enabled: !!slug && !!user?.sqlInfo?.company_id,
     onSuccess: (data) => {
       if (data?.data?.members) {
         setMembersData(data?.data?.members);
+        // Hydrate Redux so deep links (/member/:id/assignment etc.) work
+        // without first clicking through the members list.
+        const member = Array.isArray(data.data.members)
+          ? data.data.members.at(-1)
+          : data.data.members;
+        if (member) dispatch(onAddMemberInfo(member));
       }
     },
   });

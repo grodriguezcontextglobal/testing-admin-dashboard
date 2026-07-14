@@ -413,7 +413,7 @@ const AssignmentDevicesToMember = () => {
       ]);
       openNotificationWithIcon(
         "success",
-        "Equipment assigned to staff member.",
+        "Equipment assigned to member.",
         ""
       );
       queryClient.invalidateQueries({
