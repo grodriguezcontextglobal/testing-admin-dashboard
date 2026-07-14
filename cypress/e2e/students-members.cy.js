@@ -205,4 +205,28 @@ describe('Industry gating (AV rental company has no Students)', () => {
     login() // principal
     cy.contains('a', /^students$/i, { timeout: 20000 }).should('be.visible')
   })
+
+  it('school district has no Consumers tab (students are the consumers)', () => {
+    cy.viewport(1440, 900)
+    login() // principal
+    cy.contains('a', /home/i, { timeout: 20000 }).should('be.visible')
+    cy.contains('nav a, a', /^consumers$/i).should('not.exist')
+    // command palette also omits it
+    cy.get('input[name="searchValue"]').click({ force: true })
+    cy.get('input[placeholder="Search commands, pages, actions..."]', { timeout: 10000 }).should('be.visible')
+    cy.get('.cmdk-panel').within(() => {
+      cy.contains(/^Consumers$/).should('not.exist')
+      cy.contains(/add new consumer/i).should('not.exist')
+    })
+    cy.get('body').type('{esc}')
+    // deep link bounces home
+    cy.visit('/consumers')
+    cy.location('pathname', { timeout: 20000 }).should('eq', '/')
+  })
+
+  it('AV rental company still has its Consumers tab', () => {
+    cy.viewport(1440, 900)
+    loginAV()
+    cy.contains('a', /^consumers$/i, { timeout: 20000 }).should('be.visible')
+  })
 })

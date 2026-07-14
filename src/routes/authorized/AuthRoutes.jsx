@@ -1,6 +1,7 @@
 import { lazy, Suspense, useRef } from "react";
 import { Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
+import IndustryTabGuard from "./IndustryTabGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import ErrorBoundary from "../../components/utils/ErrorBoundary";
@@ -359,6 +360,7 @@ const AuthRoutes = () => {
                   element={<AddNewBulkItems />}
                 />
               </Route>
+              <Route element={<IndustryTabGuard tab="consumers" />}>
               <Route element={<PermissionGuard action="nav:consumers" />}>
                 <Route path="/consumers" element={<ConsumersMainPage />} />
                 <Route path="/consumers/:id" element={<ConsumerDetail />} />
@@ -382,6 +384,7 @@ const AuthRoutes = () => {
                   path="/consumers/:id/charge-all-lost-devices/credit_card"
                   element={<ChargeAllListDeviceCreditCard />}
                 />
+              </Route>
               </Route>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>

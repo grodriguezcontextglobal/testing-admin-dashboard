@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CommandMenu from "./CommandMenu";
+import { useSelector } from "react-redux";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 
 /**
  * App-wide ⌘K / Ctrl+K command menu: quick navigation + common actions.
@@ -9,6 +11,10 @@ import CommandMenu from "./CommandMenu";
 const GlobalCommandMenu = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.admin);
+  const hiddenNavTabs = getIndustryProfile(
+    user?.companyData?.industry
+  ).hiddenNavTabs;
 
   useEffect(() => {
     const onKey = (e) => {
@@ -35,6 +41,7 @@ const GlobalCommandMenu = () => {
     };
   }, []);
 
+  const isTabVisible = (id) => !hiddenNavTabs.includes(id);
   const groups = useMemo(
     () => [
       {
@@ -43,7 +50,9 @@ const GlobalCommandMenu = () => {
           { id: "home", label: "Home", icon: "tabler:home", onSelect: () => navigate("/") },
           { id: "events", label: "Events", icon: "tabler:calendar-event", onSelect: () => navigate("/events") },
           { id: "inventory", label: "Inventory", icon: "tabler:box", onSelect: () => navigate("/inventory") },
-          { id: "consumers", label: "Consumers", icon: "tabler:users", onSelect: () => navigate("/consumers") },
+          ...(isTabVisible("consumers")
+            ? [{ id: "consumers", label: "Consumers", icon: "tabler:users", onSelect: () => navigate("/consumers") }]
+            : []),
           { id: "staff", label: "Staff", icon: "tabler:id-badge-2", onSelect: () => navigate("/staff") },
           { id: "posts", label: "Posts", icon: "tabler:news", onSelect: () => navigate("/posts") },
         ],
@@ -57,13 +66,15 @@ const GlobalCommandMenu = () => {
             icon: "tabler:calendar-plus",
             onSelect: () => navigate("/create-event-page/event-detail"),
           },
-          {
-            id: "new-consumer",
-            label: "Add new consumer",
-            icon: "tabler:user-plus",
-            onSelect: () =>
-              navigate("/consumers", { state: { quickAction: "create" } }),
-          },
+          ...(isTabVisible("consumers")
+            ? [{
+                id: "new-consumer",
+                label: "Add new consumer",
+                icon: "tabler:user-plus",
+                onSelect: () =>
+                  navigate("/consumers", { state: { quickAction: "create" } }),
+              }]
+            : []),
           {
             id: "new-staff",
             label: "Add staff member",
@@ -99,7 +110,7 @@ const GlobalCommandMenu = () => {
         ],
       },
     ],
-    [navigate]
+    [navigate, hiddenNavTabs]
   );
 
   return (

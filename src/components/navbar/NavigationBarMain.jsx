@@ -42,6 +42,7 @@ import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 // import { ProfileIcon } from "../icons/ProfileIcon";
 import { hasPermission, resolveRoleType } from "../../config/roles";
+import { getIndustryProfile } from "../../config/industryProfiles";
 import Input from "../UX/inputs/Input";
 import { CircleDeleteIcon } from "../icons/CircleDeleteIcon";
 import MenuIcon from "../icons/MenuIcon";
@@ -144,6 +145,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
       window: true,
     });
   };
+  const hiddenNavTabs = getIndustryProfile(
+    user?.companyData?.industry
+  ).hiddenNavTabs;
+  const isNavTabVisible = (item) =>
+    !hiddenNavTabs.includes(String(item.title).toLowerCase());
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)",
@@ -206,7 +212,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           if (item.route === 0) {
             return <ConditionalButton key={item.title} user={user} />;
           }
-          if (!hasPermission(item.permission, resolveRoleType(user)) || !item.mobile) {
+          if (
+            !hasPermission(item.permission, resolveRoleType(user)) ||
+            !item.mobile ||
+            !isNavTabVisible(item)
+          ) {
             return null;
           }
           const active = location.pathname === `${item.route}`;
@@ -330,7 +340,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </NavLink>
 
             {navItems.map((item) => {
-              if (hasPermission(item.permission, resolveRoleType(user)) && item.desktop) {
+              if (
+                hasPermission(item.permission, resolveRoleType(user)) &&
+                item.desktop &&
+                isNavTabVisible(item)
+              ) {
                 if (item.route === 0) {
                   return (
                     <ConditionalButton

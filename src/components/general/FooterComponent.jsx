@@ -1,5 +1,7 @@
 import PropTypes from "prop-types";
 import { forwardRef } from "react";
+import { useSelector } from "react-redux";
+import { getIndustryProfile } from "../../config/industryProfiles";
 import { Link } from "react-router-dom";
 import colorMark from "../../assets/maskable_icon_white_background.png";
 import DevitrakWordmark from "../icons/DevitrakWordmark";
@@ -77,6 +79,22 @@ const COLUMNS = [
 ];
 
 const FooterComponent = forwardRef(function FooterComponent({ full }, ref) {
+  const { user } = useSelector((state) => state.admin);
+  const hiddenNavTabs = getIndustryProfile(
+    user?.companyData?.industry
+  ).hiddenNavTabs;
+  // hide product links the company's industry doesn't use (e.g. Consumers
+  // for schools — students are the consumers there)
+  const columns = COLUMNS.map((col) =>
+    col.heading === "Product"
+      ? {
+          ...col,
+          links: col.links.filter(
+            (l) => !hiddenNavTabs.includes(l.label.toLowerCase())
+          ),
+        }
+      : col
+  );
   const year = new Date().getFullYear();
 
   if (!full) {
@@ -151,7 +169,7 @@ const FooterComponent = forwardRef(function FooterComponent({ full }, ref) {
           </p>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "64px" }}>
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div
               key={col.heading}
               style={{

@@ -15,6 +15,8 @@ import industriesList from "../components/navbar/component/industriesList.json";
 
 const DEFAULT_PROFILE = {
   icon: "tabler:users-group",
+  // nav tabs this industry does NOT use (by navItems title)
+  hiddenNavTabs: [],
   representative: {
     label: "Authorized representative",
     shortLabel: "Rep",
@@ -26,6 +28,10 @@ const DEFAULT_PROFILE = {
 const PROFILES = {
   Education: {
     icon: "tabler:school",
+    // students ARE the consumers in a school — the generic consumer/rental
+    // track (deposits, event check-ins) doesn't apply and would bypass
+    // guardian enforcement if used by mistake
+    hiddenNavTabs: ["consumers"],
     representative: {
       label: "Parent / Guardian",
       shortLabel: "Rep",
@@ -62,7 +68,7 @@ const PROFILES = {
 export const getIndustryProfile = (industry) => {
   const audience = industriesList?.[industry]?.[0] ?? null;
   const profile = PROFILES[industry] ?? DEFAULT_PROFILE;
-  return { audience, ...profile };
+  return { audience, hiddenNavTabs: [], ...profile };
 };
 
 export default getIndustryProfile;
