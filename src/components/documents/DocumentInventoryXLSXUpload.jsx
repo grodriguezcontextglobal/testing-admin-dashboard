@@ -1,6 +1,6 @@
 import { message, Modal } from "antd";
 import { useCallback, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { read, utils } from "xlsx";
 import { Subtitle } from "../../styles/global/Subtitle";
 import BlueButtonComponent from "../UX/buttons/BlueButton";
@@ -9,40 +9,23 @@ import { devitrakApi } from "../../api/devitrakApi";
 import { groupBy } from "lodash";
 import { verifyAndCreateLocation } from "../../pages/inventory/actions/utils/verifyLocationBeforeCreateNewInventory";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { onTrackBackgroundJob } from "../../store/slices/backgroundJobsSlice";
+import generateIdempotencyKey from "../../utils/actions/generateIdempotencyKey";
 import { formatDate } from "../../pages/inventory/utils/dateFormat";
 
 const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     const { user } = useSelector((state) => state.admin);
+    const dispatch = useDispatch();
     const [openModal, setOpenModal] = useState(false);
     const [fileName, setFileName] = useState("");
     const [loadingState, setLoadingState] = useState(false);
     const [processedRows, setProcessedRows] = useState([]);
     const queryClient = useQueryClient();
     const alphaNumericInsertItemMutation = useMutation({
-        mutationFn: (template) =>
-            devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["listOfItemsInStock"],
-                exact: true,
-                refetchType: "active",
-            });
-            queryClient.invalidateQueries({
-                queryKey: ["ItemsInInventoryCheckingQuery"],
-                exact: true,
-                refetchType: "active",
-            });
-            queryClient.invalidateQueries({
-                queryKey: ["RefactoredListInventoryCompany"],
-                exact: true,
-                refetchType: "active",
-            });
-            clearCacheMemory(
-                `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-            );
-            clearCacheMemory(`providerCompanies_${user.companyData.id}`);
-        },
+        mutationFn: ({ template, idempotencyKey }) =>
+            devitrakApi.post("/db_item/bulk-item-alphanumeric", template, {
+                headers: { "Idempotency-Key": idempotencyKey },
+            }),
     });
 
     const processFile = async (originalFile) => {
@@ -212,13 +195,36 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                         created_at: formatDate(new Date()),
                         update_at: formatDate(new Date()),
                     };
-                    await alphaNumericInsertItemMutation.mutate(template);
+                    const idempotencyKey = generateIdempotencyKey();
+                    const { data: response } = await alphaNumericInsertItemMutation.mutateAsync({
+                        template,
+                        idempotencyKey,
+                    });
+                    dispatch(
+                        onTrackBackgroundJob({
+                            jobId: response.jobId,
+                            type: "bulk-inventory-insert",
+                            successMessage: `"${itemGroupName}" was successfully created in inventory.`,
+                            failureMessage: `The import of "${itemGroupName}" failed.`,
+                            invalidateKeys: [
+                                ["listOfItemsInStock"],
+                                ["ItemsInInventoryCheckingQuery"],
+                                ["RefactoredListInventoryCompany"],
+                            ],
+                            clearCacheKeys: [
+                                `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+                                `providerCompanies_${user.companyData.id}`,
+                            ],
+                        })
+                    );
                     templatesForApi.push(template);
                 }
             }
 
             if (templatesForApi.length > 0) {
-                message.warning(`Items were successfully imported. ${templatesForApi.length} item groups were created.`);
+                message.warning(
+                    `${templatesForApi.length} item group(s) queued for import. You'll be notified as each one completes.`
+                );
                 return closeModal();
             } else {
                 message.warning("No item groups could be formed from the processed items.");

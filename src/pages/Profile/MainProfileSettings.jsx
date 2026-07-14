@@ -7,6 +7,7 @@ import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import { persistor } from "../../store/Store";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
+import { onResetBackgroundJobs } from "../../store/slices/backgroundJobsSlice";
 import { onResetCustomer } from "../../store/slices/customerSlice";
 import {
   onResetDeviceInQuickGlance,
@@ -41,6 +42,7 @@ const MainProfileSettings = () => {
       dispatch(onResetEventInfo());
       dispatch(onResetStaffProfile());
       dispatch(onResetHelpers());
+      dispatch(onResetBackgroundJobs());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       clearSessionStorage();

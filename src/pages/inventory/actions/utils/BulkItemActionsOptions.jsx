@@ -1,7 +1,9 @@
 import { message } from "antd";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
+import { onTrackBackgroundJob } from "../../../../store/slices/backgroundJobsSlice";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import generateIdempotencyKey from "../../../../utils/actions/generateIdempotencyKey";
 import { verifyAndCreateLocation } from "./verifyLocationBeforeCreateNewInventory";
 
 export const bulkItemInsertAlphanumeric = async ({
@@ -21,6 +23,7 @@ export const bulkItemInsertAlphanumeric = async ({
   alphaNumericInsertItemMutation,
   dicSuppliers,
   queryClient,
+  dispatch,
 }) => {
   try {
     await verifyAndCreateLocation({
@@ -67,7 +70,11 @@ export const bulkItemInsertAlphanumeric = async ({
         : null,
     };
 
-    await alphaNumericInsertItemMutation.mutate(template);
+    const idempotencyKey = generateIdempotencyKey();
+    const { data: response } = await alphaNumericInsertItemMutation.mutateAsync({
+      template,
+      idempotencyKey,
+    });
     setValue("category_name", "");
     setValue("item_group", "");
     setValue("cost", "");
@@ -81,13 +88,26 @@ export const bulkItemInsertAlphanumeric = async ({
     setValue("containerSpotLimit", "0");
     setScannedSerialNumbers([]);
     openNotificationWithIcon(
-      "New group of items were created and stored in database."
+      "Your upload was registered and is processing in the background. We'll notify you when it's ready."
     );
     setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    dispatch(
+      onTrackBackgroundJob({
+        jobId: response.jobId,
+        type: "bulk-inventory-insert",
+        successMessage: "New group of items were successfully created in inventory.",
+        failureMessage: "The inventory upload failed.",
+        invalidateKeys: [
+          ["listOfItemsInStock"],
+          ["ItemsInInventoryCheckingQuery"],
+          ["RefactoredListInventoryCompany"],
+        ],
+        clearCacheKeys: [
+          `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+          `providerCompanies_${user.companyData.id}`,
+        ],
+      })
     );
-    await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
     return navigate("/inventory");
   } catch (error) {
     message.error("Failed to create new item: " + error.message);

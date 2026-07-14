@@ -31,25 +31,10 @@ const FormDeviceTrackingMethod = ({
   const { roleType } = useSelector((state) => state.permission);
   const options = isCoordinatorLevel(roleType) ? ["Permanent", "Rent"] : ["Rent"];
   const alphaNumericInsertItemMutation = useMutation({
-    mutationFn: (template) =>
-      devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-    },
+    mutationFn: ({ template, idempotencyKey }) =>
+      devitrakApi.post("/db_item/bulk-item-alphanumeric", template, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
   });
   const {
     supplierList,

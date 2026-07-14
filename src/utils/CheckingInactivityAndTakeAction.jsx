@@ -6,6 +6,7 @@ import { onLogout } from "../store/slices/adminSlice";
 import { devitrakApi } from "../api/devitrakApi";
 import { clearSessionStorage } from "../api/sessionHeaders";
 import { onResetArticleEdited } from "../store/slices/articleSlide";
+import { onResetBackgroundJobs } from "../store/slices/backgroundJobsSlice";
 import { onResetCustomer } from "../store/slices/customerSlice";
 import { onResetDeviceInQuickGlance, onResetDevicesHandle } from "../store/slices/devicesHandleSlice";
 import { onResetEventInfo } from "../store/slices/eventSlice";
@@ -54,6 +55,7 @@ const InactivityLogout = ({ children }) => {
     dispatch(onResetEventInfo());
     dispatch(onResetStaffProfile());
     dispatch(onResetHelpers());
+    dispatch(onResetBackgroundJobs());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
     clearSessionStorage();

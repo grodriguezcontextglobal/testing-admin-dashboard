@@ -17,6 +17,7 @@ import {
 // const { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore } = require("redux-persist");
 import adminSlice from "./slices/adminSlice";
 import articleSlide from "./slices/articleSlide";
+import backgroundJobsSlice from "./slices/backgroundJobsSlice";
 import customerSlice from "./slices/customerSlice";
 import devicesHandleSlice from "./slices/devicesHandleSlice";
 import eventSlice from "./slices/eventSlice";
@@ -38,6 +39,7 @@ const persistConfig = {
 const reducers = combineReducers({
   admin: adminSlice,
   article: articleSlide,
+  backgroundJobs: backgroundJobsSlice,
   customer: customerSlice,
   devicesHandle: devicesHandleSlice,
   event: eventSlice,

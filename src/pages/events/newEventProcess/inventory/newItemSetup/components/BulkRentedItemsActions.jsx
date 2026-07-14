@@ -1,5 +1,7 @@
 import { message } from "antd";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import { onTrackBackgroundJob } from "../../../../../../store/slices/backgroundJobsSlice";
+import generateIdempotencyKey from "../../../../../../utils/actions/generateIdempotencyKey";
 
 // Helper function to check if item already exists in event inventory
 export const checkIfItemExistsInEvent = (selectedItems, itemGroup) => {
@@ -70,7 +72,7 @@ export const finishingProcess = async ({
   setValue("containerSpotLimit", "0");
 
   openNotificationWithIcon(
-    "New group of items were created and added to event inventory."
+    "New group of items were queued for creation and added to the event's device list."
   );
   setLoadingStatus(false);
 
@@ -140,7 +142,24 @@ export const bulkItemInsertAlphanumericWithEventCheck = async ({
         : null,
     };
 
-    await alphaNumericInsertItemMutation.mutate(template);
+    const idempotencyKey = generateIdempotencyKey();
+    const { data: response } = await alphaNumericInsertItemMutation.mutateAsync({
+      template,
+      idempotencyKey,
+    });
+    dispatch(
+      onTrackBackgroundJob({
+        jobId: response.jobId,
+        type: "bulk-inventory-insert",
+        successMessage: `"${data.item_group}" was successfully created in inventory.`,
+        failureMessage: `Creating "${data.item_group}" failed — it was added to this event optimistically but may not exist in inventory. Please review it.`,
+        invalidateKeys: [
+          ["listOfItemsInStock"],
+          ["ItemsInInventoryCheckingQuery"],
+          ["RefactoredListInventoryCompany"],
+        ],
+      })
+    );
 
     // Check if item already exists in event inventory
     const itemExists = checkIfItemExistsInEvent(selectedItems, data.item_group);

@@ -23,6 +23,7 @@ import { clearSessionStorage } from "../../api/sessionHeaders";
 import { persistor } from "../../store/Store";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
+import { onResetBackgroundJobs } from "../../store/slices/backgroundJobsSlice";
 import { onResetCustomer } from "../../store/slices/customerSlice";
 import {
   onResetDeviceInQuickGlance,
@@ -93,6 +94,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     dispatch(onResetEventInfo());
     dispatch(onResetStaffProfile());
     dispatch(onResetHelpers());
+    dispatch(onResetBackgroundJobs());
     dispatch(onResetStripesInfo());
     dispatch(onResetSubscriptionInfo());
     clearSessionStorage();

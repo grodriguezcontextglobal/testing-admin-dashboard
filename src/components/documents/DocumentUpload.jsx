@@ -8,16 +8,10 @@ import SectionFooter from "./new_form_components/SectionFooter";
 import SectionHeader from "./new_form_components/SectionHeader";
 import SectionLabel from "./new_form_components/SectionLabel";
 import industries from "../navbar/component/industriesList.json";
+import generateIdempotencyKey from "../../utils/actions/generateIdempotencyKey";
 
 const JOB_POLL_INTERVAL_MS = 1500;
 const JOB_POLL_TIMEOUT_MS = 60000;
-
-const generateIdempotencyKey = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-};
 
 const DocumentUpload = ({ activeTab, refetch }) => {
   const [form] = Form.useForm();
