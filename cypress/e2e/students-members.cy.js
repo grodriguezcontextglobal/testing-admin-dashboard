@@ -55,3 +55,67 @@ describe('Students (member) section', () => {
     })
   })
 })
+
+describe('Students Phase 2 (grades, overdue, bulk return)', () => {
+  beforeEach(login)
+
+  it('members list shows the Grade column with seeded grades', () => {
+    cy.visit('/members')
+    cy.contains('th', 'Grade', { timeout: 20000 }).should('be.visible')
+    cy.contains('td', '7').should('exist')
+  })
+
+  it('Overdue devices tab lists overdue leases with days-overdue tags', () => {
+    cy.visit('/members')
+    cy.contains('button', 'Overdue devices', { timeout: 20000 }).click()
+    cy.contains('Maya Okafor', { timeout: 20000 }).should('be.visible')
+    cy.contains(/14 days?/).should('be.visible')
+    cy.contains('button', /send all reminders/i).should('be.visible')
+    cy.contains('button', /mark all returned/i).should('be.visible')
+  })
+
+  it('bulk-return API closes scoped leases and preserves history', () => {
+    // self-contained: create an overdue lease against a fake device id,
+    // bulk-return it by member scope, then clean up the closed row.
+    cy.request('POST', 'http://localhost:34001/api/admin/login', {
+      email: 'marcus.reyes@summitavrentals.com',
+      password: 'DemoPass123!',
+    }).then((login) => {
+      const headers = { 'x-token': login.body.token }
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:34001/api/db_member/new-member-assigned-device-lease',
+        headers,
+        body: {
+          member_id: 7, staff_member_id: 1, device_id: 999901, company_id: '2',
+          assigned_date: '2026-01-10', expected_return_date: '2026-02-01',
+        },
+      }).then((r) => expect(r.body.ok).to.eq(true))
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:34001/api/db_member/bulk-return',
+        headers,
+        body: { company_id: '2', member_ids: [7], return_status: 'returned', condition_note: 'e2e bulk return' },
+      }).then((r) => {
+        expect(r.body.ok).to.eq(true)
+        expect(r.body.returned).to.eq(1)
+      })
+      // history preserved: the closed lease is still retrievable
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:34001/api/db_member/retrieve-members-assigned-devices',
+        headers,
+        body: { member_id: 7, company_id: '2', returned: 1 },
+      }).then((r) => {
+        expect(r.body.rows.some((row) => row.return_status === 'returned')).to.eq(true)
+      })
+      // cleanup the e2e row
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:34001/api/db_member/remove-row-lease-member',
+        headers,
+        body: { company_id: '2', member_id: 7, device_id: 999901 },
+      })
+    })
+  })
+})

@@ -98,6 +98,28 @@ const MainTable = ({ state }) => {
       },
     },
     {
+      title: "Grade",
+      dataIndex: "grade",
+      width: "10%",
+      sorter: {
+        compare: (a, b) => ("" + (a.grade ?? "")).localeCompare("" + (b.grade ?? ""), undefined, { numeric: true }),
+      },
+      filters: [...new Set((membersData || []).map((m) => m.grade).filter(Boolean))]
+        .sort((a, b) => ("" + a).localeCompare("" + b, undefined, { numeric: true }))
+        .map((g) => ({ text: `Grade ${g}`, value: g })),
+      onFilter: (value, record) => record.grade === value,
+      render: (grade, record) => (
+        <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+          <Typography style={styleCellColumns}>{grade || "—"}</Typography>
+          {record.homeroom && (
+            <Typography style={{ ...styleCellColumns, fontSize: "12px", color: "var(--gray-500, #777b73)" }}>
+              {record.homeroom}
+            </Typography>
+          )}
+        </span>
+      ),
+    },
+    {
       title: "Email address",
       dataIndex: "email",
       responsive: ["lg"],

@@ -14,6 +14,8 @@ export const EMPTY_SINGLE_MEMBER_FORM = {
   address_city: "",
   address_state: "",
   address_zip: "",
+  grade: "",
+  homeroom: "",
   minor: false,
   parent_guardian_first_name: "",
   parent_guardian_last_name: "",

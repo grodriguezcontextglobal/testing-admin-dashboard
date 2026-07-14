@@ -26,6 +26,8 @@ export const headerAliasMap = {
   city: ["address_city", "city", "addr_city"],
   state: ["address_state", "state", "addr_state", "province"],
   zip: ["address_zip", "zip", "zip_code", "zipcode", "postal_code"],
+  grade: ["grade", "grade_level", "year"],
+  homeroom: ["homeroom", "home_room", "class", "classroom"],
   minor: ["minor", "is_minor"],
   "parent guardian first name": [
     "parent_guardian_first_name",
@@ -116,6 +118,8 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
       address_state: normalizedRow.state || "",
       address_zip: normalizedRow.zip || "",
       company_id: companyId,
+      grade: String(normalizedRow.grade || ""),
+      homeroom: String(normalizedRow.homeroom || ""),
       minor: isMinor,
       parent_guardian_first_name:
         normalizedRow["parent guardian first name"] || "",

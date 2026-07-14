@@ -15,6 +15,7 @@ import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
 import MainTable from "./tables/MainTable";
+import OverdueDevicesTable from "./tables/OverdueDevicesTable";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
 
 const MainPage = () => {
@@ -23,6 +24,7 @@ const MainPage = () => {
   const titleParams = String(slug || "").replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
+  const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
   const { register, setValue } = useForm();
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -121,7 +123,57 @@ const MainPage = () => {
         </Grid>
 
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          {loadingStatus ? <DevitrakLoading /> : <MainTable state={titleParams} />}
+          <div
+            role="tablist"
+            style={{
+              display: "inline-flex",
+              gap: 4,
+              padding: 4,
+              margin: "0 0 12px",
+              background: "var(--gray-50, #f7f7f4)",
+              border: "1px solid var(--gray-200, #ddded6)",
+              borderRadius: "var(--radius-md, 8px)",
+            }}
+          >
+            {[
+              { key: "all", label: `All ${titleParams || "members"}` },
+              { key: "overdue", label: "Overdue devices" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={activeView === tab.key}
+                onClick={() => setActiveView(tab.key)}
+                style={{
+                  border: "none",
+                  cursor: "pointer",
+                  borderRadius: "var(--radius-sm, 6px)",
+                  padding: "8px 12px",
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  textTransform: "capitalize",
+                  backgroundColor:
+                    activeView === tab.key ? "var(--base-white, #fff)" : "transparent",
+                  color:
+                    activeView === tab.key
+                      ? "var(--gray-700, #484d47)"
+                      : "var(--gray-500, #777b73)",
+                  boxShadow: activeView === tab.key ? "var(--shadow-sm)" : "none",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {loadingStatus ? (
+            <DevitrakLoading />
+          ) : activeView === "overdue" ? (
+            <OverdueDevicesTable />
+          ) : (
+            <MainTable state={titleParams} />
+          )}
         </Grid>
       </Grid>
       {addingNewMember && (

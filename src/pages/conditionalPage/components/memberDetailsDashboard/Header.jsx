@@ -70,7 +70,11 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
       <Divider style={{ margin: "0.5rem 0" }} />
       <RefactoredHeaderUntitledUiReact
         title={`${detailMemberInfo?.first_name} ${detailMemberInfo?.last_name ?? ""}`}
-        subtitle={detailMemberInfo?.external_id ? `External ID: ${detailMemberInfo.external_id}` : null}
+        subtitle={[
+          detailMemberInfo?.grade ? `Grade ${detailMemberInfo.grade}` : null,
+          detailMemberInfo?.homeroom || null,
+          detailMemberInfo?.external_id ? `External ID: ${detailMemberInfo.external_id}` : null,
+        ].filter(Boolean).join(" · ") || null}
         actions={actions.desktop}
         image={detailMemberInfo?.image_url}
         centerContentComponentTitle={"Contact"}
