@@ -4,7 +4,7 @@ import { Divider, Dropdown } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
@@ -50,6 +50,17 @@ const MainPage = () => {
       controller.abort();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Industry gate: the members module only exists for industries with an
+  // audience mapping (Education -> Students, etc.). Companies outside that
+  // list (e.g. AV rental) never see this page — even via deep link or a
+  // stale pre-login session.
+  const hasMembersSection = Boolean(
+    getIndustryProfile(adminUser?.companyData?.industry).audience
+  );
+  if (!hasMembersSection) {
+    return <Navigate to="/" replace />;
+  }
 
   const manageMembersItems = buildManageMembersMenu({
     titleParams,

@@ -1,10 +1,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { hasPermission, resolveRoleType } from "../../../../config/roles";
 import { onAddMemberInfo } from "../../../../store/slices/memberSlice";
+import { getIndustryProfile } from "../../../../config/industryProfiles";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import AddNewMember from "../modals/AddNewMember";
 import MemberInfoHeader from "./Header";
@@ -55,6 +56,10 @@ const MainPage = () => {
       }
     },
   });
+
+  if (!getIndustryProfile(user?.companyData?.industry).audience) {
+    return <Navigate to="/" replace />;
+  }
 
   const navTabs = [
     { label: "Home",                route: "main",                       permission: "nav:members",            id: 0 },

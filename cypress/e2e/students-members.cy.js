@@ -174,3 +174,35 @@ describe('Representative accountability (minors vs adults)', () => {
     })
   })
 })
+
+describe('Industry gating (AV rental company has no Students)', () => {
+  const AV_EMAIL = 'marcus.reyes@summitavrentals.com'
+
+  const loginAV = () => {
+    cy.visit('/login')
+    cy.get('input').first().should('be.visible').type(AV_EMAIL)
+    cy.contains('button', /continue/i).click()
+    cy.get('input[type="password"]', { timeout: 15000 }).should('be.visible').type(PASSWORD, { log: false })
+    cy.get('button').filter(':visible').contains(/sign in|log in|continue/i).click()
+    cy.location('pathname', { timeout: 30000 }).should('not.eq', '/login')
+  }
+
+  it('AV rental navbar has no Students tab', () => {
+    cy.viewport(1440, 900)
+    loginAV()
+    cy.contains('a', /home/i, { timeout: 20000 }).should('be.visible')
+    cy.contains('nav a, a', /^students$/i).should('not.exist')
+  })
+
+  it('deep-linking /members as an AV company redirects home', () => {
+    loginAV()
+    cy.visit('/members')
+    cy.location('pathname', { timeout: 20000 }).should('eq', '/')
+  })
+
+  it('school district still sees the Students tab', () => {
+    cy.viewport(1440, 900)
+    login() // principal
+    cy.contains('a', /^students$/i, { timeout: 20000 }).should('be.visible')
+  })
+})
