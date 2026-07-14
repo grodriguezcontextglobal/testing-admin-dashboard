@@ -13,7 +13,32 @@ import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import BaseTable from "../../../components/UX/tables/BaseTable";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 const MainTable = ({ state }) => {
+  // For cells that stack two lines (grade+homeroom, badge+rep) — must NOT
+  // use styleCellColumns, whose position:absolute makes lines overlap.
+  const stackedCellStyle = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: "2px",
+    textAlign: "left",
+  };
+  const stackedPrimaryText = {
+    fontFamily: "Inter, sans-serif",
+    fontSize: "14px",
+    lineHeight: "20px",
+    fontWeight: 500,
+    color: "var(--gray-900, #171d1a)",
+    margin: 0,
+  };
+  const stackedSecondaryText = {
+    fontFamily: "Inter, sans-serif",
+    fontSize: "12px",
+    lineHeight: "16px",
+    color: "var(--gray-500, #777b73)",
+    margin: 0,
+  };
   const styleCellColumns = {
     justifyContent: "flex-start",
     ...Subtitle,
@@ -33,6 +58,7 @@ const MainTable = ({ state }) => {
   const dispatch = useDispatch();
   const [membersData, setMembersData] = useState([]);
   const { user } = useSelector((state) => state.admin);
+  const industryProfile = getIndustryProfile(user?.companyData?.industry);
   const membersDataQuery = useQuery({
     queryKey: ["membersInfoQuery"],
     queryFn: () =>
@@ -99,6 +125,7 @@ const MainTable = ({ state }) => {
     },
     {
       title: "Grade",
+      key: "gradeColumn",
       dataIndex: "grade",
       width: "10%",
       sorter: {
@@ -109,12 +136,12 @@ const MainTable = ({ state }) => {
         .map((g) => ({ text: `Grade ${g}`, value: g })),
       onFilter: (value, record) => record.grade === value,
       render: (grade, record) => (
-        <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          <Typography style={styleCellColumns}>{grade || "—"}</Typography>
+        <span style={stackedCellStyle}>
+          <Typography style={stackedPrimaryText}>
+            {grade ? `Grade ${grade}` : "—"}
+          </Typography>
           {record.homeroom && (
-            <Typography style={{ ...styleCellColumns, fontSize: "12px", color: "var(--gray-500, #777b73)" }}>
-              {record.homeroom}
-            </Typography>
+            <Typography style={stackedSecondaryText}>{record.homeroom}</Typography>
           )}
         </span>
       ),
@@ -166,16 +193,14 @@ const MainTable = ({ state }) => {
         }
         if (hasRep) {
           return (
-            <span style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+            <span style={stackedCellStyle}>
               {badge(
                 "var(--blue-50, #eff8ff)",
                 "var(--blue-200, #b2ddff)",
                 "var(--blue-800, #1849a9)",
                 "Minor"
               )}
-              <Typography
-                style={{ ...styleCellColumns, fontSize: "12px", color: "var(--gray-500, #777b73)" }}
-              >
+              <Typography style={stackedSecondaryText}>
                 Rep: {record.parent_guardian_first_name} {record.parent_guardian_last_name}
               </Typography>
             </span>
@@ -297,7 +322,10 @@ const MainTable = ({ state }) => {
         <BaseTable
           style={{ width: "100%", cursor: "pointer", ...tableStyle }}
           dataSource={membersData}
-          columns={columns}
+          // industry profile decides whether the Grade column applies
+          columns={columns.filter(
+            (c) => c.key !== "gradeColumn" || industryProfile.fields.grade
+          )}
           rowClassName="editable-row"
           enablePagination={true}
           pageSize={10}

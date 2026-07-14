@@ -17,7 +17,7 @@ import DeleteMember from "./components/modals/DeleteMember";
 import MainTable from "./tables/MainTable";
 import OverdueDevicesTable from "./tables/OverdueDevicesTable";
 import MembersStatsRow from "./components/MembersStatsRow";
-import industriesList from "../../components/navbar/component/industriesList.json";
+import { getIndustryProfile } from "../../config/industryProfiles";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
 
 const MainPage = () => {
@@ -25,7 +25,7 @@ const MainPage = () => {
   const slug = location.state?.referencing || "";
   const { user: adminUser } = useSelector((state) => state.admin);
   const industryLabel =
-    industriesList?.[adminUser?.companyData?.industry]?.[0] ?? "Members";
+    getIndustryProfile(adminUser?.companyData?.industry).audience ?? "Members";
   const titleParams = String(slug || industryLabel).replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);

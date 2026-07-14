@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
+import { getIndustryProfile } from "../../../../../../../config/industryProfiles";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
@@ -430,6 +431,9 @@ const AssignmentDevicesToMember = () => {
   // Representative accountability: minors need a complete parent/guardian on
   // file — the guardian is the responsible party who signs the contract.
   const isMinor = Number(memberInfo.minor) === 1;
+  const repLabel = getIndustryProfile(
+    user?.companyData?.industry
+  ).representative.label.toLowerCase();
   const guardianComplete = Boolean(
     memberInfo.parent_guardian_first_name?.trim?.() &&
       memberInfo.parent_guardian_email?.trim?.()
@@ -458,7 +462,7 @@ const AssignmentDevicesToMember = () => {
           }}
         >
           <strong>Representative required.</strong> {memberInfo.first_name} is a
-          minor and has no complete parent/guardian on file. Devices cannot be
+          minor and has no complete {repLabel} on file. Devices cannot be
           assigned until a representative (name + email) is added in{" "}
           <NavLink
             to={`/member/${memberInfo.member_id}/update-member-information`}
