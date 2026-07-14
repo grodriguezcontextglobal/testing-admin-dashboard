@@ -129,6 +129,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
                 }),
                 devitrakApi.post('/db_inventory/update-large-data', { //
                     item_ids,
+                    company_id,
                     warehouse: 0, // Mark items as out of warehouse
                     updates: { logistic_status: 'in-transit', warehouse: 0 }
                 }),
@@ -153,6 +154,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
                 }),
                 devitrakApi.post('/db_inventory/update-large-data', {
                     item_ids,
+                    company_id,
                     warehouse: 0, // Mark items as out of warehouse
                     updates: { logistic_status: 'in-transit', warehouse: 0 }
                 }),

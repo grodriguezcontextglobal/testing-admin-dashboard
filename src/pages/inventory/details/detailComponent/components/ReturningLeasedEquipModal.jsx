@@ -80,6 +80,7 @@ const ReturningLeasedEquipModal = ({
       const returnDate = new Date().toISOString();
       const payload = {
         item_ids: [dataFound.item_id],
+        company_id: user.aqlInfo.company_id,
         updates: {
           warehouse: 1,
           enableAssignFeature: 0,
