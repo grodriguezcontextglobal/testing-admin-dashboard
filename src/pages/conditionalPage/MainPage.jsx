@@ -38,6 +38,14 @@ const MainPage = () => {
   const canDeleteMembers = hasPermission("member:delete", roleType);
   const canManageMembers = canAddMembers || canDeleteMembers;
 
+  // command-palette quick action: open the add-member modal on arrival (once)
+  useEffect(() => {
+    if (location.state?.quickAction === "create") {
+      setAddingNewMember(true);
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
+
   useEffect(() => {
     const controller = new AbortController();
     setValue("searchAdmin", ".");

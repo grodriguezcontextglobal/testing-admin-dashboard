@@ -229,4 +229,29 @@ describe('Industry gating (AV rental company has no Students)', () => {
     loginAV()
     cy.contains('a', /^consumers$/i, { timeout: 20000 }).should('be.visible')
   })
+
+  it('school palette has Students nav + Add new student action, and it works', () => {
+    cy.viewport(1440, 900)
+    login() // principal
+    cy.get('input[name="searchValue"]', { timeout: 20000 }).click({ force: true })
+    cy.get('.cmdk-panel', { timeout: 10000 }).within(() => {
+      cy.contains(/^Students$/).should('be.visible')
+      cy.contains(/add new student/i).should('be.visible').click()
+    })
+    // lands on /members with the add-member modal open
+    cy.location('pathname', { timeout: 20000 }).should('eq', '/members')
+    cy.contains(/single|xlsx|import/i, { timeout: 20000 }).should('be.visible')
+  })
+
+  it('AV palette keeps consumer entries and has no student entries', () => {
+    cy.viewport(1440, 900)
+    loginAV()
+    cy.get('input[name="searchValue"]', { timeout: 20000 }).click({ force: true })
+    cy.get('.cmdk-panel', { timeout: 10000 }).within(() => {
+      cy.contains(/^Consumers$/).should('be.visible')
+      cy.contains(/add new consumer/i).should('be.visible')
+      cy.contains(/^Students$/).should('not.exist')
+      cy.contains(/add new student/i).should('not.exist')
+    })
+  })
 })

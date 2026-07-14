@@ -12,9 +12,13 @@ const GlobalCommandMenu = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
-  const hiddenNavTabs = getIndustryProfile(
-    user?.companyData?.industry
-  ).hiddenNavTabs;
+  const industryProfile = getIndustryProfile(user?.companyData?.industry);
+  const hiddenNavTabs = industryProfile.hiddenNavTabs;
+  // members section (Students/Patients/...) exists only for mapped industries
+  const membersAudience = industryProfile.audience; // e.g. "Students" | null
+  const membersSingular = membersAudience
+    ? membersAudience.replace(/s$/i, "").toLowerCase() // Students -> student
+    : null;
 
   useEffect(() => {
     const onKey = (e) => {
@@ -53,6 +57,14 @@ const GlobalCommandMenu = () => {
           ...(isTabVisible("consumers")
             ? [{ id: "consumers", label: "Consumers", icon: "tabler:users", onSelect: () => navigate("/consumers") }]
             : []),
+          ...(membersAudience
+            ? [{
+                id: "members",
+                label: membersAudience,
+                icon: industryProfile.icon,
+                onSelect: () => navigate("/members"),
+              }]
+            : []),
           { id: "staff", label: "Staff", icon: "tabler:id-badge-2", onSelect: () => navigate("/staff") },
           { id: "posts", label: "Posts", icon: "tabler:news", onSelect: () => navigate("/posts") },
         ],
@@ -73,6 +85,15 @@ const GlobalCommandMenu = () => {
                 icon: "tabler:user-plus",
                 onSelect: () =>
                   navigate("/consumers", { state: { quickAction: "create" } }),
+              }]
+            : []),
+          ...(membersAudience
+            ? [{
+                id: "new-member",
+                label: `Add new ${membersSingular}`,
+                icon: "tabler:user-plus",
+                onSelect: () =>
+                  navigate("/members", { state: { quickAction: "create" } }),
               }]
             : []),
           {
@@ -110,7 +131,7 @@ const GlobalCommandMenu = () => {
         ],
       },
     ],
-    [navigate, hiddenNavTabs]
+    [navigate, hiddenNavTabs, membersAudience, membersSingular, industryProfile.icon]
   );
 
   return (
@@ -119,7 +140,9 @@ const GlobalCommandMenu = () => {
       onClose={() => setOpen(false)}
       groups={groups}
       searchScopes={[
-        { key: "Consumers", label: "Consumers", icon: "tabler:users" },
+        ...(isTabVisible("consumers")
+          ? [{ key: "Consumers", label: "Consumers", icon: "tabler:users" }]
+          : []),
         { key: "Staff", label: "Staff", icon: "tabler:id-badge-2" },
         { key: "Devices", label: "Devices", icon: "tabler:device-mobile" },
         { key: "Events", label: "Events", icon: "tabler:calendar-event" },
