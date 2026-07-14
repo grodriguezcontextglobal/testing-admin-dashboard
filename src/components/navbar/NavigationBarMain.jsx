@@ -314,6 +314,10 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               justifyContent: "flex-start",
               alignItems: "center",
               padding: 0,
+              // with the dynamic industry tab the row can exceed its grid at
+              // medium widths — wrap instead of overflowing under the search
+              flexWrap: "wrap",
+              minWidth: 0,
             }}
           >
             <NavLink

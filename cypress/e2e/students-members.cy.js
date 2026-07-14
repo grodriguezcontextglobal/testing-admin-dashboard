@@ -3,7 +3,7 @@
  * Covers Phase 1 hardening: Students nav visibility (Education industry),
  * members list, and deep-linked member detail tabs (previously crashed).
  */
-const EMAIL = Cypress.env('DEMO_EMAIL') || 'marcus.reyes@summitavrentals.com'
+const EMAIL = Cypress.env('DEMO_EMAIL') || 'principal@summitunified.edu'
 const PASSWORD = Cypress.env('DEMO_PASSWORD') || 'DemoPass123!'
 
 const login = () => {
@@ -19,6 +19,7 @@ describe('Students (member) section', () => {
   beforeEach(login)
 
   it('shows the Students nav item for an Education company and lists students', () => {
+    cy.viewport(1440, 900)
     cy.contains('a,button', /^students$/i, { timeout: 20000 }).should('be.visible').click()
     cy.location('pathname').should('eq', '/members')
     // seeded students appear
@@ -48,7 +49,7 @@ describe('Students (member) section', () => {
     cy.request({
       method: 'POST',
       url: 'http://localhost:34001/api/db_member/consulting-member',
-      body: { company_id: '2' },
+      body: { company_id: '3' },
       failOnStatusCode: false,
     }).then((res) => {
       expect(res.status).to.eq(401)
@@ -78,8 +79,8 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
     // self-contained: create an overdue lease against a fake device id,
     // bulk-return it by member scope, then clean up the closed row.
     cy.request('POST', 'http://localhost:34001/api/admin/login', {
-      email: 'marcus.reyes@summitavrentals.com',
-      password: 'DemoPass123!',
+      email: EMAIL,
+      password: PASSWORD,
     }).then((login) => {
       const headers = { 'x-token': login.body.token }
       cy.request({
@@ -87,7 +88,7 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
         url: 'http://localhost:34001/api/db_member/new-member-assigned-device-lease',
         headers,
         body: {
-          member_id: 7, staff_member_id: 1, device_id: 999901, company_id: '2',
+          member_id: 7, staff_member_id: 1, device_id: 999901, company_id: '3',
           assigned_date: '2026-01-10', expected_return_date: '2026-02-01',
         },
       }).then((r) => expect(r.body.ok).to.eq(true))
@@ -95,7 +96,7 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
         method: 'POST',
         url: 'http://localhost:34001/api/db_member/bulk-return',
         headers,
-        body: { company_id: '2', member_ids: [7], return_status: 'returned', condition_note: 'e2e bulk return' },
+        body: { company_id: '3', member_ids: [7], return_status: 'returned', condition_note: 'e2e bulk return' },
       }).then((r) => {
         expect(r.body.ok).to.eq(true)
         expect(r.body.returned).to.eq(1)
@@ -105,7 +106,7 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
         method: 'POST',
         url: 'http://localhost:34001/api/db_member/retrieve-members-assigned-devices',
         headers,
-        body: { member_id: 7, company_id: '2', returned: 1 },
+        body: { member_id: 7, company_id: '3', returned: 1 },
       }).then((r) => {
         expect(r.body.rows.some((row) => row.return_status === 'returned')).to.eq(true)
       })
@@ -114,7 +115,7 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
         method: 'POST',
         url: 'http://localhost:34001/api/db_member/remove-row-lease-member',
         headers,
-        body: { company_id: '2', member_id: 7, device_id: 999901 },
+        body: { company_id: '3', member_id: 7, device_id: 999901 },
       })
     })
   })
@@ -162,7 +163,7 @@ describe('Representative accountability (minors vs adults)', () => {
         headers: { 'x-token': l.body.token },
         failOnStatusCode: false,
         body: {
-          member_id: 10, staff_member_id: 1, device_id: 999902, company_id: '2',
+          member_id: 10, staff_member_id: 1, device_id: 999902, company_id: '3',
           assigned_date: '2026-07-14', expected_return_date: '2027-06-15',
         },
       }).then((r) => {

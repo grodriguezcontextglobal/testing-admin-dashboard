@@ -3,7 +3,7 @@
  * lease (no pseudo-event, no receivers pool), and the lease appears in the
  * student's assigned-devices table.
  */
-const EMAIL = 'marcus.reyes@summitavrentals.com'
+const EMAIL = 'principal@summitunified.edu'
 const PASSWORD = 'DemoPass123!'
 const API = 'http://localhost:34001/api'
 
@@ -21,7 +21,7 @@ describe('Member device assignment (first-class lease)', () => {
     // Baseline: count lease-type events before
     cy.request('POST', `${API}/admin/login`, { email: EMAIL, password: PASSWORD }).then((l) => {
       const headers = { 'x-token': l.body.token }
-      cy.request({ url: `${API}/event/event-list-per-company?company=Summit AV Rentals&type=lease`, headers })
+      cy.request({ url: `${API}/event/event-list-per-company?company=Summit Unified School District&type=lease`, headers })
         .then((r) => cy.wrap((r.body.list || []).length).as('eventsBefore'))
     })
 
@@ -45,14 +45,14 @@ describe('Member device assignment (first-class lease)', () => {
     // lands back on the student's device list with the lease visible
     cy.location('pathname', { timeout: 30000 }).should('eq', '/member/3/main')
     cy.get('#root', { timeout: 30000 }).should(($r) => {
-      expect($r.text()).to.match(/SAV-\d+/)
+      expect($r.text()).to.match(/(CHR|IPD|CAL|HSP|CRT)-\d+/)
     })
 
     // and no new lease-type event was fabricated
     cy.get('@eventsBefore').then((before) => {
       cy.request('POST', `${API}/admin/login`, { email: EMAIL, password: PASSWORD }).then((l) => {
         const headers = { 'x-token': l.body.token }
-        cy.request({ url: `${API}/event/event-list-per-company?company=Summit AV Rentals&type=lease`, headers })
+        cy.request({ url: `${API}/event/event-list-per-company?company=Summit Unified School District&type=lease`, headers })
           .then((r) => {
             expect((r.body.list || []).length, 'lease-event count unchanged').to.eq(before)
           })
@@ -66,10 +66,10 @@ describe('Member device return (history-preserving)', () => {
     login()
     cy.visit('/member/3/main')
     // the assigned device row from the previous test — remember its serial
-    cy.contains('td', /SAV-\d+/, { timeout: 30000 })
+    cy.contains('td', /(CHR|IPD|CAL|HSP|CRT)-\d+/, { timeout: 30000 })
       .should('be.visible')
       .invoke('text')
-      .then((t) => cy.wrap(t.match(/SAV-\d+/)[0]).as('serial'))
+      .then((t) => cy.wrap(t.match(/(CHR|IPD|CAL|HSP|CRT)-\d+/)[0]).as('serial'))
     cy.contains('button', /^Return$/).first().click()
     // outcome: damaged + note + condition
     // MUI selects render as .MuiSelect-select; the modal has: 0 = outcome,
@@ -94,7 +94,7 @@ describe('Member device return (history-preserving)', () => {
         method: 'POST',
         url: `${API}/db_member/retrieve-members-assigned-devices`,
         headers,
-        body: { member_id: 3, company_id: '2', returned: 1 },
+        body: { member_id: 3, company_id: '3', returned: 1 },
       }).then((r) => {
         const closed = (r.body.rows || []).find((row) => row.return_status === 'damaged')
         expect(closed, 'closed lease with damaged status exists').to.not.eq(undefined)
