@@ -16,7 +16,6 @@ import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../../../components/icons/CheckIcon";
-import { checkArray } from "../../../../../../../components/utils/checkArray";
 import { formatDate } from "../../../../../../../components/utils/dateFormat";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../../components/UX/buttons/GrayButton";
@@ -46,7 +45,6 @@ const AssignmentDevicesToMember = () => {
   const [contractList, setContractList] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const verificationInfo = {};
-  const newEventInfo = {};
   const dateToUse = useMemo(() => formatDate(new Date()), []);
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
@@ -57,7 +55,6 @@ const AssignmentDevicesToMember = () => {
     setValue("expectedReturnDate", dateToUse);
   }, [dateToUse, setValue]);
 
-  const referenceDateTime = useMemo(() => new Date().getTime(), []);
 
   const { role, locationsAssignPermission } = useStaffRoleAndLocations();
   // const bodyFetchRequest = () => {
@@ -200,8 +197,7 @@ const AssignmentDevicesToMember = () => {
     });
   };
   const createNewLease = async (props) => {
-    const newLeaseIds = [];
-    const verificationContractID = await verificationContractStaffMember();
+    const verificationContractID = await verificationContractMember();
     for (let data of props.deviceInfo) {
       const newLease = await devitrakApi.post(
         "/db_member/new-member-assigned-device-lease",
@@ -216,217 +212,58 @@ const AssignmentDevicesToMember = () => {
             ? formatDate(new Date(props.expectedReturnDate))
             : dateToUse,
           returned: 0,
-          assigned_date: new Date().toLocaleDateString(),
+          assigned_date: formatDate(new Date()),
         }
       );
-      newLeaseIds.push(newLease.insertId);
+      if (!newLease?.data?.ok) {
+        throw new Error("Failed to create the device lease record.");
+      }
     }
     return (verificationInfo._id =
       verificationContractID.data.verificationInfo._id);
   };
-  const createEvent = async (props) => {
-    try {
-      const respoNewEvent = await devitrakApi.post("/db_event/new_event", {
-        event_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
-        venue_name: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
-        street_address: props.street,
-        city_address: props.city,
-        state_address: props.state,
-        zip_address: props.zip,
-        email_company: memberInfo.email,
-        phone_number: memberInfo.phone_number ?? "000-000-0000",
-        company_assigned_event_id: user.sqlInfo.company_id,
-        contact_name: `${user.name} ${user.lastName}`,
-      });
-      if (respoNewEvent.data) {
-        return (newEventInfo.insertId = respoNewEvent.data.consumer.insertId);
-      }
-    } catch (error) {
-      return null;
-    }
-  };
-  const createDeviceRecordInNoSQLDatabase = async (props) => {
-    const db = props.deviceInfo;
-    let items = [];
-    for (let index = 0; index < db.length; index++) {
-      await devitrakApi.post("/receiver/receivers-pool", {
-        device: db[index].serial_number,
-        status: "Operational",
-        activity: true,
-        comment: "No comment",
-        eventSelected: `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-          } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`,
-        provider: user.company,
-        type: db[index].item_group,
-        company: user.companyData.id,
-        contract_type: "lease",
-      });
-      items.push({
-        serial_number: db[index].serial_number,
-        type: db[index].item_group,
-        id: db[index].item_id,
-      });
-    }
-    {
-      addContracts &&
-        (await emailContractToStaffMember({
-          company_name: user.companyData.company_name,
-          emailAdmin: user.email,
-          member: {
-            name: `${memberInfo.first_name ?? ""} ${memberInfo.last_name ?? ""
-              }`,
-            email: memberInfo.email,
-          },
-          contractList: contractList,
-          items: items,
-          verification_id: verificationInfo._id,
-        }));
-    }
-    return null;
-  };
-  const addDeviceToEvent = async (props) => {
-    for (let data of props) {
-      for (let item of data.selectedList) {
-        await devitrakApi.post("/db_event/event_device_directly", {
-          event_id: newEventInfo.insertId,
-          item_id: item.item_id,
-        });
-      }
-    }
-    queryClient.invalidateQueries({
-      queryKey: ["staffMemberInfo"],
-      exact: true,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["imagePerItemList"],
-      exact: true,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["ItemsInventoryCheckingQuery"],
-      exact: true,
-    });
-  };
-  const createEventNoSQL = async (props) => {
-    const eventName = `${memberInfo.first_name} ${memberInfo.last_name} / ${memberInfo.email
-      } / ${new Date().toLocaleDateString()} / reference:${referenceDateTime}`;
-    const eventLink = eventName.replace(/ /g, "%20");
-    const eventFormat = {
-      user: user.email,
-      company: user.company,
-      subscription: [],
-      eventInfoDetail: {
-        eventName: eventName,
-        eventLocation: `${props.state}, ${props.zip}`,
-        address: `${props.street}, ${props.city} ${props.state}, ${props.zip}`,
-        building: eventName,
-        floor: "",
-        merchant: false,
-        dateBegin: new Date().toString(),
-        dateEnd: props.expectedReturnDate
-          ? formatDate(new Date(props.expectedReturnDate))
-          : dateToUse,
-        dateBeginTime: new Date().getTime(),
-      },
-      staff: {
-        adminUser: [
-          {
-            firstName: user.name,
-            lastName: user.lastName,
-            email: user.email,
-            role: "Administrator",
-          },
-        ],
-        headsetAttendees: [],
-      },
-      deviceSetup: [
-        {
-          category: props.deviceInfo[0].category_name,
-          group: props.deviceInfo[0].item_group,
-          value: props.deviceInfo[0].cost,
-          description: props.deviceInfo[0].descript_item,
-          company: props.deviceInfo[0].company_id,
-          ownership: props.deviceInfo[0].ownership,
-          createdBy: user.email,
-          key: props.deviceInfo[0].item_id,
-          dateCreated: props.deviceInfo[0].create_at,
-          resume: props.deviceInfo[0].descript_item,
-          existing: true,
-          quantity: props.quantity,
-          consumerUses: false,
-          startingNumber: props.deviceInfo[0].serial_number,
-          endingNumber: props.deviceInfo?.at(-1)?.serial_number,
-        },
-      ],
-      extraServicesNeeded: false,
-      extraServices: [],
-      active: true,
-      contactInfo: {
-        name: `${user.name} ${user.lastName}`,
-        phone: [user.phone],
-        email: user.email,
-      },
-      qrCodeLink: `https://app.devitrak.net/?event=${eventLink}&company=${user.companyData.id}`,
-      type: "lease",
-      company_id: user.companyData.id,
-      contract_for: "member",
-    };
-    const newEventInfo = await devitrakApi.post(
-      "/event/create-event",
-      eventFormat
-    );
-    if (newEventInfo.data.ok) {
-      const eventId = checkArray(newEventInfo.data.event);
-      await devitrakApi.patch(`/event/edit-event/${eventId.id}`, {
-        qrCodeLink: `https://app.devitrak.net/?event=${eventId.id}&company=${user.companyData.id}`,
-      });
-      await createDeviceRecordInNoSQLDatabase({
-        deviceInfo: props.deviceInfo,
-        event_id: eventId.id,
-      });
-    }
-  };
+  // First-class lease lifecycle: warehouse-out -> lease rows (+ contract
+  // verification) -> contract email -> done. No pseudo-events, no receiver
+  // pools — the lease table is the single source of truth.
   const option1 = async (props) => {
-    await createEvent(props.template);
     const deviceInfo = props.selectedData; //*array of existing devices in sql db
-    if (newEventInfo.insertId && deviceInfo.length > 0) {
+    if (deviceInfo.length > 0) {
       await updateDeviceInWarehouse({
         item_group: deviceInfo[0].item_group,
         category_name: deviceInfo[0].category_name,
         data: [...deviceInfo.map((item) => item.serial_number)],
       });
       await createNewLease({ ...props.template, deviceInfo });
-      await createEventNoSQL({
-        ...props.template,
-        quantity: props.quantity,
-        deviceInfo,
-      });
-      await addDeviceToEvent([
-        {
-          item_group: deviceInfo[0].item_group,
-          category_name: deviceInfo[0].category_name,
-          min_serial_number: deviceInfo?.at(-1)?.serial_number,
-          quantity: props.quantity,
-          selectedList: deviceInfo,
-        },
-      ]);
-      openNotificationWithIcon(
-        "success",
-        "Equipment assigned to member.",
-        ""
-      );
+      if (addContracts) {
+        await emailContractToMember({
+          contractList: contractList,
+          items: deviceInfo.map((d) => ({
+            serial_number: d.serial_number,
+            type: d.item_group,
+            id: d.item_id,
+          })),
+          verification_id: verificationInfo._id,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["staffMemberInfo"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["ItemsInventoryCheckingQuery"], exact: true });
       queryClient.invalidateQueries({
         queryKey: ["devicesAssignedActive"],
         exact: true,
         refetchType: "active",
         refetchActive: true,
       });
+      openNotificationWithIcon(
+        "success",
+        "Equipment assigned to member.",
+        ""
+      );
       setLoadingStatus(false);
       return navigate(`/member/${memberInfo?.member_id}/main`);
     }
   };
-  const verificationContractStaffMember = async () => {
+  const verificationContractMember = async () => {
     const verification = await devitrakApi.post(
       "/document/verification/member/signed_document",
       {
@@ -439,7 +276,7 @@ const AssignmentDevicesToMember = () => {
     );
     return verification;
   };
-  const emailContractToStaffMember = async (props) => {
+  const emailContractToMember = async (props) => {
     await devitrakApi.post(
       "/nodemailer/liability-contract-member-email-notification",
       {
@@ -460,7 +297,7 @@ const AssignmentDevicesToMember = () => {
     );
     return null;
   };
-  const assignDeviceToStaffMember = async (data) => {
+  const assignDeviceToMember = async (data) => {
     try {
       const template = {
         street: data.street,
@@ -553,7 +390,10 @@ const AssignmentDevicesToMember = () => {
   };
   useEffect(() => {
     const checkingSerialNumberInputted = async () => {
-      const data = JSON.parse(valueItemSelected?.data);
+      // No device group selected yet — nothing to validate.
+      if (!valueItemSelected?.data || !watch("startingNumber")) return;
+      const data = JSON.parse(valueItemSelected.data);
+      if (!Array.isArray(data) || !data.length) return;
       if (watch("startingNumber").length === data[0].serial_number.length) {
         setCheckingSerialNumberInputted(
           data.some((item) => item.serial_number === watch("startingNumber"))
@@ -562,6 +402,16 @@ const AssignmentDevicesToMember = () => {
     };
     checkingSerialNumberInputted();
   }, [watch("startingNumber"), valueItemSelected]);
+
+  // Deep links hydrate memberInfo asynchronously (dashboard fetch -> Redux);
+  // render the loading state until the member is available.
+  if (!memberInfo?.member_id) {
+    return (
+      <div style={CenteringGrid}>
+        <DevitrakLoading />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -582,7 +432,7 @@ const AssignmentDevicesToMember = () => {
           {renderTitle()}
           <form
             style={{ width: "100%" }}
-            onSubmit={handleSubmit(assignDeviceToStaffMember)}
+            onSubmit={handleSubmit(assignDeviceToMember)}
           >
             <Grid
               style={{

@@ -67,29 +67,6 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
       }
     },
     onSuccess: async () => {
-      await closingEventAndReturningDevice();
-    },
-  });
-  const closeEvent = useMutation({
-    mutationFn: async (event) => {
-      await devitrakApi.patch(`/event/edit-event/${event?.id}`, {
-        active: false,
-        show: false
-      })
-      await devitrakApi.delete(`/event/delete-event/${event?.id}`);
-    },
-    onSuccess: () => {
-      alert("Transaction closed and device returned to inventory company");
-    }
-  });
-  const updateDeviceInPoolArea = useMutation({
-    mutationKey: ["updateDeviceInPoolArea"],
-    mutationFn: async (id) => {
-      await devitrakApi.patch(`/receiver/receivers-pool-update/${id}`, {
-        activity: false,
-      });
-    },
-    onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: ["devicesAssignedActive"],
         exact: true,
@@ -99,9 +76,9 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
       await sentReturnEmailNotification();
       setStoredRecord({});
       modalHandler(false);
+      setLoading(false);
     },
   });
-
   const sentReturnEmailNotification = async () => {
     const response = await devitrakApi.post(
       "/nodemailer/member-lease-return-device-notification",
@@ -142,33 +119,6 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
     } catch (error) {
       setLoading(false);
       throw new Error(error);
-    }
-  };
-  const closingEventAndReturningDevice = async () => {
-    try {
-      const checkEventByDevice = await devitrakApi.post(
-        "/receiver/receiver-pool-list",
-        {
-          company: user.companyData.id,
-          device: storedRecord.device_serial_number,
-          type: storedRecord.device_item_group,
-        }
-      );
-      if (checkEventByDevice.data) {
-        const eventInfo = await devitrakApi.get(
-          `/event/event-list-per-company?company=${user.company}&type=lease`
-        );
-        const eventId = eventInfo.data?.list?.filter(item => item.eventInfoDetail.eventName === checkEventByDevice.data.receiversInventory.at(-1).eventSelected);
-        const filterEventsBasedOnInventory = eventId.filter(item => item.deviceSetup.some(item => item.group === storedRecord.device_item_group));
-        await closeEvent.mutateAsync(filterEventsBasedOnInventory?.at(-1));
-        await updateDeviceInPoolArea.mutateAsync(
-          checkEventByDevice.data.receiversInventory.at(-1).id
-        );
-      }
-    } catch (error) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
     }
   };
   return (
