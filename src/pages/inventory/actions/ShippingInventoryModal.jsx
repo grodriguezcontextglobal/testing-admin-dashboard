@@ -23,8 +23,8 @@ const formatDateTime = (iso) => {
     });
 };
 
-const statusColor = { delivered: 'purple', locked_in_warehouse: 'blue', shipped: 'green' };
-const statusRef = { delivered: 'Delivered', locked_in_warehouse: 'Locked in Warehouse', shipped: 'Shipped' };
+const statusColor = { delivered: 'purple', 'in-reserved': 'blue', shipped: 'green' };
+const statusRef = { delivered: 'Delivered', 'in-reserved': 'In Reserved', shipped: 'Shipped' };
 
 // ─── component ───────────────────────────────────────────────────────────────
 
@@ -54,7 +54,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
                 active: 1,
                 company_id: companyId,
-                shipping_status: 'locked_in_warehouse',
+                shipping_status: 'in-reserved', //locked_in_warehouse
             });
             if (!res.data?.ok || !res.data?.items) return [];
 
@@ -82,7 +82,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
                 company_id: companyId,
                 event_id: selectedEvent.id,
-                shipping_status: 'locked_in_warehouse',
+                shipping_status: 'in-reserved', //locked_in_warehouse
             });
             return res.data?.items ?? [];
         },
@@ -125,9 +125,9 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
                     company_id,
                     event_id,
                     updates: { shipping_status: 'in-transit' }, // The new status
-                    filters: { shipping_status: 'locked_in_warehouse' }, // The old status
+                    filters: { shipping_status: 'in-reserved' }, // The old status - locked_in_warehouse
                 }),
-                devitrakApi.post('/db_inventory/update-large-data', {
+                devitrakApi.post('/db_inventory/update-large-data', { //
                     item_ids,
                     warehouse: 0, // Mark items as out of warehouse
                     updates: { logistic_status: 'in-transit', warehouse: 0 }
