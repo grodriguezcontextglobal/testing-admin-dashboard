@@ -119,3 +119,57 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
     })
   })
 })
+
+describe('Representative accountability (minors vs adults)', () => {
+  beforeEach(login)
+
+  it('students page shows stat tiles and status badges', () => {
+    cy.visit('/members')
+    // stat tiles
+    cy.contains('p', /total students/i, { timeout: 20000 }).should('be.visible')
+    cy.contains('p', /minors/i).should('be.visible')
+    cy.contains('p', /missing a representative/i).should('be.visible')
+    cy.contains('p', /devices out/i).should('be.visible')
+    // status badges
+    cy.contains('td', 'Adult').should('exist')
+    cy.contains('span', /minor — rep missing/i).should('exist')
+    cy.get('td').contains(/Rep:/).should('exist')
+  })
+
+  it('blocks device assignment for a minor without a representative', () => {
+    cy.visit('/member/10/assignment') // Noah Briggs — minor, no guardian
+    cy.contains(/representative required/i, { timeout: 30000 }).should('be.visible')
+    cy.contains('button', /assign equipment to member/i).should('be.disabled')
+    // and the banner links to the fix
+    cy.contains('a', /update member info/i)
+      .should('have.attr', 'href')
+      .and('include', '/member/10/update-member-information')
+  })
+
+  it('shows the representative notice for a minor with a guardian', () => {
+    cy.visit('/member/1/assignment') // Maya Okafor — minor with guardian
+    cy.contains(/represented by ngozi okafor/i, { timeout: 30000 }).should('be.visible')
+    cy.contains(/contract will be sent to the representative/i).should('be.visible')
+  })
+
+  it('API rejects lease creation for a minor without a representative', () => {
+    cy.request('POST', 'http://localhost:34001/api/admin/login', {
+      email: EMAIL, password: PASSWORD,
+    }).then((l) => {
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:34001/api/db_member/new-member-assigned-device-lease',
+        headers: { 'x-token': l.body.token },
+        failOnStatusCode: false,
+        body: {
+          member_id: 10, staff_member_id: 1, device_id: 999902, company_id: '2',
+          assigned_date: '2026-07-14', expected_return_date: '2027-06-15',
+        },
+      }).then((r) => {
+        expect(r.status).to.eq(422)
+        expect(r.body.code).to.eq('GUARDIAN_REQUIRED')
+        expect(r.body.msg).to.include('Noah Briggs')
+      })
+    })
+  })
+})

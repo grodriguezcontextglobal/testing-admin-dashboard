@@ -16,12 +16,17 @@ import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
 import MainTable from "./tables/MainTable";
 import OverdueDevicesTable from "./tables/OverdueDevicesTable";
+import MembersStatsRow from "./components/MembersStatsRow";
+import industriesList from "../../components/navbar/component/industriesList.json";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
 
 const MainPage = () => {
   const location = useLocation();
   const slug = location.state?.referencing || "";
-  const titleParams = String(slug || "").replace(/-/g, " ");
+  const { user: adminUser } = useSelector((state) => state.admin);
+  const industryLabel =
+    industriesList?.[adminUser?.companyData?.industry]?.[0] ?? "Members";
+  const titleParams = String(slug || industryLabel).replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
   const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
@@ -123,6 +128,7 @@ const MainPage = () => {
         </Grid>
 
         <Grid item xs={12} sm={12} md={12} lg={12}>
+          <MembersStatsRow audienceLabel={titleParams.toLowerCase()} />
           <div
             role="tablist"
             style={{

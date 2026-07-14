@@ -11,7 +11,7 @@ import { Divider, notification, Select } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
@@ -277,16 +277,30 @@ const AssignmentDevicesToMember = () => {
     return verification;
   };
   const emailContractToMember = async (props) => {
+    // Responsible party: for minors the parent/guardian (representative)
+    // receives and signs the liability contract; adults sign for themselves.
+    const isMinor = Number(memberInfo.minor) === 1;
+    const responsibleParty = isMinor
+      ? {
+          name: `${memberInfo.parent_guardian_first_name ?? ""} ${
+            memberInfo.parent_guardian_last_name ?? ""
+          } (representative for ${memberInfo.first_name ?? ""} ${
+            memberInfo.last_name ?? ""
+          })`,
+          email: memberInfo.parent_guardian_email,
+          member_id: memberInfo.member_id,
+        }
+      : {
+          name: `${memberInfo.first_name ?? ""} ${memberInfo.last_name ?? ""}`,
+          email: memberInfo.email,
+          member_id: memberInfo.member_id,
+        };
     await devitrakApi.post(
       "/nodemailer/liability-contract-member-email-notification",
       {
         company_name: user.companyData.company_name,
         email_admin: user.email,
-        member: {
-          name: `${memberInfo.first_name ?? ""} ${memberInfo.last_name ?? ""}`,
-          email: memberInfo.email,
-          member_id: memberInfo.member_id,
-        },
+        member: responsibleParty,
         contract_list: props.contractList,
         subject: "Device Liability Contract",
         items: props.items,
@@ -413,6 +427,82 @@ const AssignmentDevicesToMember = () => {
     );
   }
 
+  // Representative accountability: minors need a complete parent/guardian on
+  // file — the guardian is the responsible party who signs the contract.
+  const isMinor = Number(memberInfo.minor) === 1;
+  const guardianComplete = Boolean(
+    memberInfo.parent_guardian_first_name?.trim?.() &&
+      memberInfo.parent_guardian_email?.trim?.()
+  );
+  const guardianIncomplete = isMinor && !guardianComplete;
+  const responsibleBanner = () => {
+    const base = {
+      width: "100%",
+      textAlign: "left",
+      borderRadius: "var(--radius-md, 8px)",
+      padding: "12px 16px",
+      margin: "0 0 16px",
+      fontFamily: "Inter, sans-serif",
+      fontSize: "14px",
+      lineHeight: "20px",
+    };
+    if (guardianIncomplete) {
+      return (
+        <div
+          role="alert"
+          style={{
+            ...base,
+            background: "var(--error-25, #fdf7f5)",
+            border: "1px solid var(--error-300, #e28f75)",
+            color: "var(--error-700, #9a3922)",
+          }}
+        >
+          <strong>Representative required.</strong> {memberInfo.first_name} is a
+          minor and has no complete parent/guardian on file. Devices cannot be
+          assigned until a representative (name + email) is added in{" "}
+          <NavLink
+            to={`/member/${memberInfo.member_id}/update-member-information`}
+            style={{ color: "var(--error-700, #9a3922)", fontWeight: 700 }}
+          >
+            Update member info
+          </NavLink>
+          .
+        </div>
+      );
+    }
+    if (isMinor) {
+      return (
+        <div
+          style={{
+            ...base,
+            background: "var(--blue-50, #eff8ff)",
+            border: "1px solid var(--blue-200, #b2ddff)",
+            color: "var(--blue-800, #1849a9)",
+          }}
+        >
+          <strong>Minor — represented by {memberInfo.parent_guardian_first_name}{" "}
+          {memberInfo.parent_guardian_last_name}</strong> (
+          {memberInfo.parent_guardian_email}). The liability contract will be
+          sent to the representative for signature; responsibility for the
+          device falls on them.
+        </div>
+      );
+    }
+    return (
+      <div
+        style={{
+          ...base,
+          background: "var(--gray-50, #f7f7f4)",
+          border: "1px solid var(--gray-200, #ddded6)",
+          color: "var(--gray-600, #5d615a)",
+        }}
+      >
+        <strong>Adult.</strong> {memberInfo.first_name} signs their own
+        liability contract and is directly responsible for the device.
+      </div>
+    );
+  };
+
   return (
     <>
       {itemsInInventoryQuery.isLoading ? (
@@ -430,6 +520,7 @@ const AssignmentDevicesToMember = () => {
         >
           {contextHolder}
           {renderTitle()}
+          {responsibleBanner()}
           <form
             style={{ width: "100%" }}
             onSubmit={handleSubmit(assignDeviceToMember)}
@@ -787,7 +878,8 @@ const AssignmentDevicesToMember = () => {
                   watch("startingNumber")?.length === 0 ||
                   !watch("startingNumber") ||
                   loadingStatus ||
-                  !checkingSerialNumberInputted
+                  !checkingSerialNumberInputted ||
+                  guardianIncomplete
                 }
                 buttonType="submit"
                 loadingState={loadingStatus}

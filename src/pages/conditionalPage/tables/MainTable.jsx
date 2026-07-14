@@ -120,6 +120,76 @@ const MainTable = ({ state }) => {
       ),
     },
     {
+      title: "Status",
+      key: "status",
+      width: "14%",
+      filters: [
+        { text: "Adult", value: "adult" },
+        { text: "Minor — has representative", value: "minor_ok" },
+        { text: "Minor — representative missing", value: "minor_missing" },
+      ],
+      onFilter: (value, record) => {
+        const isMinor = Number(record.minor) === 1;
+        const hasRep = Boolean(record.parent_guardian_email?.trim?.());
+        if (value === "adult") return !isMinor;
+        if (value === "minor_ok") return isMinor && hasRep;
+        return isMinor && !hasRep;
+      },
+      render: (_, record) => {
+        const isMinor = Number(record.minor) === 1;
+        const hasRep = Boolean(record.parent_guardian_email?.trim?.());
+        const badge = (bg, border, color, text) => (
+          <span
+            style={{
+              display: "inline-block",
+              padding: "2px 10px",
+              borderRadius: "var(--radius-full, 9999px)",
+              border: `1px solid ${border}`,
+              background: bg,
+              color,
+              fontFamily: "Inter, sans-serif",
+              fontSize: "12px",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {text}
+          </span>
+        );
+        if (!isMinor) {
+          return badge(
+            "var(--gray-50, #f7f7f4)",
+            "var(--gray-300, #c6c7bb)",
+            "var(--gray-700, #454944)",
+            "Adult"
+          );
+        }
+        if (hasRep) {
+          return (
+            <span style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+              {badge(
+                "var(--blue-50, #eff8ff)",
+                "var(--blue-200, #b2ddff)",
+                "var(--blue-800, #1849a9)",
+                "Minor"
+              )}
+              <Typography
+                style={{ ...styleCellColumns, fontSize: "12px", color: "var(--gray-500, #777b73)" }}
+              >
+                Rep: {record.parent_guardian_first_name} {record.parent_guardian_last_name}
+              </Typography>
+            </span>
+          );
+        }
+        return badge(
+          "var(--error-25, #fdf7f5)",
+          "var(--error-300, #e28f75)",
+          "var(--error-700, #9a3922)",
+          "Minor — rep missing"
+        );
+      },
+    },
+    {
       title: "Email address",
       dataIndex: "email",
       responsive: ["lg"],
