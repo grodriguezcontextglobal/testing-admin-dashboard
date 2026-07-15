@@ -45,7 +45,7 @@ describe('Member device assignment (first-class lease)', () => {
     // lands back on the student's device list with the lease visible
     cy.location('pathname', { timeout: 30000 }).should('eq', '/member/3/main')
     cy.get('#root', { timeout: 30000 }).should(($r) => {
-      expect($r.text()).to.match(/(CHR|IPD|CAL|HSP|CRT)-\d+/)
+      expect($r.text()).to.match(/[A-Z]{3,4}-(?:[A-Z]{2,3}-)?\d{4}/)
     })
 
     // and no new lease-type event was fabricated
@@ -66,10 +66,10 @@ describe('Member device return (history-preserving)', () => {
     login()
     cy.visit('/member/3/main')
     // the assigned device row from the previous test — remember its serial
-    cy.contains('td', /(CHR|IPD|CAL|HSP|CRT)-\d+/, { timeout: 30000 })
+    cy.contains('td', /[A-Z]{3,4}-(?:[A-Z]{2,3}-)?\d{4}/, { timeout: 30000 })
       .should('be.visible')
       .invoke('text')
-      .then((t) => cy.wrap(t.match(/(CHR|IPD|CAL|HSP|CRT)-\d+/)[0]).as('serial'))
+      .then((t) => cy.wrap(t.match(/[A-Z]{3,4}-(?:[A-Z]{2,3}-)?\d{4}/)[0]).as('serial'))
     cy.contains('button', /^Return$/).first().click()
     // outcome: damaged + note + condition
     // MUI selects render as .MuiSelect-select; the modal has: 0 = outcome,

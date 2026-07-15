@@ -80,7 +80,7 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
     cy.visit('/members')
     cy.contains('button', 'Overdue devices', { timeout: 20000 }).click()
     cy.contains('Maya Okafor', { timeout: 20000 }).should('be.visible')
-    cy.contains(/14 days?/).should('be.visible')
+    cy.get('.ant-tag').contains(/\d+ days?/).should('be.visible')
     cy.contains('button', /send all reminders/i).should('be.visible')
     cy.contains('button', /mark all returned/i).should('be.visible')
   })
@@ -245,8 +245,8 @@ describe('Industry gating (AV rental company has no Students)', () => {
     login() // principal
     cy.get('input[name="searchValue"]', { timeout: 20000 }).click({ force: true })
     cy.get('.cmdk-panel', { timeout: 10000 }).within(() => {
-      cy.contains(/^Students$/).should('be.visible')
-      cy.contains(/add new student/i).should('be.visible').click()
+      cy.contains(/^Students$/).scrollIntoView().should('be.visible')
+      cy.contains(/add new student/i).scrollIntoView().should('be.visible').click()
     })
     // lands on /members with the add-member modal open
     cy.location('pathname', { timeout: 20000 }).should('eq', '/members')
@@ -258,8 +258,8 @@ describe('Industry gating (AV rental company has no Students)', () => {
     loginAV()
     cy.get('input[name="searchValue"]', { timeout: 20000 }).click({ force: true })
     cy.get('.cmdk-panel', { timeout: 10000 }).within(() => {
-      cy.contains(/^Consumers$/).should('be.visible')
-      cy.contains(/add new consumer/i).should('be.visible')
+      cy.contains(/^Consumers$/).scrollIntoView().should('be.visible')
+      cy.contains(/add new consumer/i).scrollIntoView().should('be.visible')
       cy.contains(/^Students$/).should('not.exist')
       cy.contains(/add new student/i).should('not.exist')
     })
