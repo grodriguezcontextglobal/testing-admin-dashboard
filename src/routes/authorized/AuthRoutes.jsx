@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
+import SuperUserGuard from "./SuperUserGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
@@ -147,6 +148,9 @@ const ConfirmSubscription = lazy(() =>
 );
 const MainPageOwnership = lazy(() =>
   import("../../pages/inventory/details/OwnershipDetail/MainPage")
+);
+const SystemJobsMainPage = lazy(() =>
+  import("../../pages/Profile/system_jobs/SystemJobsMainPage")
 );
 
 const Home = lazy(() => import("../../pages/home/MainPage"));
@@ -443,6 +447,16 @@ const AuthRoutes = () => {
                   path="platform_policies"
                   element={<PlatformPolicies />}
                 />
+                {/* Platform observability (job queue stats/lookup) — gated on
+                    the employee-level super_user flag, not a roleType, so it
+                    can't use PermissionGuard's action matrix. See
+                    FRONTEND_task_queue_changes.md §8.2. */}
+                <Route element={<SuperUserGuard />}>
+                  <Route
+                    path="system-jobs"
+                    element={<SystemJobsMainPage />}
+                  />
+                </Route>
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route

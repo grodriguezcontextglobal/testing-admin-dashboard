@@ -93,11 +93,18 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
 };
 
 export const ErrorLogFetch = async (error, info) => {
-  const fetchingError = await devitrakApi.post("/error_log/error_log", {
-    error: `${error}`,
-    componentStack: info.componentStack,
-  });
-  if (fetchingError.data.ok) {
-    return alert(`${fetchingError.data.msg}`);
+  try {
+    const fetchingError = await devitrakApi.post("/error_log/error_log", {
+      error: `${error}`,
+      componentStack: info.componentStack,
+    });
+    if (fetchingError.data.ok) {
+      return alert(`${fetchingError.data.msg}`);
+    }
+  } catch (loggingError) {
+    // error_log now validates its input (400 if componentStack/error is
+    // missing) instead of surfacing as a 500 — swallow it here rather than
+    // throwing on top of the error the boundary is already displaying.
+    console.error("Failed to log error to server:", loggingError);
   }
 };

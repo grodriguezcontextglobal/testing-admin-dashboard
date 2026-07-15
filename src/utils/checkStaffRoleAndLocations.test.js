@@ -104,6 +104,40 @@ describe("useStaffRoleAndLocations — isAdmin", () => {
   });
 });
 
+// ─── isSuperUser ──────────────────────────────────────────────────────────────
+
+describe("useStaffRoleAndLocations — isSuperUser", () => {
+  it("isSuperUser:true cuando super_user es true, sin importar roleType", () => {
+    const store = makeStore({ roleType: "assistant", role: "5", super_user: true });
+    const { result } = renderHook(() => useStaffRoleAndLocations(), { wrapper: wrap(store) });
+    expect(result.current.isSuperUser).toBe(true);
+  });
+
+  it("isSuperUser:false cuando super_user es false, incluso para root_admin", () => {
+    const store = makeStore({ roleType: "root_admin", role: undefined, super_user: false });
+    const { result } = renderHook(() => useStaffRoleAndLocations(), { wrapper: wrap(store) });
+    expect(result.current.isSuperUser).toBe(false);
+  });
+
+  it("isSuperUser:false por defecto cuando no hay employee record", () => {
+    const store = configureStore({
+      reducer: { admin: adminReducer },
+      preloadedState: {
+        admin: {
+          status: "authenticated",
+          user: { email: "nope@test.com" },
+          errorMessage: undefined,
+          companyAccountStripe: undefined,
+          companyInfo: undefined,
+          mfaEnabled: false,
+        },
+      },
+    });
+    const { result } = renderHook(() => useStaffRoleAndLocations(), { wrapper: wrap(store) });
+    expect(result.current.isSuperUser).toBe(false);
+  });
+});
+
 // ─── roleType en el objeto retornado ─────────────────────────────────────────
 
 describe("useStaffRoleAndLocations — expone roleType", () => {

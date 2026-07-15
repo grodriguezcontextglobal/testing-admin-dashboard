@@ -22,6 +22,8 @@ const FULL_INVENTORY_ACCESS_ROLES = new Set([
  * @returns {object} An object containing user's role, permissions, and employee data.
  *  - `role` {string}: The user's role (e.g., "0", "2"). Defaults to "2".
  *  - `isAdmin` {boolean}: True if the user has admin privileges (role "0" or super_user).
+ *  - `isSuperUser` {boolean}: True only when the employee record's `super_user` flag is set
+ *    (the company founder/owner) — narrower than `isAdmin`, which also includes roleType-based access.
  *  - `employee` {object|null}: The full employee record from the company data.
  *  - `permissionsByLocation` {object}: An object mapping locations to their specific action permissions.
  *  - `locationsViewPermission` {string[]}: Locations with 'view' permission (for backward compatibility).
@@ -39,6 +41,7 @@ export const useStaffRoleAndLocations = () => {
     const defaultState = {
       role: "2",
       isAdmin: false,
+      isSuperUser: false,
       employee: null,
       permissionsByLocation: {},
       locationsViewPermission: [],
@@ -73,6 +76,7 @@ export const useStaffRoleAndLocations = () => {
         role,
         roleType,
         isAdmin: true,
+        isSuperUser: super_user === true,
         employee: employeeRecord,
       };
     }
@@ -116,6 +120,7 @@ export const useStaffRoleAndLocations = () => {
       role,
       roleType,
       isAdmin: false,
+      isSuperUser: super_user === true,
       employee: employeeRecord,
       permissionsByLocation,
       locationsViewPermission: locationPermissions.view,

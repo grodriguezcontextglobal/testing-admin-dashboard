@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, notification } from "antd";
@@ -86,32 +86,17 @@ const useLogic = () => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const refTemplateToUpdate = useRef(null);
   const queryClient = useQueryClient();
   const [api, contextHolder] = notification.useNotification();
   const alphaNumericUpdateItemMutation = useMutation({
-    mutationFn: (template) =>
+    mutationFn: ({ template, idempotencyKey }) =>
       devitrakApi.post(
         "/db_company/update-items-based-on-alphanumeric-serial-number",
         template,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-    },
   });
 
   // const sequencialNumbericUpdateItemMutation = useMutation({
@@ -290,6 +275,7 @@ const useLogic = () => {
           data,
           user,
           navigate,
+          dispatch,
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,

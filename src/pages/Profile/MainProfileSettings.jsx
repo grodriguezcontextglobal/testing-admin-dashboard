@@ -19,10 +19,12 @@ import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import { hasPermission } from "../../config/roles";
+import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import MainHeaders from "./ui/MainHeaders";
 
 const MainProfileSettings = () => {
   const { user } = useSelector((state) => state.admin);
+  const { isSuperUser } = useStaffRoleAndLocations();
   const dispatch = useDispatch();
   const logout = async () => {
     try {
@@ -59,6 +61,7 @@ const MainProfileSettings = () => {
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
     { label: "Platform policies",route: "platform_policies",       permission: "nav:profile"            },
+    { label: "System Jobs",      route: "system-jobs",              requiresSuperUser: true              },
   ];
   const pillStyle = {
     border: "none",
@@ -98,7 +101,10 @@ const MainProfileSettings = () => {
         }}
       >
         {tabOptions.map((option) => {
-          if (hasPermission(option.permission, user.roleType)) {
+          const isAllowed = option.requiresSuperUser
+            ? isSuperUser
+            : hasPermission(option.permission, user.roleType);
+          if (isAllowed) {
             return (
               <NavLink
                 key={option.label}

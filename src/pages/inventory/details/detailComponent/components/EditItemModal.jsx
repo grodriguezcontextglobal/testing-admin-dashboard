@@ -4,11 +4,12 @@ import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import ReusableCard from "../../../../../components/UX/cards/ReusableCard";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
+import { onTrackBackgroundJob } from "../../../../../store/slices/backgroundJobsSlice";
 import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
@@ -21,6 +22,7 @@ import NewSupplier from "../../../actions/utils/suppliers/NewSupplier";
 import costValueInputFormat from "../../../utils/costValueInputFormat";
 import { formatDate } from "../../../utils/dateFormat";
 import useSuppliers from "../../../utils/hooks/useSuppliers";
+import generateIdempotencyKey from "../../../../../utils/actions/generateIdempotencyKey";
 import { renderTitle } from "./ux/EditItemComponents";
 import EditItemForm from "./ux/EditItemForm";
 
@@ -29,7 +31,6 @@ const EditItemModal = ({
   dataFound,
   openEditItemModal,
   setOpenEditItemModal,
-  refetchingFn,
 }) => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
@@ -50,6 +51,7 @@ const EditItemModal = ({
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
   const [removeImage, setRemoveImage] = useState(null);
   const { user } = useSelector((state) => state.admin);
+  const dispatch = useDispatch();
   const {
     dicSuppliers,
     refetchingAfterNewSupplier,
@@ -90,64 +92,12 @@ const EditItemModal = ({
   });
 
   const editingItemMutation = useMutation({
-    mutationFn: (template) =>
+    mutationFn: ({ template, idempotencyKey }) =>
       devitrakApi.post(
         "/db_company/update-items-based-on-alphanumeric-serial-number",
         template,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-
-      const resetTemplate = {
-        category_name: "",
-        item_group: "",
-        cost: "",
-        brand: "",
-        descript_item: "",
-        ownership: "",
-        warehouse: "",
-        main_warehouse: "",
-        update_at: "",
-        company: "",
-        location: "",
-        sub_location: "",
-        current_location: "",
-        extra_serial_number: "",
-        return_date: "",
-        container: "",
-        containerSpotLimit: "",
-        image_url: "",
-        supplier_info: "",
-        enableAssignFeature: "",
-      };
-
-      Object.keys(resetTemplate).map((key) => {
-        setValue(key, "");
-      });
-
-      message.success("Item was successfully updated.");
-      setLoadingStatus(false);
-      refetchingFn();
-      return closeModal();
-    },
-    onError: (error) => {
-      openNotificationWithIcon(`${error.message}`);
-      setLoadingStatus(false);
-    }
   });
   const retrieveItemOptions = (props) => {
     const result = new Set();
@@ -257,7 +207,57 @@ const EditItemModal = ({
           : null,
         reference: {},
       };
-      return await editingItemMutation.mutateAsync(template);
+      const idempotencyKey = generateIdempotencyKey();
+      const { data: response } = await editingItemMutation.mutateAsync({
+        template,
+        idempotencyKey,
+      });
+
+      const resetTemplate = {
+        category_name: "",
+        item_group: "",
+        cost: "",
+        brand: "",
+        descript_item: "",
+        ownership: "",
+        warehouse: "",
+        main_warehouse: "",
+        update_at: "",
+        company: "",
+        location: "",
+        sub_location: "",
+        current_location: "",
+        extra_serial_number: "",
+        return_date: "",
+        container: "",
+        containerSpotLimit: "",
+        image_url: "",
+        supplier_info: "",
+        enableAssignFeature: "",
+      };
+      Object.keys(resetTemplate).map((key) => {
+        setValue(key, "");
+      });
+
+      openNotificationWithIcon(
+        "Your update was registered and is processing in the background. We'll notify you when it's ready."
+      );
+      dispatch(
+        onTrackBackgroundJob({
+          jobId: response.jobId,
+          type: "inventory-item-update",
+          successMessage: "Item was successfully updated.",
+          failureMessage: "The item update failed.",
+          invalidateKeys: [
+            ["listOfItemsInStock"],
+            ["ItemsInInventoryCheckingQuery"],
+            ["RefactoredListInventoryCompany"],
+            ["trackingItemActivity"],
+            ["infoItemSql"],
+          ],
+        })
+      );
+      return closeModal();
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
     } finally {

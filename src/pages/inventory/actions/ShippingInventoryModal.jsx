@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Divider, message, Tag } from 'antd';
 import { saveAs } from 'file-saver';
 import { useCallback, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { devitrakApi } from '../../../api/devitrakApi';
 import { default as BlueButton, default as BlueButtonComponent } from '../../../components/UX/buttons/BlueButton';
 import DangerButtonComponent from '../../../components/UX/buttons/DangerButton';
@@ -11,6 +12,8 @@ import SelectComponent from '../../../components/UX/dropdown/SelectComponent';
 import Input from '../../../components/UX/inputs/Input';
 import ModalUX from '../../../components/UX/modal/ModalUX';
 import BaseTable from '../../../components/UX/tables/BaseTable';
+import { onTrackBackgroundJob } from '../../../store/slices/backgroundJobsSlice';
+import generateIdempotencyKey from '../../../utils/actions/generateIdempotencyKey';
 import ExchangeModal from './components/ExchangeModal';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -30,6 +33,7 @@ const statusRef = { delivered: 'Delivered', 'in-reserved': 'In Reserved', shippe
 
 const ShippingInventoryModal = ({ visible, onClose, user }) => {
     const queryClient = useQueryClient();
+    const dispatch = useDispatch();
 
     const [openModalNotification, setOpenModalNotification] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -54,7 +58,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
                 active: 1,
                 company_id: companyId,
-                shipping_status: 'in-reserved', //locked_in_warehouse
+                shipping_status: 'locked_in_warehouse', //locked_in_warehouse
             });
             if (!res.data?.ok || !res.data?.items) return [];
 
@@ -82,7 +86,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
             const res = await devitrakApi.post('/db_item/event-items/search', {
                 company_id: companyId,
                 event_id: selectedEvent.id,
-                shipping_status: 'in-reserved', //locked_in_warehouse
+                shipping_status: 'locked_in_warehouse', //locked_in_warehouse
             });
             return res.data?.items ?? [];
         },
@@ -104,29 +108,40 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
             const items = itemsQuery.data ?? [];
             if (items.length > 0) {
                 const item_ids = items.map((item) => item.item_id);
-                updateItemStatusMutation.mutate({
+                bulkUpdateItemStatusMutation.mutate({
                     company_id: companyId,
                     event_id: selectedEvent.id,
                     item_ids,
+                    idempotencyKey: generateIdempotencyKey(),
                 });
             } else {
                 // If there are no items, we can just close the modal and show success.
                 message.success('Shipment record created successfully.');
-                queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
+                queryClient.invalidateQueries({ queryKey: ['shippingEvents'] });
                 handleClose();
             }
         },
     });
 
+    // The item-status update itself now runs in the backend's job queue
+    // (PUT /db_item/event-items/bulk-update returns 202 + jobId instead of a
+    // synchronous 200); /db_inventory/update-large-data is unaffected and
+    // still resolves synchronously. Global polling via onTrackBackgroundJob
+    // mirrors the pattern already used for bulk inventory insert/update
+    // (see BulkItemActionsOptions.jsx / EditBulkActionOptions.jsx).
     const bulkUpdateItemStatusMutation = useMutation({
-        mutationFn: async ({ company_id, event_id, item_ids }) => {
-            await Promise.all([
-                devitrakApi.put('/db_item/event-items/bulk-update', {
-                    company_id,
-                    event_id,
-                    updates: { shipping_status: 'in-transit' }, // The new status
-                    filters: { shipping_status: 'in-reserved' }, // The old status - locked_in_warehouse
-                }),
+        mutationFn: async ({ company_id, event_id, item_ids, idempotencyKey }) => {
+            const [{ data: bulkUpdateResponse }] = await Promise.all([
+                devitrakApi.put(
+                    '/db_item/event-items/bulk-update',
+                    {
+                        company_id,
+                        event_id,
+                        updates: { shipping_status: 'in-transit' }, // The new status
+                        filters: { shipping_status: 'in-reserved' }, // The old status - locked_in_warehouse
+                    },
+                    { headers: { 'Idempotency-Key': idempotencyKey } },
+                ),
                 devitrakApi.post('/db_inventory/update-large-data', { //
                     item_ids,
                     company_id,
@@ -134,36 +149,22 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
                     updates: { logistic_status: 'in-transit', warehouse: 0 }
                 }),
             ]);
+            return bulkUpdateResponse;
         },
         onError: () => message.error('Could not bulk update item statuses.'),
-        onSuccess: () => {
-            message.success('Shipment record created and inventory shipped out successfully.');
-            queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
-            handleClose();
-        },
-    });
-
-    const updateItemStatusMutation = useMutation({
-        mutationFn: async ({ company_id, event_id, item_ids }) => {
-            await Promise.all([
-                devitrakApi.put('/db_item/event-items', {
-                    company_id,
-                    event_id,
-                    items: item_ids,
-                    updates: { shipping_status: 'in-transit' },
-                }),
-                devitrakApi.post('/db_inventory/update-large-data', {
-                    item_ids,
-                    company_id,
-                    warehouse: 0, // Mark items as out of warehouse
-                    updates: { logistic_status: 'in-transit', warehouse: 0 }
-                }),
-            ]);
-        },
-        onError: () => message.error('Could not update item statuses after creating shipment record.'),
-        onSuccess: () => {
-            message.success('Shipment record created and inventory shipped out successfully.');
-            queryClient.invalidateQueries({ queryKey: ['shippingEvents', companyId] });
+        onSuccess: (response) => {
+            message.info(
+                "Shipment was registered and inventory is being shipped out in the background. We'll notify you when it's ready."
+            );
+            dispatch(
+                onTrackBackgroundJob({
+                    jobId: response.jobId,
+                    type: 'shipment-item-status-bulk-update',
+                    successMessage: 'Shipment record created and inventory shipped out successfully.',
+                    failureMessage: 'Could not bulk update item statuses.',
+                    invalidateKeys: [['shippingEvents']],
+                })
+            );
             handleClose();
         },
     });
@@ -527,7 +528,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
                         <GrayButton
                             title="Cancel"
                             func={handleClose}
-                            disabled={createShipmentRecordMutation.isPending || updateItemStatusMutation.isPending}
+                            disabled={createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending}
                         />
                     </Grid>
                     <Grid item>
@@ -542,8 +543,8 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
                         <BlueButton
                             title="Ship Out Inventory"
                             func={handleShipOut}
-                            disabled={!isFormValid || createShipmentRecordMutation.isPending || updateItemStatusMutation.isPending || bulkUpdateItemStatusMutation.isPending}
-                            isLoading={createShipmentRecordMutation.isPending || updateItemStatusMutation.isPending || bulkUpdateItemStatusMutation.isPending}
+                            disabled={!isFormValid || createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending}
+                            isLoading={createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending}
                         />
                     </Grid>
                 </Grid>

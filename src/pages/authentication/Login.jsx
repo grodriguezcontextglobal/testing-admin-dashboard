@@ -482,7 +482,7 @@ const Login = () => {
 
       openNotificationWithIcon(
         "success",
-        "An email has been sent to you to revoke the active session."
+        "An email to revoke the active session is queued and will be sent shortly."
       );
       setForceLogin(false); // Close the modal
     } catch (error) {

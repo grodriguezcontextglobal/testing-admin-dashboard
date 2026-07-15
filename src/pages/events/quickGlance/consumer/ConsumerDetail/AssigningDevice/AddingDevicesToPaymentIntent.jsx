@@ -182,7 +182,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
         link: `https://app.devitrak.net/?event=${props.event_id}&company=${user.companyData.id}`,
         admin: user.email,
       });
-      message.success("Assignment email has been sent successfully");
+      message.success("Assignment email queued and will be sent shortly");
     } catch (error) {
       message.error(`There was an error. ${error}`);
     }
@@ -293,7 +293,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
       );
       if (response.data.ok) {
         return message.success(
-          `Device report was sent successfully to ${customer.email}`,
+          `Device report queued and will be sent shortly to ${customer.email}`,
         );
       }
     }

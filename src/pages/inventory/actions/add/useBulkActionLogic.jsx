@@ -135,28 +135,12 @@ const useBulkActionLogic = () => {
   });
 
   const alphaNumericUpdateItemMutation = useMutation({
-    mutationFn: (template) =>
+    mutationFn: ({ template, idempotencyKey }) =>
       devitrakApi.post(
         "/db_company/update-items-based-on-alphanumeric-serial-number",
         template,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-    },
   });
 
   const retrieveItemOptions = (props) => {
@@ -250,6 +234,7 @@ const useBulkActionLogic = () => {
         data,
         user,
         navigate,
+        dispatch,
         openNotificationWithIcon,
         setLoadingStatus,
         setValue,
@@ -267,8 +252,6 @@ const useBulkActionLogic = () => {
         queryClient,
         updateAll,
       });
-      openNotificationWithIcon("All items were updated database.");
-      return navigate("/inventory");
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);

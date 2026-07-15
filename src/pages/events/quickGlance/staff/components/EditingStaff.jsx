@@ -232,7 +232,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
         });
         openNotificationWithIcon(
           "success",
-          `An invitation was sent to ${data.name} ${data.lastName}!`
+          `An invitation to ${data.name} ${data.lastName} is queued and will be sent shortly.`
         );
       } catch (error) {
         openNotificationWithIcon(

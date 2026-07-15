@@ -142,7 +142,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           role,
         });
 
-        notify("success", `An invitation was sent to ${existing?.name ?? ""} ${existing?.lastName ?? ""}!`);
+        notify("success", `An invitation to ${existing?.name ?? ""} ${existing?.lastName ?? ""} is queued and will be sent shortly.`);
         setModalState(false);
       } else {
         setNeedCreate(true);
@@ -176,7 +176,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           role: data.role,
         });
 
-        notify("success", `An invitation was sent to ${data.name} ${data.lastName}!`);
+        notify("success", `An invitation to ${data.name} ${data.lastName} is queued and will be sent shortly.`);
         setTimeout(() => setModalState(false), 1500);
       } else {
         await verifyEmailExists();

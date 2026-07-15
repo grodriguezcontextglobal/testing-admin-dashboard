@@ -556,7 +556,7 @@ const ExpandedRowInTable = ({
       if (response.data.ok) {
         setIsLoadingAction(false);
         return message.success(
-          `Device report was sent successfully to ${customer.email}`
+          `Device report queued and will be sent shortly to ${customer.email}`
         );
       }
     } catch (error) {
