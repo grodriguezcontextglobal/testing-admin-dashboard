@@ -265,3 +265,34 @@ describe('Industry gating (AV rental company has no Students)', () => {
     })
   })
 })
+
+describe('My Devices family portal (public)', () => {
+  it('guardian of a minor sees the student devices with status', () => {
+    cy.visit('/my-devices')
+    cy.get('#portal-student-id').type('STU-1001')
+    cy.get('#portal-email').type('ngozi.okafor@example.com')
+    cy.contains('button', /view my devices/i).click()
+    cy.contains(/maya okafor/i, { timeout: 20000 }).should('be.visible')
+    cy.contains(/responsible party: ngozi okafor/i).should('be.visible')
+    cy.contains(/CHR-3001/).should('be.visible')
+    cy.contains(/overdue — please return/i).should('be.visible')
+  })
+
+  it('a minor cannot use their own email — guardian email required', () => {
+    cy.visit('/my-devices')
+    cy.get('#portal-student-id').type('STU-1001')
+    cy.get('#portal-email').type('maya.okafor@summit-district.edu')
+    cy.contains('button', /view my devices/i).click()
+    cy.contains(/parent\/guardian email on file/i, { timeout: 20000 }).should('be.visible')
+  })
+
+  it('home dashboard shows Students KPI instead of Consumers for the district', () => {
+    cy.viewport(1440, 900)
+    login()
+    cy.visit('/')
+    cy.contains(/^Students$/, { timeout: 30000 }).should('exist')
+    cy.get('#root').should(($r) => {
+      expect($r.text()).not.to.include('Consumers')
+    })
+  })
+})

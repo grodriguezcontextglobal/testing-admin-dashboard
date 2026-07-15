@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { getEventStatus } from "../../events/utils/getEventStatus";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 
 /**
  * Home dashboard KPI strip. Derives everything from two queries that other
@@ -122,15 +123,32 @@ const HomeKpiSection = () => {
       }),
     refetchOnMount: false,
   });
+  // Industry-aware audience KPI: members industries (Education, ...) show
+  // their audience (Students) instead of the rental-world Consumers count.
+  const industryProfile = getIndustryProfile(user?.companyData?.industry);
+  const usesMembers = Boolean(industryProfile.audience);
+  const consumersHidden = industryProfile.hiddenNavTabs.includes("consumers");
+
   const consumersQuery = useQuery({
     queryKey: ["allConsumersBasedOnEventsPerCompany"],
     queryFn: () =>
       devitrakApi.get(
         `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
       ),
-    enabled: !!user.companyData.id,
+    enabled: !!user.companyData.id && !consumersHidden,
     staleTime: 5 * 60 * 1000,
   });
+
+  const membersQuery = useQuery({
+    queryKey: ["membersInfoQuery"],
+    queryFn: () =>
+      devitrakApi.post("/db_member/consulting-member", {
+        company_id: user?.sqlInfo?.company_id,
+      }),
+    enabled: usesMembers && !!user?.sqlInfo?.company_id,
+    staleTime: 5 * 60 * 1000,
+  });
+  const totalMembers = membersQuery.data?.data?.members?.length ?? 0;
 
   const events = eventsQuery.data?.data?.list ?? [];
   const withStatus = events.map((e) => ({ e, status: getEventStatus(e).key }));
@@ -182,11 +200,19 @@ const HomeKpiSection = () => {
         value={employees.length}
         hint={employees.length > 0 ? `${activeStaff} active` : undefined}
       />
-      <KpiCard
-        icon="tabler:user-heart"
-        label="Consumers"
-        value={totalConsumers}
-      />
+      {usesMembers ? (
+        <KpiCard
+          icon={industryProfile.icon}
+          label={industryProfile.audience}
+          value={totalMembers}
+        />
+      ) : (
+        <KpiCard
+          icon="tabler:user-heart"
+          label="Consumers"
+          value={totalConsumers}
+        />
+      )}
       <KpiCard
         icon="tabler:broadcast"
         label="Live events"
