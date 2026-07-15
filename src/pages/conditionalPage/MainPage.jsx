@@ -30,7 +30,8 @@ const MainPage = () => {
   const [addingNewMember, setAddingNewMember] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
   const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
-  const { register, setValue } = useForm();
+  const { register, setValue, watch } = useForm();
+  const searchTerm = watch("searchMember") || "";
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const roleType = resolveRoleType(user);
@@ -197,7 +198,7 @@ const MainPage = () => {
           ) : activeView === "overdue" ? (
             <OverdueDevicesTable />
           ) : (
-            <MainTable state={titleParams} />
+            <MainTable state={titleParams} search={searchTerm} />
           )}
         </Grid>
       </Grid>

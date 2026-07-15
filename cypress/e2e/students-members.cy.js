@@ -66,6 +66,16 @@ describe('Students Phase 2 (grades, overdue, bulk return)', () => {
     cy.contains('td', '7').should('exist')
   })
 
+  it('the members search filters the table', () => {
+    cy.visit('/members')
+    cy.contains('td', 'Maya Okafor', { timeout: 20000 }).should('be.visible')
+    cy.get('input[name="searchMember"]').type('hann')
+    cy.contains('td', 'Hannah Kim', { timeout: 10000 }).should('be.visible')
+    cy.contains('td', 'Maya Okafor').should('not.exist')
+    cy.get('input[name="searchMember"]').clear()
+    cy.contains('td', 'Maya Okafor', { timeout: 10000 }).should('be.visible')
+  })
+
   it('Overdue devices tab lists overdue leases with days-overdue tags', () => {
     cy.visit('/members')
     cy.contains('button', 'Overdue devices', { timeout: 20000 }).click()

@@ -5,7 +5,7 @@ import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import TableHeader from "../../../components/UX/TableHeader";
 // import { data } from "../mock/mockData";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -14,7 +14,7 @@ import BaseTable from "../../../components/UX/tables/BaseTable";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { getIndustryProfile } from "../../../config/industryProfiles";
-const MainTable = ({ state }) => {
+const MainTable = ({ state, search = "" }) => {
   // For cells that stack two lines (grade+homeroom, badge+rep) — must NOT
   // use styleCellColumns, whose position:absolute makes lines overlap.
   const stackedCellStyle = {
@@ -59,6 +59,15 @@ const MainTable = ({ state }) => {
   const [membersData, setMembersData] = useState([]);
   const { user } = useSelector((state) => state.admin);
   const industryProfile = getIndustryProfile(user?.companyData?.industry);
+  // client-side search across every visible field (name, email, phone,
+  // grade, homeroom, guardian, external id, address, ...)
+  const filteredMembers = useMemo(() => {
+    const term = `${search ?? ""}`.trim().toLowerCase();
+    if (!term) return membersData;
+    return (membersData || []).filter((m) =>
+      JSON.stringify(m).toLowerCase().includes(term)
+    );
+  }, [membersData, search]);
   const membersDataQuery = useQuery({
     queryKey: ["membersInfoQuery"],
     queryFn: () =>
@@ -321,7 +330,7 @@ const MainTable = ({ state }) => {
       ) : (
         <BaseTable
           style={{ width: "100%", cursor: "pointer", ...tableStyle }}
-          dataSource={membersData}
+          dataSource={filteredMembers}
           // industry profile decides whether the Grade column applies
           columns={columns.filter(
             (c) => c.key !== "gradeColumn" || industryProfile.fields.grade
