@@ -30,6 +30,12 @@ const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes"));
 const BackgroundJobsTracker = lazy(() =>
   import("./components/backgroundJobs/BackgroundJobsTracker")
 );
+const OfflineIndicator = lazy(() =>
+  import("./components/offlineStatus/OfflineIndicator")
+);
+const InstallAppNotification = lazy(() =>
+  import("./components/installPrompt/InstallAppNotification")
+);
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -127,12 +133,14 @@ const App = () => {
     >
       {renderNetworkStatusMessage()}
       {contextHolder}
+      <InstallAppNotification />
       {status === "authenticated" && adminToken ? (
         // <InactivityLogout>
         //   <AuthRoutes />
         // </InactivityLogout>
         <>
           <BackgroundJobsTracker />
+          <OfflineIndicator />
           <AuthRoutes />
         </>
       ) : (
