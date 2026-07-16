@@ -296,3 +296,34 @@ describe('My Devices family portal (public)', () => {
     })
   })
 })
+
+describe('Inventory geography (schools → sub-locations → shelves)', () => {
+  beforeEach(login)
+
+  it('inventory tree expands schools into sub-locations with nesting', () => {
+    cy.viewport(1440, 900)
+    cy.visit('/inventory')
+    cy.contains('.tree-node', /lincoln middle school/i, { timeout: 30000 })
+      .find('[aria-label="Expand sub-locations"]')
+      .first()
+      .click()
+    cy.contains(/av storage/i, { timeout: 15000 }).should('be.visible')
+    cy.contains(/room 101 — rivera/i).should('be.visible')
+    // nested shelf under AV Storage
+    cy.contains('.tree-node', /av storage/i)
+      .find('[aria-label="Expand sub-locations"]')
+      .first()
+      .click()
+    cy.contains(/shelf 1/i, { timeout: 15000 }).should('be.visible')
+  })
+
+  it('location page shows sub-location chips and they filter the table', () => {
+    cy.viewport(1440, 900)
+    cy.visit('/inventory/location?District%20Office&search=')
+    cy.contains(/sub-locations in district office/i, { timeout: 30000 }).should('be.visible')
+    cy.contains('a', /warehouse › rack a/i).should('be.visible').click()
+    // table now filtered to the PA systems on Rack A
+    cy.contains('td', /SUSD-PA-\d+/, { timeout: 20000 }).should('be.visible')
+    cy.contains('td', /HSP-\d+|SUSD-HSP-\d+/).should('not.exist')
+  })
+})
