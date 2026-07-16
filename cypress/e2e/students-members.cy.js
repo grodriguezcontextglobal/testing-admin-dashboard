@@ -321,8 +321,15 @@ describe('Inventory geography (schools → sub-locations → shelves)', () => {
     cy.viewport(1440, 900)
     cy.visit('/inventory/location?District%20Office&search=')
     cy.contains(/sub-locations in district office/i, { timeout: 30000 }).should('be.visible')
-    cy.contains('a', /warehouse › rack a/i).should('be.visible').click()
-    // table now filtered to the PA systems on Rack A
+    // drill down one level at a time: Warehouse -> Rack A -> Bin 1
+    cy.contains('a', /^Warehouse/).should('be.visible').click()
+    cy.contains(/inside warehouse/i, { timeout: 15000 }).should('be.visible')
+    // empty racks are visible and labeled
+    cy.contains('a', /rack c/i).should('contain.text', 'Empty')
+    cy.contains('a', /^Rack A/).click()
+    cy.contains(/inside warehouse › rack a/i, { timeout: 15000 }).should('be.visible')
+    cy.contains('a', /^Bin 1/).click()
+    // table now filtered to the PA systems in Bin 1
     cy.contains('td', /SUSD-PA-\d+/, { timeout: 20000 }).should('be.visible')
     cy.contains('td', /HSP-\d+|SUSD-HSP-\d+/).should('not.exist')
   })
