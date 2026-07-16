@@ -4,9 +4,10 @@ import { Card } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { resolveRoleType } from "../../../../../config/roles";
+import { hasPermission, resolveRoleType } from "../../../../../config/roles";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
+import { BellIcon } from "../../../../../components/icons/BellIcon";
 import { EmailIcon } from "../../../../../components/icons/EmailIcon";
 import LinkIcon from "../../../../../components/icons/LinkIcon";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
@@ -16,6 +17,9 @@ import { CreateNewConsumer } from "../../../../consumers/utils/CreateNewUser";
 import FeedbackModal from "../FeedbackModal";
 const EmailNotification = lazy(() =>
   import("../../../../../components/notification/email/EmailNotification")
+);
+const PushNotificationModal = lazy(() =>
+  import("../notification/PushNotificationModal")
 );
 const SpreadSheet = lazy(() => import("../SpreadSheet"));
 const EndEventButton = lazy(() => import("./EndEventButton"));
@@ -31,6 +35,8 @@ const ButtonSections = () => {
     customizedEmailNotificationModal,
     setCustomizedEmailNotificationModal,
   ] = useState(false);
+  const [sendPushNotificationModal, setSendPushNotificationModal] =
+    useState(false);
   const [feedbackEventModal, setFeedbackEventModal] = useState(false);
 
   const listOfInventoryQuery = useQuery({
@@ -110,6 +116,25 @@ const ButtonSections = () => {
       disableStatus: !event.active,
       fn: () => setSendEventLink(true),
     },
+    // Push notifications are an additional channel alongside email above —
+    // not a replacement. Only shown to roles allowed to notify this event.
+    ...(hasPermission("event:notify_push", resolveRoleType(user))
+      ? [
+          {
+            icon: (
+              <BellIcon
+                fill="#344054"
+                hoverFill="var(--basewhite)"
+                width={21}
+                height={18}
+              />
+            ),
+            text: "Push Notifications to Attendees",
+            disableStatus: !event.active,
+            fn: () => setSendPushNotificationModal(true),
+          },
+        ]
+      : []),
   ];
 
   const groupingByCompany = groupBy(
@@ -267,6 +292,12 @@ const ButtonSections = () => {
           setCustomizedEmailNotificationModal={
             setCustomizedEmailNotificationModal
           }
+        />
+      )}
+      {sendPushNotificationModal && (
+        <PushNotificationModal
+          sendPushNotificationModal={sendPushNotificationModal}
+          setSendPushNotificationModal={setSendPushNotificationModal}
         />
       )}
       {sendEventLink && (
