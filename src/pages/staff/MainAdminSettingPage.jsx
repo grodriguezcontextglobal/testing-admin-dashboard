@@ -12,7 +12,7 @@ import dicRole from "../../components/general/dicRole";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import PageSpinner from "../../components/utils/PageSpinner";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
-import BaseTable from "../../components/ux/tables/BaseTable";
+import BaseTable from "../../components/UX/tables/BaseTable";
 import { onAddStaffProfile } from "../../store/slices/staffDetailSlide";
 import "../../styles/global/ant-table.css";
 import DownLoadReportButton from "./components/DownLoadReportButton";

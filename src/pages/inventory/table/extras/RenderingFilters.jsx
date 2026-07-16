@@ -32,7 +32,7 @@ import CardForTreeView from "../../utils/CardForTreeView";
 import CardInventoryLocationPreference from "../../utils/CardInventoryLocationPreference";
 import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTreeviewElements";
 import SkeletonInventoryCards from "../../utils/SkeletonInventoryCards";
-import StaffMemberWrapper from "../../utils/staffmemberWrapper";
+import StaffMemberWrapper from "../../utils/StaffMemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
 import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();

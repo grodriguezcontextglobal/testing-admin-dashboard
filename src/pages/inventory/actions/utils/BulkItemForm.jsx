@@ -15,7 +15,7 @@ import {
 import { renderFields } from "./BulkItemsFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
-import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
+import ImageUploaderComponent from "./uxForm/ImageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "./uxForm/SerialNumberAndMoreInfoComponentForm";
 import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
 

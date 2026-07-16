@@ -17,7 +17,7 @@ import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayBut
 import ReusableCardWithHeaderAndFooter from "../../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import Chip from "../../../../../../components/UX/Chip/Chip";
 import CheckboxReusableComponent from "../../../../../../components/UX/checkbox/CheckboxReusableComponent";
-import BaseTable from "../../../../../../components/ux/tables/BaseTable";
+import BaseTable from "../../../../../../components/UX/tables/BaseTable";
 import {
   hasPermission,
   resolveRoleType,

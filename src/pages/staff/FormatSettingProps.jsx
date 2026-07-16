@@ -14,7 +14,7 @@ import { isCoordinatorLevel } from "../../../config/roles";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../components/ux/buttons/DangerButton";
+import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 const FormatSettingProps = ({ props, sendObjectIdUser }) => {
   const { Meta } = Card;
   const { user } = useAdminStore();

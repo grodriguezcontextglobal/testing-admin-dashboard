@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
-import BaseTable from "../../../../components/ux/tables/BaseTable";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
 
 const ModalAllItemsBasedOnGroup = ({
   openModalItemList,

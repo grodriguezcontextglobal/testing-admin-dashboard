@@ -18,7 +18,7 @@ import SerialNumberAndMoreInfoComponentForm from "../edit/ux/SerialNumbersSectio
 import { renderFields } from "./EditBulkFields";
 import ButtonsForm from "./uxForm/ButtonsForm";
 import FieldsSections from "./uxForm/FieldsSections";
-import ImageUploaderComponent from "./uxForm/imageUploaderComponent";
+import ImageUploaderComponent from "./uxForm/ImageUploaderComponent";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
 

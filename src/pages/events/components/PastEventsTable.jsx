@@ -13,7 +13,7 @@ import {
   onSelectEvent,
 } from "../../../store/slices/eventSlice";
 import { onAddSubscription } from "../../../store/slices/subscriptionSlice";
-import BaseTable from "../../../components/ux/tables/BaseTable";
+import BaseTable from "../../../components/UX/tables/BaseTable";
 
 const PastEventsTable = ({ events }) => {
   const navigate = useNavigate();

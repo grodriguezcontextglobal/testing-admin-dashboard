@@ -6,7 +6,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
-import BaseTable from "../../../../components/ux/tables/BaseTable";
+import BaseTable from "../../../../components/UX/tables/BaseTable";
 
 const TableLocations = () => {
   const { user } = useSelector((state) => state.admin);

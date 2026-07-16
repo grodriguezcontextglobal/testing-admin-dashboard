@@ -3,7 +3,7 @@ import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { renderFields } from "../../../../../inventory/actions/utils/BulkItemsFields";
 import { gripingFields, renderingOptionsButtons, renderOptional, stylingComponents } from "../../../../../inventory/actions/utils/BulkComponents";
-import ImageUploaderComponent from "../../../../../inventory/actions/utils/uxForm/imageUploaderComponent";
+import ImageUploaderComponent from "../../../../../inventory/actions/utils/uxForm/ImageUploaderComponent";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
