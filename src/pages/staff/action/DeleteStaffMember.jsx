@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
-import dicRole from "../../../components/general/dicRole";
+import { useRoleLabel } from "../../../hooks/useRoleLabel";
 import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -37,6 +37,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
   const [selectionType] = useState("checkbox");
   const [staffMemberList, setStaffMemberList] = useState([]);
   const { user } = useSelector((state) => state.admin);
+  const roleLabel = useRoleLabel();
   const location = useLocation();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -187,7 +188,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
       responsive: ["lg"],
       sorter: { compare: (a, b) => ("" + a.role).localeCompare(b.role) },
       render: (role) => (
-        <Typography style={cellSubtextStyle}>{dicRole[role]}</Typography>
+        <Typography style={cellSubtextStyle}>{roleLabel(role)}</Typography>
       ),
     },
     {

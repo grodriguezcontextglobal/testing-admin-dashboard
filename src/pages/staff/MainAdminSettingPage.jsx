@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Chip from "../../components/UX/Chip/Chip";
 import TableHeader from "../../components/UX/TableHeader";
-import dicRole from "../../components/general/dicRole";
+import { useRoleLabel } from "../../hooks/useRoleLabel";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import PageSpinner from "../../components/utils/PageSpinner";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
@@ -54,6 +54,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const roleLabel = useRoleLabel();
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
     queryFn: () =>
@@ -125,11 +126,11 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       .filter((row) => {
         if (!term) return true;
         const haystack = `${row.name} ${row.email} ${
-          dicRole[row.role] ?? ""
+          roleLabel(row.role) ?? ""
         } ${statusChipProps(row.active).label}`.toLowerCase();
         return haystack.includes(term);
       });
-  }, [employees, adminUsersQuery.data, searchAdmin, company]);
+  }, [employees, adminUsersQuery.data, searchAdmin, company, roleLabel]);
 
   const handleDetailStaff = (record) => {
     if (record.active === "Pending" || !record?.entireData?.adminUserInfo?.id)
@@ -205,7 +206,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       },
       render: (role) => (
         <Chip
-          label={dicRole[role] ?? "Unknown"}
+          label={roleLabel(role) || "Unknown"}
           color={roleChipColor(role)}
           size="small"
         />

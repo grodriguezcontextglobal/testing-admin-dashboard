@@ -6,7 +6,6 @@ import {
   isCoordinatorLevel,
   isNotAssistant,
 } from "./roles";
-import dicRole from "../components/general/dicRole";
 
 // ─── ROLE_LABELS ──────────────────────────────────────────────────────────────
 
@@ -37,6 +36,20 @@ describe("getRoleLabel", () => {
   it("retorna string vacío para undefined/null", () => {
     expect(getRoleLabel(undefined)).toBe("");
     expect(getRoleLabel(null)).toBe("");
+  });
+
+  it("acepta el valor numérico legacy (0-5), igual que el antiguo dicRole.jsx", () => {
+    expect(getRoleLabel(0)).toBe("Root Administrator");
+    expect(getRoleLabel(1)).toBe("Administrator");
+    expect(getRoleLabel(2)).toBe("Sale Manager");
+    expect(getRoleLabel(3)).toBe("Event Manager");
+    expect(getRoleLabel(4)).toBe("Inventory Manager");
+    expect(getRoleLabel(5)).toBe("Assistant");
+  });
+
+  it("acepta el valor numérico como string ('0'-'5')", () => {
+    expect(getRoleLabel("0")).toBe("Root Administrator");
+    expect(getRoleLabel("2")).toBe("Sale Manager");
   });
 });
 
@@ -95,23 +108,5 @@ describe("isNotAssistant", () => {
   it("retorna true para roleType desconocido (safe default)", () => {
     expect(isNotAssistant(undefined)).toBe(true);
     expect(isNotAssistant(null)).toBe(true);
-  });
-});
-
-// ─── dicRole — claves por roleType ────────────────────────────────────────────
-
-describe("dicRole — soporte de claves roleType string", () => {
-  it("resuelve los 6 roleType strings a etiquetas legibles", () => {
-    expect(dicRole["root_admin"]).toBe("Root Administrator");
-    expect(dicRole["admin"]).toBe("Administrator");
-    expect(dicRole["sale_manager"]).toBe("Sale Manager");
-    expect(dicRole["event_manager"]).toBe("Event Manager");
-    expect(dicRole["inventory_manager"]).toBe("Inventory Manager");
-    expect(dicRole["assistant"]).toBe("Assistant");
-  });
-
-  it("mantiene claves numéricas legacy para retrocompatibilidad", () => {
-    expect(dicRole[0]).toBeTruthy();
-    expect(dicRole[1]).toBeTruthy();
   });
 });

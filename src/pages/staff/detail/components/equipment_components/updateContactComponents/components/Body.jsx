@@ -8,7 +8,7 @@ import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../../components/UX/buttons/GrayButton";
 import { BadgeWithDot } from "../../../../../../../components/base/badges/badges";
-import dicRole from "../../../../../../../components/general/dicRole";
+import { useRoleLabel } from "../../../../../../../hooks/useRoleLabel";
 import { onLogin } from "../../../../../../../store/slices/adminSlice";
 import { onAddStaffProfile } from "../../../../../../../store/slices/staffDetailSlide";
 import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
@@ -37,13 +37,14 @@ const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
+  const roleLabel = useRoleLabel();
   const { register, handleSubmit } = useForm({
     defaultValues: {
       name: profile.firstName,
       lastName: profile.lastName,
       email: profile.user,
       phone: profile.adminUserInfo.phone ?? "000-000-0000",
-      role: dicRole[Number(profile.role)],
+      role: roleLabel(profile.role),
     },
   });
   const dispatch = useDispatch();

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import dicRole from "../../../../../components/general/dicRole";
+import { useRoleLabel } from "../../../../../hooks/useRoleLabel";
 import renderingTitle from "../../../../../components/general/renderingTitle";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
@@ -19,6 +19,7 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 const UpdateRoleInCompany = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
+  const roleLabel = useRoleLabel();
   const [newRole, setNewRole] = useState("");
   const navigate = useNavigate();
   const closeModal = () => {
@@ -110,14 +111,10 @@ const UpdateRoleInCompany = () => {
     updateRole({ role_level: Number(newRole), roleType, employees });
   };
 
-  const options = [
-    { label: "Root Administrator",  value: 0 },
-    { label: "Administrator",       value: 1 },
-    { label: "Sale Manager",        value: 2 },
-    { label: "Event Manager",       value: 3 },
-    { label: "Inventory Manager",   value: 4 },
-    { label: "Assistant",           value: 5 },
-  ];
+  const options = [0, 1, 2, 3, 4, 5].map((value) => ({
+    label: roleLabel(value),
+    value,
+  }));
 
   const optionsBasedOnCurrentRolePermission = options.filter((option) => {
     const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
@@ -126,7 +123,7 @@ const UpdateRoleInCompany = () => {
   });
 
   const bodyModal = () => {
-    const role = dicRole[profile.role]
+    const role = roleLabel(profile.role)
     return (
       <ReusableCardWithHeaderAndFooter
         title={`Current role in company: ${role}`}

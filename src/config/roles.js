@@ -62,6 +62,30 @@ export const ROLE_UPGRADE_MAP = {
   assistant: "associate_inventory",
 };
 
+// ─── Role label groups (company-level label customization) ──────────────────
+// Groups the legacy + canonical roleType strings that represent the same
+// conceptual role, keyed by the legacy string. A company customizing role
+// labels edits one entry per group instead of needing to know both strings.
+// Derived from ROLE_UPGRADE_MAP so the two stay in sync automatically.
+export const ROLE_LABEL_GROUPS = Object.fromEntries(
+  Object.entries(ROLE_UPGRADE_MAP).map(([legacy, canonical]) => [
+    legacy,
+    legacy === canonical ? [legacy] : [legacy, canonical],
+  ])
+);
+
+/**
+ * Returns the ROLE_LABEL_GROUPS key (legacy string) that roleType belongs to.
+ * Accepts a roleType string or a legacy numeric role value (see getRoleLabel).
+ */
+export const getRoleLabelGroupKey = (roleType) => {
+  const resolved = LEGACY_ROLE_MAP[Number(roleType)] ?? roleType;
+  const entry = Object.entries(ROLE_LABEL_GROUPS).find(([, members]) =>
+    members.includes(resolved)
+  );
+  return entry?.[0] ?? resolved;
+};
+
 // ─── Role groups (internal — not exported) ───────────────────────────────────
 const ALL_ROLES = Object.values(ROLE_TYPES);
 
@@ -227,9 +251,13 @@ export const ROLE_LABELS = {
   event_assistant: "Event Assistant",
 };
 
+// Accepts a roleType string (legacy or canonical) OR a legacy numeric role
+// value (0-5, number or numeric string) — mirrors the numeric-key support
+// the old src/components/general/dicRole.jsx dictionary used to provide.
 export const getRoleLabel = (roleType) => {
-  if (!roleType) return "";
-  return ROLE_LABELS[roleType] ?? roleType;
+  if (roleType === undefined || roleType === null || roleType === "") return "";
+  const resolved = LEGACY_ROLE_MAP[Number(roleType)] ?? roleType;
+  return ROLE_LABELS[resolved] ?? resolved;
 };
 
 /** True for root_admin and admin (levels 0–1) — full administrative access. */

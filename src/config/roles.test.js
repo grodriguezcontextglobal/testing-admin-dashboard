@@ -5,9 +5,11 @@ import {
   PERMISSIONS,
   LEGACY_ROLE_MAP,
   ROLE_UPGRADE_MAP,
+  ROLE_LABEL_GROUPS,
   hasPermission,
   resolveRoleType,
   getRoleLabel,
+  getRoleLabelGroupKey,
 } from "./roles";
 
 // ─── ROLE_TYPES ──────────────────────────────────────────────────────────────
@@ -386,6 +388,55 @@ describe("F-01 — ROLE_UPGRADE_MAP: mapeo legacy string → nuevo string", () =
     expect(LEGACY_ROLE_MAP[3]).toBe("event_manager");
     expect(LEGACY_ROLE_MAP[4]).toBe("inventory_manager");
     expect(LEGACY_ROLE_MAP[5]).toBe("assistant");
+  });
+});
+
+// ─── ROLE_LABEL_GROUPS — agrupa legacy + canónico bajo un mismo concepto ─────
+
+describe("ROLE_LABEL_GROUPS", () => {
+  it("agrupa root_admin con root_administrator", () => {
+    expect(ROLE_LABEL_GROUPS.root_admin).toEqual(["root_admin", "root_administrator"]);
+  });
+  it("admin queda solo (mismo string legacy y canónico)", () => {
+    expect(ROLE_LABEL_GROUPS.admin).toEqual(["admin"]);
+  });
+  it("agrupa sale_manager con sales_associate", () => {
+    expect(ROLE_LABEL_GROUPS.sale_manager).toEqual(["sale_manager", "sales_associate"]);
+  });
+  it("agrupa event_manager con manager_event", () => {
+    expect(ROLE_LABEL_GROUPS.event_manager).toEqual(["event_manager", "manager_event"]);
+  });
+  it("agrupa inventory_manager con manager_inventory", () => {
+    expect(ROLE_LABEL_GROUPS.inventory_manager).toEqual(["inventory_manager", "manager_inventory"]);
+  });
+  it("agrupa assistant con associate_inventory", () => {
+    expect(ROLE_LABEL_GROUPS.assistant).toEqual(["assistant", "associate_inventory"]);
+  });
+  it("tiene exactamente 6 conceptos de rol (uno por cada legacy role)", () => {
+    expect(Object.keys(ROLE_LABEL_GROUPS)).toHaveLength(6);
+  });
+});
+
+describe("getRoleLabelGroupKey(roleType)", () => {
+  it("mapea el string canónico a la clave legacy del grupo", () => {
+    expect(getRoleLabelGroupKey("root_administrator")).toBe("root_admin");
+    expect(getRoleLabelGroupKey("sales_associate")).toBe("sale_manager");
+    expect(getRoleLabelGroupKey("manager_event")).toBe("event_manager");
+    expect(getRoleLabelGroupKey("manager_inventory")).toBe("inventory_manager");
+    expect(getRoleLabelGroupKey("associate_inventory")).toBe("assistant");
+  });
+  it("el string legacy mapea a sí mismo", () => {
+    expect(getRoleLabelGroupKey("root_admin")).toBe("root_admin");
+    expect(getRoleLabelGroupKey("admin")).toBe("admin");
+  });
+  it("roleType desconocido (ej. event_assistant, fuera de los 6 grupos) se devuelve tal cual", () => {
+    expect(getRoleLabelGroupKey("event_assistant")).toBe("event_assistant");
+    expect(getRoleLabelGroupKey("unknown_role")).toBe("unknown_role");
+  });
+  it("acepta el valor numérico legacy (0-5) igual que getRoleLabel", () => {
+    expect(getRoleLabelGroupKey(0)).toBe("root_admin");
+    expect(getRoleLabelGroupKey(2)).toBe("sale_manager");
+    expect(getRoleLabelGroupKey("5")).toBe("assistant");
   });
 });
 

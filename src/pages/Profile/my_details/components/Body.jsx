@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
-import dicRole from "../../../../components/general/dicRole";
+import { useRoleLabel } from "../../../../hooks/useRoleLabel";
 import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
 import "./Body.css";
 import { dicIconNotification } from "../../../../utils/dicIconNotification";
@@ -14,7 +14,8 @@ const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const [loading, setLoading] = useState(false);
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
-  const roleDefinition = dicRole[Number(user.role)];
+  const roleLabel = useRoleLabel();
+  const roleDefinition = roleLabel(user.role);
   const { register, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues: {
       name: user.name,

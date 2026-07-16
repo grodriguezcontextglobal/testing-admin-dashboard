@@ -11,8 +11,7 @@ import {
   persistCompanyHeaders,
 } from "../../../api/sessionHeaders";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
-import dicRole from "../../../components/general/dicRole";
-import { isAssistant } from "../../../config/roles";
+import { getRoleLabel, isAssistant } from "../../../config/roles";
 import { buildSetPermissionsPayload } from "../utils/loginUtils";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -357,10 +356,10 @@ const ModalMultipleCompanies = ({
                     }}
                   >
                     {
-                      dicRole[
-                      renderingExtraCompanyInfo(item.company)
-                        .employeeRoleInCompany
-                      ]
+                      getRoleLabel(
+                        renderingExtraCompanyInfo(item.company)
+                          .employeeRoleInCompany
+                      )
                     }
                   </span>
                 </p>
