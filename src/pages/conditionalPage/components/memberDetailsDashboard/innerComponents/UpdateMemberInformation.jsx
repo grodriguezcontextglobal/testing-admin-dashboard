@@ -32,13 +32,17 @@ const UpdateMemberInformation = () => {
     queryFn: () =>
       devitrakApi.post("/db_member/consulting-member", {
         member_id: Number(slug),
+        company_id: user?.sqlInfo?.company_id,
       }),
     enabled: !!slug,
   });
   const updateMemberInfoMutation = useMutation({
     mutationKey: ["updateMemberInformationData"],
     mutationFn: async (data) =>
-      await devitrakApi.patch("/db_member/update-member-info", data),
+      await devitrakApi.patch("/db_member/update-member-info", {
+        company_id: user?.sqlInfo?.company_id,
+        ...data,
+      }),
     onSuccess: () => {
       openNotificationWithIcon(
         "success",
@@ -129,6 +133,8 @@ const UpdateMemberInformation = () => {
       setValue("city", membersData?.address_city);
       setValue("state", membersData?.address_state);
       setValue("zip", membersData?.address_zip);
+      setValue("grade", membersData?.grade ?? "");
+      setValue("homeroom", membersData?.homeroom ?? "");
       setValue("minor", membersData?.minor === 1);
       setValue("parent_guardian_first_name", membersData?.parent_guardian_first_name);
       setValue("parent_guardian_last_name", membersData?.parent_guardian_last_name);
@@ -179,6 +185,8 @@ const UpdateMemberInformation = () => {
         address_state: data?.state,
         address_zip: data?.zip,
         image_url: newImageUploaded ? newImageUploaded : memberInfo.image_url,
+        grade: data?.grade,
+        homeroom: data?.homeroom,
         minor: data?.minor,
         parent_guardian_first_name: data?.parent_guardian_first_name,
         parent_guardian_last_name: data?.parent_guardian_last_name,
@@ -319,6 +327,18 @@ const UpdateMemberInformation = () => {
           >
             <span style={{ width: "100%", textAlign: "left" }}>Zip</span>
             <Input {...register("zip")} />
+          </InputLabel>
+          <InputLabel
+            style={{ display: "flex", flexDirection: "column", gap: 4 }}
+          >
+            <span style={{ width: "100%", textAlign: "left" }}>Grade</span>
+            <Input {...register("grade")} />
+          </InputLabel>
+          <InputLabel
+            style={{ display: "flex", flexDirection: "column", gap: 4 }}
+          >
+            <span style={{ width: "100%", textAlign: "left" }}>Homeroom</span>
+            <Input {...register("homeroom")} />
           </InputLabel>
         </div>
         <FormControlLabel

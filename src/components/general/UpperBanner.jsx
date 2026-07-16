@@ -14,7 +14,10 @@ const UpperBanner = forwardRef(function UpperBanner() {
         color:"var(--blue-dark--100)",
         fontFamily:"Inter, serif-sans",
         fontWeight:400,
-        height:"1.5rem"
+        height:"1.5rem",
+        // full-bleed ribbon — no radius (was showing white slivers at corners)
+        borderRadius: 0,
+        border: "none"
       }}
     />
   );

@@ -37,7 +37,7 @@ const StatTile = ({ value, label, accentColor, "data-testid": testId }) => (
         fontFamily: "Inter",
         fontSize: "13px",
         lineHeight: "18px",
-        color: "var(--gray-500, #667085)",
+        color: "var(--gray-500, #777b73)",
         marginTop: "4px",
       }}
     >
@@ -93,7 +93,7 @@ const ConsumerStatsSection = ({ data }) => {
             <StatTile
               value={inactive}
               label="Inactive"
-              accentColor="var(--gray-600, #475467)"
+              accentColor="var(--gray-600, #5d615a)"
               data-testid="stat-inactive"
             />
           </Grid>

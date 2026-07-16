@@ -41,6 +41,7 @@ import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 import { ShipmentRecord } from "./actions/ShipmentRecord";
+import PageSpinner from "../../components/utils/PageSpinner";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
 export const SearchItemContext = createContext();
@@ -364,8 +365,7 @@ const MainPage = () => {
           </Grid>
         </Grid>
       </Grid>
-      {isLoadingState && <DevitrakLoading fullscreen />}
-      {renderingData && <DevitrakLoading fullscreen />}
+      {(isLoadingState || renderingData) && <PageSpinner />}
       {openDetails && (
         <DisplayItemTypesPerLocationModal
           id_key={typePerLocationInfoModal.id_key}

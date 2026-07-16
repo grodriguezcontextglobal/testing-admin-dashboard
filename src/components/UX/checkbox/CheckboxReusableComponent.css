@@ -20,8 +20,8 @@
   top: 2px;
   flex-shrink: 0;
   border-radius: 4px;
-  border: 1px solid #D0D5DD; /* gray-300 */
-  background-color: #FFFFFF; /* white */
+  border: 1px solid var(--gray-300); /* gray-300 */
+  background-color: var(--base-white); /* white */
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
@@ -43,8 +43,8 @@
 
 /* Checked state */
 .checkbox-reusable-input:checked ~ .checkbox-reusable-checkmark {
-  background-color: #7F56D9; /* primary-600 */
-  border-color: #7F56D9; /* primary-600 */
+  background-color: var(--action-600); /* action-600 */
+  border-color: var(--action-600); /* action-600 */
 }
 
 /* Checkmark symbol */
@@ -89,7 +89,7 @@
 
 /* Focus state */
 .checkbox-reusable-input:focus-visible ~ .checkbox-reusable-checkmark {
-  box-shadow: 0 0 0 4px #F4EBFF; /* primary-100 */
+  box-shadow: var(--focus-ring-action); /* 4px action ring */
 }
 
 
@@ -101,12 +101,12 @@
 
 /* Label and Hint styles */
 .checkbox-reusable-label {
-  color: #344054; /* gray-700 */
+  color: var(--gray-700); /* gray-700 */
   font-weight: 500;
 }
 
 .checkbox-reusable-hint {
-  color: #667085; /* gray-500 */
+  color: var(--gray-600); /* gray-600 secondary text */
   margin: 0;
 }
 

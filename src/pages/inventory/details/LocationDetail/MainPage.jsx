@@ -16,6 +16,7 @@ import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import HeaderInventaryComponent from "../../utils/HeaderInventaryComponent";
+import SubLocationsBreakdown from "./components/SubLocationsBreakdown";
 import CardInfo from "../UX/CardInfo";
 const TableDeviceLocation = lazy(() => import("./components/Table"));
 const MainPage = () => {
@@ -162,6 +163,11 @@ const MainPage = () => {
             <Typography style={TextFontSize30LineHeight38}>
               Local inventory
             </Typography>
+          </Grid>
+          <Grid item xs={12} sm={12} md={12} lg={12}>
+            <SubLocationsBreakdown
+              locationName={decodeURI(locationName.slice(1))}
+            />
           </Grid>
         </Grid>
         <Grid

@@ -2,7 +2,8 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, Tooltip } from "antd";
+import { Avatar, Spin, Tooltip } from "antd";
+import Loading from "../../../components/animation/Loading";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +18,12 @@ import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18Lin
 import "../../../styles/global/ant-table.css";
 import "./TablesConsumers.css";
 
-export default function TablesConsumers({ searching, data, getCounting }) {
+export default function TablesConsumers({
+  searching,
+  data,
+  getCounting,
+  onResultCount,
+}) {
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const dataRef = useRef(null);
@@ -72,36 +78,21 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     setResponseData(dataRef.current);
   }, [getCounting]);
 
-  const checkEventsPerCompany = () => {
-    if (searching?.length > 0) {
-      const check = responseData?.filter((item) =>
-        JSON.stringify(item)
-          .toLowerCase()
-          .includes(String(searching).toLowerCase()),
-      );
-      return check;
-    }
-    return responseData;
-  };
-  checkEventsPerCompany();
-
   const getInfoNeededToBeRenderedInTable = useCallback(() => {
-    let result = new Set();
-    let mapTemplate = {};
-    if (checkEventsPerCompany()?.length > 0) {
-      for (let data of checkEventsPerCompany()) {
-        mapTemplate = {
+    const result = [];
+    if (Array.isArray(responseData)) {
+      for (let data of responseData) {
+        result.push({
           company: user.company,
           user: [data.name, data.lastName],
           email: data.email,
           key: data.id ?? data._id,
           entireData: data,
-        };
-        result.add(mapTemplate);
+        });
       }
     }
-    return Array.from(result).reverse();
-  }, [responseData?.length, dataRef.current]);
+    return result.reverse();
+  }, [responseData, user.company]);
 
   const dataToRenderInTable = async () => {
     const result = new Set();
@@ -124,18 +115,30 @@ export default function TablesConsumers({ searching, data, getCounting }) {
     dataToRenderInTable();
   }, [dataRef.current, receiversByEmail]);
 
-  const filterData = (data) => {
-    if (!searching || searching.length < 1) return data;
+  const filteredData = useMemo(() => {
+    const term = searching?.trim().toLowerCase();
+    if (!term) return dataSortedAndFilterToRender;
 
-    return data.filter((item) => {
-      const searchLower = searching.toLowerCase();
-      const fullDetailItem = JSON.stringify(item);
-
-      return fullDetailItem.toLowerCase().includes(searchLower);
+    return dataSortedAndFilterToRender.filter((item) => {
+      const consumer = item.entireData ?? {};
+      const haystack = [
+        consumer.name,
+        consumer.lastName,
+        consumer.email,
+        consumer.phoneNumber,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(term);
     });
-  };
+  }, [dataSortedAndFilterToRender, searching]);
 
-  const filteredData = filterData(dataSortedAndFilterToRender);
+  useEffect(() => {
+    if (typeof onResultCount === "function") {
+      onResultCount(filteredData.length);
+    }
+  }, [filteredData.length, onResultCount]);
 
   const renderingStyle = {
     ...TextFontsize18LineHeight28,
@@ -182,6 +185,17 @@ export default function TablesConsumers({ searching, data, getCounting }) {
 
     return Array.from(checked.values());
   };
+
+  const eventFilterOptions = useMemo(() => {
+    const list = eventInfoCompanyQuery?.data?.data?.list ?? [];
+    const seen = new Map();
+    for (const ev of list) {
+      const name = ev.eventInfoDetail?.eventName ?? "";
+      if (name && !seen.has(ev.id)) seen.set(ev.id, name);
+    }
+    return Array.from(seen, ([value, text]) => ({ text, value }));
+  }, [eventInfoCompanyQuery?.data]);
+
   const columns = [
     {
       title: renderingRowStyling("User"),
@@ -238,6 +252,14 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       dataIndex: "entireData",
       responsive: ["md", "lg"],
       width: "13%",
+      filters: [
+        { text: "Active", value: "active" },
+        { text: "Inactive", value: "inactive" },
+      ],
+      onFilter: (value, record) =>
+        value === "active"
+          ? record.currentActivity > 0
+          : record.currentActivity < 1,
       sorter: {
         compare: (a, b) => (a.currentActivity > 0 ? 1 : 0) - (b.currentActivity > 0 ? 1 : 0),
       },
@@ -292,6 +314,10 @@ export default function TablesConsumers({ searching, data, getCounting }) {
       dataIndex: "entireData",
       width: "fit-content",
       responsive: ["md", "lg"],
+      filters: eventFilterOptions,
+      filterSearch: true,
+      onFilter: (value, record) =>
+        (record.entireData?.event_providers ?? []).includes(value),
       render: (entireData) => {
         const data =
           renderingEventsPermittedForAdminBasedOnAdminAssignment(entireData) ??
@@ -360,10 +386,24 @@ export default function TablesConsumers({ searching, data, getCounting }) {
           pagination={{
             position: ["bottomCenter"],
           }}
+          locale={{
+            emptyText: searching?.trim()
+              ? `No consumers match "${searching.trim()}"`
+              : "No consumers",
+          }}
           className="table-ant-customized"
         />
       ) : (
-        <DevitrakLoading fullscreen />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "48px 0",
+          }}
+        >
+          <Spin spinning={isLoading} indicator={<Loading />} percent={0} />
+        </div>
       )}
     </>
   );

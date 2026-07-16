@@ -36,52 +36,35 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         item_group: storedRecord.device_item_group,
         company_id: user.sqlInfo.company_id,
       }),
-    onSuccess: () => {
-      updateLeaseInfo();
-    },
     onError: (error) => {
       setLoading(false);
       throw new Error(error);
     },
   });
-  const deleteMemberLeaseRowInTable = useMutation({
-    mutationFn: async () => {
+  // History-preserving close: the lease row stays (with outcome + condition
+  // note + returned_date) instead of being deleted.
+  const closeMemberLeaseRowInTable = useMutation({
+    mutationFn: async ({ outcome, note }) => {
       const response = await devitrakApi.post(
-        "/db_member/delete-member-assigned-device-lease",
+        "/db_member/update-member-assigned-device-lease",
         {
+          company_id: storedRecord.company_id,
           where: {
             company_id: storedRecord.company_id,
             member_id: storedRecord.member_id,
             device_id: storedRecord.device_id,
+          },
+          update: {
+            returned: 1,
+            return_status: outcome,
+            condition_note: note || null,
+            returned_date: formatDate(new Date()),
           },
         }
       );
       if (response.data && response.data.ok) {
         return response.data;
       }
-    },
-    onSuccess: async () => {
-      await closingEventAndReturningDevice();
-    },
-  });
-  const closeEvent = useMutation({
-    mutationFn: async (event) => {
-      await devitrakApi.patch(`/event/edit-event/${event?.id}`, {
-        active: false,
-        show: false
-      })
-      await devitrakApi.delete(`/event/delete-event/${event?.id}`);
-    },
-    onSuccess: () => {
-      alert("Transaction closed and device returned to inventory company");
-    }
-  });
-  const updateDeviceInPoolArea = useMutation({
-    mutationKey: ["updateDeviceInPoolArea"],
-    mutationFn: async (id) => {
-      await devitrakApi.patch(`/receiver/receivers-pool-update/${id}`, {
-        activity: false,
-      });
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({
@@ -93,9 +76,9 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
       await sentReturnEmailNotification();
       setStoredRecord({});
       modalHandler(false);
+      setLoading(false);
     },
   });
-
   const sentReturnEmailNotification = async () => {
     const response = await devitrakApi.post(
       "/nodemailer/member-lease-return-device-notification",
@@ -122,42 +105,20 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
     }
   };
   const handleReturnDevice = async (data) => {
+    const outcome = data.outcome || "returned";
     try {
       setLoading(true);
-      await returnItemToInventoryCompany.mutateAsync(data);
+      // Lost devices never come back — skip the warehouse restock.
+      if (outcome !== "lost") {
+        await returnItemToInventoryCompany.mutateAsync(data);
+      }
+      await closeMemberLeaseRowInTable.mutateAsync({
+        outcome,
+        note: data.condition_note || (outcome === "returned" ? data.reason : null),
+      });
     } catch (error) {
       setLoading(false);
       throw new Error(error);
-    }
-  };
-  const updateLeaseInfo = async () => {
-    return await deleteMemberLeaseRowInTable.mutateAsync();
-  };
-  const closingEventAndReturningDevice = async () => {
-    try {
-      const checkEventByDevice = await devitrakApi.post(
-        "/receiver/receiver-pool-list",
-        {
-          company: user.companyData.id,
-          device: storedRecord.device_serial_number,
-          type: storedRecord.device_item_group,
-        }
-      );
-      if (checkEventByDevice.data) {
-        const eventInfo = await devitrakApi.get(
-          `/event/event-list-per-company?company=${user.company}&type=lease`
-        );
-        const eventId = eventInfo.data?.list?.filter(item => item.eventInfoDetail.eventName === checkEventByDevice.data.receiversInventory.at(-1).eventSelected);
-        const filterEventsBasedOnInventory = eventId.filter(item => item.deviceSetup.some(item => item.group === storedRecord.device_item_group));
-        await closeEvent.mutateAsync(filterEventsBasedOnInventory?.at(-1));
-        await updateDeviceInPoolArea.mutateAsync(
-          checkEventByDevice.data.receiversInventory.at(-1).id
-        );
-      }
-    } catch (error) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
     }
   };
   return (
@@ -188,12 +149,45 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         </Grid>
         <Divider />
         <Grid item xs={12} sm={12} md={12} lg={12}>
+          <Typography>Outcome</Typography>
+        </Grid>
+        <Grid margin={"1rem auto 0"} item xs={12} sm={12} md={12} lg={12}>
+          <Select
+            className="custom-autocomplete"
+            defaultValue="returned"
+            {...register("outcome")}
+            style={{ ...AntSelectorStyle, width: "100%" }}
+          >
+            <MenuItem value="returned"><Typography>Returned</Typography></MenuItem>
+            <MenuItem value="damaged"><Typography>Returned damaged</Typography></MenuItem>
+            <MenuItem value="lost"><Typography>Lost — device not recovered</Typography></MenuItem>
+          </Select>
+        </Grid>
+        <Grid margin={"1rem auto 0"} item xs={12} sm={12} md={12} lg={12}>
+          <Typography>Condition note {watch("outcome") === "returned" ? "(optional)" : ""}</Typography>
+          <OutlinedInput
+            {...register("condition_note", {
+              required: watch("outcome") === "damaged" || watch("outcome") === "lost",
+            })}
+            placeholder={
+              watch("outcome") === "lost"
+                ? "e.g. Reported lost by student on 6/2"
+                : "e.g. Cracked screen — charged to account"
+            }
+            style={{ ...OutlinedInputStyle, width: "100%" }}
+            multiline
+          />
+        </Grid>
+        {watch("outcome") !== "lost" && (
+        <Grid item xs={12} sm={12} md={12} lg={12}>
           <Typography>Returned device condition</Typography>
         </Grid>
+        )}
+        {watch("outcome") !== "lost" && (
         <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
           <Select
             className="custom-autocomplete"
-            {...register("reason", { required: true })}
+            {...register("reason", { required: watch("outcome") !== "lost" })}
             style={{ ...AntSelectorStyle, width: "100%" }}
             autoComplete="off"
             clearable={true}
@@ -206,7 +200,8 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             ))}
           </Select>
         </Grid>
-        {watch("reason") !== "" && (
+        )}
+        {(watch("outcome") === "lost" || watch("reason") !== "") && (
           <Grid
             display={"flex"}
             flexDirection={"row"}
@@ -216,9 +211,9 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             container
           >
             <BlueButtonComponent
-              title={"Return and Save"}
+              title={watch("outcome") === "lost" ? "Mark as Lost and Save" : "Return and Save"}
               loadingState={loading}
-              disabled={watch("reason") === "" || loading}
+              disabled={loading || (watch("outcome") !== "lost" && watch("reason") === "")}
               buttonType="submit"
             />
           </Grid>

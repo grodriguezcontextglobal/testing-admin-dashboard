@@ -9,26 +9,25 @@ export const EventPeriodFormatDisplay = ({ event, styleText }) => {
 
     const dateBegin = new Date(`${event?.eventInfoDetail?.dateBegin}`).getDate();
     const dateEnd = new Date(`${event?.eventInfoDetail?.dateEnd}`).getDate();
-    return (
-        <div style={{ display: "flex",  justifyContent: "flex-start", width: "-webkit-fill-available" }}>
-            <p style={{ ...styleText, paddingTop: "8px" }}>
-                <span style={{ width: "100%", display: "flex", textAlign: "left" }}>
-                    {beginMonth} {dateBegin}
-                </span>
-                <span style={{ ...Subtitle, width: "100%", display: "flex", textAlign: "left" }}>
-                    {beginYear}
-                </span>
-            </p>
-            <p style={{ ...styleText, paddingTop: "8px", margin:"0 .5rem" }}><strong>-</strong></p>
-            <p style={{ ...styleText, paddingTop: "8px" }}>
-                <span style={{ width: "100%", display: "flex", textAlign: "left" }}>
-                    {endMonth} {dateEnd}
-                </span>
-                <span style={{ ...Subtitle, width: "100%", display: "flex", textAlign: "left" }}>
-                    {endYear}
-                </span>
-            </p>
 
+    // "June 30 – July 3" on one line, with the year shown once underneath
+    // ("2026", or "2026 – 2027" when the range crosses a year boundary).
+    const sameDay = beginMonth === endMonth && dateBegin === dateEnd && beginYear === endYear;
+    const rangeLabel = sameDay
+        ? `${beginMonth} ${dateBegin}`
+        : `${beginMonth} ${dateBegin} – ${endMonth} ${dateEnd}`;
+    const yearLabel = beginYear === endYear ? `${beginYear}` : `${beginYear} – ${endYear}`;
+
+    return (
+        <div style={{ display: "flex", justifyContent: "flex-start", width: "-webkit-fill-available" }}>
+            <p style={{ ...styleText, paddingTop: "8px" }}>
+                <span style={{ width: "100%", display: "flex", textAlign: "left" }}>
+                    {rangeLabel}
+                </span>
+                <span style={{ ...Subtitle, width: "100%", display: "flex", textAlign: "left" }}>
+                    {yearLabel}
+                </span>
+            </p>
         </div>
     );
 };

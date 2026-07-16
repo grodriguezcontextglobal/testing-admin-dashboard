@@ -5,6 +5,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import { useEffect } from "react";
 import { onLogin } from "../../../store/slices/adminSlice";
 import { checkArray } from "../../../components/utils/checkArray";
+import Loading from "../../../components/animation/Loading";
 
 const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = () => {
   const { user } = useSelector((state) => state.admin);
@@ -37,7 +38,32 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = () => {
     };
   }, [companyDataQuery.data]);
 
-  return <div>UpdatingCompanyInfoAfterStripeConnectedAccountCreated</div>;
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "12px",
+        width: "100%",
+        minHeight: "60vh",
+      }}
+    >
+      <Loading />
+      <p
+        style={{
+          margin: 0,
+          fontFamily: "Inter, sans-serif",
+          fontSize: "14px",
+          lineHeight: "20px",
+          color: "var(--gray-600, #5d615a)",
+        }}
+      >
+        Finishing your Stripe account setup...
+      </p>
+    </div>
+  );
 };
 
 export default UpdatingCompanyInfoAfterStripeConnectedAccountCreated;

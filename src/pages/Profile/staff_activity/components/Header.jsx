@@ -81,7 +81,7 @@ const Header = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-900, #101828)",
+                color: "var(--gray-900, #171d1a)",
                 lineHeight: "38px",
               }}
               textAlign={"left"}
@@ -95,7 +95,7 @@ const Header = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "#475467",
+                color: "var(--gray-600, #5d615a)",
                 lineHeight: "38px",
               }}
               textAlign={"left"}
@@ -129,7 +129,7 @@ const Header = () => {
               <InputLabel style={{ width: "100%" }}>
                 <Typography
                   textTransform={"none"}
-                  color={"#475467"}
+                  color={"var(--gray-600, #5d615a)"}
                   textAlign={"left"}
                   fontWeight={500}
                   fontFamily={"Inter"}
@@ -171,7 +171,7 @@ const Header = () => {
               <InputLabel style={{ width: "100%" }}>
                 <Typography
                   textTransform={"none"}
-                  color={"#475467"}
+                  color={"var(--gray-600, #5d615a)"}
                   textAlign={"left"}
                   fontWeight={500}
                   fontFamily={"Inter"}
@@ -213,7 +213,7 @@ const Header = () => {
               <InputLabel style={{ width: "100%" }}>
                 <Typography
                   textTransform={"none"}
-                  color={"#475467"}
+                  color={"var(--gray-600, #5d615a)"}
                   textAlign={"left"}
                   fontWeight={500}
                   fontFamily={"Inter"}

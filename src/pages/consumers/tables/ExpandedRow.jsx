@@ -486,7 +486,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
         <div id={rowRecord.key} key={rowRecord.key} style={{ width: "100%" }}>
           <TableHeader
             leftCta={
-              <p style={{ fontFamily: "Inter", fontSize: "14px", fontWeight: 600, color: "#344054", padding: "12px 16px", margin: 0 }}>
+              <p style={{ fontFamily: "Inter", fontSize: "14px", fontWeight: 600, color: "var(--gray-700, #484d47)", padding: "12px 16px", margin: 0 }}>
                 {Array.isArray(rowRecord.eventSelected) ? rowRecord.eventSelected[0] : rowRecord.eventSelected}
               </p>
             }
@@ -503,7 +503,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             enablePagination={true}
             pageSize={10}
           />
-          <div style={{ borderTop: "1px solid #EAECF0", paddingTop: "4px" }}>
+          <div style={{ borderTop: "1px solid var(--gray-200, #ddded6)", paddingTop: "4px" }}>
             <FooterExpandedRow
               displayTernary={displayTernary}
               handleReturnSingleDevice={handleReturnItemInTransaction}

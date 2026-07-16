@@ -125,6 +125,10 @@ const Report = () => {
               columns={columns}
               dataSource={sourceReportData()}
               enablePagination={true}
+              locale={{
+                emptyText:
+                  "No cash payments recorded for this event yet. Cash collected for lost-device fees will appear here.",
+              }}
             />
           </Grid>
           {openLostReportDetail && (

@@ -127,6 +127,18 @@ const Single = ({ closingModal }) => {
           </Label>
           <Input value={form.address_zip} onChange={update("address_zip")} />
         </div>
+        <div style={fieldWrapper}>
+          <Label>
+            Grade <span style={optionalHint}>(Optional)</span>
+          </Label>
+          <Input value={form.grade} onChange={update("grade")} placeholder="e.g. 7" />
+        </div>
+        <div style={fieldWrapper}>
+          <Label>
+            Homeroom <span style={optionalHint}>(Optional)</span>
+          </Label>
+          <Input value={form.homeroom} onChange={update("homeroom")} placeholder="e.g. Rivera 7B" />
+        </div>
       </div>
 
       <FormControlLabel

@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
+import { Modal, notification } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +8,7 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import { formatDate } from "../../../../../components/utils/dateFormat";
-import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 
@@ -693,6 +693,39 @@ const EndEventButton = () => {
     }
   };
 
+  // Devices still with consumers (same "in use" definition the closure flow
+  // uses at line ~473): active in the pool, or flagged lost.
+  // receiversInventory can arrive as a JSON string — normalize first.
+  const poolInventory = checkTypeFetchResponse(
+    eventInventoryQuery?.data?.data?.receiversInventory,
+  );
+  const outstandingDevices = (
+    Array.isArray(poolInventory) ? poolInventory : []
+  ).filter(
+    (item) => item.activity || `${item.status}`.toLowerCase() === "lost",
+  ).length;
+
+  // Imperative Modal.confirm (portal-rendered) instead of Popconfirm: this
+  // subtree re-renders often (query refetches + Million memoization), which
+  // resets Popconfirm's internal open state and made the popup flash away.
+  const confirmEndEvent = () => {
+    Modal.confirm({
+      title:
+        outstandingDevices > 0
+          ? `${outstandingDevices} device${outstandingDevices > 1 ? "s are" : " is"} still checked out`
+          : "End this event?",
+      content:
+        outstandingDevices > 0
+          ? "Ending the event now will close out all outstanding device assignments and remove staff access. This cannot be reversed."
+          : "This will return inventory, close transactions, and remove staff access. This cannot be reversed.",
+      okText: outstandingDevices > 0 ? "End event anyway" : "End event",
+      cancelText: "Cancel",
+      okButtonProps: { danger: true },
+      centered: true,
+      onOk: updatingItemInDB,
+    });
+  };
+
   return (
     <Suspense
       fallback={
@@ -721,10 +754,9 @@ const EndEventButton = () => {
             md={12}
             lg={12}
           >
-            <BlueButtonConfirmationComponent
+            <DangerButtonComponent
               title="End event"
-              func={updatingItemInDB}
-              confirmationTitle="Are you sure? This action can not be reversed."
+              func={confirmEndEvent}
               styles={{ width: "100%" }}
               size="lg"
             />

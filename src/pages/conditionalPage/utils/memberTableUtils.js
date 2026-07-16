@@ -29,6 +29,8 @@ export const buildMemberRows = (members) => {
     name: `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
     email: m.email,
     phone: m.phone_number ?? m.phone,
+    grade: m.grade ?? "",
+    homeroom: m.homeroom ?? "",
     address: composeAddress(m),
     member_id: m.member_id,
     entireData: m,

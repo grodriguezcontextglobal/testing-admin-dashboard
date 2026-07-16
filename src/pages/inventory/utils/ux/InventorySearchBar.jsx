@@ -69,8 +69,10 @@ const InventorySearchBar = ({
         style={{
           width: "100%",
           display: "flex",
+          flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: "8px",
           margin: "0px 0px 1rem 0px",
         }}
       >
@@ -81,8 +83,8 @@ const InventorySearchBar = ({
             padding: 0,
             textAlign: "left",
             width: {
-              xs: "100%",
-              sm: "100%",
+              xs: "auto",
+              sm: "auto",
               md: "50%",
               lg: "50%",
             },

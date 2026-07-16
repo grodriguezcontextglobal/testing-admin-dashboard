@@ -33,8 +33,7 @@ const Header = () => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "var(--gray-900, #101828)",
-              lineHeight: "38px",
+              color: "var(--gray-900, #171d1a)",
             }}
             textAlign={"left"}
             fontWeight={600}
@@ -47,13 +46,12 @@ const Header = () => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "#475467",
-              lineHeight: "38px",
+              color: "var(--gray-600, #5d615a)",
             }}
             textAlign={"left"}
             fontWeight={400}
             fontFamily={"Inter"}
-            fontSize={"14x"}
+            fontSize={"14px"}
             lineHeight={"20px"}
           >
             Your credit card and other payment details of your plan with Devitrak.
@@ -73,7 +71,7 @@ const Header = () => {
           {/* <Button
             style={{
               width: "fit-content",
-              border: "1px solid var(--gray-300, #D0D5DD)",
+              border: "1px solid var(--gray-300, #c6c7bb)",
               borderRadius: "8px",
               background: "var(--base-white, #FFF)",
               boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
@@ -82,7 +80,7 @@ const Header = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 fontSize: "14px",
                 fontWeight: "600",
                 fontFamily: "Inter",

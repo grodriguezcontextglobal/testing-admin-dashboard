@@ -5,22 +5,22 @@
 
 .tabs-header {
   display: flex;
-  border-bottom: 1px solid #eaecf0;
+  border-bottom: 1px solid var(--gray-200, #ddded6);
   margin-bottom: 24px;
 }
 
 .tab-item {
   padding: 8px 12px;
   cursor: pointer;
-  color: #475467;
+  color: var(--gray-600, #5d615a);
   font-weight: 500;
   border-bottom: 2px solid transparent;
   margin-right: 16px;
 }
 
 .tab-item.active {
-  color: #101828;
-  border-bottom: 2px solid #101828;
+  color: var(--action-600, #155eef);
+  border-bottom: 2px solid var(--action-600, #155eef);
 }
 
 .document-grid,
@@ -38,29 +38,31 @@
 }
 
 .folders-header h3 {
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 28px;
   font-weight: 600;
-  color: #101828;
+  color: var(--gray-900, #171d1a);
+  margin: 0;
 }
 
 .folder-card {
-  border: 1px solid #eaecf0;
+  border: 1px solid var(--gray-200, #ddded6);
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.06),
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+  background: var(--base-white, #fff);
+  box-shadow: var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05));
   display: flex;
   flex-direction: column;
 }
 
 .folder-card-main {
-  padding: 16px;
+  padding: 24px 24px 16px;
   flex-grow: 1;
 }
 
 .folder-card-main h3 {
   font-size: 16px;
   font-weight: 600;
+  color: var(--gray-900, #171d1a);
   margin: 0 0 4px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -69,7 +71,7 @@
 
 .folder-card-main p {
   font-size: 14px;
-  color: #475467;
+  color: var(--gray-600, #5d615a);
   margin: 0 0 8px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -82,7 +84,7 @@
 
 .folder-card-docs strong {
   font-size: 12px;
-  color: #475467;
+  color: var(--gray-600, #5d615a);
   font-weight: 600;
 }
 
@@ -95,8 +97,8 @@
 
 .tag {
   display: inline-block;
-  background-color: #f2f4f7;
-  color: #344054;
+  background-color: var(--gray-100, #f1f1f1);
+  color: var(--gray-700, #484d47);
   padding: 2px 8px;
   border-radius: 16px;
   font-size: 12px;
@@ -109,11 +111,11 @@
 }
 
 .folder-card-footer {
-  border-top: 1px solid #eaecf0;
-  padding: 16px;
+  border-top: 1px solid var(--gray-200, #ddded6);
+  padding: 16px 24px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
 }
 
 .modal-overlay {
@@ -130,30 +132,34 @@
 }
 
 .modal-content {
-  background: #fff;
-  border-radius: 8px;
+  background: var(--base-white, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-xl, 0 20px 24px -4px rgba(16, 24, 40, 0.08));
   width: 100%;
   max-width: 1000px;
   max-height: 90vh;
+  margin: 0 16px;
   display: flex;
   flex-direction: column;
 }
 
 .modal-header {
   padding: 24px;
-  border-bottom: 1px solid #eaecf0;
+  border-bottom: 1px solid var(--gray-200, #ddded6);
 }
 
 .modal-header h3 {
   font-size: 18px;
+  line-height: 28px;
   font-weight: 600;
+  color: var(--gray-900, #171d1a);
   margin: 0;
 }
 
 .modal-body {
   padding: 24px;
-  overflow-y: visible;
-  /* Changed from auto to visible */
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -161,7 +167,7 @@
 
 .modal-footer {
   padding: 24px;
-  border-top: 1px solid #eaecf0;
+  border-top: 1px solid var(--gray-200, #ddded6);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -174,8 +180,10 @@
 }
 
 .form-label {
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 500;
-  color: #344054;
+  color: var(--gray-700, #484d47);
   font-family: "Inter", sans-serif;
 }
 
@@ -183,12 +191,12 @@
 .form-textarea {
   width: -webkit-fill-available;
   padding: 10px 14px;
-  border: 1px solid #d0d5dd;
+  border: 1px solid var(--gray-300, #c6c7bb);
   border-radius: 8px;
   font-size: 16px;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   background-color: #fff;
-  color: #101828;
+  color: var(--gray-900, #171d1a);
   font-family: "Inter", sans-serif;
 
 }
@@ -196,8 +204,8 @@
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #101828;
-  box-shadow: 0 0 0 2px rgba(16, 24, 40, 0.1);
+  border-color: var(--action-300, #84adff);
+  box-shadow: var(--focus-ring-action, 0 0 0 4px #d1e0ff);
 }
 
 .form-textarea {
@@ -222,7 +230,17 @@
   gap: 8px;
   margin-bottom: 16px;
   min-height: 40px;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+  border: 1px solid var(--gray-200, #ddded6);
+  background: var(--gray-50, #f7f7f4);
+  border-radius: 8px;
   padding: 8px;
+}
+
+.documents-in-folder > p {
+  margin: 0;
+  align-self: center;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+  font-family: "Inter", sans-serif;
 }

@@ -11,6 +11,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
+import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import DocumentUpload from "./actions/UploadDocument";
 import HistoryDocumentProvider from "./components/HistoryDocumentProvider";
 import ProviderCard from "./components/ProviderCard";
@@ -61,7 +63,7 @@ const Main = () => {
   });
 
   useEffect(() => {
-    setProviders(providersList?.data?.data?.providerCompanies);
+    setProviders(providersList?.data?.data?.providerCompanies ?? []);
   }, [providersList.data, providersList.isRefetching]);
 
   const handleInputChange = (e) => {
@@ -93,6 +95,11 @@ const Main = () => {
     setOpenDocumentHistory(true);
   };
 
+  const handleUploadDocument = (provider) => {
+    setSelectedProvider(provider);
+    setUploadDocumentModal(true);
+  };
+
   const handleEditClick = (provider) => {
     setSelectedProvider(provider);
     setNewProvider(provider);
@@ -101,7 +108,7 @@ const Main = () => {
   };
 
   const sortDocuments = (documents) => {
-    return [...documents].sort((a, b) => {
+    return [...(documents ?? [])].sort((a, b) => {
       const dateA = new Date(a.uploadDate);
       const dateB = new Date(b.uploadDate);
       return documentSortOrder === "desc" ? dateB - dateA : dateA - dateB;
@@ -154,7 +161,7 @@ const Main = () => {
         const providerData = {
           ...newProvider,
           services: cleanedServices,
-          creator: user.companyData.id, // Replace with actual company ID from your auth context
+          creator: user?.companyData?.id,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -163,7 +170,7 @@ const Main = () => {
             "/company/new_provider",
             providerData
           );
-          if (newResp.data.ok) {
+          if (newResp?.data?.ok) {
             queryClient.invalidateQueries([
               "providersCompanyQuery",
               user?.companyData?.id,
@@ -171,13 +178,16 @@ const Main = () => {
             providersList.refetch();
             clearUpForm();
             setOpenDialog(false);
+            message.success("Provider added successfully");
+          } else {
+            message.error(newResp?.data?.msg || "Failed to add provider");
           }
         } else {
           const updateResponse = await devitrakApi.patch(
             `/company/update_provider/${providerData.id}`,
             providerData
           );
-          if (updateResponse.data.ok) {
+          if (updateResponse?.data?.ok) {
             queryClient.invalidateQueries([
               "providersCompanyQuery",
               user?.companyData?.id,
@@ -185,12 +195,18 @@ const Main = () => {
             clearUpForm();
             providersList.refetch();
             setOpenDialog(false);
+            message.success("Provider updated successfully");
+          } else {
+            message.error(
+              updateResponse?.data?.msg || "Failed to update provider"
+            );
           }
         }
       } catch (error) {
-        console.error("Error saving provider:", error);
         message.error("Error saving provider");
       }
+    } else {
+      message.error("Please complete all required provider fields.");
     }
   };
 
@@ -203,12 +219,12 @@ const Main = () => {
     );
   }
 
-  if (providersList.isLoading) {
-    // console.log(providersList.error.message);
+  if (providersList.isError) {
     return (
       <Box sx={{ p: 3 }}>
         <Typography color="error">
-          Error loading providers: {providersList.error.message}
+          Error loading providers:{" "}
+          {providersList.error?.message || "Unknown error"}
         </Typography>
       </Box>
     );
@@ -225,13 +241,7 @@ const Main = () => {
           alignItems: "center",
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 600,
-            fontSize: isMobile ? "1.25rem" : "1.5rem",
-          }}
-        >
+        <Typography sx={{ ...TextFontsize18LineHeight28 }}>
           Company Suppliers
         </Typography>
         <BlueButtonComponent
@@ -243,12 +253,32 @@ const Main = () => {
         />
       </Grid>
 
+      {(!providers || providers.length === 0) && (
+        <Grid item xs={12}>
+          <EmptyState
+            icon="tabler:building-store"
+            title="No suppliers yet"
+            description="Add your first supplier company to keep contact details and shared documents in one place."
+            action={
+              <BlueButtonComponent
+                title="Add Provider"
+                func={() => {
+                  setDialogMode("add");
+                  setOpenDialog(true);
+                }}
+              />
+            }
+          />
+        </Grid>
+      )}
+
       {providers?.map((provider) => (
-        <Grid item xs={12} md={6} key={provider.id}>
+        <Grid item xs={12} md={6} key={provider.id || provider._id}>
           <ProviderCard
             provider={provider}
             handleEditClick={handleEditClick}
             handleViewDocuments={handleViewDocuments}
+            handleUploadDocument={handleUploadDocument}
           />
         </Grid>
       ))}
@@ -281,6 +311,7 @@ const Main = () => {
           openDialog={uploadDocumentModal}
           setOpenDialog={setUploadDocumentModal}
           providerId={selectedProvider?.id}
+          refetch={() => providersList.refetch()}
         />
       )}
     </Grid>

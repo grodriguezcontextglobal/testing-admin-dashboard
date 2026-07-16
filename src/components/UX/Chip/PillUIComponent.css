@@ -28,8 +28,8 @@
 
 /* Colors */
 .brand {
-  background-color: #F9F5FF;
-  color: #6941C6;
+  background-color: var(--brand-50, #f2f3f5);
+  color: var(--brand-600, #021833);
 }
 
 .gray {

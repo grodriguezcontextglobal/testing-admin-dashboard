@@ -112,7 +112,7 @@ const ButtonSections = () => {
           // height={20}
         />
       ),
-      text: "Send event link.",
+      text: "Send event link",
       disableStatus: !event.active,
       fn: () => setSendEventLink(true),
     },
@@ -255,18 +255,12 @@ const ButtonSections = () => {
                 lg={12}
               >
                 <GrayButtonComponent
-                  icon={item.icon}
+                  iconLeading={item.icon}
                   disabled={item.disableStatus}
                   func={() => item.fn()}
                   title={item.text}
                   styles={{ width: "100%" }}
-                  titleStyles={{
-                    textTransform: "none",
-                    textAlign: "left",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
+                  titleStyles={{ textTransform: "none" }}
                 />
               </Grid>
             );

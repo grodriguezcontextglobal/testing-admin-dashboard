@@ -2,11 +2,12 @@ import { Chip, Grid, Typography } from "@mui/material";
 import { Card, Progress } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-// import UpdatingSubscription from "../payment/UpdatingSubscription";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import _ from 'lodash';
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import UpdatingSubscription from "../payment/UpdatingSubscription";
+import ModalCancelOptions from "./ModalCancelOptions";
 const PlanSubscriptionDetails = () => {
   const [openCancelOptionsModal, setOpenCancelOptionsModal] = useState(false);
   const [updatingSubscriptionModal, setUpdatingSubscriptionModal] =
@@ -15,22 +16,29 @@ const PlanSubscriptionDetails = () => {
   const [subscriptionDetailFetched, setSubscriptionDetailFetched] = useState(null)
   const { subscriptionRecord } = useSelector((state) => state.subscription);
   const retrieveSubscriptionPerCompany = async () => {
-    if (subscriptionRecord.company) {
-      const responseSubs = await devitrakApi.post(`/subscription/search_subscription`, { company: subscriptionRecord.company })
-      return setSubscriptionDetailFetched(responseSubs.data.subscription)
+    try {
+      if (subscriptionRecord?.company) {
+        const responseSubs = await devitrakApi.post(`/subscription/search_subscription`, { company: subscriptionRecord.company })
+        return setSubscriptionDetailFetched(responseSubs?.data?.subscription ?? null)
+      }
+    } catch (error) {
+      // subscription info is optional for rendering this card
     }
   }
-  retrieveSubscriptionPerCompany()
   const renderActiveSubscriptionDetail = useCallback(async () => {
-    if (!subscriptionDetailFetched) {
-      const groupingActive = _.groupBy(subscriptionRecord.record, 'active')
-      const active = groupingActive[true]
-      if (active) {
-        const response = await devitrakApi.get(`/subscription/subscriptions/${active[0].subscription_id}`)
-        if (response.data.ok) {
-          return setDetails(response.data.subscriptions)
+    try {
+      if (!subscriptionDetailFetched) {
+        const groupingActive = _.groupBy(subscriptionRecord?.record, 'active')
+        const active = groupingActive[true]
+        if (active?.[0]?.subscription_id) {
+          const response = await devitrakApi.get(`/subscription/subscriptions/${active[0].subscription_id}`)
+          if (response?.data?.ok) {
+            return setDetails(response.data.subscriptions)
+          }
         }
       }
+    } catch (error) {
+      // keep the card rendered with empty details
     }
   }, [subscriptionRecord.company, details])
 
@@ -63,7 +71,7 @@ const PlanSubscriptionDetails = () => {
         fontStyle={"normal"}
         fontWeight={500}
         lineHeight={"20px"}
-        color="var(--primary-700, #6941C6)"
+        color="var(--action-700, #004eea)"
       >
         {amount ? dic[amount] : 'Unknown'}
       </Typography>
@@ -86,10 +94,9 @@ const PlanSubscriptionDetails = () => {
           style={{
             height: "20rem",
             borderRadius: "12px",
-            border: "1px solid var(--gray-200, #EAECF0)",
+            border: "1px solid var(--gray-200, #ddded6)",
             background: "var(--base-white, #FFF)",
-            boxShadow:
-              "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
+            boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
           }}
           actions={[
             <Grid
@@ -101,9 +108,17 @@ const PlanSubscriptionDetails = () => {
               alignItems={"center"}
               textAlign={"right"}
             >
-              <div onClick={() => setOpenCancelOptionsModal(true)}>
+              <div
+                onClick={() => setOpenCancelOptionsModal(true)}
+                style={{ cursor: "pointer" }}
+              >
                 <Typography
-                  style={{ ...Subtitle, padding: "16px 24px", color: "#fd5656" }}
+                  style={{
+                    ...Subtitle,
+                    padding: "16px 24px",
+                    fontWeight: 600,
+                    color: "var(--error-600, #bc4b2f)",
+                  }}
                 >
                   Cancel plan
                 </Typography>
@@ -111,7 +126,13 @@ const PlanSubscriptionDetails = () => {
 
               <Typography
                 onClick={() => setUpdatingSubscriptionModal(true)}
-                style={{ ...Subtitle, color: "#004EEB", padding: "16px 24px" }}
+                style={{
+                  ...Subtitle,
+                  fontWeight: 600,
+                  color: "var(--action-600, #155eef)",
+                  padding: "16px 24px",
+                  cursor: "pointer",
+                }}
               >
                 Upgrade plan
               </Typography>
@@ -162,7 +183,7 @@ const PlanSubscriptionDetails = () => {
                     <Typography
                       width={"100%"}
                       textTransform={"none"}
-                      color="var(--gray-900, #101828)"
+                      color="var(--gray-900, #171d1a)"
                       lineHeight={"28px"}
                       textAlign={"left"}
                       fontWeight={600}
@@ -181,7 +202,7 @@ const PlanSubscriptionDetails = () => {
                       style={{
                         width: "fit-content",
                         borderRadius: "16px",
-                        background: "var(--primary-50, #F9F5FF)",
+                        background: "var(--action-50, #eff4ff)",
                         mixBlendMode: "multiply",
                         display: "flex",
                         alignItems: "center",
@@ -193,7 +214,7 @@ const PlanSubscriptionDetails = () => {
                 <Typography
                   width={"100%"}
                   textTransform={"none"}
-                  color="var(--gray-600, #475467)"
+                  color="var(--gray-600, #5d615a)"
                   lineHeight={"20px"}
                   textAlign={"left"}
                   fontWeight={400}
@@ -220,7 +241,7 @@ const PlanSubscriptionDetails = () => {
             >
               <Typography
                 textTransform={"none"}
-                color="var(--gray-900, #101828)"
+                color="var(--gray-900, #171d1a)"
                 lineHeight={"60px"}
                 textAlign={"center"}
                 fontWeight={600}
@@ -234,7 +255,7 @@ const PlanSubscriptionDetails = () => {
               </Typography>
               <Typography
                 textTransform={"none"}
-                color="#475467"
+                color="var(--gray-600, #5d615a)"
                 lineHeight={"24px"}
                 textAlign={"center"}
                 fontWeight={500}
@@ -261,7 +282,7 @@ const PlanSubscriptionDetails = () => {
           </Grid>
         </Card>
       </Grid>
-      {/* {updatingSubscriptionModal && (
+      {updatingSubscriptionModal && (
         <UpdatingSubscription
           updatingSubscriptionModal={updatingSubscriptionModal}
           setUpdatingSubscriptionModal={setUpdatingSubscriptionModal}
@@ -272,7 +293,7 @@ const PlanSubscriptionDetails = () => {
           openCancelOptionsModal={openCancelOptionsModal}
           setOpenCancelOptionsModal={setOpenCancelOptionsModal}
         />
-      )} */}
+      )}
     </>
   );
 };

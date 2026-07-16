@@ -225,7 +225,9 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 message.warning(
                     `${templatesForApi.length} item group(s) queued for import. You'll be notified as each one completes.`
                 );
-                return closeModal();
+                clearStateAndClose();
+                if (typeof closeModal === "function") closeModal();
+                return;
             } else {
                 message.warning("No item groups could be formed from the processed items.");
             }
@@ -264,7 +266,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 maskClosable={false}
             >
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ ...Subtitle, color: "#667085" }}>
+                    <div style={{ ...Subtitle, color: "var(--gray-600, #5d615a)" }}>
                         Select an Excel file to import inventory items. Ensure the columns
                         match the template.
                     </div>
@@ -293,7 +295,9 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
 
                     <div
                         style={{
-                            background: "#F9FAFB",
+                            background: "var(--gray-50, #f7f7f4)",
+                            border: "1px solid var(--gray-200, #ddded6)",
+                            color: "var(--gray-600, #5d615a)",
                             padding: 12,
                             borderRadius: 8,
                             fontSize: 13,

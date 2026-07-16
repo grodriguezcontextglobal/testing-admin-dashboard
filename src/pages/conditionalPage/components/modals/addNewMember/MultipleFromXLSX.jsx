@@ -90,6 +90,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       setImporting(true);
       const fetching = await devitrakApi.post("/db_member/bulk-members", {
         list: rows,
+        company_id: user?.sqlInfo?.company_id,
       });
       if (fetching?.data?.ok) {
         setErrors([]);

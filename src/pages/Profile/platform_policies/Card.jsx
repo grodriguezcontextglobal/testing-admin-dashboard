@@ -16,10 +16,9 @@ const Card = ({ doc }) => {
         flexDirection: "column",
         overflow: "hidden",
         borderRadius: "12px",
-        backgroundColor: "var(--basewhite)",
-        boxShadow:
-          "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",
-        border: "1px solid var(--gray-200, #EAECF0)",
+        backgroundColor: "var(--base-white, #fff)",
+        boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
+        border: "1px solid var(--gray-200, #ddded6)",
       }}
     >
       <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" } }}>
@@ -58,10 +57,10 @@ const Card = ({ doc }) => {
           sx={{
             flex: 1,
             padding: { xs: "16px", sm: "24px" },
-            border: "1px solid var(--gray-200, #EAECF0)",
-            borderTop: { xs: "none", sm: "1px solid var(--gray-200, #EAECF0)" },
+            border: "1px solid var(--gray-200, #ddded6)",
+            borderTop: { xs: "none", sm: "1px solid var(--gray-200, #ddded6)" },
             borderLeft: {
-              xs: "1px solid var(--gray-200, #EAECF0)",
+              xs: "1px solid var(--gray-200, #ddded6)",
               sm: "none",
             },
             borderRadius: { xs: "0", sm: "0 12px 0 0" },
@@ -70,13 +69,13 @@ const Card = ({ doc }) => {
           <Box sx={{ display: "flex", flexDirection: "column" }}>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 600, color: "#101828" }}
+              sx={{ fontWeight: 600, color: "var(--gray-900, #171d1a)" }}
             >
               {doc.title}
             </Typography>
             <Typography
               variant="body2"
-              sx={{ marginTop: "4px", color: "#475467" }}
+              sx={{ marginTop: "4px", color: "var(--gray-600, #5d615a)" }}
             >
               {doc.description}
             </Typography>
@@ -101,7 +100,7 @@ const Card = ({ doc }) => {
           sx={{
             width: "100%",
             height: "500px",
-            borderTop: "1px solid var(--gray-200, #EAECF0)",
+            borderTop: "1px solid var(--gray-200, #ddded6)",
           }}
         >
           <iframe

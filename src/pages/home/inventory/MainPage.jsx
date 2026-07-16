@@ -1,17 +1,13 @@
-
 import { lazy, Suspense } from "react";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
+import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 
 const CategoryInventory = lazy(
   () => import("../components/CategoriesInventory"),
 );
 const Graphic = lazy(() => import("../components/Graphic"));
-const TotalConsumer = lazy(() => import("../components/TotalConsumer"));
 const TotalDevice = lazy(() => import("../components/TotalDeviceValue"));
-const TableLocations = lazy(
-  () => import("../components/locations/TableLocations"),
-);
 
 const MainPage = () => {
   // Inline media query for 3 columns on desktop
@@ -35,7 +31,7 @@ const MainPage = () => {
       <Suspense
         fallback={
           <div style={CenteringGrid}>
-            <DevitrakLoading fullscreen />
+            <Loading />
           </div>
         }
       >
@@ -54,9 +50,7 @@ const MainPage = () => {
               width: "100%",
             }}
           >
-            <TotalConsumer />
             <TotalDevice />
-            <TableLocations />
           </div>
 
           {/* Column 3: Category Inventory */}

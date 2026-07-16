@@ -19,8 +19,9 @@ const DocumentUpload = ({ activeTab, refetch }) => {
   const [uploading, setUploading] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
-      setFile(e.target.files[0]);
+    const selected = e?.target?.files?.[0];
+    if (selected) {
+      setFile(selected);
     }
   };
 
@@ -55,16 +56,17 @@ const DocumentUpload = ({ activeTab, refetch }) => {
     if (!file) {
       return message.error("Please select a PDF file.");
     }
-
+    setUploading(true);
     const formDataToSend = new FormData();
     formDataToSend.append("document", file);
-    formDataToSend.append("company_id", user.companyData.id);
-    formDataToSend.append("created_by", user.uid);
+    formDataToSend.append("company_id", user?.companyData?.id);
+    formDataToSend.append("created_by", user?.uid);
     formDataToSend.append("at_", new Date().toISOString());
     formDataToSend.append("requires_signature", false);
     formDataToSend.append("document_type", "document");
-    // Append all form fields
+    // Append all form fields (skip empty values so we never send "undefined")
     Object.keys(values).forEach((key) => {
+      if (values[key] === undefined || values[key] === null) return;
       if (
         key === "applicable_locations" ||
         key === "applicable_items" ||
@@ -75,7 +77,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       ) {
         formDataToSend.append(key, JSON.stringify(values[key] || []));
       } else if (key === "expiration_date") {
-        formDataToSend.append(key, values[key]?.toISOString());
+        formDataToSend.append(key, values[key].toISOString());
       } else {
         formDataToSend.append(key, values[key]);
       }
@@ -89,48 +91,40 @@ const DocumentUpload = ({ activeTab, refetch }) => {
         { headers: { "Idempotency-Key": generateIdempotencyKey() } }
       );
 
-      const data = await response.data;
-      if (!data.ok) {
-        console.error("Upload failed:", data.msg);
-        throw Error(data.msg);
+      const data = response?.data;
+      if (data?.ok) {
+        form.resetFields();
+        setFile(null);
+        message.success("Document uploaded successfully");
+        activeTab("1");
+        return refetch();
       }
-
-      message.loading({
-        content: "Document queued — processing upload...",
-        key: "document-upload",
-        duration: 0,
-      });
-      await pollJobStatus(data.jobId);
-
-      message.success({
-        content: "Document uploaded successfully.",
-        key: "document-upload",
-      });
-      form.resetFields();
-      setFile(null);
-      activeTab("1");
-      return refetch();
+      message.error(data?.msg || "Upload failed. Please try again.");
     } catch (error) {
-      console.error("Error uploading document:", error);
-      message.error({
-        content: error.message || "Failed to upload document.",
-        key: "document-upload",
-      });
-      throw error;
+      message.error(
+        error?.response?.data?.msg ||
+          "Failed to upload document. Please try again."
+      );
     } finally {
       setUploading(false);
     }
   };
-  const industry = String(user.companyData.industry);
-  const representative = industries[industry][0];
+  const industry = String(user?.companyData?.industry);
+  // The company's industry isn't guaranteed to be a key in the curated list
+  // (e.g. custom values) — fall back to the raw industry string rather than
+  // crashing the whole Documents tab.
+  const representative = industries[industry]?.[0] ?? industry;
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ margin: "1rem 0" }}>
       <SectionHeader
         title="Document details"
         subtitle="Update your document details here."
-        cancelButton={() => form.resetFields()}
+        cancelButton={() => {
+          form.resetFields();
+          setFile(null);
+        }}
         saveButton={() => form.submit()}
-        saveLoading={uploading}
+        loading={uploading}
       />
       <Grid container spacing={3} mt={2}>
         <Grid item xs={12} lg={3}>
@@ -148,29 +142,6 @@ const DocumentUpload = ({ activeTab, refetch }) => {
           </Form.Item>
         </Grid>
       </Grid>
-      <Divider />
-      {/* <Grid container spacing={3} mt={2}>
-        <Grid item xs={12} lg={3}>
-          <SectionLabel
-            title="Document type"
-            description="Select the type of document."
-          />
-        </Grid>
-        <Grid item xs={12} lg={9}>
-          <Form.Item
-            name="document_type"
-            rules={[
-              { required: true, message: "Please select document type!" },
-            ]}
-          >
-            <Select>
-              <Select.Option value="policy">Policy</Select.Option>
-              <Select.Option value="procedure">Procedure</Select.Option>
-              <Select.Option value="form">Form</Select.Option>
-            </Select>
-          </Form.Item>
-        </Grid>
-      </Grid> */}
       <Divider />
       <Grid container spacing={3} mt={2}>
         <Grid item xs={12} lg={3}>
@@ -244,7 +215,9 @@ const DocumentUpload = ({ activeTab, refetch }) => {
           />
         </Grid>
         <Grid item xs={12} lg={9}>
-          <Form.Item>
+          <Form.Item
+            help={file ? `Selected file: ${file.name}` : undefined}
+          >
             <Input
               type="file"
               onChange={handleFileChange}
@@ -255,9 +228,12 @@ const DocumentUpload = ({ activeTab, refetch }) => {
         </Grid>
       </Grid>
       <SectionFooter
-        cancelButton={() => form.resetFields()}
+        cancelButton={() => {
+          form.resetFields();
+          setFile(null);
+        }}
         saveButton={() => form.submit()}
-        saveLoading={uploading}
+        loading={uploading}
       />
     </Form>
   );

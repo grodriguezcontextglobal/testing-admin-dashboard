@@ -11,6 +11,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import TableHeader from "../../../components/UX/TableHeader";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import ExpandableTable from "../../../components/UX/tables/ExpandableTable";
 import { DownNarrow } from "../../../components/icons/DownNarrow";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
@@ -31,15 +32,15 @@ import ExpandedRow from "./ExpandedRow";
 const searchInputStyle = {
   height: "36px",
   padding: "0 32px 0 34px",
-  border: "1px solid var(--gray-300, #D0D5DD)",
+  border: "1px solid var(--gray-300, #c6c8bf)",
   borderRadius: "8px",
   fontSize: "14px",
   fontFamily: "Inter",
-  color: "var(--gray-900, #101828)",
+  color: "var(--gray-900, #171d1a)",
   outline: "none",
   width: "200px",
   background: "#fff",
-  boxShadow: "0px 1px 2px rgba(16, 24, 40, 0.05)",
+  boxShadow: "var(--shadow-xs)",
 };
 
 const StripeTransactionPerConsumer = ({ data, refetching }) => {
@@ -47,9 +48,6 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
   const searchValue = watch("searchEvent") ?? "";
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
-  const [paymentIntentInfoRetrieved, setPaymentIntentInfoRetrieved] = useState(
-    {},
-  );
   const [responseData, setResponseData] = useState([]);
   const [stripeStatusMap, setStripeStatusMap] = useState({});
   const queryClient = useQueryClient();
@@ -60,8 +58,13 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     id: customer.id ?? customer.uid,
   };
 
-  const retrievePaymentIntentInfo = (props) => {
-    return setPaymentIntentInfoRetrieved(props);
+  const retrievePaymentIntentInfo = (paymentIntent) => {
+    if (paymentIntent?.id && paymentIntent?.status) {
+      setStripeStatusMap((prev) => ({
+        ...prev,
+        [paymentIntent.id]: paymentIntent.status,
+      }));
+    }
   };
 
   const fetchStripeStatusesForPaymentIntents = async (paymentIntentIds) => {
@@ -92,9 +95,12 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     const result = new Map();
     const groupedData = groupBy(allTransactionFetching, "paymentIntent");
     const paymentIntentList = [...Object.keys(groupedData)];
-    const respo = await devitrakApi.post("/receiver/all-transaction-by-event-and-consumer", {
-      paymentIntentList,
-      company: user.companyData.id
+    // NOTE: "/receiver/all-transaction-by-event-and-consumer" does not exist
+    // on the backend (it 404'd on every load). receiver-assigned-list is a
+    // generic Receivers.find(body) that returns the same {listOfReceivers}.
+    const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
+      paymentIntent: { $in: paymentIntentList },
+      company: user.companyData.id,
     })
 
     respo?.data?.listOfReceivers?.forEach((item) => {
@@ -157,6 +163,16 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     };
   }, [customer.id, customer.uid, data]); // Add dependencies to trigger refresh
 
+  // Fetch live Stripe statuses so Capture/Release buttons reflect each
+  // card payment intent's current state.
+  useEffect(() => {
+    const paymentIntents = Object.keys(groupBy(data, "paymentIntent"));
+    if (paymentIntents.length > 0) {
+      fetchStripeStatusesForPaymentIntents(paymentIntents);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
   const refetchingAfterReturnDeviceInRow = async () => {
     await queryClient.invalidateQueries({ queryKey: ["transactionsList"] });
     await queryClient.invalidateQueries({ queryKey: ["receiverList"] });
@@ -184,21 +200,6 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
       );
     } catch (error) {
       console.error("Error fetching event details:", error);
-    }
-  };
-
-  const renderingOptionsBasedOnPaymentIntentStatus = (paymentIntent) => {
-    if (paymentIntent?.length < 16) {
-      return "none";
-    } else if (
-      (paymentIntent?.length > 15 && String(paymentIntent).includes("cash")) ||
-      (paymentIntent?.length > 15 &&
-        paymentIntentInfoRetrieved.status !== "requires_capture")
-    ) {
-      return "none";
-    } else {
-      fetchStripeStatusesForPaymentIntents(paymentIntent);
-      return "flex";
     }
   };
 
@@ -232,7 +233,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
             <p
               style={{
                 ...Subtitle,
-                color: "#000",
+                color: "var(--gray-900, #171d1a)",
                 fontWeight: 500,
                 width: "100%",
                 textAlign: "left",
@@ -297,7 +298,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
         return (
           <p
             style={{
-              color: "var(--Gray900)", //, #101828
+              color: "var(--gray-900, #171d1a)",
               fontFamily: "Inter",
               fontSize: "14px",
               fontStyle: "normal",
@@ -408,13 +409,13 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
           props.onExpand(props.record, e);
         }}
         style={{
-          border: "1px solid #D0D5DD",
-          background: props.expanded ? "#344054" : "#fff",
+          border: "1px solid var(--gray-300, #c6c8bf)",
+          background: props.expanded ? "var(--gray-700, #484d47)" : "#fff",
           borderRadius: "9999px",
           padding: "6px 14px",
           fontSize: "14px",
           lineHeight: "20px",
-          color: props.expanded ? "#fff" : "#475467",
+          color: props.expanded ? "#fff" : "var(--gray-600, #5d615a)",
           fontWeight: props.expanded ? 500 : 400,
           cursor: "pointer",
           display: "inline-flex",
@@ -473,7 +474,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
   const headerTitleStyle = {
     ...TextFontsize18LineHeight28,
     fontWeight: 600,
-    color: "#344054",
+    color: "var(--gray-900, #171d1a)",
     display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -490,7 +491,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
             <div style={{ position: "relative" }}>
               <Icon
                 icon="radix-icons:magnifying-glass"
-                color="#667085"
+                color="var(--gray-500, #777b73)"
                 width={16}
                 height={16}
                 style={{
@@ -511,7 +512,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
               {searchValue.length > 0 && (
                 <Icon
                   icon="ic:baseline-delete-forever"
-                  color="#667085"
+                  color="var(--gray-500, #777b73)"
                   width={18}
                   height={18}
                   style={{
@@ -553,6 +554,16 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
         className="table-ant-customized"
         enablePagination={true}
         pageSize={10}
+        locale={{
+          emptyText: (
+            <EmptyState
+              compact
+              icon="tabler:receipt-off"
+              title="No transactions"
+              description="This consumer has no transactions yet. Assign a device to create one."
+            />
+          ),
+        }}
       />
     </div>
   );

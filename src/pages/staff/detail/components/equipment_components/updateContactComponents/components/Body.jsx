@@ -264,7 +264,7 @@ const Body = () => {
                   borderRadius: "28px",
                 }}
               >
-                <Icon icon="tabler:cloud-upload" color="#475467" width={20} height={20} />
+                <Icon icon="tabler:cloud-upload" color="var(--gray-600, #5d615a)" width={20} height={20} />
               </Avatar>
               <TextField
                 {...register("photo")}

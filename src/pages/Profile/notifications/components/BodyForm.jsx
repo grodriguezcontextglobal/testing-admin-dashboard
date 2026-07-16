@@ -25,6 +25,7 @@ const BodyForm = ({
   setEventsReminders,
   setSubscriptions,
   navigate,
+  emailNotifications,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -58,7 +59,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -73,7 +74,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-600, #475467)",
+                color: "var(--gray-600, #5d615a)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "400",
@@ -93,7 +94,7 @@ const BodyForm = ({
           alignSelf={"stretch"}
           marginY={0}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -109,7 +110,12 @@ const BodyForm = ({
             md={8}
           >
             <FormControlLabel
-              control={<Checkbox {...register("newsAndUpdates")} />}
+              control={
+                <Checkbox
+                  defaultChecked={Boolean(emailNotifications?.newsAndUpdates)}
+                  {...register("newsAndUpdates")}
+                />
+              }
               label={renderLabel({
                 bodyContent: {
                   title: "News and updates",
@@ -130,11 +136,16 @@ const BodyForm = ({
             md={12}
           >
             <FormControlLabel
-              control={<Checkbox {...register("tipsAndTutorials")} />}
+              control={
+                <Checkbox
+                  defaultChecked={Boolean(emailNotifications?.tipsAndTutorials)}
+                  {...register("tipsAndTutorials")}
+                />
+              }
               label={renderLabel({
                 bodyContent: {
                   title: "Tips and tutorials",
-                  description: "Tips on getting more out of Untitled.",
+                  description: "Tips on getting more out of Devitrak.",
                 },
               })}
             />
@@ -151,7 +162,12 @@ const BodyForm = ({
             md={12}
           >
             <FormControlLabel
-              control={<Checkbox {...register("userResearch")} />}
+              control={
+                <Checkbox
+                  defaultChecked={Boolean(emailNotifications?.userResearch)}
+                  {...register("userResearch")}
+                />
+              }
               label={renderLabel({
                 bodyContent: {
                   title: "User research",
@@ -162,14 +178,16 @@ const BodyForm = ({
             />
           </Grid>
         </Grid>
-        <Divider />
+        <Grid item xs={12}>
+          <Divider style={{ margin: "8px 0" }} />
+        </Grid>
         <Grid
           display={"flex"}
           flexDirection={"column"}
           alignSelf={"stretch"}
           marginY={0}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -177,7 +195,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -192,7 +210,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-600, #475467)",
+                color: "var(--gray-600, #5d615a)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "400",
@@ -213,7 +231,7 @@ const BodyForm = ({
           marginY={0}
           gap={2}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -226,7 +244,7 @@ const BodyForm = ({
             <FormControlLabel
               value="Do not notifiy me"
               control={<Radio />}
-              label="Do not notifiy me"
+              label="Do not notify me"
             />
             <FormControlLabel
               value="Device inventory only"
@@ -251,14 +269,16 @@ const BodyForm = ({
             />
           </RadioGroup>
         </Grid>
-        <Divider />
+        <Grid item xs={12}>
+          <Divider style={{ margin: "8px 0" }} />
+        </Grid>
         <Grid
           display={"flex"}
           flexDirection={"column"}
           alignSelf={"stretch"}
           marginY={0}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -266,7 +286,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -281,7 +301,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-600, #475467)",
+                color: "var(--gray-600, #5d615a)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "400",
@@ -301,7 +321,7 @@ const BodyForm = ({
           marginY={0}
           gap={2}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -314,7 +334,7 @@ const BodyForm = ({
             <FormControlLabel
               value="Do not notifiy me"
               control={<Radio />}
-              label="Do not notifiy me"
+              label="Do not notify me"
             />
             <FormControlLabel
               value="All reminders"
@@ -328,14 +348,16 @@ const BodyForm = ({
             />
           </RadioGroup>
         </Grid>
-        <Divider />
+        <Grid item xs={12}>
+          <Divider style={{ margin: "8px 0" }} />
+        </Grid>
         <Grid
           display={"flex"}
           flexDirection={"column"}
           alignSelf={"stretch"}
           marginY={0}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -343,7 +365,7 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -358,10 +380,10 @@ const BodyForm = ({
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-600, #475467)",
+                color: "var(--gray-600, #5d615a)",
                 textAlign: "left",
                 fontSize: "14px",
-                fontWeight: "500",
+                fontWeight: "400",
                 fontFamily: "Inter",
                 lineHeight: "20px",
                 textWrap: "balance",
@@ -379,7 +401,7 @@ const BodyForm = ({
           marginY={0}
           gap={2}
           item
-          xs={6}
+          xs={12}
           sm={6}
           md={6}
         >
@@ -392,7 +414,7 @@ const BodyForm = ({
             <FormControlLabel
               value="Do not notifiy me"
               control={<Radio />}
-              label="Do not notifiy me"
+              label="Do not notify me"
             />
             <FormControlLabel
               value="All remiders"
@@ -406,7 +428,9 @@ const BodyForm = ({
             />
           </RadioGroup>
         </Grid>
-        <Divider />
+        <Grid item xs={12}>
+          <Divider style={{ margin: "8px 0" }} />
+        </Grid>
       </Grid>{" "}
       <Grid
         display={"flex"}

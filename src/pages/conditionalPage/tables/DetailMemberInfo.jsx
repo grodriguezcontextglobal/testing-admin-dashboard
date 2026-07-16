@@ -28,6 +28,7 @@ const DetailMemberInfo = () => {
       devitrakApi.post("/db_member/retrieve-members-assigned-devices", {
         member_id: memberId,
         company_id: user.sqlInfo.company_id,
+        returned: 0, // history-preserving returns: closed leases stay in the DB
       }),
     enabled: !!memberId && !!user.sqlInfo.company_id,
     onSuccess: (data) => {

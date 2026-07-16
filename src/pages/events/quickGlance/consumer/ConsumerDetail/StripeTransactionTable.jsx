@@ -1,3 +1,4 @@
+import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Popconfirm } from "antd";
@@ -23,7 +24,7 @@ import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAd
 import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import { groupBy } from "lodash";
-import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
+import Loading from "../../../../../components/animation/Loading";
 import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";

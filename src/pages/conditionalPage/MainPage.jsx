@@ -4,7 +4,7 @@ import { Divider, Dropdown } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
@@ -15,21 +15,37 @@ import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
 import MainTable from "./tables/MainTable";
+import OverdueDevicesTable from "./tables/OverdueDevicesTable";
+import MembersStatsRow from "./components/MembersStatsRow";
+import { getIndustryProfile } from "../../config/industryProfiles";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
 
 const MainPage = () => {
   const location = useLocation();
   const slug = location.state?.referencing || "";
-  const titleParams = String(slug || "").replace(/-/g, " ");
+  const { user: adminUser } = useSelector((state) => state.admin);
+  const industryLabel =
+    getIndustryProfile(adminUser?.companyData?.industry).audience ?? "Members";
+  const titleParams = String(slug || industryLabel).replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
-  const { register, setValue } = useForm();
+  const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
+  const { register, setValue, watch } = useForm();
+  const searchTerm = watch("searchMember") || "";
   const { user } = useSelector((state) => state.admin);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const roleType = resolveRoleType(user);
   const canAddMembers = hasPermission("member:create", roleType);
   const canDeleteMembers = hasPermission("member:delete", roleType);
   const canManageMembers = canAddMembers || canDeleteMembers;
+
+  // command-palette quick action: open the add-member modal on arrival (once)
+  useEffect(() => {
+    if (location.state?.quickAction === "create") {
+      setAddingNewMember(true);
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,6 +59,17 @@ const MainPage = () => {
       controller.abort();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Industry gate: the members module only exists for industries with an
+  // audience mapping (Education -> Students, etc.). Companies outside that
+  // list (e.g. AV rental) never see this page — even via deep link or a
+  // stale pre-login session.
+  const hasMembersSection = Boolean(
+    getIndustryProfile(adminUser?.companyData?.industry).audience
+  );
+  if (!hasMembersSection) {
+    return <Navigate to="/" replace />;
+  }
 
   const manageMembersItems = buildManageMembersMenu({
     titleParams,
@@ -121,7 +148,58 @@ const MainPage = () => {
         </Grid>
 
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          {loadingStatus ? <DevitrakLoading /> : <MainTable state={titleParams} />}
+          <MembersStatsRow audienceLabel={titleParams.toLowerCase()} />
+          <div
+            role="tablist"
+            style={{
+              display: "inline-flex",
+              gap: 4,
+              padding: 4,
+              margin: "0 0 12px",
+              background: "var(--gray-50, #f7f7f4)",
+              border: "1px solid var(--gray-200, #ddded6)",
+              borderRadius: "var(--radius-md, 8px)",
+            }}
+          >
+            {[
+              { key: "all", label: `All ${titleParams || "members"}` },
+              { key: "overdue", label: "Overdue devices" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={activeView === tab.key}
+                onClick={() => setActiveView(tab.key)}
+                style={{
+                  border: "none",
+                  cursor: "pointer",
+                  borderRadius: "var(--radius-sm, 6px)",
+                  padding: "8px 12px",
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  textTransform: "capitalize",
+                  backgroundColor:
+                    activeView === tab.key ? "var(--base-white, #fff)" : "transparent",
+                  color:
+                    activeView === tab.key
+                      ? "var(--gray-700, #484d47)"
+                      : "var(--gray-500, #777b73)",
+                  boxShadow: activeView === tab.key ? "var(--shadow-sm)" : "none",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {loadingStatus ? (
+            <DevitrakLoading />
+          ) : activeView === "overdue" ? (
+            <OverdueDevicesTable />
+          ) : (
+            <MainTable state={titleParams} search={searchTerm} />
+          )}
         </Grid>
       </Grid>
       {addingNewMember && (

@@ -22,7 +22,7 @@ const ModalCancelOptions = ({
     return (
       <Typography
         textTransform={"none"}
-        color="#475467"
+        color="var(--gray-600, #5d615a)"
         lineHeight={"24px"}
         textAlign={"center"}
         fontWeight={600}

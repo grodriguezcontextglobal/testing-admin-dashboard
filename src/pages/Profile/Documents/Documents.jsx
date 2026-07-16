@@ -1,4 +1,4 @@
-import { message } from "antd";
+import { message, Spin } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectCom
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
 import "./Documents.css";
 import Chip from "../../../components/UX/Chip/Chip";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -41,11 +42,12 @@ const Documents = () => {
   const fetchDocuments = async () => {
     try {
       const response = await devitrakApi.get(
-        `/document/?company_id=${user.companyData.id}`
+        `/document/?company_id=${user?.companyData?.id}`
       );
-      setDocuments(response.data.documents);
+      setDocuments(response?.data?.documents ?? []);
     } catch (error) {
       setDocuments([]);
+      message.error("Failed to load documents. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -54,11 +56,12 @@ const Documents = () => {
   const fetchFolders = async () => {
     try {
       const response = await devitrakApi.post(`/document/folders`, {
-        company_id: user.companyData.id,
+        company_id: user?.companyData?.id,
       });
-      setFolders(response.data.folders || []);
+      setFolders(response?.data?.folders ?? []);
     } catch (error) {
       setFolders([]);
+      message.error("Failed to load document folders. Please try again later.");
     }
   };
 
@@ -83,7 +86,8 @@ const Documents = () => {
     setEditingFolder(folder);
     setFolderForm({
       folder_name: folder.folder_name || folder.name || "",
-      trigger_action: folder.trigger_action,
+      trigger_action:
+        folder.trigger_action || folder.folder_trigger_action || "",
       folder_description: folder.folder_description || folder.description || "",
       documents: folder.documents || [],
     });
@@ -98,18 +102,18 @@ const Documents = () => {
     try {
       const folderData = {
         ...folderForm,
-        company_id: user.companyData.id,
+        company_id: user?.companyData?.id,
       };
 
       if (editingFolder) {
         await devitrakApi.put(
-          `/document/folder/${editingFolder.folder_id}`,
+          `/document/folder/${editingFolder.folder_id || editingFolder._id}`,
           folderData
         );
         message.success("Folder updated successfully");
       } else {
         await devitrakApi.post("/document/new_folder", folderData);
-        queryClient.invalidateQueries(["folders", user.companyData.id]);
+        queryClient.invalidateQueries(["folders", user?.companyData?.id]);
         message.success("Folder created successfully");
       }
 
@@ -125,7 +129,7 @@ const Documents = () => {
     try {
       await devitrakApi.delete(`/document/folder/${folderId}`);
       message.success("Folder deleted successfully");
-      queryClient.invalidateQueries(["folders", user.companyData.id]);
+      queryClient.invalidateQueries(["folders", user?.companyData?.id]);
       fetchFolders();
     } catch (error) {
       message.error("Failed to delete folder");
@@ -153,12 +157,14 @@ const Documents = () => {
       )
       .map((docId) => {
         const document = documents.find((doc) => doc._id === docId);
+        if (!document) return null;
         return {
           document_name: document.title,
           active: true,
           document_id: docId,
         };
-      });
+      })
+      .filter(Boolean);
 
     if (newDocuments.length > 0) {
       setFolderForm({
@@ -198,11 +204,27 @@ const Documents = () => {
 
   const renderDocumentContent = () => {
     if (loading) {
-      return <p>Loading documents...</p>;
+      return (
+        <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}>
+          <Spin size="large" />
+        </div>
+      );
     }
 
     if (documents.length === 0) {
-      return <p>No documents found</p>;
+      return (
+        <EmptyState
+          icon="tabler:file-text"
+          title="No documents yet"
+          description="Upload your first document to share policies, waivers and agreements with staff and consumers."
+          action={
+            <BlueButtonComponent
+              title="Upload document"
+              func={() => handleTabChange("2")}
+            />
+          }
+        />
+      );
     }
 
     return (
@@ -225,17 +247,39 @@ const Documents = () => {
           />
         </div>
 
+        {folders.length === 0 && (
+          <EmptyState
+            icon="tabler:folder"
+            title="No folders yet"
+            description="Group documents into folders and attach them to actions like staff onboarding or consumer checkout."
+            action={
+              <BlueButtonComponent
+                title="Create folder"
+                func={handleCreateFolder}
+              />
+            }
+          />
+        )}
+
         <div className="folder-grid">
           {folders.map((folder) => (
-            <div className="folder-card" key={folder.folder_id}>
+            <div
+              className="folder-card"
+              key={folder.folder_id || folder._id || folder.folder_name}
+            >
               <div className="folder-card-main">
                 <h3>{folder.folder_name || folder.name}</h3>
                 <p>{folder.folder_description || folder.description}</p>
                 <p>
                   Trigger:{" "}
                   {triggerActions.find(
-                    (t) => t.value === folder.folder_trigger_action
-                  )?.label || folder.folder_trigger_action}
+                    (t) =>
+                      t.value ===
+                      (folder.trigger_action || folder.folder_trigger_action)
+                  )?.label ||
+                    folder.trigger_action ||
+                    folder.folder_trigger_action ||
+                    "None"}
                 </p>
                 <p>Documents: {folder.documents?.length || 0}</p>
 
@@ -273,7 +317,7 @@ const Documents = () => {
                 />
                 <DangerButtonConfirmationComponent
                   title={`Delete`}
-                  func={() => handleDeleteFolder(folder.folder_id)}
+                  func={() => handleDeleteFolder(folder.folder_id || folder._id)}
                   confirmationTitle="Are you sure you want to delete this folder?. This action cannot be undone."
                 />
               </div>
@@ -385,13 +429,11 @@ const Documents = () => {
                 <SelectComponent
                   placeholder="Where to use this folder"
                   value={folderForm.trigger_action}
-                  onSelect={(item) => {
-                    console.log(item)
-                    return setFolderForm({
+                  onSelect={(item) =>
+                    setFolderForm({
                       ...folderForm,
-                      trigger_action: item.value,
+                      trigger_action: item?.value ?? item,
                     })
-                  }
                   }
                   items={triggerActions}
                 />

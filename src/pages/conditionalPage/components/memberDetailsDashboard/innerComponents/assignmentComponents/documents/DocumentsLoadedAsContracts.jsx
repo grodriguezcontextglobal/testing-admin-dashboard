@@ -214,7 +214,7 @@ const LegalDocumentModal = ({
       {documentsToUse.source === "folders" && (
         <Box sx={{ mb: 2, p: 2, bgcolor: "#e3f2fd", borderRadius: 1 }}>
           <Typography variant="body2" color="primary">
-            📁 Using documents from Equipment Staff folder
+            📁 Using documents from the equipment-assignment folder
             {autoAssignedFromFolder && " (Auto-assigned)"}
           </Typography>
         </Box>
@@ -291,7 +291,7 @@ const LegalDocumentModal = ({
                       color="text.secondary"
                       sx={{ mt: 2 }}
                     >
-                      Documents will be auto-assigned from Equipment Staff
+                      Documents will be auto-assigned from the equipment-assignment
                       folder when available.
                     </Typography>
                   )}
@@ -300,7 +300,7 @@ const LegalDocumentModal = ({
               // Only show document selection if no folders exist
               !foldersExisting && (
                 <Box>
-                  <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to staff member.">
+                  <Tooltip title="All documents must be uploaded to the company's document library before they can be emailed to the member.">
                     <Typography variant="subtitle1" sx={{ mb: 2 }}>
                       Select documents to be attached to device assignment <QuestionIcon />
                     </Typography>

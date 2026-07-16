@@ -1,21 +1,20 @@
-/* UntitledUI-ish tokens (tweak to match your global CSS vars if you have them) */
+/* Untitled UI tokens mapped to Devitrak brand vars (tokens.css) */
 :root {
-  --ud-bg: #fff;
-  --ud-border: #D0D5DD;
-  --ud-shadow:
-    0 4px 6px -2px rgba(16, 24, 40, 0.03),
-    0 12px 16px -4px rgba(16, 24, 40, 0.08);
-  --ud-text: #101828;
-  --ud-muted: #475467;
-  --ud-hover: #F9FAFB;
-  --ud-focus: rgba(46, 144, 250, 0.35);
-  --ud-radius: 8px;
-  --ud-radius-sm: 6px;
+  --ud-bg: var(--base-white, #fff);
+  --ud-border: var(--gray-300, #c6c7bb);
+  --ud-border-menu: var(--gray-200, #ddded6);
+  --ud-shadow: var(--shadow-lg, 0 12px 16px -4px rgba(23, 29, 26, 0.08), 0 4px 6px -2px rgba(23, 29, 26, 0.03));
+  --ud-text: var(--gray-900, #171d1a);
+  --ud-muted: var(--gray-600, #5d615a);
+  --ud-hover: var(--gray-50, #f7f7f4);
+  --ud-focus: var(--action-100, #d1e0ff);
+  --ud-radius: var(--radius-md, 8px);
+  --ud-radius-sm: var(--radius-sm, 6px);
 
   /* Variant colors */
-  --ud-primary: #155eef;
-  --ud-primary-hover: #175cd3;
-  --ud-text-on-primary: #ffffff;
+  --ud-primary: var(--action-600, #155eef);
+  --ud-primary-hover: var(--action-700, #004eea);
+  --ud-text-on-primary: var(--base-white, #ffffff);
 }
 
 .ud-root {
@@ -36,7 +35,7 @@
   cursor: pointer;
   height: 40px;
   padding: 0 14px;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(23, 29, 26, 0.05));
   outline: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   font-family: inherit;
@@ -45,11 +44,12 @@
   line-height: 20px;
 }
 
-/* .ud-trigger:focus-visible {
+.ud-trigger:focus-visible {
+  border-color: var(--action-300, #84adff);
   box-shadow:
     0 0 0 4px var(--ud-focus),
-    0 1px 2px rgba(16, 24, 40, 0.06);
-} */
+    var(--shadow-xs, 0 1px 2px rgba(23, 29, 26, 0.05));
+}
 
 .ud-trigger.is-disabled {
   opacity: 0.55;
@@ -61,17 +61,17 @@
   opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
-  background-color: #f5f5f5;
-  color: #9ca3af;
+  background-color: var(--gray-100, #f1f1f1);
+  color: var(--gray-400, #9a9d93);
 }
 
 .ud-item.is-disabled .ud-item-label,
 .ud-item.is-disabled p {
-  color: #9ca3af !important;
+  color: var(--gray-400, #9a9d93) !important;
 }
 
 .ud-item.is-disabled:hover {
-  background-color: #f5f5f5;
+  background-color: var(--gray-100, #f1f1f1);
 }
 /* Sizes */
 .ud-trigger--sm {
@@ -201,7 +201,7 @@
   position: fixed;
   z-index: 9999;
   background: var(--ud-bg);
-  border: 1px solid var(--ud-border);
+  border: 1px solid var(--ud-border-menu);
   border-radius: var(--ud-radius);
   box-shadow: var(--ud-shadow);
   padding: 4px;
@@ -265,13 +265,13 @@
 }
 
 .ud-item.is-selected {
-  background-color: #F2F4F7;
+  background-color: var(--gray-100, #f1f1f1);
   color: var(--ud-text);
   font-weight: 500;
 }
 
 .ud-item.is-selected:hover {
-  background-color: #EAECF0;
+  background-color: var(--gray-200, #ddded6);
 }
 
 .ud-item-label {
@@ -280,7 +280,7 @@
 /* Section & Separator */
 .ud-separator {
   height: 1px;
-  background: var(--ud-border);
+  background: var(--ud-border-menu);
   margin: 4px 0;
 }
 

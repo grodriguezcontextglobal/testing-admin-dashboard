@@ -67,20 +67,24 @@ const groupByFallbackLabels = {
 const groupByPillStyle = {
   border: "none",
   background: "transparent",
-  borderRadius: "9999px",
-  padding: "6px 14px",
+  borderRadius: "var(--radius-sm, 6px)",
+  padding: "8px 12px",
   fontSize: "14px",
   lineHeight: "20px",
-  color: "#475467",
-  fontWeight: 400,
+  color: "var(--gray-500, #777b73)",
+  fontWeight: 600,
   cursor: "pointer",
   whiteSpace: "nowrap",
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  transition: "background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease",
 };
 
 const groupByPillActiveStyle = {
-  background: "#344054",
-  color: "#fff",
-  fontWeight: 500,
+  background: "var(--base-white, #fff)",
+  color: "var(--gray-700, #484d47)",
+  boxShadow: "var(--shadow-sm)",
 };
 
 /**
@@ -1142,10 +1146,10 @@ const RenderingFilters = ({
               alignItems: "center",
               flexWrap: "wrap",
               gap: "2px",
-              border: "1px solid #D0D5DD",
-              borderRadius: "9999px",
+              border: "1px solid var(--gray-200, #ddded6)",
+              borderRadius: "var(--radius-md, 8px)",
               padding: "4px",
-              backgroundColor: "#fff",
+              backgroundColor: "var(--gray-50, #f7f7f4)",
               width: "fit-content",
             }}
           >

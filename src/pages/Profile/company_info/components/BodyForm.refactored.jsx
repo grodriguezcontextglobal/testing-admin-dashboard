@@ -38,7 +38,7 @@ const BodyFormRefactored = ({
     } else if (feature && feature?.logo) {
         return (
             <div className="photo-section">
-            {String(user.companyData.company_logo).length > 0 ? (
+            {user?.companyData?.company_logo ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: 'center' }}>
                 <Avatar size={100} src={<img src={user?.companyData?.company_logo} alt="company_logo" />} />
                 <button
@@ -65,7 +65,7 @@ const BodyFormRefactored = ({
             )}
             <div className="file-upload-dropzone">
                 <div className="file-upload-dropzone__icon-wrapper">
-                    <Icon icon="tabler:cloud-upload" color="#475467" width={20} height={20} />
+                    <Icon icon="tabler:cloud-upload" color="var(--gray-600, #5d615a)" width={20} height={20} />
                 </div>
                 <div className="file-upload-dropzone__text-group">
                     <label htmlFor="file-upload" className="file-upload-dropzone__cta">
@@ -85,7 +85,7 @@ const BodyFormRefactored = ({
                     <span style={{ marginLeft: '10px' }}>Employees</span>
                 </summary>
                 <div className="employees-grid">
-                    {user.companyData.employees.map((employee) => (
+                    {(user?.companyData?.employees ?? []).map((employee) => (
                     <CardSearchStaffFound
                         key={employee.user}
                         props={{
@@ -139,7 +139,7 @@ const BodyFormRefactored = ({
           <input
             {...register(feature && feature?.name)}
             className="input-base__input"
-            placeholder={`Enter ${feature?.title.toLowerCase()}`}
+            placeholder={`Enter ${feature?.title?.toLowerCase() ?? ""}`}
           />
         </div>
       </div>

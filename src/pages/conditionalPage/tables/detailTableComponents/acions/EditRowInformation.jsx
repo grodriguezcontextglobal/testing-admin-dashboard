@@ -27,6 +27,7 @@ export const updateExpectedReturnDate = async ({
     // - Provide filters under `where`
     // - Provide columns to change under `update` (do NOT include filter keys)
     const payload = {
+      company_id: updateInfo.record.company_id,
       where: {
         member_id: updateInfo.record.member_id,
         staff_member_id: updateInfo.record.staff_member_id,

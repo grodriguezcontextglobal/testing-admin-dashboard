@@ -340,7 +340,7 @@ const BodyForm = ({
             style={{
               width: "100%",
               borderRadius: "12px",
-              border: "1px solid var(--gray-200, #EAECF0)",
+              border: "1px solid var(--gray-200, #ddded6)",
               background: "var(--base-white, #FFF)",
             }}
             item
@@ -367,7 +367,7 @@ const BodyForm = ({
                 {" "}
                 <Icon
                   icon="tabler:cloud-upload"
-                  color="#475467"
+                  color="var(--gray-600, #5d615a)"
                   width={20}
                   height={20}
                 />

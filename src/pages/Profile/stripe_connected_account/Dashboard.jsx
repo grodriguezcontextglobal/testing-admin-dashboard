@@ -1,5 +1,5 @@
 import { FormLabel, Grid, OutlinedInput } from "@mui/material";
-import { Button } from "antd";
+import { Button, message } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -7,6 +7,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import countryList from "../../../components/json/countries.json";
 import StripeConnectedAccountDashboard from "../../../components/stripe/connected_account/dashboard";
 import { checkArray } from "../../../components/utils/checkArray";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
@@ -24,7 +25,9 @@ const Dashboard = () => {
   const { register, watch, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
   useEffect(() => {
-    if (user.companyData.stripe_connected_account[stripeEnvMode.current]?.id) {
+    if (
+      user?.companyData?.stripe_connected_account?.[stripeEnvMode.current]?.id
+    ) {
       return setClientSecret(true);
     }
   }, []);
@@ -32,9 +35,9 @@ const Dashboard = () => {
   if (clientSecret) {
     return (
       <div style={{ width: "100%" }}>
-        {user.companyData.stripe_connected_account[stripeEnvMode.current]?.id && clientSecret && (
-          <StripeConnectedAccountDashboard />
-        )}
+        {user?.companyData?.stripe_connected_account?.[stripeEnvMode.current]
+          ?.id &&
+          clientSecret && <StripeConnectedAccountDashboard />}
       </div>
     );
   }
@@ -73,6 +76,10 @@ const Dashboard = () => {
       }
     } catch (error) {
       setLoadingStatus(false);
+      message.error(
+        error?.response?.data?.msg ||
+          "Failed to create the Stripe connected account. Please try again."
+      );
     }
   };
 
@@ -84,14 +91,22 @@ const Dashboard = () => {
         width: "100%",
       }}
     >
-      {!user.companyData.stripe_connected_account[stripeEnvMode.current]?.id &&
+      {!user?.companyData?.stripe_connected_account?.[stripeEnvMode.current]
+        ?.id &&
         !openModalStripeConnectedAccount && (
-          <Button
-            onClick={() => setOpenModalStripeConnectedAccount(true)}
-            style={BlueButton}
-          >
-            <p style={BlueButtonText}>Create stripe connected account</p>
-          </Button>
+          <EmptyState
+            icon="tabler:brand-stripe"
+            title="No Stripe account connected"
+            description="Connect a Stripe account to accept payments and manage payouts for your company."
+            action={
+              <Button
+                onClick={() => setOpenModalStripeConnectedAccount(true)}
+                style={BlueButton}
+              >
+                <p style={BlueButtonText}>Create stripe connected account</p>
+              </Button>
+            }
+          />
         )}
       {openModalStripeConnectedAccount && (
         <form
@@ -123,13 +138,13 @@ const Dashboard = () => {
                 style={{
                   ...OutlinedInputStyle,
                   backgroundColor: "transparent",
-                  color: "rgba(0, 0, 0, 0.6)",
+                  color: "var(--gray-600, #5d615a)",
                   width: "100%",
                 }}
               >
                 {countryList.map((item) => (
                   <option
-                    style={{ color: "rgba(0, 0, 0, 0.6)" }}
+                    style={{ color: "var(--gray-600, #5d615a)" }}
                     key={item.name}
                     value={item.code}
                   >
@@ -144,7 +159,11 @@ const Dashboard = () => {
               htmlType="submit"
               disabled={loadingStatus}
               loading={loadingStatus}
-              style={{ width: "100%", background: "#004EEB", color: "#fff" }}
+              style={{
+                width: "100%",
+                background: "var(--action-600, #155eef)",
+                color: "#fff",
+              }}
             >
               {loadingStatus ? "Loading..." : "Register"}
             </Button>
