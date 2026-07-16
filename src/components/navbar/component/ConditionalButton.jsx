@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { Icon as IconifyIcon } from "@iconify/react";
 import industries from "./industriesList.json";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 
 const ConditionalButton = ({ user, icon: Icon, variant = "desktop" }) => {
   const location = useLocation();
@@ -75,7 +77,19 @@ const ConditionalButton = ({ user, icon: Icon, variant = "desktop" }) => {
         >
           <div className="content-2-main-navbar-updated">
             <div className="text-1-main-navbar-updated text-mdsemibold">
-              <p style={{ textTransform: "capitalize" }}>
+              <p
+                style={{
+                  textTransform: "capitalize",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <IconifyIcon
+                  icon={getIndustryProfile(user?.companyData?.industry).icon}
+                  width={18}
+                  height={18}
+                />
                 {conditionalInfo.title}
               </p>
             </div>

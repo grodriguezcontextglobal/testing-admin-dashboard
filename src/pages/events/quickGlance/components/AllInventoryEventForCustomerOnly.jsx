@@ -55,7 +55,7 @@ const AlInventoryEventAssigned = ({
           </p>
         </button>
       </Grid>
-      <div style={{ display: showInventoryTypes ? "flex" : "none" }}>
+      <div style={{ display: showInventoryTypes ? "block" : "none", width: "100%" }}>
         <DisplayAllItemsSetInventoryEventForCustomers database={database} />
       </div>
     </>

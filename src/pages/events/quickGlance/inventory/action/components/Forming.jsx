@@ -414,6 +414,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                       Assign all&nbsp;
                       <input
                         type="checkbox"
+              style={{ accentColor: "var(--action-600, #155eef)", width: 16, height: 16 }}
                         value={assignAllDevices}
                         onChange={(e) => setAssignAllDevices(e.target.checked)}
                       />

@@ -1,9 +1,11 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useRef } from "react";
 import { Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
+import IndustryTabGuard from "./IndustryTabGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
+import ErrorBoundary from "../../components/utils/ErrorBoundary";
 import AuthorizedDeposit from "../../pages/consumers/action/transaction/AuthorizedDeposit";
 import AdvanceSearchResultPage from "../../pages/inventory/table/extras/AdvanceSearchResultPage";
 import ChargeAllListDeviceCash from "../../pages/consumers/action/chargeAllDevicesFolder/ChargeAllListDeviceCash";
@@ -18,6 +20,7 @@ import LandingPageForDownloadableDocuments from "../../pages/authentication/Land
 import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPolicies";
 import SignedContractViewHigherPermissionLevel from "../../pages/staff/detail/components/equipment_components/SignedContractViewHigherLevelPermissions";
 import MfaSetup from "../../pages/Profile/mfa/MfaSetup";
+import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -200,6 +203,8 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
 );
 const Providers = lazy(() => import("../../pages/Profile/providers/Main"));
 const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
+const DesignLab = lazy(() => import("../../pages/designLab/DesignLab"));
+import GlobalCommandMenu from "../../components/UX/commandMenu/GlobalCommandMenu";
 const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
 const ConditionalMainPage = lazy(() =>
   import("../../pages/conditionalPage/MainPage")
@@ -232,9 +237,19 @@ const AssignmentDeviceMembers = lazy(() =>
   )
 );
 const AuthRoutes = () => {
+  const navbarRef = useRef(null);
   return (
-    <div style={{ width: "100%", margin: "auto", minHeight: "100dvh" }}>
-      <HeaderComponent />
+    <div
+      style={{
+        width: "100%",
+        margin: "auto",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <HeaderComponent ref={navbarRef} />
+      <GlobalCommandMenu />
       <Suspense
         fallback={
           <div style={{ ...CenteringGrid, minHeight: "60dvh" }}>
@@ -245,6 +260,9 @@ const AuthRoutes = () => {
         <div
           style={{
             // minWidth: "768px",
+            // width:100% so this flex-column child stretches to maxWidth
+            // instead of shrinking to content (footer flex change regressed it)
+            width: "100%",
             maxWidth: "1400px",
             margin: "auto auto 0",
             minHeight: "100dvh",
@@ -255,9 +273,14 @@ const AuthRoutes = () => {
               <Route path="/" element={<Home />} />
               <Route path="/" element={<Home />} />
               <Route path="/events" element={<EventMainPage />} />
+              <Route path="/design-lab" element={<DesignLab />} />
               <Route
                 path="/events/event-quickglance"
-                element={<EventQuickGlanceMainPage />}
+                element={
+                  <ErrorBoundary>
+                    <EventQuickGlanceMainPage />
+                  </ErrorBoundary>
+                }
               />
               <Route
                 path="/events/event-attendees/:id"
@@ -342,6 +365,7 @@ const AuthRoutes = () => {
                   element={<AddNewBulkItems />}
                 />
               </Route>
+              <Route element={<IndustryTabGuard tab="consumers" />}>
               <Route element={<PermissionGuard action="nav:consumers" />}>
                 <Route path="/consumers" element={<ConsumersMainPage />} />
                 <Route path="/consumers/:id" element={<ConsumerDetail />} />
@@ -365,6 +389,7 @@ const AuthRoutes = () => {
                   path="/consumers/:id/charge-all-lost-devices/credit_card"
                   element={<ChargeAllListDeviceCreditCard />}
                 />
+              </Route>
               </Route>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
@@ -473,31 +498,32 @@ const AuthRoutes = () => {
               <Route path="posts/post-edit/:id" element={<EditPost />} />
               <Route path="posts/post/:id" element={<DisplayArticle />} />
               <Route path="login" element={<RedirectionPage />} />
-              <Route path="members" element={<ConditionalMainPage />} />
-              <Route path="/member/:id" element={<MemberDetailsMainPage />}>
-                <Route
-                  key={"/member/:id/main"}
-                  path="main"
-                  element={<DetailMemberInfo />}
-                />
-                <Route
-                  key={"/member/:id/update-member-information"}
-                  path="update-member-information"
-                  element={<UpdateMemberInformation />}
-                />
-                <Route
-                  key={"/member/:id/reminders"}
-                  path="reminders"
-                  element={<Remainders />}
-                />
-                <Route
-                  key={"/member/:id/assignment"}
-                  path="assignment"
-                  element={<AssignmentDeviceMembers />}
-                />
+              <Route path="/my-devices" element={<MyDevicesPortal />} />
+              <Route element={<PermissionGuard action="nav:members" />}>
+                <Route path="members" element={<ConditionalMainPage />} />
+                <Route path="/member/:id" element={<MemberDetailsMainPage />}>
+                  <Route
+                    key={"/member/:id/main"}
+                    path="main"
+                    element={<DetailMemberInfo />}
+                  />
+                  <Route
+                    key={"/member/:id/update-member-information"}
+                    path="update-member-information"
+                    element={<UpdateMemberInformation />}
+                  />
+                  <Route
+                    key={"/member/:id/reminders"}
+                    path="reminders"
+                    element={<Remainders />}
+                  />
+                  <Route
+                    key={"/member/:id/assignment"}
+                    path="assignment"
+                    element={<AssignmentDeviceMembers />}
+                  />
+                </Route>
               </Route>
-
-              <Route path="patiences" element={<ConditionalMainPage />} />
               <Route
                 path="register/company-setup"
                 element={<RedirectionPage />}
@@ -529,10 +555,9 @@ const AuthRoutes = () => {
           </Routes>
         </div>
       </Suspense>
-      <div
-        style={{ minWidth: "768px", maxWidth: "1400px", margin: "0 auto 15px" }}
-      >
-        <FooterComponent />
+      {/* full-bleed footer, pinned to the viewport bottom (flex column + auto margin) */}
+      <div style={{ width: "100%", marginTop: "auto" }}>
+        <FooterComponent full ref={navbarRef} />
       </div>
     </div>
   );

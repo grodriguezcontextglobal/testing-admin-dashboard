@@ -25,21 +25,27 @@
   gap: 2px;
 }
 
+.mh-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .mh-name {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #101828;
+  color: var(--gray-900, #171d1a);
   margin: 0;
   padding: 0;
   line-height: 1.4;
 }
 
-.mh-role {
-  font-size: 0.875rem;
-  color: #667085;
-  margin: 0;
-  padding: 0;
-  line-height: 1.4;
+.mh-role-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
 }
 
 /* ── Center: contact ─────────────────────────────── */
@@ -52,7 +58,7 @@
 .mh-section-label {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #98a2b3;
+  color: var(--gray-400, #9fa39b);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
@@ -68,7 +74,7 @@
 
 .mh-contact-value {
   font-size: 0.875rem;
-  color: #344054;
+  color: var(--gray-700, #484d47);
   font-weight: 400;
   line-height: 1.4;
 }

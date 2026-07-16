@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import "./Body.css";
-// import InvoiceTables from "./component/InvoiceTables";
+import InvoiceTables from "./component/InvoiceTables";
 import PlanSubscriptionDetails from "./component/PlanSubscriptionDetails";
 // import PaymentMethodDetails from "./component/PaymentMethodDetails";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
@@ -50,7 +50,7 @@ const Body = () => {
         <Typography
           textTransform={"none"}
           style={{
-            color: "#344054",
+            color: "var(--gray-700, #484d47)",
             textAlign: "left",
             fontSize: "14px",
             fontWeight: "500",
@@ -64,7 +64,7 @@ const Body = () => {
         <Typography
           textTransform={"none"}
           style={{
-            color: "var(--gray-600, #475467)",
+            color: "var(--gray-600, #5d615a)",
             textAlign: "left",
             fontSize: "14px",
             fontWeight: "400",
@@ -80,7 +80,7 @@ const Body = () => {
 
   return (
     <form
-      // onSubmit={handleSubmit(handleUpdatePersonalInfo)}
+      onSubmit={(e) => e.preventDefault()}
       style={{
         width: "100%",
       }}
@@ -109,7 +109,7 @@ const Body = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -124,7 +124,7 @@ const Body = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-600, #475467)",
+                color: "var(--gray-600, #5d615a)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "400",
@@ -189,13 +189,11 @@ const Body = () => {
                   fullWidth
                   style={OutlinedInputStyle}
                   {...register("billingEmail")}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Icon icon="ic:outline-email" />
-                      </InputAdornment>
-                    ),
-                  }}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <Icon icon="ic:outline-email" />
+                    </InputAdornment>
+                  }
                 />
               </Grid>
             )}
@@ -244,7 +242,7 @@ const Body = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -259,7 +257,7 @@ const Body = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "var(--gray-600, #475467)",
+                color: "var(--gray-600, #5d615a)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "400",
@@ -291,17 +289,15 @@ const Body = () => {
               alignItems: "center",
               gap: "8px",
               borderRadius: "8px",
-              border: "1px solid var(--gray-300, #D0D5DD)",
+              border: "1px solid var(--gray-300, #c6c7bb)",
               background: "var(--base-white, #FFF)",
-
-              /* Shadow/xs */
-              boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+              boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
             }}
           >
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 textAlign: "left",
                 fontSize: "14px",
                 fontWeight: "600",
@@ -311,8 +307,8 @@ const Body = () => {
             >
               {" "}
               <Icon
-                icon="tabler:cloud-upload"
-                color="#475467"
+                icon="tabler:cloud-download"
+                color="var(--gray-600, #5d615a)"
                 width={20}
                 height={20}
               />
@@ -329,7 +325,7 @@ const Body = () => {
           sm={12}
           md={12}
         >
-          {/* <InvoiceTables /> */}
+          <InvoiceTables />
         </Grid>
         {/* </Grid> */}
       </Grid>{" "}
@@ -349,16 +345,16 @@ const Body = () => {
         onClick={()=> navigate('/')}
           style={{
             width: "fit-content",
-            border: "1px solid var(--gray-300, #D0D5DD)",
+            border: "1px solid var(--gray-300, #c6c7bb)",
             borderRadius: "8px",
             background: "var(--base-white, #FFF)",
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
+            boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
           }}
         >
           <Typography
             textTransform={"none"}
             style={{
-              color: "#344054",
+              color: "var(--gray-700, #484d47)",
               fontSize: "14px",
               fontWeight: "600",
               fontFamily: "Inter",
@@ -372,16 +368,16 @@ const Body = () => {
           type="submit"
           style={{
             width: "fit-content",
-            border: "1px solid var(--blue-dark-600, #155EEF)",
+            border: "1px solid var(--action-600, #155eef)",
             borderRadius: "8px",
-            background: "var(--blue-dark-600, #155EEF)",
-            boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05",
+            background: "var(--action-600, #155eef)",
+            boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
           }}
         >
           <Typography
             textTransform={"none"}
             style={{
-              color: "var(--base-white, #FFF",
+              color: "var(--base-white, #fff)",
               fontSize: "14px",
               fontWeight: "600",
               fontFamily: "Inter",

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
+import { message, notification } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,18 +21,18 @@ const Body = () => {
     });
   };
   const originalDataRef = {
-    companyName: user.companyData.company_name,
-    mainPhoneNumber: user.companyData.phone.main,
-    alternativePhoneNumber: user.companyData.phone.alternative,
-    street: user.companyData.address.street,
-    city: user.companyData.address.city,
-    state: user.companyData.address.state,
-    zipCode: user.companyData.address.postal_code,
-    website: user.companyData.website,
-    email: user.companyData.main_email,
-    industry: user.companyData.industry,
-    employees: user.companyData.employees,
-    companyLogo: user.companyData.company_logo,
+    companyName: user?.companyData?.company_name,
+    mainPhoneNumber: user?.companyData?.phone?.main,
+    alternativePhoneNumber: user?.companyData?.phone?.alternative,
+    street: user?.companyData?.address?.street,
+    city: user?.companyData?.address?.city,
+    state: user?.companyData?.address?.state,
+    zipCode: user?.companyData?.address?.postal_code,
+    website: user?.companyData?.website,
+    email: user?.companyData?.main_email,
+    industry: user?.companyData?.industry,
+    employees: user?.companyData?.employees,
+    companyLogo: user?.companyData?.company_logo,
   };
   function convertToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -46,19 +46,19 @@ const Body = () => {
       };
     });
   }
-  const { register, handleSubmit, watch, control } = useForm({
+  const { register, handleSubmit, watch, control, reset } = useForm({
     defaultValues: {
-      companyName: user.companyData.company_name,
-      mainPhoneNumber: user.companyData.phone.main,
-      alternativePhoneNumber: user.companyData.phone.alternative,
-      street: user.companyData.address.street,
-      city: user.companyData.address.city,
-      state: user.companyData.address.state,
-      zipCode: user.companyData.address.postal_code,
-      website: user.companyData.website,
-      industry: user.companyData.industry,
-      email: user.companyData.main_email,
-      employees: user.companyData.employees,
+      companyName: user?.companyData?.company_name,
+      mainPhoneNumber: user?.companyData?.phone?.main,
+      alternativePhoneNumber: user?.companyData?.phone?.alternative,
+      street: user?.companyData?.address?.street,
+      city: user?.companyData?.address?.city,
+      state: user?.companyData?.address?.state,
+      zipCode: user?.companyData?.address?.postal_code,
+      website: user?.companyData?.website,
+      industry: user?.companyData?.industry,
+      email: user?.companyData?.main_email,
+      employees: user?.companyData?.employees,
     },
   });
 
@@ -78,15 +78,15 @@ const Body = () => {
   const industryListOptions = useQuery({
     queryKey: ["existingRegisteredIndustryOptions"],
     queryFn: () => devitrakApi.post("/db_company/industry"),
-    enabled: !!user.companyData.company_name,
+    enabled: !!user?.companyData?.company_name,
   });
   const eventsCompany = useQuery({
     queryKey: ["allEventsRelatedCompany"],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
-        company_id: user.companyData.id,
+        company_id: user?.companyData?.id,
       }),
-    enabled: !!user.companyData.company_name,
+    enabled: !!user?.companyData?.company_name,
   });
   const [industryOptionStored, setIndustryOptionStored] = useState([]);
   const features = [
@@ -155,14 +155,14 @@ const Body = () => {
   ];
   useEffect(() => {
     if (industryListOptions.data) {
-      setIndustryOptionStored(industryListOptions.data.data.industry);
+      setIndustryOptionStored(industryListOptions.data?.data?.industry ?? []);
     }
   }, [industryListOptions.data]);
 
   const updateCompanyInfoMutation = useMutation({
     mutationFn: async (data) => {
-      let base64 = user.companyData.company_logo;
-      if (data.companyLogo[0]) {
+      let base64 = user?.companyData?.company_logo;
+      if (data.companyLogo?.[0]) {
         if (data.companyLogo[0].size > 1048576) {
           throw new Error(
             "Image is bigger than 1mb. Please resize the image or select a new one."
@@ -274,11 +274,13 @@ const Body = () => {
       };
     },
     onSuccess: () => {
-      openNotificationWithIcon(
-        "Company information updated successfully",
-        3000
-      );
+      openNotificationWithIcon("Company information updated successfully", 3);
       dispatch(onLogout());
+    },
+    onError: (error) => {
+      message.error(
+        error?.message || "Failed to update company info. Please try again."
+      );
     },
   });
 
@@ -292,10 +294,10 @@ const Body = () => {
       );
     },
     onSuccess: () => {
-      openNotificationWithIcon(
-        "Company logo removed successfully",
-        3000
-      );
+      openNotificationWithIcon("Company logo removed successfully", 3);
+    },
+    onError: () => {
+      message.error("Failed to remove company logo. Please try again.");
     },
   });
 
@@ -303,7 +305,7 @@ const Body = () => {
   // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleCancel = () => {
-    console.log("cancel");
+    reset();
   };
     const handleUpdate = (data) => {
       updateCompanyInfoMutation.mutate(data);
@@ -322,6 +324,9 @@ const Body = () => {
           <SectionHeader
             title="Company info"
             subtitle="Update your company info and branding here."
+            cancelButton={handleCancel}
+            saveButton={handleSubmit(handleUpdate)}
+            loading={updateCompanyInfoMutation.isLoading}
           />
           {features.map((feature) => (
             <BodyForm
@@ -347,6 +352,7 @@ const Body = () => {
           <SectionFooter
             cancelButton={handleCancel}
             saveButton={handleSubmit(handleUpdate)}
+            loading={updateCompanyInfoMutation.isLoading}
           />
         </form>
       </div>

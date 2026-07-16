@@ -224,8 +224,8 @@ const BodyRendering = ({
                       borderRadius: "50%",
                     }}
                   >
-                    {user?.name[0]}
-                    {user?.lastName[0]}
+                    {user?.name?.[0]}
+                    {user?.lastName?.[0]}
                   </Avatar>
                 )}
               </>

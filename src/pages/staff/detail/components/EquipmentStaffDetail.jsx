@@ -14,8 +14,8 @@ const pillNavLinkStyle = ({ isActive }) => ({
   lineHeight: "1.4",
   whiteSpace: "nowrap",
   textDecoration: "none",
-  backgroundColor: isActive ? "#344054" : "transparent",
-  color: isActive ? "#fff" : "#475467",
+  backgroundColor: isActive ? "var(--gray-700, #484d47)" : "transparent",
+  color: isActive ? "#fff" : "var(--gray-600, #5d615a)",
   transition: "background-color 0.15s, color 0.15s",
 });
 
@@ -31,7 +31,7 @@ const EquipmentStafDetail = () => {
               display: "inline-flex",
               alignItems: "center",
               gap: "2px",
-              border: "1px solid #D0D5DD",
+              border: "1px solid var(--gray-300, #c6c8bf)",
               borderRadius: "9999px",
               padding: "4px",
               backgroundColor: "#fff",

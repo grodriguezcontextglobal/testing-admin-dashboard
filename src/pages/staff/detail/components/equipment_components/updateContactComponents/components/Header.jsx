@@ -15,7 +15,7 @@ const Header = () => {
       <p
         style={{
           fontSize: "14px",
-          color: "#475467",
+          color: "var(--gray-600, #5d615a)",
           margin: 0,
           lineHeight: "20px",
         }}

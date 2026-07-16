@@ -1,0 +1,389 @@
+/**
+ * Untitled UI skin — global restyle of antd + MUI components to Untitled UI
+ * specs (shape, spacing, borders, shadows, focus, typography). Colors come
+ * from tokens.css (Devitrak palette); button/link colors are intentionally
+ * NOT touched here (brand decision: keep action blue / Deep Blue / Ember).
+ *
+ * Imported once in src/main.jsx, after tokens.css. Page-scoped overrides
+ * (e.g. .table-ant-customized) load later and still win where they specify.
+ */
+
+/* =========================================================================
+   antd — form controls
+   ========================================================================= */
+
+/* Text inputs, number inputs, textareas: 8px radius, gray-300 border,
+   shadow-xs; focus ring comes from ConfigProvider (controlOutline). */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-picker,
+.ant-input-textarea textarea {
+  border-radius: var(--radius-md, 8px);
+  border-color: var(--gray-300, #c6c7bb);
+  box-shadow: var(--shadow-xs);
+}
+.ant-input::placeholder,
+.ant-input-number input::placeholder,
+.ant-picker input::placeholder {
+  color: var(--gray-500, #777b73);
+}
+
+/* Select / AutoComplete control */
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-radius: var(--radius-md, 8px);
+  border-color: var(--gray-300, #c6c7bb);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Dropdown menus (Select, AutoComplete, Dropdown, Cascader) */
+.ant-select-dropdown,
+.ant-dropdown .ant-dropdown-menu,
+.ant-cascader-dropdown {
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+}
+.ant-select-item {
+  border-radius: var(--radius-sm, 6px);
+  padding: 10px 10px;
+  color: var(--gray-900, #171d1a);
+}
+.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: var(--gray-50, #f7f7f4);
+}
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--gray-50, #f7f7f4);
+  font-weight: 500;
+}
+.ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item {
+  border-radius: var(--radius-sm, 6px);
+  padding: 9px 10px;
+}
+
+/* Checkbox: 16px box, 4px radius, gray-300 border (check color = antd
+   colorPrimary from ConfigProvider — unchanged on purpose) */
+.ant-checkbox .ant-checkbox-inner {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-xs, 4px);
+  border-color: var(--gray-300, #c6c7bb);
+}
+.ant-checkbox-wrapper {
+  color: var(--gray-700, #484d47);
+  font-weight: 500;
+}
+
+/* Radio: gray-300 ring at rest */
+.ant-radio .ant-radio-inner {
+  border-color: var(--gray-300, #c6c7bb);
+}
+.ant-radio-wrapper {
+  color: var(--gray-700, #484d47);
+  font-weight: 500;
+}
+
+/* Toggle (Switch): Untitled track gray-100 when off, subtle handle shadow */
+.ant-switch:not(.ant-switch-checked) {
+  background: var(--gray-200, #ddded6);
+}
+.ant-switch .ant-switch-handle::before {
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================================================================
+   antd — overlays & feedback
+   ========================================================================= */
+
+/* Tooltip: Midnight bg, 8px radius, 12px/semibold, tight padding */
+.ant-tooltip .ant-tooltip-inner {
+  background: var(--gray-900, #171d1a);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  box-shadow: var(--shadow-lg);
+}
+.ant-tooltip .ant-tooltip-arrow::before,
+.ant-tooltip .ant-tooltip-arrow::after {
+  background: var(--gray-900, #171d1a);
+}
+
+/* Modal: 12px radius, 24px padding, Untitled header type scale */
+.ant-modal .ant-modal-content {
+  border-radius: var(--radius-xl, 12px);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+}
+.ant-modal .ant-modal-title {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}
+.ant-modal .ant-modal-header {
+  margin-bottom: 16px;
+}
+
+/* Popover / Popconfirm */
+.ant-popover .ant-popover-inner {
+  border-radius: var(--radius-xl, 12px);
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+}
+
+/* Toasts (message) & notifications: 12px radius, bordered, shadow-lg */
+.ant-message .ant-message-notice-content {
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-lg);
+  padding: 10px 14px;
+  font-weight: 500;
+  color: var(--gray-700, #484d47);
+}
+.ant-notification .ant-notification-notice {
+  border-radius: var(--radius-xl, 12px);
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-lg);
+}
+.ant-notification .ant-notification-notice-message {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}
+.ant-notification .ant-notification-notice-description {
+  font-size: 14px;
+  color: var(--gray-600, #5d615a);
+}
+
+/* Alert banners: 12px radius, 16px padding, title-weight message */
+.ant-alert {
+  border-radius: var(--radius-xl, 12px);
+  padding: 14px 16px;
+}
+.ant-alert .ant-alert-message {
+  font-weight: 600;
+}
+
+/* =========================================================================
+   antd — data display
+   ========================================================================= */
+
+/* Tables (base for any table NOT scoped by .table-ant-customized) */
+.ant-table {
+  border-radius: var(--radius-xl, 12px);
+}
+.ant-table .ant-table-thead > tr > th {
+  background: var(--gray-50, #f7f7f4);
+  color: var(--gray-600, #5d615a);
+  font-size: 12px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--gray-200, #ddded6);
+}
+.ant-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--gray-200, #ddded6);
+  color: var(--gray-600, #5d615a);
+}
+
+/* Pagination: 40px square targets, 8px radius, gray-600 text
+   (active colors stay = antd colorPrimary, untouched) */
+.ant-pagination .ant-pagination-item,
+.ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  border-radius: var(--radius-md, 8px);
+}
+.ant-pagination .ant-pagination-item a {
+  color: var(--gray-600, #5d615a);
+  font-weight: 500;
+}
+
+/* Tags → Untitled badges: pill, 12px/500, subtle border already via antd */
+.ant-tag {
+  border-radius: var(--radius-full, 9999px);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 2px 10px;
+}
+
+/* Avatars: hairline inner border like Untitled */
+.ant-avatar {
+  box-shadow: inset 0 0 0 0.75px rgba(23, 29, 26, 0.08);
+}
+
+/* Progress bars: full-rounded 8px track */
+.ant-progress-line .ant-progress-inner {
+  border-radius: var(--radius-full, 9999px);
+}
+
+/* Breadcrumbs: 14px/500 grays; link color untouched */
+.ant-breadcrumb {
+  font-size: 14px;
+  font-weight: 500;
+}
+.ant-breadcrumb li:last-child {
+  color: var(--gray-700, #484d47);
+  font-weight: 600;
+}
+
+/* Tabs: 2px ink bar, semibold labels, gray-500 rest state */
+.ant-tabs .ant-tabs-tab {
+  font-weight: 600;
+  color: var(--gray-500, #777b73);
+}
+.ant-tabs .ant-tabs-ink-bar {
+  height: 2px;
+}
+.ant-tabs-top > .ant-tabs-nav::before {
+  border-bottom: 1px solid var(--gray-200, #ddded6);
+}
+
+/* Cards: 12px radius, gray-200 border, shadow-xs (Untitled card base) */
+.ant-card {
+  border-radius: var(--radius-xl, 12px);
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-xs);
+}
+.ant-card .ant-card-head {
+  border-bottom: 1px solid var(--gray-200, #ddded6);
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}
+
+/* Divider: gray-200 hairline */
+.ant-divider {
+  border-color: var(--gray-200, #ddded6);
+}
+
+/* Steps (progress steps): 14px/600 titles */
+.ant-steps .ant-steps-item-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Date picker panel: 8px radius cells */
+.ant-picker-dropdown .ant-picker-panel-container {
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--gray-200, #ddded6);
+}
+.ant-picker-dropdown .ant-picker-cell-inner {
+  border-radius: var(--radius-full, 9999px);
+}
+
+/* Empty state: gray-600 description */
+.ant-empty-description {
+  color: var(--gray-600, #5d615a);
+}
+
+/* =========================================================================
+   MUI — inputs (OutlinedInput/TextField/Select across 40+ files)
+   ========================================================================= */
+.MuiOutlinedInput-root {
+  border-radius: var(--radius-md, 8px) !important;
+  background: var(--base-white, #fff);
+}
+.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--gray-300, #c6c7bb);
+}
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--gray-400, #9a9d93);
+}
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  /* Untitled focus = 1px brand border + 4px soft ring (not MUI's 2px).
+     !important: MUI's emotion styles outrank this stylesheet. */
+  border-color: var(--action-600, #155eef) !important;
+  border-width: 1px !important;
+}
+.MuiOutlinedInput-root.Mui-focused {
+  box-shadow: var(--focus-ring-action, 0 0 0 4px #d1e0ff);
+}
+.MuiInputLabel-root,
+.MuiFormLabel-root {
+  color: var(--gray-700, #484d47);
+  font-weight: 500;
+  font-size: 14px;
+}
+.MuiMenuItem-root {
+  border-radius: var(--radius-sm, 6px) !important;
+  margin: 0 4px !important;
+  font-size: 14px !important;
+}
+.MuiMenuItem-root:hover,
+.MuiMenuItem-root.Mui-selected {
+  background: var(--gray-50, #f7f7f4) !important;
+}
+.MuiPaper-root.MuiMenu-paper {
+  border-radius: var(--radius-md, 8px) !important;
+  border: 1px solid var(--gray-200, #ddded6);
+  box-shadow: var(--shadow-lg) !important;
+}
+
+
+/* =========================================================================
+   Typography normalization
+   ========================================================================= */
+
+/* MUI Typography defaults to 16px Roboto — the source of "body text is
+   bigger on some pages". Bare (unstyled) Typography now matches the app's
+   body style (Subtitle: Inter 14/20 gray-600). Explicit inline styles on
+   individual Typography elements still win over these rules. */
+.MuiTypography-root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+}
+.MuiTypography-body1,
+.MuiTypography-body2 {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+}
+
+/* antd Typography + form labels: same body baseline */
+.ant-typography {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+}
+.ant-form-item .ant-form-item-label > label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700, #484d47);
+}
+
+
+/* =========================================================================
+   Responsive (mobile-first polish; desktop layouts unchanged)
+   ========================================================================= */
+
+/* Native file inputs have an intrinsic width that overflows small screens */
+input[type="file"] {
+  max-width: 100%;
+}
+
+/* Wide tables scroll inside their card instead of squashing columns */
+.ant-table-content,
+.ant-table-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  /* Modals: use nearly the full screen width on phones */
+  .ant-modal {
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px auto !important;
+  }
+  .ant-modal .ant-modal-content {
+    padding: 16px;
+  }
+  /* Command menu closer to the top, full usable width */
+  .cmdk-overlay {
+    padding-top: 5vh;
+  }
+  /* Notifications shouldn't span past the viewport */
+  .ant-notification .ant-notification-notice {
+    max-width: calc(100vw - 24px);
+  }
+}

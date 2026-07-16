@@ -1,0 +1,173 @@
+/**
+ * Untitled UI tokens — Devitrak palette.
+ * Reconstructed from main.jsx antd theme + component usage after the original
+ * file was lost to a OneDrive sync failure (original kept as tokens.css.onedrive-dead).
+ *
+ * Deep Blue (#021833) is the brand/chrome color; primary ACTIONS use the
+ * vivid action blue (#155eef) so CTAs pop against it. Error is Ember Red
+ * (#d15334). Neutrals are the khaki-warmed gray ramp.
+ */
+
+:root {
+  /* ---- Base ---------------------------------------------------------- */
+  --base-white: #ffffff;
+  --base-black: #000000;
+
+  /* ---- Gray (khaki-warmed neutral ramp) ------------------------------ */
+  --gray-25: #fcfcfa;
+  --gray-50: #f7f7f4;
+  --gray-100: #eeefe9;
+  --gray-200: #ddded6;
+  --gray-300: #c6c7bb;
+  --gray-400: #a2a69b;
+  --gray-500: #777b73;
+  --gray-600: #5d615a;
+  --gray-700: #454944;
+  --gray-800: #2d302c;
+  --gray-900: #171d1a;
+
+  /* ---- Brand (Deep Blue chrome) --------------------------------------- */
+  --brand-25: #f2f6fa;
+  --brand-50: #e6edf4;
+  --brand-100: #c3d4e4;
+  --brand-200: #8fb0cc;
+  --brand-300: #5b88ad;
+  --brand-400: #2f628c;
+  --brand-500: #0a2f52;
+  --brand-600: #021833;
+  --brand-700: #011226;
+  --brand-800: #010c1a;
+  --brand-900: #010714;
+
+  /* ---- Action (vivid CTA blue) ---------------------------------------- */
+  --action-25: #f5f8ff;
+  --action-50: #eff4ff;
+  --action-100: #d1e0ff;
+  --action-200: #b2ccff;
+  --action-300: #84adff;
+  --action-400: #528bff;
+  --action-500: #2970ff;
+  --action-600: #155eef;
+  --action-700: #004eeb;
+  --action-800: #0040c1;
+
+  /* ---- Blue / Blue dark (Untitled UI ramps) ---------------------------- */
+  --blue-25: #f5faff;
+  --blue-50: #eff8ff;
+  --blue-100: #d1e9ff;
+  --blue-200: #b2ddff;
+  --blue-300: #84caff;
+  --blue-400: #53b1fd;
+  --blue-500: #2e90fa;
+  --blue-600: #1570ef;
+  --blue-700: #175cd3;
+  --blue-800: #1849a9;
+
+  --blue-dark-25: #f5f8ff;
+  --blue-dark-50: #eff4ff;
+  --blue-dark-100: #d1e0ff;
+  --blue-dark-200: #b2ccff;
+  --blue-dark-300: #84adff;
+  --blue-dark-400: #528bff;
+  --blue-dark-500: #2970ff;
+  /* note: index.css also defines --blue-dark-600 (#155dee) for legacy use */
+  --blue-dark-700: #004eeb;
+  --blue-dark-800: #0040c1;
+
+  /* ---- Error (Ember Red) ----------------------------------------------- */
+  --error-25: #fdf7f5;
+  --error-50: #fbeae5;
+  --error-100: #f6d5cb;
+  --error-200: #eeb4a3;
+  --error-300: #e28f75;
+  --error-400: #d96f4f;
+  --error-500: #d15334;
+  --error-600: #b8452a;
+  --error-700: #9a3922;
+  --error-800: #7d2e1c;
+
+  /* ---- Warning ---------------------------------------------------------- */
+  --warning-25: #fffcf5;
+  --warning-50: #fffaeb;
+  --warning-100: #fef0c7;
+  --warning-200: #fedf89;
+  --warning-300: #fec84b;
+  --warning-400: #fdb022;
+  --warning-500: #f79009;
+  --warning-600: #dc6803;
+  --warning-700: #b54708;
+
+  /* ---- Success ---------------------------------------------------------- */
+  --success-25: #f6fef9;
+  --success-50: #ecfdf3;
+  --success-100: #dcfae6;
+  --success-200: #abefc6;
+  --success-300: #75e0a7;
+  --success-400: #47cd89;
+  --success-500: #17b26a;
+  --success-600: #079455;
+  --success-700: #067647;
+
+  /* ---- Accents ----------------------------------------------------------- */
+  --orange-700: #b93815;
+  --orange-dark-50: #fff4ed;
+  --indigo-700: #3538cd;
+  --primary-600: var(--action-600);
+  --primary-700: var(--action-700);
+
+  /* Capitalized aliases used by some components */
+  --Gray-100: var(--gray-100);
+  --Gray-300: var(--gray-300);
+  --Gray-600: var(--gray-600);
+  --Gray-900: var(--gray-900);
+  --Primary-50: var(--action-50);
+  --Primary-700: var(--action-700);
+  --Error-700: var(--error-700);
+  --Warning-50: var(--warning-50);
+  --Warning-600: var(--warning-600);
+  --Warning-700: var(--warning-700);
+  --Blue-700: var(--blue-700);
+  --Indigo-700: var(--indigo-700);
+
+  /* ---- Radius (Untitled UI shape scale) --------------------------------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows (warm-tinted like antd theme) ------------------------------ */
+  --shadow-xs: 0 1px 2px 0 rgba(23, 29, 26, 0.05);
+  --shadow-sm:
+    0 1px 3px 0 rgba(23, 29, 26, 0.1), 0 1px 2px -1px rgba(23, 29, 26, 0.1);
+  --shadow-md:
+    0 4px 8px -2px rgba(23, 29, 26, 0.1), 0 2px 4px -2px rgba(23, 29, 26, 0.06);
+  --shadow-lg:
+    0 12px 16px -4px rgba(23, 29, 26, 0.08),
+    0 4px 6px -2px rgba(23, 29, 26, 0.03);
+  --shadow-xl:
+    0 20px 24px -4px rgba(23, 29, 26, 0.08),
+    0 8px 8px -4px rgba(23, 29, 26, 0.03);
+
+  /* ---- Focus rings (4px soft ring, Untitled UI) --------------------------- */
+  --focus-ring-action: 0 0 0 4px var(--action-100);
+  --focus-ring-brand: 0 0 0 4px rgba(2, 24, 51, 0.24);
+  --focus-ring-error: 0 0 0 4px var(--error-100);
+
+  /* ---- ud-* convenience aliases ------------------------------------------- */
+  --ud-text: var(--gray-900);
+  --ud-muted: var(--gray-500);
+  --ud-border: var(--gray-200);
+  --ud-border-menu: var(--gray-100);
+  --ud-bg: var(--base-white);
+  --ud-hover: var(--gray-50);
+  --ud-primary: var(--action-600);
+  --ud-primary-hover: var(--action-700);
+  --ud-text-on-primary: var(--base-white);
+  --ud-focus: var(--focus-ring-action);
+  --ud-shadow: var(--shadow-lg);
+  --ud-radius: var(--radius-md);
+  --ud-radius-sm: var(--radius-sm);
+}

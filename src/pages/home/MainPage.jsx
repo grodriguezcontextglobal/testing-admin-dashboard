@@ -22,6 +22,9 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { Title } from "../../styles/global/Title";
 import { PlusIcon } from "../../components/icons/PlusIcon";
 import { PlusSquareIcon } from "../../components/icons/PlusSquareIcon";
+import HomeKpiSection from "./components/HomeKpiSection";
+import EventsDevicesChart from "./components/EventsDevicesChart";
+import LiveEventSnapshot from "./components/LiveEventSnapshot";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -216,6 +219,9 @@ const MainPage = () => {
         <Grid
           sx={{
             display: "flex",
+            // stack the action buttons instead of bleeding off-screen when
+            // the row is too narrow for them side by side
+            flexWrap: "wrap",
             justifyContent: {
               xs: "flex-start",
               sm: "flex-start",
@@ -256,6 +262,7 @@ const MainPage = () => {
             <GrayButtonComponent title={"Create new event"} iconTrailing={<PlusIcon stroke="#000000" />} func={null} />
           </Link>
         </Grid>
+        {/* ===== Dashboard widgets: KPIs, live-event snapshot, per-event chart ===== */}
         <Grid
           textAlign={"right"}
           flexDirection={"column"}
@@ -285,7 +292,10 @@ const MainPage = () => {
             Some general stats of your devices.
           </Typography>
         </Grid>
-        <Divider />
+        <Divider style={{ margin: "8px 0 16px" }} />
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          <HomeKpiSection />
+        </Grid>
         {inventoryQuery?.data?.data?.items.length > 0 ? (
           <>
             <Grid
@@ -343,6 +353,64 @@ const MainPage = () => {
               </Grid>
               {/* <ActiveEventMainPage /> */}
 
+              <Grid item xs={12} sm={12} md={12} lg={12} marginBottom={2}>
+          <div
+            style={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: "16px",
+              margin: "16px 0 4px",
+            }}
+          >
+            <div
+              style={{
+                background: "var(--base-white, #fff)",
+                border: "1px solid var(--gray-200, #ddded6)",
+                borderRadius: "12px",
+                boxShadow: "var(--shadow-xs)",
+                padding: "24px",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0 0 12px",
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "var(--gray-900, #171d1a)",
+                  textAlign: "left",
+                }}
+              >
+                Live event
+              </p>
+              <LiveEventSnapshot />
+            </div>
+            <div
+              style={{
+                background: "var(--base-white, #fff)",
+                border: "1px solid var(--gray-200, #ddded6)",
+                borderRadius: "12px",
+                boxShadow: "var(--shadow-xs)",
+                padding: "24px",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0 0 12px",
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "var(--gray-900, #171d1a)",
+                  textAlign: "left",
+                }}
+              >
+                Devices deployed per event
+              </p>
+              <EventsDevicesChart />
+            </div>
+          </div>
+              </Grid>
               <Grid
                 textAlign={"right"}
                 display={"flex"}

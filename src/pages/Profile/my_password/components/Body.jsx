@@ -30,8 +30,10 @@ const Body = () => {
   };
   if (adminUsersStaffQuery.data) {
     const foundAdminInfo = () => {
-      reference.current = checkArray(adminUsersStaffQuery.data.data.adminUsers);
-      return checkArray(adminUsersStaffQuery.data.data.adminUsers);
+      reference.current = checkArray(
+        adminUsersStaffQuery?.data?.data?.adminUsers ?? []
+      );
+      return reference.current;
     };
     foundAdminInfo();
     const triggerRoutes = () => {
@@ -43,10 +45,14 @@ const Body = () => {
 
     const handleUpdatePersonalInfo = async (data) => {
       try {
-        const isValid = compareSync(
-          data.current_password,
-          foundAdminInfo().password
-        );
+        const adminInfo = foundAdminInfo();
+        if (!adminInfo?.password) {
+          return openNotificationWithIcon(
+            "error",
+            "We could not verify your account. Please try again later."
+          );
+        }
+        const isValid = compareSync(data.current_password, adminInfo.password);
         if (!isValid) {
           return openNotificationWithIcon(
             "error",
@@ -59,21 +65,21 @@ const Body = () => {
         if (data.password2.length > 12 || data.password2.length < 6) {
           return openNotificationWithIcon(
             "error",
-            "Passwords length must be between 6 digits and 1 digits"
+            "Password length must be between 6 and 12 characters."
           );
         }
         if (data.password1.length > 12 || data.password1.length < 6) {
           return openNotificationWithIcon(
             "error",
-            "Passwords length must be between 6 digits and 1 digits"
+            "Password length must be between 6 and 12 characters."
           );
         }
-        const resp = devitrakApi.patch(`/admin/update-password`, {
-          email: foundAdminInfo().email,
+        const resp = await devitrakApi.patch(`/admin/update-password`, {
+          email: adminInfo.email,
           password: data.password1,
         });
-        if ((await resp).data) {
-          openNotificationWithIcon("Success", "Password updated!");
+        if (resp.data) {
+          openNotificationWithIcon("success", "Password updated!");
           dispatch(onLogout());
           return window.location.reload(true);
         }
@@ -94,6 +100,7 @@ const Body = () => {
       </>
     );
   }
+  return null;
 };
 
 export default Body;

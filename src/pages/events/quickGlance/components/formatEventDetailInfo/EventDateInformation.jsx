@@ -95,15 +95,25 @@ const EventDateInformation = () => {
           <Grid item xs={12}>
             <EventPeriodFormatDisplay event={event} styleText={TextFontSize30LineHeight38} />
           </Grid>
-          <Grid item xs={12} style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <Icon icon="mdi:clock-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0 }} />
-            <Typography style={Subtitle}>
-              {`${hourBeginTime}:${minutesBeginTime} ${new Date(`${event?.eventInfoDetail?.dateBegin}`).getHours() < 12 ? "AM" : "PM"}`}
-              {" – "}
-              {`${hourEndTime}:${minutesEndTime} ${new Date(`${event?.eventInfoDetail?.dateEnd}`).getHours() < 12 ? "AM" : "PM"}`}
-              {" local time"}
-            </Typography>
-          </Grid>
+          {/* Hide the time row when begin/end times are identical — an
+              identical range ("8:07 PM – 8:07 PM") reads as a bug, and events
+              created without explicit hours land in this state. */}
+          {(() => {
+            const beginTimeLabel = `${hourBeginTime}:${minutesBeginTime} ${new Date(`${event?.eventInfoDetail?.dateBegin}`).getHours() < 12 ? "AM" : "PM"}`;
+            const endTimeLabel = `${hourEndTime}:${minutesEndTime} ${new Date(`${event?.eventInfoDetail?.dateEnd}`).getHours() < 12 ? "AM" : "PM"}`;
+            if (beginTimeLabel === endTimeLabel) return null;
+            return (
+              <Grid item xs={12} style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Icon icon="mdi:clock-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0 }} />
+                <Typography style={Subtitle}>
+                  {beginTimeLabel}
+                  {" – "}
+                  {endTimeLabel}
+                  {" local time"}
+                </Typography>
+              </Grid>
+            );
+          })()}
           <Grid item xs={12} style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "4px" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
               <Icon icon="mdi:map-marker-outline" width={16} style={{ color: "var(--gray-500, #667085)", flexShrink: 0, marginTop: "2px" }} />
@@ -114,6 +124,11 @@ const EventDateInformation = () => {
                 <Typography style={{ ...Subtitle, marginTop: "2px" }}>
                   {[addressSplitting().address, addressSplitting().cityAndState, addressSplitting().zip]
                     .filter(Boolean)
+                    .filter(
+                      (segment) =>
+                        segment.trim().toLowerCase() !==
+                        (event?.eventInfoDetail?.building ?? "").trim().toLowerCase()
+                    )
                     .join(", ")}
                 </Typography>
               </div>

@@ -28,13 +28,15 @@ const checkServerHealth = async (serverUrl) => {
 
 const findHealthyServer = async () => {
   // Check in-memory active server first
-  if (activeServer && await checkServerHealth(activeServer)) {
+  if (activeServer && SERVERS.includes(activeServer) && await checkServerHealth(activeServer)) {
     return activeServer;
   }
 
-  // Check localStorage for a previously known healthy server
+  // Check localStorage for a previously known healthy server — but only trust it
+  // if it's one of the currently-configured servers. A stale URL from another
+  // environment (e.g. a cached production URL while running locally) is ignored.
   const storedServer = localStorage.getItem('activeApiServer');
-  if (storedServer && await checkServerHealth(storedServer)) {
+  if (storedServer && SERVERS.includes(storedServer) && await checkServerHealth(storedServer)) {
     activeServer = storedServer;
     return activeServer;
   }
@@ -86,5 +88,9 @@ export const switchServer = async () => {
 
 // Synchronous getter for the initial (pre-check) server URL.
 export const getActiveServerSynchronously = () => {
-  return localStorage.getItem('activeApiServer') || PRIMARY_API;
+  // Only trust a cached server if it's one of the currently-configured servers;
+  // otherwise a stale cross-environment URL (e.g. production while running local)
+  // would hijack every request. Fall back to the primary (configured) API.
+  const stored = localStorage.getItem('activeApiServer');
+  return (stored && SERVERS.includes(stored)) ? stored : PRIMARY_API;
 };

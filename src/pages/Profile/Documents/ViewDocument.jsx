@@ -8,6 +8,7 @@ import ArrowBackIcon from "../../../components/icons/arrow-left.svg";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import DocumentPreview from "./DocumentPreview"; // Import the new component
 import "./ViewDocument.css";
 
@@ -89,6 +90,10 @@ const ViewDocument = () => {
   const handleDownload = () => {
     if (pdfUrl) {
       window.open(pdfUrl, "_blank");
+    } else {
+      message.info(
+        "The document file is not available yet. Please try again in a moment."
+      );
     }
   };
 
@@ -103,7 +108,12 @@ const ViewDocument = () => {
   if (!documentData) {
     return (
       <div className="view-document-container">
-        <p className="error-message">Document not found</p>
+        <EmptyState
+          icon="tabler:file-off"
+          title="Document not found"
+          description="This document may have been deleted or you may not have access to it."
+          action={<GrayButtonComponent title="Back to documents" func={handleBack} />}
+        />
       </div>
     );
   }

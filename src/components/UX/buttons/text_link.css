@@ -1,0 +1,46 @@
+/* Untitled UI text link ("Link color" / "Link gray" button styles). */
+.customized__textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: 600 14px/20px Inter, sans-serif;
+  color: var(--brand-700, #004eea);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.customized__textLink:hover {
+  color: var(--brand-800, #0040c1);
+  text-decoration: underline;
+}
+.customized__textLink:focus-visible {
+  outline: none;
+  border-radius: 2px;
+  box-shadow: var(--focus-ring-brand, 0 0 0 4px #d1e0ff);
+}
+.customized__textLink:disabled,
+.customized__textLink[aria-disabled="true"] {
+  color: var(--gray-400, #98a2b3);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* "Link gray" variant */
+.customized__textLink--gray {
+  color: var(--gray-600, #475467);
+}
+.customized__textLink--gray:hover {
+  color: var(--gray-700, #344054);
+}
+
+/* Destructive link variant */
+.customized__textLink--error {
+  color: var(--error-700, #b42318);
+}
+.customized__textLink--error:hover {
+  color: var(--error-800, #912018);
+}

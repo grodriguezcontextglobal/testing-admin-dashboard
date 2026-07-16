@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
 import GrayButtonComponent from "../../UX/buttons/GrayButton";
 
-const SectionFooter = ({ cancelButton, saveButton, saveLoading = false }) => {
+const SectionFooter = ({ cancelButton, saveButton, loading = false }) => {
   return (
     <Box
       sx={{
@@ -10,11 +10,12 @@ const SectionFooter = ({ cancelButton, saveButton, saveLoading = false }) => {
         justifyContent: "flex-end",
         gap: "12px",
         padding: "20px 0",
-        // borderTop: "1px solid #eaecf0",
+        borderTop: "1px solid var(--gray-200, #ddded6)",
+        marginTop: "8px",
       }}
     >
-      <GrayButtonComponent title="Cancel" func={cancelButton} disabled={saveLoading} />
-      <BlueButtonComponent title="Save" func={saveButton} isLoading={saveLoading} />
+      <GrayButtonComponent title="Cancel" func={cancelButton} disabled={loading} />
+      <BlueButtonComponent title="Save" func={saveButton} loadingState={loading} />
     </Box>
   );
 };

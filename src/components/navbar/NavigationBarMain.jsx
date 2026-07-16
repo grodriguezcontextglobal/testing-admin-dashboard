@@ -3,6 +3,7 @@ import {
   Box,
   Drawer,
   Grid,
+  List
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import {
@@ -42,16 +43,31 @@ import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 // import { ProfileIcon } from "../icons/ProfileIcon";
 import { hasPermission, resolveRoleType } from "../../config/roles";
+import { getIndustryProfile } from "../../config/industryProfiles";
 import Input from "../UX/inputs/Input";
 import { CircleDeleteIcon } from "../icons/CircleDeleteIcon";
 import MenuIcon from "../icons/MenuIcon";
+import { SendIcon } from "../icons/SendIcon";
+import { Icon } from "@iconify/react";
 import MagnifyIcon from "../icons/search-lg.svg";
+import colorMark from "../../assets/maskable_icon_white_background.png";
+import DevitrakWordmark from "../icons/DevitrakWordmark";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
 import MobileSidebarNav from "./component/MobileSidebarNav";
 import "./style/style.css";
 const { PropTypes } = pkg;
-const drawerWidth = 280;
+// Same icons as the command menu navigation group (tabler set)
+const NAV_ICONS = {
+  home: "tabler:home",
+  inventory: "tabler:box",
+  events: "tabler:calendar-event",
+  consumers: "tabler:users",
+  posts: "tabler:news",
+  staff: "tabler:id-badge-2",
+  profile: "tabler:user-circle",
+};
+
 const navItems = [
   { title: "home", route: "/", permission: "nav:home", mobile: true, desktop: true, icon: HomeLine },
   { title: "inventory", route: "/inventory", permission: "nav:inventory", mobile: true, desktop: true, icon: Package },
@@ -69,13 +85,15 @@ const getHomeRoute = (roleType) => {
   return "/";
 };
 
+// million-ignore — Million's block compiler broke event handlers in this
+// component (search button onClick silently dead); keep it un-optimized.
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // eslint-disable-next-line no-unused-vars
   // const [{ x, y }, scrollTo] = useWindowScroll();
   // const { register, handleSubmit, watch } = useForm()
   const { window } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
-  // const [showSearch, setShowSearch] = useState(false);
+  const [showSearch] = useState(false); // inline search retired — magnifier opens the ⌘K palette
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
   const [searchValue, setSearchValue] = useState("");
@@ -114,13 +132,10 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     return dispatch(onResetResult());
   };
 
-  // const toggleSearch = () => {
-  //   if (showSearch) {
-  //     setSearchValue("");
-  //     dispatch(onResetResult());
-  //   }
-  //   setShowSearch((prev) => !prev);
-  // };
+  const toggleSearch = () => {
+    // Global search now lives in the command menu (⌘K) — Untitled UI pattern.
+    window.dispatchEvent(new CustomEvent("devitrak:open-cmdk"));
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -132,6 +147,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
       window: true,
     });
   };
+  const hiddenNavTabs = getIndustryProfile(
+    user?.companyData?.industry
+  ).hiddenNavTabs;
+  const isNavTabVisible = (item) =>
+    !hiddenNavTabs.includes(String(item.title).toLowerCase());
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)",
@@ -139,13 +159,101 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const isLargeDevice = useMediaQuery(
     "only screen and (min-width : 993px) and (max-width : 1200px)",
   );
+  // Untitled UI mobile navigation: white sheet, icon rows, active state,
+  // account section at the bottom. Tapping anywhere closes via Box onClick.
+  const drawerItemStyle = (isActive) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    width: "100%",
+    padding: "12px",
+    borderRadius: "8px",
+    fontFamily: "Inter, sans-serif",
+    fontSize: "16px",
+    lineHeight: "24px",
+    fontWeight: 600,
+    textTransform: "capitalize",
+    textDecoration: "none",
+    color: isActive ? "var(--gray-900, #171d1a)" : "var(--gray-700, #484d47)",
+    backgroundColor: isActive ? "var(--gray-50, #f7f7f4)" : "transparent",
+  });
+
   const drawer = (
-    <MobileSidebarNav
-      navItems={navItems}
-      user={user}
-      onLogout={logout}
-      onNavigate={handleDrawerToggle}
-    />
+    <Box
+      onClick={handleDrawerToggle}
+      sx={{ textAlign: "left", padding: "16px", height: "100%" }}
+    >
+      {/* header: colored logo + close */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "4px 4px 16px",
+        }}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <img src={colorMark} alt="Devitrak" width={36} height={36} style={{ margin: "-6px" }} />
+          <DevitrakWordmark height={18} />
+        </span>
+        <button
+          aria-label="Close menu"
+          style={{
+            border: "none",
+            background: "transparent",
+            padding: "8px",
+            cursor: "pointer",
+            display: "flex",
+          }}
+        >
+          <Icon icon="tabler:x" width={22} color="var(--gray-500, #777b73)" />
+        </button>
+      </div>
+      <List sx={{ display: "flex", flexDirection: "column", gap: "2px", padding: 0 }}>
+        {navItems.map((item) => {
+          if (item.route === 0) {
+            return <ConditionalButton key={item.title} user={user} />;
+          }
+          if (
+            !hasPermission(item.permission, resolveRoleType(user)) ||
+            !item.mobile ||
+            !isNavTabVisible(item)
+          ) {
+            return null;
+          }
+          const active = location.pathname === `${item.route}`;
+          return (
+            <NavLink key={item.title} to={item.route} style={drawerItemStyle(active)}>
+              {NAV_ICONS[String(item.title).toLowerCase()] && (
+                <Icon
+                  icon={NAV_ICONS[String(item.title).toLowerCase()]}
+                  width={20}
+                  color={active ? "var(--gray-900, #171d1a)" : "var(--gray-500, #777b73)"}
+                />
+              )}
+              {item.title}
+            </NavLink>
+          );
+        })}
+      </List>
+      <div
+        style={{
+          borderTop: "1px solid var(--gray-200, #ddded6)",
+          margin: "12px 0",
+        }}
+      />
+      <NavLink
+        to="/login"
+        onClick={() => logout()}
+        style={{
+          ...drawerItemStyle(false),
+          color: "var(--error-600, #bc4b2f)",
+        }}
+      >
+        <Icon icon="tabler:logout" width={20} color="var(--error-600, #bc4b2f)" />
+        Log out
+      </NavLink>
+    </Box>
   );
 
   const container =
@@ -191,7 +299,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             alignItems: "center",
           }}
           item
-          xs={12}
+          xs={2}
           sm={2}
           md={8}
           lg={8}
@@ -218,6 +326,10 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               justifyContent: "flex-start",
               alignItems: "center",
               padding: 0,
+              // with the dynamic industry tab the row can exceed its grid at
+              // medium widths — wrap instead of overflowing under the search
+              flexWrap: "wrap",
+              minWidth: 0,
             }}
           >
             <NavLink
@@ -230,7 +342,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </NavLink>
 
             {navItems.map((item) => {
-              if (hasPermission(item.permission, resolveRoleType(user)) && item.desktop) {
+              if (
+                hasPermission(item.permission, resolveRoleType(user)) &&
+                item.desktop &&
+                isNavTabVisible(item)
+              ) {
                 if (item.route === 0) {
                   return (
                     <ConditionalButton
@@ -256,7 +372,21 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                         >
                           <div className="content-2-main-navbar-updated">
                             <div className="text-1-main-navbar-updated text-mdsemibold">
-                              <p style={{ textTransform: "capitalize" }}>
+                              <p
+                                style={{
+                                  textTransform: "capitalize",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                }}
+                              >
+                                {NAV_ICONS[String(item.title).toLowerCase()] && (
+                                  <Icon
+                                    icon={NAV_ICONS[String(item.title).toLowerCase()]}
+                                    width={18}
+                                    height={18}
+                                  />
+                                )}
                                 {item.title}
                               </p>
                             </div>
@@ -273,14 +403,19 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
 
         <Grid
           item
+          xs={10}
           sm={10}
           md={4}
           lg={4}
           sx={{
-            display: { xs: "none", sm: "flex", md: "flex", lg: "flex" },
+            // search stays visible on every breakpoint; on phones it shares
+            // the row with the hamburger (left grid) and must not overflow
+            display: { xs: "flex", sm: "flex", md: "flex", lg: "flex" },
             justifyContent: "flex-end",
             alignItems: "center",
             margin: 0,
+            minWidth: 0,
+            paddingRight: { xs: "12px", sm: "12px", md: 0 },
           }}
         >
           {/* {showSearch && ( */}
@@ -288,6 +423,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             style={{
               margin: "0 5px 0 0",
               width: "100%",
+              minWidth: 0,
               display: "flex",
               alignItems: "center",
               gap: "6px",
@@ -297,15 +433,31 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             action="/search-result-page?search="
             id="search-form"
           >
+            {/* Read-only trigger: clicking (or Enter/Space) opens the ⌘K
+                command palette instead of editing text, so the navbar input
+                and the magnifier button share one unified global-search UX. */}
             <Input
               placeholder="Search"
-              required
-              style={{ ...OutlinedInputStyle, boxSizing: "border-box" }}
-              onChange={(e) => onChange(e)}
+              readOnly
+              data-open-cmdk="true"
+              role="button"
+              tabIndex={0}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toggleSearch}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleSearch();
+                }
+              }}
+              style={{
+                ...OutlinedInputStyle,
+                boxSizing: "border-box",
+                cursor: "pointer",
+              }}
               name={"searchValue"}
               value={searchValue}
               fullWidth
-              autoFocus
             // endAdornment={
             //   <div>
             //     <button style={{
@@ -366,6 +518,9 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </button>
           )}
           <button
+            data-open-cmdk="true"
+            onClick={toggleSearch}
+            aria-label="Open search"
             style={{
               outline: "none",
               border: "transparent",
@@ -373,9 +528,9 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               padding: 0,
               backgroundColor: "transparent",
               display: "flex",
+              cursor: "pointer",
             }}
-            type="submit"
-            form="search-form"
+            type="button"
           >
             <div className="content-main-navbar-updated">
               <article
@@ -426,12 +581,10 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           sx={{
             display: { xs: "block", sm: "block" },
             "& .MuiDrawer-paper": {
-              GridSizing: "border-box",
-              width: drawerWidth,
-              padding: {
-                sx: "0 20px",
-                sm: "0 20px",
-              },
+              boxSizing: "border-box",
+              width: "min(320px, 86vw)",
+              backgroundColor: "var(--base-white, #fff)",
+              borderRight: "1px solid var(--gray-200, #ddded6)",
             },
           }}
         >

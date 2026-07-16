@@ -1,5 +1,4 @@
-import { Grid, Typography, Button } from "@mui/material";
-import React from "react";
+import { Grid, Typography } from "@mui/material";
 
 const Header = () => {
   return (
@@ -34,7 +33,7 @@ const Header = () => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "var(--gray-900, #101828)",
+              color: "var(--gray-900, #171d1a)",
               lineHeight: "38px",
             }}
             textAlign={"left"}
@@ -48,7 +47,7 @@ const Header = () => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "#475467",
+              color: "var(--gray-600, #5d615a)",
               lineHeight: "38px",
             }}
             textAlign={"left"}
@@ -74,7 +73,7 @@ const Header = () => {
           {/* <Button
             style={{
               width: "fit-content",
-              border: "1px solid var(--gray-300, #D0D5DD)",
+              border: "1px solid var(--gray-300, #c6c7bb)",
               borderRadius: "8px",
               background: "var(--base-white, #FFF)",
               boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
@@ -83,7 +82,7 @@ const Header = () => {
             <Typography
               textTransform={"none"}
               style={{
-                color: "#344054",
+                color: "var(--gray-700, #484d47)",
                 fontSize: "14px",
                 fontWeight: "600",
                 fontFamily: "Inter",

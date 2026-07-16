@@ -8,6 +8,7 @@ import Login from "../../pages/authentication/Login";
 import RegisterCompany from "../../pages/authentication/RegisterCompany";
 import RegisterStripeConnectedAccount from "../../pages/authentication/RegisterStripeConnectedAccount";
 import Register from "../../pages/authentication/Registration";
+import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 import ForceLogout from "../../pages/authentication/ForceLogout";
 
@@ -27,6 +28,7 @@ const NoAuthRoutes = () => {
         <Route path="/invitation" element={<InvitationLanding />} />
         <Route path="/force-logout" element={<ForceLogout />} />
         <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
+        <Route path="/my-devices" element={<MyDevicesPortal />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>

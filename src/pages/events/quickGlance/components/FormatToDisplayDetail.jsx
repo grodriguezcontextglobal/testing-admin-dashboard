@@ -1,13 +1,12 @@
-import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "lodash";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import CardRendered from "./CardRendered";
-import { useEffect, useState } from "react";
-import ModalListOfDefectedDevices from "./ModalListOfDefectedDevices";
 import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
-import gettingInventoryTotalCount from "./gettingInventoryTotalCount";
+import DeviceHealthBar from "./DeviceHealthBar";
+import ModalListOfDefectedDevices from "./ModalListOfDefectedDevices";
+
 const FormatToDisplayDetail = () => {
   const [defectedDeviceList, setDefectedDeviceList] = useState(false);
   const { event } = useSelector((state) => state.event);
@@ -37,33 +36,18 @@ const FormatToDisplayDetail = () => {
     return () => {
       controller.abort();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (receiversPoolQuery.data && receiversNoOperatingInPoolQuery.data) {
     const inventoryEventData = checkTypeFetchResponse(
       receiversPoolQuery.data.data.receiversInventory
     );
-    const foundAllDevicesGivenInEvent = () => {
-      const receiversPoolData = inventoryEventData;
-      if (receiversPoolData?.length > 0) return receiversPoolData;
-      return [];
-    };
+    const pool = Array.isArray(inventoryEventData) ? inventoryEventData : [];
 
-    const foundAllNoOperatingDeviceInEvent = () => {
-      const receiversPoolData = inventoryEventData;
-      const groupingByReturnedStatus = groupBy(receiversPoolData, "status");
-      let result = [];
-      for (let data of Object.entries(groupingByReturnedStatus)) {
-        if (data[0] !== "Operational") {
-          result = [...result, data[1]?.length];
-        }
-      }
-      return result.reduce((accu, curr) => accu + curr, 0);
-    };
-
+    // Devices with a non-Operational status, for the issues modal (lost + defective).
     const foundAllNoOperatingDeviceListInEvent = () => {
-      const receiversPoolData = inventoryEventData;
-      const groupingByReturnedStatus = groupBy(receiversPoolData, "status");
+      const groupingByReturnedStatus = groupBy(pool, "status");
       let result = [];
       for (let data of Object.entries(groupingByReturnedStatus)) {
         if (data[0] !== "Operational") {
@@ -73,88 +57,22 @@ const FormatToDisplayDetail = () => {
       return result;
     };
 
-    const foundDevicesOut = () => {
-      const groupingByActivity = groupBy(
-        foundAllDevicesGivenInEvent(),
-        "activity"
-      );
-      if (groupingByActivity?.true?.length > 0)
-        return groupingByActivity?.true?.length;
-      return 0;
-    };
-
-    const deviceRangeDisplay = () => {
-      let allItemsForConsumers = 0;
-      const groupingInventorySetForConsumer = groupBy(
-        foundAllDevicesGivenInEvent(),
-        "type"
-      );
-      for (let data of event.deviceSetup) {
-        if (data.consumerUses) {
-          // allItemsForConsumers += Number(data.quantity);
-          const checkingTypeInventory = Number(groupingInventorySetForConsumer[data.group]?.length) ?? 0;
-          allItemsForConsumers += checkingTypeInventory;
-        }
-      }
-      return allItemsForConsumers;
-    };
-    deviceRangeDisplay();
-
-    const numberDisplayDynamically = () => {
-      const dataRef = inventoryEventData;
-      if (dataRef?.length > 0) {
-        return deviceRangeDisplay() - foundDevicesOut();
-      }
-      return 0;
-    };
+    // Mutually exclusive counts that sum to the pool total — one honest story.
+    const isLost = (item) => `${item.status}`.toLowerCase() === "lost";
+    const isDefective = (item) => item.status !== "Operational" && !isLost(item);
+    const lost = pool.filter(isLost).length;
+    const needsRepair = pool.filter(isDefective).length;
+    const checkedOut = pool.filter(
+      (item) => item.activity && !isLost(item) && !isDefective(item)
+    ).length;
+    const onHand = Math.max(0, pool.length - lost - needsRepair - checkedOut);
 
     return (
-      <Grid container spacing={1}>
-        <Grid item xs={12} sm={12} md={12} lg={4}>
-          <CardRendered
-            key={"Total devices of event."}
-            props={
-              gettingInventoryTotalCount({
-                inventoryEventData,
-                event,
-              }) ?? 0
-            }
-            title={"Total inventory of event included consumers items."}
-          />
-        </Grid>
-        <Grid item xs={12} sm={12} md={12} lg={4}>
-          <CardRendered
-            key={"Total devices on hand for consumer use"}
-            props={numberDisplayDynamically()}
-            title={"Total devices on hand for consumers, including not functional"}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={6} lg={4}>
-          <CardRendered
-            key={"Total devices checked out"}
-            props={foundDevicesOut()}
-            title={"Total devices checked out"}
-          />
-        </Grid>
-        {foundAllNoOperatingDeviceInEvent() > 0 && (
-          <Grid item xs={12} sm={6} md={6} lg={4}>
-            <button
-              onClick={() => setDefectedDeviceList(true)}
-              style={{
-                backgroundColor: "transparent",
-                outline: "none",
-                width: "100%",
-                padding: 0,
-                margin: 0,
-              }}
-            >
-              <CardRendered
-                key={"Total lost/defected devices"}
-                props={foundAllNoOperatingDeviceInEvent()}
-                title={"Total devices not functional"}
-              />
-            </button>
-          </Grid>)}
+      <>
+        <DeviceHealthBar
+          counts={{ checkedOut, onHand, needsRepair, lost }}
+          onOpenIssuesList={() => setDefectedDeviceList(true)}
+        />
         {defectedDeviceList && (
           <ModalListOfDefectedDevices
             data={foundAllNoOperatingDeviceListInEvent()}
@@ -162,7 +80,7 @@ const FormatToDisplayDetail = () => {
             setDefectedDeviceList={setDefectedDeviceList}
           />
         )}
-      </Grid>
+      </>
     );
   }
 };

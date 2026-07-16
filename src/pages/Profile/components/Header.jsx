@@ -33,8 +33,7 @@ const Header = ({ title, description }) => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "var(--gray-900, #101828)",
-              lineHeight: "38px",
+              color: "var(--gray-900, #171d1a)",
             }}
             textAlign={"left"}
             fontWeight={600}
@@ -47,13 +46,12 @@ const Header = ({ title, description }) => {
           <Typography
             textTransform={"none"}
             style={{
-              color: "#475467",
-              lineHeight: "38px",
+              color: "var(--gray-600, #5d615a)",
             }}
             textAlign={"left"}
             fontWeight={400}
             fontFamily={"Inter"}
-            fontSize={"14x"}
+            fontSize={"14px"}
             lineHeight={"20px"}
           >
             {description}

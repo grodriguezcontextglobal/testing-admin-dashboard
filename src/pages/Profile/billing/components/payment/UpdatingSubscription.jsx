@@ -1,7 +1,7 @@
 import { Box, Grid, Tab, Tabs, Typography } from "@mui/material";
 import { Button, Modal } from "antd";
 import { useState, useRef } from "react";
-import subscriptionList from "../../../../../components/json";
+import subscriptionList from "../../../../../components/json/subscriptionList.json";
 import OptionSubscriptionTitle from "../../../../events/newEventProcess/subscription/components/OptionSubscriptionTitle";
 import DescriptionFormat from "../../../../events/newEventProcess/subscription/components/DescriptionFormat";
 import ModalMonthlyPayment from "../../../../events/newEventProcess/subscription/components/ModalMonthlyPayment";
@@ -12,7 +12,7 @@ const UpdatingSubscription = ({
 }) => {
   const [value, setValue] = useState(0);
   const [clientSecret, setClientSecret] = useState(null);
-  const [total, setTotal] = useState(0);
+  const [total] = useState(0);
 
   const amountSubTierDisplay = useRef({
     month: "",
@@ -30,7 +30,7 @@ const UpdatingSubscription = ({
       <Typography
         width={"100%"}
         textTransform={"none"}
-        color="var(--gray-900, #101828)"
+        color="var(--gray-900, #171d1a)"
         lineHeight={"28px"}
         textAlign={"left"}
         fontWeight={600}
@@ -78,7 +78,7 @@ const UpdatingSubscription = ({
           >
             <Tabs
               style={{
-                background: "#e4e4e4",
+                background: "var(--gray-200, #ddded6)",
                 width: "fit-content",
                 borderRadius: "12px",
               }}
@@ -92,16 +92,20 @@ const UpdatingSubscription = ({
                   justifyContent: "center",
                   alignItems: "center",
                   width: "fit-content",
-                  background: `${value === 0 ? "#fff" : "#e4e4e4"}`,
-                  border: `${
-                    value === 0 ? "solid 1px #000" : "solid 1px #e4e4e4"
+                  background: `${
+                    value === 0 ? "#fff" : "var(--gray-200, #ddded6)"
+                  }`,
+                  border: `solid 1px ${
+                    value === 0
+                      ? "var(--gray-300, #c6c7bb)"
+                      : "var(--gray-200, #ddded6)"
                   }`,
                   borderRadius: "12px 0 0 12px",
                 }}
                 label={
                   <Typography
                     textTransform={"none"}
-                    color={"#000"}
+                    color={"var(--gray-900, #171d1a)"}
                     fontSize={"14px"}
                     fontWeight={400}
                     fontFamily={"Inter"}
@@ -117,16 +121,20 @@ const UpdatingSubscription = ({
                   justifyContent: "center",
                   alignItems: "center",
                   width: "fit-content",
-                  background: `${value === 0 ? "#e4e4e4" : "#fff"}`,
-                  border: `${
-                    value === 0 ? "solid 1px #e4e4e4" : "solid 1px #000"
+                  background: `${
+                    value === 0 ? "var(--gray-200, #ddded6)" : "#fff"
+                  }`,
+                  border: `solid 1px ${
+                    value === 0
+                      ? "var(--gray-200, #ddded6)"
+                      : "var(--gray-300, #c6c7bb)"
                   }`,
                   borderRadius: "0px 12px 12px 0px",
                 }}
                 label={
                   <Typography
                     textTransform={"none"}
-                    color={"#000"}
+                    color={"var(--gray-900, #171d1a)"}
                     fontSize={"14px"}
                     fontWeight={400}
                     fontFamily={"Inter"}
@@ -162,8 +170,7 @@ const UpdatingSubscription = ({
             return (
               <Button
                 disabled={item.id === 1}
-                key={"update-subscription-button"}
-                // onClick={() => console.log(item)}
+                key={`update-subscription-button-${item.id}`}
               >
                 <Typography
                   fontFamily={"Inter"}
@@ -171,7 +178,7 @@ const UpdatingSubscription = ({
                   fontStyle={"normal"}
                   fontWeight={600}
                   lineHeight={"20px"}
-                  color="#004EEB"
+                  color="var(--action-600, #155eef)"
                 >
                   Upgrade plan
                 </Typography>
@@ -221,7 +228,10 @@ const UpdatingSubscription = ({
             }
 
             return (
-              <>
+              <Box
+                key={`subscription-amount-${item.id}`}
+                sx={{ display: "flex", alignItems: "baseline", gap: "4px" }}
+              >
                 <Typography
                   textAlign={"left"}
                   fontSize={"28px"}
@@ -246,7 +256,7 @@ const UpdatingSubscription = ({
                 >
                   {`${value === 0 ? "per month" : "per year"}`}
                 </Typography>
-              </>
+              </Box>
             );
           })}
         </Grid>

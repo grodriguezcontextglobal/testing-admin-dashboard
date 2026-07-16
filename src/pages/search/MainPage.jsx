@@ -5,6 +5,7 @@ import HeaderSearch from "./components/HeaderSearch";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
+import EmptyState from "../../components/UX/emptyState/EmptyState";
 import SearchConsumerRef from "./components/SearchConsumerRef";
 import SearchDeviceRef from "./components/SearchDeviceRef";
 import SearchEventsRef from "./components/SearchEventsRef";
@@ -71,8 +72,8 @@ const SearchMainPage = () => {
     >
       <HeaderSearch
         countingResults={sum}
-        filterOptions={filterOptions}
         setFilterOptions={setFilterOptions}
+        initialFilters={location.state?.filter ? [location.state.filter] : []}
       />
       <div
         style={{
@@ -125,6 +126,36 @@ const SearchMainPage = () => {
             />
           </section>
         )}
+        {/* Empty messaging: explicitly-selected filters with no hits */}
+        {!generalSearch.isLoading &&
+          [
+            { key: "Consumers", count: consumersCount, icon: "tabler:users" },
+            { key: "Staff", count: staffCount, icon: "tabler:id-badge-2" },
+            { key: "Devices", count: devicesCount, icon: "tabler:device-mobile" },
+            { key: "Events", count: eventsCount, icon: "tabler:calendar-event" },
+          ]
+            .filter((f) => filterOptions[f.key] === 1 && f.count === 0)
+            .map((f) => (
+              <section style={styleSection} key={`empty-${f.key}`}>
+                <EmptyState
+                  compact
+                  icon={f.icon}
+                  title={`No ${f.key.toLowerCase()} match “${searchParams}”`}
+                  description="Try a different keyword, or switch to another filter."
+                />
+              </section>
+            ))}
+        {!generalSearch.isLoading &&
+          filterOptions["View All"] === 1 &&
+          sum() === 0 && (
+            <section style={{ ...styleSection, borderBottom: "none" }}>
+              <EmptyState
+                icon="tabler:search-off"
+                title={`No results for “${searchParams}”`}
+                description="Nothing matched across consumers, staff, devices, or events. Check the spelling or try a broader keyword."
+              />
+            </section>
+          )}
         {filterOptions["View All"] === 1 && (
           <section style={{ ...styleSection, display: "none" }}>
             <SearchTransaction

@@ -1,7 +1,6 @@
 import { Grid } from "@mui/material";
 import PropTypes from "prop-types";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../../components/icons/WhiteCirclePlusIcon";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import { Subtitle } from "../../../styles/global/Subtitle";
 
@@ -48,8 +47,7 @@ const ConsumerHeader = ({ setCreateUserButton }) => {
         <BlueButtonComponent
           func={() => setCreateUserButton(true)}
           title={"Add new consumer"}
-          icon={<WhiteCirclePlusIcon />}
-        />
+          />
       </Grid>
     </Grid>
   );

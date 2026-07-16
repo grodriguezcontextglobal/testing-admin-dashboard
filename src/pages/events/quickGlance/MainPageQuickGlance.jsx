@@ -1,3 +1,4 @@
+import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -8,6 +9,7 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
+import Loading from "../../../components/animation/Loading";
 import BannerNotificationTemplate from "../../../components/notification/alerts/BannerNotificationTemplate";
 import { convertToBase64 } from "../../../components/utils/convertToBase64";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -19,10 +21,10 @@ import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize1
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import AlInventoryEventAssigned from "./components/AlInventoryEventAssigned";
+import EventStatusChip from "./components/EventStatusChip";
 import AllInventoryEventForCustomerOnly from "./components/AllInventoryEventForCustomerOnly";
 import FormatEventDetailInfo from "./components/FormatEventDetailInfo";
 import FormatToDisplayDetail from "./components/FormatToDisplayDetail";
-import GraphicInventoryEventActivity from "./components/GraphicInventoryEventActivity";
 import Report from "./components/lostFee/Report";
 import ModalsComponentsEventQuickGlance from "./components/modals/ModalsComponentsEventQuickGlance";
 import HighlightedPill from "./components/ux/HighlightedPill";
@@ -159,19 +161,29 @@ const MainPageQuickGlance = () => {
 
     const uploadButton = (
       <button
+        aria-label="Add event logo"
         style={{ border: 0, background: "none", width: "100%", aspectRatio: 1 }}
         type="button"
       >
-        {isLoading ? <DevitrakLoading /> : null}
-        <p
-          style={{
-            ...Subtitle,
-            marginTop: 8,
-            display: isLoading ? "none" : "inline-block",
-          }}
-        >
-          Upload
-        </p>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <span
+            style={{
+              display: "inline-flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2px",
+            }}
+          >
+            <Icon
+              icon="mdi:camera-plus-outline"
+              width={20}
+              color="var(--gray-500, #667085)"
+            />
+            <p style={{ ...Subtitle, fontSize: "12px", margin: 0 }}>Add logo</p>
+          </span>
+        )}
       </button>
     );
 
@@ -273,6 +285,7 @@ const MainPageQuickGlance = () => {
               gap: "16px",
               flex: 1,
               minWidth: 0,
+              flexWrap: "wrap",
             }}
           >
             <Upload
@@ -299,18 +312,28 @@ const MainPageQuickGlance = () => {
               )}
             </Upload>
             <div style={{ paddingTop: "4px", minWidth: 0 }}>
-              <p
+              <div
                 style={{
-                  ...TextFontSize30LineHeight38,
-                  fontWeight: 700,
-                  margin: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                  minWidth: 0,
                 }}
               >
-                {event?.eventInfoDetail?.eventName}
-              </p>
+                <p
+                  style={{
+                    ...TextFontSize30LineHeight38,
+                    fontWeight: 700,
+                    margin: 0,
+                    minWidth: 0,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {event?.eventInfoDetail?.eventName}
+                </p>
+                <EventStatusChip event={event} />
+              </div>
               <p
                 style={{
                   ...TextFontSize14LineHeight20,
@@ -332,16 +355,13 @@ const MainPageQuickGlance = () => {
               flexShrink: 0,
             }}
           >
+            {/* "Add new consumer" lives in the actions card and the Consumers
+                section — keeping the page header to a single primary action. */}
             {checkStaffRoleToDisplayCashReportInfo() && (
               <Link to="/create-event-page/event-detail">
                 <BlueButtonComponent title="Add new event" />
               </Link>
             )}
-            <BlueButtonComponent
-              func={() => setCreateUserButton(true)}
-              disabled={!event.active}
-              title="Add new consumer"
-            />
           </div>
         </Grid>
 
@@ -354,21 +374,14 @@ const MainPageQuickGlance = () => {
           <FormatEventDetailInfo />
         </Grid>
 
-        {/* Summary metric cards */}
+        {/* Device health (unified stat bar; replaces metric cards + gauge) */}
         <Grid item xs={12} style={{ marginBottom: "16px" }}>
           <FormatToDisplayDetail />
         </Grid>
 
-        {/* Activity chart + lost fee report */}
+        {/* Lost fee report */}
         <Grid item xs={12} style={{ marginBottom: "16px" }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4} lg={4}>
-              <GraphicInventoryEventActivity />
-              </Grid>
-            <Grid item xs={12} md={8}>
-              <Report />
-            </Grid>
-          </Grid>
+          <Report />
         </Grid>
 
         <Grid item xs={12}>
