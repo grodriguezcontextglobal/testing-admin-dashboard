@@ -21,8 +21,13 @@ const RoleColumn = ({
   register,
   employees = [],
   getLockReason,
+  dropDisabled = false,
 }) => {
-  const { isOver, setNodeRef } = useDroppable({ id: groupKey });
+  // Scoped-role columns (Phase A, v1 decision) never accept drops.
+  const { isOver, setNodeRef } = useDroppable({
+    id: groupKey,
+    disabled: dropDisabled,
+  });
   const defaultLabel = getRoleLabel(groupKey);
   const summary = ROLE_SUMMARIES[groupKey];
   const scope = getRoleScope(groupKey);

@@ -14,6 +14,14 @@ export const ROLE_TYPES = {
   MANAGER_INVENTORY: "manager_inventory",
   ASSOCIATE_INVENTORY: "associate_inventory",
   EVENT_ASSISTANT: "event_assistant",
+  // Scoped roles (Phase A groundwork) — backend "Location/Category Scoped
+  // Roles" plan. Strings only: see ROLE_LEVELS below for why no numeric
+  // level is assigned yet (R1 — unresolved level-6 collision with
+  // event_assistant). Every new-code path keys off these strings.
+  INVENTORY_LOCATION_MANAGER: "inventory_location_manager",
+  INVENTORY_LOCATION_ASSISTANT: "inventory_location_assistant",
+  CATEGORY_MANAGER: "category_manager",
+  CATEGORY_ASSISTANT: "category_assistant",
 };
 
 // ─── Role levels ─────────────────────────────────────────────────────────────
@@ -33,6 +41,15 @@ export const ROLE_LEVELS = {
   manager_inventory: 4,
   associate_inventory: 5,
   event_assistant: 6,
+  // TODO(R1): the 4 scoped roles (inventory_location_manager,
+  // inventory_location_assistant, category_manager, category_assistant)
+  // deliberately have NO entry here. Backend's plan assigns them levels 6-9,
+  // which collides with event_assistant's level 6 above. Until R1 is
+  // resolved with backend (renumber one side, or go string-only forever),
+  // do NOT add numeric levels for these roles anywhere in the frontend.
+  // Every helper that reads ROLE_LEVELS for one of these roles must keep
+  // falling back to its "unknown role" default (see isCoordinatorLevel,
+  // canReassign/getRowLockReason in staffByRoleUtils.js).
 };
 
 // ─── Legacy numeric map ───────────────────────────────────────────────────────
@@ -67,12 +84,22 @@ export const ROLE_UPGRADE_MAP = {
 // conceptual role, keyed by the legacy string. A company customizing role
 // labels edits one entry per group instead of needing to know both strings.
 // Derived from ROLE_UPGRADE_MAP so the two stay in sync automatically.
-export const ROLE_LABEL_GROUPS = Object.fromEntries(
-  Object.entries(ROLE_UPGRADE_MAP).map(([legacy, canonical]) => [
-    legacy,
-    legacy === canonical ? [legacy] : [legacy, canonical],
-  ])
-);
+// Scoped roles (Phase A) have no legacy/canonical duality — each is its own
+// singleton group, appended to the ROLE_UPGRADE_MAP-derived groups above.
+// New roles ARE renameable per company (product decision), same as the 6
+// existing concepts.
+export const ROLE_LABEL_GROUPS = {
+  ...Object.fromEntries(
+    Object.entries(ROLE_UPGRADE_MAP).map(([legacy, canonical]) => [
+      legacy,
+      legacy === canonical ? [legacy] : [legacy, canonical],
+    ])
+  ),
+  inventory_location_manager: ["inventory_location_manager"],
+  inventory_location_assistant: ["inventory_location_assistant"],
+  category_manager: ["category_manager"],
+  category_assistant: ["category_assistant"],
+};
 
 /**
  * Returns the ROLE_LABEL_GROUPS key (legacy string) that roleType belongs to.
@@ -86,8 +113,82 @@ export const getRoleLabelGroupKey = (roleType) => {
   return entry?.[0] ?? resolved;
 };
 
-// ─── Role groups (internal — not exported) ───────────────────────────────────
-const ALL_ROLES = Object.values(ROLE_TYPES);
+// ─── Role scope (Phase A groundwork) ─────────────────────────────────────────
+// Which "scope dimension" a role concept is restricted to, per the backend's
+// Location/Category Scoped Roles plan §3. `null` means the role has no scope
+// restriction (the 6 pre-existing role concepts). Keyed by ROLE_LABEL_GROUPS
+// concept key — resolve any member roleType string through
+// getRoleScopeDimension below.
+export const ROLE_SCOPE = {
+  root_admin: null,
+  admin: null,
+  sale_manager: null,
+  event_manager: null,
+  inventory_manager: null,
+  assistant: null,
+  inventory_location_manager: "location",
+  inventory_location_assistant: "location",
+  category_manager: "category",
+  category_assistant: "category",
+};
+
+/**
+ * Returns the scope dimension ("location" | "category" | null) for roleType.
+ * Accepts any member string (legacy, canonical, or scoped) via
+ * getRoleLabelGroupKey — mirrors useRoleLabel's resolution semantics.
+ */
+export const getRoleScopeDimension = (roleType) =>
+  ROLE_SCOPE[getRoleLabelGroupKey(roleType)] ?? null;
+
+// ─── Role groups ──────────────────────────────────────────────────────────────
+// R5: this MUST be an explicit, frozen array — NOT `Object.values(ROLE_TYPES)`.
+// ROLE_TYPES now also holds the 4 scoped roles (inventory_location_manager,
+// inventory_location_assistant, category_manager, category_assistant); if
+// ALL_ROLES were derived from it, every permission row below that uses
+// ALL_ROLES (e.g. staff:read) would silently grant access to those 4 roles
+// too. Exported (and pinned by a test in roles.test.js) so this can never
+// regress silently.
+export const ALL_ROLES = Object.freeze([
+  "root_admin",
+  "admin",
+  "sale_manager",
+  "event_manager",
+  "inventory_manager",
+  "assistant",
+  "root_administrator",
+  "sales_associate",
+  "manager_event",
+  "manager_inventory",
+  "associate_inventory",
+  "event_assistant",
+]);
+
+// Scoped roles (Phase A) — kept as separate named consts (NOT part of
+// ALL_ROLES) so each PERMISSIONS row below opts them in explicitly.
+const INVENTORY_LOCATION_MANAGER = ROLE_TYPES.INVENTORY_LOCATION_MANAGER;
+const INVENTORY_LOCATION_ASSISTANT = ROLE_TYPES.INVENTORY_LOCATION_ASSISTANT;
+const CATEGORY_MANAGER = ROLE_TYPES.CATEGORY_MANAGER;
+const CATEGORY_ASSISTANT = ROLE_TYPES.CATEGORY_ASSISTANT;
+
+// All 4 scoped roles — used for the shared baseline (nav:home/inventory/
+// profile, staff self-service). Every scoped role gets at least this.
+const SCOPED_ROLES_ALL = [
+  INVENTORY_LOCATION_MANAGER,
+  INVENTORY_LOCATION_ASSISTANT,
+  CATEGORY_MANAGER,
+  CATEGORY_ASSISTANT,
+];
+
+// All 4 scoped roles can read/update inventory (managers additionally get
+// create/delete below).
+const SCOPED_INVENTORY_RU = SCOPED_ROLES_ALL;
+
+// Only the two "manager" scoped roles can create/delete inventory.
+const SCOPED_INVENTORY_CD = [INVENTORY_LOCATION_MANAGER, CATEGORY_MANAGER];
+
+// Only inventory_location_manager manages locations — category_manager
+// explicitly gets NO location-management actions (backend plan §1/§6).
+const SCOPED_LOCATION_MANAGEMENT = [INVENTORY_LOCATION_MANAGER];
 
 // Full administrative access: root_admin + admin only
 const ADMIN_FULL = ["root_admin", "admin"];
@@ -124,23 +225,27 @@ export const PERMISSIONS = {
   "staff:assign_event": ADMIN_FULL,
   "staff:assign_location": ADMIN_FULL,
   "staff:change_role": ADMIN_FULL,
-  "staff:reset_password": ALL_ROLES,
-  "staff:update_contact": ALL_ROLES,
+  "staff:reset_password": [...ALL_ROLES, ...SCOPED_ROLES_ALL],
+  "staff:update_contact": [...ALL_ROLES, ...SCOPED_ROLES_ALL],
   "staff:grant_access": ADMIN_FULL,
 
-  // Inventory — sale_manager: R/U only (no Create/Delete)
-  "inventory:create": INVENTORY_CD,
-  "inventory:read": INVENTORY_RU,
-  "inventory:update": INVENTORY_RU,
-  "inventory:delete": INVENTORY_CD,
-  "inventory:assign_location": INVENTORY_CD,
-  "inventory:manage_location": INVENTORY_CD,
+  // Inventory — sale_manager: R/U only (no Create/Delete). Scoped roles
+  // (Phase A): inventory_location_manager + category_manager get full CRUD;
+  // inventory_location_assistant + category_assistant get R/U only.
+  "inventory:create": [...INVENTORY_CD, ...SCOPED_INVENTORY_CD],
+  "inventory:read": [...INVENTORY_RU, ...SCOPED_INVENTORY_RU],
+  "inventory:update": [...INVENTORY_RU, ...SCOPED_INVENTORY_RU],
+  "inventory:delete": [...INVENTORY_CD, ...SCOPED_INVENTORY_CD],
+  "inventory:assign_location": [...INVENTORY_CD, ...SCOPED_LOCATION_MANAGEMENT],
+  "inventory:manage_location": [...INVENTORY_CD, ...SCOPED_LOCATION_MANAGEMENT],
 
-  // Locations — inventory_manager + admins only (sale_manager has no location access)
-  "location:create": INVENTORY_CD,
-  "location:read": INVENTORY_CD,
-  "location:update": INVENTORY_CD,
-  "location:delete": INVENTORY_CD,
+  // Locations — inventory_manager + admins only (sale_manager has no location
+  // access). Scoped roles: only inventory_location_manager — category_manager
+  // deliberately excluded (backend plan §1/§6: no location-management actions).
+  "location:create": [...INVENTORY_CD, ...SCOPED_LOCATION_MANAGEMENT],
+  "location:read": [...INVENTORY_CD, ...SCOPED_LOCATION_MANAGEMENT],
+  "location:update": [...INVENTORY_CD, ...SCOPED_LOCATION_MANAGEMENT],
+  "location:delete": [...INVENTORY_CD, ...SCOPED_LOCATION_MANAGEMENT],
 
   // Events — sale_manager: R/U only; assistant: C/R/U (no Delete)
   "event:create": EVENT_CRU,
@@ -167,15 +272,17 @@ export const PERMISSIONS = {
   "post:update": POSTS_ACCESS,
   "post:delete": POSTS_ACCESS,
 
-  // Navigation
-  "nav:home": ALL_ROLES,
-  "nav:inventory": INVENTORY_RU,
+  // Navigation. Scoped roles get nav:home/nav:inventory/nav:profile only —
+  // without this baseline they'd see an empty app shell (review R6) despite
+  // having inventory access; they get NO other nav:* entry.
+  "nav:home": [...ALL_ROLES, ...SCOPED_ROLES_ALL],
+  "nav:inventory": [...INVENTORY_RU, ...SCOPED_ROLES_ALL],
   "nav:events": EVENT_RU,
   "nav:consumers": EVENT_CRU,
   "nav:staff": ADMIN_FULL,
   "nav:posts": POSTS_ACCESS,
   "nav:dynamic_section": EVENT_D,
-  "nav:profile": ALL_ROLES,
+  "nav:profile": [...ALL_ROLES, ...SCOPED_ROLES_ALL],
 
   // Profile settings
   "profile:company_settings": ADMIN_FULL,
@@ -249,6 +356,11 @@ export const ROLE_LABELS = {
   manager_inventory: "Inventory Manager",
   associate_inventory: "Inventory Associate",
   event_assistant: "Event Assistant",
+  // Scoped roles (Phase A groundwork)
+  inventory_location_manager: "Inventory Location Manager",
+  inventory_location_assistant: "Inventory Location Assistant",
+  category_manager: "Category Manager",
+  category_assistant: "Category Assistant",
 };
 
 // Accepts a roleType string (legacy or canonical) OR a legacy numeric role

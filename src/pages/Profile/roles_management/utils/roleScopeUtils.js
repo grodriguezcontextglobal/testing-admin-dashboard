@@ -157,4 +157,13 @@ export const ROLE_SUMMARIES = {
     "Creates and manages inventory and storage locations; no event or staff management.",
   assistant:
     "Day-of-event operations: consumer check-in/out and device assignment; most limited role.",
+  // Scoped roles (Phase A groundwork) — see FRONTEND_scoped_roles_phaseA_plan.md.
+  inventory_location_manager:
+    "Full inventory and location management, limited to their assigned locations.",
+  inventory_location_assistant:
+    "Views and updates inventory, limited to their assigned locations.",
+  category_manager:
+    "Full inventory management, limited to their assigned categories.",
+  category_assistant:
+    "Views and updates inventory, limited to their assigned categories.",
 };

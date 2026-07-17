@@ -1,6 +1,6 @@
 import { MenuItem, Select, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { Divider, message } from "antd";
+import { Divider, message, Tooltip } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -11,17 +11,41 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../../store/slices/adminSlice";
-import { isCoordinatorLevel, LEGACY_ROLE_MAP, ROLE_LEVELS, resolveRoleType } from "../../../../../config/roles";
+import {
+  isCoordinatorLevel,
+  LEGACY_ROLE_MAP,
+  ROLE_LEVELS,
+  resolveRoleType,
+} from "../../../../../config/roles";
+import { FEATURE_SCOPED_ROLES } from "../../../../../config/featureFlags";
 import { onAddStaffProfile } from "../../../../../store/slices/staffDetailSlide";
 import { extractStaffId } from "../../../../authentication/utils/loginUtils";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import ScopeAssignmentSelect from "./ScopeAssignmentSelect";
+import { validateScopeSelection } from "./utils/scopeUtils";
+
+// Scoped roles (Phase A groundwork) — string-valued, level-less (R1
+// unresolved). Only listed as pickable options when FEATURE_SCOPED_ROLES is
+// on; flag OFF keeps this file's behavior byte-for-byte identical to today.
+const SCOPED_ROLE_VALUES = [
+  "inventory_location_manager",
+  "inventory_location_assistant",
+  "category_manager",
+  "category_assistant",
+];
 const UpdateRoleInCompany = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
   const roleLabel = useRoleLabel();
   const [newRole, setNewRole] = useState("");
+  const [scopeSelection, setScopeSelection] = useState([]);
   const navigate = useNavigate();
+
+  // Scoped roles (Phase A) — save stays disabled until backend Phase B ships
+  // role_type validation (§5.3) and the scope endpoint (§5.4). See
+  // FRONTEND_scoped_roles_phaseA_plan.md §4.4.
+  const isScopedRoleSelected = SCOPED_ROLE_VALUES.includes(newRole);
   const closeModal = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
   };
@@ -95,6 +119,10 @@ const UpdateRoleInCompany = () => {
   const handleSubmitNewRole = (e) => {
     e.preventDefault();
     if (!newRole && newRole !== 0) return;
+    // TODO(Phase B §5.3/§5.4): backend rejects the new role_types today and
+    // the scope endpoint doesn't exist yet — block save here as defense in
+    // depth (the Save button below is also disabled for a scoped role).
+    if (isScopedRoleSelected) return;
     const roleType = LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant";
     const foundStaffIdx = profile.companyData.employees.findIndex(
       (el) => el.user === profile.user,
@@ -116,26 +144,50 @@ const UpdateRoleInCompany = () => {
     value,
   }));
 
-  const optionsBasedOnCurrentRolePermission = options.filter((option) => {
-    const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
-    if (userLevel === 0) return true;
-    return option.value > userLevel;
-  });
+  // Scoped roles (Phase A) — string-valued options, only listed when the
+  // feature flag is on. Flag OFF -> this array is empty and `options` below
+  // is unchanged from today.
+  const scopedRoleOptions = FEATURE_SCOPED_ROLES
+    ? SCOPED_ROLE_VALUES.map((value) => ({ label: roleLabel(value), value }))
+    : [];
+
+  const optionsBasedOnCurrentRolePermission = [
+    ...options.filter((option) => {
+      const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
+      if (userLevel === 0) return true;
+      return option.value > userLevel;
+    }),
+    ...scopedRoleOptions,
+  ];
+
+  const scopeValidation = validateScopeSelection(newRole, scopeSelection);
 
   const bodyModal = () => {
     const role = roleLabel(profile.role)
+    const saveButton = (
+      <BlueButtonComponent
+        form="update-role-form"
+        key="save"
+        buttonType="submit"
+        title="Save"
+        loadingState={isLoading}
+        // TODO(Phase B §5.3/§5.4): re-enable once backend accepts the new
+        // role_types and the scope-assignment endpoint exists.
+        isDisabled={isScopedRoleSelected}
+        styles={{ margin: "0 0 0 24px" }}
+      />
+    );
     return (
       <ReusableCardWithHeaderAndFooter
         title={`Current role in company: ${role}`}
         actions={[
-          <BlueButtonComponent
-            form="update-role-form"
-            key="save"
-            buttonType="submit"
-            title="Save"
-            loadingState={isLoading}
-            styles={{ margin: "0 0 0 24px" }}
-          />,
+          isScopedRoleSelected ? (
+            <Tooltip key="save" title="Pending backend availability">
+              <span>{saveButton}</span>
+            </Tooltip>
+          ) : (
+            saveButton
+          ),
         ]}
       >
         {isCoordinatorLevel(user.roleType) ? (
@@ -160,6 +212,20 @@ const UpdateRoleInCompany = () => {
                 </MenuItem>
               ))}
             </Select>
+            {isScopedRoleSelected && (
+              <div style={{ width: "100%", marginTop: "16px" }}>
+                <ScopeAssignmentSelect
+                  roleType={newRole}
+                  value={scopeSelection}
+                  onChange={setScopeSelection}
+                />
+                {!scopeValidation.valid && (
+                  <Typography style={{ color: "red", marginTop: "8px" }}>
+                    {scopeValidation.message}
+                  </Typography>
+                )}
+              </div>
+            )}
             {isError && (
               <Typography style={{ color: "red" }}>
                 {error?.response?.data?.msg ||

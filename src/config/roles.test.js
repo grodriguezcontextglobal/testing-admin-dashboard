@@ -6,10 +6,15 @@ import {
   LEGACY_ROLE_MAP,
   ROLE_UPGRADE_MAP,
   ROLE_LABEL_GROUPS,
+  ROLE_LABELS,
+  ROLE_SCOPE,
+  ALL_ROLES,
   hasPermission,
   resolveRoleType,
   getRoleLabel,
   getRoleLabelGroupKey,
+  getRoleScopeDimension,
+  isCoordinatorLevel,
 } from "./roles";
 
 // ─── ROLE_TYPES ──────────────────────────────────────────────────────────────
@@ -412,8 +417,21 @@ describe("ROLE_LABEL_GROUPS", () => {
   it("agrupa assistant con associate_inventory", () => {
     expect(ROLE_LABEL_GROUPS.assistant).toEqual(["assistant", "associate_inventory"]);
   });
-  it("tiene exactamente 6 conceptos de rol (uno por cada legacy role)", () => {
-    expect(Object.keys(ROLE_LABEL_GROUPS)).toHaveLength(6);
+  it("tiene exactamente 10 conceptos de rol (6 legacy + 4 scoped roles nuevos)", () => {
+    expect(Object.keys(ROLE_LABEL_GROUPS)).toHaveLength(10);
+  });
+
+  it("cada uno de los 4 nuevos roles scoped es su propio grupo singleton", () => {
+    expect(ROLE_LABEL_GROUPS.inventory_location_manager).toEqual([
+      "inventory_location_manager",
+    ]);
+    expect(ROLE_LABEL_GROUPS.inventory_location_assistant).toEqual([
+      "inventory_location_assistant",
+    ]);
+    expect(ROLE_LABEL_GROUPS.category_manager).toEqual(["category_manager"]);
+    expect(ROLE_LABEL_GROUPS.category_assistant).toEqual([
+      "category_assistant",
+    ]);
   });
 });
 
@@ -621,5 +639,287 @@ describe("F-01 — getRoleLabel: etiquetas para nuevos roleType strings", () => 
     expect(getRoleLabel("event_manager")).toBe("Event Manager");
     expect(getRoleLabel("inventory_manager")).toBe("Inventory Manager");
     expect(getRoleLabel("assistant")).toBe("Assistant");
+  });
+});
+
+// ─── Scoped roles (Phase A groundwork) — ALL_ROLES must be frozen ───────────
+// R5: Object.values(ROLE_TYPES) would silently widen every ALL_ROLES-derived
+// permission row to include the 4 new scoped roles. ALL_ROLES must be an
+// explicit, pinned array of exactly the 12 pre-existing roleType strings.
+
+const SCOPED_ROLE_TYPES = [
+  "inventory_location_manager",
+  "inventory_location_assistant",
+  "category_manager",
+  "category_assistant",
+];
+
+describe("Scoped roles — ALL_ROLES is frozen and excludes the 4 new roles", () => {
+  it("ALL_ROLES has exactly the 12 pre-existing roleType strings", () => {
+    expect(ALL_ROLES).toEqual([
+      "root_admin",
+      "admin",
+      "sale_manager",
+      "event_manager",
+      "inventory_manager",
+      "assistant",
+      "root_administrator",
+      "sales_associate",
+      "manager_event",
+      "manager_inventory",
+      "associate_inventory",
+      "event_assistant",
+    ]);
+  });
+
+  it("ALL_ROLES does NOT include any of the 4 new scoped roles", () => {
+    SCOPED_ROLE_TYPES.forEach((role) => {
+      expect(ALL_ROLES).not.toContain(role);
+    });
+  });
+
+  it("ROLE_TYPES now has 16 entries (12 pre-existing + 4 scoped)", () => {
+    expect(Object.values(ROLE_TYPES)).toHaveLength(16);
+  });
+
+  it("ALL_ROLES-derived rows (staff:read, staff:reset_password, staff:update_contact) do NOT silently include scoped roles' peers like staff:create/staff:delete", () => {
+    // staff:create/staff:delete/staff:assign_role are ADMIN_FULL-only — never
+    // driven by ALL_ROLES — so scoped roles must never appear there either.
+    SCOPED_ROLE_TYPES.forEach((role) => {
+      expect(PERMISSIONS["staff:create"]).not.toContain(role);
+      expect(PERMISSIONS["staff:delete"]).not.toContain(role);
+      expect(PERMISSIONS["staff:assign_role"]).not.toContain(role);
+      expect(PERMISSIONS["staff:read"]).not.toContain(role);
+    });
+  });
+});
+
+describe("Scoped roles — ROLE_TYPES: 4 new roleType strings", () => {
+  it("incluye INVENTORY_LOCATION_MANAGER", () => {
+    expect(ROLE_TYPES.INVENTORY_LOCATION_MANAGER).toBe(
+      "inventory_location_manager"
+    );
+  });
+  it("incluye INVENTORY_LOCATION_ASSISTANT", () => {
+    expect(ROLE_TYPES.INVENTORY_LOCATION_ASSISTANT).toBe(
+      "inventory_location_assistant"
+    );
+  });
+  it("incluye CATEGORY_MANAGER", () => {
+    expect(ROLE_TYPES.CATEGORY_MANAGER).toBe("category_manager");
+  });
+  it("incluye CATEGORY_ASSISTANT", () => {
+    expect(ROLE_TYPES.CATEGORY_ASSISTANT).toBe("category_assistant");
+  });
+});
+
+describe("Scoped roles — ROLE_LEVELS: strings only, NO numeric levels (R1 unresolved)", () => {
+  it("ninguno de los 4 nuevos roles tiene entrada en ROLE_LEVELS", () => {
+    SCOPED_ROLE_TYPES.forEach((role) => {
+      expect(ROLE_LEVELS[role]).toBeUndefined();
+    });
+  });
+
+  it("isCoordinatorLevel es false para los 4 nuevos roles (sin nivel -> fallback 99)", () => {
+    SCOPED_ROLE_TYPES.forEach((role) => {
+      expect(isCoordinatorLevel(role)).toBe(false);
+    });
+  });
+});
+
+describe("Scoped roles — resolveRoleType reconoce los 4 nuevos strings (R2)", () => {
+  it("retorna el roleType tal cual, sin downgrade a assistant", () => {
+    SCOPED_ROLE_TYPES.forEach((role) => {
+      expect(resolveRoleType({ roleType: role })).toBe(role);
+    });
+  });
+});
+
+describe("Scoped roles — ROLE_LABELS", () => {
+  it("tiene una etiqueta legible para cada uno de los 4 nuevos roles", () => {
+    expect(ROLE_LABELS.inventory_location_manager).toBe(
+      "Inventory Location Manager"
+    );
+    expect(ROLE_LABELS.inventory_location_assistant).toBe(
+      "Inventory Location Assistant"
+    );
+    expect(ROLE_LABELS.category_manager).toBe("Category Manager");
+    expect(ROLE_LABELS.category_assistant).toBe("Category Assistant");
+  });
+});
+
+describe("Scoped roles — ROLE_SCOPE / getRoleScopeDimension", () => {
+  it("los 6 conceptos de rol existentes tienen dimensión null (sin scope)", () => {
+    [
+      "root_admin",
+      "admin",
+      "sale_manager",
+      "event_manager",
+      "inventory_manager",
+      "assistant",
+    ].forEach((role) => {
+      expect(getRoleScopeDimension(role)).toBeNull();
+    });
+  });
+
+  it("inventory_location_manager/assistant tienen dimensión 'location'", () => {
+    expect(getRoleScopeDimension("inventory_location_manager")).toBe(
+      "location"
+    );
+    expect(getRoleScopeDimension("inventory_location_assistant")).toBe(
+      "location"
+    );
+  });
+
+  it("category_manager/assistant tienen dimensión 'category'", () => {
+    expect(getRoleScopeDimension("category_manager")).toBe("category");
+    expect(getRoleScopeDimension("category_assistant")).toBe("category");
+  });
+
+  it("acepta cualquier roleType miembro (canónico o legacy) vía getRoleLabelGroupKey", () => {
+    expect(getRoleScopeDimension("root_administrator")).toBeNull();
+    expect(getRoleScopeDimension("sales_associate")).toBeNull();
+  });
+
+  it("ROLE_SCOPE está definido para los 10 conceptos de rol", () => {
+    expect(Object.keys(ROLE_SCOPE)).toHaveLength(10);
+  });
+});
+
+// ─── Scoped roles — PERMISSIONS rows (inventory-only baseline, R5/R6) ───────
+// Per FRONTEND_scoped_roles_phaseA_plan.md §2.6. Assert BOTH inclusion and
+// exclusion so the 4 new roles never silently gain access outside inventory.
+
+const SCOPED_BASELINE_ACTIONS = [
+  "nav:home",
+  "nav:inventory",
+  "nav:profile",
+  "staff:update_contact",
+  "staff:reset_password",
+];
+
+const OUT_OF_SCOPE_ACTIONS = [
+  "nav:events",
+  "nav:consumers",
+  "nav:staff",
+  "nav:posts",
+  "nav:dynamic_section",
+  "nav:members",
+  "event:create",
+  "event:read",
+  "event:update",
+  "event:delete",
+  "consumer:create",
+  "consumer:read",
+  "member:create",
+  "member:read",
+  "post:create",
+  "post:read",
+  "staff:create",
+  "staff:update",
+  "staff:delete",
+  "staff:assign_role",
+  "staff:assign_devices",
+  "staff:assign_event",
+  "staff:assign_location",
+  "staff:change_role",
+  "staff:grant_access",
+  "profile:company_settings",
+  "profile:billing",
+  "profile:subscription",
+  "profile:staff_settings",
+  "transaction:create",
+  "transaction:read",
+];
+
+describe("Scoped roles — PERMISSIONS: baseline (nav:home/inventory/profile + staff self-service)", () => {
+  SCOPED_ROLE_TYPES.forEach((role) => {
+    SCOPED_BASELINE_ACTIONS.forEach((action) => {
+      it(`"${role}" puede "${action}"`, () => {
+        expect(hasPermission(action, role)).toBe(true);
+      });
+    });
+  });
+});
+
+describe("Scoped roles — PERMISSIONS: exclusion — ninguno de los 4 roles aparece fuera de inventory/baseline", () => {
+  SCOPED_ROLE_TYPES.forEach((role) => {
+    OUT_OF_SCOPE_ACTIONS.forEach((action) => {
+      it(`"${role}" NO puede "${action}"`, () => {
+        expect(hasPermission(action, role)).toBe(false);
+      });
+    });
+  });
+});
+
+describe("Scoped roles — PERMISSIONS: inventory_location_manager (full inventory + location CRUD)", () => {
+  const role = "inventory_location_manager";
+  const allowed = [
+    "inventory:create",
+    "inventory:read",
+    "inventory:update",
+    "inventory:delete",
+    "inventory:assign_location",
+    "inventory:manage_location",
+    "location:create",
+    "location:read",
+    "location:update",
+    "location:delete",
+  ];
+  allowed.forEach((action) => {
+    it(`puede "${action}"`, () => {
+      expect(hasPermission(action, role)).toBe(true);
+    });
+  });
+});
+
+describe("Scoped roles — PERMISSIONS: inventory_location_assistant (inventory R/U only, no location mgmt)", () => {
+  const role = "inventory_location_assistant";
+  it("puede inventory:read / inventory:update", () => {
+    expect(hasPermission("inventory:read", role)).toBe(true);
+    expect(hasPermission("inventory:update", role)).toBe(true);
+  });
+  it("NO puede inventory:create / inventory:delete", () => {
+    expect(hasPermission("inventory:create", role)).toBe(false);
+    expect(hasPermission("inventory:delete", role)).toBe(false);
+  });
+  it("NO tiene ninguna acción de location:* ni inventory:*_location", () => {
+    ["location:create", "location:read", "location:update", "location:delete",
+     "inventory:assign_location", "inventory:manage_location"].forEach((action) => {
+      expect(hasPermission(action, role)).toBe(false);
+    });
+  });
+});
+
+describe("Scoped roles — PERMISSIONS: category_manager (full inventory CRUD, NO location mgmt)", () => {
+  const role = "category_manager";
+  const allowed = [
+    "inventory:create",
+    "inventory:read",
+    "inventory:update",
+    "inventory:delete",
+  ];
+  allowed.forEach((action) => {
+    it(`puede "${action}"`, () => {
+      expect(hasPermission(action, role)).toBe(true);
+    });
+  });
+  it("NO tiene ninguna acción de location:* ni inventory:*_location", () => {
+    ["location:create", "location:read", "location:update", "location:delete",
+     "inventory:assign_location", "inventory:manage_location"].forEach((action) => {
+      expect(hasPermission(action, role)).toBe(false);
+    });
+  });
+});
+
+describe("Scoped roles — PERMISSIONS: category_assistant (inventory R/U only)", () => {
+  const role = "category_assistant";
+  it("puede inventory:read / inventory:update", () => {
+    expect(hasPermission("inventory:read", role)).toBe(true);
+    expect(hasPermission("inventory:update", role)).toBe(true);
+  });
+  it("NO puede inventory:create / inventory:delete", () => {
+    expect(hasPermission("inventory:create", role)).toBe(false);
+    expect(hasPermission("inventory:delete", role)).toBe(false);
   });
 });

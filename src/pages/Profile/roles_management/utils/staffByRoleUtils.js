@@ -2,8 +2,15 @@ import {
   ROLE_LABEL_GROUPS,
   ROLE_LEVELS,
   getRoleLabelGroupKey,
+  getRoleScopeDimension,
   resolveRoleType,
 } from "../../../../config/roles";
+
+// Scoped roles (Phase A) are not draggable/droppable in v1: staff holding one
+// render locked, and scoped-role columns never accept drops. See
+// FRONTEND_scoped_roles_phaseA_plan.md §0/§3.
+const SCOPED_ROLE_LOCK_REASON = "Scoped roles are managed from the staff profile.";
+const isScopedRoleGroup = (groupKey) => getRoleScopeDimension(groupKey) !== null;
 
 /**
  * Pure helpers for the Roles-tab staff board. Grouping + guard-rail logic lives
@@ -72,6 +79,21 @@ export const canReassign = ({ actorUser, targetEmployee, toGroupKey }) => {
     };
   }
 
+  // Scoped-role guard (Phase A, v1 decision) — neither direction is allowed:
+  // a staff member already holding a scoped role cannot be dragged out of it,
+  // and no one can be dropped onto a scoped-role column. Checked before the
+  // "unknown role" guard so a recognized scoped role gets this specific
+  // message instead of "not recognized".
+  const currentGroupKeyForScopeCheck = getRoleLabelGroupKey(
+    targetEmployee?.roleType ?? targetEmployee?.role
+  );
+  if (
+    isScopedRoleGroup(currentGroupKeyForScopeCheck) ||
+    isScopedRoleGroup(toGroupKey)
+  ) {
+    return { allowed: false, reason: SCOPED_ROLE_LOCK_REASON };
+  }
+
   // Unknown target role.
   if (!GROUP_KEYS.has(toGroupKey) || ROLE_LEVELS[toGroupKey] === undefined) {
     return { allowed: false, reason: "That role is not recognized." };
@@ -123,6 +145,15 @@ export const getRowLockReason = ({ actorUser, targetEmployee }) => {
   }
   if (targetEmployee?.status === "Pending" || !targetEmployee?.userId) {
     return "This member's invitation is still pending.";
+  }
+
+  // Scoped-role guard (Phase A, v1 decision) — locked regardless of actor
+  // level, including root_admin.
+  const currentGroupKeyForScopeCheck = getRoleLabelGroupKey(
+    targetEmployee?.roleType ?? targetEmployee?.role
+  );
+  if (isScopedRoleGroup(currentGroupKeyForScopeCheck)) {
+    return SCOPED_ROLE_LOCK_REASON;
   }
 
   const actorLevel = ROLE_LEVELS[resolveRoleType(actorUser)] ?? 99;

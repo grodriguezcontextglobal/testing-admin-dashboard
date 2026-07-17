@@ -6,10 +6,12 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import SectionHeader from "../../../components/documents/new_form_components/SectionHeader";
+import { FEATURE_SCOPED_ROLES } from "../../../config/featureFlags";
 import {
   ROLE_LABEL_GROUPS,
   getRoleLabel,
   getRoleLabelGroupKey,
+  getRoleScopeDimension,
 } from "../../../config/roles";
 import { useRoleLabel } from "../../../hooks/useRoleLabel";
 import { onLogin } from "../../../store/slices/adminSlice";
@@ -93,6 +95,16 @@ const RolesManagementMainPage = () => {
   const getLockReason = (employee) =>
     getRowLockReason({ actorUser: user, targetEmployee: employee });
 
+  // Scoped roles (Phase A groundwork) — render their column only when the
+  // feature flag is on, OR at least one employee already holds that role
+  // (so backend-created scoped staff are never invisible — review R2).
+  // Non-scoped concepts (the 6 pre-existing) always show.
+  const visibleGroupKeys = ROLE_CONCEPT_KEYS.filter((groupKey) => {
+    const scopeDimension = getRoleScopeDimension(groupKey);
+    if (!scopeDimension) return true;
+    return FEATURE_SCOPED_ROLES || (grouped[groupKey]?.length ?? 0) > 0;
+  });
+
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (!over) return;
@@ -144,7 +156,7 @@ const RolesManagementMainPage = () => {
             padding: "16px 0",
           }}
         >
-          {ROLE_CONCEPT_KEYS.map((groupKey) => (
+          {visibleGroupKeys.map((groupKey) => (
             <RoleColumn
               key={groupKey}
               groupKey={groupKey}
@@ -152,6 +164,7 @@ const RolesManagementMainPage = () => {
               register={register}
               employees={grouped[groupKey] ?? []}
               getLockReason={getLockReason}
+              dropDisabled={Boolean(getRoleScopeDimension(groupKey))}
             />
           ))}
         </div>

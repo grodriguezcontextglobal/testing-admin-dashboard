@@ -79,6 +79,18 @@ const actorEventManager = {
   companyData: { owner: { email: "owner@co.com" } },
 };
 
+// A staff member holding one of the 4 new scoped roles (Phase A groundwork).
+const scopedLocationManager = {
+  user: "loc-mgr@co.com",
+  email: "loc-mgr@co.com",
+  role: null,
+  roleType: "inventory_location_manager",
+  status: "confirmed",
+  userId: "u-locmgr",
+  firstName: "Lena",
+  lastName: "Locations",
+};
+
 describe("groupEmployeesByRoleConcept", () => {
   it("groups employees under their legacy role-concept key", () => {
     const grouped = groupEmployeesByRoleConcept([owner, admin, assistant]);
@@ -98,6 +110,12 @@ describe("groupEmployeesByRoleConcept", () => {
       { user: "x@co.com", roleType: "not_a_role" },
     ]);
     expect(grouped.unknown).toHaveLength(1);
+  });
+
+  it("buckets a scoped role (Phase A) under its own group key, NOT 'unknown'", () => {
+    const grouped = groupEmployeesByRoleConcept([scopedLocationManager]);
+    expect(grouped.inventory_location_manager).toHaveLength(1);
+    expect(grouped.unknown).toBeUndefined();
   });
 
   it("handles empty / non-array input", () => {
@@ -208,6 +226,28 @@ describe("canReassign", () => {
     });
     expect(result.allowed).toBe(false);
   });
+
+  // ── Scoped roles (Phase A) — v1 decision: not draggable/droppable ────────
+
+  it("even root_admin cannot reassign a staff member who holds a scoped role", () => {
+    const result = canReassign({
+      actorUser: actorRoot,
+      targetEmployee: scopedLocationManager,
+      toGroupKey: "assistant",
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toMatch(/scoped role/i);
+  });
+
+  it("even root_admin cannot drop a normal employee onto a scoped-role column", () => {
+    const result = canReassign({
+      actorUser: actorRoot,
+      targetEmployee: assistant,
+      toGroupKey: "category_manager",
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toMatch(/scoped role/i);
+  });
 });
 
 describe("getRowLockReason", () => {
@@ -255,5 +295,14 @@ describe("getRowLockReason", () => {
         targetEmployee: assistant,
       })
     ).toBeNull();
+  });
+
+  it("locks a staff member holding a scoped role, even for root_admin", () => {
+    expect(
+      getRowLockReason({
+        actorUser: actorRoot,
+        targetEmployee: scopedLocationManager,
+      })
+    ).toMatch(/scoped role/i);
   });
 });
