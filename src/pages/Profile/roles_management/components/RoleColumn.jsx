@@ -95,7 +95,7 @@ const RoleColumn = ({
       }}
     >
       <Input
-        label="Role label"
+        // label="Role label"
         id={`role-label-${groupKey}`}
         placeholder={defaultLabel}
         {...register(groupKey)}
