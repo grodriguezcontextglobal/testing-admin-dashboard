@@ -250,4 +250,51 @@ describe("buildAttendanceEmail", () => {
     });
     expect(email.message).toMatch(/August/);
   });
+
+  it("renders the confirmation link as a button (anchor), not as the primary raw string", () => {
+    const recipient = getConfirmationRecipient(adultMember);
+    const link = "https://app.devitrak.net/attendance-confirmation?a=1&b=2";
+    const email = buildAttendanceEmail({
+      member: adultMember,
+      event,
+      recipient,
+      confirmationLink: link,
+    });
+    // button = anchor with the link in href (& escaped for valid HTML)
+    expect(email.message).toContain(
+      'href="https://app.devitrak.net/attendance-confirmation?a=1&amp;b=2"'
+    );
+    expect(email.message).toContain("Confirm attendance");
+  });
+
+  it("includes the URL as a visible copy/paste fallback in case the button doesn't navigate", () => {
+    const recipient = getConfirmationRecipient(adultMember);
+    const link = "https://app.devitrak.net/attendance-confirmation?a=1&b=2";
+    const email = buildAttendanceEmail({
+      member: adultMember,
+      event,
+      recipient,
+      confirmationLink: link,
+    });
+    expect(email.message).toMatch(/copy and paste this link/i);
+    // fallback shows the link as visible text too (HTML-escaped)
+    const fallbackOccurrences = email.message.split(
+      "https://app.devitrak.net/attendance-confirmation?a=1&amp;b=2"
+    ).length - 1;
+    expect(fallbackOccurrences).toBeGreaterThanOrEqual(2); // href + visible fallback
+  });
+
+  it("escapes HTML in member/event names so generated markup stays safe", () => {
+    const trickyMember = { ...adultMember, first_name: "Ada <script>", last_name: "L & co" };
+    const recipient = getConfirmationRecipient(trickyMember);
+    const email = buildAttendanceEmail({
+      member: trickyMember,
+      event,
+      recipient,
+      confirmationLink: "https://app.devitrak.net/attendance-confirmation?x=9",
+    });
+    expect(email.message).not.toContain("<script>");
+    expect(email.message).toContain("Ada &lt;script&gt;");
+    expect(email.message).toContain("L &amp; co");
+  });
 });

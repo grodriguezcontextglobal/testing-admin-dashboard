@@ -212,6 +212,17 @@ const formatEventDate = (value) => {
  * @param {string} params.confirmationLink
  * @returns {{to: string, subject: string, message: string}}
  */
+// Minimal HTML-escape for strings interpolated into the email markup.
+// Emails can't run JS, so the "button" is an anchor styled inline (the only
+// mechanism email clients support); the raw URL appears once more below it
+// as a copy/paste fallback for clients that block or strip links.
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
 export const buildAttendanceEmail = ({ member, event, recipient, confirmationLink }) => {
   const memberName = `${member?.first_name ?? ""} ${member?.last_name ?? ""}`.trim() || "this member";
   const eventName = eventNameOf(event) || "the event";
@@ -225,15 +236,30 @@ export const buildAttendanceEmail = ({ member, event, recipient, confirmationLin
   const subject = `Please confirm attendance for ${eventName}`;
 
   const opening = recipient?.isGuardian
-    ? `You are receiving this message on behalf of ${memberName}.`
-    : `Hi ${memberName},`;
+    ? `You are receiving this message on behalf of ${escapeHtml(memberName)}.`
+    : `Hi ${escapeHtml(memberName)},`;
+
+  const safeLink = escapeHtml(confirmationLink);
+  const safeEventName = escapeHtml(eventName);
+  const safeDateRange = escapeHtml(dateRange);
 
   const message = [
-    opening,
-    `You have been invited to attend ${eventName}${dateRange ? ` (${dateRange})` : ""}.`,
-    "Please confirm attendance using the link below:",
-    confirmationLink,
-  ].join("\n\n");
+    `<div style="font-family: Inter, Arial, sans-serif; color: #171d1a; line-height: 1.6; font-size: 14px;">`,
+    `<p style="margin: 0 0 16px;">${opening}</p>`,
+    `<p style="margin: 0 0 16px;">You have been invited to attend <strong>${safeEventName}</strong>${
+      safeDateRange ? ` (${safeDateRange})` : ""
+    }.</p>`,
+    `<p style="margin: 0 0 24px;">Please confirm attendance by clicking the button below:</p>`,
+    `<p style="margin: 0 0 24px;">` +
+      `<a href="${safeLink}" target="_blank" rel="noopener" ` +
+      `style="background-color: #155eef; color: #ffffff; text-decoration: none; ` +
+      `padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block;">` +
+      `Confirm attendance</a></p>`,
+    `<p style="margin: 0 0 4px; font-size: 12px; color: #5d615a;">` +
+      `If the button doesn't work, copy and paste this link into your browser:</p>`,
+    `<p style="margin: 0; font-size: 12px; color: #5d615a; word-break: break-all;">${safeLink}</p>`,
+    `</div>`,
+  ].join("\n");
 
   return {
     to: recipient?.email,
