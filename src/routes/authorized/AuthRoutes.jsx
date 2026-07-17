@@ -21,6 +21,7 @@ import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPoli
 import SignedContractViewHigherPermissionLevel from "../../pages/staff/detail/components/equipment_components/SignedContractViewHigherLevelPermissions";
 import MfaSetup from "../../pages/Profile/mfa/MfaSetup";
 import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
+import AttendanceConfirmationLanding from "../../pages/authentication/AttendanceConfirmationLanding";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -510,6 +511,7 @@ const AuthRoutes = () => {
               <Route path="posts/post/:id" element={<DisplayArticle />} />
               <Route path="login" element={<RedirectionPage />} />
               <Route path="/my-devices" element={<MyDevicesPortal />} />
+              <Route path="/attendance-confirmation" element={<AttendanceConfirmationLanding />} />
               <Route element={<PermissionGuard action="nav:members" />}>
                 <Route path="members" element={<ConditionalMainPage />} />
                 <Route path="/member/:id" element={<MemberDetailsMainPage />}>

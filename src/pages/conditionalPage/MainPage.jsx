@@ -14,6 +14,7 @@ import { Title } from "../../styles/global/Title";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
 import DeleteMember from "./components/modals/DeleteMember";
+import RegisterMembersToEvent from "./components/modals/RegisterMembersToEvent";
 import MainTable from "./tables/MainTable";
 import OverdueDevicesTable from "./tables/OverdueDevicesTable";
 import MembersStatsRow from "./components/MembersStatsRow";
@@ -29,6 +30,7 @@ const MainPage = () => {
   const titleParams = String(slug || industryLabel).replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
+  const [registeringToEvent, setRegisteringToEvent] = useState(false);
   const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
   const { register, setValue, watch } = useForm();
   const searchTerm = watch("searchMember") || "";
@@ -37,6 +39,7 @@ const MainPage = () => {
   const roleType = resolveRoleType(user);
   const canAddMembers = hasPermission("member:create", roleType);
   const canDeleteMembers = hasPermission("member:delete", roleType);
+  const canNotifyMembers = hasPermission("member:notify", roleType);
   const canManageMembers = canAddMembers || canDeleteMembers;
 
   // command-palette quick action: open the add-member modal on arrival (once)
@@ -130,6 +133,14 @@ const MainPage = () => {
             }
           />
 
+          {canNotifyMembers && (
+            <BlueButtonComponent
+              title={`Register ${titleParams || "members"} to event`}
+              iconLeading={<Icon icon="tabler:calendar-plus" width={18} />}
+              func={() => setRegisteringToEvent(true)}
+            />
+          )}
+
           {canManageMembers && (
             <Dropdown menu={{ items: manageMembersItems }} trigger={["click"]}>
               {/* span wrapper: antd Dropdown injects its toggle onClick + ref
@@ -212,6 +223,13 @@ const MainPage = () => {
         <DeleteMember
           openModal={removingMember}
           setOpenModal={setRemovingMember}
+        />
+      )}
+      {registeringToEvent && (
+        <RegisterMembersToEvent
+          openModal={registeringToEvent}
+          setOpenModal={setRegisteringToEvent}
+          audienceLabel={(titleParams || "members").toLowerCase()}
         />
       )}
     </>
