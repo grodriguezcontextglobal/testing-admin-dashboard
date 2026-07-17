@@ -10,7 +10,6 @@ import SectionHeader from "../../../../components/documents/new_form_components/
 import { onLogout } from "../../../../store/slices/adminSlice";
 import "./Body.css";
 import BodyForm from "./BodyForm.refactored";
-import RoleLabelsForm from "./RoleLabelsForm";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -356,7 +355,6 @@ const Body = () => {
             loading={updateCompanyInfoMutation.isLoading}
           />
         </form>
-        <RoleLabelsForm />
       </div>
     );
   }

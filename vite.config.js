@@ -24,6 +24,15 @@ export default defineConfig(({ mode }) => {
     : null;
 
   return {
+    server: {
+      watch: {
+        // Docker Desktop on Windows does not reliably propagate host file events
+        // into the container; without polling Vite serves stale modules after
+        // git operations (see 2026-07-16 incident: stale roles.js export crash).
+        usePolling: true,
+        interval: 300,
+      },
+    },
     plugins: [
       million.vite({ auto: true }),
       react(),

@@ -57,6 +57,7 @@ const MainProfileSettings = () => {
     { label: "MFA Setup",       route: "mfa-setup",                permission: "nav:profile"            },
     { label: "Notifications",   route: "notifications",            permission: "profile:staff_settings" },
     { label: "Company info",    route: "company-info",             permission: "profile:company_settings"},
+    { label: "Roles",           route: "roles",                    permission: "staff:assign_role"      },
     { label: "Stripe account",  route: "stripe_connected_account", permission: "profile:billing"        },
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
