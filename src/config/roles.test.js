@@ -440,6 +440,23 @@ describe("getRoleLabelGroupKey(roleType)", () => {
   });
 });
 
+// ─── nav:staff — acceso a la página de Staff solo para administración ────────
+
+describe("PERMISSIONS — nav:staff (página Staff: footer, navbar, cmdk, ruta)", () => {
+  it("root_admin y admin tienen acceso", () => {
+    expect(hasPermission("nav:staff", "root_admin")).toBe(true);
+    expect(hasPermission("nav:staff", "admin")).toBe(true);
+  });
+
+  it("sale_manager, event_manager, inventory_manager y assistant NO tienen acceso", () => {
+    ["sale_manager", "event_manager", "inventory_manager", "assistant"].forEach(
+      (role) => {
+        expect(hasPermission("nav:staff", role)).toBe(false);
+      }
+    );
+  });
+});
+
 // ─── F-01: PERMISSIONS — nuevas claves (arrays vacíos) ───────────────────────
 
 const F01_MEMBER_ACTIONS = ["member:create", "member:read", "member:update", "member:delete"];

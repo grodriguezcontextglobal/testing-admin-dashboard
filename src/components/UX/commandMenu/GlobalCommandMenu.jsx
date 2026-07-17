@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CommandMenu from "./CommandMenu";
 import { useSelector } from "react-redux";
 import { getIndustryProfile } from "../../../config/industryProfiles";
+import { hasPermission, resolveRoleType } from "../../../config/roles";
 
 /**
  * App-wide ⌘K / Ctrl+K command menu: quick navigation + common actions.
@@ -65,7 +66,10 @@ const GlobalCommandMenu = () => {
                 onSelect: () => navigate("/members"),
               }]
             : []),
-          { id: "staff", label: "Staff", icon: "tabler:id-badge-2", onSelect: () => navigate("/staff") },
+          // Staff is admin-level (nav:staff) — same gate as navbar/footer/route
+          ...(hasPermission("nav:staff", resolveRoleType(user))
+            ? [{ id: "staff", label: "Staff", icon: "tabler:id-badge-2", onSelect: () => navigate("/staff") }]
+            : []),
           { id: "posts", label: "Posts", icon: "tabler:news", onSelect: () => navigate("/posts") },
         ],
       },
@@ -96,13 +100,15 @@ const GlobalCommandMenu = () => {
                   navigate("/members", { state: { quickAction: "create" } }),
               }]
             : []),
-          {
-            id: "new-staff",
-            label: "Add staff member",
-            icon: "tabler:user-plus",
-            onSelect: () =>
-              navigate("/staff", { state: { quickAction: "create" } }),
-          },
+          ...(hasPermission("nav:staff", resolveRoleType(user))
+            ? [{
+                id: "new-staff",
+                label: "Add staff member",
+                icon: "tabler:user-plus",
+                onSelect: () =>
+                  navigate("/staff", { state: { quickAction: "create" } }),
+              }]
+            : []),
           {
             id: "new-inventory",
             label: "Add to inventory",
@@ -131,7 +137,7 @@ const GlobalCommandMenu = () => {
         ],
       },
     ],
-    [navigate, hiddenNavTabs, membersAudience, membersSingular, industryProfile.icon]
+    [navigate, hiddenNavTabs, membersAudience, membersSingular, industryProfile.icon, user]
   );
 
   return (

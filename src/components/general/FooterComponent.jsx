@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { forwardRef } from "react";
 import { useSelector } from "react-redux";
 import { getIndustryProfile } from "../../config/industryProfiles";
+import { hasPermission, resolveRoleType } from "../../config/roles";
 import { Link } from "react-router-dom";
 import colorMark from "../../assets/maskable_icon_white_background.png";
 import DevitrakWordmark from "../icons/DevitrakWordmark";
@@ -84,13 +85,18 @@ const FooterComponent = forwardRef(function FooterComponent({ full }, ref) {
     user?.companyData?.industry
   ).hiddenNavTabs;
   // hide product links the company's industry doesn't use (e.g. Consumers
-  // for schools — students are the consumers there)
+  // for schools — students are the consumers there), and links the user's
+  // role can't access (Staff is admin-level — same nav:staff gate as the
+  // navbar; the /staff route also redirects unauthorized deep links home)
+  const canSeeStaff = hasPermission("nav:staff", resolveRoleType(user));
   const columns = COLUMNS.map((col) =>
     col.heading === "Product"
       ? {
           ...col,
           links: col.links.filter(
-            (l) => !hiddenNavTabs.includes(l.label.toLowerCase())
+            (l) =>
+              !hiddenNavTabs.includes(l.label.toLowerCase()) &&
+              (l.to !== "/staff" || canSeeStaff)
           ),
         }
       : col

@@ -394,6 +394,10 @@ const AuthRoutes = () => {
                 />
               </Route>
               </Route>
+              {/* Staff directory + detail — admin-level only (nav:staff), same
+                  gate the navbar/footer/command palette use. PermissionGuard
+                  redirects unauthorized deep links to home. */}
+              <Route element={<PermissionGuard action="nav:staff" />}>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
                 <Route
@@ -445,6 +449,7 @@ const AuthRoutes = () => {
                   path="view_actions_staff_taken"
                   element={<SignedContractViewHigherPermissionLevel />}
                 />
+              </Route>
               </Route>
               <Route path="/profile" element={<MainProfileSetting />}>
                 <Route path="my_details" element={<MyDetailsMainPage />} />
