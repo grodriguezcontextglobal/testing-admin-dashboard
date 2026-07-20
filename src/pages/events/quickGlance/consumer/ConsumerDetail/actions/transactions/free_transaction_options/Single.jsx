@@ -130,12 +130,16 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
       `/receiver/receivers-pool-update/${grouping[props].at(-1).id}`,
       { activity: true, status: "Operational" }
     );
-    await clearCacheMemory(
-      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-    );
-    await clearCacheMemory(
-      `eventSelected=${event.id}&company=${user.companyData.id}`
-    );
+    // Both cache keys are independent (different literal keys, neither depends on
+    // the other's result), so clear them concurrently instead of sequentially.
+    await Promise.all([
+      clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      ),
+      clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      ),
+    ]);
   };
 
   const onSubmitRegister = async (data) => {
@@ -192,28 +196,30 @@ const SingleFreeTransaction = ({ setCreateTransactionForNoRegularUser }) => {
             "/stripe/save-transaction",
             transactionProfile
           );
-          await queryClient.refetchQueries({
-            queryKey: ["transactionListQuery"],
-            exact: true,
-          });
-          await queryClient.refetchQueries({
-            queryKey: ["transactionsList"],
-            exact: true,
-          });
-
-          await queryClient.refetchQueries({
-            queryKey: ["listOfNoOperatingDevices"],
-            exact: true,
-          });
-
-          await queryClient.refetchQueries({
-            queryKey: ["assginedDeviceList"],
-            exact: true,
-          });
-          await queryClient.refetchQueries({
-            queryKey: ["listOfDevicesAssigned"],
-            exact: true,
-          });
+          // All five refetches target distinct, unrelated query keys and none
+          // consumes another's result — run them concurrently.
+          await Promise.all([
+            queryClient.refetchQueries({
+              queryKey: ["transactionListQuery"],
+              exact: true,
+            }),
+            queryClient.refetchQueries({
+              queryKey: ["transactionsList"],
+              exact: true,
+            }),
+            queryClient.refetchQueries({
+              queryKey: ["listOfNoOperatingDevices"],
+              exact: true,
+            }),
+            queryClient.refetchQueries({
+              queryKey: ["assginedDeviceList"],
+              exact: true,
+            }),
+            queryClient.refetchQueries({
+              queryKey: ["listOfDevicesAssigned"],
+              exact: true,
+            }),
+          ]);
           alert(
             "Device assigned successfully. If transaction/device are not showed in table, please click 'Refresh button' in header of the transaction table."
           );

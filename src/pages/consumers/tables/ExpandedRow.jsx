@@ -149,25 +149,23 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const handleReturnItemInTransaction = async (props) => {
     try {
       setActionInProgress(true);
-      const responseDeviceInfoInTransaction = await devitrakApi.post(
-        "/receiver/receiver-assigned-list",
-        {
-          paymentIntent: rowRecord.paymentIntent,
-          "device.serialNumber": props.serial_number,
-          "device.deviceType": props.type,
-        },
-      );
       const eventIDInfoFound = props.entireData
         ? props.entireData.event_id
         : props.eventInfo[0].event_id;
       const eventIdFound = eventIDInfoFound;
-      const eventInfoInTransaction = await devitrakApi.post(
-        "/event/event-list",
-        {
-          company: user.companyData.company_name,
-          _id: eventIdFound,
-        },
-      );
+      // Neither request depends on the other's result, so fetch both in parallel.
+      const [responseDeviceInfoInTransaction, eventInfoInTransaction] =
+        await Promise.all([
+          devitrakApi.post("/receiver/receiver-assigned-list", {
+            paymentIntent: rowRecord.paymentIntent,
+            "device.serialNumber": props.serial_number,
+            "device.deviceType": props.type,
+          }),
+          devitrakApi.post("/event/event-list", {
+            company: user.companyData.company_name,
+            _id: eventIdFound,
+          }),
+        ]);
       if (responseDeviceInfoInTransaction.data.listOfReceivers.length > 0) {
         const dataAsProps = checkArray(
           responseDeviceInfoInTransaction.data.listOfReceivers,
@@ -225,17 +223,17 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   const handleReturnItemFromLeaseTransaction = async (props) => {
     try {
       setOpenReturnDeviceStaffModal(true);
-      const sqlItemInfo = await devitrakApi.post("/db_item/consulting-item", {
-        serial_number: props.serial_number,
-        item_group: props.type,
-        company_id: user.sqlInfo.company_id,
-      });
-      const sqlConsumerInfo = await devitrakApi.post(
-        "/db_consumer/consulting-consumer",
-        {
+      // sqlItemInfo and sqlConsumerInfo are independent lookups; fetch them in parallel.
+      const [sqlItemInfo, sqlConsumerInfo] = await Promise.all([
+        devitrakApi.post("/db_item/consulting-item", {
+          serial_number: props.serial_number,
+          item_group: props.type,
+          company_id: user.sqlInfo.company_id,
+        }),
+        devitrakApi.post("/db_consumer/consulting-consumer", {
           email: customer.email,
-        },
-      );
+        }),
+      ]);
       const sqlConsumerLeaseInfo = await devitrakApi.post(
         "/db_lease/consulting-consumer-lease",
         {

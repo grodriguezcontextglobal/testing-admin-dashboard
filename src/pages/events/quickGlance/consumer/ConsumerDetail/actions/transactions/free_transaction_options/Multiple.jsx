@@ -224,37 +224,36 @@ const Multiple = ({ setCreateTransactionForNoRegularUser }) => {
           });
         }
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        );
-
-        await queryClient.refetchQueries({
-          queryKey: ["transactionListQuery"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["transactionsList"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["listOfNoOperatingDevices"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["assginedDeviceList"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["listOfDevicesAssigned"],
-          exact: true,
-        });
+        // The two cache-clears and five refetches below all target distinct,
+        // unrelated keys and none consumes another's result — run them concurrently.
+        await Promise.all([
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          ),
+          queryClient.refetchQueries({
+            queryKey: ["transactionListQuery"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["transactionsList"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["listOfNoOperatingDevices"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["assginedDeviceList"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["listOfDevicesAssigned"],
+            exact: true,
+          }),
+        ]);
 
         setIsLoading(false);
         alert("Devices assigned successfully");

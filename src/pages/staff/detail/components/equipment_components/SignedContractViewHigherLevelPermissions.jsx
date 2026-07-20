@@ -45,21 +45,25 @@ const SignedContractViewHigherPermissionLevel = () => {
   useEffect(() => {
     const checkIfDocumentIsSignedAlready = async () => {
       try {
-        const response = await devitrakApi.post(
-          `/document/verification/staff_member/check_signed_document`,
-          {
-            verificationID: location.state.verificationId,
-          }
-        );
-        const checkIfDocumentIsSignedAlready = await devitrakApi.post(
-          "/company/consulting-signatures",
-          {
-            staff_member_id: profile.adminUserInfo.id,
-            company_id: location.state.company_id,
-            contract_url: location.state.contract_url,
-            verification_id: location.state.verification_id,
-          }
-        );
+        // Neither request depends on the other's result (the second uses
+        // only profile/location.state), so fetch them concurrently.
+        const [response, checkIfDocumentIsSignedAlready] = await Promise.all([
+          devitrakApi.post(
+            `/document/verification/staff_member/check_signed_document`,
+            {
+              verificationID: location.state.verificationId,
+            }
+          ),
+          devitrakApi.post(
+            "/company/consulting-signatures",
+            {
+              staff_member_id: profile.adminUserInfo.id,
+              company_id: location.state.company_id,
+              contract_url: location.state.contract_url,
+              verification_id: location.state.verification_id,
+            }
+          ),
+        ]);
         if (response.data.ok) {
           setSignatureInfo(checkIfDocumentIsSignedAlready.data.data[0]);
           return setContractInfo({

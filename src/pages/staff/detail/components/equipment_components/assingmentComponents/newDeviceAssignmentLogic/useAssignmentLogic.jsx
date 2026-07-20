@@ -254,21 +254,27 @@ export const useAssignmentLogic = () => {
           "Image is bigger than allow. Please resize the image or select a new one.",
         );
       }
-      const newInsertedItem = await singleItemInserting({
-        data,
-        user,
-        openNotificationWithIcon,
-        setLoadingStatus,
-        setValue,
-        img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-        moreInfo,
-        formatDate,
-        returningDate,
-        subLocationsSubmitted,
-        invalidateQueries,
-        dicSuppliers,
-      });
-      const verificationID = await verificationContractStaffMember();
+      // singleItemInserting (create the item) and verificationContractStaffMember
+      // (create the signed-document verification) are independent of each
+      // other's result — both are only joined together below in
+      // createNewLease — so run them concurrently instead of sequentially.
+      const [newInsertedItem, verificationID] = await Promise.all([
+        singleItemInserting({
+          data,
+          user,
+          openNotificationWithIcon,
+          setLoadingStatus,
+          setValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
+          moreInfo,
+          formatDate,
+          returningDate,
+          subLocationsSubmitted,
+          invalidateQueries,
+          dicSuppliers,
+        }),
+        verificationContractStaffMember(),
+      ]);
       await createNewLease({
         address: {
           street: data.address_street,

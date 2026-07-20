@@ -42,14 +42,20 @@ const DownLoadReportButton = () => {
         return [];
       }
 
-      // 2) Active leases for each staff member
+      // 2) Active leases for each staff member. Each request is independent
+      // of the others (different staff_member_id), so fetch them concurrently
+      // instead of awaiting one staff member at a time.
       const flatLeases = [];
-      for (const st of staffSqlRows) {
-        const leaseResp = await devitrakApi.post("/db_lease/consulting-lease", {
-          staff_member_id: st.staff_id,
-          company_id: user.sqlInfo.company_id,
-          subscription_current_in_use: 1,
-        });
+      const leaseResponses = await Promise.all(
+        staffSqlRows.map((st) =>
+          devitrakApi.post("/db_lease/consulting-lease", {
+            staff_member_id: st.staff_id,
+            company_id: user.sqlInfo.company_id,
+            subscription_current_in_use: 1,
+          })
+        )
+      );
+      for (const leaseResp of leaseResponses) {
         if (leaseResp?.data?.ok && Array.isArray(leaseResp?.data?.lease)) {
           flatLeases.push(...leaseResp.data.lease);
         }
@@ -58,36 +64,50 @@ const DownLoadReportButton = () => {
         return [];
       }
 
-      // 3) Staff details for involved leases
+      // 3) Staff details and 4) item info both derive from flatLeases only
+      // (not from each other), so fetch them in parallel.
       const staffIds = Array.from(
         new Set(flatLeases.map((l) => l.staff_member_id))
       ).filter(Boolean);
-      let staffDetails = [];
-      if (staffIds.length > 0) {
-        const placeholders = staffIds.map(() => "?").join(",");
-        const staffDetailQuery = `SELECT staff_id, first_name, last_name, email FROM staff_member WHERE staff_id IN (${placeholders})`;
-        const staffDetailResp = await devitrakApi.post(
-          "/db_event/inventory-based-on-submitted-parameters",
-          { query: staffDetailQuery, values: staffIds }
-        );
-        staffDetails = staffDetailResp?.data?.result || [];
-      }
-      const staffById = groupBy(staffDetails, "staff_id");
-
-      // 4) Item info for involved devices
       const deviceIds = Array.from(
         new Set(flatLeases.map((l) => l.device_id))
       ).filter(Boolean);
-      let itemsResult = [];
-      if (deviceIds.length > 0) {
-        const placeholders = deviceIds.map(() => "?").join(",");
-        const itemQuery = `SELECT item_id, item_group, brand, serial_number, location, warehouse, cost, category_name FROM item_inv WHERE item_id IN (${placeholders})`;
-        const itemResp = await devitrakApi.post(
-          "/db_event/inventory-based-on-submitted-parameters",
-          { query: itemQuery, values: deviceIds }
-        );
-        itemsResult = itemResp?.data?.result || [];
-      }
+
+      const staffDetailsPromise =
+        staffIds.length > 0
+          ? devitrakApi.post(
+              "/db_event/inventory-based-on-submitted-parameters",
+              {
+                query: `SELECT staff_id, first_name, last_name, email FROM staff_member WHERE staff_id IN (${staffIds
+                  .map(() => "?")
+                  .join(",")})`,
+                values: staffIds,
+              }
+            )
+          : Promise.resolve(null);
+
+      const itemsPromise =
+        deviceIds.length > 0
+          ? devitrakApi.post(
+              "/db_event/inventory-based-on-submitted-parameters",
+              {
+                query: `SELECT item_id, item_group, brand, serial_number, location, warehouse, cost, category_name FROM item_inv WHERE item_id IN (${deviceIds
+                  .map(() => "?")
+                  .join(",")})`,
+                values: deviceIds,
+              }
+            )
+          : Promise.resolve(null);
+
+      const [staffDetailResp, itemResp] = await Promise.all([
+        staffDetailsPromise,
+        itemsPromise,
+      ]);
+
+      const staffDetails = staffDetailResp?.data?.result || [];
+      const staffById = groupBy(staffDetails, "staff_id");
+
+      const itemsResult = itemResp?.data?.result || [];
       const itemsById = groupBy(itemsResult, "item_id");
 
       // 5) Join into flat rows for export

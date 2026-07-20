@@ -31,9 +31,13 @@ const DisplayAllItemsSetInventoryEvent = ({ database }) => {
         })
       );
       dispatch(onAddDeviceSetup(deviceInventoryUpdated));
-      await clearCacheMemory(`company=${event.company}&type=${event.type}`);
-      await clearCacheMemory(`company=${event.company_id}&type=${event.type}`);
-      await clearCacheMemory(`company=${event.company}`)
+      // All three cache keys are independent (different literal keys, none
+      // depends on another's result), so clear them concurrently.
+      await Promise.all([
+        clearCacheMemory(`company=${event.company}&type=${event.type}`),
+        clearCacheMemory(`company=${event.company_id}&type=${event.type}`),
+        clearCacheMemory(`company=${event.company}`),
+      ]);
       return setLoadingStatus(false);
     }
     return setLoadingStatus(false);

@@ -16,18 +16,22 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
   const { event } = useSelector((state) => state.event);
   const queryClient = useQueryClient();
   const handleRefreshingData = async () => {
-    await clearCacheMemory(
-      `eventSelected=${event.id}&company=${user.companyData.id}`
-    );
-    await clearCacheMemory(
-      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-    );
-    await clearCacheMemory(
-      `eventSelected=${event.id}&company=${user.companyData.companyName}`
-    );
-    await clearCacheMemory(
-      `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.companyName}`
-    );
+    // All four cache keys are independent (different literal keys, none
+    // depends on another's result), so clear them concurrently.
+    await Promise.all([
+      clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.id}`
+      ),
+      clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+      ),
+      clearCacheMemory(
+        `eventSelected=${event.id}&company=${user.companyData.companyName}`
+      ),
+      clearCacheMemory(
+        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.companyName}`
+      ),
+    ]);
     return queryClient.invalidateQueries({ queryKey: "deviceInPoolList", exact: true, refetchPage: true });
   };
   return (

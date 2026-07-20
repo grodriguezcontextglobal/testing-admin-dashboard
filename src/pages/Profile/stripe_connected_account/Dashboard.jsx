@@ -53,22 +53,28 @@ const Dashboard = () => {
         const newConnectedAccount = checkArray(
           createConnectedAccount.data.account
         );
-        await devitrakApi.patch(
-          `/company/update-company/${user.companyData.id}`,
-          {
-            stripe_connected_account: {
-              id: newConnectedAccount.id,
-              login_links: newConnectedAccount.login_links,
-            },
-          }
-        );
-        const responseCreateAccount = await devitrakApi.post(
-          "/stripe/account_link",
-          {
-            connectedAccountId: newConnectedAccount.id,
-            origin: window.location.origin,
-          }
-        );
+        // Persisting the connected account id on our company record and
+        // requesting the Stripe onboarding link both only depend on
+        // `newConnectedAccount`; neither needs the other's response, so run
+        // them in parallel instead of one after the other.
+        const [, responseCreateAccount] = await Promise.all([
+          devitrakApi.patch(
+            `/company/update-company/${user.companyData.id}`,
+            {
+              stripe_connected_account: {
+                id: newConnectedAccount.id,
+                login_links: newConnectedAccount.login_links,
+              },
+            }
+          ),
+          devitrakApi.post(
+            "/stripe/account_link",
+            {
+              connectedAccountId: newConnectedAccount.id,
+              origin: window.location.origin,
+            }
+          ),
+        ]);
         if (responseCreateAccount.data) {
           setLoadingStatus(false);
           return window.location.assign(responseCreateAccount.data.account.url);

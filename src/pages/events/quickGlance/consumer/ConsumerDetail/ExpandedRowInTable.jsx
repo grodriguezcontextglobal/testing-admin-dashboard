@@ -218,12 +218,16 @@ const ExpandedRowInTable = ({
           await checkItemsStatusInTransactionForEmailNotification();
         }
       }
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        ),
+      ]);
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -286,12 +290,16 @@ const ExpandedRowInTable = ({
           setStatusRecordState(null);
         }
       }
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        ),
+      ]);
       await devitrakApi.post("/nodemailer/assignig-device-notification", {
         consumer: {
           email: customer.email,
@@ -510,12 +518,16 @@ const ExpandedRowInTable = ({
         await returnDevicesInTransaction(groupingByStatus[true]);
         await returnDeviceInPool(groupingByStatus[true]);
         await returnConfirmationEmailNotification(groupingByStatus[true]);
-        await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        );
+        // Both cache keys are independent (different literal keys, neither depends on
+        // the other's result), so clear them concurrently instead of sequentially.
+        await Promise.all([
+          clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          ),
+        ]);
         message.success("All items returned successfully");
         handleRecord(rowRecord);
         return setOpenCancelingDepositModal(true);

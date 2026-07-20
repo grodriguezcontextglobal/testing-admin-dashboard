@@ -201,13 +201,18 @@ const Body = () => {
           const newEmployeeData = updatingEmployeesCompany(
             newDataUpdatedEmployeeCompany
           );
-          await devitrakApi.patch(
-            `/company/update-company/${user.companyData.id}`,
-            {
-              employees: newEmployeeData,
-            }
-          );
-          await updatedStaffInEvent(data);
+          // These two updates target different collections (company employees
+          // list vs. per-event staff records) and neither consumes the
+          // other's result, so run them in parallel instead of sequentially.
+          await Promise.all([
+            devitrakApi.patch(
+              `/company/update-company/${user.companyData.id}`,
+              {
+                employees: newEmployeeData,
+              }
+            ),
+            updatedStaffInEvent(data),
+          ]);
           openNotificationWithIcon("success", "Information updated.", 3);
           openNotificationWithIcon("warning", "Please log in again.", 3);
           dispatch(onLogout());
@@ -230,13 +235,18 @@ const Body = () => {
           const newEmployeeData = updatingEmployeesCompany(
             newDataUpdatedEmployeeCompany
           );
-          await devitrakApi.patch(
-            `/company/update-company/${user.companyData.id}`,
-            {
-              employees: newEmployeeData,
-            }
-          );
-          await updatedStaffInEvent(data);
+          // These two updates target different collections (company employees
+          // list vs. per-event staff records) and neither consumes the
+          // other's result, so run them in parallel instead of sequentially.
+          await Promise.all([
+            devitrakApi.patch(
+              `/company/update-company/${user.companyData.id}`,
+              {
+                employees: newEmployeeData,
+              }
+            ),
+            updatedStaffInEvent(data),
+          ]);
           openNotificationWithIcon("success", "Information updated.", 3);
           openNotificationWithIcon("warning", "Please log in again.", 3);
           dispatch(onLogout());

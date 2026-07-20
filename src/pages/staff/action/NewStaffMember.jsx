@@ -114,8 +114,12 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     queryClient.invalidateQueries({ queryKey: ["listAdminUsers"], exact: true });
     queryClient.invalidateQueries({ queryKey: ["staff"], exact: true });
     queryClient.invalidateQueries({ queryKey: ["employeesPerCompanyList"], exact: true });
-    await clearCacheMemory(`_id=${user.companyData.id}`);
-    await clearCacheMemory(`company_id=${user.companyData.id}`);
+    // Both cache keys are independent, so clear them concurrently instead of
+    // one after the other.
+    await Promise.all([
+      clearCacheMemory(`_id=${user.companyData.id}`),
+      clearCacheMemory(`company_id=${user.companyData.id}`),
+    ]);
   };
 
   const verifyEmailExists = async () => {

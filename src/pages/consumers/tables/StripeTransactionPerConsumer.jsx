@@ -174,8 +174,11 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
   }, [data]);
 
   const refetchingAfterReturnDeviceInRow = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["transactionsList"] });
-    await queryClient.invalidateQueries({ queryKey: ["receiverList"] });
+    // These two cache invalidations target independent query keys, so run them in parallel.
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["transactionsList"] }),
+      queryClient.invalidateQueries({ queryKey: ["receiverList"] }),
+    ]);
     if (refetching) refetching();
     return fetchingDataPerAllowed();
   };
