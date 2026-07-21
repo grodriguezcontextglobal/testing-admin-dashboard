@@ -319,4 +319,28 @@ describe("extractStaffId", () => {
   it("retorna null para array vacío", () => {
     expect(extractStaffId({ member: [] })).toBeNull();
   });
+
+  it("con registros duplicados (mismo email) elige el más reciente por created_at, sin depender del orden", () => {
+    // El server puede tener transitoriamente filas SQL duplicadas para un email
+    // mientras deduplica. La resolución debe ser determinista para que login y
+    // el cambio de rol usen el MISMO staff_id.
+    const data = {
+      member: [
+        { staff_id: 185, created_at: "2025-10-19T19:29:12.000Z" },
+        { staff_id: 193, created_at: "2025-10-20T22:31:56.000Z" },
+        { staff_id: 183, created_at: "2025-10-17T19:56:31.000Z" },
+      ],
+    };
+    expect(extractStaffId(data)).toBe(193);
+  });
+
+  it("ignora registros sin staff_id al elegir", () => {
+    const data = {
+      member: [
+        { staff_id: 200, created_at: "2025-01-01T00:00:00.000Z" },
+        { email: "x@x.com", created_at: "2025-12-31T00:00:00.000Z" }, // sin staff_id, más nuevo
+      ],
+    };
+    expect(extractStaffId(data)).toBe(200);
+  });
 });

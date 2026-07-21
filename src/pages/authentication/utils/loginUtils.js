@@ -42,18 +42,35 @@ export const normalizeLocations = (managerLocation) => {
 };
 
 /**
- * Safely extracts staff_id from a /db_staff/consulting-member API response.
- * Handles both array and single-object member shapes.
+ * Safely extracts a single staff_id from a /db_staff/consulting-member response.
+ * Handles both array and single-object `member` shapes.
+ *
+ * The SQL staff table can transiently hold duplicate rows for one email while
+ * the server dedupes them. Resolution must be DETERMINISTIC and independent of
+ * array ordering so every call site (login, role update, scope assign) picks
+ * the SAME staff_id — otherwise a role/scope PATCH can target a different row
+ * than the one login resolves. We keep only records that actually carry a
+ * staff_id and choose the most recently created (newest created_at, falling
+ * back to updated_at), which mirrors the previous "last element" behavior when
+ * the response is already ordered ascending.
  *
  * @param {{ member: Array|Object }|null|undefined} memberApiData
  * @returns {number|null}
  */
 export const extractStaffId = (memberApiData) => {
   if (!memberApiData) return null;
-  const member = Array.isArray(memberApiData.member)
-    ? memberApiData.member.at(-1)
-    : memberApiData.member;
-  return member?.staff_id ?? null;
+  const members = Array.isArray(memberApiData.member)
+    ? memberApiData.member
+    : memberApiData.member
+      ? [memberApiData.member]
+      : [];
+  const withId = members.filter((m) => m?.staff_id != null);
+  if (withId.length === 0) return null;
+  const newest = withId.reduce((latest, current) => {
+    const t = (rec) => Date.parse(rec?.created_at ?? rec?.updated_at ?? "") || 0;
+    return t(current) >= t(latest) ? current : latest;
+  });
+  return newest.staff_id;
 };
 
 /**
