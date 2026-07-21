@@ -83,7 +83,14 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       }
     });
 
-    setUploading(true);
+    const onUploadComplete = () => {
+      form.resetFields();
+      setFile(null);
+      message.success("Document uploaded successfully");
+      activeTab("1");
+      return refetch();
+    };
+
     try {
       const response = await devitrakApi.post(
         "/document/upload",
@@ -92,17 +99,23 @@ const DocumentUpload = ({ activeTab, refetch }) => {
       );
 
       const data = response?.data;
+      // Durable job-queue path: the endpoint now returns 202 { jobId } instead
+      // of a synchronous { ok }. Poll the job until it finishes, then run the
+      // success actions with the produced document.
+      if (data?.jobId) {
+        await pollJobStatus(data.jobId);
+        return onUploadComplete();
+      }
+      // Legacy synchronous success (fallback in case a deployment still
+      // resolves the upload inline).
       if (data?.ok) {
-        form.resetFields();
-        setFile(null);
-        message.success("Document uploaded successfully");
-        activeTab("1");
-        return refetch();
+        return onUploadComplete();
       }
       message.error(data?.msg || "Upload failed. Please try again.");
     } catch (error) {
       message.error(
         error?.response?.data?.msg ||
+          error?.message ||
           "Failed to upload document. Please try again."
       );
     } finally {
