@@ -8,14 +8,9 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { groupBy } from "lodash";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { Button, Table } from "antd";
-import { LightBlueButton } from "../../../styles/global/LightBlueButton";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { Typography } from "@mui/material";
-import LightBlueButtonText from "../../../styles/global/LightBlueButtonText";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
+import { Table } from "antd";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import UpdatingConsumerLease from "../action/UpdatingConsumerLease";
 const LeasesTable = () => {
   const [openReturnDeviceStaffModal, setOpenReturnDeviceStaffModal] =
@@ -179,7 +174,7 @@ const LeasesTable = () => {
               gap: "20px",
             }}
           >
-            <Button
+            <BlueButtonComponent
               onClick={() => {
                 setDeviceInfo({
                   ...record,
@@ -190,29 +185,10 @@ const LeasesTable = () => {
                 setOpenReturnDeviceStaffModal(true);
               }}
               disabled={record.active === 0}
-              style={record.active === 0 ? LightBlueButton : BlueButton}
             >
-              <Typography
-                style={
-                  record.active === 0
-                    ? { ...LightBlueButtonText, color: "#83a9f6" }
-                    : BlueButtonText
-                }
-              >
-                Mark as returned
-              </Typography>
-            </Button>
-            <Button disabled style={GrayButton}>
-              <Typography
-                style={
-                  record.active === 0
-                    ? { ...GrayButtonText, color: "#a5a5a5" }
-                    : GrayButtonText
-                }
-              >
-                Mark as lost
-              </Typography>
-            </Button>
+              Mark as returned
+            </BlueButtonComponent>
+            <GrayButtonComponent disabled>Mark as lost</GrayButtonComponent>
           </div>
         ),
       },

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { UploadIcon } from "../../icons/UploadIcon";
+import TextLink from "../../UX/buttons/TextLink";
 
 const DEFAULT_ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/gif"];
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
@@ -247,24 +248,13 @@ const ImageUploaderUX = ({
               </span>
             </div>
 
-            <button
-              type="button"
+            <TextLink
+              color="error"
               onClick={handleRemove}
-              style={{
-                background: "none",
-                border: "none",
-                padding: "0",
-                cursor: "pointer",
-                fontFamily: "Inter, sans-serif",
-                fontSize: "14px",
-                fontWeight: 600,
-                lineHeight: "20px",
-                color: "var(--error-700, #B42318)",
-                flexShrink: 0,
-              }}
+              style={{ flexShrink: 0 }}
             >
               Remove
-            </button>
+            </TextLink>
           </div>
         </div>
       )}

@@ -1,18 +1,16 @@
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, notification, Table } from "antd";
+import { notification, Table } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../styles/global/GrayButton";
-import GrayButtonText from "../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const UpdateListOfNotesPerConsumer = ({
@@ -175,34 +173,20 @@ const UpdateListOfNotesPerConsumer = ({
           }}
           onSubmit={handleSubmit(handleDeleteNote)}
         >
-          <Button
-            loading={loading}
-            htmlType="submit"
-            style={{
-              ...BlueButton,
-              ...CenteringGrid,
-              width: "100%",
-              margin: "1.5rem 0 0",
-            }}
+          <BlueButtonComponent
+            isLoading={loading}
+            buttonType="submit"
+            styles={{ ...CenteringGrid, width: "100%", margin: "1.5rem 0 0" }}
           >
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              Update consumer information
-            </Typography>
-          </Button>
-          <Button
+            Update consumer information
+          </BlueButtonComponent>
+          <GrayButtonComponent
             onClick={() => closeDeviceModal()}
-            htmlType="reset"
-            style={{
-              ...GrayButton,
-              ...CenteringGrid,
-              width: "100%",
-              margin: "0.5rem 0 0",
-            }}
+            buttonType="reset"
+            styles={{ ...CenteringGrid, width: "100%", margin: "0.5rem 0 0" }}
           >
-            <Typography textTransform={"none"} style={GrayButtonText}>
-              Cancel{" "}
-            </Typography>
-          </Button>
+            Cancel
+          </GrayButtonComponent>
         </form>
       </Grid>
     );

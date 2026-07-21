@@ -1,4 +1,5 @@
 import { Component } from "react";
+import GrayButtonComponent from "../UX/buttons/GrayButton";
 
 /**
  * Catches render-time errors in its children so a single component throwing
@@ -55,19 +56,12 @@ class ErrorBoundary extends Component {
               {this.state.info.componentStack}
             </pre>
           )}
-          <button
+          <GrayButtonComponent
             onClick={() => this.setState({ error: null, info: null })}
-            style={{
-              marginTop: "12px",
-              padding: "8px 16px",
-              border: "1px solid #D0D5DD",
-              borderRadius: "8px",
-              background: "#fff",
-              cursor: "pointer",
-            }}
+            styles={{ marginTop: "12px" }}
           >
             Try again
-          </button>
+          </GrayButtonComponent>
         </div>
       );
     }

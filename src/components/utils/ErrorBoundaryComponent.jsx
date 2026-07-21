@@ -1,10 +1,10 @@
 import { Card } from "antd";
 import { devitrakApi } from "../../api/devitrakApi";
-import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
+import BlueButtonComponent from "../UX/buttons/BlueButton";
 
 export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
   const titleRendering = () => {
@@ -81,12 +81,9 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
         >
           {error.message}
         </pre>
-        <button
-          style={{ ...BlueButton, width: "100%" }}
-          onClick={resetErrorBoundary}
-        >
-          <p style={BlueButtonText}>Reset</p>
-        </button>
+        <BlueButtonComponent onClick={resetErrorBoundary} styles={{ width: "100%" }}>
+          Reset
+        </BlueButtonComponent>
       </div>
     </Card>
   );

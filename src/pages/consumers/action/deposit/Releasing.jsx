@@ -1,5 +1,4 @@
 import {
-  Button,
   FormHelperText,
   Grid,
   InputAdornment,
@@ -14,8 +13,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 
 const Releasing = ({
@@ -272,27 +270,19 @@ const bodyModal = () => {
                   </Typography>
                 </FormHelperText>
 
-                <Button
-                  type="submit"
+                <BlueButtonComponent
+                  buttonType="submit"
                   disabled={
                     stripeTransactionQuery?.data?.data?.paymentIntent
                       ?.status === "canceled"
                   }
-                  style={{
-                    ...BlueButton,
+                  styles={{
                     width: "100%",
                     display: transactionStatus ? "none" : "flex",
                   }}
                 >
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      ...BlueButtonText,
-                    }}
-                  >
-                    Release deposit
-                  </Typography>
-                </Button>
+                  Release deposit
+                </BlueButtonComponent>
               </form>
             </Grid>
           </Grid>{" "}

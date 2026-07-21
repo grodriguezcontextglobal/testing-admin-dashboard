@@ -16,10 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import CustomerLostItemFee from "../../../../components/stripe/elements/CustomerLostItemFee";
 import { onAddPaymentIntentSelected } from "../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import CustomerHeader from "../../components/UI/header";
@@ -293,29 +291,19 @@ const ChargeAllListDeviceCreditCard = () => {
                   md={3}
                   lg={2}
                 >
-                  <button
-                    type="reset"
-                    style={{
-                      ...GrayButton,
-                      width: "fit-content",
-                    }}
+                  <GrayButtonComponent
+                    buttonType="reset"
                     onClick={() => handleBackAction()}
+                    styles={{ width: "fit-content" }}
                   >
-                    <p style={{ ...GrayButtonText, textTransform: "none" }}>
-                      Cancel
-                    </p>
-                  </button>{" "}
-                  <button
-                    style={{
-                      ...BlueButton,
-                      width: "fit-content",
-                    }}
-                    type="submit"
+                    Cancel
+                  </GrayButtonComponent>{" "}
+                  <BlueButtonComponent
+                    buttonType="submit"
+                    styles={{ width: "fit-content" }}
                   >
-                    <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                      CC Info
-                    </p>
-                  </button>
+                    CC Info
+                  </BlueButtonComponent>
                 </Grid>
               </Grid>
             </form>

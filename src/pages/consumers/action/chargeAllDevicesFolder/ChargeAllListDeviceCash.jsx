@@ -8,10 +8,8 @@ import {
 import CustomerHeader from "../../components/UI/header";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -257,29 +255,19 @@ const ChargeAllListDeviceCash = () => {
                   md={3}
                   lg={2}
                 >
-                  <button
-                    type="reset"
-                    style={{
-                      ...GrayButton,
-                      width: "fit-content",
-                    }}
+                  <GrayButtonComponent
+                    buttonType="reset"
                     onClick={() => handleBackAction()}
+                    styles={{ width: "fit-content" }}
                   >
-                    <p style={{ ...GrayButtonText, textTransform: "none" }}>
-                      Cancel
-                    </p>
-                  </button>{" "}
-                  <button
-                    style={{
-                      ...BlueButton,
-                      width: "fit-content",
-                    }}
-                    type="submit"
+                    Cancel
+                  </GrayButtonComponent>{" "}
+                  <BlueButtonComponent
+                    buttonType="submit"
+                    styles={{ width: "fit-content" }}
                   >
-                    <p style={{ ...BlueButtonText, textTransform: "none" }}>
-                      Submit
-                    </p>
-                  </button>
+                    Submit
+                  </BlueButtonComponent>
                 </Grid>
               </Grid>
             </form>

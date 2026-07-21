@@ -13,9 +13,8 @@ import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 // import { DangerButtonText } from "../../../../styles/global/DangerButtonText";
 import { useSelector } from "react-redux";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import GrayButtonConfirmationComponent from "../../../../components/UX/buttons/GrayButtonConfirmation";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import sendRefundReceiptEmail from "../../utils/sendRefundReceiptEmail";
 
@@ -273,16 +272,16 @@ const ExpandedLostButton = ({
                 gap: "5px",
               }}
             >
-              <Button
-                htmlType="reset"
-                style={{ ...GrayButton }}
+              <GrayButtonComponent
+                buttonType="reset"
                 onClick={() => {
                   setOpenPartialRefundModal(false);
                   setIsLoadingState(false);
                 }}
               >
-                <p style={GrayButtonText}>X</p>
-              </Button>
+                X
+              </GrayButtonComponent>
+              {/* NEEDS-MANUAL-REVIEW: icon-only confirm button (no text label), left as raw antd Button */}
               <Button
                 htmlType="submit"
                 style={{ ...BlueButton }}
