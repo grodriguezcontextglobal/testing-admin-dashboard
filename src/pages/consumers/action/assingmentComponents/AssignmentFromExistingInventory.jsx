@@ -1,5 +1,4 @@
 import {
-  Button,
   Grid,
   InputAdornment,
   InputLabel,
@@ -15,13 +14,12 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import "../../../../styles/global/OutlineInput.css";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
@@ -680,14 +678,12 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
               md={12}
               lg={12}
             >
-              <Button
+              <GrayButtonComponent
                 onClick={() => closeModal()}
-                style={{ ...GrayButton, ...CenteringGrid, width: "100%" }}
+                styles={{ ...CenteringGrid, width: "100%" }}
               >
-                <p style={{ ...GrayButtonText, textTransform: "none" }}>
-                  Go back
-                </p>
-              </Button>
+                Go back
+              </GrayButtonComponent>
               <BlueButtonComponent
                 disabled={
                   watch("startingNumber")?.length === 0 ||
