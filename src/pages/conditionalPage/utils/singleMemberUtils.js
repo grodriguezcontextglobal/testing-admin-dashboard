@@ -27,10 +27,19 @@ export const EMPTY_SINGLE_MEMBER_FORM = {
  * Returns an array of human-readable error strings for the given form.
  * An empty array means the form is valid.
  *
+ * The representative label is industry-driven (e.g. "Parent / Guardian" for
+ * schools, "Authorized representative" otherwise) so the error copy matches the
+ * vocabulary shown in the form. Defaults to "Guardian" for backward
+ * compatibility.
+ *
  * @param {object} form single-member form values
+ * @param {{ representativeLabel?: string }} [options]
  * @returns {string[]} validation errors
  */
-export const validateSingleMemberForm = (form = {}) => {
+export const validateSingleMemberForm = (
+  form = {},
+  { representativeLabel = "Guardian" } = {}
+) => {
   const errs = [];
   if (!form.first_name) errs.push("First name is required.");
   if (!form.last_name) errs.push("Last name is required.");
@@ -38,13 +47,13 @@ export const validateSingleMemberForm = (form = {}) => {
   if (!form.phone) errs.push("Phone is required.");
   if (form.minor) {
     if (!form.parent_guardian_first_name)
-      errs.push("Guardian first name is required for minors.");
+      errs.push(`${representativeLabel} first name is required for minors.`);
     if (!form.parent_guardian_last_name)
-      errs.push("Guardian last name is required for minors.");
+      errs.push(`${representativeLabel} last name is required for minors.`);
     if (!form.parent_guardian_email)
-      errs.push("Guardian email is required for minors.");
+      errs.push(`${representativeLabel} email is required for minors.`);
     if (!form.parent_guardian_phone_number)
-      errs.push("Guardian phone number is required for minors.");
+      errs.push(`${representativeLabel} phone number is required for minors.`);
   }
   return errs;
 };

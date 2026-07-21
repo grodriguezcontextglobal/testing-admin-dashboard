@@ -67,6 +67,16 @@ describe("validateSingleMemberForm", () => {
     });
     expect(errs).toEqual([]);
   });
+
+  it("usa el label del representante de la industria en los mensajes (schools)", () => {
+    const errs = validateSingleMemberForm(
+      { ...validAdult, minor: true },
+      { representativeLabel: "Parent / Guardian" }
+    );
+    expect(errs).toContain("Parent / Guardian first name is required for minors.");
+    expect(errs).toContain("Parent / Guardian email is required for minors.");
+    expect(errs.some((e) => e.startsWith("Guardian "))).toBe(false);
+  });
 });
 
 describe("buildSingleMemberPayload", () => {

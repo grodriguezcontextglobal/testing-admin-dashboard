@@ -12,6 +12,7 @@ import {
   buildSingleMemberPayload,
   validateSingleMemberForm,
 } from "../../../utils/singleMemberUtils";
+import { getIndustryProfile } from "../../../../../config/industryProfiles";
 
 const fieldWrapper = {
   display: "flex",
@@ -42,6 +43,12 @@ const errorCaption = {
 
 const Single = ({ closingModal }) => {
   const { user } = useSelector((state) => state.admin);
+  // Industry-adaptive vocabulary/fields: schools show grade/homeroom and call
+  // the responsible adult "Parent / Guardian"; other industries hide the school
+  // fields and use their own representative label (industryProfiles.js).
+  const { fields, representative } = getIndustryProfile(
+    user?.companyData?.industry
+  );
   const [form, setForm] = useState({
     ...EMPTY_SINGLE_MEMBER_FORM,
     company_id: user.sqlInfo.company_id,
@@ -65,7 +72,9 @@ const Single = ({ closingModal }) => {
   };
 
   const handleSubmit = async () => {
-    const errs = validateSingleMemberForm(form);
+    const errs = validateSingleMemberForm(form, {
+      representativeLabel: representative.label,
+    });
     if (errs.length) return setErrors(errs);
     try {
       setSaving(true);
@@ -127,75 +136,83 @@ const Single = ({ closingModal }) => {
           </Label>
           <Input value={form.address_zip} onChange={update("address_zip")} />
         </div>
-        <div style={fieldWrapper}>
-          <Label>
-            Grade <span style={optionalHint}>(Optional)</span>
-          </Label>
-          <Input value={form.grade} onChange={update("grade")} placeholder="e.g. 7" />
-        </div>
-        <div style={fieldWrapper}>
-          <Label>
-            Homeroom <span style={optionalHint}>(Optional)</span>
-          </Label>
-          <Input value={form.homeroom} onChange={update("homeroom")} placeholder="e.g. Rivera 7B" />
-        </div>
+        {fields.grade && (
+          <div style={fieldWrapper}>
+            <Label>
+              Grade <span style={optionalHint}>(Optional)</span>
+            </Label>
+            <Input value={form.grade} onChange={update("grade")} placeholder="e.g. 7" />
+          </div>
+        )}
+        {fields.homeroom && (
+          <div style={fieldWrapper}>
+            <Label>
+              Homeroom <span style={optionalHint}>(Optional)</span>
+            </Label>
+            <Input value={form.homeroom} onChange={update("homeroom")} placeholder="e.g. Rivera 7B" />
+          </div>
+        )}
       </div>
 
-      <FormControlLabel
-        control={
-          <CheckboxReusableComponent
-            name="minor"
-            checked={form.minor}
-            onChange={update("minor")}
+      {fields.minor && (
+        <>
+          <FormControlLabel
+            control={
+              <CheckboxReusableComponent
+                name="minor"
+                checked={form.minor}
+                onChange={update("minor")}
+              />
+            }
+            label="Is the member a minor?"
           />
-        }
-        label="Is the member a minor?"
-      />
 
-      {form.minor && (
-        <div
-          style={{
-            ...gridTwoCol,
-            border: "1px solid var(--gray-200, #EAECF0)",
-            borderRadius: "12px",
-            padding: "16px",
-            background: "var(--gray-50, #F9FAFB)",
-          }}
-        >
-          <div style={fieldWrapper}>
-            <Label>Guardian&apos;s first name *</Label>
-            <Input
-              value={form.parent_guardian_first_name}
-              onChange={update("parent_guardian_first_name")}
-              required
-            />
-          </div>
-          <div style={fieldWrapper}>
-            <Label>Guardian&apos;s last name *</Label>
-            <Input
-              value={form.parent_guardian_last_name}
-              onChange={update("parent_guardian_last_name")}
-              required
-            />
-          </div>
-          <div style={fieldWrapper}>
-            <Label>Guardian&apos;s email *</Label>
-            <Input
-              type="email"
-              value={form.parent_guardian_email}
-              onChange={update("parent_guardian_email")}
-              required
-            />
-          </div>
-          <div style={fieldWrapper}>
-            <Label>Guardian&apos;s phone *</Label>
-            <Input
-              value={form.parent_guardian_phone_number}
-              onChange={update("parent_guardian_phone_number")}
-              required
-            />
-          </div>
-        </div>
+          {form.minor && (
+            <div
+              style={{
+                ...gridTwoCol,
+                border: "1px solid var(--gray-200, #EAECF0)",
+                borderRadius: "12px",
+                padding: "16px",
+                background: "var(--gray-50, #F9FAFB)",
+              }}
+            >
+              <div style={fieldWrapper}>
+                <Label>{representative.label} first name *</Label>
+                <Input
+                  value={form.parent_guardian_first_name}
+                  onChange={update("parent_guardian_first_name")}
+                  required
+                />
+              </div>
+              <div style={fieldWrapper}>
+                <Label>{representative.label} last name *</Label>
+                <Input
+                  value={form.parent_guardian_last_name}
+                  onChange={update("parent_guardian_last_name")}
+                  required
+                />
+              </div>
+              <div style={fieldWrapper}>
+                <Label>{representative.label} email *</Label>
+                <Input
+                  type="email"
+                  value={form.parent_guardian_email}
+                  onChange={update("parent_guardian_email")}
+                  required
+                />
+              </div>
+              <div style={fieldWrapper}>
+                <Label>{representative.label} phone *</Label>
+                <Input
+                  value={form.parent_guardian_phone_number}
+                  onChange={update("parent_guardian_phone_number")}
+                  required
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {errors.length > 0 && (
