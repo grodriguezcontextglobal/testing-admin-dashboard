@@ -18,7 +18,7 @@ function makeWrapper(companyId) {
     preloadedState: {
       admin: {
         status: "authenticated",
-        user: companyId ? { companyData: { id: companyId } } : {},
+        user: companyId ? { sqlInfo: { company_id: companyId } } : {},
         errorMessage: undefined,
         companyAccountStripe: undefined,
         companyInfo: undefined,
@@ -53,6 +53,8 @@ describe("useCompanyCategories", () => {
     // LIVE contract (FRONTEND_INTEGRATION_scoped_roles.md §6): the endpoint
     // returns `{ ok, result: [...] }`, options carry the numeric category_id as
     // value (sent to the scope endpoint) and category_name as label.
+    // company_id is the SQL integer id (user.sqlInfo.company_id) — /db_company/*
+    // are SQL routes; the Mongo companyData.id would return an empty result.
     devitrakApi.post.mockResolvedValue({
       data: {
         ok: true,

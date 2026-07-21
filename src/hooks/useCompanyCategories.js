@@ -12,7 +12,11 @@ import { dedupeCategories } from "../pages/staff/detail/components/equipment_com
  * `category_id` as value — that id is what the scope endpoint (§4) expects.
  */
 export const useCompanyCategories = () => {
-  const companyId = useSelector((state) => state.admin.user?.companyData?.id);
+  // /db_company/* are SQL routes — they expect the SQL integer company id
+  // (user.sqlInfo.company_id), NOT the Mongo companyData.id. Sending the Mongo
+  // ObjectId returns an empty result. Mirrors the scope-save path in
+  // UpdateRoleInCompany.jsx, which also uses user.sqlInfo.company_id.
+  const companyId = useSelector((state) => state.admin.user?.sqlInfo?.company_id);
 
   const query = useQuery({
     queryKey: ["companyCategories", companyId],

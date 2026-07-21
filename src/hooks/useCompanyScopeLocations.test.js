@@ -18,7 +18,7 @@ function makeWrapper(companyId) {
     preloadedState: {
       admin: {
         status: "authenticated",
-        user: companyId ? { companyData: { id: companyId } } : {},
+        user: companyId ? { sqlInfo: { company_id: companyId } } : {},
         errorMessage: undefined,
         companyAccountStripe: undefined,
         companyInfo: undefined,
