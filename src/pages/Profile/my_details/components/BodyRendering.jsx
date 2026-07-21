@@ -7,11 +7,10 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Avatar, Button, Divider, Space } from "antd";
+import { Avatar, Divider, Space } from "antd";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import Header from "../../components/Header";
@@ -68,7 +67,7 @@ const BodyRendering = ({
               buttonType="submit"
               loadingState={loading}
               title={"Save and log out"}
-              style={{
+              styles={{
                 width: "fit-content",
               }}
             />
@@ -205,12 +204,11 @@ const BodyRendering = ({
                         />
                       }
                     />
-                    <Button
-                      style={GrayButton}
+                    <GrayButtonComponent
                       onClick={removeUploadedProfileImage}
                     >
-                      <p style={GrayButtonText}>Remove</p>
-                    </Button>
+                      Remove
+                    </GrayButtonComponent>
                   </div>
                 ) : (
                   <Avatar
@@ -319,7 +317,7 @@ const BodyRendering = ({
             buttonType="submit"
             loadingState={loading}
             title={"Save and log out"}
-            style={{
+            styles={{
               width: "fit-content",
             }}
           />

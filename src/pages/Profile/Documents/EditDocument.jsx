@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import ArrowBackIcon from "../../../components/icons/arrow-left.svg";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 
 const EditDocument = () => {
   const { id } = useParams();
@@ -149,10 +151,12 @@ const EditDocument = () => {
               </Grid>
               <Grid item xs={12}>
                 <Box display="flex" justifyContent="flex-end" gap={2}>
-                  <Button onClick={handleBack}>Cancel</Button>
-                  <Button type="primary" htmlType="submit">
+                  <GrayButtonComponent onClick={handleBack}>
+                    Cancel
+                  </GrayButtonComponent>
+                  <BlueButtonComponent buttonType="submit">
                     Save Changes
-                  </Button>
+                  </BlueButtonComponent>
                 </Box>
               </Grid>
             </Grid>

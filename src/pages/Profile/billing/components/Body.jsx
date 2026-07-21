@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react";
 import {
   Grid,
-  Button,
   Typography,
   InputLabel,
   RadioGroup,
@@ -20,6 +19,8 @@ import PlanSubscriptionDetails from "./component/PlanSubscriptionDetails";
 // import PaymentMethodDetails from "./component/PaymentMethodDetails";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { useNavigate } from "react-router-dom";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
 const Body = () => {
   const [billingEmailOption, setBillingEmailOption] = useState(null);
@@ -280,41 +281,18 @@ const Body = () => {
           sm={6}
           md={6}
         >
-          <Button
-            style={{
-              width: "fit-content",
-              display: "flex",
-              padding: "10px 16px",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "8px",
-              borderRadius: "8px",
-              border: "1px solid var(--gray-300, #c6c7bb)",
-              background: "var(--base-white, #FFF)",
-              boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
-            }}
-          >
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "var(--gray-700, #484d47)",
-                textAlign: "left",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              {" "}
+          <GrayButtonComponent
+            iconLeading={
               <Icon
                 icon="tabler:cloud-download"
                 color="var(--gray-600, #5d615a)"
                 width={20}
                 height={20}
               />
-              &nbsp;Download all
-            </Typography>
-          </Button>
+            }
+          >
+            Download all
+          </GrayButtonComponent>
         </Grid>
         <Grid
           display={"flex"}
@@ -341,52 +319,10 @@ const Body = () => {
         sm={12}
         md={12}
       >
-        <Button
-        onClick={()=> navigate('/')}
-          style={{
-            width: "fit-content",
-            border: "1px solid var(--gray-300, #c6c7bb)",
-            borderRadius: "8px",
-            background: "var(--base-white, #FFF)",
-            boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
-          }}
-        >
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "var(--gray-700, #484d47)",
-              fontSize: "14px",
-              fontWeight: "600",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-            }}
-          >
-            Cancel
-          </Typography>
-        </Button>
-        <Button
-          type="submit"
-          style={{
-            width: "fit-content",
-            border: "1px solid var(--action-600, #155eef)",
-            borderRadius: "8px",
-            background: "var(--action-600, #155eef)",
-            boxShadow: "var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05))",
-          }}
-        >
-          <Typography
-            textTransform={"none"}
-            style={{
-              color: "var(--base-white, #fff)",
-              fontSize: "14px",
-              fontWeight: "600",
-              fontFamily: "Inter",
-              lineHeight: "20px",
-            }}
-          >
-            Save
-          </Typography>
-        </Button>
+        <GrayButtonComponent onClick={() => navigate('/')}>
+          Cancel
+        </GrayButtonComponent>
+        <BlueButtonComponent buttonType="submit">Save</BlueButtonComponent>
       </Grid>
     </form>
   );

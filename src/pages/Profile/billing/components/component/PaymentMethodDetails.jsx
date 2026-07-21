@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 import { Grid, Typography } from "@mui/material";
-import { Button, Card } from "antd";
+import { Card } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import "./PaymentMethod.css";
@@ -8,6 +8,7 @@ import { useMediaQuery } from "@uidotdev/usehooks";
 import UpdateCreditCard from "./UpdatingData/UpdateCreditCard";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 const PaymentMethodDetails = () => {
   const [openUpdateCreditCardModal, setOpenUpdateCreditCardModal] =
     useState(false);
@@ -235,31 +236,11 @@ const PaymentMethodDetails = () => {
                       </Grid>
                     </Grid>
                     <Grid alignItems={"center"} item md={3}>
-                      <Button
+                      <GrayButtonComponent
                         onClick={() => setOpenUpdateCreditCardModal(true)}
-                        style={{
-                          width: "fit-content",
-                          borderRadius: "8px",
-                          border: "1px solid var(--gray-300, #c6c7bb)",
-                          background: "var(--base-white, #FFF)",
-
-                          /* Shadow/xs */
-                          boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                        }}
                       >
-                        <Typography
-                          width={"100%"}
-                          textTransform={"none"}
-                          color="var(--gray-600, #5d615a)"
-                          lineHeight={"20px"}
-                          textAlign={"left"}
-                          fontWeight={400}
-                          fontFamily={"Inter"}
-                          fontSize={"14px"}
-                        >
-                          Edit
-                        </Typography>
-                      </Button>
+                        Edit
+                      </GrayButtonComponent>
                     </Grid>
                   </Grid>
                 </Card>

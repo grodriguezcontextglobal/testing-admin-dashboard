@@ -1,5 +1,5 @@
 import { FormLabel, Grid, OutlinedInput } from "@mui/material";
-import { Button, message } from "antd";
+import { message } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -9,11 +9,10 @@ import StripeConnectedAccountDashboard from "../../../components/stripe/connecte
 import { checkArray } from "../../../components/utils/checkArray";
 import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import Header from "../components/Header";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 const Dashboard = () => {
   const stripeEnvMode = useRef(
     String(ConfigEnvExport.stripe_public_key).includes("test") ? "test" : "live"
@@ -99,12 +98,11 @@ const Dashboard = () => {
             title="No Stripe account connected"
             description="Connect a Stripe account to accept payments and manage payouts for your company."
             action={
-              <Button
+              <BlueButtonComponent
                 onClick={() => setOpenModalStripeConnectedAccount(true)}
-                style={BlueButton}
               >
-                <p style={BlueButtonText}>Create stripe connected account</p>
-              </Button>
+                Create stripe connected account
+              </BlueButtonComponent>
             }
           />
         )}
@@ -155,18 +153,14 @@ const Dashboard = () => {
             </FormLabel>
           </Grid>
           <Grid textAlign={"left"} marginY={"20px"} item xs={12}>
-            <Button
-              htmlType="submit"
+            <BlueButtonComponent
+              buttonType="submit"
               disabled={loadingStatus}
-              loading={loadingStatus}
-              style={{
-                width: "100%",
-                background: "var(--action-600, #155eef)",
-                color: "#fff",
-              }}
+              isLoading={loadingStatus}
+              styles={{ width: "100%" }}
             >
-              {loadingStatus ? "Loading..." : "Register"}
-            </Button>
+              Register
+            </BlueButtonComponent>
           </Grid>
         </form>
       )}

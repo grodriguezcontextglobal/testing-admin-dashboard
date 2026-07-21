@@ -4,11 +4,12 @@ import {
   CardActions,
   CardContent,
   Divider,
-  Button,
   IconButton,
   Typography,
 } from "@mui/material";
 import { EditIcon } from "../../../../components/icons/EditIcon";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
 const ProviderCard = ({
   provider,
@@ -72,23 +73,19 @@ const ProviderCard = ({
       </CardContent>
       <Divider sx={{ borderColor: "var(--gray-200, #ddded6)" }} />
       <CardActions sx={{ px: 2, py: 1.5, gap: 1 }}>
-        <Button
-          color="inherit"
-          sx={{ fontWeight: 600, color: "var(--gray-600, #5d615a)" }}
-          size="small"
+        <GrayButtonComponent
+          size="sm"
           onClick={() => handleViewDocuments(provider)}
         >
           View documents
-        </Button>
+        </GrayButtonComponent>
         {typeof handleUploadDocument === "function" && (
-          <Button
-            color="inherit"
-            sx={{ fontWeight: 600, color: "var(--action-600, #155eef)" }}
-            size="small"
+          <BlueButtonComponent
+            size="sm"
             onClick={() => handleUploadDocument(provider)}
           >
             Upload document
-          </Button>
+          </BlueButtonComponent>
         )}
       </CardActions>
     </Card>

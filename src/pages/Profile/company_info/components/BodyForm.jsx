@@ -9,6 +9,7 @@ import {
 import { AutoComplete, Avatar, Divider, Space } from "antd";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import TextLink from "../../../../components/UX/buttons/TextLink";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import Header from "../../components/Header";
@@ -67,7 +68,7 @@ const BodyForm = ({
             buttonType="submit"
             loadingState={loading}
             title={"Save and log out"}
-            style={{
+            styles={{
               width: "fit-content",
             }}
           />
@@ -294,26 +295,9 @@ const BodyForm = ({
                   }
                 />
                 <br />
-                <button
-                  type="button"
-                  onClick={() => removingCompanyLogo()}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    outline: "none",
-                    margin: 0,
-                    padding: 0,
-                  }}
-                >
-                  <p
-                    style={{
-                      textDecoration: "underline",
-                      color: "var(--danger-action)",
-                    }}
-                  >
-                    remove
-                  </p>
-                </button>
+                <TextLink color="error" onClick={() => removingCompanyLogo()}>
+                  remove
+                </TextLink>
               </div>
             ) : (
               <Avatar
@@ -480,7 +464,7 @@ const BodyForm = ({
             buttonType="submit"
             loadingState={loading}
             title={"Save and log out"}
-            style={{
+            styles={{
               width: "fit-content",
             }}
           />

@@ -1,11 +1,12 @@
 import { Box, Grid, Tab, Tabs, Typography } from "@mui/material";
-import { Button, Modal } from "antd";
+import { Modal } from "antd";
 import { useState, useRef } from "react";
 import subscriptionList from "../../../../../components/json/subscriptionList.json";
 import OptionSubscriptionTitle from "../../../../events/newEventProcess/subscription/components/OptionSubscriptionTitle";
 import DescriptionFormat from "../../../../events/newEventProcess/subscription/components/DescriptionFormat";
 import ModalMonthlyPayment from "../../../../events/newEventProcess/subscription/components/ModalMonthlyPayment";
 import ModalAnnualPayment from "../../../../events/newEventProcess/subscription/components/ModalAnnualPayment";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 const UpdatingSubscription = ({
   updatingSubscriptionModal,
   setUpdatingSubscriptionModal,
@@ -168,21 +169,12 @@ const UpdatingSubscription = ({
         >
           {subscriptionList.subscriptionsList.map((item) => {
             return (
-              <Button
+              <BlueButtonComponent
                 disabled={item.id === 1}
                 key={`update-subscription-button-${item.id}`}
               >
-                <Typography
-                  fontFamily={"Inter"}
-                  fontSize={"14px"}
-                  fontStyle={"normal"}
-                  fontWeight={600}
-                  lineHeight={"20px"}
-                  color="var(--action-600, #155eef)"
-                >
-                  Upgrade plan
-                </Typography>
-              </Button>
+                Upgrade plan
+              </BlueButtonComponent>
             );
           })}
         </Grid>

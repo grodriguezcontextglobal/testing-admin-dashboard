@@ -7,7 +7,6 @@ import {
   ListItemText,
   Typography
 } from "@mui/material";
-import { Button } from "antd";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import EmptyState from "../../../../components/UX/emptyState/EmptyState";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -31,13 +30,13 @@ const HistoryDocumentProvider = ({
             alignItems: "center",
           }}
         >
-          <Button
+          <GrayButtonComponent
             onClick={() =>
               setDocumentSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
             }
           >
             {documentSortOrder === "desc" ? "↓" : "↑"} Sort by Date
-          </Button>
+          </GrayButtonComponent>
         </DialogTitle>
         <DialogContent>
           {selectedProvider?.documents?.length > 0 ? (

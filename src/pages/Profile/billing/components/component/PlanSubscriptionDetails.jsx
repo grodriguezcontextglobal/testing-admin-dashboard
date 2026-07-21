@@ -5,9 +5,9 @@ import { useSelector } from "react-redux";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import _ from 'lodash';
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
 import UpdatingSubscription from "../payment/UpdatingSubscription";
 import ModalCancelOptions from "./ModalCancelOptions";
+import TextLink from "../../../../../components/UX/buttons/TextLink";
 const PlanSubscriptionDetails = () => {
   const [openCancelOptionsModal, setOpenCancelOptionsModal] = useState(false);
   const [updatingSubscriptionModal, setUpdatingSubscriptionModal] =
@@ -108,34 +108,21 @@ const PlanSubscriptionDetails = () => {
               alignItems={"center"}
               textAlign={"right"}
             >
-              <div
+              <TextLink
+                color="error"
                 onClick={() => setOpenCancelOptionsModal(true)}
-                style={{ cursor: "pointer" }}
+                style={{ padding: "16px 24px" }}
               >
-                <Typography
-                  style={{
-                    ...Subtitle,
-                    padding: "16px 24px",
-                    fontWeight: 600,
-                    color: "var(--error-600, #bc4b2f)",
-                  }}
-                >
-                  Cancel plan
-                </Typography>
-              </div>
+                Cancel plan
+              </TextLink>
 
-              <Typography
+              <TextLink
+                color="brand"
                 onClick={() => setUpdatingSubscriptionModal(true)}
-                style={{
-                  ...Subtitle,
-                  fontWeight: 600,
-                  color: "var(--action-600, #155eef)",
-                  padding: "16px 24px",
-                  cursor: "pointer",
-                }}
+                style={{ padding: "16px 24px" }}
               >
                 Upgrade plan
-              </Typography>
+              </TextLink>
             </Grid>,
           ]}
         >

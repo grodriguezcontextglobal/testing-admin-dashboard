@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { useState } from "react";
 import SectionLabel from "../../../../components/documents/new_form_components/SectionLabel";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";
+import TextLink from "../../../../components/UX/buttons/TextLink";
 import CardSearchStaffFound from "../../../search/utils/CardSearchStaffFound";
 import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
 import { DownNarrow } from "../../../../components/icons/DownNarrow";
@@ -41,22 +42,9 @@ const BodyFormRefactored = ({
             {user?.companyData?.company_logo ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: 'center' }}>
                 <Avatar size={100} src={<img src={user?.companyData?.company_logo} alt="company_logo" />} />
-                <button
-                  type="button"
-                  onClick={() => removingCompanyLogo()}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    outline: "none",
-                    margin: 0,
-                    padding: 0,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <p style={{ textDecoration: "underline", color: "var(--danger-action)" }}>
-                    Remove
-                  </p>
-                </button>
+                <TextLink color="error" onClick={() => removingCompanyLogo()}>
+                  Remove
+                </TextLink>
               </div>
             ) : (
               <Avatar style={{ padding: "40px" }}>

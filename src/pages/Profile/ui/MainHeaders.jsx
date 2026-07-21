@@ -1,9 +1,10 @@
 import PropTypes from "prop-types";
-import { Avatar, Button, Input } from "antd";
+import { Avatar, Input } from "antd";
 import { useMediaQuery } from "@mui/material";
 import { Icon } from "@iconify/react";
 import "./MainHeaders.css";
 import Breadcrumb from "../../../components/UX/breadcrumbs/Breadcrumb";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 
 const MainHeaders = ({
   user,
@@ -20,13 +21,12 @@ const MainHeaders = ({
     <div className="main-header-comp">
       <div className="main-header-top">
         {isMobile ? (
-          <Button
-            type="link"
-            icon={<Icon icon="mdi:arrow-left" />}
+          <GrayButtonComponent
+            iconLeading={<Icon icon="tabler:arrow-left" width={20} height={20} />}
             onClick={onBack}
           >
             Back
-          </Button>
+          </GrayButtonComponent>
         ) : (
           <Breadcrumb
             path={breadcrumbs}
