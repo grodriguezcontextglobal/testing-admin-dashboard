@@ -15,12 +15,18 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import Input from "../../../../../components/UX/inputs/Input";
 import { dicIcons } from "./utils/dicIcons";
 import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
+import { getIndustryProfile } from "../../../../../config/industryProfiles";
 
 const UpdateMemberInformation = () => {
   const [errors, setErrors] = useState([]);
   const [saving, setSaving] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector(state => state.member)
+  // Industry-adaptive fields/labels — mirrors the add-member form
+  // (industryProfiles.js).
+  const { fields, representative } = getIndustryProfile(
+    user?.companyData?.industry
+  );
   const location = useLocation();
   const navigate = useNavigate()
   const [newImageProfileURL, setNewImageProfileURL] = useState(null);
@@ -141,7 +147,7 @@ const UpdateMemberInformation = () => {
       setValue("parent_guardian_email", membersData?.parent_guardian_email);
       setValue("parent_guardian_phone_number", membersData?.parent_guardian_phone_number);
     }
-  }, [membersData, memberInfoRetrieveQuery.data]);
+  }, [membersData, memberInfoRetrieveQuery.data, setValue]);
 
   const handleImageProfile = async () => {
     if (
@@ -328,24 +334,30 @@ const UpdateMemberInformation = () => {
             <span style={{ width: "100%", textAlign: "left" }}>Zip</span>
             <Input {...register("zip")} />
           </InputLabel>
-          <InputLabel
-            style={{ display: "flex", flexDirection: "column", gap: 4 }}
-          >
-            <span style={{ width: "100%", textAlign: "left" }}>Grade</span>
-            <Input {...register("grade")} />
-          </InputLabel>
-          <InputLabel
-            style={{ display: "flex", flexDirection: "column", gap: 4 }}
-          >
-            <span style={{ width: "100%", textAlign: "left" }}>Homeroom</span>
-            <Input {...register("homeroom")} />
-          </InputLabel>
+          {fields.grade && (
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>Grade</span>
+              <Input {...register("grade")} />
+            </InputLabel>
+          )}
+          {fields.homeroom && (
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>Homeroom</span>
+              <Input {...register("homeroom")} />
+            </InputLabel>
+          )}
         </div>
-        <FormControlLabel
-          control={<CheckboxReusableComponent name="minor" checked={watch("minor")} onChange={(e) => setValue("minor", e.target.checked)} />}
-          label="Is the member a minor?"
-        />
-        {watch("minor") && (
+        {fields.minor && (
+          <FormControlLabel
+            control={<CheckboxReusableComponent name="minor" checked={watch("minor")} onChange={(e) => setValue("minor", e.target.checked)} />}
+            label="Is the member a minor?"
+          />
+        )}
+        {fields.minor && watch("minor") && (
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
           >
@@ -353,7 +365,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian First name
+                {representative.label} first name
               </span>
               <Input
 
@@ -364,7 +376,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian Last name
+                {representative.label} last name
               </span>
               <Input
 
@@ -375,7 +387,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian Email
+                {representative.label} email
               </span>
               <Input
 
@@ -387,7 +399,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian Phone
+                {representative.label} phone
               </span>
               <Input
                 {...register("parent_guardian_phone_number")}
