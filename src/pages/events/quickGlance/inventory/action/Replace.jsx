@@ -1,5 +1,4 @@
 import {
-  Button,
   Grid,
   MenuItem,
   OutlinedInput,
@@ -18,14 +17,12 @@ import {
   onTriggerModalToReplaceReceiver,
 } from "../../../../../store/slices/helperSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 const menuOptions = ["Network", "Hardware", "Damaged", "Battery", "Other"];
 export const Replace = () => {
   const [newDeviceInfoFromPool, setNewDeviceInfoFromPool] = useState([]);
@@ -315,25 +312,21 @@ export const Replace = () => {
           </Grid>
           {watch("reason") !== "" && (
             <Grid display={"flex"} alignItems={"center"} gap={2} container>
-              <Button
+              <GrayButtonComponent
                 disabled={watch("reason") !== ""}
                 onClick={closeModal}
-                style={{ ...GrayButton, width: "100%" }}
+                styles={{ width: "100%" }}
               >
-                <Typography textTransform={"none"} style={GrayButtonText}>
-                  Cancel
-                </Typography>
-              </Button>
+                Cancel
+              </GrayButtonComponent>
 
-              <Button
+              <BlueButtonComponent
                 disabled={watch("reason") === ""}
-                type="submit"
-                style={{ ...BlueButton, width: "100%" }}
+                buttonType="submit"
+                styles={{ width: "100%" }}
               >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Save
-                </Typography>
-              </Button>
+                Save
+              </BlueButtonComponent>
             </Grid>
           )}{" "}
         </Grid>

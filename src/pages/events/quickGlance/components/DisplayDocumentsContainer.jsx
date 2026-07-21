@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import { Tabs, Table, Button, Select, message, Modal, Tooltip } from "antd";
+import { Tabs, Table, Select, message, Modal, Tooltip } from "antd";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -216,13 +216,12 @@ const DisplayDocumentsContainer = ({
                   })) || []
               }
             />
-            <Button
-              type="primary"
+            <BlueButtonComponent
               onClick={handleAssignDocuments}
-              loading={updateEventDocumentsMutation.isLoading}
+              isLoading={updateEventDocumentsMutation.isLoading}
             >
               Assign Selected Documents
-            </Button>
+            </BlueButtonComponent>
           </Box>
         )}
       </Box>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Modal, notification } from "antd";
+import { Modal, notification } from "antd";
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import PropTypes from "prop-types";
@@ -9,10 +9,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { onAddEventData } from "../../../../store/slices/eventSlice";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { useQuery } from "@tanstack/react-query";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
   const { user } = useSelector((state) => state.admin);
@@ -462,13 +460,13 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
               />
             </div>
           </div>
-          <Button
-            htmlType="submit"
-            loading={loading}
-            style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+          <BlueButtonComponent
+            buttonType="submit"
+            isLoading={loading}
+            styles={{ width: "100%" }}
           >
-            <Typography style={BlueButtonText}>Update</Typography>
-          </Button>
+            Update
+          </BlueButtonComponent>
         </form>
       </Grid>
     </Modal>

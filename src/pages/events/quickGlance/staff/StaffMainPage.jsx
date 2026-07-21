@@ -1,7 +1,5 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "antd";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
@@ -9,6 +7,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Title } from "../../../../styles/global/Title";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import StaffTable from "./table/StaffTable";
+import TextLink from "../../../../components/UX/buttons/TextLink";
 
 const StaffMainPage = () => {
   const { event } = useSelector((state) => state.event);
@@ -89,28 +88,9 @@ const StaffMainPage = () => {
               marginRight: "5px",
             }}
           >
-            <Button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                outline: "none",
-                backgroundColor: "transparent",
-              }}
-              onClick={() => refreshing()}
-            >
-              <Typography
-                textTransform={"none"}
-                textAlign={"left"}
-                fontWeight={500}
-                fontSize={"12px"}
-                fontFamily={"Inter"}
-                lineHeight={"28px"}
-                color={"var(--blue-dark-700, #004EEB)"}
-                padding={"0px 8px"}
-              >
-                <Icon icon="jam:refresh" /> Refresh
-              </Typography>
-            </Button>
+            <TextLink color="brand" onClick={() => refreshing()}>
+              Refresh
+            </TextLink>
           </div>
         </Grid>
 

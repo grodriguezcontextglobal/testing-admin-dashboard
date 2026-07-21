@@ -1,7 +1,6 @@
-import { message, Button, Tooltip } from "antd";
+import { message, Tooltip } from "antd";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { read, utils, writeFile } from "xlsx";
-import { DownloadOutlined } from "@ant-design/icons";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -575,13 +574,12 @@ const ImportingXLSXFile = ({
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span>Import Template Guide</span>
               <Tooltip title="Download Template">
-                <Button
-                  type="primary"
-                  shape="round"
-                  icon={<DownloadOutlined />}
+                <BlueButtonComponent
                   onClick={handleDownloadTemplate}
-                  size="small"
-                >Download Template</Button>
+                  size="sm"
+                >
+                  Download Template
+                </BlueButtonComponent>
               </Tooltip>
             </div>
           }

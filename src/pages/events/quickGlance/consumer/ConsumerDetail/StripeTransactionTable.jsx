@@ -1,7 +1,7 @@
 import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Button, message, Popconfirm } from "antd";
+import { message, Popconfirm } from "antd";
 import pkg from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,12 +12,7 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
@@ -25,10 +20,11 @@ import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import { groupBy } from "lodash";
 import Loading from "../../../../../components/animation/Loading";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -271,29 +267,13 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                       .replaceAll(",", " ")}
                   </p>
                   <div style={{ padding: "2px 8px" }}>
-                    <Button
-                      loading={isLoading}
+                    <DangerButtonComponent
+                      isLoading={isLoading}
                       disabled={!record.active}
-                      style={{
-                        ...CenteringGrid,
-                        ...DangerButton,
-                        background: `${!record.active
-                          ? GrayButton.background
-                          : DangerButton.backgroundColor
-                          }`,
-                        border: `${!record.active
-                          ? GrayButton.border
-                          : DangerButton.border
-                          }`,
-                      }}
                       onClick={() => handleRefund(record)}
                     >
-                      {record.active ? (
-                        <p style={DangerButtonText}>Refund</p>
-                      ) : (
-                        <p style={GrayButtonText}>Refunded</p>
-                      )}
-                    </Button>
+                      {record.active ? "Refund" : "Refunded"}
+                    </DangerButtonComponent>
                   </div>
                 </span>
               )}
@@ -310,35 +290,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     ...CenteringGrid,
                   }}
                 >
-                  <Button
+                  <DangerButtonComponent
                     disabled={!record.active}
-                    style={{
-                      // ...CenteringGrid,
-                      ...DangerButton,
-                      width: "100%",
-                      border: `${!record.active
-                        ? "1px solid var(--disabled-danger-button)"
-                        : DangerButton.border
-                        }`,
-                      background: `${!record.active
-                        ? "var(--disabled-danger-button)"
-                        : DangerButton.background
-                        }`,
-                    }}
+                    styles={{ width: "100%" }}
                   >
-                    <Typography
-                      textTransform={"none"}
-                      style={{
-                        ...DangerButtonText,
-                        color: !record.active
-                          ? "var(--disabled-danger-button-text)"
-                          : DangerButtonText.color,
-                        margin: 0,
-                      }}
-                    >
-                      Release deposit
-                    </Typography>
-                  </Button>
+                    Release deposit
+                  </DangerButtonComponent>
                 </Popconfirm>
               )}
           </Grid>
@@ -359,26 +316,12 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                     handleRecord(record);
                   }}
                 >
-                  <Button
+                  <BlueButtonComponent
                     disabled={!record.active}
-                    style={{
-                      ...CenteringGrid,
-                      ...BlueButton,
-                      width: "100%",
-                      border: `${!record.active
-                        ? "1px solid var(--disabled-blue-button)"
-                        : BlueButton.border
-                        }`,
-                      background: `${!record.active
-                        ? "var(--disabled-blue-button)"
-                        : BlueButton.background
-                        }`,
-                    }}
+                    styles={{ width: "100%" }}
                   >
-                    <Typography textTransform={"none"} style={BlueButtonText}>
-                      Capture fund
-                    </Typography>
-                  </Button>
+                    Capture fund
+                  </BlueButtonComponent>
                 </Popconfirm>
               </Grid>
             )}

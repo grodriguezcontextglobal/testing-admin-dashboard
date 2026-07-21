@@ -1,11 +1,9 @@
-import { Button, Modal } from "antd";
+import { Modal } from "antd";
 import { Subtitle } from "../../../../styles/global/Subtitle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import { GrayButton } from "../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../styles/global/GrayButtonText";
 import FeedbackEvent from "../../../../components/notification/email/FeedbackEvent";
 import { useState } from "react";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
 const FeedbackModal = ({ feedbackEventModal, setFeedbackEventModal }) => {
   const [triggerFeedbackEvent, setTriggerFeedbackEvent] = useState(false);
@@ -28,23 +26,21 @@ const FeedbackModal = ({ feedbackEventModal, setFeedbackEventModal }) => {
             gap: "10px",
           }}
         >
-          <Button
+          <GrayButtonComponent
             key="back"
-            htmlType="reset"
+            buttonType="reset"
             onClick={closeModal}
-            style={GrayButton}
           >
-            <p style={GrayButtonText}>Cancel</p>
-          </Button>
+            Cancel
+          </GrayButtonComponent>
 
-          <Button
+          <BlueButtonComponent
             key="submit"
-            htmlType="button"
+            buttonType="button"
             onClick={() => setTriggerFeedbackEvent(true)}
-            style={BlueButton}
           >
-            <p style={BlueButtonText}>Continue</p>
-          </Button>
+            Continue
+          </BlueButtonComponent>
         </div>,
       ]}
       closeIcon={<p style={{ display: "none" }}>x</p>}

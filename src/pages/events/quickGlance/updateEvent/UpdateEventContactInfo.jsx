@@ -12,9 +12,8 @@ import {
   onAddEventData,
 } from "../../../../store/slices/eventSlice";
 import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 const UpdateEventContactInfo = ({
   openUpdateEventModal,
   setOpenUpdateEventModal,
@@ -316,13 +315,13 @@ const UpdateEventContactInfo = ({
               );
             })}
           </Space>
-          <Button
-            loading={loading}
-            htmlType="submit"
-            style={{ ...BlueButton, ...CenteringGrid, width: "100%" }}
+          <BlueButtonComponent
+            isLoading={loading}
+            buttonType="submit"
+            styles={{ width: "100%" }}
           >
-            <Typography style={BlueButtonText}>Update</Typography>
-          </Button>
+            Update
+          </BlueButtonComponent>
         </form>
       </Grid>
     </Modal>
