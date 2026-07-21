@@ -1,7 +1,7 @@
-import { Button, Space, Tooltip, Typography } from "antd";
+import { Space, Tooltip, Typography } from "antd";
 import { useRef } from "react";
 import TourModals from "../../../components/UX/tours/TourModals";
-import { DownloadOutlined } from "@ant-design/icons";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { utils, writeFile } from "xlsx";
 
 const { Text } = Typography;
@@ -460,13 +460,11 @@ const TourModal = ({ open, setOpen }) => {
       title={<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span>Inventory Import Template Guide</span>
         <Tooltip title="Download Template">
-          <Button
-            type="primary"
+          <BlueButtonComponent
             shape="round"
-            icon={<DownloadOutlined />}
             onClick={handleDownloadTemplate}
-            size="small"
-          >Download Template</Button>
+            size="sm"
+          >Download Template</BlueButtonComponent>
         </Tooltip>
       </div>}
       description={

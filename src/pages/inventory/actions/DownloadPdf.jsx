@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { Typography } from "@mui/material";
 import {
   Page,
   Text,
@@ -9,11 +8,10 @@ import {
   // PDFDownloadLink,
   pdf,
 } from "@react-pdf/renderer";
-import { Button, message } from "antd";
+import { message } from "antd";
 import { saveAs } from "file-saver";
 import { useState } from "react";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-import { BlueButton } from "../../../styles/global/BlueButton";
+import TextLink from "../../../components/UX/buttons/TextLink";
 
 // Create styles
 const styles = StyleSheet.create({
@@ -188,35 +186,21 @@ const DownloadPdf = ({ data }) => {
   return (
     <div>
       {/* <PDFDownloadLink */}
-      <Button
+      <TextLink
         // document={<FileGenerator data={data} />}
         // fileName={`excel_stock_report_${Date.now()}.pdf`}
-        loading={isLoading}
+        disabled={isLoading}
         onClick={() => {
           message.loading({
             content: "excel file generating...",
           });
           generateAndSavePdf();
         }}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          borderTop: "transparent",
-          borderRight: "transparent",
-          borderBottom: "transparent",
-        }}
       >
-        <Typography
-          style={{
-            ...TextFontSize14LineHeight20,
-            color: BlueButton.background,
-          }}
-        >
-          {({ blob, url, loading, error }) => loading && "Loading document..."}
-          Export record&nbsp;(
-          <span style={{ textDecoration: "underline" }}>.pdf</span>)
-        </Typography>
-      </Button>
+        {({ blob, url, loading, error }) => loading && "Loading document..."}
+        Export record&nbsp;(
+        <span style={{ textDecoration: "underline" }}>.pdf</span>)
+      </TextLink>
       {/* </PDFDownloadLink> */}
     </div>
   );

@@ -3,6 +3,7 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import DatePicker from "react-datepicker";
@@ -17,15 +18,15 @@ export const renderingOptionsButtons = ({
 }) => {
   if (label === "Sub location") {
     return (
-      <Button
-        style={{
+      <BlueButtonComponent
+        styles={{
           display: "flex",
           margin: "10px 0 0",
         }}
         onClick={() => addingSubLocation(watch("sub_location"))}
       >
         Add sub location
-      </Button>
+      </BlueButtonComponent>
     );
   }
 };

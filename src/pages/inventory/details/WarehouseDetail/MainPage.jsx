@@ -1,6 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
-  Button,
   Grid,
   InputAdornment,
   OutlinedInput,
@@ -12,10 +11,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import LightBlueButtonText from "../../../../styles/global/LightBlueButtonText";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import TableDeviceLocation from "./components/Table";
@@ -88,17 +85,9 @@ const MainPageWarehouse = () => {
           item
           md={6}
         >
-          <Button
-            style={{ ...BlueButton }}
-            onClick={() => navigate("/inventory/new-item")}
-          >
-            <WhitePlusIcon />
-            &nbsp;{" "}
-            <Typography textTransform={"none"} style={BlueButtonText}>
-              {" "}
-              Add new device{" "}
-            </Typography>
-          </Button>
+          <BlueButtonComponent onClick={() => navigate("/inventory/new-item")}>
+            Add new device
+          </BlueButtonComponent>
         </Grid>
       </Grid>
       <Grid

@@ -1,10 +1,11 @@
 import { Icon } from '@iconify/react'
 import { Grid, InputAdornment, OutlinedInput, Typography } from '@mui/material'
-import { Button, Divider } from 'antd'
+import { Divider } from 'antd'
 import { useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
 import Component from './Component'
+import GrayButtonComponent from '../../../components/UX/buttons/GrayButton'
 
 
 const MainPage = () => {
@@ -78,8 +79,8 @@ const MainPage = () => {
                         xs={4}
                     >
                         <Link to={'/inventory'}>
-                        <Button style={{ width: "fit-content" }}>Back</Button></Link>
-                        
+                        <GrayButtonComponent styles={{ width: "fit-content" }}>Back</GrayButtonComponent></Link>
+
                     </Grid>
                     <Grid
                         display={"flex"}

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { Button, Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
+import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Divider } from "antd";
@@ -8,12 +8,10 @@ import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
-import { WhitePlusIcon } from "../../../../components/icons/WhitePlusIcon";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import EventInventoryTable from "./table/EventInventoryData";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 
 const MainPage = () => {
     const event_id = new URLSearchParams(window.location.search).get(
@@ -70,15 +68,11 @@ const MainPage = () => {
                             xs={12}
                             sm={12}
                         >
-                            <Button
-                                style={{ ...BlueButton }}
+                            <BlueButtonComponent
                                 // onClick={() => setOpenDeviceModal(true)}
                             >
-                                <WhitePlusIcon />&nbsp; <Typography
-                                    textTransform={"none"}
-                                    style={BlueButtonText}
-                                > Add new group of devices </Typography>
-                            </Button>
+                                Add new group of devices
+                            </BlueButtonComponent>
                         </Grid>
                         <Grid marginY={0} item xs={12} sm={12} md={6}>
                             <Typography
@@ -104,15 +98,11 @@ const MainPage = () => {
                             item
                             md={6}
                         >
-                            <Button
-                                style={{ ...BlueButton }}
+                            <BlueButtonComponent
                                 // onClick={() => setOpenDeviceModal(true)}
                             >
-                                <WhitePlusIcon />&nbsp; <Typography
-                                    textTransform={"none"}
-                                    style={BlueButtonText}
-                                > Add new group of devices </Typography>
-                            </Button>
+                                Add new group of devices
+                            </BlueButtonComponent>
                         </Grid>
                     </Grid>
                     <Grid

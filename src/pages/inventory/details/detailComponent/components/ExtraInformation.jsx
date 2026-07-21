@@ -1,16 +1,13 @@
 import { Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Card, message, Popconfirm, Space } from "antd";
+import { Card, message, Popconfirm, Space } from "antd";
 import { useEffect, useState } from "react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
 import Chip from "../../../../../components/UX/Chip/Chip";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import ContainerContent from "./ContainerContent";
 const ExtraInformation = ({ dataFound, containerInfo }) => {
   const [openModal, setOpenModal] = useState(false);
@@ -118,20 +115,16 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
                 title="Are you sure you want to remove all items inside this container?"
                 onConfirm={() => handleContainerItemsRemoval()}
               >
-                <Button style={{ ...DangerButton, margin: 0 }}>
-                  <Typography style={{ ...DangerButtonText }}>
-                    Empty case
-                  </Typography>
-                </Button>
+                <DangerButtonComponent styles={{ margin: 0 }}>
+                  Empty case
+                </DangerButtonComponent>
               </Popconfirm>
-              <Button
+              <BlueButtonComponent
                 onClick={() => setOpenModal(true)}
-                style={{ ...BlueButton, margin: 0 }}
+                styles={{ margin: 0 }}
               >
-                <Typography style={{ ...BlueButtonText, ...CenteringGrid }}>
-                  Add/Update
-                </Typography>
-              </Button>
+                Add/Update
+              </BlueButtonComponent>
             </Grid>
           </Grid>
           <Grid container>

@@ -1,16 +1,13 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
+import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
-import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import ImageUploaderUX from "../../../../../../components/utils/UX/ImageUploaderUX";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../../../components/UX/Chip/Chip";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { gripingFields } from "../../../../actions/utils/BulkComponents";
 import {
@@ -200,30 +197,13 @@ const EditItemForm = ({
                           gap: "1rem",
                         }}
                       >
-                        <Button
+                        <BlueButtonComponent
                           disabled={imageUrlGenerated}
                           onClick={() => acceptImage()}
-                          style={{
-                            ...BlueButton,
-                            background: imageUrlGenerated
-                              ? "transparent"
-                              : BlueButton.background,
-                          }}
+                          iconLeading={imageUrlGenerated ? <CheckIcon /> : null}
                         >
-                          <p
-                            style={{
-                              ...BlueButtonText,
-                              color: imageUrlGenerated
-                                ? "var(--gray-600, #475467)"
-                                : BlueButtonText.color,
-                            }}
-                          >
-                            {imageUrlGenerated ? <CheckIcon /> : null}
-                            {imageUrlGenerated
-                              ? "Image accepted"
-                              : "Accept image"}
-                          </p>
-                        </Button>
+                          {imageUrlGenerated ? "Image accepted" : "Accept image"}
+                        </BlueButtonComponent>
                       </div>
                     </div>
                   </InputLabel>
@@ -485,19 +465,17 @@ const EditItemForm = ({
         })}
       </Grid>
       <Divider />
-      <Button
-        type="button"
+      <BlueButtonComponent
+        buttonType="button"
         onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        style={
+        styles={
           stylingComponents({
             loadingStatus,
           }).buttonStyleLoading
         }
       >
-        <Typography textTransform={"none"} style={BlueButtonText}>
-          <WhiteCirclePlusIcon /> &nbsp; Add more information
-        </Typography>
-      </Button>
+        Add more information
+      </BlueButtonComponent>
       {moreInfoDisplay &&
         addingExtraInfo({
           keyObject,

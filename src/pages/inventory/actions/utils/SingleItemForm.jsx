@@ -1,13 +1,11 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
+import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { CheckIcon } from "../../../../components/icons/CheckIcon";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { BlueButton } from "../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { renderFields } from "../utils/SingleItemFields";
 
@@ -224,30 +222,13 @@ const SingleItemForm = ({
                           gap: "1rem",
                         }}
                       >
-                        <Button
+                        <BlueButtonComponent
                           disabled={imageUrlGenerated}
                           onClick={() => acceptImage()}
-                          style={{
-                            ...BlueButton,
-                            background: imageUrlGenerated
-                              ? "transparent"
-                              : BlueButton.background,
-                          }}
+                          iconLeading={imageUrlGenerated ? <CheckIcon /> : null}
                         >
-                          <p
-                            style={{
-                              ...BlueButtonText,
-                              color: imageUrlGenerated
-                                ? "var(--gray-600, #475467)"
-                                : BlueButtonText.color,
-                            }}
-                          >
-                            {imageUrlGenerated ? <CheckIcon /> : null}
-                            {imageUrlGenerated
-                              ? "Image accepted"
-                              : "Accept image"}
-                          </p>
-                        </Button>
+                          {imageUrlGenerated ? "Image accepted" : "Accept image"}
+                        </BlueButtonComponent>
                       </div>
                     </div>
                   </InputLabel>

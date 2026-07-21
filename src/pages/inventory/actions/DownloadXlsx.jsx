@@ -1,10 +1,8 @@
-import { Typography } from "@mui/material";
-import { Button, message } from "antd";
+import { message } from "antd";
 import { useCallback, useState } from "react";
 import { saveAs } from "file-saver";
 import { XLSXIcon } from "../../../components/icons/XLSXIcon";
-import { TextFontSize14LineHeight20 } from "../../../styles/global/TextFontSize14LineHeight20";
-import { BlueButton } from "../../../styles/global/BlueButton";
+import TextLink from "../../../components/UX/buttons/TextLink";
 
 const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -146,25 +144,16 @@ const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
   return (
     <>
       {contextHolder}
-      <Button
+      <TextLink
         onClick={generateExcelFile}
         disabled={isExporting}
-        style={{ display: "flex", alignItems: "center", border: "transparent" }}
+        iconLeading={<XLSXIcon />}
+        style={{ opacity: isExporting ? 0.6 : 1 }}
       >
-        <Typography
-          style={{
-            ...TextFontSize14LineHeight20,
-            color: BlueButton.background,
-            fontSize: "12px",
-            lineHeight: "28px",
-            opacity: isExporting ? 0.6 : 1,
-          }}
-        >
-          <XLSXIcon /> Export record (
-          <span style={{ textDecoration: "underline" }}>.xlsx</span>)
-          {isExporting ? " — generating…" : ""}
-        </Typography>
-      </Button>
+        Export record (
+        <span style={{ textDecoration: "underline" }}>.xlsx</span>)
+        {isExporting ? " — generating…" : ""}
+      </TextLink>
     </>
   );
 };

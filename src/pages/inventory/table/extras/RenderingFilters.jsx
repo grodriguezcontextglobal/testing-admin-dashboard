@@ -791,10 +791,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("location_1")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("location_1")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <div
@@ -820,8 +820,8 @@ const RenderingFilters = ({
               {selectedLocations.size > 0 && (
                 <DangerButtonComponent
                   func={handleDeleteSelectedLocations}
-                  style={{ margin: "0 1.5rem" }}
-                  loading={isDeleting}
+                  styles={{ margin: "0 1.5rem" }}
+                  loadingState={isDeleting}
                   title={`Delete Selected (${selectedLocations.size})`}
                 />
               )}
@@ -870,10 +870,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("category_name")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("category_name")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -914,10 +914,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("item_group")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("item_group")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -958,8 +958,8 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("brand")}>Save</Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              <BlueButtonComponent onClick={() => handleNameUpdate("brand")}>Save</BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -1000,10 +1000,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("ownership")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("ownership")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -1044,10 +1044,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("assignedToStaffMember")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("assignedToStaffMember")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
