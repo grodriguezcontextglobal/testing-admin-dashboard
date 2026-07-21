@@ -77,23 +77,31 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
     },
   });
 
+  // Nesting uses the working sub-location-path endpoint (the /db_sub_location
+  // table has no company_id column and errors). A single-segment path under the
+  // parent location renders as a sub-location in the inventory tree.
   const createSubLocationMutation = useMutation({
     mutationFn: (data) =>
-      devitrakApi.post("/db_sub_location/sub-locations", {
-        location_id: parentLocation?.id,
+      devitrakApi.post("/db_location/sub-location-path", {
         company_id: user.sqlInfo.company_id,
-        name: data.location_name,
-        parent_id: null,
-        active: 1,
+        location_id: parentLocation?.id,
+        sub_location_path: [data.location_name.trim()],
+        created_by: user.sqlInfo.staff_id || user.sqlInfo.id || null,
       }),
     onSuccess: (_res, variables) => {
       message.success(
-        `"${variables.location_name}" added under ${parentLocation?.name}`
+        `"${variables.location_name.trim()}" added under ${parentLocation?.name}`
       );
       invalidateLocationData();
       handleClose();
     },
     onError: (error) => {
+      if (error.response?.status === 409) {
+        message.info("That sub-location already exists here.");
+        invalidateLocationData();
+        handleClose();
+        return;
+      }
       message.error(
         `Error creating sub-location: ${
           error.response?.data?.msg || error.message
