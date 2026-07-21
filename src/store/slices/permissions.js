@@ -7,19 +7,22 @@ const permissionsSlice = createSlice({
     roleType: null,
     companyName: "",
     locations: [],
+    categories: [],
   },
   reducers: {
     setPermissions: (state, { payload }) => {
       state.role = payload.role;
       state.roleType = payload.roleType;
       state.companyName = payload.companyName;
-      state.locations = payload.locations;
+      state.locations = payload.locations ?? [];
+      state.categories = payload.categories ?? [];
     },
     onClearPermissions: (state) => {
       state.role = null;
       state.roleType = null;
       state.companyName = "";
       state.locations = [];
+      state.categories = [];
     },
   },
 });

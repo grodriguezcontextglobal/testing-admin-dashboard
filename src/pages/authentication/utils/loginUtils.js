@@ -61,14 +61,15 @@ export const extractStaffId = (memberApiData) => {
  * Works with both buildActiveCompaniesFromSQL output (SQL path) and
  * buildActiveCompanies output (legacy MongoDB path).
  *
- * @param {{ company, role, roleType, locations? }} activeCompany
- * @returns {{ role, roleType, companyName, locations }}
+ * @param {{ company, role, roleType, locations?, categories? }} activeCompany
+ * @returns {{ role, roleType, companyName, locations, categories }}
  */
-export const buildSetPermissionsPayload = ({ company, role, roleType, locations }) => ({
+export const buildSetPermissionsPayload = ({ company, role, roleType, locations, categories }) => ({
   role,
   roleType,
   companyName: company,
   locations: locations ?? [],
+  categories: categories ?? [],
 });
 
 /**
@@ -76,17 +77,18 @@ export const buildSetPermissionsPayload = ({ company, role, roleType, locations 
  * Locations are already normalized by the backend — no client-side transformation needed.
  *
  * @param {Array|null|undefined} sqlCompanies
- * @returns {Array<{ company, role, roleType, locations }>}
+ * @returns {Array<{ company, role, roleType, locations, categories }>}
  */
 export const buildActiveCompaniesFromSQL = (sqlCompanies) => {
   if (!Array.isArray(sqlCompanies)) return [];
   return sqlCompanies
     .filter(({ company_name }) => company_name)
-    .map(({ company_name, role_level, roleType, locations }) => ({
+    .map(({ company_name, role_level, roleType, locations, categories }) => ({
       company: company_name,
       role: role_level,
       roleType,
       locations: locations ?? [],
+      categories: categories ?? [],
     }));
 };
 

@@ -216,6 +216,30 @@ describe("buildActiveCompaniesFromSQL", () => {
     const result = buildActiveCompaniesFromSQL(input);
     expect(result[0].locations).toEqual([]);
   });
+
+  it("preserva categories[] del backend (scope de categoría)", () => {
+    const input = [
+      {
+        company_name: "Cat Co",
+        company_id: 4,
+        roleType: "category_manager",
+        role_level: 8,
+        categories: [
+          { category_id: 11, category_name: "Audio", can_create: true, can_update: true, can_delete: true },
+        ],
+      },
+    ];
+    const result = buildActiveCompaniesFromSQL(input);
+    expect(result[0].categories).toHaveLength(1);
+    expect(result[0].categories[0].category_id).toBe(11);
+    expect(result[0].categories[0].category_name).toBe("Audio");
+  });
+
+  it("usa [] para categories ausente en un registro", () => {
+    const input = [{ company_name: "Solo", company_id: 3, roleType: "assistant", role_level: 5 }];
+    const result = buildActiveCompaniesFromSQL(input);
+    expect(result[0].categories).toEqual([]);
+  });
 });
 
 // ─── buildSetPermissionsPayload ───────────────────────────────────────────────
@@ -241,6 +265,20 @@ describe("buildSetPermissionsPayload", () => {
   it("usa locations: [] cuando el activeCompany no tiene locations", () => {
     const payload = buildSetPermissionsPayload({ company: "Beta", role: 5, roleType: "assistant" });
     expect(payload.locations).toEqual([]);
+  });
+
+  it("propaga categories y usa [] cuando están ausentes", () => {
+    const withCats = buildSetPermissionsPayload({
+      company: "Cat Co",
+      role: 8,
+      roleType: "category_manager",
+      categories: [{ category_id: 11, category_name: "Audio" }],
+    });
+    expect(withCats.categories).toHaveLength(1);
+    expect(withCats.categories[0].category_name).toBe("Audio");
+
+    const without = buildSetPermissionsPayload({ company: "Beta", role: 5, roleType: "assistant" });
+    expect(without.categories).toEqual([]);
   });
 
   it("preserva roleType del backend sin re-derivar", () => {

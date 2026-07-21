@@ -1,3 +1,5 @@
+import { getRoleScopeDimension } from "../../../config/roles";
+
 const FULL_ACCESS_TYPES = ["root_admin", "admin", "sale_manager"];
 const INVENTORY_TYPES = [...FULL_ACCESS_TYPES, "inventory_manager"];
 
@@ -91,4 +93,62 @@ export const filterDataByRoleAndPreference = (data, user) => {
       return false;
     });
   });
+};
+
+// ─── Scoped roles (Phase C) ───────────────────────────────────────────────────
+// Category scope is the new dimension (roles category_manager/category_assistant).
+// Server-side enforcement is authoritative; the helpers below mirror it on the
+// client for a consistent UX. Location scope keeps its legacy path above.
+
+/**
+ * True when the role is category-scoped (category_manager / category_assistant).
+ * @param {string} roleType
+ * @returns {boolean}
+ */
+export const isCategoryScopedRole = (roleType) =>
+  getRoleScopeDimension(roleType) === "category";
+
+/**
+ * Client-side mirror of the server's category-scope filter: keep only inventory
+ * rows whose `category_name` is in the assigned set (matched case-insensitively,
+ * since scope is by category name server-side).
+ *
+ * FAIL-CLOSED: an empty assignment set returns no inventory (matches the
+ * backend contract — a scoped user with zero categories sees nothing).
+ *
+ * @param {Array}    data                 - Inventory rows (each with `category_name`)
+ * @param {string[]} assignedCategoryNames - Category names assigned to the user
+ * @returns {Array}
+ */
+export const filterInventoryByCategoryScope = (data, assignedCategoryNames) => {
+  if (!Array.isArray(data)) return [];
+  if (!Array.isArray(assignedCategoryNames) || assignedCategoryNames.length === 0) {
+    return [];
+  }
+  const allowed = new Set(
+    assignedCategoryNames.map((name) => String(name).toLowerCase())
+  );
+  return data.filter(
+    (item) =>
+      item?.category_name &&
+      allowed.has(String(item.category_name).toLowerCase())
+  );
+};
+
+/**
+ * R6 — a scoped role (location or category) with zero assignments in its
+ * dimension can see no inventory. Callers use this to render the empty-scope
+ * message instead of an ambiguous empty table.
+ *
+ * Non-scoped roles always return false.
+ *
+ * @param {string} roleType
+ * @param {{ locations?: Array, categories?: Array }} scope - permission-slice scope
+ * @returns {boolean}
+ */
+export const hasEmptyScope = (roleType, { locations = [], categories = [] } = {}) => {
+  const dimension = getRoleScopeDimension(roleType);
+  if (dimension === "category") return (categories?.length ?? 0) === 0;
+  if (dimension === "location") return (locations?.length ?? 0) === 0;
+  return false;
 };

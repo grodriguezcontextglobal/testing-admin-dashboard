@@ -27,7 +27,12 @@ import ColumnsFormat from "./extras/ux/ColumnsFormat";
 import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 import BaseTable from "../../../components/UX/tables/BaseTable";
 import TableHeader from "../../../components/UX/TableHeader";
-// import { filterDataByRoleAndPreference } from "../utils/accessControlUtils";
+import { FEATURE_SCOPED_ROLES } from "../../../config/featureFlags";
+import {
+  filterInventoryByCategoryScope,
+  hasEmptyScope,
+  isCategoryScopedRole,
+} from "../utils/accessControlUtils";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
@@ -77,6 +82,13 @@ const ItemTable = ({
   const searchValues = useContext(SearchItemContext);
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.admin);
+  // Scoped-roles (Phase C): the category dimension is enforced server-side and
+  // mirrored here for a consistent UX. Read the SQL scope stored at login.
+  const {
+    roleType: scopedRoleType,
+    categories: scopedCategories,
+    locations: scopedLocations,
+  } = useSelector((state) => state.permission);
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchResult, setSearchResult] = useState([]);
   const { role, employee } = useStaffRoleAndLocations();
@@ -266,8 +278,29 @@ const ItemTable = ({
       });
     }
 
+    // Category-scoped roles (8/9): mirror the server-side scope filter so the
+    // table matches what the backend will return. Fail-closed on empty scope.
+    if (FEATURE_SCOPED_ROLES && isCategoryScopedRole(scopedRoleType)) {
+      const assignedCategoryNames = (scopedCategories ?? []).map(
+        (c) => c.category_name,
+      );
+      data = filterInventoryByCategoryScope(data, assignedCategoryNames);
+    }
+
     return data;
-  }, [refactoredDataset, legacyDataset, allowedLocations, user]);
+  }, [refactoredDataset, legacyDataset, allowedLocations, scopedRoleType, scopedCategories]);
+
+  // R6 — a scoped role with zero assignments sees no inventory; show a clear
+  // message instead of an ambiguous empty table.
+  const emptyScope = useMemo(
+    () =>
+      FEATURE_SCOPED_ROLES &&
+      hasEmptyScope(scopedRoleType, {
+        locations: scopedLocations,
+        categories: scopedCategories,
+      }),
+    [scopedRoleType, scopedLocations, scopedCategories],
+  );
 
   // Filtering helpers now use baseDataset
   const filterOptionsBasedOnProps = (props) => {
@@ -393,6 +426,22 @@ const ItemTable = ({
       }
     >
       <Grid margin={"15px 0 0 0"} padding={0} container>
+        {emptyScope && (
+          <Grid item xs={12} sm={12} md={12} lg={12}>
+            <div style={{ width: "100%", textAlign: "center", padding: "48px 16px" }}>
+              <p style={{ fontWeight: 600, fontSize: "18px", margin: 0 }}>
+                No inventory in your scope yet
+              </p>
+              <p style={{ color: "#667085", marginTop: "8px" }}>
+                You don&apos;t have any{" "}
+                {isCategoryScopedRole(scopedRoleType) ? "categories" : "locations"}{" "}
+                assigned. Contact your administrator to get access to inventory.
+              </p>
+            </div>
+          </Grid>
+        )}
+        {!emptyScope && (
+          <>
         <Grid
           display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
           item
@@ -488,6 +537,8 @@ const ItemTable = ({
               }}
             />
           )}
+          </>
+        )}
       </Grid>
     </Suspense>
   );
