@@ -80,19 +80,21 @@ const ReassignConfirmModal = ({
   );
 
   const footer = [
+    <div style={{ display: "flex", justifyContent: "flex-end" }} key="footer">
     <GrayButtonComponent
       key="cancel"
       title="Cancel"
       func={onCancel}
       disabled={isReassigning}
-    />,
+    />
     <BlueButtonComponent
       key="confirm"
       title="Confirm change"
       func={onConfirm}
       loadingState={isReassigning}
       styles={{ margin: "0 0 0 12px" }}
-    />,
+    />
+      </div>
   ];
 
   return (

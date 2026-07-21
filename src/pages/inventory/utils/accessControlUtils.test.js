@@ -195,16 +195,16 @@ describe("hasEmptyScope", () => {
     expect(hasEmptyScope("category_manager", { categories: [{ category_id: 1 }] })).toBe(false);
   });
 
-  it("rol de ubicación sin ubicaciones asignadas → true", () => {
-    expect(hasEmptyScope("inventory_location_manager", { locations: [] })).toBe(true);
-  });
-
-  it("rol de ubicación con ubicaciones asignadas → false", () => {
-    expect(hasEmptyScope("inventory_location_manager", { locations: [{ location_id: 3 }] })).toBe(false);
+  it("roles de UBICACIÓN nunca son bloqueados por R6 (scope legacy server-side) → false", () => {
+    // La dimensión location vive en el Mongo legacy (managerLocation), no en el
+    // permission slice; no debemos inferir 'vacío' desde permission.locations,
+    // porque eso ocultaría el inventario a un usuario de ubicación bien scopeado.
+    expect(hasEmptyScope("inventory_location_manager", { categories: [] })).toBe(false);
+    expect(hasEmptyScope("inventory_location_assistant", {})).toBe(false);
   });
 
   it("roles no-scoped siempre → false, aun con scope vacío", () => {
-    expect(hasEmptyScope("root_admin", { locations: [], categories: [] })).toBe(false);
+    expect(hasEmptyScope("root_admin", { categories: [] })).toBe(false);
     expect(hasEmptyScope("inventory_manager", {})).toBe(false);
   });
 });

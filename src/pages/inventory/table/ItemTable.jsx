@@ -87,7 +87,6 @@ const ItemTable = ({
   const {
     roleType: scopedRoleType,
     categories: scopedCategories,
-    locations: scopedLocations,
   } = useSelector((state) => state.permission);
   const [chosenConditionState, setChosenConditionState] = useState(0);
   const [searchResult, setSearchResult] = useState([]);
@@ -290,16 +289,15 @@ const ItemTable = ({
     return data;
   }, [refactoredDataset, legacyDataset, allowedLocations, scopedRoleType, scopedCategories]);
 
-  // R6 — a scoped role with zero assignments sees no inventory; show a clear
-  // message instead of an ambiguous empty table.
+  // R6 — a CATEGORY-scoped role with zero assigned categories sees no
+  // inventory; show a clear message instead of an ambiguous empty table.
+  // Location roles are governed by the legacy server-side filter (R3), so
+  // hasEmptyScope deliberately ignores them here.
   const emptyScope = useMemo(
     () =>
       FEATURE_SCOPED_ROLES &&
-      hasEmptyScope(scopedRoleType, {
-        locations: scopedLocations,
-        categories: scopedCategories,
-      }),
-    [scopedRoleType, scopedLocations, scopedCategories],
+      hasEmptyScope(scopedRoleType, { categories: scopedCategories }),
+    [scopedRoleType, scopedCategories],
   );
 
   // Filtering helpers now use baseDataset
