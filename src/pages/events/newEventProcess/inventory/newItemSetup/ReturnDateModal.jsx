@@ -1,12 +1,11 @@
 import { Typography } from "@mui/material";
-import { Button, Tooltip } from "antd";
+import { Tooltip } from "antd";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize14LineHeight20 } from "../../../../../styles/global/TextFontSize14LineHeight20";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
@@ -82,12 +81,11 @@ const ReturnDateModal = ({
             marginTop: "20px",
           }}
         >
-          <Button
+          <BlueButtonComponent
             onClick={() => handleAddReturnDateRentedDevice()}
-            style={BlueButton}
           >
-            <p style={BlueButtonText}>Submit</p>
-          </Button>
+            Submit
+          </BlueButtonComponent>
         </div>
       </>
     );
