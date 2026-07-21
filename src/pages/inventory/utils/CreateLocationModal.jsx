@@ -4,20 +4,20 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { devitrakApi } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import TextLink from "../../../components/UX/buttons/TextLink";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
-// import CreateSubLocationPathModal from "./CreateSubLocationPathModal";
 
 const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
   const { control, handleSubmit, reset } = useForm();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [createdLocation, setCreatedLocation] = useState(null);
-  // const [openPathModal, setOpenPathModal] = useState(false);
+  const [segments, setSegments] = useState([""]);
+  const [savedPaths, setSavedPaths] = useState([]);
 
   const createLocationMutation = useMutation({
     mutationFn: async (data) => {
@@ -57,6 +57,51 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
     },
   });
 
+  // Saves one ordered sub-location path (e.g. ["Building A", "Floor 2"]) for
+  // the just-created location. Lets the user add several without leaving step 2.
+  const pathMutation = useMutation({
+    mutationFn: (path) =>
+      devitrakApi.post("/db_location/sub-location-path", {
+        company_id: user.sqlInfo.company_id,
+        location_id: createdLocation?.id,
+        sub_location_path: path,
+        created_by: user.sqlInfo.staff_id || user.sqlInfo.id || null,
+      }),
+    onSuccess: (_, path) => {
+      const key = path.join(" > ");
+      setSavedPaths((prev) => [...prev, key]);
+      setSegments([""]);
+      queryClient.invalidateQueries(["locationPathsTree"]);
+      queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
+      message.success(`Sub-location "${key}" added`);
+    },
+    onError: (err, path) => {
+      if (err.response?.status === 409) {
+        setSavedPaths((prev) => [...prev, path.join(" > ")]);
+        setSegments([""]);
+        message.info("That sub-location already exists.");
+        return;
+      }
+      message.error(err.response?.data?.msg || err.message);
+    },
+  });
+
+  const preview = segments.map((s) => s.trim()).filter(Boolean).join(" > ");
+  const addSegment = () => setSegments((prev) => [...prev, ""]);
+  const removeSegment = (index) =>
+    setSegments((prev) => prev.filter((_, i) => i !== index));
+  const updateSegment = (index, value) =>
+    setSegments((prev) => prev.map((s, i) => (i === index ? value : s)));
+
+  const handleAddPath = () => {
+    const path = segments.map((s) => s.trim()).filter(Boolean);
+    if (path.length === 0) {
+      message.warning("Type at least one level first.");
+      return;
+    }
+    pathMutation.mutate(path);
+  };
+
   const onSubmit = async (data) => {
     if (data.manager_id) {
       const res = await devitrakApi.post("/db_staff/consulting-member", {
@@ -73,7 +118,8 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
   const handleClose = () => {
     setStep(1);
     setCreatedLocation(null);
-    // setOpenPathModal(false);
+    setSegments([""]);
+    setSavedPaths([]);
     reset();
     setOpenModal(false);
   };
@@ -112,8 +158,10 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
         />
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-start", gap: "10px" }}>
-        <DangerButtonComponent
+      <div
+        style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}
+      >
+        <GrayButtonComponent
           title="Cancel"
           func={handleClose}
           buttonType="button"
@@ -128,6 +176,8 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
     </form>
   );
 
+  const canAddPaths = Boolean(createdLocation?.id);
+
   const step2Body = () => (
     <div
       style={{
@@ -139,44 +189,170 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
     >
       <div
         style={{
-          background: "#f6ffed",
-          border: "1px solid #b7eb8f",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          background: "var(--success-50, #ecfdf3)",
+          border: "1px solid var(--success-200, #abefc6)",
           borderRadius: "8px",
           padding: "12px 16px",
           fontSize: "14px",
-          color: "#344054",
+          color: "var(--gray-700, #344054)",
         }}
       >
-        <strong>&quot;{createdLocation?.name}&quot;</strong> was created successfully.
+        <span style={{ color: "var(--success-600, #079455)", fontWeight: 700 }}>
+          ✓
+        </span>
+        <span>
+          <strong>&quot;{createdLocation?.name}&quot;</strong> was created.
+        </span>
       </div>
 
-      <p style={{ margin: 0, fontSize: "14px", color: "#475467" }}>
-        You can now register ordered sub-location paths for this location, or
-        skip and do it later.
-      </p>
+      {canAddPaths ? (
+        <>
+          <div>
+            <label style={{ fontWeight: 600, display: "block" }}>
+              Add sub-locations{" "}
+              <span style={{ fontWeight: 400, color: "var(--gray-500, #667085)" }}>
+                (optional)
+              </span>
+            </label>
+            <p
+              style={{
+                margin: "4px 0 0",
+                fontSize: "13px",
+                color: "var(--gray-600, #475467)",
+              }}
+            >
+              Break this location into an ordered path, e.g.{" "}
+              <em>Building A &gt; Floor 2 &gt; Room 201</em>. Add as many as you
+              like — or just click Done.
+            </p>
+          </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-start", gap: "10px" }}>
-        <GrayButtonComponent
-          title="Skip for now"
-          func={handleClose}
-          buttonType="button"
-        />
-        {/* <BlueButtonComponent
-          title="Register Sub-location Paths"
-          func={() => setOpenPathModal(true)}
-          buttonType="button"
-        /> */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {segments.map((seg, index) => (
+              <div
+                key={index}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span
+                  style={{
+                    minWidth: "18px",
+                    color: "var(--gray-500, #667085)",
+                    fontSize: "12px",
+                    textAlign: "right",
+                  }}
+                >
+                  {index + 1}.
+                </span>
+                <Input
+                  style={{ ...OutlinedInputStyle, flex: 1 }}
+                  value={seg}
+                  onChange={(e) => updateSegment(index, e.target.value)}
+                  placeholder={index === 0 ? "e.g. Building A" : `Level ${index + 1}`}
+                  onPressEnter={addSegment}
+                />
+                {segments.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSegment(index)}
+                    aria-label="Remove level"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--error-500, #d15334)",
+                      fontSize: "20px",
+                      lineHeight: 1,
+                      padding: "0 4px",
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            <TextLink onClick={addSegment} style={{ width: "fit-content" }}>
+              + Add another level
+            </TextLink>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}
+          >
+            <BlueButtonComponent
+              buttonType="button"
+              size="sm"
+              onClick={handleAddPath}
+              loadingState={pathMutation.isPending}
+              isDisabled={!preview}
+              styles={{ width: "fit-content" }}
+            >
+              Add sub-location
+            </BlueButtonComponent>
+            {preview && (
+              <span style={{ fontSize: "13px", color: "var(--gray-500, #667085)" }}>
+                Preview:{" "}
+                <strong style={{ color: "var(--gray-700, #344054)" }}>
+                  {preview}
+                </strong>
+              </span>
+            )}
+          </div>
+
+          {savedPaths.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "var(--gray-600, #475467)",
+                }}
+              >
+                Added ({savedPaths.length})
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {savedPaths.map((p, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      background: "var(--gray-100, #eeefe9)",
+                      borderRadius: "6px",
+                      padding: "4px 10px",
+                      fontSize: "13px",
+                      color: "var(--gray-700, #344054)",
+                    }}
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <p style={{ margin: 0, fontSize: "14px", color: "var(--gray-600, #475467)" }}>
+          You can add sub-locations to this location anytime from its page.
+        </p>
+      )}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "10px",
+          borderTop: "1px solid var(--gray-200, #ddded6)",
+          paddingTop: "1rem",
+        }}
+      >
+        <BlueButtonComponent title="Done" func={handleClose} buttonType="button" />
       </div>
-
-      {/* {openPathModal && (
-        <CreateSubLocationPathModal
-          open={openPathModal}
-          onClose={() => setOpenPathModal(false)}
-          locationId={createdLocation?.id || null}
-          locationName={createdLocation?.name || null}
-          user={user}
-        />
-      )} */}
     </div>
   );
 
@@ -187,7 +363,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
       footer={null}
       title={
         <Typography style={Subtitle}>
-          {step === 1 ? "Create New Location" : "Location Created"}
+          {step === 1 ? "Create New Location" : "Add Sub-locations"}
         </Typography>
       }
       body={step === 1 ? step1Body() : step2Body()}
