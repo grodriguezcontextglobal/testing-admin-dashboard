@@ -42,3 +42,26 @@ export const validateScopeSelection = (roleType, selection) => {
     message: `Assign at least one ${label} — a scoped user with no assignments cannot see any inventory.`,
   };
 };
+
+/**
+ * Builds the body for `PUT /db_staff/company-staff/scope`
+ * (FRONTEND_INTEGRATION_scoped_roles.md §4). Sends ONLY the dimension that
+ * matches the role — location role → `locations`, category role → `categories`
+ * — because sending the wrong key is a 400. Ids are coerced to numbers and
+ * non-numeric entries dropped (the endpoint requires numeric ids). A non-scoped
+ * roleType yields no dimension key. Full-replace semantics: pass the complete
+ * current selection, not a delta.
+ */
+export const buildScopePayload = (roleType, selection, { company_id, staff_id }) => {
+  const base = { company_id, staff_id };
+  const dimension = getRoleScopeDimension(roleType);
+  if (!dimension) return base;
+
+  const ids = (Array.isArray(selection) ? selection : [])
+    .map((id) => Number(id))
+    .filter((id) => Number.isFinite(id));
+
+  return dimension === "location"
+    ? { ...base, locations: ids }
+    : { ...base, categories: ids };
+};

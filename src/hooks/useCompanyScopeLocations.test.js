@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
 import adminReducer from "../store/slices/adminSlice";
 import { devitrakApi } from "../api/devitrakApi";
-import { useCompanyCategories } from "./useCompanyCategories";
+import { useCompanyScopeLocations } from "./useCompanyScopeLocations";
 
 vi.mock("../api/devitrakApi", () => ({
   devitrakApi: { post: vi.fn() },
@@ -39,45 +39,64 @@ function makeWrapper(companyId) {
   return Wrapper;
 }
 
-describe("useCompanyCategories", () => {
+describe("useCompanyScopeLocations", () => {
   beforeEach(() => {
     devitrakApi.post.mockReset();
   });
 
   it("does not fire the query when there is no company id", () => {
-    renderHook(() => useCompanyCategories(), { wrapper: makeWrapper(undefined) });
+    renderHook(() => useCompanyScopeLocations(), {
+      wrapper: makeWrapper(undefined),
+    });
     expect(devitrakApi.post).not.toHaveBeenCalled();
   });
 
-  it("fetches categories and dedupes them into label/value options", async () => {
-    // LIVE contract (FRONTEND_INTEGRATION_scoped_roles.md §6): the endpoint
-    // returns `{ ok, result: [...] }`, options carry the numeric category_id as
-    // value (sent to the scope endpoint) and category_name as label.
+  it("maps result[] into label/value options carrying the numeric location_id", async () => {
+    // LIVE contract: POST /db_company/locations -> { ok, result: [...] }.
     devitrakApi.post.mockResolvedValue({
       data: {
         ok: true,
         result: [
-          { category_id: 1, category_name: "Cameras" },
-          { category_id: 99, category_name: "Cameras" },
-          { category_id: 2, category_name: "Lenses" },
+          { location_id: 3, location_name: "Warehouse A" },
+          { location_id: 7, location_name: "Warehouse B" },
         ],
       },
     });
 
-    const { result } = renderHook(() => useCompanyCategories(), {
+    const { result } = renderHook(() => useCompanyScopeLocations(), {
       wrapper: makeWrapper("company-123"),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(devitrakApi.post).toHaveBeenCalledWith("/db_company/categories", {
+    expect(devitrakApi.post).toHaveBeenCalledWith("/db_company/locations", {
       company_id: "company-123",
     });
-    expect(result.current.categories).toHaveLength(2);
-    // Dedupe by category_name keeps the first category_id (1, not 99).
     expect(result.current.options).toEqual([
-      { label: "Cameras", value: 1 },
-      { label: "Lenses", value: 2 },
+      { label: "Warehouse A", value: 3 },
+      { label: "Warehouse B", value: 7 },
+    ]);
+  });
+
+  it("drops entries with no location_id and tolerates a non-array result", async () => {
+    devitrakApi.post.mockResolvedValue({
+      data: {
+        ok: true,
+        result: [
+          { location_id: 3, location_name: "Warehouse A" },
+          { location_name: "No id here" },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useCompanyScopeLocations(), {
+      wrapper: makeWrapper("company-123"),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.options).toEqual([
+      { label: "Warehouse A", value: 3 },
     ]);
   });
 });

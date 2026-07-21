@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { dedupeCategories, validateScopeSelection } from "./scopeUtils";
+import {
+  buildScopePayload,
+  dedupeCategories,
+  validateScopeSelection,
+} from "./scopeUtils";
 
 // ─── dedupeCategories ─────────────────────────────────────────────────────────
 // Backend §5.5: category multi-select must dedupe by category_name (stale /
@@ -70,6 +74,54 @@ describe("validateScopeSelection", () => {
     expect(validateScopeSelection("category_assistant", ["Cameras"])).toEqual({
       valid: true,
       message: "",
+    });
+  });
+});
+
+// ─── buildScopePayload ────────────────────────────────────────────────────────
+// Backend §4: PUT /db_staff/company-staff/scope. Send ONLY the dimension that
+// matches the role (wrong key => 400); ids must be numeric; full-replace.
+
+describe("buildScopePayload", () => {
+  const identity = { company_id: 62, staff_id: 158 };
+
+  it("sends `categories` (numeric) for a category-scoped role", () => {
+    expect(buildScopePayload("category_manager", [11, 12], identity)).toEqual({
+      company_id: 62,
+      staff_id: 158,
+      categories: [11, 12],
+    });
+  });
+
+  it("sends `locations` (numeric) for a location-scoped role", () => {
+    expect(
+      buildScopePayload("inventory_location_manager", [3, 7], identity)
+    ).toEqual({ company_id: 62, staff_id: 158, locations: [3, 7] });
+  });
+
+  it("coerces string ids to numbers and drops non-numeric entries", () => {
+    expect(buildScopePayload("category_assistant", ["11", "x", 12], identity)).toEqual(
+      { company_id: 62, staff_id: 158, categories: [11, 12] }
+    );
+  });
+
+  it("emits an empty array (full-replace clear) for an empty/undefined selection", () => {
+    expect(buildScopePayload("category_manager", [], identity)).toEqual({
+      company_id: 62,
+      staff_id: 158,
+      categories: [],
+    });
+    expect(buildScopePayload("category_manager", undefined, identity)).toEqual({
+      company_id: 62,
+      staff_id: 158,
+      categories: [],
+    });
+  });
+
+  it("omits any dimension key for a non-scoped role", () => {
+    expect(buildScopePayload("admin", [1, 2], identity)).toEqual({
+      company_id: 62,
+      staff_id: 158,
     });
   });
 });

@@ -1,6 +1,6 @@
 import { MenuItem, Select, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { Divider, message, Tooltip } from "antd";
+import { Divider, message } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -23,11 +23,14 @@ import { extractStaffId } from "../../../../authentication/utils/loginUtils";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import ScopeAssignmentSelect from "./ScopeAssignmentSelect";
-import { validateScopeSelection } from "./utils/scopeUtils";
+import { buildScopePayload, validateScopeSelection } from "./utils/scopeUtils";
 
-// Scoped roles (Phase A groundwork) — string-valued, level-less (R1
-// unresolved). Only listed as pickable options when FEATURE_SCOPED_ROLES is
-// on; flag OFF keeps this file's behavior byte-for-byte identical to today.
+// Scoped roles — string-valued, level-less (R1 resolved: backend derives
+// identity from the JWT and keys off role_type strings, so no numeric level is
+// ever sent). Both dimensions (location + category) are wired to save via the
+// scope endpoint; the correct dimension is chosen by buildScopePayload. Only
+// listed as pickable options when FEATURE_SCOPED_ROLES is on; flag OFF keeps
+// this file's behavior byte-for-byte identical to today.
 const SCOPED_ROLE_VALUES = [
   "inventory_location_manager",
   "inventory_location_assistant",
@@ -42,9 +45,6 @@ const UpdateRoleInCompany = () => {
   const [scopeSelection, setScopeSelection] = useState([]);
   const navigate = useNavigate();
 
-  // Scoped roles (Phase A) — save stays disabled until backend Phase B ships
-  // role_type validation (§5.3) and the scope endpoint (§5.4). See
-  // FRONTEND_scoped_roles_phaseA_plan.md §4.4.
   const isScopedRoleSelected = SCOPED_ROLE_VALUES.includes(newRole);
   const closeModal = () => {
     return navigate(`/staff/${profile.adminUserInfo.id}/main`);
@@ -116,13 +116,88 @@ const UpdateRoleInCompany = () => {
     },
   });
 
+  // Category-scoped save (Phase B): change role by role_type string (no numeric
+  // level — R1 (c)), then full-replace the category scope, then keep the Mongo
+  // employees array in sync. Separate from `updateRole` so the legacy numeric
+  // path is untouched.
+  const { mutate: saveScopedRole, isLoading: isScopedSaving } = useMutation({
+    mutationFn: async ({ roleType, selection }) => {
+      // 1. Resolve staff_id (recipient) from email; actor comes from the JWT.
+      const staffResponse = await devitrakApi.post("/db_staff/consulting-member", {
+        email: profile.user,
+      });
+      const staff_id = extractStaffId(staffResponse.data);
+      if (!staff_id) throw new Error("Staff member not found in SQL database.");
+
+      // 2. Change role — role_type string only, never a numeric level.
+      await devitrakApi.patch("/db_staff/company-staff/role", {
+        company_id: user.sqlInfo.company_id,
+        staff_id,
+        role_type: roleType,
+      });
+
+      // 3. Assign the scope (full-replace; dimension chosen by role).
+      await devitrakApi.put(
+        "/db_staff/company-staff/scope",
+        buildScopePayload(roleType, selection, {
+          company_id: user.sqlInfo.company_id,
+          staff_id,
+        }),
+      );
+
+      // 4. Keep the MongoDB employees array in sync (scoped roles are
+      //    string-only, so `role` mirrors the roleType string).
+      const foundStaffIdx = profile.companyData.employees.findIndex(
+        (el) => el.user === profile.user,
+      );
+      const employees =
+        foundStaffIdx > -1
+          ? profile.companyData.employees.toSpliced(foundStaffIdx, 1, {
+              ...profile.companyData.employees[foundStaffIdx],
+              role: roleType,
+              roleType,
+            })
+          : profile.companyData.employees;
+
+      return devitrakApi.patch(
+        `/company/update-company/${profile.companyData.id}`,
+        { employees },
+      );
+    },
+    onSuccess: (mongoResult) => {
+      dispatch(
+        onAddStaffProfile({
+          ...profile,
+          role: newRole,
+          roleType: newRole,
+          companyData: mongoResult.data.company,
+        }),
+      );
+      if (user.email === profile.user) {
+        dispatch(onLogin({ ...user, role: newRole, roleType: newRole }));
+      }
+      messaging();
+      closeModal();
+    },
+    onError: (mutationError) => {
+      messageApi.open({
+        type: "error",
+        content:
+          mutationError?.response?.data?.msg ||
+          "Failed to update scoped role. Please try again.",
+      });
+    },
+  });
+
   const handleSubmitNewRole = (e) => {
     e.preventDefault();
     if (!newRole && newRole !== 0) return;
-    // TODO(Phase B §5.3/§5.4): backend rejects the new role_types today and
-    // the scope endpoint doesn't exist yet — block save here as defense in
-    // depth (the Save button below is also disabled for a scoped role).
-    if (isScopedRoleSelected) return;
+    // Scoped roles: save via the string role_type + scope (dimension chosen by
+    // buildScopePayload), guarded fail-closed (≥1 assignment).
+    if (isScopedRoleSelected) {
+      if (!scopeValidation.valid) return;
+      return saveScopedRole({ roleType: newRole, selection: scopeSelection });
+    }
     const roleType = LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant";
     const foundStaffIdx = profile.companyData.employees.findIndex(
       (el) => el.user === profile.user,
@@ -170,25 +245,16 @@ const UpdateRoleInCompany = () => {
         key="save"
         buttonType="submit"
         title="Save"
-        loadingState={isLoading}
-        // TODO(Phase B §5.3/§5.4): re-enable once backend accepts the new
-        // role_types and the scope-assignment endpoint exists.
-        isDisabled={isScopedRoleSelected}
+        loadingState={isLoading || isScopedSaving}
+        // Scoped roles require a valid (≥1) scope selection before saving.
+        isDisabled={isScopedRoleSelected && !scopeValidation.valid}
         styles={{ margin: "0 0 0 24px" }}
       />
     );
     return (
       <ReusableCardWithHeaderAndFooter
         title={`Current role in company: ${role}`}
-        actions={[
-          isScopedRoleSelected ? (
-            <Tooltip key="save" title="Pending backend availability">
-              <span>{saveButton}</span>
-            </Tooltip>
-          ) : (
-            saveButton
-          ),
-        ]}
+        actions={[saveButton]}
       >
         {isCoordinatorLevel(user.roleType) ? (
           <form
