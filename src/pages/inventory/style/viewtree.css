@@ -145,6 +145,10 @@
   background: var(--gray-100, #f2f4f7);
 }
 
+.tree-row__action-btn--danger:hover {
+  background: var(--error-50, #fef3f2);
+}
+
 .tree-row__edit-input {
   font-family: "Inter", sans-serif;
   font-size: 14px;

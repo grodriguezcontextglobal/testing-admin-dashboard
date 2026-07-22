@@ -1,6 +1,7 @@
 // TreeNode.jsx
+import { Icon } from "@iconify/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Checkbox, message } from "antd";
+import { Checkbox, message, Modal } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -124,6 +125,35 @@ const TreeNode = ({
   const handleCancel = () => {
     setEditedName(nodeName);
     setIsEditing(false);
+  };
+
+  // Delete an empty location. Only offered for empty nodes that carry a
+  // location_id (top-level locations). Sub-location *paths* have no id and no
+  // backend delete route yet, so they are not deletable from here.
+  const handleDeleteEmpty = () => {
+    if (!nodeId) return;
+    Modal.confirm({
+      title: `Delete "${nodeName}"?`,
+      content:
+        "This empty location will be permanently removed. This can't be undone.",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      centered: true,
+      onOk: async () => {
+        try {
+          await devitrakApi.post(`/db_location/locations/${nodeId}`);
+          message.success(`"${nodeName}" deleted`);
+          queryClient.invalidateQueries("structuredCompanyInventory");
+          queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
+          queryClient.invalidateQueries(["locationPathsTree"]);
+          await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
+        } catch (error) {
+          console.error("Error deleting location:", error);
+          message.error("Failed to delete location. Please try again.");
+        }
+      },
+    });
   };
 
   const navigateToLocation = (location) => {
@@ -360,6 +390,22 @@ const TreeNode = ({
             >
               <RightNarrowInCircle />
             </button>
+            {canManageLocation && !hasDevices && nodeId && (
+              <button
+                type="button"
+                className="tree-row__action-btn tree-row__action-btn--danger"
+                onClick={handleDeleteEmpty}
+                title="Delete empty location"
+                aria-label="Delete empty location"
+              >
+                <Icon
+                  icon="tabler:trash"
+                  width={18}
+                  height={18}
+                  color="var(--error-600, #d92d20)"
+                />
+              </button>
+            )}
           </div>
         </div>
       </div>
