@@ -36,10 +36,6 @@
   background: var(--gray-100, #f2f4f7);
 }
 
-.tree-row--selected {
-  background: rgba(24, 144, 255, 0.08);
-}
-
 .tree-row__chevron {
   width: 20px;
   min-width: 20px;

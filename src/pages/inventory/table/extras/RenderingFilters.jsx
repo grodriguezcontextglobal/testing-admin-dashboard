@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { hasPermission } from "../../../../config/roles";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Switch } from "antd";
+import { Button, Switch } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -13,9 +13,7 @@ import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
 import RefreshIcon from "../../../../components/icons/RefreshIcon";
 import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
@@ -241,63 +239,7 @@ const RenderingFilters = ({
     setGroupBy(key);
   };
 
-  const [selectedLocations, setSelectedLocations] = useState(new Set());
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const handleSelectLocation = (locationId) => {
-    setSelectedLocations((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(locationId)) {
-        newSet.delete(locationId);
-      } else {
-        newSet.add(locationId);
-      }
-      return newSet;
-    });
-  };
-  const [
-    openSelectedLocationForDeletingModal,
-    setOpenSelectedLocationForDeletingModal,
-  ] = useState(false);
-  const handleDeleteSelectedLocations = () => {
-    if (selectedLocations.size === 0) return;
-    return setOpenSelectedLocationForDeletingModal(true);
-  };
-  const deletingSelectedLocations = async () => {
-    setIsDeleting(true);
-    try {
-      // Convert Set to Array for iteration
-      const idsToDelete = Array.from(selectedLocations);
-
-      // Execute deletions
-      // Using Promise.all for parallel execution, or sequential if dependency needed.
-      // Assuming independent deletions.
-      await Promise.all(
-        idsToDelete.map((id) =>
-          devitrakApi.post(`/db_location/locations/${id}`)
-        )
-      );
-
-      message.success("Selected locations deleted successfully.");
-
-      // Clear selection
-      setSelectedLocations(new Set());
-      setOpenSelectedLocationForDeletingModal(false);
-
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries("structuredCompanyInventory");
-      queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
-      await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
-
-      // Refetch
-      await locationsAndSublocationsWithTypes.refetch();
-    } catch (error) {
-      console.error("Error deleting locations:", error);
-      message.error("Failed to delete some locations. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleEditClick = (sectionKey) => {
     setEditingSection(sectionKey);
@@ -867,14 +809,6 @@ const RenderingFilters = ({
               >
                 <EditIcon />
               </Button>
-              {selectedLocations.size > 0 && (
-                <DangerButtonComponent
-                  func={handleDeleteSelectedLocations}
-                  styles={{ margin: "0 1.5rem" }}
-                  loadingState={isDeleting}
-                  title={`Delete Selected (${selectedLocations.size})`}
-                />
-              )}
               <div
                 style={{
                   marginLeft: "20px",
@@ -906,8 +840,6 @@ const RenderingFilters = ({
       identifierRender: 1,
       show: true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
-      selectedLocations: selectedLocations,
-      onSelectLocation: handleSelectLocation,
     },
     {
       key: "category_name",
@@ -1422,8 +1354,6 @@ const RenderingFilters = ({
                       data={item.data}
                       setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                       setOpenDetails={setOpenDetails}
-                      selectedLocations={item.selectedLocations}
-                      onSelectLocation={item.onSelectLocation}
                     />
                   ))}{" "}
               </Grid>
@@ -1503,39 +1433,6 @@ const RenderingFilters = ({
         </AdvanceSearchContext.Provider>
       )}
       {/* </> */}
-      {openSelectedLocationForDeletingModal && (
-        <ModalUX
-          title="Delete Selected Locations"
-          body={`Are you sure you want to delete ${selectedLocations.size} selected location(s)? This action cannot be undone.`}
-          openDialog={openSelectedLocationForDeletingModal}
-          footer={[
-            <div
-              key="footer-deleting-locations-modal"
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <GrayButtonComponent
-                key={"cancel-button-deleting-locations-modal"}
-                title={"Cancel"}
-                func={() => {
-                  setSelectedLocations(new Set());
-                  setOpenSelectedLocationForDeletingModal(false);
-                }}
-              />
-              <DangerButtonComponent
-                key={"accepting-button-deleting-locations-modal"}
-                func={deletingSelectedLocations}
-                loadingState={isDeleting}
-                title={"Delete"}
-              />
-            </div>,
-          ]}
-        />
-      )}
     </Grid>
   );
 };

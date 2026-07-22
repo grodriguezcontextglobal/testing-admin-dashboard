@@ -6,8 +6,6 @@ const TreeView = ({
   data,
   setTypePerLocationInfoModal,
   setOpenDetails,
-  selectedLocations,
-  onSelectLocation,
 }) => {
   return (
     <div className="tree-list">
@@ -20,8 +18,6 @@ const TreeView = ({
           depth={0}
           setTypePerLocationInfoModal={setTypePerLocationInfoModal}
           setOpenDetails={setOpenDetails}
-          selectedLocations={selectedLocations}
-          onSelectLocation={onSelectLocation}
         />
       ))}
     </div>

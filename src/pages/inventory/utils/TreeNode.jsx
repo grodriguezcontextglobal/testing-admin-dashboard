@@ -1,7 +1,7 @@
 // TreeNode.jsx
 import { Icon } from "@iconify/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Checkbox, message, Modal } from "antd";
+import { message, Modal } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -28,8 +28,6 @@ const TreeNode = ({
   onUpdateLocation,
   setTypePerLocationInfoModal,
   setOpenDetails,
-  selectedLocations,
-  onSelectLocation,
   rootLocationId = null,
 }) => {
   const { user } = useSelector((state) => state.admin);
@@ -46,7 +44,6 @@ const TreeNode = ({
   // The owning top-level location's id, threaded down through recursion so
   // sub-location nodes (which carry no id of their own) can be targeted.
   const effectiveRootId = rootLocationId ?? nodeId;
-  const isSelectable = total === 0;
   const subLocationNames = children
     ? Object.keys(children).filter((key) => key !== "null")
     : [];
@@ -296,11 +293,7 @@ const TreeNode = ({
     }
   };
 
-  const rowClassNames = [
-    "tree-row",
-    depth > 0 ? "tree-row--child" : "",
-    selectedLocations?.has(nodeId) ? "tree-row--selected" : "",
-  ]
+  const rowClassNames = ["tree-row", depth > 0 ? "tree-row--child" : ""]
     .filter(Boolean)
     .join(" ");
 
@@ -322,13 +315,6 @@ const TreeNode = ({
           </button>
         ) : (
           <span className="tree-row__chevron" aria-hidden="true" />
-        )}
-        {canManageLocation && nodeId && onSelectLocation && isSelectable && (
-          <Checkbox
-            checked={selectedLocations?.has(nodeId)}
-            onChange={() => onSelectLocation(nodeId)}
-            title="Select empty location for deletion"
-          />
         )}
         {isEditing ? (
           <span
@@ -468,8 +454,6 @@ const TreeNode = ({
                 onUpdateLocation={onUpdateLocation}
                 setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                 setOpenDetails={setOpenDetails}
-                selectedLocations={selectedLocations}
-                onSelectLocation={onSelectLocation}
                 rootLocationId={effectiveRootId}
               />
             ))}
@@ -497,7 +481,5 @@ TreeNode.propTypes = {
   onUpdateLocation: PropTypes.func,
   setTypePerLocationInfoModal: PropTypes.func,
   setOpenDetails: PropTypes.func,
-  selectedLocations: PropTypes.instanceOf(Set),
-  onSelectLocation: PropTypes.func,
   rootLocationId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
