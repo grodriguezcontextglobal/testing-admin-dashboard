@@ -31,3 +31,25 @@ describe("FEATURE_SCOPED_ROLES", () => {
     expect(FEATURE_SCOPED_ROLES).toBe(true);
   });
 });
+
+describe("FEATURE_MEMBER_FEES", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("defaults to false when the env var is unset", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_MEMBER_FEES", undefined);
+    const { FEATURE_MEMBER_FEES } = await import("./featureFlags");
+    expect(FEATURE_MEMBER_FEES).toBe(false);
+  });
+
+  it("is true only when the env var is the string 'true'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_MEMBER_FEES", "true");
+    const { FEATURE_MEMBER_FEES } = await import("./featureFlags");
+    expect(FEATURE_MEMBER_FEES).toBe(true);
+  });
+});

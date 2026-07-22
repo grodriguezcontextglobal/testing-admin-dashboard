@@ -16,6 +16,8 @@ import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { FEATURE_MEMBER_FEES } from "../../../../../../config/featureFlags";
+import { buildFeeFields } from "../../../../utils/leaseReturnUtils";
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
 const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
@@ -44,7 +46,7 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
   // History-preserving close: the lease row stays (with outcome + condition
   // note + returned_date) instead of being deleted.
   const closeMemberLeaseRowInTable = useMutation({
-    mutationFn: async ({ outcome, note }) => {
+    mutationFn: async ({ outcome, note, fee = {} }) => {
       const response = await devitrakApi.post(
         "/db_member/update-member-assigned-device-lease",
         {
@@ -59,6 +61,9 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             return_status: outcome,
             condition_note: note || null,
             returned_date: formatDate(new Date()),
+            // Lost/damaged fee (B1) — only present when a positive amount was
+            // entered and the fees feature is on; harmless no-op otherwise.
+            ...fee,
           },
         }
       );
@@ -112,9 +117,17 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
       if (outcome !== "lost") {
         await returnItemToInventoryCompany.mutateAsync(data);
       }
+      const fee = FEATURE_MEMBER_FEES
+        ? buildFeeFields({
+            outcome,
+            feeAmount: data.fee_amount,
+            feeReason: data.condition_note,
+          })
+        : {};
       await closeMemberLeaseRowInTable.mutateAsync({
         outcome,
         note: data.condition_note || (outcome === "returned" ? data.reason : null),
+        fee,
       });
     } catch (error) {
       setLoading(false);
@@ -178,6 +191,20 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             multiline
           />
         </Grid>
+        {FEATURE_MEMBER_FEES &&
+          (watch("outcome") === "damaged" || watch("outcome") === "lost") && (
+            <Grid margin={"1rem auto 0"} item xs={12} sm={12} md={12} lg={12}>
+              <Typography>Fee to charge (optional)</Typography>
+              <OutlinedInput
+                {...register("fee_amount")}
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
+                placeholder="e.g. 250.00 — leave blank for no charge"
+                style={{ ...OutlinedInputStyle, width: "100%" }}
+                startAdornment={<span style={{ marginRight: 4 }}>$</span>}
+              />
+            </Grid>
+          )}
         {watch("outcome") !== "lost" && (
         <Grid item xs={12} sm={12} md={12} lg={12}>
           <Typography>Returned device condition</Typography>
