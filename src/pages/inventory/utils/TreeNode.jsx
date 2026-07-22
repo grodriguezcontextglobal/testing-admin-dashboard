@@ -30,6 +30,7 @@ const TreeNode = ({
   setOpenDetails,
   selectedLocations,
   onSelectLocation,
+  rootLocationId = null,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +43,9 @@ const TreeNode = ({
 
   const { total, available, children, types } = nodeData;
   const nodeId = nodeData?.location_id || nodeData?._id || nodeData?.id;
+  // The owning top-level location's id, threaded down through recursion so
+  // sub-location nodes (which carry no id of their own) can be targeted.
+  const effectiveRootId = rootLocationId ?? nodeId;
   const isSelectable = total === 0;
   const subLocationNames = children
     ? Object.keys(children).filter((key) => key !== "null")
@@ -127,22 +131,51 @@ const TreeNode = ({
     setIsEditing(false);
   };
 
-  // Delete an empty location. Only offered for empty nodes that carry a
-  // location_id (top-level locations). Sub-location *paths* have no id and no
-  // backend delete route yet, so they are not deletable from here.
+  // A node is deletable when it's empty AND either a top-level location (has an
+  // id) or a sub-location path under a known location. Sub-location paths are
+  // identified by (company_id, location_id, path segments).
+  const isTopLevelLocation = !!nodeId;
+  const isSubLocationPath = !nodeId && depth > 0 && !!effectiveRootId;
+  const canDelete =
+    canManageLocation && !hasDevices && (isTopLevelLocation || isSubLocationPath);
+
+  // Delete an empty location or sub-location. For sub-locations the whole
+  // (empty) subtree is removed by the backend, so we say so in the prompt.
   const handleDeleteEmpty = () => {
-    if (!nodeId) return;
+    if (!canDelete) return;
+    const childCount = subLocationNames.length;
+    const content = isTopLevelLocation
+      ? "This empty location will be permanently removed. This can't be undone."
+      : childCount > 0
+      ? `"${nodeName}" and its ${childCount} empty sub-location${
+          childCount === 1 ? "" : "s"
+        } will be permanently removed. This can't be undone.`
+      : "This empty sub-location will be permanently removed. This can't be undone.";
+
     Modal.confirm({
       title: `Delete "${nodeName}"?`,
-      content:
-        "This empty location will be permanently removed. This can't be undone.",
+      content,
       okText: "Delete",
       okButtonProps: { danger: true },
       cancelText: "Cancel",
       centered: true,
       onOk: async () => {
         try {
-          await devitrakApi.post(`/db_location/locations/${nodeId}`);
+          if (isTopLevelLocation) {
+            await devitrakApi.post(`/db_location/locations/${nodeId}`);
+          } else {
+            const response = await devitrakApi.post(
+              "/db_location/sub-location-path/delete",
+              {
+                company_id: user.sqlInfo.company_id,
+                location_id: effectiveRootId,
+                sub_location_path: path.slice(1),
+              }
+            );
+            if (!response?.data?.ok) {
+              throw new Error(response?.data?.msg || "Delete failed");
+            }
+          }
           message.success(`"${nodeName}" deleted`);
           queryClient.invalidateQueries("structuredCompanyInventory");
           queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
@@ -150,7 +183,10 @@ const TreeNode = ({
           await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
         } catch (error) {
           console.error("Error deleting location:", error);
-          message.error("Failed to delete location. Please try again.");
+          message.error(
+            error.response?.data?.msg ||
+              "Failed to delete. Please try again."
+          );
         }
       },
     });
@@ -390,13 +426,21 @@ const TreeNode = ({
             >
               <RightNarrowInCircle />
             </button>
-            {canManageLocation && !hasDevices && nodeId && (
+            {canDelete && (
               <button
                 type="button"
                 className="tree-row__action-btn tree-row__action-btn--danger"
                 onClick={handleDeleteEmpty}
-                title="Delete empty location"
-                aria-label="Delete empty location"
+                title={
+                  isTopLevelLocation
+                    ? "Delete empty location"
+                    : "Delete empty sub-location"
+                }
+                aria-label={
+                  isTopLevelLocation
+                    ? "Delete empty location"
+                    : "Delete empty sub-location"
+                }
               >
                 <Icon
                   icon="tabler:trash"
@@ -426,6 +470,7 @@ const TreeNode = ({
                 setOpenDetails={setOpenDetails}
                 selectedLocations={selectedLocations}
                 onSelectLocation={onSelectLocation}
+                rootLocationId={effectiveRootId}
               />
             ))}
         </div>
@@ -454,4 +499,5 @@ TreeNode.propTypes = {
   setOpenDetails: PropTypes.func,
   selectedLocations: PropTypes.instanceOf(Set),
   onSelectLocation: PropTypes.func,
+  rootLocationId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
