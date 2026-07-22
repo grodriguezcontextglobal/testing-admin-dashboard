@@ -178,15 +178,28 @@ const RenderingFilters = ({
     staleTime: 2 * 60 * 1000,
   });
 
-  // const locationPathsTreeQuery = useQuery({
-  //   queryKey: ["locationPathsTree", user.sqlInfo.company_id],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/db_location/companies/${user.sqlInfo.company_id}/location-paths-tree`
-  //     ),
-  //   enabled: !!user.sqlInfo.company_id,
-  //   staleTime: 2 * 60 * 1000,
-  // });
+  // Definition-based tree: every registered location + sub-location path,
+  // including empty (device-less) ones. Merged into the display tree below so
+  // users can browse/build their full location structure before adding
+  // inventory. Invalidated on location/sub-location create.
+  const locationPathsTreeQuery = useQuery({
+    queryKey: ["locationPathsTree", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.get(
+        `/db_location/companies/${user.sqlInfo.company_id}/location-paths-tree`
+      ),
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Response follows the sibling endpoint convention ({ ok, data: <tree> }),
+  // but fall back to the raw body in case it returns the tree directly.
+  const pathsTreeData = (() => {
+    const body = locationPathsTreeQuery?.data?.data;
+    if (!body || typeof body !== "object") return {};
+    if (body.data && typeof body.data === "object") return body.data;
+    return body;
+  })();
 
   // const [openPathModal, setOpenPathModal] = useState(false);
 
@@ -492,6 +505,41 @@ const RenderingFilters = ({
         locationsAndSublocationsWithTypes?.data?.data?.data
         ? locationsAndSublocationsWithTypes.data.data.data
         : {};
+
+    // Overlay the registered paths so empty (device-less) locations and
+    // sub-locations still appear and are expandable. Device counts win where
+    // present; path-only nodes come in as empty (total 0). Guarded: if the
+    // paths tree is unavailable, the display tree is untouched (no regression).
+    const mergePathsIntoTree = (deviceTree, pathsTree) => {
+      const dev = deviceTree && typeof deviceTree === "object" ? deviceTree : {};
+      const paths = pathsTree && typeof pathsTree === "object" ? pathsTree : {};
+      const out = {};
+      for (const [name, dNode] of Object.entries(dev)) {
+        const pNode = paths[name];
+        out[name] = {
+          ...dNode,
+          children: mergePathsIntoTree(
+            dNode?.children && typeof dNode.children === "object"
+              ? dNode.children
+              : {},
+            pNode?.children || {}
+          ),
+        };
+      }
+      for (const [name, pNode] of Object.entries(paths)) {
+        if (out[name]) continue;
+        out[name] = {
+          total: 0,
+          available: 0,
+          location_id: pNode?.location_id,
+          children: mergePathsIntoTree({}, pNode?.children || {}),
+        };
+      }
+      return out;
+    };
+    if (pathsTreeData && Object.keys(pathsTreeData).length > 0) {
+      source = mergePathsIntoTree(source, pathsTreeData);
+    }
 
     // Filter source tree if allowedLocations is restricted (not null)
     if (allowedLocations !== null && Array.isArray(allowedLocations)) {
