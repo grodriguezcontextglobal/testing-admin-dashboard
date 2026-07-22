@@ -96,21 +96,24 @@ const FieldsSections = ({
       </Grid>
       {!isChild && ( // Conditionally render sub-location options
         <Grid
-          display={
-            item.label === "Main location" || item.label === "Sub location"
-              ? "flex"
-              : "none"
-          }
-          justifyContent={"flex-start"}
-          alignItems={"center"}
           item
           xs={12}
           sm={12}
           md={12}
           lg={12}
+          style={{
+            display:
+              item.label === "Main location" || item.label === "Sub location"
+                ? "flex"
+                : "none",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            gap: "10px",
+          }}
         >
           {renderingOptionsForSubLocations(item.label).addSubLocation}
-          {renderingOptionsForSubLocations(item.label).removeAllSubLocations}        </Grid>
+          {renderingOptionsForSubLocations(item.label).removeAllSubLocations}
+        </Grid>
       )}
     </Grid>
   );
