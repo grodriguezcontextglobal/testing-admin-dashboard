@@ -197,8 +197,10 @@ const RenderingFilters = ({
   const pathsTreeData = (() => {
     const body = locationPathsTreeQuery?.data?.data;
     if (!body || typeof body !== "object") return {};
-    if (body.data && typeof body.data === "object") return body.data;
-    return body;
+    // The tree lives under a wrapper key (locations/data/tree); fall back to the
+    // raw body only if it already looks like the tree.
+    const candidate = body.locations ?? body.data ?? body.tree ?? body;
+    return candidate && typeof candidate === "object" ? candidate : {};
   })();
 
   // const [openPathModal, setOpenPathModal] = useState(false);
