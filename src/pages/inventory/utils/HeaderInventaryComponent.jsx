@@ -35,11 +35,12 @@ import Vertical3Dots from "../../../components/icons/Vertical3Dots";
  * @param {Function} props.setOpenDeleteItemModal - Callback to open the delete-group modal.
  */
 const HeaderInventaryComponent = ({
-  user,
   TextFontSize30LineHeight38,
   setAddInventoryFromXLSXFileModal,
   setOpenCheckInDevicesFromEvent,
   setOpenDeleteItemModal,
+  prefillLocation = null,
+  prefillSubLocations = [],
 }) => {
   const navigate = useNavigate();
   const { roleType, locations } = useSelector((state) => state.permission);
@@ -128,7 +129,14 @@ const HeaderInventaryComponent = ({
         lg={8}
       >
         {canCreate && (
-          <Link to="/inventory/new-bulk-items">
+          <Link
+            to="/inventory/new-bulk-items"
+            state={
+              prefillLocation
+                ? { location: prefillLocation, sub_location: prefillSubLocations }
+                : undefined
+            }
+          >
             <BlueButtonComponent
               title={"Add inventory"}
               styles={{ with: "100%" }}
@@ -200,6 +208,8 @@ HeaderInventaryComponent.propTypes = {
   setAddInventoryFromXLSXFileModal: PropTypes.func,
   setOpenCheckInDevicesFromEvent: PropTypes.func,
   setOpenDeleteItemModal: PropTypes.func,
+  prefillLocation: PropTypes.string,
+  prefillSubLocations: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default HeaderInventaryComponent;

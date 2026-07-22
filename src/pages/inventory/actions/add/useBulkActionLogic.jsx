@@ -659,6 +659,26 @@ const useBulkActionLogic = () => {
     setValue("location", watch("tax_location"));
   }, [watch("tax_location")]);
 
+  // Pre-fill the location / sub-location when the user arrived here from a
+  // specific location or sub-location page (the caller passes them via
+  // react-router navigation state). Runs once on mount; runs after the
+  // tax_location sync above so the pre-filled location wins on load.
+  useEffect(() => {
+    const prefill = locationInApp.state;
+    if (!prefill) return;
+    if (prefill.location) {
+      setValue("location", prefill.location);
+    }
+    const subs = (Array.isArray(prefill.sub_location) ? prefill.sub_location : [])
+      .map((s) => String(s).trim())
+      .filter((s) => s && s !== "undefined" && s !== "null");
+    if (subs.length > 0) {
+      setSubLocationsSubmitted(subs);
+      setDisplaySublocationFields(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return {
     // acceptAndGenerateImage,
     addingSubLocation,

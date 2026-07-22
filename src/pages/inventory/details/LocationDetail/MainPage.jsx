@@ -139,6 +139,8 @@ const MainPage = () => {
             LightBlueButtonText={LightBlueButtonText}
             BlueButton={BlueButton}
             BlueButtonText={BlueButtonText}
+            prefillLocation={decodeURI(locationName.slice(1))}
+            prefillSubLocations={subLocations}
           />
         </Grid>
         <Divider />
