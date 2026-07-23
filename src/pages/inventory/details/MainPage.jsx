@@ -29,6 +29,23 @@ const TotalReturnedDevice = lazy(() =>
   import("./detailComponent/components/TotalReturnedDevice")
 );
 const EditItem = lazy(() => import("./detailComponent/actions/EditItem"));
+
+// item_inv.sub_location is stored as a JSON-stringified array (see
+// singleItemIserting / bulkItemActionsOptions). Normalize it to a string[]
+// so it can pre-fill the bulk-add form's sub-location chips.
+const parsePrefillSubLocation = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === "string") return [parsed];
+    return [];
+  } catch {
+    return [raw];
+  }
+};
+
 const MainPage = () => {
   const canEditInventory = usePermission("inventory:update");
   const canDeleteInventory = usePermission("inventory:delete");
@@ -167,7 +184,22 @@ const MainPage = () => {
           >
             <BlueButtonComponent
               title={"Add new group of devices"}
-              func={() => navigate("/inventory/new-bulk-items")}
+              func={() => {
+                const loc = dataFound[0]?.location;
+                return navigate(
+                  "/inventory/new-bulk-items",
+                  loc
+                    ? {
+                        state: {
+                          location: loc,
+                          sub_location: parsePrefillSubLocation(
+                            dataFound[0]?.sub_location
+                          ),
+                        },
+                      }
+                    : undefined
+                );
+              }}
               buttonType="button"
             />
           </Grid>
