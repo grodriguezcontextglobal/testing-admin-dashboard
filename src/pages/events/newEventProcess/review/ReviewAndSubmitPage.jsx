@@ -73,8 +73,8 @@ const ReviewAndSubmitEvent = () => {
   const lockedItemsInWarehouseForEventShipping = async()=> {
     for (let data of deviceSetup) {
       const findItemsId = await devitrakApi.post(`/db_company/retrieve-company-inventory`,{
-      category: data.category_name,
-      group: data.item_group,
+      category_name: data.category_name,
+      item_group: data.item_group,
       location: data.location,
       limit:data.quantity,
       company_id: user.sqlInfo.company_id,

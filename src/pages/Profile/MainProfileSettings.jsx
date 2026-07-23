@@ -7,6 +7,7 @@ import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
 import { persistor } from "../../store/Store";
 import { onLogout } from "../../store/slices/adminSlice";
 import { onResetArticleEdited } from "../../store/slices/articleSlide";
+import { onResetBackgroundJobs } from "../../store/slices/backgroundJobsSlice";
 import { onResetCustomer } from "../../store/slices/customerSlice";
 import {
   onResetDeviceInQuickGlance,
@@ -18,10 +19,12 @@ import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import { hasPermission } from "../../config/roles";
+import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import MainHeaders from "./ui/MainHeaders";
 
 const MainProfileSettings = () => {
   const { user } = useSelector((state) => state.admin);
+  const { isSuperUser } = useStaffRoleAndLocations();
   const dispatch = useDispatch();
   const logout = async () => {
     try {
@@ -41,6 +44,7 @@ const MainProfileSettings = () => {
       dispatch(onResetEventInfo());
       dispatch(onResetStaffProfile());
       dispatch(onResetHelpers());
+      dispatch(onResetBackgroundJobs());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       clearSessionStorage();
@@ -53,10 +57,12 @@ const MainProfileSettings = () => {
     { label: "MFA Setup",       route: "mfa-setup",                permission: "nav:profile"            },
     { label: "Notifications",   route: "notifications",            permission: "profile:staff_settings" },
     { label: "Company info",    route: "company-info",             permission: "profile:company_settings"},
+    { label: "Roles",           route: "roles",                    permission: "staff:assign_role"      },
     { label: "Stripe account",  route: "stripe_connected_account", permission: "profile:billing"        },
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
     { label: "Platform policies",route: "platform_policies",       permission: "nav:profile"            },
+    { label: "System Jobs",      route: "system-jobs",              requiresSuperUser: true              },
   ];
   // Untitled UI segmented tabs ("button white" style): gray-50 rail,
   // active tab lifts to white with shadow-sm.
@@ -99,7 +105,10 @@ const MainProfileSettings = () => {
         }}
       >
         {tabOptions.map((option) => {
-          if (hasPermission(option.permission, user.roleType)) {
+          const isAllowed = option.requiresSuperUser
+            ? isSuperUser
+            : hasPermission(option.permission, user.roleType);
+          if (isAllowed) {
             return (
               <NavLink
                 key={option.label}

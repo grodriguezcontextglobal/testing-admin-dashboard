@@ -1,12 +1,15 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
+import { onTrackBackgroundJob } from "../../../../store/slices/backgroundJobsSlice";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
+import generateIdempotencyKey from "../../../../utils/actions/generateIdempotencyKey";
 
 export const bulkItemUpdateAlphanumeric = async ({
   data,
   user,
   navigate,
+  dispatch,
   openNotificationWithIcon,
   setLoadingStatus,
   setValue,
@@ -61,17 +64,36 @@ export const bulkItemUpdateAlphanumeric = async ({
         category_name: data.reference_category_name,
       }
     };
-    await alphaNumericUpdateItemMutation.mutate(template);
+    const idempotencyKey = generateIdempotencyKey();
+    const { data: response } = await alphaNumericUpdateItemMutation.mutateAsync({
+      template,
+      idempotencyKey,
+    });
     Object.keys(template).map((key) => {
       setValue(key, "");
     });
     setScannedSerialNumbers([]);
-    openNotificationWithIcon("Items updated. New group of items were created and stored in database.");
-    setLoadingStatus(false);
-    await clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    openNotificationWithIcon(
+      "Your update was registered and is processing in the background. We'll notify you when it's ready."
     );
-    await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
+    setLoadingStatus(false);
+    dispatch(
+      onTrackBackgroundJob({
+        jobId: response.jobId,
+        type: "bulk-inventory-update",
+        successMessage: "Items were successfully updated in inventory.",
+        failureMessage: "The inventory update failed.",
+        invalidateKeys: [
+          ["listOfItemsInStock"],
+          ["ItemsInInventoryCheckingQuery"],
+          ["RefactoredListInventoryCompany"],
+        ],
+        clearCacheKeys: [
+          `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
+          `providerCompanies_${user.companyData.id}`,
+        ],
+      })
+    );
 
     return navigate("/inventory");
   }

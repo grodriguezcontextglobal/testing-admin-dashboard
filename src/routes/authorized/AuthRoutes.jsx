@@ -1,6 +1,7 @@
 import { lazy, Suspense, useRef } from "react";
 import { Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
+import SuperUserGuard from "./SuperUserGuard";
 import IndustryTabGuard from "./IndustryTabGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -20,6 +21,7 @@ import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPoli
 import SignedContractViewHigherPermissionLevel from "../../pages/staff/detail/components/equipment_components/SignedContractViewHigherLevelPermissions";
 import MfaSetup from "../../pages/Profile/mfa/MfaSetup";
 import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
+import AttendanceConfirmationLanding from "../../pages/authentication/AttendanceConfirmationLanding";
 
 const FooterComponent = lazy(() =>
   import("../../components/general/FooterComponent")
@@ -142,6 +144,9 @@ const ConsumerDeviceLostFeeCreditCard = lazy(() =>
 const CompanyInfo = lazy(() =>
   import("../../pages/Profile/company_info/MainPage")
 );
+const RolesManagementMainPage = lazy(() =>
+  import("../../pages/Profile/roles_management/RolesManagementMainPage")
+);
 const SubscriptionMainPage = lazy(() =>
   import("../../pages/subscription/MainPage")
 );
@@ -150,6 +155,9 @@ const ConfirmSubscription = lazy(() =>
 );
 const MainPageOwnership = lazy(() =>
   import("../../pages/inventory/details/OwnershipDetail/MainPage")
+);
+const SystemJobsMainPage = lazy(() =>
+  import("../../pages/Profile/system_jobs/SystemJobsMainPage")
 );
 
 const Home = lazy(() => import("../../pages/home/MainPage"));
@@ -387,6 +395,10 @@ const AuthRoutes = () => {
                 />
               </Route>
               </Route>
+              {/* Staff directory + detail — admin-level only (nav:staff), same
+                  gate the navbar/footer/command palette use. PermissionGuard
+                  redirects unauthorized deep links to home. */}
+              <Route element={<PermissionGuard action="nav:staff" />}>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
                 <Route
@@ -439,6 +451,7 @@ const AuthRoutes = () => {
                   element={<SignedContractViewHigherPermissionLevel />}
                 />
               </Route>
+              </Route>
               <Route path="/profile" element={<MainProfileSetting />}>
                 <Route path="my_details" element={<MyDetailsMainPage />} />
                 <Route path="password" element={<PasswordMainPage />} />
@@ -453,6 +466,9 @@ const AuthRoutes = () => {
                   element={<StaffActivityMainPage />}
                 />
                 <Route path="company-info" element={<CompanyInfo />} />
+                <Route element={<PermissionGuard action="staff:assign_role" />}>
+                  <Route path="roles" element={<RolesManagementMainPage />} />
+                </Route>
                 <Route
                   path="stripe_connected_account"
                   element={<Dashboard />}
@@ -468,6 +484,16 @@ const AuthRoutes = () => {
                   path="platform_policies"
                   element={<PlatformPolicies />}
                 />
+                {/* Platform observability (job queue stats/lookup) — gated on
+                    the employee-level super_user flag, not a roleType, so it
+                    can't use PermissionGuard's action matrix. See
+                    FRONTEND_task_queue_changes.md §8.2. */}
+                <Route element={<SuperUserGuard />}>
+                  <Route
+                    path="system-jobs"
+                    element={<SystemJobsMainPage />}
+                  />
+                </Route>
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
               <Route
@@ -485,6 +511,7 @@ const AuthRoutes = () => {
               <Route path="posts/post/:id" element={<DisplayArticle />} />
               <Route path="login" element={<RedirectionPage />} />
               <Route path="/my-devices" element={<MyDevicesPortal />} />
+              <Route path="/attendance-confirmation" element={<AttendanceConfirmationLanding />} />
               <Route element={<PermissionGuard action="nav:members" />}>
                 <Route path="members" element={<ConditionalMainPage />} />
                 <Route path="/member/:id" element={<MemberDetailsMainPage />}>

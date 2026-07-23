@@ -3,6 +3,9 @@ import {
   checkRolePermission,
   getPreferenceLocation,
   filterDataByRoleAndPreference,
+  isCategoryScopedRole,
+  filterInventoryByCategoryScope,
+  hasEmptyScope,
 } from "./accessControlUtils";
 
 // ─── checkRolePermission ──────────────────────────────────────────────────────
@@ -126,5 +129,82 @@ describe("filterDataByRoleAndPreference", () => {
 
   it("retorna [] si data no es array", () => {
     expect(filterDataByRoleAndPreference(null, makeUser("root_admin"))).toEqual([]);
+  });
+});
+
+// ─── isCategoryScopedRole ─────────────────────────────────────────────────────
+
+describe("isCategoryScopedRole", () => {
+  it("true para roles de categoría", () => {
+    expect(isCategoryScopedRole("category_manager")).toBe(true);
+    expect(isCategoryScopedRole("category_assistant")).toBe(true);
+  });
+
+  it("false para roles de ubicación y no-scoped", () => {
+    expect(isCategoryScopedRole("inventory_location_manager")).toBe(false);
+    expect(isCategoryScopedRole("root_admin")).toBe(false);
+    expect(isCategoryScopedRole("inventory_manager")).toBe(false);
+    expect(isCategoryScopedRole(undefined)).toBe(false);
+  });
+});
+
+// ─── filterInventoryByCategoryScope ───────────────────────────────────────────
+
+const catItems = [
+  { item_id: 1, category_name: "Audio" },
+  { item_id: 2, category_name: "Lighting" },
+  { item_id: 3, category_name: "Audio" },
+  { item_id: 4, category_name: null },
+];
+
+describe("filterInventoryByCategoryScope", () => {
+  it("mantiene solo los items cuyas categorías están asignadas", () => {
+    const result = filterInventoryByCategoryScope(catItems, ["Audio"]);
+    expect(result).toHaveLength(2);
+    expect(result.every((i) => i.category_name === "Audio")).toBe(true);
+  });
+
+  it("hace match case-insensitive del category_name", () => {
+    expect(filterInventoryByCategoryScope(catItems, ["audio"])).toHaveLength(2);
+  });
+
+  it("FAIL-CLOSED: scope vacío retorna [] (sin inventario)", () => {
+    expect(filterInventoryByCategoryScope(catItems, [])).toEqual([]);
+    expect(filterInventoryByCategoryScope(catItems, null)).toEqual([]);
+  });
+
+  it("ignora items sin category_name", () => {
+    const result = filterInventoryByCategoryScope(catItems, ["Audio", "Lighting"]);
+    expect(result.find((i) => i.item_id === 4)).toBeUndefined();
+  });
+
+  it("retorna [] si data no es array", () => {
+    expect(filterInventoryByCategoryScope(null, ["Audio"])).toEqual([]);
+  });
+});
+
+// ─── hasEmptyScope (R6) ───────────────────────────────────────────────────────
+
+describe("hasEmptyScope", () => {
+  it("rol de categoría sin categorías asignadas → true", () => {
+    expect(hasEmptyScope("category_manager", { categories: [] })).toBe(true);
+    expect(hasEmptyScope("category_assistant", {})).toBe(true);
+  });
+
+  it("rol de categoría con categorías asignadas → false", () => {
+    expect(hasEmptyScope("category_manager", { categories: [{ category_id: 1 }] })).toBe(false);
+  });
+
+  it("roles de UBICACIÓN nunca son bloqueados por R6 (scope legacy server-side) → false", () => {
+    // La dimensión location vive en el Mongo legacy (managerLocation), no en el
+    // permission slice; no debemos inferir 'vacío' desde permission.locations,
+    // porque eso ocultaría el inventario a un usuario de ubicación bien scopeado.
+    expect(hasEmptyScope("inventory_location_manager", { categories: [] })).toBe(false);
+    expect(hasEmptyScope("inventory_location_assistant", {})).toBe(false);
+  });
+
+  it("roles no-scoped siempre → false, aun con scope vacío", () => {
+    expect(hasEmptyScope("root_admin", { categories: [] })).toBe(false);
+    expect(hasEmptyScope("inventory_manager", {})).toBe(false);
   });
 });

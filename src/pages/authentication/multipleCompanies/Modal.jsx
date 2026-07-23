@@ -11,8 +11,7 @@ import {
   persistCompanyHeaders,
 } from "../../../api/sessionHeaders";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
-import dicRole from "../../../components/general/dicRole";
-import { isAssistant } from "../../../config/roles";
+import { getRoleLabel, isAssistant } from "../../../config/roles";
 import { buildSetPermissionsPayload } from "../utils/loginUtils";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -38,6 +37,7 @@ import {
 import { onResetEventInfo } from "../../../store/slices/eventSlice";
 import { onResetStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { onResetHelpers } from "../../../store/slices/helperSlice";
+import { onResetBackgroundJobs } from "../../../store/slices/backgroundJobsSlice";
 import { onResetStripesInfo } from "../../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice";
 import { persistor } from "../../../store/Store";
@@ -194,6 +194,7 @@ const ModalMultipleCompanies = ({
       dispatch(onResetEventInfo());
       dispatch(onResetStaffProfile());
       dispatch(onResetHelpers());
+      dispatch(onResetBackgroundJobs());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       clearSessionStorage();
@@ -355,10 +356,10 @@ const ModalMultipleCompanies = ({
                     }}
                   >
                     {
-                      dicRole[
-                      renderingExtraCompanyInfo(item.company)
-                        .employeeRoleInCompany
-                      ]
+                      getRoleLabel(
+                        renderingExtraCompanyInfo(item.company)
+                          .employeeRoleInCompany
+                      )
                     }
                   </span>
                 </p>

@@ -404,12 +404,13 @@ const ReturnRentedItemModal = ({
     const batchProcessor = async (batch) => {
       const payload = {
         item_ids: batch,
-	updates:{
-       		warehouse: 1,
-        	enableAssignFeature: 0,
-        	returnedRentedInfo: JSON.stringify(moreInfo),
-        	return_date: returnDate,
-	}
+        company_id: user.sqlInfo.company_id,
+        updates: {
+          warehouse: 1,
+          enableAssignFeature: 0,
+          returnedRentedInfo: JSON.stringify(moreInfo),
+          return_date: returnDate,
+        }
       };
 
       // Validate payload size

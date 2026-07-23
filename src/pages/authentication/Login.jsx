@@ -239,6 +239,7 @@ const Login = () => {
         role: props.role,
         roleType: props.roleType,
         locations: props.locations,
+        categories: props.categories,
       })));
       dispatch(onAddSubscription({}));
       dispatch(clearErrorMessage());
@@ -363,6 +364,7 @@ const Login = () => {
             role: activeCompanies[0].role,
             roleType: activeCompanies[0].roleType,
             locations: activeCompanies[0].locations,
+            categories: activeCompanies[0].categories,
             company_data: mongoCompanyResponse.data.company,
             sqlMemberInfo: checkArray(staffMemberResponse.data.member),
             respo: loginResponse.data,
@@ -482,7 +484,7 @@ const Login = () => {
 
       openNotificationWithIcon(
         "success",
-        "An email has been sent to you to revoke the active session."
+        "An email to revoke the active session is queued and will be sent shortly."
       );
       setForceLogin(false); // Close the modal
     } catch (error) {

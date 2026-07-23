@@ -30,7 +30,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import ItemForm from "./addSerialNumberRangeToEvent/ItemForm";
-import ContainerForm from "./addSerialNumberRangeToEvent/containerForm";
+import ContainerForm from "./addSerialNumberRangeToEvent/ContainerForm";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 
 const ModalAddAndUpdateDeviceSetup = ({

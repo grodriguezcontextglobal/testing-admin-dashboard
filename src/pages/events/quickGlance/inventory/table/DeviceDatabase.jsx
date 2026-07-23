@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
-import BaseTable from "../../../../../components/ux/tables/BaseTable";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import "../../../../../styles/global/ant-table.css";
 const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {

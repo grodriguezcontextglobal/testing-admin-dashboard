@@ -1,21 +1,10 @@
 import { Grid, Typography } from "@mui/material";
 import { Card } from "antd";
-import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import DevitrakLoading from "../../../components/animation/DevitrakLoading";
-const dicRole = lazy(() => import("../../../components/general/dicRole"));
+import { getRoleLabel } from "../../../config/roles";
 
 const InfrmationCard = ({ props }) => {
   return (
-    <Suspense
-      fallback={
-        <div style={CenteringGrid}>
-          {" "}
-          <DevitrakLoading />{" "}
-        </div>
-      }
-    >
       <Card
         style={{
           display: "flex",
@@ -85,7 +74,7 @@ const InfrmationCard = ({ props }) => {
             lineHeight="24px"
             textAlign={"left"}
           >
-            {dicRole[Number(props.role)]}
+            {getRoleLabel(props.role)}
           </Typography>
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -115,7 +104,6 @@ const InfrmationCard = ({ props }) => {
           </Typography>
         </Grid>
       </Card>
-    </Suspense>
   );
 };
 

@@ -1,3 +1,5 @@
+import { getRoleScopeDimension } from "../../../config/roles";
+
 const FULL_ACCESS_TYPES = ["root_admin", "admin", "sale_manager"];
 const INVENTORY_TYPES = [...FULL_ACCESS_TYPES, "inventory_manager"];
 
@@ -91,4 +93,70 @@ export const filterDataByRoleAndPreference = (data, user) => {
       return false;
     });
   });
+};
+
+// ─── Scoped roles (Phase C) ───────────────────────────────────────────────────
+// Category scope is the new dimension (roles category_manager/category_assistant).
+// Server-side enforcement is authoritative; the helpers below mirror it on the
+// client for a consistent UX. Location scope keeps its legacy path above.
+
+/**
+ * True when the role is category-scoped (category_manager / category_assistant).
+ * @param {string} roleType
+ * @returns {boolean}
+ */
+export const isCategoryScopedRole = (roleType) =>
+  getRoleScopeDimension(roleType) === "category";
+
+/**
+ * Client-side mirror of the server's category-scope filter: keep only inventory
+ * rows whose `category_name` is in the assigned set (matched case-insensitively,
+ * since scope is by category name server-side).
+ *
+ * FAIL-CLOSED: an empty assignment set returns no inventory (matches the
+ * backend contract — a scoped user with zero categories sees nothing).
+ *
+ * @param {Array}    data                 - Inventory rows (each with `category_name`)
+ * @param {string[]} assignedCategoryNames - Category names assigned to the user
+ * @returns {Array}
+ */
+export const filterInventoryByCategoryScope = (data, assignedCategoryNames) => {
+  if (!Array.isArray(data)) return [];
+  if (!Array.isArray(assignedCategoryNames) || assignedCategoryNames.length === 0) {
+    return [];
+  }
+  const allowed = new Set(
+    assignedCategoryNames.map((name) => String(name).toLowerCase())
+  );
+  return data.filter(
+    (item) =>
+      item?.category_name &&
+      allowed.has(String(item.category_name).toLowerCase())
+  );
+};
+
+/**
+ * R6 — a CATEGORY-scoped role with zero assigned categories can see no
+ * inventory; callers render the empty-scope message instead of an ambiguous
+ * empty table.
+ *
+ * ⚠️ Only the CATEGORY dimension is evaluated here. Category scope is tracked
+ * client-side in the SQL permission slice (`permission.categories`), so an
+ * empty array reliably means "no scope". LOCATION scope, by the R3 decision,
+ * still lives in the legacy Mongo `preference.managerLocation` and is enforced
+ * server-side — it is NOT mirrored into the permission slice, so inferring
+ * "empty" for a location role from `permission.locations` is wrong and would
+ * hide the inventory table for a correctly-scoped location user. Location roles
+ * therefore always return false here (server-side filtering governs what they
+ * see).
+ *
+ * Non-scoped roles always return false.
+ *
+ * @param {string} roleType
+ * @param {{ categories?: Array }} scope - permission-slice scope
+ * @returns {boolean}
+ */
+export const hasEmptyScope = (roleType, { categories = [] } = {}) => {
+  if (getRoleScopeDimension(roleType) !== "category") return false;
+  return (categories?.length ?? 0) === 0;
 };

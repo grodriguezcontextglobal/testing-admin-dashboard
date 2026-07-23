@@ -15,13 +15,12 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import useSuppliers from "../../utils/hooks/useSuppliers";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import { formatDate } from "../../utils/dateFormat";
 import { bulkItemUpdateAlphanumeric } from "../utils/EditBulkActionOptions";
-import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 
 const useBulkActionLogic = () => {
   const {
@@ -89,6 +88,7 @@ const useBulkActionLogic = () => {
   });
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
@@ -141,54 +141,19 @@ const useBulkActionLogic = () => {
   });
 
   const alphaNumericInsertItemMutation = useMutation({
-    mutationFn: (template) =>
-      devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-      clearCacheMemory(
-        `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
-      );
-      clearCacheMemory(`providerCompanies_${user.companyData.id}`);
-    },
+    mutationFn: ({ template, idempotencyKey }) =>
+      devitrakApi.post("/db_item/bulk-item-alphanumeric", template, {
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
   });
 
   const alphaNumericUpdateItemMutation = useMutation({
-    mutationFn: (template) =>
+    mutationFn: ({ template, idempotencyKey }) =>
       devitrakApi.post(
         "/db_company/update-items-based-on-alphanumeric-serial-number",
         template,
+        { headers: { "Idempotency-Key": idempotencyKey } },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["listOfItemsInStock"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["ItemsInInventoryCheckingQuery"],
-        exact: true,
-        refetchType: "active",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["RefactoredListInventoryCompany"],
-        exact: true,
-        refetchType: "active",
-      });
-    },
   });
 
   const retrieveItemOptions = (props) => {
@@ -245,6 +210,7 @@ const useBulkActionLogic = () => {
           data,
           user,
           navigate,
+          dispatch,
           openNotificationWithIcon,
           setLoadingStatus,
           setValue,
@@ -281,6 +247,7 @@ const useBulkActionLogic = () => {
         data,
         user,
         navigate,
+        dispatch,
         openNotificationWithIcon,
         setLoadingStatus,
         setValue,
@@ -298,8 +265,6 @@ const useBulkActionLogic = () => {
         queryClient,
         updateAll,
       });
-      openNotificationWithIcon("All items were updated database.");
-      return navigate("/inventory");
     } catch (error) {
       openNotificationWithIcon(`${error.message}`);
       setLoadingStatus(false);

@@ -8,6 +8,7 @@ import "./App.css";
 // import NoAuthRoutes from "./routes/no-authorized/NoAuthRoutes";
 import { onLogout } from "./store/slices/adminSlice";
 import { onResetArticleEdited } from "./store/slices/articleSlide";
+import { onResetBackgroundJobs } from "./store/slices/backgroundJobsSlice";
 import { onResetCustomer } from "./store/slices/customerSlice";
 import {
   onResetDeviceInQuickGlance,
@@ -26,6 +27,15 @@ import { clearSessionStorage } from "./api/sessionHeaders";
 // );
 const AuthRoutes = lazy(() => import("./routes/authorized/AuthRoutes"));
 const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes"));
+const BackgroundJobsTracker = lazy(() =>
+  import("./components/backgroundJobs/BackgroundJobsTracker")
+);
+const OfflineIndicator = lazy(() =>
+  import("./components/offlineStatus/OfflineIndicator")
+);
+const InstallAppNotification = lazy(() =>
+  import("./components/installPrompt/InstallAppNotification")
+);
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -63,6 +73,7 @@ const App = () => {
       dispatch(onResetEventInfo());
       dispatch(onResetStaffProfile());
       dispatch(onResetHelpers());
+      dispatch(onResetBackgroundJobs());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
       clearSessionStorage();
@@ -122,11 +133,16 @@ const App = () => {
     >
       {renderNetworkStatusMessage()}
       {contextHolder}
+      <InstallAppNotification />
       {status === "authenticated" && adminToken ? (
         // <InactivityLogout>
         //   <AuthRoutes />
         // </InactivityLogout>
-        <AuthRoutes />
+        <>
+          <BackgroundJobsTracker />
+          <OfflineIndicator />
+          <AuthRoutes />
+        </>
       ) : (
         <NoAuthRoutes />
       )}

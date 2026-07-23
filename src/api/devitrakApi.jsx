@@ -1,7 +1,28 @@
 import axios from "axios";
+import { notification } from "antd";
 import { ConfigEnvExport } from "../config/ConfigEnvExport";
 import { getActiveServerSynchronously, switchServer, initializeActiveServer } from "./serverManager";
 import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
+import { isOfflineQueueableRequest } from "../config/offlineQueue";
+
+// Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads (not
+// exposed through ConfigEnvExport, which only carries the primary origin).
+const configuredApiOrigins = [
+    import.meta.env.VITE_APP_DEVITRACK_API,
+    import.meta.env.VITE_APP_DEVITRACK_API_BACKUP,
+]
+    .filter(Boolean)
+    .map((origin) => origin.trim().replace(/\/$/, ""));
+
+// Shown once per offline stretch so a burst of queued mutations doesn't spam
+// the user with one toast each; reset as soon as the browser reports it's
+// back online.
+let hasShownOfflineQueueNotice = false;
+if (typeof window !== "undefined") {
+    window.addEventListener("online", () => {
+        hasShownOfflineQueueNotice = false;
+    });
+}
 
 const { aws_api, header_auth_token } = ConfigEnvExport;
 
@@ -112,6 +133,32 @@ const setupResponseInterceptor = (instance) => {
         async (error) => {
             const { config, message } = error;
             const originalRequest = config;
+
+            if (
+                isOfflineQueueableRequest({
+                    method: originalRequest?.method,
+                    url: originalRequest?.baseURL
+                        ? `${originalRequest.baseURL}${originalRequest.url || ""}`
+                        : originalRequest?.url,
+                    isOnline: navigator.onLine,
+                    apiOrigins: configuredApiOrigins,
+                })
+            ) {
+                // The device itself has no network — switching servers won't help.
+                // The service worker's Background Sync queue (see vite.config.js)
+                // already queued this request and will retry it once connectivity
+                // returns; surface that once per offline stretch instead of a
+                // generic error.
+                error.isQueuedOffline = true;
+                if (!hasShownOfflineQueueNotice) {
+                    hasShownOfflineQueueNotice = true;
+                    notification.info({
+                        message: "You're offline",
+                        description: "This action will be retried automatically once you're back online.",
+                    });
+                }
+                return Promise.reject(error);
+            }
 
             if (
                 (message.includes("Network Error") || message.includes("timeout")) &&

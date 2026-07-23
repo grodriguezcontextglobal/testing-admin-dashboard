@@ -15,7 +15,7 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import Main from "./components/EditingInventoryUXOptions/Main";
-import RenderingEventInventorySection from "./components/EditingInventoryUXOptions/renderingEventInventorySection";
+import RenderingEventInventorySection from "./components/EditingInventoryUXOptions/RenderingEventInventorySection";
 
 export const valueContext = createContext(null);
 

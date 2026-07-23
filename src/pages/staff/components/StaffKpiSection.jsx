@@ -4,7 +4,7 @@ import ReactECharts from "echarts-for-react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import dicRole from "../../../components/general/dicRole";
+import { useRoleLabel } from "../../../hooks/useRoleLabel";
 
 /**
  * KPI strip for the staff page: total staff, active members, pending
@@ -79,6 +79,7 @@ KpiCard.propTypes = {
 
 const StaffKpiSection = () => {
   const { user } = useSelector((state) => state.admin);
+  const roleLabel = useRoleLabel();
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
     queryFn: () =>
@@ -112,7 +113,7 @@ const StaffKpiSection = () => {
   const donutData = Object.entries(roleCount)
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([roleKey, count]) => ({
-      name: dicRole[roleKey] ?? `Role ${roleKey}`,
+      name: roleLabel(roleKey) || `Role ${roleKey}`,
       value: count,
       itemStyle: {
         color: ROLE_COLORS[Number(roleKey) % ROLE_COLORS.length],

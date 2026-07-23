@@ -11,6 +11,7 @@ import Register from "../../pages/authentication/Registration";
 import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 import ForceLogout from "../../pages/authentication/ForceLogout";
+import AttendanceConfirmationLanding from "../../pages/authentication/AttendanceConfirmationLanding";
 
 const NoAuthRoutes = () => {
   return (
@@ -29,6 +30,7 @@ const NoAuthRoutes = () => {
         <Route path="/force-logout" element={<ForceLogout />} />
         <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
         <Route path="/my-devices" element={<MyDevicesPortal />} />
+        <Route path="/attendance-confirmation" element={<AttendanceConfirmationLanding />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>

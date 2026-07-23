@@ -1,4 +1,4 @@
-import dicRole from "../../../../components/general/dicRole";
+import { useRoleLabel } from "../../../../hooks/useRoleLabel";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import Chip from "../../../../components/UX/Chip/Chip";
 import Input from "../../../../components/UX/inputs/Input";
@@ -17,6 +17,7 @@ const BodyRendering = ({
   removeUploadedProfileImage,
   onCancel,
 }) => {
+  const roleLabel = useRoleLabel();
   return (
     <form className="profile-form" onSubmit={handleSubmit(handleUpdatePersonalInfo)}>
       <div className="profile-form__header">
@@ -129,7 +130,7 @@ const BodyRendering = ({
               <Input
                 type="text"
                 id="role"
-                value={dicRole[Number(user?.role)] ?? ""}
+                value={roleLabel(user?.role) ?? ""}
                 readOnly
                 className="input input--readonly"
               />
