@@ -1,6 +1,6 @@
 import { Radio } from "antd";
 // import { renderOptional } from "../BulkComponents";
-import { renderingOptionsForSubLocations } from "../EditBulkComponents";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 const FieldsSections = ({
   Grid,
   item,
@@ -17,7 +17,8 @@ const FieldsSections = ({
   setAddSerialNumberField,
   index,
   Divider,
-  // renderingOptionsForSubLocations,
+  subLocationsSubmitted,
+  setSubLocationsSubmitted,
   value,
   onChange,
   isChild = false, // Added isChild prop with a default value
@@ -94,27 +95,34 @@ const FieldsSections = ({
             <Divider margin="2.5px 0px 2.5px 0px" style={{ width: "100%" }} />
           )}
       </Grid>
-      {!isChild && ( // Conditionally render sub-location options
-        <Grid
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-          style={{
-            display:
-              item.label === "Main location" || item.label === "Sub location"
-                ? "flex"
-                : "none",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          {renderingOptionsForSubLocations(item.label).addSubLocation}
-          {renderingOptionsForSubLocations(item.label).removeAllSubLocations}
-        </Grid>
-      )}
+      {/* Offer "Remove all" only once at least one sub-location has been
+          added — under the Sub location field. Individual chips keep their
+          own delete (×); this clears them all at once. */}
+      {!isChild &&
+        item.label === "Sub location" &&
+        subLocationsSubmitted?.length > 0 && (
+          <Grid
+            item
+            xs={12}
+            sm={12}
+            md={12}
+            lg={12}
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              gap: "10px",
+              marginTop: "10px",
+            }}
+          >
+            <DangerButtonComponent
+              title="Remove all sub location"
+              func={() => setSubLocationsSubmitted?.([])}
+              buttonType="button"
+              styles={{ width: "fit-content" }}
+            />
+          </Grid>
+        )}
     </Grid>
   );
 };
