@@ -34,6 +34,7 @@ import ConsentGateBanner from "../../../../../../../pages/school/compliance/Cons
 import RecordGuardianConsentModal from "../../../../../../../pages/school/compliance/RecordGuardianConsentModal";
 import { useStudentConsent } from "../../../../../../../pages/school/compliance/stagedConsentStore";
 import { DEFAULT_ENFORCEMENT } from "../../../../../../../pages/school/compliance/consentModel";
+import { useStudentDob } from "../../../../../../../pages/school/compliance/stagedProfileStore";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -56,7 +57,9 @@ const AssignmentDevicesToMember = () => {
   const navigate = useNavigate();
   const [consentModalOpen, setConsentModalOpen] = useState(false);
   // Staged, client-side FERPA/COPPA consent gate (see pages/school/compliance).
-  const consent = useStudentConsent(memberInfo);
+  // The staged DOB overlays the record so the under-13 gate fires in the demo.
+  const { dob: stagedDob } = useStudentDob(memberInfo);
+  const consent = useStudentConsent({ ...memberInfo, date_of_birth: stagedDob });
   // Initialize expected return date with today's date in the form
   useEffect(() => {
     // Set default expected return date to today

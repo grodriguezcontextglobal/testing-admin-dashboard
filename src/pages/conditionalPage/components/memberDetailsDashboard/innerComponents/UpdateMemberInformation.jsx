@@ -15,6 +15,8 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import Input from "../../../../../components/UX/inputs/Input";
 import { dicIcons } from "./utils/dicIcons";
 import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
+import { getStagedDob, setStagedDob } from "../../../../../pages/school/compliance/stagedProfileStore";
+import { deriveAgeCategory } from "../../../../../pages/school/compliance/consentModel";
 
 const UpdateMemberInformation = () => {
   const [errors, setErrors] = useState([]);
@@ -102,6 +104,10 @@ const UpdateMemberInformation = () => {
     }
   }, [memberInfoRetrieveQuery.data]);
   const { register, handleSubmit, setValue, watch } = useForm();
+  const editMemberId =
+    membersData?.member_id ?? membersData?.id ?? memberInfo?.member_id;
+  const dobRegistration = register("date_of_birth");
+  const ageCategory = deriveAgeCategory({ date_of_birth: watch("date_of_birth") });
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
     api.open({
@@ -135,6 +141,12 @@ const UpdateMemberInformation = () => {
       setValue("zip", membersData?.address_zip);
       setValue("grade", membersData?.grade ?? "");
       setValue("homeroom", membersData?.homeroom ?? "");
+      setValue(
+        "date_of_birth",
+        getStagedDob(membersData?.member_id ?? membersData?.id) ??
+          membersData?.date_of_birth ??
+          ""
+      );
       setValue("minor", membersData?.minor === 1);
       setValue("parent_guardian_first_name", membersData?.parent_guardian_first_name);
       setValue("parent_guardian_last_name", membersData?.parent_guardian_last_name);
@@ -192,7 +204,11 @@ const UpdateMemberInformation = () => {
         parent_guardian_last_name: data?.parent_guardian_last_name,
         parent_guardian_email: data?.parent_guardian_email,
         parent_guardian_phone_number: data?.parent_guardian_phone_number,
+        date_of_birth: data?.date_of_birth || null,
       };
+      // Stage the DOB client-side so the consent gate reacts even before the
+      // backend persists date_of_birth (Phase D).
+      setStagedDob(editMemberId, data?.date_of_birth);
       return updateMemberInfoMutation.mutate(payload);
     } catch (error) {
       setErrors([
@@ -339,6 +355,55 @@ const UpdateMemberInformation = () => {
           >
             <span style={{ width: "100%", textAlign: "left" }}>Homeroom</span>
             <Input {...register("homeroom")} />
+          </InputLabel>
+          <InputLabel
+            style={{ display: "flex", flexDirection: "column", gap: 4 }}
+          >
+            <span style={{ width: "100%", textAlign: "left" }}>
+              Date of birth
+            </span>
+            <Input
+              type="date"
+              {...dobRegistration}
+              onChange={(e) => {
+                dobRegistration.onChange(e);
+                setStagedDob(editMemberId, e.target.value);
+                // Minor is derived from DOB (COPPA/FERPA); reveal guardian
+                // fields automatically once a birth date makes them a minor.
+                if (deriveAgeCategory({ date_of_birth: e.target.value }).isMinor) {
+                  setValue("minor", true);
+                }
+              }}
+            />
+            {ageCategory.ageYears != null && (
+              <span
+                style={{
+                  marginTop: 4,
+                  alignSelf: "flex-start",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "2px 10px",
+                  borderRadius: 9999,
+                  background: ageCategory.isUnder13
+                    ? "var(--error-50, #fef3f2)"
+                    : ageCategory.isMinor
+                    ? "var(--warning-50, #fffaeb)"
+                    : "var(--gray-100, #f2f4f7)",
+                  color: ageCategory.isUnder13
+                    ? "var(--error-700, #b42318)"
+                    : ageCategory.isMinor
+                    ? "var(--warning-700, #b54708)"
+                    : "var(--gray-600, #475467)",
+                }}
+              >
+                Age {ageCategory.ageYears} ·{" "}
+                {ageCategory.isUnder13
+                  ? "Under 13 — guardian consent required"
+                  : ageCategory.isMinor
+                  ? "Minor"
+                  : "Adult"}
+              </span>
+            )}
           </InputLabel>
         </div>
         <FormControlLabel
