@@ -3,6 +3,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import { verifyAndCreateLocation } from "./verifyLocationBeforeCreateNewInventory";
+import { buildSubLocationPath } from "./SubLocationRenderer";
 
 export const bulkItemInsertAlphanumeric = async ({
   data,
@@ -50,7 +51,7 @@ export const bulkItemInsertAlphanumeric = async ({
       company: user.company,
       location: data.location,
       current_location: data.location,
-      sub_location: JSON.stringify(subLocationsSubmitted),
+      sub_location: JSON.stringify(buildSubLocationPath(subLocationsSubmitted, data)),
       extra_serial_number: JSON.stringify(moreInfo),
       company_id: user.sqlInfo.company_id,
       return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,
@@ -134,7 +135,7 @@ export const bulkItemInsertSequential = async ({
       company: user.company,
       location: data.location,
       current_location: data.location,
-      sub_location: JSON.stringify(subLocationsSubmitted),
+      sub_location: JSON.stringify(buildSubLocationPath(subLocationsSubmitted, data)),
       extra_serial_number: JSON.stringify(moreInfo),
       company_id: user.sqlInfo.company_id,
       return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,

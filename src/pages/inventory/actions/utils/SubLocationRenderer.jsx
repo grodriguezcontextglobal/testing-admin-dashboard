@@ -31,3 +31,19 @@ export const retrieveExistingSubLocationsForCompanyInventory = (props, selectedL
   const orderedData = orderBy(result, ["value"], ["asc"]);
   return orderedData;
 };
+
+/**
+ * Combine the committed sub-location chips (subLocationsSubmitted) with any
+ * value still sitting in the "Sub location" field so a sub-location that was
+ * picked/typed but not explicitly "added" as a chip is still saved. Skips a
+ * field value that is already the last chip to avoid duplicating it.
+ */
+export const buildSubLocationPath = (subLocationsSubmitted, data) => {
+  const chips = Array.isArray(subLocationsSubmitted) ? subLocationsSubmitted : [];
+  const fieldValue =
+    data && typeof data.sub_location === "string" ? data.sub_location.trim() : "";
+  if (fieldValue && chips[chips.length - 1] !== fieldValue) {
+    return [...chips, fieldValue];
+  }
+  return [...chips];
+};
