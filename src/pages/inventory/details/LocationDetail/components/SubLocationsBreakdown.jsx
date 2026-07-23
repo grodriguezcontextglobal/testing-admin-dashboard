@@ -74,7 +74,12 @@ const SubLocationsBreakdown = ({ locationName }) => {
   // siblings so the row never disappears
   let level = node.children;
   let levelPrefix = resolved;
+  // When the active node is a leaf we fall back to its siblings — that list
+  // already contains the active node, so we must NOT also render the separate
+  // "current" chip below (it would show the selected tag twice).
+  let showingSiblings = false;
   if (!level || Object.keys(level).length === 0) {
+    showingSiblings = true;
     levelPrefix = resolved.slice(0, -1);
     let parent = root;
     for (const seg of levelPrefix) parent = parent.children[seg];
@@ -154,6 +159,7 @@ const SubLocationsBreakdown = ({ locationName }) => {
           All areas
         </Link>
         {resolved.length > 0 &&
+          !showingSiblings &&
           chip(
             resolved[resolved.length - 1],
             node.total,
