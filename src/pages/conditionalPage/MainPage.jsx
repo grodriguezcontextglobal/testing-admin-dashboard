@@ -18,6 +18,7 @@ import RegisterMembersToEvent from "./components/modals/RegisterMembersToEvent";
 import MainTable from "./tables/MainTable";
 import OverdueDevicesTable from "./tables/OverdueDevicesTable";
 import MembersStatsRow from "./components/MembersStatsRow";
+import SchoolReadinessDashboard from "../school/dashboard/SchoolReadinessDashboard";
 import { getIndustryProfile } from "../../config/industryProfiles";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
 
@@ -175,6 +176,7 @@ const MainPage = () => {
             {[
               { key: "all", label: `All ${titleParams || "members"}` },
               { key: "overdue", label: "Overdue devices" },
+              { key: "readiness", label: "Readiness" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -206,6 +208,10 @@ const MainPage = () => {
           </div>
           {loadingStatus ? (
             <DevitrakLoading />
+          ) : activeView === "readiness" ? (
+            <SchoolReadinessDashboard
+              audienceLabel={(titleParams || "students").toLowerCase()}
+            />
           ) : activeView === "overdue" ? (
             <OverdueDevicesTable />
           ) : (
