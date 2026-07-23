@@ -30,6 +30,10 @@ import { dicIcons } from "../../utils/dicIcons";
 import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
 import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
 import Input from "../../../../../../../components/UX/inputs/Input";
+import ConsentGateBanner from "../../../../../../../pages/school/compliance/ConsentGateBanner";
+import RecordGuardianConsentModal from "../../../../../../../pages/school/compliance/RecordGuardianConsentModal";
+import { useStudentConsent } from "../../../../../../../pages/school/compliance/stagedConsentStore";
+import { DEFAULT_ENFORCEMENT } from "../../../../../../../pages/school/compliance/consentModel";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -50,6 +54,9 @@ const AssignmentDevicesToMember = () => {
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
   const navigate = useNavigate();
+  const [consentModalOpen, setConsentModalOpen] = useState(false);
+  // Staged, client-side FERPA/COPPA consent gate (see pages/school/compliance).
+  const consent = useStudentConsent(memberInfo);
   // Initialize expected return date with today's date in the form
   useEffect(() => {
     // Set default expected return date to today
@@ -523,8 +530,26 @@ const AssignmentDevicesToMember = () => {
           key={"settingUp-deviceList-event"}
         >
           {contextHolder}
+          <RecordGuardianConsentModal
+            open={consentModalOpen}
+            onClose={() => setConsentModalOpen(false)}
+            member={memberInfo}
+            requiredPolicyVersion={DEFAULT_ENFORCEMENT.required_consent_policy_version}
+            onRecord={consent.recordConsent}
+          />
           {renderTitle()}
           {responsibleBanner()}
+          <ConsentGateBanner
+            status={consent.status}
+            reason={consent.reason}
+            consentRecord={consent.consentRecord}
+            requiredPolicyVersion={DEFAULT_ENFORCEMENT.required_consent_policy_version}
+            studentFirstName={memberInfo.first_name}
+            onRecordConsent={() => setConsentModalOpen(true)}
+            onManageGuardian={() =>
+              navigate(`/member/${memberInfo.member_id}/update-member-information`)
+            }
+          />
           <form
             style={{ width: "100%" }}
             onSubmit={handleSubmit(assignDeviceToMember)}
@@ -883,7 +908,8 @@ const AssignmentDevicesToMember = () => {
                   !watch("startingNumber") ||
                   loadingStatus ||
                   !checkingSerialNumberInputted ||
-                  guardianIncomplete
+                  guardianIncomplete ||
+                  consent.blocked
                 }
                 buttonType="submit"
                 loadingState={loadingStatus}
