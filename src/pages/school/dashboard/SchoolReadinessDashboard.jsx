@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
+import { Button, Modal, message } from "antd";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { loadDemoData, resetStagedDemoData } from "../compliance/loadDemoData";
 import {
   CONSENT_STATUS,
   DEFAULT_ENFORCEMENT,
@@ -95,6 +97,11 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
   const { user } = useSelector((state) => state.admin);
   const companyId = user?.sqlInfo?.company_id;
   const enforcement = DEFAULT_ENFORCEMENT;
+  const queryClient = useQueryClient();
+  const [seeding, setSeeding] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+  // Seeder controls only appear on the Summit demo company.
+  const isDemoCompany = String(companyId) === "3";
 
   const membersQuery = useQuery({
     queryKey: ["membersInfoQuery"],
@@ -172,7 +179,57 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
       },
       attention: attentionRows,
     };
-  }, [membersData, enforcement]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshTick forces a recompute after seed/reset; the staged stores are read imperatively
+  }, [membersData, enforcement, refreshTick]);
+
+  const runSeed = () => {
+    Modal.confirm({
+      title: "Load Summit demo data?",
+      content:
+        "Creates any missing demo students (12 total) on this company and stages their birth dates + guardian consent. Safe to run again — existing students are skipped, nothing is emailed.",
+      okText: "Load demo data",
+      onOk: async () => {
+        setSeeding(true);
+        try {
+          const s = await loadDemoData({ companyId });
+          queryClient.invalidateQueries({ queryKey: ["membersInfoQuery"] });
+          queryClient.invalidateQueries({
+            queryKey: ["outstandingLeasesCount", companyId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["overdueLeasesQuery", companyId],
+          });
+          setRefreshTick((t) => t + 1);
+          const msg = `Demo data loaded — ${s.created} created, ${s.ensured} already present, ${s.stagedConsent} consents staged.`;
+          if (s.errors.length) {
+            console.warn("Demo seed issues:", s.errors);
+            message.warning(`${msg} ${s.errors.length} issue(s) — see console.`);
+          } else {
+            message.success(msg);
+          }
+        } catch (e) {
+          message.error(`Demo seed failed: ${e.message}`);
+        } finally {
+          setSeeding(false);
+        }
+      },
+    });
+  };
+
+  const runReset = () => {
+    Modal.confirm({
+      title: "Reset staged consent + DOB?",
+      content:
+        "Clears the client-side staged birth dates and consent records for a clean demo run. Does not delete any students.",
+      okText: "Reset",
+      okButtonProps: { danger: true },
+      onOk: () => {
+        resetStagedDemoData();
+        setRefreshTick((t) => t + 1);
+        message.success("Staged consent + DOB cleared.");
+      },
+    });
+  };
 
   const coverageColor =
     kpis.coverage >= 100
@@ -207,10 +264,22 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
         >
           <Icon icon="tabler:shield-check" width={20} /> Compliance readiness
         </p>
-        <span style={chip("var(--blue-50, #eff8ff)", "var(--blue-700, #175cd3)")}>
-          Consent policy v{enforcement.required_consent_policy_version} · enforcement
-          on
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={chip("var(--blue-50, #eff8ff)", "var(--blue-700, #175cd3)")}>
+            Consent policy v{enforcement.required_consent_policy_version} ·
+            enforcement on
+          </span>
+          {isDemoCompany && (
+            <>
+              <Button size="small" type="primary" loading={seeding} onClick={runSeed}>
+                Load demo data
+              </Button>
+              <Button size="small" onClick={runReset}>
+                Reset staged
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div
