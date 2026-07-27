@@ -12,6 +12,7 @@ import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 import ForceLogout from "../../pages/authentication/ForceLogout";
 import AttendanceConfirmationLanding from "../../pages/authentication/AttendanceConfirmationLanding";
+import GuardianConsentResponsePage from "../../pages/schoolConsent/GuardianConsentResponsePage";
 
 const NoAuthRoutes = () => {
   return (
@@ -31,6 +32,7 @@ const NoAuthRoutes = () => {
         <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
         <Route path="/my-devices" element={<MyDevicesPortal />} />
         <Route path="/attendance-confirmation" element={<AttendanceConfirmationLanding />} />
+        <Route path="/school/consent/respond" element={<GuardianConsentResponsePage />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>
