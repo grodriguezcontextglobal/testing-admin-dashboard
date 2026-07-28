@@ -5,7 +5,7 @@ import { Avatar, Typography, notification } from "antd";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import DangerButtonConfirmationComponent from "../../../../components/UX/buttons/DangerButtonConfirmation";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -189,8 +189,7 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
       />
 
       <Grid item xs={12} marginTop={"0.5rem"}>
-        <DangerButtonConfirmationComponent
-          confirmationTitle={`Are you sure you want to delete the ${selectedKeys.length} selected member(s)?`}
+        <DangerButtonComponent
           title={`Delete selected member(s)${
             selectedKeys.length ? ` (${selectedKeys.length})` : ""
           }`}
