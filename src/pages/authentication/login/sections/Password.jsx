@@ -96,7 +96,7 @@ const Password = ({
                 style={{ paddingRight: "0.5rem" }}
               />
             }
-            label={`${" "}Remember for 30 days`}
+            label={`${" "}Remember me for 30 days`}
           />
         </Grid>
 
