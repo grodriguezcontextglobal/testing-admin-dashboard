@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  Alert,
   Button,
   Card,
   Divider,
@@ -16,6 +17,10 @@ import {
   respondPublicConsent,
   retrievePublicConsent,
 } from "./guardianConsentPublicApi";
+import {
+  formatConsentExpiryMessage,
+  shouldRetryTransientError,
+} from "./consentPageUtils";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -33,16 +38,18 @@ const GuardianConsentResponsePage = () => {
 
   const [signerName, setSignerName] = useState("");
   const [decision, setDecision] = useState(null);
+  const [submittedStatus, setSubmittedStatus] = useState(null);
 
   const {
     data: consentData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["publicConsent", otc],
     queryFn: () => retrievePublicConsent(otc),
     enabled: Boolean(otc),
-    retry: false,
+    retry: shouldRetryTransientError,
   });
 
   const submitMutation = useMutation({
@@ -51,8 +58,15 @@ const GuardianConsentResponsePage = () => {
       decision: consentDecision,
       signerName: name,
     }) => respondPublicConsent(consentOtc, consentDecision, name),
+    // The respond endpoint is idempotent-safe for a resubmit (backend
+    // returns "already <status>" on a repeat), so retrying transient
+    // failures here can't cause a double-write.
+    retry: shouldRetryTransientError,
 
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Render the confirmation from the mutation result itself — no need
+      // to re-fetch retrievePublicConsent just to learn what we already know.
+      setSubmittedStatus(data?.status || variables?.decision);
       notification.success({
         message: "Consent submitted successfully",
         description: "Thank you for your response.",
@@ -156,6 +170,11 @@ const GuardianConsentResponsePage = () => {
           status="error"
           title="Error"
           subTitle="Unable to load consent details. Please try again later."
+          extra={
+            <Button type="primary" onClick={() => refetch()}>
+              Try again
+            </Button>
+          }
         />
       </div>
     );
@@ -169,22 +188,33 @@ const GuardianConsentResponsePage = () => {
   const companyName = company?.name || "the school";
   const guardianName = guardian?.full_name || "";
   const studentName = student?.full_name || "the student";
+  const expiryMessage = formatConsentExpiryMessage(consent?.expires_at);
 
-  if (consent?.status === "agreed" || consent?.status === "refused") {
-    const isAgreed = consent.status === "agreed";
+  // `mutable` is the authoritative "already responded" signal from the
+  // server; fall back to the agreed/refused status allowlist only for
+  // older responses that don't carry the field yet.
+  const hasMutableFlag = typeof consent?.mutable === "boolean";
+  const isAlreadyResponded = hasMutableFlag
+    ? consent.mutable === false
+    : consent?.status === "agreed" || consent?.status === "refused";
+
+  const finalStatus = submittedStatus || consent?.status;
+
+  if (submittedStatus || isAlreadyResponded) {
+    const isAgreed = finalStatus === "agreed";
 
     return (
       <div style={pageShellStyle}>
         <Result
           status={isAgreed ? "success" : "info"}
-          title={
-            isAgreed
-              ? "Consent Already Provided"
-              : "Consent Already Refused"
+          title={submittedStatus ? "Thank you!" : (isAgreed ? "Consent Already Provided" : "Consent Already Refused")}
+          subTitle={
+            submittedStatus
+              ? `Your response has been recorded for ${studentName}.`
+              : `${guardianName || "Guardian"} has already ${
+                  isAgreed ? "agreed to" : "refused"
+                } the consent request for ${studentName}.`
           }
-          subTitle={`${guardianName || "The guardian"} has already ${
-            isAgreed ? "agreed to" : "refused"
-          } the consent request for ${studentName}.`}
         />
       </div>
     );
@@ -277,15 +307,35 @@ const GuardianConsentResponsePage = () => {
           )}
         </Space>
 
+        {expiryMessage && (
+          <Alert
+            type="warning"
+            showIcon
+            message={expiryMessage}
+            style={{ marginTop: 12 }}
+          />
+        )}
+
         {consent?.consent_text && (
           <>
             <Divider />
 
             <Title level={5}>Consent details</Title>
 
-            <Paragraph style={{ whiteSpace: "pre-wrap" }}>
-              {consent.consent_text}
-            </Paragraph>
+            <div
+              data-testid="consent-text-scroll"
+              style={{
+                maxHeight: 240,
+                overflowY: "auto",
+                border: "1px solid #f0f0f0",
+                borderRadius: 6,
+                padding: "8px 12px",
+              }}
+            >
+              <Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
+                {consent.consent_text}
+              </Paragraph>
+            </div>
           </>
         )}
 

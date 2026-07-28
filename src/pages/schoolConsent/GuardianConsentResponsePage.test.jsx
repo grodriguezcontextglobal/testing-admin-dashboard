@@ -100,6 +100,21 @@ describe("GuardianConsentResponsePage", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a generic error with a Try again button on a non-404/410 failure, and refetches on click", async () => {
+    // 403 is a definitive (non-retryable) status, so the error surfaces
+    // immediately instead of exhausting the query's own transient-error retries.
+    retrievePublicConsent
+      .mockRejectedValueOnce({ response: { status: 403 } })
+      .mockResolvedValueOnce(pendingConsent);
+    renderPage();
+
+    expect(await screen.findByText("Error")).toBeInTheDocument();
+    const retryButton = screen.getByRole("button", { name: "Try again" });
+    fireEvent.click(retryButton);
+
+    expect(await screen.findByText("AUP version 2")).toBeInTheDocument();
+  });
+
   it("shows student name and policy info when data loads", async () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     renderPage();
@@ -109,6 +124,33 @@ describe("GuardianConsentResponsePage", () => {
     expect(screen.getByText("guardian@example.com")).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("5A")).toBeInTheDocument();
+  });
+
+  it("shows an expiry warning when the consent carries expires_at", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      consent: { ...pendingConsent.consent, expires_at: "2026-08-04T12:00:00.000Z" },
+    });
+    renderPage();
+    expect(
+      await screen.findByText(/This link expires on August 4, 2026\./)
+    ).toBeInTheDocument();
+  });
+
+  it("shows no expiry warning when expires_at is absent", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    renderPage();
+    await screen.findByText("AUP version 2");
+    expect(screen.queryByText(/This link expires on/)).not.toBeInTheDocument();
+  });
+
+  it("caps the consent text in a scrollable, height-limited container", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    renderPage();
+    const container = await screen.findByTestId("consent-text-scroll");
+    expect(container).toHaveTextContent(pendingConsent.consent.consent_text);
+    expect(container.style.maxHeight).toBe("240px");
+    expect(container.style.overflowY).toBe("auto");
   });
 
   it("shows already responded result when consent already agreed", async () => {
@@ -136,6 +178,45 @@ describe("GuardianConsentResponsePage", () => {
       screen.getByText(
         "Jane Guardian has already refused the consent request for Alex Student."
       )
+    ).toBeInTheDocument();
+  });
+
+  it("treats consent.mutable === false as already-responded even with an unrecognized status", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      consent: { ...pendingConsent.consent, status: "revoked", mutable: false },
+    });
+    renderPage();
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Agree" })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: "Refuse" })).not.toBeInTheDocument();
+  });
+
+  it("still shows the editable form when mutable is absent and status is pending (legacy fallback)", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Agree" })).toBeInTheDocument();
+  });
+
+  it("shows the editable form when mutable is explicitly true even if an old status lingers", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      consent: { ...pendingConsent.consent, status: "pending", mutable: true },
+    });
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Agree" })).toBeInTheDocument();
+  });
+
+  it("uses the same guardian-name fallback ('Guardian') in the header and the already-responded message", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      guardian: { ...pendingConsent.guardian, full_name: "" },
+      consent: { ...pendingConsent.consent, status: "agreed" },
+    });
+    renderPage();
+    expect(
+      await screen.findByText("Guardian has already agreed to the consent request for Alex Student.")
     ).toBeInTheDocument();
   });
 
@@ -171,6 +252,40 @@ describe("GuardianConsentResponsePage", () => {
         "Jane Guardian"
       );
     });
+  });
+
+  it("shows an immediate confirmation screen after a successful Agree submit, without re-fetching", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    respondPublicConsent.mockResolvedValue({ ok: true, status: "agreed" });
+    renderPage();
+    fireEvent.change(await screen.findByLabelText("Full name of guardian signing"), {
+      target: { value: "Jane Guardian" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Agree" }));
+
+    expect(await screen.findByText("Thank you!")).toBeInTheDocument();
+    expect(
+      screen.getByText(/your response has been recorded/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Agree" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refuse" })).not.toBeInTheDocument();
+    // Confirmation renders from the mutation result alone — no second GET.
+    expect(retrievePublicConsent).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows an immediate confirmation screen after a successful Refuse submit", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    respondPublicConsent.mockResolvedValue({ ok: true, status: "refused" });
+    renderPage();
+    fireEvent.change(await screen.findByLabelText("Full name of guardian signing"), {
+      target: { value: "Jane Guardian" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Refuse" }));
+
+    expect(await screen.findByText("Thank you!")).toBeInTheDocument();
+    expect(
+      screen.getByText(/your response has been recorded/i)
+    ).toBeInTheDocument();
   });
 
   it("shows warning when signer name is empty", async () => {
