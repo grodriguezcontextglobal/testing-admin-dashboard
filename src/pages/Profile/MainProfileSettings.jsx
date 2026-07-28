@@ -62,6 +62,7 @@ const MainProfileSettings = () => {
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
     { label: "Platform policies",route: "platform_policies",       permission: "nav:profile"            },
+    { label: "School compliance", route: "school-compliance",       permission: "member:update",          industry: "Education" },
     { label: "System Jobs",      route: "system-jobs",              requiresSuperUser: true              },
   ];
   // Untitled UI segmented tabs ("button white" style): gray-50 rail,
@@ -108,20 +109,20 @@ const MainProfileSettings = () => {
           const isAllowed = option.requiresSuperUser
             ? isSuperUser
             : hasPermission(option.permission, user.roleType);
-          if (isAllowed) {
-            return (
-              <NavLink
-                key={option.label}
-                to={`${option.route}`}
-                style={({ isActive }) => ({
-                  ...pillStyle,
-                  ...(isActive ? pillActiveStyle : {}),
-                })}
-              >
-                {option.label}
-              </NavLink>
-            );
-          }
+          if (!isAllowed) return null;
+          if (option.industry && user?.companyData?.industry !== option.industry) return null;
+          return (
+            <NavLink
+              key={option.label}
+              to={`${option.route}`}
+              style={({ isActive }) => ({
+                ...pillStyle,
+                ...(isActive ? pillActiveStyle : {}),
+              })}
+            >
+              {option.label}
+            </NavLink>
+          );
         })}
       </div>
     );

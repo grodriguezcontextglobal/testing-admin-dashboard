@@ -28,6 +28,13 @@ describe("resolveKey", () => {
     expect(resolveKey("zipcode")).toBe("zip");
   });
 
+  it("resuelve alias de date_of_birth", () => {
+    expect(resolveKey("date_of_birth")).toBe("date_of_birth");
+    expect(resolveKey("dob")).toBe("date_of_birth");
+    expect(resolveKey("birth_date")).toBe("date_of_birth");
+    expect(resolveKey("birthday")).toBe("date_of_birth");
+  });
+
   it("retorna null para claves desconocidas", () => {
     expect(resolveKey("unknown_column")).toBeNull();
   });
@@ -69,7 +76,7 @@ describe("validateAndNormalizeRows", () => {
     expect(errors.some((e) => e.includes("last name"))).toBe(true);
   });
 
-  it("exige datos del guardián cuando minor es truthy", () => {
+  it("exige datos del guardián cuando minor es truthy (manual)", () => {
     const { errors } = validateAndNormalizeRows(
       [{ ...validRow, Minor: "true" }],
       1
@@ -99,5 +106,57 @@ describe("validateAndNormalizeRows", () => {
       1
     );
     expect(rows[0].external_id).toBe("123456");
+  });
+
+  it("calcula minor desde DOB cuando se provee date_of_birth", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...validRow, "Date of Birth": "2015-05-10" }],
+      1
+    );
+    expect(rows[0].minor).toBe(true);
+    expect(rows[0].under_13).toBe(true);
+    expect(rows[0].date_of_birth).toBe("2015-05-10");
+  });
+
+  it("calcula minor=false desde DOB para adulto", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...validRow, DOB: "2000-01-01" }],
+      1
+    );
+    expect(rows[0].minor).toBe(false);
+    expect(rows[0].under_13).toBe(false);
+  });
+
+  it("exige guardian cuando DOB indica menor", () => {
+    const { errors } = validateAndNormalizeRows(
+      [{ ...validRow, "Date of Birth": "2016-01-01" }],
+      1
+    );
+    expect(errors.some((e) => e.includes("Guardian first name"))).toBe(true);
+  });
+
+  it("no exige guardian cuando DOB indica adulto", () => {
+    const { errors } = validateAndNormalizeRows(
+      [{ ...validRow, DOB: "2000-01-01" }],
+      1
+    );
+    expect(errors.some((e) => e.includes("Guardian"))).toBe(false);
+  });
+
+  it("incluye under_13 en el output cuando DOB < 13", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...validRow, "Date of Birth": "2018-01-01" }],
+      1
+    );
+    expect(rows[0].under_13).toBe(true);
+  });
+
+  it("incluye under_13=false cuando DOB >= 13", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...validRow, DOB: "2012-01-01" }],
+      1
+    );
+    expect(rows[0].under_13).toBe(false);
+    expect(rows[0].minor).toBe(true);
   });
 });

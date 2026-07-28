@@ -1,4 +1,4 @@
-import { FormControlLabel, InputLabel } from "@mui/material";
+import { InputLabel } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Avatar, Divider, notification } from "antd";
 import { useEffect, useState } from "react";
@@ -14,13 +14,21 @@ import DangerButtonComponent from "../../../../../components/UX/buttons/DangerBu
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
 import { dicIcons } from "./utils/dicIcons";
-import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
+import { getIndustryProfile } from "../../../../../config/industryProfiles";
+import { calculateAgeFlags } from "../../../utils/ageCalculationUtils";
+import { saveGuardian } from "../../../utils/guardianConsentApi";
+import { StudentConsentPanel } from "./StudentConsentPanel";
 
 const UpdateMemberInformation = () => {
   const [errors, setErrors] = useState([]);
   const [saving, setSaving] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector(state => state.member)
+  // Industry-adaptive fields/labels — mirrors the add-member form
+  // (industryProfiles.js).
+  const { fields, representative } = getIndustryProfile(
+    user?.companyData?.industry
+  );
   const location = useLocation();
   const navigate = useNavigate()
   const [newImageProfileURL, setNewImageProfileURL] = useState(null);
@@ -102,6 +110,11 @@ const UpdateMemberInformation = () => {
     }
   }, [memberInfoRetrieveQuery.data]);
   const { register, handleSubmit, setValue, watch } = useForm();
+  const dobValue = watch("date_of_birth");
+  const calculatedAgeFlags = dobValue
+    ? calculateAgeFlags(dobValue)
+    : { age: null, minor: false, under_13: false };
+  const [ageFlags, setAgeFlags] = useState(calculatedAgeFlags);
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
     api.open({
@@ -136,12 +149,19 @@ const UpdateMemberInformation = () => {
       setValue("grade", membersData?.grade ?? "");
       setValue("homeroom", membersData?.homeroom ?? "");
       setValue("minor", membersData?.minor === 1);
+      setValue("under_13", false);
+      setValue("date_of_birth", membersData?.date_of_birth ?? "");
+      setAgeFlags(
+        membersData?.date_of_birth
+          ? calculateAgeFlags(membersData.date_of_birth)
+          : { age: null, minor: false, under_13: false }
+      );
       setValue("parent_guardian_first_name", membersData?.parent_guardian_first_name);
       setValue("parent_guardian_last_name", membersData?.parent_guardian_last_name);
       setValue("parent_guardian_email", membersData?.parent_guardian_email);
       setValue("parent_guardian_phone_number", membersData?.parent_guardian_phone_number);
     }
-  }, [membersData, memberInfoRetrieveQuery.data]);
+  }, [membersData, memberInfoRetrieveQuery.data, setValue]);
 
   const handleImageProfile = async () => {
     if (
@@ -173,6 +193,8 @@ const UpdateMemberInformation = () => {
     if (saving) return;
     try {
       setSaving(true);
+      const isMinor = Boolean(data?.minor || ageFlags.minor);
+      const isUnder13 = Boolean(data?.under_13 || ageFlags.under_13);
       const payload = {
         member_id: membersData?.member_id ?? membersData?.id,
         first_name: data?.first_name,
@@ -187,13 +209,30 @@ const UpdateMemberInformation = () => {
         image_url: newImageUploaded ? newImageUploaded : memberInfo.image_url,
         grade: data?.grade,
         homeroom: data?.homeroom,
-        minor: data?.minor,
+        minor: isMinor,
+        under_13: isUnder13,
+        date_of_birth: data?.date_of_birth,
         parent_guardian_first_name: data?.parent_guardian_first_name,
         parent_guardian_last_name: data?.parent_guardian_last_name,
         parent_guardian_email: data?.parent_guardian_email,
         parent_guardian_phone_number: data?.parent_guardian_phone_number,
       };
-      return updateMemberInfoMutation.mutate(payload);
+      await updateMemberInfoMutation.mutateAsync(payload);
+
+      if (isMinor && data.parent_guardian_email) {
+        try {
+          await saveGuardian({
+            member_id: membersData?.member_id ?? membersData?.id,
+            company_id: user?.sqlInfo?.company_id,
+            first_name: data.parent_guardian_first_name,
+            last_name: data.parent_guardian_last_name,
+            email: data.parent_guardian_email,
+            phone_number: data.parent_guardian_phone_number,
+          });
+        } catch (guardianError) {
+          console.warn("Guardian save failed:", guardianError);
+        }
+      }
     } catch (error) {
       setErrors([
         `Failed to update member: ${error?.message || String(error)}`,
@@ -328,24 +367,49 @@ const UpdateMemberInformation = () => {
             <span style={{ width: "100%", textAlign: "left" }}>Zip</span>
             <Input {...register("zip")} />
           </InputLabel>
-          <InputLabel
-            style={{ display: "flex", flexDirection: "column", gap: 4 }}
-          >
-            <span style={{ width: "100%", textAlign: "left" }}>Grade</span>
-            <Input {...register("grade")} />
-          </InputLabel>
-          <InputLabel
-            style={{ display: "flex", flexDirection: "column", gap: 4 }}
-          >
-            <span style={{ width: "100%", textAlign: "left" }}>Homeroom</span>
-            <Input {...register("homeroom")} />
-          </InputLabel>
+          {fields.grade && (
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>Grade</span>
+              <Input {...register("grade")} />
+            </InputLabel>
+          )}
+          {fields.homeroom && (
+            <InputLabel
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+            >
+              <span style={{ width: "100%", textAlign: "left" }}>Homeroom</span>
+              <Input {...register("homeroom")} />
+            </InputLabel>
+          )}
         </div>
-        <FormControlLabel
-          control={<CheckboxReusableComponent name="minor" checked={watch("minor")} onChange={(e) => setValue("minor", e.target.checked)} />}
-          label="Is the member a minor?"
-        />
-        {watch("minor") && (
+        {fields.minor && (
+          <InputLabel style={{ display: "flex", flexDirection: "column", gap: 4, gridColumn: "1 / -1" }}>
+            <span style={{ width: "100%", textAlign: "left" }}>Date of birth</span>
+            <Input
+              {...register("date_of_birth")}
+              type="date"
+              onChange={(e) => {
+                setValue("date_of_birth", e.target.value, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                });
+                const flags = calculateAgeFlags(e.target.value);
+                setAgeFlags(flags);
+                setValue("minor", flags.minor, { shouldDirty: true });
+                setValue("under_13", flags.under_13, { shouldDirty: true });
+              }}
+            />
+            {ageFlags.minor && (
+              <span style={{ color: "#d48806", fontSize: 12, marginTop: 4 }}>
+                This student is {ageFlags.under_13 ? "under 13" : "a minor"}. Guardian information and consent are required.
+              </span>
+            )}
+          </InputLabel>
+        )}
+        {fields.minor && (watch("minor") || ageFlags.minor) && (
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
           >
@@ -353,7 +417,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian First name
+                {representative.label} first name
               </span>
               <Input
 
@@ -364,7 +428,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian Last name
+                {representative.label} last name
               </span>
               <Input
 
@@ -375,7 +439,7 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian Email
+                {representative.label} email
               </span>
               <Input
 
@@ -387,13 +451,23 @@ const UpdateMemberInformation = () => {
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             >
               <span style={{ width: "100%", textAlign: "left" }}>
-                Guardian Phone
+                {representative.label} phone
               </span>
               <Input
                 {...register("parent_guardian_phone_number")}
               />
             </InputLabel>
           </div>
+        )}
+
+        {fields.minor && (watch("minor") || ageFlags.minor) && membersData && (
+          <>
+            <Divider />
+            <StudentConsentPanel
+              memberId={membersData?.member_id ?? membersData?.id}
+              memberData={membersData}
+            />
+          </>
         )}
 
         {errors.length ? (

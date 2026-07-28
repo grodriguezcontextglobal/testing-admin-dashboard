@@ -5,6 +5,8 @@
  * it can be unit-tested without a spreadsheet.
  */
 
+import { calculateStudentAgeFlags } from "./ageCalculationUtils";
+
 /** Normalizes an arbitrary header name to a snake_case token. */
 export const normalizeHeader = (key) =>
   String(key || "")
@@ -28,6 +30,7 @@ export const headerAliasMap = {
   zip: ["address_zip", "zip", "zip_code", "zipcode", "postal_code"],
   grade: ["grade", "grade_level", "year"],
   homeroom: ["homeroom", "home_room", "class", "classroom"],
+  date_of_birth: ["date_of_birth", "dob", "birth_date", "birthday", "date of birth"],
   minor: ["minor", "is_minor"],
   "parent guardian first name": [
     "parent_guardian_first_name",
@@ -84,7 +87,13 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
       );
     }
 
-    const isMinor = /true|1|yes/i.test(String(normalizedRow.minor));
+    // Calculate minor from DOB; fall back to manual minor column for backward compat
+    const dob = normalizedRow["date_of_birth"] || "";
+    const { minor: calculatedMinor, under_13 } = calculateStudentAgeFlags(dob);
+    const manualMinor = /true|1|yes/i.test(String(normalizedRow.minor));
+    const isMinor = dob ? calculatedMinor : manualMinor;
+    const isUnder13 = dob ? under_13 : false;
+
     if (isMinor) {
       if (!normalizedRow["parent guardian first name"])
         errors.push(`Row ${idx + 1}: Guardian first name is required for minors.`);
@@ -120,7 +129,9 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
       company_id: companyId,
       grade: String(normalizedRow.grade || ""),
       homeroom: String(normalizedRow.homeroom || ""),
+      date_of_birth: dob,
       minor: isMinor,
+      under_13: isUnder13,
       parent_guardian_first_name:
         normalizedRow["parent guardian first name"] || "",
       parent_guardian_last_name:

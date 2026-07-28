@@ -14,7 +14,17 @@ const validAdult = {
   address_city: "London",
   address_state: "NY",
   address_zip: "10001",
+  date_of_birth: "2000-01-01",
   minor: false,
+};
+
+const validMinor = {
+  ...validAdult,
+  date_of_birth: "2015-05-10",
+  parent_guardian_first_name: "Jane",
+  parent_guardian_last_name: "Doe",
+  parent_guardian_email: "jane@test.com",
+  parent_guardian_phone_number: "555-1",
 };
 
 describe("EMPTY_SINGLE_MEMBER_FORM", () => {
@@ -24,6 +34,7 @@ describe("EMPTY_SINGLE_MEMBER_FORM", () => {
       last_name: "",
       email: "",
       phone: "",
+      date_of_birth: "",
       minor: false,
       parent_guardian_first_name: "",
     });
@@ -48,8 +59,15 @@ describe("validateSingleMemberForm", () => {
     expect(errs.some((e) => e.includes("Guardian"))).toBe(false);
   });
 
-  it("exige los datos del guardián cuando es menor", () => {
-    const errs = validateSingleMemberForm({ ...validAdult, minor: true });
+  it("exige los datos del guardián cuando el DOB indica menor", () => {
+    const errs = validateSingleMemberForm({
+      ...validAdult,
+      date_of_birth: "2015-05-10",
+      parent_guardian_first_name: "",
+      parent_guardian_last_name: "",
+      parent_guardian_email: "",
+      parent_guardian_phone_number: "",
+    });
     expect(errs).toContain("Guardian first name is required for minors.");
     expect(errs).toContain("Guardian last name is required for minors.");
     expect(errs).toContain("Guardian email is required for minors.");
@@ -57,15 +75,36 @@ describe("validateSingleMemberForm", () => {
   });
 
   it("no exige datos del guardián de un menor cuando ya están completos", () => {
-    const errs = validateSingleMemberForm({
-      ...validAdult,
-      minor: true,
-      parent_guardian_first_name: "Jane",
-      parent_guardian_last_name: "Doe",
-      parent_guardian_email: "jane@test.com",
-      parent_guardian_phone_number: "555-1",
-    });
+    const errs = validateSingleMemberForm(validMinor);
     expect(errs).toEqual([]);
+  });
+
+  it("usa el label del representante de la industria en los mensajes (schools)", () => {
+    const errs = validateSingleMemberForm(
+      { ...validAdult, date_of_birth: "2015-05-10" },
+      { representativeLabel: "Parent / Guardian" }
+    );
+    expect(errs).toContain("Parent / Guardian first name is required for minors.");
+    expect(errs).toContain("Parent / Guardian email is required for minors.");
+    expect(errs.some((e) => e.startsWith("Guardian "))).toBe(false);
+  });
+
+  it("requiere DOB cuando requireDob=true", () => {
+    const errs = validateSingleMemberForm(
+      { ...validAdult, date_of_birth: "" },
+      { requireDob: true }
+    );
+    expect(errs).toContain("Date of birth is required.");
+  });
+
+  it("no requiere DOB cuando requireDob=false (default)", () => {
+    const errs = validateSingleMemberForm(validAdult);
+    expect(errs.some((e) => e.includes("Date of birth"))).toBe(false);
+  });
+
+  it("no exige DOB cuando tiene DOB válido y requireDob=true", () => {
+    const errs = validateSingleMemberForm(validAdult, { requireDob: true });
+    expect(errs.some((e) => e.includes("Date of birth"))).toBe(false);
   });
 });
 
@@ -81,5 +120,41 @@ describe("buildSingleMemberPayload", () => {
       first_name: "Ada",
       email: "ada@test.com",
     });
+  });
+
+  it("incluye date_of_birth en el payload", () => {
+    const payload = buildSingleMemberPayload(validAdult);
+    expect(payload.date_of_birth).toBe("2000-01-01");
+  });
+
+  it("calcula minor=true para DOB de menor", () => {
+    const payload = buildSingleMemberPayload({
+      ...validAdult,
+      date_of_birth: "2015-05-10",
+    });
+    expect(payload.minor).toBe(true);
+  });
+
+  it("calcula minor=false para DOB de adulto", () => {
+    const payload = buildSingleMemberPayload(validAdult);
+    expect(payload.minor).toBe(false);
+  });
+
+  it("calcula under_13=true para DOB < 13 años", () => {
+    const payload = buildSingleMemberPayload({
+      ...validAdult,
+      date_of_birth: "2016-01-01",
+    });
+    expect(payload.under_13).toBe(true);
+    expect(payload.minor).toBe(true);
+  });
+
+  it("calcula under_13=false para DOB >= 13 años", () => {
+    const payload = buildSingleMemberPayload({
+      ...validAdult,
+      date_of_birth: "2010-01-01",
+    });
+    expect(payload.under_13).toBe(false);
+    expect(payload.minor).toBe(true);
   });
 });

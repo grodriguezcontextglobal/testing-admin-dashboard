@@ -12,3 +12,11 @@
 /** Default OFF. Set VITE_APP_FEATURE_SCOPED_ROLES=true in .env.dev to enable. */
 export const FEATURE_SCOPED_ROLES =
   import.meta.env.VITE_APP_FEATURE_SCOPED_ROLES === "true";
+
+/**
+ * Member device fees (school vertical, Phase 2 B1): capturing a lost/damaged
+ * fee on return. Default OFF — flip once the backend persists fee_amount /
+ * fee_reason and exposes the fees read (FRONTEND_school_backend_asks.md §B1).
+ */
+export const FEATURE_MEMBER_FEES =
+  import.meta.env.VITE_APP_FEATURE_MEMBER_FEES === "true";

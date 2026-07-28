@@ -144,6 +144,9 @@ const ConsumerDeviceLostFeeCreditCard = lazy(() =>
 const CompanyInfo = lazy(() =>
   import("../../pages/Profile/company_info/MainPage")
 );
+const SchoolComplianceSettings = lazy(() =>
+  import("../../pages/Profile/school_compliance/SchoolComplianceSettings")
+);
 const RolesManagementMainPage = lazy(() =>
   import("../../pages/Profile/roles_management/RolesManagementMainPage")
 );
@@ -466,6 +469,9 @@ const AuthRoutes = () => {
                   element={<StaffActivityMainPage />}
                 />
                 <Route path="company-info" element={<CompanyInfo />} />
+                <Route element={<PermissionGuard action="member:update" />}>
+                  <Route path="school-compliance" element={<SchoolComplianceSettings />} />
+                </Route>
                 <Route element={<PermissionGuard action="staff:assign_role" />}>
                   <Route path="roles" element={<RolesManagementMainPage />} />
                 </Route>
