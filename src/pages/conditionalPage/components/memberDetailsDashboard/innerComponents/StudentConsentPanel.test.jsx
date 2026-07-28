@@ -5,12 +5,14 @@ import { StudentConsentPanel } from "./StudentConsentPanel";
 import {
   fetchStudentConsent,
   sendConsentRequest,
+  resendConsentRequest,
 } from "../../../utils/guardianConsentApi";
 import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
 
 vi.mock("../../../utils/guardianConsentApi", () => ({
   fetchStudentConsent: vi.fn(),
   sendConsentRequest: vi.fn(),
+  resendConsentRequest: vi.fn(),
 }));
 
 vi.mock("../../../../Profile/school_compliance/utils/schoolComplianceUtils", () => ({
@@ -180,6 +182,51 @@ describe("StudentConsentPanel", () => {
         policy_type: "AUP",
         policy_version: "1",
       });
+    });
+  });
+
+  it.each(["expired", "refused", "stale"])(
+    "calls resendConsentRequest (not sendConsentRequest) when status is %s",
+    async (statusCase) => {
+      const isStale = statusCase === "stale";
+      fetchStudentConsent.mockResolvedValue({
+        data: {
+          consent: {
+            status: isStale ? "agreed" : statusCase,
+            policy_version: isStale ? "1" : "1",
+          },
+        },
+      });
+      resendConsentRequest.mockResolvedValue({ ok: true, status: "pending" });
+      renderPanel(isStale ? { requiredPolicyVersion: "2" } : {});
+
+      fireEvent.click(await screen.findByRole("button", { name: /^resend$/i }));
+
+      await waitFor(() => {
+        expect(resendConsentRequest).toHaveBeenCalledWith({
+          company_id: 137,
+          member_id: 42,
+          policy_type: "AUP",
+          policy_version: isStale ? "2" : "1",
+        });
+      });
+      expect(sendConsentRequest).not.toHaveBeenCalled();
+    }
+  );
+
+  it("shows a specific message when resend finds no existing request (404)", async () => {
+    fetchStudentConsent.mockResolvedValue({
+      data: { consent: { status: "expired", policy_version: "1" } },
+    });
+    const error = new Error("Not found");
+    error.response = { status: 404 };
+    resendConsentRequest.mockRejectedValue(error);
+    renderPanel();
+
+    fireEvent.click(await screen.findByRole("button", { name: /^resend$/i }));
+
+    await waitFor(() => {
+      expect(resendConsentRequest).toHaveBeenCalled();
     });
   });
 });

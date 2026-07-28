@@ -5,6 +5,7 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import {
   fetchStudentConsent,
   sendConsentRequest,
+  resendConsentRequest,
 } from "../../../utils/guardianConsentApi";
 import {
   getConsentStatusCopy,
@@ -106,11 +107,8 @@ export const StudentConsentPanel = ({
   const guardianPhone = memberData?.parent_guardian_phone_number;
   const canSendRequest =
     Boolean(guardianEmail) && consentStatus !== "pending" && !isAgreed;
-  const sendButtonLabel = ["expired", "refused", "stale"].includes(
-    consentStatus
-  )
-    ? "Resend"
-    : "Send Consent Request";
+  const isResend = ["expired", "refused", "stale"].includes(consentStatus);
+  const sendButtonLabel = isResend ? "Resend" : "Send Consent Request";
 
   const sendConsentMutation = useMutation({
     mutationFn: (payload) => sendConsentRequest(payload),
@@ -126,7 +124,47 @@ export const StudentConsentPanel = ({
     },
   });
 
+  const resendConsentMutation = useMutation({
+    mutationFn: (payload) => resendConsentRequest(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["studentConsent", memberId]);
+      notification.success({ message: "Consent request resent" });
+    },
+    onError: (err) => {
+      const status = err?.response?.status;
+      if (status === 404) {
+        notification.error({
+          message: "No pending request to resend — send a new one first",
+        });
+        return;
+      }
+      if (status === 409) {
+        notification.warning({
+          message: "Guardian already responded — nothing to resend",
+        });
+        return;
+      }
+      if (status === 422) {
+        notification.error({ message: "No guardian email on file" });
+        return;
+      }
+      notification.error({
+        message:
+          err?.response?.data?.msg || "Failed to resend consent request",
+      });
+    },
+  });
+
   const handleSendConsentRequest = () => {
+    if (isResend) {
+      resendConsentMutation.mutate({
+        company_id: companyId,
+        member_id: memberId,
+        policy_type: policyType,
+        policy_version: effectivePolicyVersion || "1",
+      });
+      return;
+    }
     sendConsentMutation.mutate({
       company_id: companyId,
       member_id: memberId,
@@ -201,7 +239,9 @@ export const StudentConsentPanel = ({
               title={sendButtonLabel}
               iconLeading={<span aria-hidden="true" />}
               func={handleSendConsentRequest}
-              loadingState={sendConsentMutation.isLoading}
+              loadingState={
+                sendConsentMutation.isLoading || resendConsentMutation.isLoading
+              }
               disabled={!canSendRequest}
             />
           </div>
