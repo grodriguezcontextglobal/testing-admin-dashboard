@@ -134,8 +134,12 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
           },
         })
       );
-      await clearCacheMemory(`_id=${user.companyData.id}`);
-      await clearCacheMemory(`company_id=${user.companyData.id}`);
+      // Both cache keys are independent (different key, same simple clear
+      // action), so clear them concurrently instead of one after the other.
+      await Promise.all([
+        clearCacheMemory(`_id=${user.companyData.id}`),
+        clearCacheMemory(`company_id=${user.companyData.id}`),
+      ]);
       queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["employeesPerCompanyList"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["events"], exact: true });

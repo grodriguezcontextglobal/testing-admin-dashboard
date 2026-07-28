@@ -107,15 +107,19 @@ const ActionsMainPage = () => {
           }
         );
         openNotificationWithIcon("Success", "Device returned.");
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
-        );
+        // All three cache keys are independent (different literal keys, none
+        // depends on another's result), so clear them concurrently.
+        await Promise.all([
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+          ),
+        ]);
         queryClient.invalidateQueries({
           queryKey: ["assignedDeviceListQuery"],
           exact: true,

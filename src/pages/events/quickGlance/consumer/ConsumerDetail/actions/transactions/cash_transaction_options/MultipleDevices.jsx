@@ -187,28 +187,30 @@ const MultipleDevices = ({ setCreateTransactionForNoRegularUser }) => {
           );
         }
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
-        await queryClient.refetchQueries({
-          queryKey: ["transactionListQuery"],
-          exact: true,
-        });
-        await queryClient.refetchQueries({
-          queryKey: ["transactionsList"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["listOfNoOperatingDevices"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["assginedDeviceList"],
-          exact: true,
-        });
-        await queryClient.refetchQueries({
-          queryKey: ["listOfDevicesAssigned"],
-          exact: true,
-        });
+        // All five refetches target distinct, unrelated query keys and none
+        // consumes another's result — run them concurrently.
+        await Promise.all([
+          queryClient.refetchQueries({
+            queryKey: ["transactionListQuery"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["transactionsList"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["listOfNoOperatingDevices"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["assginedDeviceList"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["listOfDevicesAssigned"],
+            exact: true,
+          }),
+        ]);
         alert("Devices assigned successfully");
         setIsLoading(false);
         return closeModal();

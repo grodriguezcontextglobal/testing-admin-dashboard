@@ -105,12 +105,16 @@ const TableDetailPerDevice = ({ dataFound }) => {
   // };
 
   const staffingFN = async (reference) => {
-    const individual = await devitrakApi.post("/staff/admin-users", {
-      email: findEmail(reference),
-    });
-    const companyInfo = await devitrakApi.post("/company/search-company", {
-      company_name: user.company,
-    });
+    // These two requests are independent of each other, so fire them in
+    // parallel instead of cascading one after the other.
+    const [individual, companyInfo] = await Promise.all([
+      devitrakApi.post("/staff/admin-users", {
+        email: findEmail(reference),
+      }),
+      devitrakApi.post("/company/search-company", {
+        company_name: user.company,
+      }),
+    ]);
     if (individual.data && companyInfo.data) {
       const employeesInCompanyInfo =
         await companyInfo.data.company[0].employees.find(

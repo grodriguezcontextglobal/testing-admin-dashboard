@@ -341,12 +341,16 @@ function AddingDeviceToPaymentIntentFromSearchBar({ record, refetchingFn }) {
       });
 
       await createEventInTransactionLog();
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`,
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`,
+        ),
+      ]);
 
       dispatch(
         onAddDevicesAssignedInPaymentIntent(

@@ -64,8 +64,8 @@ const FooterExpandedRow = ({
       setSelectedItems: setSelectedItems,
       loadingStatus: isLoadingState,
     });
-    await refetchingDevicePerTransaction();
-    await formatItemsInfoAsProps();
+    // Neither refresh depends on the other's result, so run them in parallel.
+    await Promise.all([refetchingDevicePerTransaction(), formatItemsInfoAsProps()]);
     return setIsLoadingState(false);
   };
   const [ccInfo, setCcInfo] = useState([]);

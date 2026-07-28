@@ -145,34 +145,34 @@ const NoDepositTransaction = ({
         }
         await devitrakApi.post("/stripe/save-transaction", transactionProfile);
 
-        await queryClient.refetchQueries({
-          queryKey: ["transactionListQuery"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["transactionsList"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["listOfNoOperatingDevices"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["assginedDeviceList"],
-          exact: true,
-        });
-
-        await queryClient.refetchQueries({
-          queryKey: ["listOfDevicesAssigned"],
-          exact: true,
-        });
-        await queryClient.refetchQueries({
-          queryKey: ["transactionsPerCustomer", customer.uid ?? customer.id],
-          exact: true,
-        });
+        // These six cache refetches target independent query keys and none
+        // of them depend on another's result, so run them in parallel.
+        await Promise.all([
+          queryClient.refetchQueries({
+            queryKey: ["transactionListQuery"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["transactionsList"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["listOfNoOperatingDevices"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["assginedDeviceList"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["listOfDevicesAssigned"],
+            exact: true,
+          }),
+          queryClient.refetchQueries({
+            queryKey: ["transactionsPerCustomer", customer.uid ?? customer.id],
+            exact: true,
+          }),
+        ]);
         refetching()
         loadingState(false);
         triggering(0);
