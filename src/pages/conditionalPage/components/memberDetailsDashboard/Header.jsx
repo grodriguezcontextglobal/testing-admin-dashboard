@@ -1,13 +1,21 @@
-import { Divider } from "antd";
+import { Divider, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { utils, writeFile } from "xlsx";
+import { devitrakApi } from "../../../../api/devitrakApi";
 import Breadcrumb from "../../../../components/UX/breadcrumbs/Breadcrumb";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import RefactoredHeaderUntitledUiReact from "../../../../components/UX/header/DynamicHeaderCompnent";
 import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import { isCoordinatorLevel } from "../../../../config/roles";
 import { onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
+import {
+  ASSIGNED_DEVICES_EXPORT_COLUMNS,
+  buildAssignedDevicesExportRows,
+  buildMemberProfileExportPairs,
+} from "../../utils/memberExportUtils";
 
 const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
   const detailMemberInfo = memberInfo?.at(-1);
@@ -38,6 +46,54 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
     },
   };
 
+  const handleExportMemberData = async () => {
+    try {
+      const response = await devitrakApi.post(
+        "/db_member/retrieve-members-assigned-devices",
+        {
+          member_id: detailMemberInfo?.member_id,
+          company_id: user?.sqlInfo?.company_id,
+          returned: 0,
+        }
+      );
+      const deviceRows = buildAssignedDevicesExportRows(response?.data?.rows);
+      const profilePairs = buildMemberProfileExportPairs(detailMemberInfo);
+
+      const wb = utils.book_new();
+
+      const profileWs = utils.aoa_to_sheet([
+        ["Field", "Value"],
+        ...profilePairs.map((p) => [p.field, p.value]),
+      ]);
+      profileWs["!cols"] = [{ width: 24 }, { width: 30 }];
+      utils.book_append_sheet(wb, profileWs, "Member Profile");
+
+      const devicesWs = utils.aoa_to_sheet([
+        ASSIGNED_DEVICES_EXPORT_COLUMNS.map((c) => c.label),
+        ...deviceRows.map((row) =>
+          ASSIGNED_DEVICES_EXPORT_COLUMNS.map((c) => row[c.key])
+        ),
+      ]);
+      devicesWs["!cols"] = ASSIGNED_DEVICES_EXPORT_COLUMNS.map(() => ({
+        width: 22,
+      }));
+      devicesWs["!autofilter"] = {
+        ref: `A1:${String.fromCharCode(
+          64 + ASSIGNED_DEVICES_EXPORT_COLUMNS.length
+        )}1`,
+      };
+      utils.book_append_sheet(wb, devicesWs, "Assigned Devices");
+
+      const fileNameLabel = `${detailMemberInfo?.first_name ?? "member"}_${
+        detailMemberInfo?.last_name ?? ""
+      }`.replace(/\s+/g, "_");
+      writeFile(wb, `${fileNameLabel}_export_${Date.now()}.xlsx`);
+      message.success("Member data exported.");
+    } catch {
+      message.error("Failed to export member data. Please try again.");
+    }
+  };
+
   const breadcrumbItems = [
     {
       title: <p style={style.titleNavigation} onClick={() => { navigate("/members", { state: { referencing: groupName } }); dispatch(onRemoveMemberInfo()) }}>All {groupName}</p>,
@@ -50,18 +106,34 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
   ];
 
   const actions = {
-    desktop: isCoordinatorLevel(user.roleType) ? (
-      <BlueButtonComponent
-        title={"Add new member"}
-        func={() => setAddingNewMember(true)}
-      />
-    ) : null,
-    mobile: isCoordinatorLevel(user.roleType) ? (
-      <BlueButtonComponent
-        title={"Add new"}
-        func={() => setAddingNewMember(true)}
-      />
-    ) : null,
+    desktop: (
+      <div style={{ display: "flex", gap: 8 }}>
+        <GrayButtonComponent
+          title={"Export data (.xlsx)"}
+          func={handleExportMemberData}
+        />
+        {isCoordinatorLevel(user.roleType) && (
+          <BlueButtonComponent
+            title={"Add new member"}
+            func={() => setAddingNewMember(true)}
+          />
+        )}
+      </div>
+    ),
+    mobile: (
+      <div style={{ display: "flex", gap: 8 }}>
+        <GrayButtonComponent
+          title={"Export"}
+          func={handleExportMemberData}
+        />
+        {isCoordinatorLevel(user.roleType) && (
+          <BlueButtonComponent
+            title={"Add new"}
+            func={() => setAddingNewMember(true)}
+          />
+        )}
+      </div>
+    ),
   };
 
   return (
