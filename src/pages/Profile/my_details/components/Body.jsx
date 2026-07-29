@@ -29,11 +29,8 @@ const Body = () => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dur) => {
     api.open({
-      message: (
-        <div>
-          <span style={{ width: "35px", aspectRatio: 1 }}>{dicIconNotification[type]}</span>&nbsp;{msg}
-        </div>
-      ),
+      icon: dicIconNotification[type],
+      message: msg,
       duration: dur,
     });
   };

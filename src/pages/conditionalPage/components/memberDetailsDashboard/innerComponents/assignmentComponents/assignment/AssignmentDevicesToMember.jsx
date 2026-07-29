@@ -219,21 +219,9 @@ const AssignmentDevicesToMember = () => {
   const [api, contextHolder] = notification.useNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
     api.open({
-      description: (
-        <div
-          style={{
-            width: "100%",
-            display: "grid",
-            gridTemplateRows: "1fr, 1fr",
-            gap: 1,
-          }}
-        >
-          <span>
-            {dicIcons[type]}&nbsp;{msg}
-          </span>
-          <span>{dscpt}</span>
-        </div>
-      ),
+      icon: dicIcons[type],
+      message: msg,
+      description: dscpt || undefined,
     });
   };
   const updateDeviceInWarehouse = async (props) => {
