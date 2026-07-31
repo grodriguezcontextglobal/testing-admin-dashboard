@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, notification } from "antd";
+import { Avatar } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +13,7 @@ import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 const fieldLabelStyle = {
   display: "block",
@@ -41,11 +42,11 @@ const EditConsumerInfoModal = ({
   const [loading, setLoading] = useState(false);
   const { customer } = useSelector((state) => state.customer);
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const queryClient = useQueryClient();
 
   const openNotificationWithIcon = (type, msg) => {
-    api.open({ message: type, description: msg });
+    notify(type.toLowerCase(), msg);
   };
 
   const handleUpdateConsumerInfo = async (data) => {

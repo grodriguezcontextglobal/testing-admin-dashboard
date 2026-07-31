@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, notification, Select } from "antd";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Divider, Select } from "antd";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -40,6 +40,7 @@ import {
   verificationContractStaffMember,
 } from "./actions";
 import "./style.css";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -152,15 +153,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       });
     }
   };
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = useCallback(
-    (msg) => {
-      api.open({
-        message: msg,
-      });
-    },
-    [api]
-  );
+  const { notify, contextHolder } = useStatusNotification();
   const reference = useRef(null);
   const referenceDateTime = useMemo(() => new Date().toISOString(), []);
   const option1 = async (props) => {
@@ -233,7 +226,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
           timeReferenceForEventName,
           referenceDateTime,
         });
-        openNotificationWithIcon("Equipment assigned to consumer.");
+        notify("success", "Equipment assigned to consumer.");
         return closeModal();
       }
     } catch (error) {
@@ -287,7 +280,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         }
       }
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      notify("error", `${error.message}`);
     } finally {
       setLoadingStatus(false);
     }

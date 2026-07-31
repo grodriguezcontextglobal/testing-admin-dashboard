@@ -8,7 +8,6 @@ import {
   Typography
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import PropTypes from "prop-types";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -18,6 +17,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -30,12 +30,9 @@ const Capturing = ({
   rowRecord,
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, title) => {
-    api.open({
-      message: title,
-      duration: 0,
-    });
+    notify(type.toLowerCase(), title, 0);
   };
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);

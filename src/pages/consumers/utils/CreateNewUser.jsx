@@ -1,7 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { InputLabel, MenuItem, OutlinedInput } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { notification, Select } from "antd";
+import { Select } from "antd";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,7 @@ import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 const schema = yup.object({
   firstName: yup.string().required("First name is required"),
@@ -121,14 +122,14 @@ export const CreateNewConsumer = ({
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.admin);
   const { eventsPerAdmin } = useSelector((state) => state.event);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const listOfAvailableEventsPerAdmin = [...eventsPerAdmin.active];
 
   const openNotificationWithIcon = useCallback(
     (type, msg) => {
-      api.open({ message: type, description: msg });
+      notify(type.toLowerCase(), msg);
     },
-    [api]
+    [notify]
   );
 
   useEffect(() => {
