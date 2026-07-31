@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material";
-import { Button, notification, Popconfirm } from "antd";
+import { Button, Popconfirm } from "antd";
 import { groupBy } from "lodash";
 import { Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,7 @@ import { BlueButton } from "../../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import ModalToDisplayFunctionInProgress from "./endEvent/ModalToDisplayFunctionInProgress";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const EndingEventButton = () => {
   const { user } = useSelector((state) => state.admin);
@@ -19,12 +20,10 @@ const EndingEventButton = () => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  
+  const { notify, contextHolder } = useStatusNotification();
+
   const openNotificationWithIcon = (type, msg) => {
-    api[type]({
-      description: msg,
-    });
+    notify(type, msg);
   };
 
   const checkRequestSize = (data) => {

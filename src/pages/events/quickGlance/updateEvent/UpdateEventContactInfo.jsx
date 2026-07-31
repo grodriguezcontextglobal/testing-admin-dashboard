@@ -1,5 +1,5 @@
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { Button, Modal, Space, Tag, notification } from "antd";
+import { Button, Modal, Space, Tag } from "antd";
 import PropTypes from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -15,6 +15,7 @@ import { BlueButton } from "../../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 const UpdateEventContactInfo = ({
   openUpdateEventModal,
   setOpenUpdateEventModal,
@@ -42,11 +43,9 @@ const UpdateEventContactInfo = ({
   const closeModal = () => {
     return setOpenUpdateEventModal(false);
   };
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const handleUpdateEvent = async (data) => {
     setLoading(true);

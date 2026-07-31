@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Card, Popconfirm, message, notification } from "antd";
+import { Button, Card, Popconfirm, message } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ import Choice from "../lostFee/Choice";
 import UpdateStatus from "./components/UpdateStatus";
 import { Replace } from "./Replace";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -34,12 +35,9 @@ const ActionsMainPage = () => {
   const [modalUpdateStatus, setModalUpdateStatus] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: type,
-      description: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const queryClient = useQueryClient();
   const returnConfirmationEmailNotification = async (props) => {

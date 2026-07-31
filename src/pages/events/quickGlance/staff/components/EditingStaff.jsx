@@ -7,7 +7,6 @@ import {
   Popconfirm,
   Select,
   Space,
-  notification
 } from "antd";
 import { groupBy } from "lodash";
 import PropTypes from "prop-types";
@@ -29,6 +28,7 @@ import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const { register, handleSubmit, watch } = useForm();
@@ -53,11 +53,9 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   }, []);
 
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
 
   const validateEmailFormat = (props) => {

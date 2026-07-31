@@ -5,7 +5,7 @@ import {
   InputLabel,
   OutlinedInput,
 } from "@mui/material";
-import { Divider, Space, Switch, notification } from "antd";
+import { Divider, Space, Switch } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +17,7 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { LightBlueButton } from "../../../../../../styles/global/LightBlueButton";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 
 const EditingServiceInEvent = ({
   editingServicesInEvent,
@@ -28,12 +29,9 @@ const EditingServiceInEvent = ({
   const [eventServiceCopy, setEventServiceCopy] = useState(event.extraServices);
   const [needService, setNeedService] = useState(event.extraServicesNeeded);
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = (msg) => {
-    api.open({
-      message: msg,
-      duration: 5,
-    });
+    notify("success", msg, 5);
   };
 
   const closeModal = () => {

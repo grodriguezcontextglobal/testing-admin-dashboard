@@ -1,6 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Select, Space, notification } from "antd";
+import { Select, Space } from "antd";
 import { createContext, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +14,7 @@ import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle"
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import Main from "./components/EditingInventoryUXOptions/Main";
 import RenderingEventInventorySection from "./components/EditingInventoryUXOptions/RenderingEventInventorySection";
 
@@ -38,14 +39,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         logistic_status: "in-stock"
       }),
   });
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api],
+    [notify],
   );
   const eventName = event.eventInfoDetail.eventName;
   const selectOptions = useMemo(() => {
