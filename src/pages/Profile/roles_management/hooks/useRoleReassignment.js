@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { ROLE_LEVELS } from "../../../../config/roles";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { extractStaffId } from "../../../authentication/utils/loginUtils";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 /**
  * Reassigns a staff member to a different role concept, reusing the canonical
@@ -22,6 +22,7 @@ export const useRoleReassignment = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
 
   const mutation = useMutation({
     // toGroupKey is the legacy role-concept string (e.g. "event_manager"),
@@ -73,25 +74,27 @@ export const useRoleReassignment = () => {
         })
       );
       queryClient.invalidateQueries({ queryKey: ["employeesPerCompanyList"] });
-      notification.success({
-        message: "Staff role updated",
-        description: "The member now holds the new role across your company.",
-      });
+      notify(
+        "success",
+        "Staff role updated",
+        "The member now holds the new role across your company.",
+      );
     },
     onError: (error) => {
-      notification.error({
-        message: "Failed to update role",
-        description:
-          error?.response?.data?.msg ||
+      notify(
+        "error",
+        "Failed to update role",
+        error?.response?.data?.msg ||
           error?.message ||
           "Please try again.",
-      });
+      );
     },
   });
 
   return {
     reassign: mutation.mutate,
     isReassigning: mutation.isLoading,
+    contextHolder,
   };
 };
 

@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Switch, message, notification } from "antd";
+import { Switch, message } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import SectionHeader from "../../../components/documents/new_form_components/SectionHeader";
 import { hasPermission } from "../../../config/roles";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { useSchoolSettings } from "./utils/useSchoolSettings";
 import {
   buildConsentEnforcementPayload,
@@ -16,7 +17,7 @@ const SchoolComplianceSettings = () => {
   const companyId = user?.sqlInfo?.company_id;
   const { settings, isLoading, isEducation } = useSchoolSettings();
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const canEdit = hasPermission("member:update", user?.roleType);
 
@@ -49,10 +50,7 @@ const SchoolComplianceSettings = () => {
     mutationFn: (payload) => updateConsentEnforcement(companyId, payload),
     onSuccess: (result) => {
       if (result.ok) {
-        api.success({
-          message: "School compliance settings updated",
-          duration: 3,
-        });
+        notify("success", "School compliance settings updated", 3);
         queryClient.invalidateQueries({ queryKey: ["schoolSettings", companyId] });
       }
     },

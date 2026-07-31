@@ -5,7 +5,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +13,7 @@ import { devitrakApiAdmin } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { onUpdateMfaStatus } from "../../../store/slices/adminSlice";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
@@ -33,7 +34,7 @@ const MfaSetup = () => {
   const [qrCode, setQrCode] = useState(null);
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, reset } = useForm();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const dispatch = useDispatch();
   const { mfaEnabled } = useSelector((state) => state.admin);
   const handleGenerateMfa = async () => {
@@ -62,11 +63,11 @@ const MfaSetup = () => {
       if (response.data) {
         dispatch(onUpdateMfaStatus(true));
         message.success("MFA is now active");
-        api.open({
-          message: "MFA Activated",
-          description:
-            "Multi-Factor Authentication has been successfully enabled for your account.",
-        });
+        notify(
+          "success",
+          "MFA Activated",
+          "Multi-Factor Authentication has been successfully enabled for your account.",
+        );
       }
     } catch (error) {
       console.error(error);
@@ -82,11 +83,11 @@ const MfaSetup = () => {
       await devitrakApiAdmin.post("/mfa/disable");
       dispatch(onUpdateMfaStatus(false));
       message.success("MFA has been disabled");
-      api.info({
-        message: "MFA Disabled",
-        description:
-          "Multi-Factor Authentication has been disabled for your account.",
-      });
+      notify(
+        "info",
+        "MFA Disabled",
+        "Multi-Factor Authentication has been disabled for your account.",
+      );
     } catch (error) {
       console.error("Error disabling MFA:", error);
       message.error("Failed to disable MFA");
