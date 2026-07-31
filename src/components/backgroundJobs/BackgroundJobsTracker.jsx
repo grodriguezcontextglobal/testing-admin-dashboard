@@ -1,15 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import { onRemoveBackgroundJob } from "../../store/slices/backgroundJobsSlice";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../notification/alerts/useStatusNotification";
 
 const TERMINAL_STATUSES = ["done", "failed", "dead"];
 
-const TrackedBackgroundJob = ({ job }) => {
+const TrackedBackgroundJob = ({ job, notify }) => {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -32,15 +32,16 @@ const TrackedBackgroundJob = ({ job }) => {
     handledRef.current = true;
 
     if (data.status === "done") {
-      // Keep `message` short (a fixed-height title antd's success icon
-      // anchors to) and put the actual descriptive text in `description` —
-      // dumping a long sentence into `message` forces it to wrap onto
-      // multiple lines, which makes the icon look like it's sitting on top
-      // of the text instead of beside a single title line.
-      notification.success({
-        message: "Task completed",
-        description: job.successMessage || "Background task completed.",
-      });
+      // Keep `message` short (a fixed-height title the status icon anchors
+      // to) and put the actual descriptive text in `description` — dumping a
+      // long sentence into `message` forces it to wrap onto multiple lines,
+      // which makes the icon look like it's sitting on top of the text
+      // instead of beside a single title line.
+      notify(
+        "success",
+        "Task completed",
+        job.successMessage || "Background task completed.",
+      );
       (job.invalidateKeys || []).forEach((queryKey) => {
         queryClient.invalidateQueries({
           queryKey,
@@ -57,21 +58,30 @@ const TrackedBackgroundJob = ({ job }) => {
         navigate(job.navigateTo);
       }
     } else {
-      notification.error({
-        message: job.failureMessage || "Background task failed.",
-        description: data.lastError || "Please try again.",
-      });
+      notify(
+        "error",
+        job.failureMessage || "Background task failed.",
+        data.lastError || "Please try again.",
+      );
     }
 
     dispatch(onRemoveBackgroundJob(job.jobId));
-  }, [data, dispatch, job, location.pathname, navigate, queryClient]);
+  }, [data, dispatch, job, location.pathname, navigate, queryClient, notify]);
 
   return null;
 };
 
 const BackgroundJobsTracker = () => {
   const jobs = useSelector((state) => state.backgroundJobs.jobs);
-  return jobs.map((job) => <TrackedBackgroundJob key={job.jobId} job={job} />);
+  const { notify, contextHolder } = useStatusNotification();
+  return (
+    <>
+      {contextHolder}
+      {jobs.map((job) => (
+        <TrackedBackgroundJob key={job.jobId} job={job} notify={notify} />
+      ))}
+    </>
+  );
 };
 
 export default BackgroundJobsTracker;

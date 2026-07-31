@@ -1,5 +1,5 @@
 import { Grid, OutlinedInput } from "@mui/material";
-import { Input, notification } from "antd";
+import { Input } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -9,6 +9,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
 import ModalUX from "../../UX/modal/ModalUX";
+import { useStatusNotification } from "../alerts/useStatusNotification";
 const { TextArea } = Input;
 const SingleEmailNotification = ({
   customizedEmailNotificationModal,
@@ -21,12 +22,9 @@ const SingleEmailNotification = ({
     setCustomizedEmailNotificationModal(false);
   };
   const [message, setMessage] = useState("");
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      message: msg,
-      description: dscpt,
-    });
+    notify(type.toLowerCase(), msg, dscpt);
   };
   const onChange = (e) => {
     return setMessage(e.target.value);

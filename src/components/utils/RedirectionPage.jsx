@@ -1,4 +1,3 @@
-import { notification } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -20,19 +19,16 @@ import { persistor } from "../../store/Store";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import DevitrakLoading from "../animation/DevitrakLoading";
 import { useEffect } from "react";
+import { useStatusNotification } from "../notification/alerts/useStatusNotification";
 
 const RedirectionPage = () => {
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = () => {
-    api.open({
-      message: "Company has been created. Please log in.",
-      placement: "top",
-      duration: 2,
-    });
+    notify("info", "Company has been created. Please log in.", 2);
   };
   const flow = async () => {
     await devitrakApi.patch(`/staff/edit-admin/${user.uid}`, {

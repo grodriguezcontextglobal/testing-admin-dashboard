@@ -1,7 +1,7 @@
-import { notification } from "antd";
 import { useEffect, useRef } from "react";
 import { useInstallPrompt } from "../../hooks/useInstallPrompt";
 import BlueButtonComponent from "../UX/buttons/BlueButton";
+import { useStatusNotification } from "../notification/alerts/useStatusNotification";
 
 const NOTIFICATION_KEY = "pwa-install-available";
 
@@ -11,27 +11,27 @@ const NOTIFICATION_KEY = "pwa-install-available";
 const InstallAppNotification = () => {
   const { canInstall, promptInstall } = useInstallPrompt();
   const hasShownRef = useRef(false);
+  const { notify, contextHolder, api } = useStatusNotification();
 
   useEffect(() => {
     if (!canInstall || hasShownRef.current) return;
     hasShownRef.current = true;
 
     const handleInstallClick = async () => {
-      notification.destroy(NOTIFICATION_KEY);
+      api.destroy(NOTIFICATION_KEY);
       await promptInstall();
     };
 
-    notification.info({
+    notify("info", "Install Devitrak", {
       key: NOTIFICATION_KEY,
-      message: "Install Devitrak",
       description:
         "You can install this dashboard on your desktop for quicker, full-screen access.",
       duration: 12,
       btn: <BlueButtonComponent title="Install" func={handleInstallClick} />,
     });
-  }, [canInstall, promptInstall]);
+  }, [canInstall, promptInstall, notify, api]);
 
-  return null;
+  return contextHolder;
 };
 
 export default InstallAppNotification;

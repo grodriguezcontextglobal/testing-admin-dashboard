@@ -1,5 +1,5 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
-import { Button, notification, Space } from "antd";
+import { Button, Space } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -13,6 +13,7 @@ import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18Lin
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
 import Chip from "../../UX/Chip/Chip";
 import ModalUX from "../../UX/modal/ModalUX";
+import { useStatusNotification } from "../alerts/useStatusNotification";
 
 const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
   const { event } = useSelector((state) => state.event);
@@ -23,12 +24,9 @@ const EventLinkNotification = ({ sendEventLink, setSendEventLink }) => {
     return setSendEventLink(false);
   };
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      message: msg,
-      description: dscpt,
-    });
+    notify(type.toLowerCase(), msg, dscpt);
   };
   const renderTitle = () => {
     return (
