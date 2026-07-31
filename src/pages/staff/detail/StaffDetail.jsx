@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Divider, notification } from "antd";
+import { Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { hasPermission, resolveRoleType } from "../../../config/roles";
 import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import { updateStaffMemberInList } from "../../../utils/staffUtils";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import HeaderStaffDetail from "./components/HeaderStaffDetal";
 
 const StaffDetail = () => {
@@ -13,6 +14,7 @@ const StaffDetail = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
 
   const updateStaffStatusMutation = useMutation({
     mutationFn: async () => {
@@ -51,17 +53,18 @@ const StaffDetail = () => {
           companyData: data.company,
         }),
       );
-      notification.success({
-        message: "Success",
-        description: `Staff access ${!profile.status ? "granted" : "removed"} successfully.`,
-      });
+      notify(
+        "success",
+        "Success",
+        `Staff access ${!profile.status ? "granted" : "removed"} successfully.`,
+      );
     },
     onError: (error) => {
-      notification.error({
-        message: "Error",
-        description:
-          error?.response?.data?.msg || "Failed to update staff status.",
-      });
+      notify(
+        "error",
+        "Error",
+        error?.response?.data?.msg || "Failed to update staff status.",
+      );
     },
   });
 
@@ -106,6 +109,7 @@ const StaffDetail = () => {
 
   return (
     <>
+      {contextHolder}
       <HeaderStaffDetail />
       <Divider />
       <nav

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,7 @@ import {
 } from "../components/newDevice/actions/AddDeviceToEvent";
 import { createNewLease } from "../components/newDevice/actions/CreateNewLease";
 import { singleItemInserting } from "../components/newDevice/actions/SingleItemInserting";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 
@@ -87,14 +88,12 @@ export const useAssignmentLogic = () => {
     formState: { errors },
   } = useForm();
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api],
+    [notify],
   );
   const providersList = useQuery({
     queryKey: ["providersCompanyQuery", user?.companyData?.id],

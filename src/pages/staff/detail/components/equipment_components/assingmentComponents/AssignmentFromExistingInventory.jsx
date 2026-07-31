@@ -6,9 +6,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Divider, notification, Select } from "antd";
+import { Button, Divider, Select } from "antd";
 import { PropTypes } from "prop-types";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +28,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/Text
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 const AssignmentFromExistingInventory = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
@@ -156,15 +157,7 @@ const AssignmentFromExistingInventory = () => {
       });
     }
   };
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = useCallback(
-    (msg) => {
-      api.open({
-        message: msg,
-      });
-    },
-    [api]
-  );
+  const { notify, contextHolder } = useStatusNotification();
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -384,7 +377,7 @@ const AssignmentFromExistingInventory = () => {
           selectedList: deviceInfo,
         },
       ]);
-      openNotificationWithIcon("Equipment assigned to staff member.");
+      notify("success", "Equipment assigned to staff member.");
       setLoadingStatus(false);
       navigate(`/staff/${profile.adminUserInfo.id}/main`);
     }
@@ -472,7 +465,7 @@ const AssignmentFromExistingInventory = () => {
         }
       }
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      notify("error", `${error.message}`);
       setLoadingStatus(false);
     } finally {
       setLoadingStatus(false);

@@ -7,7 +7,6 @@ import {
   Divider,
   Popconfirm,
   Skeleton,
-  notification,
 } from "antd";
 import { useState } from "react";
 import { isCoordinatorLevel } from "../../../config/roles";
@@ -15,6 +14,7 @@ import { useAdminStore } from "../../../hooks/useAdminStore";
 import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 const FormatSettingProps = ({ props, sendObjectIdUser }) => {
   const { Meta } = Card;
   const { user } = useAdminStore();
@@ -41,12 +41,9 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
     setPermissionUpdated("");
   };
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, content) => {
-    api.open({
-      message: content.title,
-      description: content.description,
-    });
+    notify(type.toLowerCase(), content.title, content.description);
   };
   const confirm = async () => {
     try {

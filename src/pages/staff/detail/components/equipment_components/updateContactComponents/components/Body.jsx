@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 import { InputLabel, OutlinedInput, TextField } from "@mui/material";
-import { Avatar, Divider, notification } from "antd";
+import { Avatar, Divider } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import { onLogin } from "../../../../../../../store/slices/adminSlice";
 import { onAddStaffProfile } from "../../../../../../../store/slices/staffDetailSlide";
 import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 
 const fieldRowStyle = {
   display: "flex",
@@ -49,10 +50,10 @@ const Body = () => {
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const openNotificationWithIcon = () => {
-    api.open({ message: "Information updated" });
+    notify("success", "Information updated");
   };
 
   const listOfEvents = () => {

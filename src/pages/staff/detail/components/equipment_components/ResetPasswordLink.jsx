@@ -1,7 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { FormControl, FormLabel, Typography } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useRef } from "react";
@@ -15,6 +14,7 @@ import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/
 import Input from "../../../../../components/UX/inputs/Input";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const schema = yup.object().shape({
   email: yup
@@ -48,11 +48,9 @@ const ForgetPasswordLinkFromStaffPage = () => {
     };
   }, []);
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
 
   const navigate = useNavigate();

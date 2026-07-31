@@ -1,13 +1,14 @@
 import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Avatar, Typography, notification } from "antd";
+import { Avatar, Typography } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useRoleLabel } from "../../../hooks/useRoleLabel";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -42,7 +43,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const [employeeList, setEmployeeList] = useState([]);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
@@ -143,7 +144,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
       queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["employeesPerCompanyList"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["events"], exact: true });
-      api.open({ message: "Staff members deleted" });
+      notify("success", "Staff members deleted");
       setModalState(false);
     }
   };
