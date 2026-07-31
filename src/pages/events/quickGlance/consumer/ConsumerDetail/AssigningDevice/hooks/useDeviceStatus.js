@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import {
   devitrakApi,
   devitrakApiAdmin,
 } from "../../../../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 
 /**
  * Custom hook to manage device status in the pool.
@@ -14,6 +14,7 @@ import {
  */
 export const useDeviceStatus = (event, user) => {
   const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
 
   // 1. Fetch Device Pool
   const deviceInPoolQuery = useQuery({
@@ -74,10 +75,7 @@ export const useDeviceStatus = (event, user) => {
       queryClient.invalidateQueries({ queryKey: ["deviceInPoolQuery"] });
     },
     onError: (error) => {
-      notification.error({
-        message: "Error",
-        description: error.message || "Something went wrong during assignment.",
-      });
+      notify("error", "Error", error.message || "Something went wrong during assignment.");
     },
   });
 
@@ -139,10 +137,7 @@ export const useDeviceStatus = (event, user) => {
       }); // Update transactions
     },
     onError: (error) => {
-      notification.error({
-        message: "Error",
-        description: error.message || "Failed to remove device.",
-      });
+      notify("error", "Error", error.message || "Failed to remove device.");
     },
   });
 
@@ -175,5 +170,6 @@ export const useDeviceStatus = (event, user) => {
     unassignDevice: unassignDeviceMutation.mutateAsync,
     isUnassigning: unassignDeviceMutation.isPending,
     getDeviceStatus,
+    contextHolder,
   };
 };

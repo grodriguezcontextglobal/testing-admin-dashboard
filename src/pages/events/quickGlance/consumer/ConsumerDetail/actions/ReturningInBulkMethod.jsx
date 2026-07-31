@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { message, notification, Space } from "antd";
+import { message, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -10,6 +10,7 @@ import Chip from "../../../../../../components/UX/Chip/Chip";
 import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 
 const ReturningInBulkMethod = ({
   openReturnDeviceBulkModal,
@@ -24,12 +25,7 @@ const ReturningInBulkMethod = ({
   const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
 
   const closeModal = () => {
     setOpenReturnDeviceInBulkModal(false);
@@ -99,7 +95,7 @@ const ReturningInBulkMethod = ({
       refetching();
       setLoadingStatus(false);
       await emailNotification();
-      openNotificationWithIcon("Success", "All devices returned!");
+      notify("success", "All devices returned!");
       message.success("All devices returned!");
       // All three cache keys are independent (different literal keys, none
       // depends on another's result), so clear them concurrently.

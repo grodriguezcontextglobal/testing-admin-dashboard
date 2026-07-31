@@ -6,7 +6,6 @@ import {
   Typography
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -14,6 +13,7 @@ import { checkArray } from "../../../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../../../components/UX/modal/ModalUX";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import {
   onReceiverObjectToReplace,
   onTriggerModalToReplaceReceiver,
@@ -42,12 +42,7 @@ export const ReplaceDevice = ({ refetching }) => {
   const stampTime = `${new Date()}`;
   const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const queryClient = useQueryClient();
 
   const assignedDeviceInTransactionQuery = useQuery({
@@ -211,7 +206,7 @@ export const ReplaceDevice = ({ refetching }) => {
         exact: true,
       });
       refetching();
-      openNotificationWithIcon("Success", "Device replaced successfully.");
+      notify("success", "Device replaced successfully.");
       // Both cache keys are independent (different literal keys, neither depends on
       // the other's result), so clear them concurrently instead of sequentially.
       await Promise.all([
