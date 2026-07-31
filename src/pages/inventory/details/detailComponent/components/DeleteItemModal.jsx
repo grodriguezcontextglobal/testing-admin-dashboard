@@ -6,12 +6,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Divider, notification } from "antd";
+import { Divider } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -52,12 +53,7 @@ const DeleteItemModal = ({
     refetchOnMount: false,
   });
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit, setValue } = useForm({
@@ -152,12 +148,12 @@ const DeleteItemModal = ({
             );
           }
         }
-        openNotificationWithIcon("Success", "Device was deleted.");
+        notify("success", "Device was deleted.");
         navigate("/inventory");
       }
     } catch (error) {
       setLoadingStatus(false);
-      openNotificationWithIcon("error", "Please try again later.");
+      notify("error", "Please try again later.");
     }
   };
 

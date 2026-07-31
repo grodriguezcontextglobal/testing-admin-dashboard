@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, message, notification } from "antd";
+import { Button, message } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -25,6 +25,7 @@ import useSuppliers from "../../../utils/hooks/useSuppliers";
 import generateIdempotencyKey from "../../../../../utils/actions/generateIdempotencyKey";
 import { renderTitle } from "./ux/EditItemComponents";
 import EditItemForm from "./ux/EditItemForm";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditItemModal = ({
@@ -72,14 +73,12 @@ const EditItemModal = ({
   const closeModal = () => {
     return setOpenEditItemModal(false);
   };
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api],
+    [notify],
   );
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],

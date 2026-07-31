@@ -5,8 +5,9 @@ import DangerButtonComponent from "../../../../components/UX/buttons/DangerButto
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { useForm } from "react-hook-form";
 import { groupBy, orderBy } from "lodash";
 import validatingInputFields from "../utils/validatingInputFields";
@@ -89,7 +90,7 @@ const useLogic = () => {
   const dispatch = useDispatch();
   const refTemplateToUpdate = useRef(null);
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const alphaNumericUpdateItemMutation = useMutation({
     mutationFn: ({ template, idempotencyKey }) =>
       devitrakApi.post(
@@ -147,11 +148,9 @@ const useLogic = () => {
 
   const openNotificationWithIcon = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api],
+    [notify],
   );
 
   const itemsInInventoryQuery = useQuery({

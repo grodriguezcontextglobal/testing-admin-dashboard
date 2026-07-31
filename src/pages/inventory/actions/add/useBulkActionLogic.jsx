@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import costValueInputFormat from "../../utils/costValueInputFormat";
 import { groupBy, orderBy } from "lodash";
-import { message, notification } from "antd";
+import { message } from "antd";
 import {
   bulkItemInsertAlphanumeric,
   // bulkItemInsertSequential,
@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import useSuppliers from "../../utils/hooks/useSuppliers";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { formatDate } from "../../utils/dateFormat";
 import { bulkItemUpdateAlphanumeric } from "../utils/EditBulkActionOptions";
 
@@ -89,14 +90,12 @@ const useBulkActionLogic = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api],
+    [notify],
   );
 
   const itemsInInventoryQuery = useQuery({
