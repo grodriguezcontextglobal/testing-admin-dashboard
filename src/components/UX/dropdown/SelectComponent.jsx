@@ -103,7 +103,7 @@ const SelectComponent = ({
           onChange={handleInputChange}
         />
         {searchTerm && (
-          <button className="clear-button" onClick={handleClear}>
+          <button type="button" className="clear-button" onClick={handleClear}>
             &times;
           </button>
         )}

@@ -88,7 +88,7 @@ const DeleteGroups = ({ openModal, closeModal, refetch, user }) => {
         }
         return deleteMutation.mutate(itemsToDelete);
     };
-    const bodyModl = <form id="delete-form">
+    const bodyModl = <form id="delete-form" onSubmit={(e) => e.preventDefault()}>
         < Typography variant="h6">Delete Item Groups</Typography>
         <div style={{ margin: "1rem 0" }}>
             <RadioGroup
