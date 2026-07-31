@@ -32,8 +32,14 @@ const TrackedBackgroundJob = ({ job }) => {
     handledRef.current = true;
 
     if (data.status === "done") {
+      // Keep `message` short (a fixed-height title antd's success icon
+      // anchors to) and put the actual descriptive text in `description` —
+      // dumping a long sentence into `message` forces it to wrap onto
+      // multiple lines, which makes the icon look like it's sitting on top
+      // of the text instead of beside a single title line.
       notification.success({
-        message: job.successMessage || "Background task completed.",
+        message: "Task completed",
+        description: job.successMessage || "Background task completed.",
       });
       (job.invalidateKeys || []).forEach((queryKey) => {
         queryClient.invalidateQueries({
