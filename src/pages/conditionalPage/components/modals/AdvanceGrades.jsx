@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Typography, notification } from "antd";
+import { Typography } from "antd";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -14,6 +14,7 @@ import {
   buildGradeAdvancementPlan,
   summarizeGradeAdvancementPlan,
 } from "../../utils/gradeAdvancementUtils";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 const cellNameStyle = {
   fontSize: "14px",
@@ -63,7 +64,7 @@ const StatusBadge = ({ status }) => {
 const AdvanceGrades = ({ openModal, setOpenModal }) => {
   const queryClient = useQueryClient();
   const { user } = useSelector((state) => state.admin);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const membersQuery = useQuery({
     queryKey: ["allMembersForGradeAdvancement"],
@@ -109,15 +110,17 @@ const AdvanceGrades = ({ openModal, setOpenModal }) => {
       queryClient.invalidateQueries({ queryKey: ["allMembersForGradeAdvancement"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["membersInfoQuery"], exact: true });
       if (failed > 0) {
-        api.warning({
-          message: "Grade advancement finished with errors",
-          description: `${succeeded} student(s) updated, ${failed} failed. Please retry for the failed students.`,
-        });
+        notify(
+          "warning",
+          "Grade advancement finished with errors",
+          `${succeeded} student(s) updated, ${failed} failed. Please retry for the failed students.`,
+        );
       } else {
-        api.success({
-          message: "Grades advanced",
-          description: `${succeeded} student(s) updated successfully.`,
-        });
+        notify(
+          "success",
+          "Grades advanced",
+          `${succeeded} student(s) updated successfully.`,
+        );
         setOpenModal(false);
       }
     },

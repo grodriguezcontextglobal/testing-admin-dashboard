@@ -1,6 +1,6 @@
 import { InputLabel } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { Divider, notification } from "antd";
+import { Divider } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -15,6 +15,7 @@ import {
   selectGuardianByEmail,
 } from "../../../utils/guardianConsentUtils";
 import { StudentConsentPanel } from "./StudentConsentPanel";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 /**
  * Guardian-only half of the member edit page (Education, minors only) —
@@ -35,7 +36,7 @@ const GuardianInfoSection = ({
 }) => {
   const [errors, setErrors] = useState([]);
   const [matchedGuardianId, setMatchedGuardianId] = useState(null);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const { register, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       first_name: initialGuardian?.first_name || "",
@@ -76,7 +77,7 @@ const GuardianInfoSection = ({
       return saveGuardian(guardianPayload);
     },
     onSuccess: () => {
-      api.success({ message: "Guardian information updated successfully" });
+      notify("success", "Guardian information updated successfully");
       onSaved?.();
     },
     onError: (error) => {

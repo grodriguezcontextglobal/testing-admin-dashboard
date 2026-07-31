@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, Select, Table, Tag, Input, message, notification } from "antd";
+import { Modal, Select, Table, Tag, Input, message } from "antd";
 import { Typography } from "@mui/material";
 import { devitrakApi } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 /**
  * Overdue devices dashboard (school track): outstanding leases past their
@@ -17,7 +18,7 @@ const OverdueDevicesTable = () => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const [gradeFilter, setGradeFilter] = useState(null);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState("returned");
@@ -70,12 +71,13 @@ const OverdueDevicesTable = () => {
   const handleSingleReminder = async (row) => {
     try {
       await sendReminder(row);
-      api.open({
-        message: "Reminder queued",
-        description: `${row.first_name} ${row.last_name}${
+      notify(
+        "success",
+        "Reminder queued",
+        `${row.first_name} ${row.last_name}${
           row.minor === 1 && row.parent_guardian_email ? " (guardian CC'd)" : ""
         }`,
-      });
+      );
     } catch {
       message.error("Failed to queue the reminder email.");
     }
@@ -94,10 +96,11 @@ const OverdueDevicesTable = () => {
       }
     }
     setWorking(false);
-    api.open({
-      message: "Reminders queued",
-      description: `${sent} of ${rows.length} reminder emails queued (guardians CC'd for minors).`,
-    });
+    notify(
+      "success",
+      "Reminders queued",
+      `${sent} of ${rows.length} reminder emails queued (guardians CC'd for minors).`,
+    );
   };
 
   const handleBulkReturn = async () => {

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Badge, Divider, notification, Spin, Tag } from "antd";
+import { Alert, Badge, Divider, Spin, Tag } from "antd";
 import { useSelector } from "react-redux";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import {
@@ -13,6 +13,7 @@ import {
   normalizeConsentStatus,
 } from "../../../utils/guardianConsentUtils";
 import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const tagColorByStatus = {
   missing: "default",
@@ -64,6 +65,7 @@ export const StudentConsentPanel = ({
   const { user } = useSelector((state) => state.admin);
   const queryClient = useQueryClient();
   const companyId = user?.sqlInfo?.company_id;
+  const { notify, contextHolder } = useStatusNotification();
 
   const consentQuery = useQuery({
     queryKey: ["studentConsent", memberId],
@@ -114,13 +116,13 @@ export const StudentConsentPanel = ({
     mutationFn: (payload) => sendConsentRequest(payload),
     onSuccess: () => {
       queryClient.invalidateQueries(["studentConsent", memberId]);
-      notification.success({ message: "Consent request sent" });
+      notify("success", "Consent request sent");
     },
     onError: (err) => {
-      notification.error({
-        message:
-          err?.response?.data?.msg || "Failed to send consent request",
-      });
+      notify(
+        "error",
+        err?.response?.data?.msg || "Failed to send consent request",
+      );
     },
   });
 
@@ -128,30 +130,26 @@ export const StudentConsentPanel = ({
     mutationFn: (payload) => resendConsentRequest(payload),
     onSuccess: () => {
       queryClient.invalidateQueries(["studentConsent", memberId]);
-      notification.success({ message: "Consent request resent" });
+      notify("success", "Consent request resent");
     },
     onError: (err) => {
       const status = err?.response?.status;
       if (status === 404) {
-        notification.error({
-          message: "No pending request to resend — send a new one first",
-        });
+        notify("error", "No pending request to resend — send a new one first");
         return;
       }
       if (status === 409) {
-        notification.warning({
-          message: "Guardian already responded — nothing to resend",
-        });
+        notify("warning", "Guardian already responded — nothing to resend");
         return;
       }
       if (status === 422) {
-        notification.error({ message: "No guardian email on file" });
+        notify("error", "No guardian email on file");
         return;
       }
-      notification.error({
-        message:
-          err?.response?.data?.msg || "Failed to resend consent request",
-      });
+      notify(
+        "error",
+        err?.response?.data?.msg || "Failed to resend consent request",
+      );
     },
   });
 
@@ -193,6 +191,7 @@ export const StudentConsentPanel = ({
         background: "#ffffff",
       }}
     >
+      {contextHolder}
       <div>
         <h3 style={{ margin: 0, fontSize: "1.125rem", fontWeight: 600 }}>
           Student Consent

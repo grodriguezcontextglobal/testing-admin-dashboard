@@ -1,6 +1,6 @@
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { notification, Tooltip, Typography } from "antd";
+import { Tooltip, Typography } from "antd";
 import PropTypes from "prop-types";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -16,6 +16,7 @@ import {
   buildConfirmationLink,
   getConfirmationRecipient,
 } from "../../utils/eventRegistrationUtils";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 /**
  * "Register [members] to event" — Members page action. Two steps in one
@@ -28,7 +29,7 @@ import {
  */
 const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "members" }) => {
   const { user } = useSelector((state) => state.admin);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const [selectedEventRaw, setSelectedEventRaw] = useState("");
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [sending, setSending] = useState(false);
@@ -123,18 +124,17 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
       .filter(({ result }) => result.status === "rejected");
 
     setSending(false);
-    api.open({
-      message:
-        failures.length === 0
-          ? `${results.length} invitation(s) sent`
-          : `${results.length - failures.length} of ${results.length} invitation(s) sent`,
-      description:
-        failures.length > 0
-          ? failures
-              .map(({ member, result }) => `${member.first_name} ${member.last_name}: ${result.reason?.message ?? "Send failed."}`)
-              .join(" | ")
-          : undefined,
-    });
+    notify(
+      failures.length === 0 ? "success" : "warning",
+      failures.length === 0
+        ? `${results.length} invitation(s) sent`
+        : `${results.length - failures.length} of ${results.length} invitation(s) sent`,
+      failures.length > 0
+        ? failures
+            .map(({ member, result }) => `${member.first_name} ${member.last_name}: ${result.reason?.message ?? "Send failed."}`)
+            .join(" | ")
+        : undefined,
+    );
 
     if (failures.length === 0) {
       closeModal();
