@@ -1,6 +1,6 @@
 import { InputLabel } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { Avatar, notification } from "antd";
+import { Avatar } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -10,7 +10,7 @@ import ImageUploaderUX from "../../../../../components/utils/UX/ImageUploaderUX"
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import Input from "../../../../../components/UX/inputs/Input";
-import { dicIcons } from "./utils/dicIcons";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { calculateAgeFlags } from "../../../utils/ageCalculationUtils";
 
 /**
@@ -34,15 +34,7 @@ const StudentInfoSection = ({
   const [ageFlags, setAgeFlags] = useState(
     dobValue ? calculateAgeFlags(dobValue) : { age: null, minor: false, under_13: false }
   );
-  const [api, contextHolder] = notification.useNotification();
-
-  const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      icon: dicIcons[type],
-      message: msg,
-      description: dscpt || undefined,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
 
   const updateMemberInfoMutation = useMutation({
     mutationKey: ["updateStudentInformationData"],
@@ -52,7 +44,7 @@ const StudentInfoSection = ({
         ...data,
       }),
     onSuccess: () => {
-      openNotificationWithIcon(
+      notify(
         "success",
         "Student information updated successfully",
         "The student information has been updated successfully."
@@ -68,7 +60,7 @@ const StudentInfoSection = ({
     mutationKey: ["uploadNewProfileImageStudent"],
     mutationFn: async (data) => await devitrakApi.post("cloudinary/upload-image", data),
     onSuccess: (res) => {
-      openNotificationWithIcon(
+      notify(
         "success",
         "New image uploaded successfully.",
         "New profile image was uploaded."

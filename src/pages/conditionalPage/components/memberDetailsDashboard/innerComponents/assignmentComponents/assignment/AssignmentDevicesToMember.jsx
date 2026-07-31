@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, notification, Select } from "antd";
+import { Divider, Select } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -26,7 +26,7 @@ import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedI
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
-import { dicIcons } from "../../utils/dicIcons";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
 import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
 import Input from "../../../../../../../components/UX/inputs/Input";
@@ -216,14 +216,7 @@ const AssignmentDevicesToMember = () => {
       });
     }
   };
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      icon: dicIcons[type],
-      message: msg,
-      description: dscpt || undefined,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -292,7 +285,7 @@ const AssignmentDevicesToMember = () => {
         refetchType: "active",
         refetchActive: true,
       });
-      openNotificationWithIcon(
+      notify(
         "success",
         "Equipment assigned to member.",
         ""
@@ -415,7 +408,7 @@ const AssignmentDevicesToMember = () => {
                     consentRequired: true,
                     consentExists: false,
                   });
-              openNotificationWithIcon("warning", consentMsg, "");
+              notify("warning", consentMsg, "");
               setLoadingStatus(false);
               navigate(`/member/${memberInfo.member_id}/update-member-information`);
               return;
@@ -435,27 +428,27 @@ const AssignmentDevicesToMember = () => {
       const errorMessage = getAssignmentErrorMessage(classification);
 
       if (classification.type === "CONSENT_REQUIRED") {
-        openNotificationWithIcon("warning", errorMessage, "");
+        notify("warning", errorMessage, "");
         setLoadingStatus(false);
         navigate(`/member/${memberInfo.member_id}/update-member-information`);
         return;
       }
 
       if (classification.type === "UNDER_13_CONSENT_REQUIRED") {
-        openNotificationWithIcon("warning", errorMessage, "");
+        notify("warning", errorMessage, "");
         setLoadingStatus(false);
         navigate(`/member/${memberInfo.member_id}/update-member-information`);
         return;
       }
 
       if (classification.type === "GUARDIAN_REQUIRED") {
-        openNotificationWithIcon("warning", errorMessage, "");
+        notify("warning", errorMessage, "");
         setLoadingStatus(false);
         navigate(`/member/${memberInfo.member_id}/update-member-information`);
         return;
       }
 
-      openNotificationWithIcon("error", errorMessage, "");
+      notify("error", errorMessage, "");
       setLoadingStatus(false);
     } finally {
       setLoadingStatus(false);

@@ -1,4 +1,4 @@
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,7 +7,7 @@ import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { useRoleLabel } from "../../../../hooks/useRoleLabel";
 import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
 import "./Body.css";
-import { dicIconNotification } from "../../../../utils/dicIconNotification";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import BodyRendering from "./BodyRendering.refactored";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -26,14 +26,7 @@ const Body = () => {
     },
   });
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg, dur) => {
-    api.open({
-      icon: dicIconNotification[type],
-      message: msg,
-      duration: dur,
-    });
-  };
+  const { notify: openNotificationWithIcon, contextHolder, api } = useStatusNotification();
 
   const originalDataRef = useRef({
     name: user.name,
