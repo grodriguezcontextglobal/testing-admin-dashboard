@@ -42,12 +42,13 @@ export function useStatusNotification() {
   const notify = (type, message, extra) => {
     let description;
     let duration;
+    let key;
     if (typeof extra === "string") {
       description = extra;
     } else if (typeof extra === "number") {
       duration = extra;
     } else if (extra && typeof extra === "object") {
-      ({ description, duration } = extra);
+      ({ description, duration, key } = extra);
     }
 
     api.open({
@@ -59,6 +60,7 @@ export function useStatusNotification() {
       ),
       description: description || undefined,
       duration,
+      key,
     });
   };
 

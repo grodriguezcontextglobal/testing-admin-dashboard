@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Checkbox, notification, Typography } from "antd";
+import { Checkbox, Typography } from "antd";
 import { jwtDecode } from "jwt-decode";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
@@ -58,6 +58,7 @@ import {
 } from "./utils/loginUtils";
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -77,18 +78,13 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const openNotificationWithIcon = useCallback(
     (type, msg) => {
-      api.open({
-        message: (
-          <div style={{ display: "flex", alignItems: "center" }}>{msg}</div>
-        ),
-        duration: 3000,
-      });
+      notify(type.toLowerCase(), msg, 3000);
     },
-    [api],
+    [notify],
   );
 
   const dataPassed = useRef(null);
