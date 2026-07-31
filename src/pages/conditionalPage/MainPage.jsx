@@ -15,6 +15,7 @@ import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20He
 import { Title } from "../../styles/global/Title";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
+import AdvanceGrades from "./components/modals/AdvanceGrades";
 import DeleteMember from "./components/modals/DeleteMember";
 import RegisterMembersToEvent from "./components/modals/RegisterMembersToEvent";
 import MainTable from "./tables/MainTable";
@@ -32,6 +33,7 @@ const MainPage = () => {
     getIndustryProfile(adminUser?.companyData?.industry).audience ?? "Members";
   const titleParams = String(slug || industryLabel).replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
+  const [advancingGrades, setAdvancingGrades] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
   const [registeringToEvent, setRegisteringToEvent] = useState(false);
   const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
@@ -44,7 +46,9 @@ const MainPage = () => {
   const canDeleteMembers = hasPermission("member:delete", roleType);
   const canNotifyMembers = hasPermission("member:notify", roleType);
   const canExportMembers = hasPermission("member:read", roleType);
-  const canManageMembers = canAddMembers || canDeleteMembers || canExportMembers;
+  const canAdvanceGrades = hasPermission("member:update", roleType);
+  const canManageMembers =
+    canAddMembers || canDeleteMembers || canExportMembers || canAdvanceGrades;
 
   const handleExportMembers = async () => {
     try {
@@ -105,9 +109,11 @@ const MainPage = () => {
   const manageMembersItems = buildManageMembersMenu({
     titleParams,
     onAdd: () => setAddingNewMember(true),
+    onAdvanceGrades: () => setAdvancingGrades(true),
     onExport: handleExportMembers,
     onDelete: () => setRemovingMember(true),
     canAdd: canAddMembers,
+    canAdvanceGrades,
     canExport: canExportMembers,
     canDelete: canDeleteMembers,
   });
@@ -253,6 +259,12 @@ const MainPage = () => {
         <DeleteMember
           openModal={removingMember}
           setOpenModal={setRemovingMember}
+        />
+      )}
+      {advancingGrades && (
+        <AdvanceGrades
+          openModal={advancingGrades}
+          setOpenModal={setAdvancingGrades}
         />
       )}
       {registeringToEvent && (

@@ -19,11 +19,13 @@ import { Icon } from "@iconify/react";
 export const buildManageMembersMenu = ({
   titleParams,
   onAdd,
-  onDelete,
+  onAdvanceGrades,
   onExport,
+  onDelete,
   canAdd = true,
-  canDelete = true,
+  canAdvanceGrades = true,
   canExport = true,
+  canDelete = true,
 }) => {
   const label = String(titleParams || "").trim() || "member";
   const items = [];
@@ -35,7 +37,18 @@ export const buildManageMembersMenu = ({
       onClick: () => onAdd?.(),
     });
   }
-  if (canAdd && (canDelete || canExport)) {
+  if (canAdd && (canAdvanceGrades || canExport || canDelete)) {
+    items.push({ type: "divider" });
+  }
+  if (canAdvanceGrades) {
+    items.push({
+      key: "advance-grades",
+      label: "Advance grades",
+      icon: <Icon icon="tabler:player-track-next" width={18} />,
+      onClick: () => onAdvanceGrades?.(),
+    });
+  }
+  if (canAdvanceGrades && (canExport || canDelete)) {
     items.push({ type: "divider" });
   }
   if (canExport) {
@@ -46,7 +59,7 @@ export const buildManageMembersMenu = ({
       onClick: () => onExport?.(),
     });
   }
-  if (canDelete && canExport) {
+  if (canExport && canDelete) {
     items.push({ type: "divider" });
   }
   if (canDelete) {
