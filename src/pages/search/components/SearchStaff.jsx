@@ -1,5 +1,4 @@
 import { Grid, Typography } from "@mui/material";
-import { notification } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,15 +9,14 @@ import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize2
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardSearchStaffFound from "../utils/CardSearchStaffFound";
 import NoDataFound from "../utils/NoDataFound";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 const SearchStaff = ({ searchParams, setCountingResult, countingResults }) => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = (title) => {
-    api.open({
-      message: title,
-    });
+    notify("warning", title);
   };
   const sortAndRenderFoundData = () => {
     const foundData = user.companyData.employees;

@@ -7,24 +7,20 @@ import {
   respondPublicConsent,
   retrievePublicConsent,
 } from "./guardianConsentPublicApi";
-import { notification } from "antd";
 
 vi.mock("./guardianConsentPublicApi", () => ({
   retrievePublicConsent: vi.fn(),
   respondPublicConsent: vi.fn(),
 }));
 
-vi.mock("antd", async () => {
-  const actual = await vi.importActual("antd");
-  return {
-    ...actual,
-    notification: {
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-    },
-  };
-});
+const mockNotify = vi.fn();
+vi.mock("../../components/notification/alerts/useStatusNotification", () => ({
+  useStatusNotification: () => ({
+    notify: mockNotify,
+    contextHolder: null,
+    api: { destroy: vi.fn() },
+  }),
+}));
 
 const pendingConsent = {
   consent: {
@@ -292,10 +288,11 @@ describe("GuardianConsentResponsePage", () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Agree" }));
-    expect(notification.warning).toHaveBeenCalledWith({
-      message: "Please enter your name",
-      description: "Your full name is required to sign.",
-    });
+    expect(mockNotify).toHaveBeenCalledWith(
+      "warning",
+      "Please enter your name",
+      "Your full name is required to sign.",
+    );
     expect(respondPublicConsent).not.toHaveBeenCalled();
   });
 });

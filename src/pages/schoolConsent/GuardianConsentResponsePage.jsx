@@ -5,7 +5,6 @@ import {
   Card,
   Divider,
   Input,
-  notification,
   Result,
   Space,
   Spin,
@@ -21,6 +20,7 @@ import {
   formatConsentExpiryMessage,
   shouldRetryTransientError,
 } from "./consentPageUtils";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -39,6 +39,7 @@ const GuardianConsentResponsePage = () => {
   const [signerName, setSignerName] = useState("");
   const [decision, setDecision] = useState(null);
   const [submittedStatus, setSubmittedStatus] = useState(null);
+  const { notify, contextHolder } = useStatusNotification();
 
   const {
     data: consentData,
@@ -67,10 +68,7 @@ const GuardianConsentResponsePage = () => {
       // Render the confirmation from the mutation result itself — no need
       // to re-fetch retrievePublicConsent just to learn what we already know.
       setSubmittedStatus(data?.status || variables?.decision);
-      notification.success({
-        message: "Consent submitted successfully",
-        description: "Thank you for your response.",
-      });
+      notify("success", "Consent submitted successfully", "Thank you for your response.");
     },
 
     onError: (err) => {
@@ -78,42 +76,30 @@ const GuardianConsentResponsePage = () => {
       const msg = err?.response?.data?.msg;
 
       if (status === 404) {
-        notification.error({
-          message: "Invalid link",
-          description: "This consent link is invalid.",
-        });
+        notify("error", "Invalid link", "This consent link is invalid.");
         return;
       }
 
       if (status === 410) {
-        notification.error({
-          message: "Link expired",
-          description:
-            "This consent link has expired. Please contact the school to request a new link.",
-        });
+        notify(
+          "error",
+          "Link expired",
+          "This consent link has expired. Please contact the school to request a new link.",
+        );
         return;
       }
 
       if (status === 409) {
-        notification.warning({
-          message: "Already responded",
-          description: "This consent request has already been answered.",
-        });
+        notify("warning", "Already responded", "This consent request has already been answered.");
         return;
       }
 
       if (status === 422) {
-        notification.error({
-          message: "Cannot change response",
-          description: "This consent request can no longer be changed.",
-        });
+        notify("error", "Cannot change response", "This consent request can no longer be changed.");
         return;
       }
 
-      notification.error({
-        message: "Error",
-        description: msg || "An unexpected error occurred.",
-      });
+      notify("error", "Error", msg || "An unexpected error occurred.");
     },
   });
 
@@ -224,10 +210,7 @@ const GuardianConsentResponsePage = () => {
     const normalizedSignerName = signerName.trim();
 
     if (!normalizedSignerName) {
-      notification.warning({
-        message: "Please enter your name",
-        description: "Your full name is required to sign.",
-      });
+      notify("warning", "Please enter your name", "Your full name is required to sign.");
       return;
     }
 
@@ -242,6 +225,7 @@ const GuardianConsentResponsePage = () => {
 
   return (
     <div style={{ ...pageShellStyle, backgroundColor: "#f5f5f5" }}>
+      {contextHolder}
       <Card style={{ maxWidth: 640, width: "100%" }}>
         <Title level={3} style={{ textAlign: "center", marginBottom: 8 }}>
           Student Consent Request
