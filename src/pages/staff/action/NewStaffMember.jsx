@@ -84,14 +84,19 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
 
   const addEmployeeAndInvite = async ({ name, lastName, email, role }) => {
     const companyInfo = companiesQuery?.data?.data?.company?.[0];
-    if (!companyInfo?.id) {
-      notify("error", "Company info not loaded. Please try again.");
-      return;
+    if (!companyInfo) {
+      throw new Error("Company info not loaded. Please try again.");
     }
 
-    await devitrakApi.patch(`/company/update-company/${companyInfo.id}`, {
+    // The search-company response's own id field isn't reliable here (this
+    // was the only spot in src/pages/staff reading it instead of the
+    // already-known user.companyData.id every sibling mutation uses —
+    // DeleteStaffMember.jsx's identical update-company PATCH included —
+    // so a falsy companyInfo.id silently short-circuited this function
+    // while the caller went on to report success and close the modal).
+    await devitrakApi.patch(`/company/update-company/${user.companyData.id}`, {
       employees: [
-        ...companyInfo.employees,
+        ...(companyInfo.employees ?? []),
         buildEmployeeEntry({ name, lastName, email, role }),
       ],
     });
