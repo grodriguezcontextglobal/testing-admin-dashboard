@@ -326,9 +326,16 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               justifyContent: "flex-start",
               alignItems: "center",
               padding: 0,
-              // with the dynamic industry tab the row can exceed its grid at
-              // medium widths — wrap instead of overflowing under the search
-              flexWrap: "wrap",
+              // Keep every option on one line regardless of label width (the
+              // dynamic industry tab's title varies a lot, e.g. "Students").
+              // Wrapping used to push whichever item didn't fit onto its own
+              // row, landing it under the logo/name. Scroll instead of wrap
+              // so the row never breaks; it still never collides with the
+              // search box since it stays confined to its own flex item.
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": { display: "none" },
               minWidth: 0,
             }}
           >
