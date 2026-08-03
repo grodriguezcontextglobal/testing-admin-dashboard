@@ -22,18 +22,23 @@ const CommandMenu = ({ open, onClose, groups = [], searchScopes = [], onSearchAl
   const inputRef = useRef(null);
   const listRef = useRef(null);
 
-  // Flatten groups into a single navigable list, filtered by the query.
+  // Navigation/Actions stay visible regardless of what's typed — the query
+  // only drives the "Search everywhere/<scope>" entries below, it never
+  // hides the static shortcuts (typing a consumer's name used to make every
+  // group disappear since none of their labels matched it).
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
     const rows = [];
     for (const group of groups) {
-      const items = (group.items || []).filter(
-        (it) => !q || it.label.toLowerCase().includes(q)
-      );
+      const items = group.items || [];
       if (items.length) rows.push({ label: group.label, items });
     }
     return rows;
-  }, [groups, query]);
+  }, [groups]);
+
+  const commandCount = useMemo(
+    () => filtered.reduce((n, g) => n + g.items.length, 0),
+    [filtered]
+  );
 
   const flatItems = useMemo(() => {
     const flat = filtered.flatMap((g) => g.items);
@@ -64,7 +69,13 @@ const CommandMenu = ({ open, onClose, groups = [], searchScopes = [], onSearchAl
     }
   }, [open]);
 
-  useEffect(() => setActiveIndex(0), [query]);
+  // With Navigation/Actions always visible, default the highlighted row to
+  // the first "Search ..." entry while typing — otherwise Enter would keep
+  // selecting "Home" (index 0) instead of running the search the user is
+  // most likely typing towards.
+  useEffect(() => {
+    setActiveIndex(query.trim() && onSearchAll ? commandCount : 0);
+  }, [query, commandCount, onSearchAll]);
 
   useEffect(() => {
     const el = listRef.current?.querySelector('[data-active="true"]');
