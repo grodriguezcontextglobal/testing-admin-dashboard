@@ -6,6 +6,7 @@ import { hasPermission, resolveRoleType } from "../../config/roles";
 import { Link } from "react-router-dom";
 import colorMark from "../../assets/maskable_icon_white_background.png";
 import DevitrakWordmark from "../icons/DevitrakWordmark";
+import { useInstallPromptContext } from "../../hooks/useInstallPromptContext";
 
 /**
  * App footer (Untitled UI style).
@@ -32,8 +33,25 @@ const linkStyle = {
   textAlign: "left",
 };
 
-const FooterLink = ({ to, href, children }) =>
-  to ? (
+const FooterLink = ({ to, href, onClick, children }) => {
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        style={{
+          ...linkStyle,
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+        }}
+      >
+        {children}
+      </button>
+    );
+  }
+  return to ? (
     <Link to={to} style={linkStyle}>
       {children}
     </Link>
@@ -42,10 +60,12 @@ const FooterLink = ({ to, href, children }) =>
       {children}
     </a>
   );
+};
 
 FooterLink.propTypes = {
   to: PropTypes.string,
   href: PropTypes.string,
+  onClick: PropTypes.func,
   children: PropTypes.node.isRequired,
 };
 
@@ -81,6 +101,7 @@ const COLUMNS = [
 
 const FooterComponent = forwardRef(function FooterComponent({ full }, ref) {
   const { user } = useSelector((state) => state.admin);
+  const { canInstall, promptInstall } = useInstallPromptContext();
   const hiddenNavTabs = getIndustryProfile(
     user?.companyData?.industry
   ).hiddenNavTabs;
@@ -89,18 +110,27 @@ const FooterComponent = forwardRef(function FooterComponent({ full }, ref) {
   // role can't access (Staff is admin-level — same nav:staff gate as the
   // navbar; the /staff route also redirects unauthorized deep links home)
   const canSeeStaff = hasPermission("nav:staff", resolveRoleType(user));
-  const columns = COLUMNS.map((col) =>
-    col.heading === "Product"
-      ? {
-          ...col,
-          links: col.links.filter(
-            (l) =>
-              !hiddenNavTabs.includes(l.label.toLowerCase()) &&
-              (l.to !== "/staff" || canSeeStaff)
-          ),
-        }
-      : col
-  );
+  const columns = COLUMNS.map((col) => {
+    if (col.heading === "Product") {
+      return {
+        ...col,
+        links: col.links.filter(
+          (l) =>
+            !hiddenNavTabs.includes(l.label.toLowerCase()) &&
+            (l.to !== "/staff" || canSeeStaff)
+        ),
+      };
+    }
+    // Only offered when the browser actually reports the app installable —
+    // there's no native way to trigger install without that captured event.
+    if (col.heading === "Support" && canInstall) {
+      return {
+        ...col,
+        links: [...col.links, { label: "Install app", onClick: promptInstall }],
+      };
+    }
+    return col;
+  });
   const year = new Date().getFullYear();
 
   if (!full) {
@@ -186,7 +216,12 @@ const FooterComponent = forwardRef(function FooterComponent({ full }, ref) {
             >
               <p style={columnHeading}>{col.heading}</p>
               {col.links.map((l) => (
-                <FooterLink key={l.label} to={l.to} href={l.href}>
+                <FooterLink
+                  key={l.label}
+                  to={l.to}
+                  href={l.href}
+                  onClick={l.onClick}
+                >
                   {l.label}
                 </FooterLink>
               ))}

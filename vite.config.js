@@ -42,6 +42,17 @@ export default defineConfig(({ mode }) => {
               registerType: "prompt",
               injectRegister: null,
               includeAssets: ["devitrak-logo-white.svg"],
+              // Without this, vite-plugin-pwa only emits the manifest/service
+              // worker on `vite build` — the dev server (`npm run dev`,
+              // docker compose up) never registers a service worker, so the
+              // browser has nothing to base an install decision on and
+              // `beforeinstallprompt` never fires. This is why the install
+              // banner/footer link never appeared while testing against the
+              // dev server.
+              devOptions: {
+                enabled: true,
+                type: "module",
+              },
               manifest: {
                 name: "Devitrak",
                 short_name: "Devitrak",
@@ -92,8 +103,15 @@ export default defineConfig(({ mode }) => {
                     method: "POST",
                     handler: "NetworkOnly",
                     options: {
+                      // Workbox requires a unique Queue name per
+                      // BackgroundSyncPlugin instance — one is created per
+                      // runtimeCaching entry, so POST and PUT each need
+                      // their own name even though they're conceptually the
+                      // same "mutation queue" (reusing one name here throws
+                      // duplicate-queue-name at service-worker startup and
+                      // was silently breaking SW activation).
                       backgroundSync: {
-                        name: "devitrak-mutations-queue",
+                        name: "devitrak-mutations-queue-post",
                         options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
                       },
                     },
@@ -104,7 +122,7 @@ export default defineConfig(({ mode }) => {
                     handler: "NetworkOnly",
                     options: {
                       backgroundSync: {
-                        name: "devitrak-mutations-queue",
+                        name: "devitrak-mutations-queue-put",
                         options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
                       },
                     },

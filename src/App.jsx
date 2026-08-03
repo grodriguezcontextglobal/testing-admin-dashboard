@@ -22,6 +22,7 @@ import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage } from "./api/sessionHeaders";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
+import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 // const InactivityLogout = lazy(() =>
 //   import("./utils/CheckingInactivityAndTakeAction")
 // );
@@ -33,8 +34,8 @@ const BackgroundJobsTracker = lazy(() =>
 const OfflineIndicator = lazy(() =>
   import("./components/offlineStatus/OfflineIndicator")
 );
-const InstallAppNotification = lazy(() =>
-  import("./components/installPrompt/InstallAppNotification")
+const InstallAppBanner = lazy(() =>
+  import("./components/installPrompt/InstallAppBanner")
 );
 
 const App = () => {
@@ -103,7 +104,7 @@ const App = () => {
         sessionStorage.setItem("network-status", true);
         setTimeout(
           () =>
-            openNotificationWithIcon(
+            notify(
               "warning",
               "The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection."
             ),
@@ -123,29 +124,31 @@ const App = () => {
   }, [status, adminToken, location.pathname]);
 
   return (
-    <Suspense
-      fallback={
-        <div style={CenteringGrid}>
-          <DevitrakLoading />
-        </div>
-      }
-    >
-      {renderNetworkStatusMessage()}
-      {contextHolder}
-      <InstallAppNotification />
-      {status === "authenticated" && adminToken ? (
-        // <InactivityLogout>
-        //   <AuthRoutes />
-        // </InactivityLogout>
-        <>
-          <BackgroundJobsTracker />
-          <OfflineIndicator />
-          <AuthRoutes />
-        </>
-      ) : (
-        <NoAuthRoutes />
-      )}
-    </Suspense>
+    <InstallPromptProvider>
+      <Suspense
+        fallback={
+          <div style={CenteringGrid}>
+            <DevitrakLoading />
+          </div>
+        }
+      >
+        <InstallAppBanner />
+        {renderNetworkStatusMessage()}
+        {contextHolder}
+        {status === "authenticated" && adminToken ? (
+          // <InactivityLogout>
+          //   <AuthRoutes />
+          // </InactivityLogout>
+          <>
+            <BackgroundJobsTracker />
+            <OfflineIndicator />
+            <AuthRoutes />
+          </>
+        ) : (
+          <NoAuthRoutes />
+        )}
+      </Suspense>
+    </InstallPromptProvider>
   );
 };
 
