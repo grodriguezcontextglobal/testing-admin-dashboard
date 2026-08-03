@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInstallPromptContext } from "../../hooks/useInstallPromptContext";
 import BlueButtonComponent from "../UX/buttons/BlueButton";
 import XCloseIcon from "../icons/XCloseIcon";
@@ -48,6 +48,19 @@ const InstallAppBanner = () => {
   const [dismissed, setDismissed] = useState(
     () => sessionStorage.getItem(DISMISS_KEY) === "true",
   );
+  const wasInstallable = useRef(canInstall);
+
+  useEffect(() => {
+    // canInstall flipping false -> true is the browser telling us a NEW
+    // install opportunity just appeared (e.g. the user uninstalled the app
+    // and reloaded) — forget any earlier dismissal from the previous
+    // opportunity instead of leaving the banner hidden for no current reason.
+    if (canInstall && !wasInstallable.current) {
+      sessionStorage.removeItem(DISMISS_KEY);
+      setDismissed(false);
+    }
+    wasInstallable.current = canInstall;
+  }, [canInstall]);
 
   if (!canInstall || dismissed) return null;
 
