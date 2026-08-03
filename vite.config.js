@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
                 type: "module",
               },
               manifest: {
+                id: "/",
                 name: "Devitrak",
                 short_name: "Devitrak",
                 description: "Devitrak admin dashboard",
