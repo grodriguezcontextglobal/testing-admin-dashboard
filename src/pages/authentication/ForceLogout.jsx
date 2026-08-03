@@ -1,17 +1,24 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
-import { notification } from "antd";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 
 const ForceLogout = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [email, setEmail] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const { notify, contextHolder } = useStatusNotification();
+    const openNotificationWithIcon = useCallback(
+        (type, msg) => {
+            notify(type, msg);
+        },
+        [notify],
+    );
     const {
         register,
         handleSubmit,
@@ -34,31 +41,24 @@ const ForceLogout = () => {
             setValue("email", userEmail);
             setValue("password", password);
         } else {
-            openNotificationWithIcon("Error", "Invalid link. Please click the link from your email again.");
+            openNotificationWithIcon("error", "Invalid link. Please click the link from your email again.");
             return navigate("/login");
         }
-    }, [searchParams, navigate, setValue]);
-
-    const openNotificationWithIcon = (message, description) => {
-        notification.open({
-            message: message,
-            description: description,
-        });
-    };
+    }, [searchParams, navigate, setValue, openNotificationWithIcon]);
 
     const onSubmit = async (data) => {
         setIsLoading(true);
         try {
             await devitrakApi.post("/staff/force-logout", data);
             openNotificationWithIcon(
-                "Success",
+                "success",
                 "Your previous session has been revoked. You can now log in."
             );
             navigate("/login");
         } catch (error) {
             const message =
                 error.response?.data?.msg || "Failed to revoke session. Please try again.";
-            openNotificationWithIcon("Error", message);
+            openNotificationWithIcon("error", message);
         } finally {
             setIsLoading(false);
         }
@@ -67,6 +67,7 @@ const ForceLogout = () => {
     if (!email) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                {contextHolder}
                 <DevitrakLoading />
             </Box>
         );
@@ -74,6 +75,7 @@ const ForceLogout = () => {
 
     return (
         <Grid container component="main" sx={{ height: '100vh', backgroundColor: '#f0f2f5' }}>
+            {contextHolder}
             <Grid
                 item
                 xs={11}
