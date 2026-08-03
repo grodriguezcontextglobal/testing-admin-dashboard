@@ -34,9 +34,6 @@ const BackgroundJobsTracker = lazy(() =>
 const OfflineIndicator = lazy(() =>
   import("./components/offlineStatus/OfflineIndicator")
 );
-const InstallAppBanner = lazy(() =>
-  import("./components/installPrompt/InstallAppBanner")
-);
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -132,7 +129,6 @@ const App = () => {
           </div>
         }
       >
-        <InstallAppBanner />
         {renderNetworkStatusMessage()}
         {contextHolder}
         {status === "authenticated" && adminToken ? (

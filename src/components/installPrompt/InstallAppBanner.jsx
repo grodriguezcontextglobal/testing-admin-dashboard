@@ -55,7 +55,6 @@ const InstallAppBanner = () => {
     sessionStorage.setItem(DISMISS_KEY, "true");
     setDismissed(true);
   };
-
   return (
     <div style={bannerStyle} role="region" aria-label="Install Devitrak">
       <p style={textStyle}>

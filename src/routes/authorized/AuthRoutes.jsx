@@ -212,6 +212,7 @@ const Providers = lazy(() => import("../../pages/Profile/providers/Main"));
 const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
 const DesignLab = lazy(() => import("../../pages/designLab/DesignLab"));
 import GlobalCommandMenu from "../../components/UX/commandMenu/GlobalCommandMenu";
+import InstallAppBanner from "../../components/installPrompt/InstallAppBanner";
 const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
 const ConditionalMainPage = lazy(() =>
   import("../../pages/conditionalPage/MainPage")
@@ -255,6 +256,7 @@ const AuthRoutes = () => {
         flexDirection: "column",
       }}
     >
+      <InstallAppBanner />
       <HeaderComponent ref={navbarRef} />
       <GlobalCommandMenu />
       <Suspense
