@@ -17,7 +17,8 @@ import {
 
 const SchoolComplianceSettings = () => {
   const { user } = useSelector((state) => state.admin);
-  const companyId = user?.sqlInfo?.company_id;
+  const companyIdForDocument = user?.companyData?.id ?? null;
+  const companyId = user?.sqlInfo?.company_id ?? null;
   const { settings, isLoading, isEducation } = useSchoolSettings();
   const queryClient = useQueryClient();
   const { notify, contextHolder } = useStatusNotification();
@@ -34,9 +35,9 @@ const SchoolComplianceSettings = () => {
   const [originalValues, setOriginalValues] = useState(null);
 
   const consentDocumentsQuery = useQuery({
-    queryKey: ["schoolConsentDocuments", companyId],
-    queryFn: () => fetchSchoolConsentDocuments(companyId),
-    enabled: !!companyId,
+    queryKey: ["schoolConsentDocuments", companyIdForDocument],
+    queryFn: () => fetchSchoolConsentDocuments(companyIdForDocument),
+    enabled: !!companyIdForDocument,
   });
   const consentDocuments = consentDocumentsQuery.data ?? [];
   const consentDocumentOptions = consentDocuments.map((doc) => {
@@ -56,7 +57,10 @@ const SchoolComplianceSettings = () => {
     if (settings) {
       const initialValues = {
         enforce: Boolean(settings.enforce_member_consent),
-        enforceUnder13: Boolean(settings.enforce_under_13),
+        // Read key is enforce_under_13_consent — confirmed against the real
+        // backend response (2026-08-04); the write payload's key stays
+        // enforce_under_13 (also confirmed, the two are asymmetric).
+        enforceUnder13: Boolean(settings.enforce_under_13_consent),
         policyVersion: settings.required_consent_policy_version || "1",
         consentDocumentId: settings.consent_document_id || null,
       };

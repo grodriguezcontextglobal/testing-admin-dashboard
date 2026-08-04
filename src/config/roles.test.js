@@ -556,6 +556,73 @@ describe("F-02 — PERMISSIONS: dominio member (CRU) visible para root_admin/adm
   });
 });
 
+// ─── School pilot S-01.2 — matriz completa rol × permiso del dominio member ──
+// EVENT_CRU/EVENT_D (que respaldan member:*) solo listan strings legacy
+// (root_admin, admin, event_manager, assistant). Este bloque prueba
+// explícitamente los 12 roles de ALL_ROLES (incluidos los 6 canónicos F-01) y
+// los 4 roles con scope, para dejar registrado — no asumido — qué pasa si un
+// staff tiene un roleType canónico o con scope.
+
+describe("School pilot S-01.2 — dominio member: roles canónicos F-01", () => {
+  const CANONICAL_ROLES = [
+    "root_administrator",
+    "sales_associate",
+    "manager_event",
+    "manager_inventory",
+    "associate_inventory",
+    "event_assistant",
+  ];
+  const MEMBER_AND_NAV_ACTIONS = [
+    "member:create",
+    "member:read",
+    "member:update",
+    "member:delete",
+    "member:assign_devices",
+    "member:notify",
+    "nav:members",
+  ];
+
+  MEMBER_AND_NAV_ACTIONS.forEach((action) => {
+    CANONICAL_ROLES.forEach((role) => {
+      it(`"${role}" NO tiene "${action}" (hallazgo: EVENT_CRU/EVENT_D son solo legacy)`, () => {
+        expect(hasPermission(action, role)).toBe(false);
+      });
+    });
+  });
+
+  it("ALL_ROLES incluye los 6 roles canónicos probados arriba (evita que el test quede desactualizado)", () => {
+    CANONICAL_ROLES.forEach((role) => {
+      expect(ALL_ROLES).toContain(role);
+    });
+  });
+});
+
+describe("School pilot S-01.2 — dominio member: roles con scope (location/category)", () => {
+  const SCOPED_ROLES = [
+    "inventory_location_manager",
+    "inventory_location_assistant",
+    "category_manager",
+    "category_assistant",
+  ];
+  const MEMBER_AND_NAV_ACTIONS = [
+    "member:create",
+    "member:read",
+    "member:update",
+    "member:delete",
+    "member:assign_devices",
+    "member:notify",
+    "nav:members",
+  ];
+
+  MEMBER_AND_NAV_ACTIONS.forEach((action) => {
+    SCOPED_ROLES.forEach((role) => {
+      it(`"${role}" NO tiene "${action}" (los roles con scope son solo de inventario, no de alumnos)`, () => {
+        expect(hasPermission(action, role)).toBe(false);
+      });
+    });
+  });
+});
+
 // ─── PERMISSIONS — event:notify_push (enviar notificación push del evento) ───
 // Mismo grupo de roles que ya puede editar el evento (EVENT_CRU): sale_manager
 // e inventory_manager quedan fuera, igual que para el resto de acciones de

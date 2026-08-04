@@ -29,6 +29,7 @@ vi.mock("react-redux", () => ({
       admin: {
         user: {
           sqlInfo: { company_id: 137 },
+          companyData: { id: "mongo-company-137" },
         },
       },
     }),
@@ -115,6 +116,28 @@ describe("StudentConsentPanel", () => {
     expect(await screen.findByText("Agreed")).toBeInTheDocument();
   });
 
+  it("shows agreed status tag from the real POST /school/consent envelope (consents[], confirmed backend 2026-08-04)", async () => {
+    fetchStudentConsent.mockResolvedValue({
+      data: {
+        ok: true,
+        count: 1,
+        consents: [
+          {
+            status: "agreed",
+            policy_version: "1",
+            requested_at: "2026-08-04T17:40:34.000Z",
+            responded_at: "2026-08-04T17:43:02.000Z",
+          },
+        ],
+      },
+    });
+    renderPanel();
+    expect(await screen.findByText("Agreed")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /send consent request/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("shows refused status tag when consent is refused", async () => {
     fetchStudentConsent.mockResolvedValue({
       data: { consent: { status: "refused", policy_version: "1" } },
@@ -196,7 +219,7 @@ describe("StudentConsentPanel", () => {
     });
   });
 
-  it("disables send button and shows a hint when no consent document is assigned", async () => {
+  it("does not disable send button when no consent document is assigned, but shows a hint (backend doesn't persist consent_document_id yet)", async () => {
     fetchSchoolSettings.mockResolvedValue({
       ok: true,
       settings: { required_consent_policy_version: "1" },
@@ -206,7 +229,7 @@ describe("StudentConsentPanel", () => {
     const button = await screen.findByRole("button", {
       name: /send consent request/i,
     });
-    expect(button).toBeDisabled();
+    expect(button).not.toBeDisabled();
     expect(
       screen.getByText(
         /Assign a School Consent document in Compliance Settings/i
@@ -214,7 +237,7 @@ describe("StudentConsentPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("disables send button and shows a hint when the assigned consent document has expired", async () => {
+  it("does not disable send button when the assigned consent document has expired, but shows a hint", async () => {
     fetchSchoolConsentDocuments.mockResolvedValue([
       {
         _id: "doc-1",
@@ -228,10 +251,19 @@ describe("StudentConsentPanel", () => {
     const button = await screen.findByRole("button", {
       name: /send consent request/i,
     });
-    expect(button).toBeDisabled();
+    expect(button).not.toBeDisabled();
     expect(
       screen.getByText(/assigned School Consent document has expired/i)
     ).toBeInTheDocument();
+  });
+
+  it("fetches consent documents using the Mongo company id, not the SQL one", async () => {
+    fetchStudentConsent.mockResolvedValue({ data: null });
+    renderPanel();
+    await screen.findByRole("button", { name: /send consent request/i });
+    expect(fetchSchoolConsentDocuments).toHaveBeenCalledWith(
+      "mongo-company-137"
+    );
   });
 
   it.each(["expired", "refused", "stale"])(

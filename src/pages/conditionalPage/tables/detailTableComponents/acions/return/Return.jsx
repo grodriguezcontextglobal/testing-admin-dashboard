@@ -185,7 +185,7 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             placeholder={
               watch("outcome") === "lost"
                 ? "e.g. Reported lost by student on 6/2"
-                : "e.g. Cracked screen — charged to account"
+                : "e.g. Cracked screen — marked as returned"
             }
             style={{ ...OutlinedInputStyle, width: "100%" }}
             multiline

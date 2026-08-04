@@ -5,9 +5,26 @@ const CONSENT_STATUSES = new Set([
   "expired",
 ]);
 
-function resolveConsentRecord(response) {
+/**
+ * Resolve the single consent record to inspect, from any of the response
+ * shapes the school-consent endpoints return. The real `POST /school/consent`
+ * response (confirmed 2026-08-04) is `{ consents: [...] }` — plural, an
+ * array, since a member can accumulate more than one request over time (e.g.
+ * a stale one left behind after a policy version bump) — so pick the most
+ * recently requested record when there's more than one.
+ *
+ * @param {object|null|undefined} response
+ * @returns {object|null}
+ */
+export function resolveConsentRecord(response) {
   if (!response || typeof response !== "object" || Array.isArray(response)) {
     return null;
+  }
+
+  if (Array.isArray(response.consents) && response.consents.length > 0) {
+    return [...response.consents].sort(
+      (a, b) => new Date(b.requested_at || 0) - new Date(a.requested_at || 0)
+    )[0];
   }
 
   return response.consent || response.record || response.data?.consent || response;

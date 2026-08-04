@@ -56,13 +56,10 @@ const OverdueDevicesTable = () => {
     await devitrakApi.post("/nodemailer/single-email-notification", {
       consumer: recipients,
       subject: `Overdue device reminder - ${user.companyData.company_name}`,
-      message: `Hi ${row.first_name},\n\nOur records show the device ${
-        row.device_serial_number || row.device_item_group || ""
-      } assigned to you was due back on ${dueDate} and is now ${
-        row.days_overdue
-      } day(s) overdue. Please return it as soon as possible.\n\n${
-        user.companyData.company_name
-      }`,
+      message: `Hi ${row.first_name},\n\nOur records show the device ${row.device_serial_number || row.device_item_group || ""
+        } assigned to you was due back on ${dueDate} and is now ${row.days_overdue
+        } day(s) overdue. Please return it as soon as possible.\n\n${user.companyData.company_name
+        }`,
       eventSelected: "",
       company: user.companyData.company_name,
     });
@@ -74,8 +71,7 @@ const OverdueDevicesTable = () => {
       notify(
         "success",
         "Reminder queued",
-        `${row.first_name} ${row.last_name}${
-          row.minor === 1 && row.parent_guardian_email ? " (guardian CC'd)" : ""
+        `${row.first_name} ${row.last_name}${row.minor === 1 && row.parent_guardian_email ? " (guardian CC'd)" : ""
         }`,
       );
     } catch {
@@ -111,14 +107,15 @@ const OverdueDevicesTable = () => {
         company_id: companyId,
         return_status: bulkStatus,
         condition_note: bulkNote || null,
+        logistic_status: "in-stock",
+        warehouse: 0
       };
       if (gradeFilter) body.grade = gradeFilter;
       const res = await devitrakApi.post("/db_member/bulk-return", body);
       setBulkModalOpen(false);
       setBulkNote("");
       message.success(
-        `${res?.data?.returned ?? 0} lease(s) closed, ${
-          res?.data?.devicesRestocked ?? 0
+        `${res?.data?.returned ?? 0} lease(s) closed, ${res?.data?.devicesRestocked ?? 0
         } device(s) restocked.`
       );
       queryClient.invalidateQueries({ queryKey: ["overdueLeasesQuery"] });

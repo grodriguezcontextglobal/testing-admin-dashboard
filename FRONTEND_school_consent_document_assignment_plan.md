@@ -9,7 +9,38 @@
 > `Documents` module (`src/pages/Profile/Documents/`) already has PDF
 > upload, storage, and viewing — this plan wires that module into the school
 > consent flow instead of building a second document system.
-> **Status:** planning only — no code changed yet.
+> **Status: Steps A–E all implemented and verified against a real running
+> backend (2026-08-04).** Timeline of what was found along the way:
+> 1. Earlier the same day, `POST /school/settings/consent-enforcement`
+>    accepted `consent_document_id` but didn't echo/persist it in a
+>    same-session round-trip — backend has since started persisting it
+>    (confirmed below), so treat that as resolved rather than a live gap.
+> 2. `GET /document/*` is keyed by the **Mongo** company id
+>    (`user.companyData.id`), while `/school/settings*` and the consent-
+>    request endpoints use the **SQL** `company_id` — two different ids were
+>    being conflated in `StudentConsentPanel.jsx`/`SchoolComplianceSettings.jsx`,
+>    fixed to use the right one per call.
+> 3. **Step D confirmed live:** `POST /school/consent/public/retrieve` now
+>    returns `company.consent_document_id` (a raw Mongo document id — not a
+>    `document: {view_url}` object as originally proposed in §2 Step D
+>    option 1). Frontend resolves it into a viewable URL itself (Step E,
+>    below), so the shape difference didn't block anything.
+> 4. **Step E implemented:** `GuardianConsentResponsePage.jsx` now fetches
+>    and renders the actual assigned PDF via
+>    `fetchPublicConsentDocument()`, falling back to legacy `consent_text`
+>    when no document is assigned. `StudentConsentPanel`'s document-required
+>    gate (Step C) is intentionally informational-only, not blocking —
+>    see the note in §6 below on why.
+> 5. **🔴 New security finding, same shape as the L8 finding in
+>    `SCHOOL_pilot_365_test_scenarios.md`:** `GET /document/:id` and
+>    `GET /document/download/:id/:userId` responded with **no auth headers
+>    at all and an arbitrary/dummy `:userId`** (`000000000000000000000000`
+>    worked). These were assumed authenticated (see the original §4 "Never
+>    reuse" note below, written before this was tested) — that assumption
+>    was **wrong**. This is what makes Step E work today, but it also means
+>    **any document in any company is fetchable by anyone who can guess/see
+>    a 24-hex-char Mongo id**, no session required. Needs the same backend
+>    escalation as L8 — see `FRONTEND_backend_security_report_company_scoping.md`.
 
 ---
 
@@ -250,8 +281,17 @@ feature ships — working without a data migration).
 
 1. Which shape for Step D — embed `document.view_url` directly in
    `retrievePublicConsent`, or a separate OTC-scoped endpoint?
-2. Does `/document/upload` accept an arbitrary `public_document` boolean
-   today, or does that need adding server-side?
+2. ✅ **Answered 2026-08-04** — Does `/document/upload` accept an arbitrary
+   `public_document` boolean today, or does that need adding server-side? →
+   Confirmed **not implemented**: `POST /school/settings/consent-enforcement`
+   accepts `consent_document_id` in the payload, returns `ok:true`, but never
+   persists it (verified by round-tripping through `GET /school/settings`).
+   Needs a schema/persistence change server-side before Step D can work at
+   all.
 3. Should a company be limited to **one** active `school_consent` document
    at a time (matches "one required policy version" mental model), or can
    multiple exist and the settings picker just chooses which is active?
+4. **New** — confirm the id convention for any new endpoint: `/document/*`
+   uses the Mongo company id, `/school/settings*` uses the SQL `company_id`.
+   Whichever endpoint ends up persisting `consent_document_id` needs to state
+   which one it expects.

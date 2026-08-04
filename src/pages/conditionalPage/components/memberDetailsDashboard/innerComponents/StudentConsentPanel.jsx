@@ -56,8 +56,18 @@ function capitalizeStatus(status) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+// The real POST /school/consent response (confirmed 2026-08-04) is
+// `{ consents: [...] }` — plural, an array — not `.consent`/`.record`. Pick
+// the most recently requested record when there's more than one (e.g. a
+// stale request left behind after a policy version bump).
 function resolveConsentRecord(response) {
-  return response?.consent || response?.record || response?.data?.consent || null;
+  if (!response || typeof response !== "object") return null;
+  if (Array.isArray(response.consents) && response.consents.length > 0) {
+    return [...response.consents].sort(
+      (a, b) => new Date(b.requested_at || 0) - new Date(a.requested_at || 0)
+    )[0];
+  }
+  return response.consent || response.record || response.data?.consent || null;
 }
 
 export const StudentConsentPanel = ({
@@ -69,6 +79,10 @@ export const StudentConsentPanel = ({
   const { user } = useSelector((state) => state.admin);
   const queryClient = useQueryClient();
   const companyId = user?.sqlInfo?.company_id;
+  // /document/* is keyed by the Mongo company id, unlike /school/settings*
+  // and the consent-request endpoints, which use the SQL company_id. Matches
+  // the `companyData.id` convention already used by Documents.jsx.
+  const mongoCompanyId = user?.companyData?.id ?? null;
   const { notify, contextHolder } = useStatusNotification();
 
   const consentQuery = useQuery({
@@ -94,9 +108,9 @@ export const StudentConsentPanel = ({
     null;
 
   const consentDocumentsQuery = useQuery({
-    queryKey: ["schoolConsentDocuments", companyId],
-    queryFn: () => fetchSchoolConsentDocuments(companyId),
-    enabled: !!companyId,
+    queryKey: ["schoolConsentDocuments", mongoCompanyId],
+    queryFn: () => fetchSchoolConsentDocuments(mongoCompanyId),
+    enabled: !!mongoCompanyId,
   });
   const assignedConsentDocument = (consentDocumentsQuery.data ?? []).find(
     (doc) => doc._id === consentDocumentId
@@ -127,12 +141,13 @@ export const StudentConsentPanel = ({
     .join(" ");
   const guardianEmail = memberData?.parent_guardian_email;
   const guardianPhone = memberData?.parent_guardian_phone_number;
+  // Document assignment (consent_document_id) isn't persisted by the backend
+  // yet — confirmed 2026-08-04: /school/settings/consent-enforcement accepts
+  // and echoes it but never stores it, so requiring it here would make
+  // sending permanently impossible. The hints below stay informational only
+  // until backend actually persists the assignment.
   const canSendRequest =
-    Boolean(guardianEmail) &&
-    consentStatus !== "pending" &&
-    !isAgreed &&
-    Boolean(consentDocumentId) &&
-    !isAssignedDocumentExpired;
+    Boolean(guardianEmail) && consentStatus !== "pending" && !isAgreed;
   const isResend = ["expired", "refused", "stale"].includes(consentStatus);
   const sendButtonLabel = isResend ? "Resend" : "Send Consent Request";
 

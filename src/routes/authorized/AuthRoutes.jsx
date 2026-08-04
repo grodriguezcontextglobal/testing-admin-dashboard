@@ -150,9 +150,6 @@ const SchoolComplianceSettings = lazy(() =>
 const RolesManagementMainPage = lazy(() =>
   import("../../pages/Profile/roles_management/RolesManagementMainPage")
 );
-const SubscriptionMainPage = lazy(() =>
-  import("../../pages/subscription/MainPage")
-);
 const ConfirmSubscription = lazy(() =>
   import("../../components/stripe/payment/ConfirmSubscription")
 );
@@ -504,10 +501,10 @@ const AuthRoutes = () => {
                 </Route>
               </Route>
               <Route path="search-result-page" element={<SearchResultPage />} />
-              <Route
-                path="subscription-company"
-                element={<SubscriptionMainPage />}
-              />
+              {/* subscription-company (PricingTable) route intentionally
+                  removed — the pricing UI is a non-functional shell
+                  (placeholder copy, dead buttons); no in-app link points to
+                  it. Restore once a real subscription flow ships. */}
               <Route
                 path="confirm-subscription"
                 element={<ConfirmSubscription />}
