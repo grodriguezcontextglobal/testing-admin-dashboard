@@ -301,8 +301,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           item
           xs={2}
           sm={2}
-          md={8}
-          lg={8}
+          md={9}
+          lg={9}
         >
           <Badge
             color="inherit"
@@ -412,8 +412,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           item
           xs={10}
           sm={10}
-          md={4}
-          lg={4}
+          md={3}
+          lg={3}
           sx={{
             // search stays visible on every breakpoint; on phones it shares
             // the row with the hamburger (left grid) and must not overflow
@@ -461,6 +461,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 ...OutlinedInputStyle,
                 boxSizing: "border-box",
                 cursor: "pointer",
+
               }}
               name={"searchValue"}
               value={searchValue}
