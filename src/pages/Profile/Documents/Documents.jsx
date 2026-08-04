@@ -61,7 +61,12 @@ const Documents = () => {
       setFolders(response?.data?.folders ?? []);
     } catch (error) {
       setFolders([]);
-      message.error("Failed to load document folders. Please try again later.");
+      // A company with no folders yet isn't a failure — the backend
+      // returns 404 for "none exist", not an empty 200 list. Only
+      // surface a notification for genuine failures (network/5xx).
+      if (error?.response?.status !== 404) {
+        message.error("Failed to load document folders. Please try again later.");
+      }
     }
   };
 

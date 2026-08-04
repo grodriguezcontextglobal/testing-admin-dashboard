@@ -1,13 +1,16 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Switch, message } from "antd";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import SectionHeader from "../../../components/documents/new_form_components/SectionHeader";
+import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
 import { hasPermission } from "../../../config/roles";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
+import { isDocumentExpired } from "../Documents/utils/documentExpirationUtils";
 import { useSchoolSettings } from "./utils/useSchoolSettings";
 import {
   buildConsentEnforcementPayload,
+  fetchSchoolConsentDocuments,
   hasSettingsChanges,
   updateConsentEnforcement,
 } from "./utils/schoolComplianceUtils";
@@ -25,9 +28,29 @@ const SchoolComplianceSettings = () => {
   const [enforce, setEnforce] = useState(false);
   const [enforceUnder13, setEnforceUnder13] = useState(false);
   const [policyVersion, setPolicyVersion] = useState("1");
+  const [consentDocumentId, setConsentDocumentId] = useState(null);
 
   // Track original values for dirty checking
   const [originalValues, setOriginalValues] = useState(null);
+
+  const consentDocumentsQuery = useQuery({
+    queryKey: ["schoolConsentDocuments", companyId],
+    queryFn: () => fetchSchoolConsentDocuments(companyId),
+    enabled: !!companyId,
+  });
+  const consentDocuments = consentDocumentsQuery.data ?? [];
+  const consentDocumentOptions = consentDocuments.map((doc) => {
+    const expired = isDocumentExpired(doc.expiration_date);
+    return {
+      id: doc._id,
+      label: doc.title,
+      disabled: expired,
+      supportingText: expired ? "Expired" : undefined,
+    };
+  });
+  const selectedConsentDocumentOption =
+    consentDocumentOptions.find((option) => option.id === consentDocumentId) ??
+    null;
 
   useEffect(() => {
     if (settings) {
@@ -35,15 +58,17 @@ const SchoolComplianceSettings = () => {
         enforce: Boolean(settings.enforce_member_consent),
         enforceUnder13: Boolean(settings.enforce_under_13),
         policyVersion: settings.required_consent_policy_version || "1",
+        consentDocumentId: settings.consent_document_id || null,
       };
       setEnforce(initialValues.enforce);
       setEnforceUnder13(initialValues.enforceUnder13);
       setPolicyVersion(initialValues.policyVersion);
+      setConsentDocumentId(initialValues.consentDocumentId);
       setOriginalValues(initialValues);
     }
   }, [settings]);
 
-  const currentValues = { enforce, enforceUnder13, policyVersion };
+  const currentValues = { enforce, enforceUnder13, policyVersion, consentDocumentId };
   const isDirty = hasSettingsChanges(currentValues, originalValues);
 
   const mutation = useMutation({
@@ -221,6 +246,56 @@ const SchoolComplianceSettings = () => {
               }}
               placeholder="e.g. 1"
             />
+          </div>
+
+          {/* School consent document assignment */}
+          <div
+            style={{
+              padding: "16px",
+              border: "1px solid var(--gray-200, #ddded6)",
+              borderRadius: "8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "var(--gray-700, #484d47)",
+                marginBottom: "8px",
+              }}
+            >
+              School consent document
+            </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--gray-500, #777b73)",
+                marginBottom: "12px",
+              }}
+            >
+              The document guardians will see and sign on the public consent
+              page. Upload it from Documents tagged &quot;School Consent&quot; first.
+            </div>
+            <SelectComponent
+              placeholder="Select a document"
+              items={consentDocumentOptions}
+              value={selectedConsentDocumentOption}
+              onSelect={(item) => setConsentDocumentId(item?.id ?? null)}
+              isRequired={enforce}
+            />
+            {!consentDocumentsQuery.isLoading &&
+              consentDocumentOptions.length === 0 && (
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--gray-500, #777b73)",
+                    marginTop: "8px",
+                  }}
+                >
+                  No documents tagged &quot;School Consent&quot; yet. Upload one
+                  from Documents first.
+                </div>
+              )}
           </div>
 
           {/* Warning when disabling enforcement */}

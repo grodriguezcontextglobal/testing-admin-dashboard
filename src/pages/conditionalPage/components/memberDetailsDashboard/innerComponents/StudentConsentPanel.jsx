@@ -12,7 +12,11 @@ import {
   isConsentAgreed,
   normalizeConsentStatus,
 } from "../../../utils/guardianConsentUtils";
-import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import {
+  fetchSchoolConsentDocuments,
+  fetchSchoolSettings,
+} from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import { isDocumentExpired } from "../../../../Profile/Documents/utils/documentExpirationUtils";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const tagColorByStatus = {
@@ -84,6 +88,22 @@ export const StudentConsentPanel = ({
     settingsQuery.data?.data?.settings?.required_consent_policy_version ??
     null;
   const effectivePolicyVersion = requiredPolicyVersion ?? settingsPolicyVersion;
+  const consentDocumentId =
+    settingsQuery.data?.settings?.consent_document_id ??
+    settingsQuery.data?.data?.settings?.consent_document_id ??
+    null;
+
+  const consentDocumentsQuery = useQuery({
+    queryKey: ["schoolConsentDocuments", companyId],
+    queryFn: () => fetchSchoolConsentDocuments(companyId),
+    enabled: !!companyId,
+  });
+  const assignedConsentDocument = (consentDocumentsQuery.data ?? []).find(
+    (doc) => doc._id === consentDocumentId
+  );
+  const isAssignedDocumentExpired = isDocumentExpired(
+    assignedConsentDocument?.expiration_date
+  );
   const consentResponse = consentQuery.data?.data ?? consentQuery.data;
   const consentRecord = resolveConsentRecord(consentResponse);
   const consentStatus = normalizeConsentStatus(
@@ -108,7 +128,11 @@ export const StudentConsentPanel = ({
   const guardianEmail = memberData?.parent_guardian_email;
   const guardianPhone = memberData?.parent_guardian_phone_number;
   const canSendRequest =
-    Boolean(guardianEmail) && consentStatus !== "pending" && !isAgreed;
+    Boolean(guardianEmail) &&
+    consentStatus !== "pending" &&
+    !isAgreed &&
+    Boolean(consentDocumentId) &&
+    !isAssignedDocumentExpired;
   const isResend = ["expired", "refused", "stale"].includes(consentStatus);
   const sendButtonLabel = isResend ? "Resend" : "Send Consent Request";
 
@@ -160,6 +184,7 @@ export const StudentConsentPanel = ({
         member_id: memberId,
         policy_type: policyType,
         policy_version: effectivePolicyVersion || "1",
+        document_id: consentDocumentId,
       });
       return;
     }
@@ -169,6 +194,7 @@ export const StudentConsentPanel = ({
       guardian_id: null,
       policy_type: policyType,
       policy_version: effectivePolicyVersion || "1",
+      document_id: consentDocumentId,
     });
   };
 
@@ -244,6 +270,19 @@ export const StudentConsentPanel = ({
               disabled={!canSendRequest}
             />
           </div>
+          {!consentDocumentId ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="Assign a School Consent document in Compliance Settings before sending requests."
+            />
+          ) : isAssignedDocumentExpired ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="The assigned School Consent document has expired — update it in Compliance Settings before sending requests."
+            />
+          ) : null}
         </>
       ) : null}
     </div>

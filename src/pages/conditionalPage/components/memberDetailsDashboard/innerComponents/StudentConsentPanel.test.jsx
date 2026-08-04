@@ -7,7 +7,10 @@ import {
   sendConsentRequest,
   resendConsentRequest,
 } from "../../../utils/guardianConsentApi";
-import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import {
+  fetchSchoolSettings,
+  fetchSchoolConsentDocuments,
+} from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
 
 vi.mock("../../../utils/guardianConsentApi", () => ({
   fetchStudentConsent: vi.fn(),
@@ -17,6 +20,7 @@ vi.mock("../../../utils/guardianConsentApi", () => ({
 
 vi.mock("../../../../Profile/school_compliance/utils/schoolComplianceUtils", () => ({
   fetchSchoolSettings: vi.fn(),
+  fetchSchoolConsentDocuments: vi.fn(),
 }));
 
 vi.mock("react-redux", () => ({
@@ -61,8 +65,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   fetchSchoolSettings.mockResolvedValue({
     ok: true,
-    settings: { required_consent_policy_version: "1" },
+    settings: {
+      required_consent_policy_version: "1",
+      consent_document_id: "doc-1",
+    },
   });
+  fetchSchoolConsentDocuments.mockResolvedValue([
+    { _id: "doc-1", title: "AUP 2026", trigger_action: "school_consent" },
+  ]);
 });
 
 describe("StudentConsentPanel", () => {
@@ -181,8 +191,47 @@ describe("StudentConsentPanel", () => {
         guardian_id: null,
         policy_type: "AUP",
         policy_version: "1",
+        document_id: "doc-1",
       });
     });
+  });
+
+  it("disables send button and shows a hint when no consent document is assigned", async () => {
+    fetchSchoolSettings.mockResolvedValue({
+      ok: true,
+      settings: { required_consent_policy_version: "1" },
+    });
+    fetchStudentConsent.mockResolvedValue({ data: null });
+    renderPanel();
+    const button = await screen.findByRole("button", {
+      name: /send consent request/i,
+    });
+    expect(button).toBeDisabled();
+    expect(
+      screen.getByText(
+        /Assign a School Consent document in Compliance Settings/i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("disables send button and shows a hint when the assigned consent document has expired", async () => {
+    fetchSchoolConsentDocuments.mockResolvedValue([
+      {
+        _id: "doc-1",
+        title: "AUP 2026",
+        trigger_action: "school_consent",
+        expiration_date: "2000-01-01T00:00:00.000Z",
+      },
+    ]);
+    fetchStudentConsent.mockResolvedValue({ data: null });
+    renderPanel();
+    const button = await screen.findByRole("button", {
+      name: /send consent request/i,
+    });
+    expect(button).toBeDisabled();
+    expect(
+      screen.getByText(/assigned School Consent document has expired/i)
+    ).toBeInTheDocument();
   });
 
   it.each(["expired", "refused", "stale"])(
@@ -208,6 +257,7 @@ describe("StudentConsentPanel", () => {
           member_id: 42,
           policy_type: "AUP",
           policy_version: isStale ? "2" : "1",
+          document_id: "doc-1",
         });
       });
       expect(sendConsentRequest).not.toHaveBeenCalled();

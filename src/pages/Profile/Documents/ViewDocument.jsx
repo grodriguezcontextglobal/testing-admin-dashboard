@@ -10,6 +10,8 @@ import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import DocumentPreview from "./DocumentPreview"; // Import the new component
+import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
+import { isDocumentExpired } from "./utils/documentExpirationUtils";
 import "./ViewDocument.css";
 
 const ViewDocument = () => {
@@ -165,7 +167,10 @@ const ViewDocument = () => {
         {documentData.expiration_date && (
           <p className="view-document-info">
             Expires:{" "}
-            {new Date(documentData.expiration_date).toLocaleDateString()}
+            {new Date(documentData.expiration_date).toLocaleDateString()}{" "}
+            {isDocumentExpired(documentData.expiration_date) && (
+              <PillUIComponent color="warning">Expired</PillUIComponent>
+            )}
           </p>
         )}
       </div>
