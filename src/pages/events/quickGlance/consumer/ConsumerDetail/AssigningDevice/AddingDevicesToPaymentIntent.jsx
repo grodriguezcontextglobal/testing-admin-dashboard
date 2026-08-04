@@ -5,7 +5,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { groupBy } from "lodash";
 import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -17,6 +17,7 @@ import DeviceAssigned from "../../../../../../classes/deviceAssigned";
 import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 import { checkArray } from "../../../../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
@@ -41,17 +42,15 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     watch,
     setValue,
   } = useForm();
-  const { devicesInPool, refetchPool, assignDevice, getDeviceStatus } =
-    useDeviceStatus(event, user);
+  const {
+    devicesInPool,
+    refetchPool,
+    assignDevice,
+    getDeviceStatus,
+    contextHolder: deviceStatusContextHolder,
+  } = useDeviceStatus(event, user);
 
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, message) => {
-    api.open({
-      message: `${type}`,
-      description: `${message}`,
-      placement: "bottomRight",
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
 
   // Normalize and aggregation helpers
   const normalizeType = (t) =>
@@ -304,8 +303,8 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
 
     const deviceLookup = retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
     if (!deviceLookup) {
-      openNotificationWithIcon(
-        "Warning",
+      notify(
+        "warning",
         `Serial number ${data.serialNumber} is out of valid range for this event, please review and try another serial number.`,
       );
       setValue("serialNumber", "");
@@ -326,8 +325,8 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     // Enforce requested type and quantity limits
     const requestedCount = requestedByType[canonicalKey];
     if (!requestedCount) {
-      openNotificationWithIcon(
-        "Warning",
+      notify(
+        "warning",
         `Type "${canonicalKey}" was not requested for this transaction. Please assign one of the requested types.`,
       );
       setValue("serialNumber", "");
@@ -339,8 +338,8 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     const alreadyAssigned = alreadyAssignedCheck?.[canonicalKey] || 0;
     if (alreadyAssigned >= requestedCount) {
       const remaining = Math.max(requestedCount - alreadyAssigned, 0);
-      openNotificationWithIcon(
-        "Info",
+      notify(
+        "info",
         `Limit reached for "${canonicalKey}". Requested: ${requestedCount}, assigned: ${alreadyAssigned}, remaining: ${remaining}.`,
       );
       setValue("serialNumber", "");
@@ -358,8 +357,8 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     ) {
       // Should be covered by deviceLookup check, but safe to keep
     } else if (deviceStatusResult === "assigned") {
-      openNotificationWithIcon(
-        "Info",
+      notify(
+        "info",
         `device ${data.serialNumber} is already assigned to other customer`,
       );
       setValue("serialNumber", "");
@@ -393,12 +392,16 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
       });
 
       await createEventInTransactionLog();
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`,
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`,
+        ),
+      ]);
 
       dispatch(
         onAddDevicesAssignedInPaymentIntent(
@@ -433,8 +436,8 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
         );
       }
 
-      openNotificationWithIcon(
-        "Success",
+      notify(
+        "success",
         "Devices are being added, they will be displayed shortly.",
       );
       setValue("serialNumber", "");
@@ -450,6 +453,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
   return (
     <>
       {contextHolder}
+      {deviceStatusContextHolder}
       <form
         onSubmit={handleSubmit(handleDevicesAssignedToPaymentIntentInEvent)}
       >

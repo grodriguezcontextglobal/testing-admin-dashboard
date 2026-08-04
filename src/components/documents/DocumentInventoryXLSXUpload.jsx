@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { onTrackBackgroundJob } from "../../store/slices/backgroundJobsSlice";
 import generateIdempotencyKey from "../../utils/actions/generateIdempotencyKey";
 import { formatDate } from "../../pages/inventory/utils/dateFormat";
+import { normalizeOwnership } from "../../pages/inventory/actions/utils/ownershipUtils";
 
 const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     const { user } = useSelector((state) => state.admin);
@@ -58,7 +59,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 if (!category_name || !item_group || !serial_number) {
                     return null;
                 }
-                const ownership = val(["ownership", "Ownership"]);
+                const ownership = normalizeOwnership(val(["ownership", "Ownership"]));
                 const location = val(["location", "Location"]);
                 const brand = val(["brand", "Brand"]);
                 const descriptionFromFile = val(["description", "descript_item", "Description"]);

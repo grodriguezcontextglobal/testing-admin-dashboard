@@ -19,7 +19,10 @@ const ModalAddingDeviceFromSearchbar = () => {
     useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
-  const { unassignDevice, isUnassigning } = useDeviceStatus(event, user);
+  const { unassignDevice, isUnassigning, contextHolder } = useDeviceStatus(
+    event,
+    user,
+  );
 
   const dispatch = useDispatch();
   const findingAssignedInPaymentIntentQuery = useQuery({
@@ -224,6 +227,7 @@ const ModalAddingDeviceFromSearchbar = () => {
         maskClosable={false}
         style={{ zIndex: 30 }}
       >
+        {contextHolder}
         <Grid container>
           {foundTransactionAndDevicesAssigned()?.length ===
           paymentIntentDetailSelected?.device ? null : (

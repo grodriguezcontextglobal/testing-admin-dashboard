@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { FormLabel, Grid, InputAdornment, TextField, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, notification, Progress } from "antd";
+import { Avatar, Progress } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +19,7 @@ import { checkArray } from "../../components/utils/checkArray";
 import { UploadImagePlaceholder } from "../../components/icons/UpdateImagePlaceholder";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Input from "../../components/UX/inputs/Input";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 // import "./style/authStyle.css";
 const Registration = () => {
   const { user } = useSelector((state) => state.admin);
@@ -43,12 +44,9 @@ const Registration = () => {
   const watchPassword = watch("password");
   const watchPassword2 = watch("password2");
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, title, msg) => {
-    api.open({
-      message: title,
-      description: msg,
-    });
+    notify(type, title, msg);
   };
 
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");

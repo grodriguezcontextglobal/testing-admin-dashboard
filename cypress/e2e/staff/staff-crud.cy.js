@@ -198,6 +198,47 @@ describe('Staff – CREATE: verificación de email (email no registrado)', () =>
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+describe('Staff – CREATE: verificación de email (email ya existe)', () => {
+  beforeEach(() => {
+    setupStaffPageInterceptors()
+    cy.loginAsAdmin('/staff')
+    cy.wait('@getCompany', { timeout: 15000 })
+    cy.contains('Add new staff', { timeout: 10000 }).click()
+    cy.wait('@getAllStaff', { timeout: 10000 })
+    cy.contains('New staff', { timeout: 8000 }).should('be.visible')
+  })
+
+  it('agrega el empleado a la compañía del usuario logueado y dispara la invitación', () => {
+    cy.intercept('PATCH', /company\/update-company\/test-company-id/, {
+      statusCode: 200,
+      body: { ok: true },
+    }).as('updateCompany')
+
+    cy.intercept('POST', /nodemailer\/new_invitation/, {
+      statusCode: 202,
+      body: { ok: true, jobId: 'job-123' },
+    }).as('sendInvitation')
+
+    cy.get('input[placeholder="Enter staff email"]').type('alice@test.com')
+    cy.get('[role="combobox"]').first().click({ force: true })
+    cy.get('[role="option"]').first().click({ force: true })
+
+    cy.contains('Verify email').click()
+
+    // Debe pegarle a la compañía del usuario logueado (test-company-id), no a
+    // un id derivado de la respuesta de /company/search-company.
+    cy.wait('@updateCompany').its('request.body.employees').then((employees) => {
+      const added = employees.at(-1)
+      expect(added.user).to.eq('alice@test.com')
+      expect(added.status).to.eq('Pending')
+    })
+    cy.wait('@sendInvitation')
+
+    cy.contains('New staff').should('not.exist')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 describe('Staff – DELETE: modal "Deleting staff members"', () => {
   beforeEach(() => {
     setupStaffPageInterceptors()

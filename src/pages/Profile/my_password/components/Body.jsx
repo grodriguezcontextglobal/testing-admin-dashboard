@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
 import { compareSync } from "bcryptjs";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
@@ -9,6 +8,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import { checkArray } from "../../../../components/utils/checkArray";
 import { isAssistant } from "../../../../config/roles";
 import { onLogout } from "../../../../store/slices/adminSlice";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import "./Body.css";
 import BodyForm from "./BodyForm";
 const Body = () => {
@@ -22,11 +22,9 @@ const Body = () => {
     queryFn: () =>
       devitrakApi.post("/staff/admin-users", { email: user.email }),
   });
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type, msg);
   };
   if (adminUsersStaffQuery.data) {
     const foundAdminInfo = () => {

@@ -342,12 +342,16 @@ const useAddingItemsToEventInventoryOneByOne = ({
       await checkAndUpdateGlobalEventStatus(eventInfo, dispatch, data, contextValue);
 
       // Clear caches and notify
-      await clearCacheMemory(
-        `eventSelected=${eventInfo.eventInfoDetail.eventName}&company=${user.companyData.id}`
-      );
-      await clearCacheMemory(
-        `eventSelected=${eventInfo.id}&company=${user.companyData.id}`
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${eventInfo.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${eventInfo.id}&company=${user.companyData.id}`
+        ),
+      ]);
       queryClient.invalidateQueries(["listOfreceiverInPool"]);
       openNotification("Items added to event inventory.");
       closeModal();

@@ -1,6 +1,6 @@
 import { DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useMutation } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +15,7 @@ import {
 } from "../../../config/roles";
 import { useRoleLabel } from "../../../hooks/useRoleLabel";
 import { onLogin } from "../../../store/slices/adminSlice";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import ReassignConfirmModal from "./components/ReassignConfirmModal";
 import RoleColumn from "./components/RoleColumn";
 import { useRoleReassignment } from "./hooks/useRoleReassignment";
@@ -37,7 +38,12 @@ const RolesManagementMainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const roleLabel = useRoleLabel();
-  const { reassign, isReassigning } = useRoleReassignment();
+  const { notify, contextHolder } = useStatusNotification();
+  const {
+    reassign,
+    isReassigning,
+    contextHolder: reassignmentContextHolder,
+  } = useRoleReassignment();
   const [pending, setPending] = useState(null);
 
   // Drag only starts after a small movement so a click on a row doesn't fire.
@@ -74,11 +80,11 @@ const RolesManagementMainPage = () => {
           companyData: { ...user.companyData, roleLabels },
         })
       );
-      notification.success({
-        message: "Role labels updated",
-        description:
-          "The new names are in effect for everyone in your company.",
-      });
+      notify(
+        "success",
+        "Role labels updated",
+        "The new names are in effect for everyone in your company.",
+      );
     },
     onError: () => {
       message.error("Failed to update role labels. Please try again.");
@@ -139,6 +145,8 @@ const RolesManagementMainPage = () => {
 
   return (
     <div style={{ width: "100%", padding: 0 }}>
+      {contextHolder}
+      {reassignmentContextHolder}
       <SectionHeader
         title="Roles"
         subtitle="Rename roles for your company and manage which staff members hold each role. Permissions are fixed per role — renaming never changes what a role can do."

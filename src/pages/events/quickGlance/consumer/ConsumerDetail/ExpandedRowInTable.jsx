@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Space, message, notification } from "antd";
+import { Space, message } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +19,7 @@ import {
 } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import Choice from "../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "./AssigningDevice/AddingDevicesToPaymentIntent";
 import DisplayDeviceRequestedLegendPerTransaction from "./AssigningDevice/components/DisplayDeviceRequestedLegendPerTransaction";
@@ -104,13 +105,7 @@ const ExpandedRowInTable = ({
     refetching();
     return deviceAssignedListQuery.refetch();
   };
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (message) => {
-    api.open({
-      message: message,
-      placement: "bottomRight",
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
 
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
@@ -212,18 +207,22 @@ const ExpandedRowInTable = ({
             `/receiver/receivers-pool-update/${deviceInPoolProfile.id}`,
             deviceInPoolProfile
           );
-          openNotificationWithIcon("Device returned.");
+          notify("success", "Device returned.");
           setStatusRecordState(null);
 
           await checkItemsStatusInTransactionForEmailNotification();
         }
       }
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        ),
+      ]);
     } catch (error) {
       setStatusRecordState(null);
       return null;
@@ -282,16 +281,20 @@ const ExpandedRowInTable = ({
             `/receiver/receivers-pool-update/${devicePoolData.id}`,
             deviceInPoolProfile
           );
-          openNotificationWithIcon("Device assigned.");
+          notify("success", "Device assigned.");
           setStatusRecordState(null);
         }
       }
-      await clearCacheMemory(
-        `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-      );
-      await clearCacheMemory(
-        `eventSelected=${event.id}&company=${user.companyData.id}`
-      );
+      // Both cache keys are independent (different literal keys, neither depends on
+      // the other's result), so clear them concurrently instead of sequentially.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        ),
+      ]);
       await devitrakApi.post("/nodemailer/assignig-device-notification", {
         consumer: {
           email: customer.email,
@@ -510,12 +513,16 @@ const ExpandedRowInTable = ({
         await returnDevicesInTransaction(groupingByStatus[true]);
         await returnDeviceInPool(groupingByStatus[true]);
         await returnConfirmationEmailNotification(groupingByStatus[true]);
-        await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        );
+        // Both cache keys are independent (different literal keys, neither depends on
+        // the other's result), so clear them concurrently instead of sequentially.
+        await Promise.all([
+          clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          ),
+        ]);
         message.success("All items returned successfully");
         handleRecord(rowRecord);
         return setOpenCancelingDepositModal(true);

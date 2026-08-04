@@ -1,4 +1,3 @@
-import { notification } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom"; // Assuming you're using react-router
@@ -15,18 +14,16 @@ import { onResetHelpers } from "../store/slices/helperSlice";
 import { onResetStripesInfo } from "../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../store/slices/subscriptionSlice";
 import { persistor } from "../store/Store";
+import { useStatusNotification } from "../components/notification/alerts/useStatusNotification";
 
 const InactivityLogout = ({ children }) => {
   const [isActive, setIsActive] = useState(true);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = () => {
-    api.open({
-      message: "You have been logged out due to inactivity.",
-      duration: 0,
-    });
+    notify("info", "You have been logged out due to inactivity.", 0);
   };
   useEffect(() => {
     let logoutTimer;

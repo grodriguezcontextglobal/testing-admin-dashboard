@@ -25,7 +25,7 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
   const cityRef = useRef(null);
   const stateRef = useRef(null);
   const zipRef = useRef(null);
-  const minorRef = useRef(null);
+  const dobRef = useRef(null);
   const guardianFirstNameRef = useRef(null);
   const guardianLastNameRef = useRef(null);
   const guardianEmailRef = useRef(null);
@@ -97,11 +97,11 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       width: 100,
     },
     {
-      title: "Minor",
-      onHeaderCell: () => ({ ref: minorRef }),
-      dataIndex: "minor",
-      key: "minor",
-      width: 100,
+      title: "Date of Birth",
+      onHeaderCell: () => ({ ref: dobRef }),
+      dataIndex: "date_of_birth",
+      key: "date_of_birth",
+      width: 120,
     },
     {
       title: "Guardian First Name",
@@ -180,9 +180,9 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       target: () => zipRef.current,
     },
     {
-      title: "Minor (optional)",
-      description: "Set to 'true' if the member is a minor.",
-      target: () => minorRef.current,
+      title: "Date of Birth (mandatory for Education)",
+      description: "Enter the member's date of birth (YYYY-MM-DD). Minor status is calculated automatically.",
+      target: () => dobRef.current,
     },
     {
       title: "Guardian First Name (mandatory if minor)",
@@ -217,7 +217,7 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
       city: "New York",
       state: "NY",
       zip: "10001",
-      minor: "true",
+      date_of_birth: "2010-06-15",
       parent_guardian_first_name: "Jane",
       parent_guardian_last_name: "Doe",
       parent_guardian_email: "jane.doe@example.com",

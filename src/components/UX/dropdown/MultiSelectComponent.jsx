@@ -188,6 +188,7 @@ const MultiSelectComponent = ({
               )}
               <span>{item.label}</span>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemoveItem(item);
@@ -210,7 +211,7 @@ const MultiSelectComponent = ({
         />
         <div className="multiselect-actions">
           {selectedKeys.size > 0 && (
-            <button className="reset-button" onClick={handleReset}>
+            <button type="button" className="reset-button" onClick={handleReset}>
               <Icon icon="heroicons:x-mark" />
             </button>
           )}
@@ -232,8 +233,8 @@ const MultiSelectComponent = ({
       {isOpen && !disabled && (
         <div className="multiselect-dropdown">
           <div className="dropdown-actions">
-            <button onClick={handleSelectAll}>Select all</button>
-            <button onClick={handleReset}>Reset</button>
+            <button type="button" onClick={handleSelectAll}>Select all</button>
+            <button type="button" onClick={handleReset}>Reset</button>
           </div>
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => renderDropdownItem(item))

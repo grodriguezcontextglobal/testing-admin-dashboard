@@ -1,6 +1,6 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Result, notification } from "antd";
+import { Result } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { BlueButton } from "../../styles/global/BlueButton";
 import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 
 const ServicePaymentConfirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -32,13 +33,9 @@ const ServicePaymentConfirmation = () => {
   const clientSecret = new URLSearchParams(window.location.search).get(
     "payment_intent_client_secret"
   );
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = (type, mess, descript) => {
-    api.open({
-      message: mess,
-      description: descript,
-      duration: 0,
-    });
+    notify(type.toLowerCase(), mess, { description: descript, duration: 0 });
   };
   function handleBackAction() {
     return navigate(

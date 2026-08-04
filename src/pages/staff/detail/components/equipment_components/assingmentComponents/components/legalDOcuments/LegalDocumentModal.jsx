@@ -41,12 +41,15 @@ const LegalDocumentModal = ({
     // staleTime: 3 * 60 * 1000,
   });
 
-  // Fetch available documents (fallback)
+  // Fetch available documents (fallback). This query always runs regardless of
+  // the folders result, and `documentsToUse` already waits for both queries, so
+  // there is no data dependency — fetch it in parallel with the folders query
+  // instead of gating it on `!loadingFolders` (which only serialized the two).
   const { data: availableDocuments, isLoading: loadingAvailable } = useQuery({
     queryKey: ["available-documents", user.companyData.id],
     queryFn: () =>
       devitrakApi.get(`/document/?company_id=${user.companyData.id}`),
-    enabled: !loadingFolders, // Only fetch if folders query is complete
+    enabled: !!user.companyData.id,
   });
 
   // Determine which documents to use based on folder availability

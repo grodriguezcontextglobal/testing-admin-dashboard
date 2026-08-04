@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { notification, Pagination } from "antd";
+import { Pagination } from "antd";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +9,12 @@ import { onAddStaffProfile } from "../../../store/slices/staffDetailSlide";
 import CardSearchStaffFound from "../utils/CardSearchStaffFound";
 import NoDataFound from "../utils/NoDataFound";
 import { checkArray } from "../../../components/utils/checkArray";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 const SearchStaffRef = ({ data }) => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -25,9 +26,7 @@ const SearchStaffRef = ({ data }) => {
     currentPage * PAGE_SIZE
   );
   const openNotification = (title) => {
-    api.open({
-      message: title,
-    });
+    notify("warning", title);
   };
 
   const handleDetailStaff = async (record) => {

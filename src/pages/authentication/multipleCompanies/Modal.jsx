@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import { useQueryClient } from "@tanstack/react-query";
-import { Select, message, notification } from "antd";
+import { Select, message } from "antd";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +42,7 @@ import { onResetStripesInfo } from "../../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice";
 import { persistor } from "../../../store/Store";
 import { checkArray } from "../../../components/utils/checkArray";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
@@ -55,12 +56,9 @@ const ModalMultipleCompanies = ({
   const [selection, setSelection] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-      duration: 0,
-    });
+    notify(type.toLowerCase(), msg, 0);
   };
   const queryClient = useQueryClient();
   const findingCompanyInfoBasedOnSelection = (props) => {

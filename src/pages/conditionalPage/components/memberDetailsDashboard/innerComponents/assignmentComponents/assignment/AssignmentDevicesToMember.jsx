@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, notification, Select } from "antd";
+import { Divider, Select } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -26,15 +26,26 @@ import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedI
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
-import { dicIcons } from "../../utils/dicIcons";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
 import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
 import Input from "../../../../../../../components/UX/inputs/Input";
-import ConsentGateBanner from "../../../../../../../pages/school/compliance/ConsentGateBanner";
-import RecordGuardianConsentModal from "../../../../../../../pages/school/compliance/RecordGuardianConsentModal";
-import { useStudentConsent } from "../../../../../../../pages/school/compliance/stagedConsentStore";
-import { DEFAULT_ENFORCEMENT } from "../../../../../../../pages/school/compliance/consentModel";
-import { useStudentDob } from "../../../../../../../pages/school/compliance/stagedProfileStore";
+import {
+  classifyAssignmentError,
+  getAssignmentErrorMessage,
+} from "../../../../../utils/assignmentErrorUtils";
+import {
+  isConsentRequired,
+  hasValidConsent,
+  getConsentStatusMessage,
+} from "../../../../../utils/consentCheckUtils";
+import { fetchStudentConsent } from "../../../../../utils/guardianConsentApi";
+import {
+  normalizeConsentStatus,
+  isConsentBlockingAssignment,
+  getConsentStatusCopy,
+} from "../../../../../utils/guardianConsentUtils";
+import { fetchSchoolSettings } from "../../../../../../../pages/Profile/school_compliance/utils/schoolComplianceUtils";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -55,11 +66,6 @@ const AssignmentDevicesToMember = () => {
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
   const navigate = useNavigate();
-  const [consentModalOpen, setConsentModalOpen] = useState(false);
-  // Staged, client-side FERPA/COPPA consent gate (see pages/school/compliance).
-  // The staged DOB overlays the record so the under-13 gate fires in the demo.
-  const { dob: stagedDob } = useStudentDob(memberInfo);
-  const consent = useStudentConsent({ ...memberInfo, date_of_birth: stagedDob });
   // Initialize expected return date with today's date in the form
   useEffect(() => {
     // Set default expected return date to today
@@ -101,6 +107,39 @@ const AssignmentDevicesToMember = () => {
   });
   const queryClient = useQueryClient();
   dataFound.current = itemsInInventoryQuery?.data?.data;
+
+  // Fetch school compliance settings for Education companies
+  const isEducation = user?.companyData?.industry === "Education";
+  const schoolSettingsQuery = useQuery({
+    queryKey: ["schoolSettings", user.sqlInfo.company_id],
+    queryFn: () => fetchSchoolSettings(user.sqlInfo.company_id),
+    enabled: isEducation,
+    staleTime: 5 * 60 * 1000,
+  });
+  const schoolSettings = schoolSettingsQuery.data?.settings || {};
+  // Fetch real consent status from server
+  const consentQuery = useQuery({
+    queryKey: [
+      "studentConsentStatus",
+      memberInfo?.member_id,
+      user.sqlInfo.company_id,
+    ],
+    queryFn: () => fetchStudentConsent(user.sqlInfo.company_id, memberInfo.member_id),
+    enabled:
+      !!memberInfo?.member_id &&
+      isEducation &&
+      (schoolSettings.enforce_member_consent || schoolSettings.enforce_under_13),
+    staleTime: 1 * 60 * 1000,
+  });
+  const consentData = consentQuery.data;
+  const consentStatus = normalizeConsentStatus(
+    consentData,
+    schoolSettings.required_consent_policy_version
+  );
+  const isConsentBlocking = isConsentBlockingAssignment(
+    consentStatus,
+    schoolSettings
+  );
   const optionsToRenderInSelector = () => {
     const result = [];
     const groupedInventory = dataFound.current?.groupedInventory ?? {};
@@ -177,26 +216,7 @@ const AssignmentDevicesToMember = () => {
       });
     }
   };
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      description: (
-        <div
-          style={{
-            width: "100%",
-            display: "grid",
-            gridTemplateRows: "1fr, 1fr",
-            gap: 1,
-          }}
-        >
-          <span>
-            {dicIcons[type]}&nbsp;{msg}
-          </span>
-          <span>{dscpt}</span>
-        </div>
-      ),
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const updateDeviceInWarehouse = async (props) => {
     await devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
@@ -265,7 +285,7 @@ const AssignmentDevicesToMember = () => {
         refetchType: "active",
         refetchActive: true,
       });
-      openNotificationWithIcon(
+      notify(
         "success",
         "Equipment assigned to member.",
         ""
@@ -360,6 +380,40 @@ const AssignmentDevicesToMember = () => {
                 ],
               }
             );
+
+            // Pre-assignment consent gate: block before any warehouse mutation
+            const memberMinor = Number(memberInfo.minor) === 1;
+            const memberUnder13Check = Boolean(memberInfo.under_13);
+            const enforceConsentCheck = Boolean(schoolSettings.enforce_member_consent);
+            const enforceUnder13Check = Boolean(schoolSettings.enforce_under_13);
+            const consentAlreadyExistsCheck = hasValidConsent(memberInfo.consent);
+
+            // Use real consent status when available
+            const preCheckConsentBlocking = consentQuery.isSuccess
+              ? isConsentBlockingAssignment(consentStatus, schoolSettings)
+              : isConsentRequired({
+                  isMinor: memberMinor,
+                  isUnder13: memberUnder13Check,
+                  enforceMemberConsent: enforceConsentCheck,
+                  enforceUnder13: enforceUnder13Check,
+                  consentExists: consentAlreadyExistsCheck,
+                });
+
+            if (preCheckConsentBlocking) {
+              const consentMsg = consentQuery.isSuccess
+                ? getConsentStatusCopy(consentStatus)
+                : getConsentStatusMessage({
+                    isMinor: memberMinor,
+                    isUnder13: memberUnder13Check,
+                    consentRequired: true,
+                    consentExists: false,
+                  });
+              notify("warning", consentMsg, "");
+              setLoadingStatus(false);
+              navigate(`/member/${memberInfo.member_id}/update-member-information`);
+              return;
+            }
+
             await option1({
               groupingType: valueItemSelected.item_group,
               template: template,
@@ -370,7 +424,31 @@ const AssignmentDevicesToMember = () => {
         }
       }
     } catch (error) {
-      openNotificationWithIcon("error", `${error.message}`, "");
+      const classification = classifyAssignmentError(error);
+      const errorMessage = getAssignmentErrorMessage(classification);
+
+      if (classification.type === "CONSENT_REQUIRED") {
+        notify("warning", errorMessage, "");
+        setLoadingStatus(false);
+        navigate(`/member/${memberInfo.member_id}/update-member-information`);
+        return;
+      }
+
+      if (classification.type === "UNDER_13_CONSENT_REQUIRED") {
+        notify("warning", errorMessage, "");
+        setLoadingStatus(false);
+        navigate(`/member/${memberInfo.member_id}/update-member-information`);
+        return;
+      }
+
+      if (classification.type === "GUARDIAN_REQUIRED") {
+        notify("warning", errorMessage, "");
+        setLoadingStatus(false);
+        navigate(`/member/${memberInfo.member_id}/update-member-information`);
+        return;
+      }
+
+      notify("error", errorMessage, "");
       setLoadingStatus(false);
     } finally {
       setLoadingStatus(false);
@@ -449,6 +527,26 @@ const AssignmentDevicesToMember = () => {
       memberInfo.parent_guardian_email?.trim?.()
   );
   const guardianIncomplete = isMinor && !guardianComplete;
+
+  // Consent gate: use real consent status from API when available,
+  // fall back to isConsentRequired for companies without consent endpoint
+  const memberUnder13 = Boolean(memberInfo.under_13);
+  const enforceConsent = Boolean(schoolSettings.enforce_member_consent);
+  const enforceUnder13Flag = Boolean(schoolSettings.enforce_under_13);
+  const consentAlreadyExists = hasValidConsent(memberInfo.consent);
+  const consentNeededLegacy = isConsentRequired({
+    isMinor,
+    isUnder13: memberUnder13,
+    enforceMemberConsent: enforceConsent,
+    enforceUnder13: enforceUnder13Flag,
+    consentExists: consentAlreadyExists,
+  });
+
+  // Use real API status when query succeeded, otherwise fall back to legacy check
+  const consentNeeded = consentQuery.isSuccess
+    ? isConsentBlocking
+    : consentNeededLegacy;
+
   const responsibleBanner = () => {
     const base = {
       width: "100%",
@@ -484,6 +582,69 @@ const AssignmentDevicesToMember = () => {
         </div>
       );
     }
+
+    // Consent required banner (Education companies with consent enforcement)
+    if (consentNeeded) {
+      const statusCopy = consentQuery.isSuccess
+        ? getConsentStatusCopy(consentStatus)
+        : getConsentStatusMessage({
+            isMinor,
+            isUnder13: memberUnder13,
+            consentRequired: true,
+            consentExists: false,
+          });
+
+      const bannerColor =
+        consentStatus === "agreed"
+          ? {
+              bg: "var(--success-25, #f0fdf4)",
+              border: "var(--success-300, #86efac)",
+              text: "var(--success-700, #15803d)",
+            }
+          : consentStatus === "refused"
+            ? {
+                bg: "var(--error-25, #fdf7f5)",
+                border: "var(--error-300, #e28f75)",
+                text: "var(--error-700, #9a3922)",
+              }
+            : consentStatus === "pending"
+              ? {
+                  bg: "var(--blue-50, #eff8ff)",
+                  border: "var(--blue-200, #b2ddff)",
+                  text: "var(--blue-800, #1849a9)",
+                }
+              : {
+                  bg: "var(--warning-bg, #FEF3C7)",
+                  border: "var(--warning-border, #F59E0B)",
+                  text: "var(--warning-text, #92400E)",
+                };
+
+      return (
+        <div
+          role="alert"
+          style={{
+            ...base,
+            background: bannerColor.bg,
+            border: `1px solid ${bannerColor.border}`,
+            color: bannerColor.text,
+          }}
+        >
+          <strong>Consent status: {consentStatus}.</strong> {statusCopy}{" "}
+          <NavLink
+            to={`/member/${memberInfo.member_id}/update-member-information`}
+            style={{ color: bannerColor.text, fontWeight: 700 }}
+          >
+            {consentStatus === "pending"
+              ? "View consent panel"
+              : consentStatus === "agreed"
+                ? "View consent details"
+                : "Update consent"}
+          </NavLink>
+          .
+        </div>
+      );
+    }
+
     if (isMinor) {
       return (
         <div
@@ -533,26 +694,8 @@ const AssignmentDevicesToMember = () => {
           key={"settingUp-deviceList-event"}
         >
           {contextHolder}
-          <RecordGuardianConsentModal
-            open={consentModalOpen}
-            onClose={() => setConsentModalOpen(false)}
-            member={memberInfo}
-            requiredPolicyVersion={DEFAULT_ENFORCEMENT.required_consent_policy_version}
-            onRecord={consent.recordConsent}
-          />
           {renderTitle()}
           {responsibleBanner()}
-          <ConsentGateBanner
-            status={consent.status}
-            reason={consent.reason}
-            consentRecord={consent.consentRecord}
-            requiredPolicyVersion={DEFAULT_ENFORCEMENT.required_consent_policy_version}
-            studentFirstName={memberInfo.first_name}
-            onRecordConsent={() => setConsentModalOpen(true)}
-            onManageGuardian={() =>
-              navigate(`/member/${memberInfo.member_id}/update-member-information`)
-            }
-          />
           <form
             style={{ width: "100%" }}
             onSubmit={handleSubmit(assignDeviceToMember)}
@@ -912,7 +1055,7 @@ const AssignmentDevicesToMember = () => {
                   loadingStatus ||
                   !checkingSerialNumberInputted ||
                   guardianIncomplete ||
-                  consent.blocked
+                  consentNeeded
                 }
                 buttonType="submit"
                 loadingState={loadingStatus}

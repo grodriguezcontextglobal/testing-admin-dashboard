@@ -1,11 +1,11 @@
 import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Avatar, Typography, notification } from "antd";
+import { Avatar, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import DangerButtonConfirmationComponent from "../../../../components/UX/buttons/DangerButtonConfirmation";
+import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -13,6 +13,7 @@ import BaseTable from "../../../../components/UX/tables/BaseTable";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { buildMemberRows, filterMemberRows } from "../../utils/memberTableUtils";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 const cellNameStyle = {
   fontSize: "14px",
@@ -35,7 +36,7 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
   const { user } = useSelector((state) => state.admin);
   const [query, setQuery] = useState("");
   const [selectedKeys, setSelectedKeys] = useState([]);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const allMembersOfCompany = useQuery({
     queryKey: ["allMembersInfoDataQuery"],
@@ -74,7 +75,7 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
         exact: true,
       });
       setSelectedKeys([]);
-      api.open({ message: "Member(s) deleted" });
+      notify("success", "Member(s) deleted");
     },
   });
 
@@ -189,8 +190,7 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
       />
 
       <Grid item xs={12} marginTop={"0.5rem"}>
-        <DangerButtonConfirmationComponent
-          confirmationTitle={`Are you sure you want to delete the ${selectedKeys.length} selected member(s)?`}
+        <DangerButtonComponent
           title={`Delete selected member(s)${
             selectedKeys.length ? ` (${selectedKeys.length})` : ""
           }`}

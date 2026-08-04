@@ -1,6 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { nanoid } from "@reduxjs/toolkit";
-import { notification } from "antd";
 import { lazy, Suspense, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +11,7 @@ import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSi
 import "./blurring.css";
 import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
 import Service from "./review/service";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
@@ -28,13 +28,7 @@ const ReviewAndSubmitEvent = () => {
   const [buttonDisable, setButtonDisable] = useState(false);
   const navigate = useNavigate();
   // const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg) => {
-    api.open({
-      description: msg,
-      duration: 0,
-    });
-  };
+  const { notify, contextHolder, api } = useStatusNotification();
 
   const createStaffInEvent = async (newEventId) => {
     const employeeStaff = [...staff.adminUser, ...staff.headsetAttendees];
@@ -80,7 +74,7 @@ const ReviewAndSubmitEvent = () => {
       company_id: user.sqlInfo.company_id,
       });
       if(findItemsId.data.ok && findItemsId.data.items.length === 0){
-        openNotificationWithIcon(`Item ${data.item_group} not found in warehouse`);
+        notify("error", `Item ${data.item_group} not found in warehouse`);
         return;
       }
       //update items in inventory to lock them out for inventory manager
@@ -157,8 +151,9 @@ const ReviewAndSubmitEvent = () => {
 
   const processOfCreatingInformationOfNewEvent = async () => {
     try {
-      openNotificationWithIcon(
-        "Your request is being processed. When it is done, you will be redirected to event page."
+      notify(
+        "info",
+        "Your request is being processed. When it is done, you will be redirected to event page.",
       );
       setLoadingStatus(true);
       setButtonDisable(true);
@@ -167,10 +162,10 @@ const ReviewAndSubmitEvent = () => {
       await createEventNoSQLDatabase();
       setLoadingStatus(false);
       setButtonDisable(false);
-      openNotificationWithIcon("Event information created.");
+      notify("success", "Event information created.");
       return navigate("/events");
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      notify("error", `${error.message}`);
       setLoadingStatus(false);
       setButtonDisable(false);
       setTimeout(() => api.destroy(), 4000);

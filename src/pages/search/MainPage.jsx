@@ -11,6 +11,7 @@ import SearchDeviceRef from "./components/SearchDeviceRef";
 import SearchEventsRef from "./components/SearchEventsRef";
 import SearchStaffRef from "./components/SearchStaffRef";
 import SearchTransaction from "./components/SearchTransaction";
+import { resolveSearchCategoryParam } from "./utils/searchCategoryUtils";
 
 const SearchMainPage = () => {
   const [filterOptions, setFilterOptions] = useState({
@@ -23,11 +24,17 @@ const SearchMainPage = () => {
   const [searchParams, setSearchParams] = useState("");
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
+  // Only scope the backend query when exactly one filter tab is active —
+  // "View All" and multi-select both mean "don't segment" (see
+  // resolveSearchCategoryParam).
+  const categoryParam = resolveSearchCategoryParam(filterOptions);
   const generalSearch = useQuery({
-    queryKey: ["generalSearch", searchParams],
+    queryKey: ["generalSearch", searchParams, categoryParam],
     queryFn: () =>
       devitrakApi.get(
-        `/search/searching_?variable=${searchParams}&company=${user.companyData.id}`
+        `/search/searching_?variable=${searchParams}&company=${user.companyData.id}${
+          categoryParam ? `&category=${categoryParam}` : ""
+        }`
       ),
     enabled: !!searchParams && !!user?.companyData?.id,
     refetchOnWindowFocus: false,

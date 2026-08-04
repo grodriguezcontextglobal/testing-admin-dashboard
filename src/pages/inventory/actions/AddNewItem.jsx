@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -26,6 +26,7 @@ import { retrieveExistingSubLocationsForCompanyInventory } from "./utils/SubLoca
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const AddNewItem = () => {
@@ -65,14 +66,12 @@ const AddNewItem = () => {
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api]
+    [notify]
   );
   const companiesQuery = useQuery({
     queryKey: ["locationOptionsPerCompany"],

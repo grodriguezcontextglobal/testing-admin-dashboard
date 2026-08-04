@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, notification } from "antd";
+import { Modal, notification, Button } from "antd";
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import PropTypes from "prop-types";
@@ -11,6 +11,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { useQuery } from "@tanstack/react-query";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
   const { user } = useSelector((state) => state.admin);
@@ -71,11 +72,9 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
   };
   addressSplitting();
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const handleUpdateEvent = async (data) => {
     setLoading(true);

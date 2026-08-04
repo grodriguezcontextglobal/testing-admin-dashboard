@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { Modal } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -17,6 +17,7 @@ import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import PropTypes from "prop-types";
 import { Subtitle } from "../../../../../../../styles/global/Subtitle";
 import BlueButton from "../../../../../../../components/UX/buttons/BlueButton";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -29,13 +30,7 @@ const Capturing = ({
   refetchingTransactionFn,
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, title) => {
-    api.open({
-      message: title,
-      duration: 0,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const { paymentIntentDetailSelected, customer } = useSelector(
     (state) => state.stripe
   );
@@ -158,7 +153,7 @@ const Capturing = ({
             exact: true,
           });
           refetchingTransactionFn();
-          openNotificationWithIcon("Success", "Deposit was captured.");
+          notify("success", "Deposit was captured.", 0);
           setTimeout(() => {
             return closeModal();
           }, 2500);

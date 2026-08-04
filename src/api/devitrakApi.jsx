@@ -1,5 +1,5 @@
 import axios from "axios";
-import { notification } from "antd";
+import { notifyStatus } from "../components/notification/alerts/useStatusNotification";
 import { ConfigEnvExport } from "../config/ConfigEnvExport";
 import { getActiveServerSynchronously, switchServer, initializeActiveServer } from "./serverManager";
 import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
@@ -152,10 +152,11 @@ const setupResponseInterceptor = (instance) => {
                 error.isQueuedOffline = true;
                 if (!hasShownOfflineQueueNotice) {
                     hasShownOfflineQueueNotice = true;
-                    notification.info({
-                        message: "You're offline",
-                        description: "This action will be retried automatically once you're back online.",
-                    });
+                    notifyStatus(
+                        "info",
+                        "You're offline",
+                        "This action will be retried automatically once you're back online.",
+                    );
                 }
                 return Promise.reject(error);
             }

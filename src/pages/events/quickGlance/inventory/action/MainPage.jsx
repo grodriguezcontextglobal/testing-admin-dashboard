@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, Popconfirm, message, notification } from "antd";
+import { Card, Popconfirm, message, notification, Button } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +23,7 @@ import { Replace } from "./Replace";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
@@ -32,12 +33,9 @@ const ActionsMainPage = () => {
   const [modalUpdateStatus, setModalUpdateStatus] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: type,
-      description: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const queryClient = useQueryClient();
   const returnConfirmationEmailNotification = async (props) => {
@@ -105,15 +103,19 @@ const ActionsMainPage = () => {
           }
         );
         openNotificationWithIcon("Success", "Device returned.");
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
-        );
+        // All three cache keys are independent (different literal keys, none
+        // depends on another's result), so clear them concurrently.
+        await Promise.all([
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.id}&company=${user.companyData.id}`
+          ),
+          clearCacheMemory(
+            `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+          ),
+        ]);
         queryClient.invalidateQueries({
           queryKey: ["assignedDeviceListQuery"],
           exact: true,

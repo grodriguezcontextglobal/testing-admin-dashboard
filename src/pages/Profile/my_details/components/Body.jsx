@@ -1,4 +1,4 @@
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,7 +7,7 @@ import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { useRoleLabel } from "../../../../hooks/useRoleLabel";
 import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
 import "./Body.css";
-import { dicIconNotification } from "../../../../utils/dicIconNotification";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import BodyRendering from "./BodyRendering.refactored";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -26,17 +26,7 @@ const Body = () => {
     },
   });
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, msg, dur) => {
-    api.open({
-      message: (
-        <div>
-          <span style={{ width: "35px", aspectRatio: 1 }}>{dicIconNotification[type]}</span>&nbsp;{msg}
-        </div>
-      ),
-      duration: dur,
-    });
-  };
+  const { notify: openNotificationWithIcon, contextHolder, api } = useStatusNotification();
 
   const originalDataRef = useRef({
     name: user.name,
@@ -201,13 +191,18 @@ const Body = () => {
           const newEmployeeData = updatingEmployeesCompany(
             newDataUpdatedEmployeeCompany
           );
-          await devitrakApi.patch(
-            `/company/update-company/${user.companyData.id}`,
-            {
-              employees: newEmployeeData,
-            }
-          );
-          await updatedStaffInEvent(data);
+          // These two updates target different collections (company employees
+          // list vs. per-event staff records) and neither consumes the
+          // other's result, so run them in parallel instead of sequentially.
+          await Promise.all([
+            devitrakApi.patch(
+              `/company/update-company/${user.companyData.id}`,
+              {
+                employees: newEmployeeData,
+              }
+            ),
+            updatedStaffInEvent(data),
+          ]);
           openNotificationWithIcon("success", "Information updated.", 3);
           openNotificationWithIcon("warning", "Please log in again.", 3);
           dispatch(onLogout());
@@ -230,13 +225,18 @@ const Body = () => {
           const newEmployeeData = updatingEmployeesCompany(
             newDataUpdatedEmployeeCompany
           );
-          await devitrakApi.patch(
-            `/company/update-company/${user.companyData.id}`,
-            {
-              employees: newEmployeeData,
-            }
-          );
-          await updatedStaffInEvent(data);
+          // These two updates target different collections (company employees
+          // list vs. per-event staff records) and neither consumes the
+          // other's result, so run them in parallel instead of sequentially.
+          await Promise.all([
+            devitrakApi.patch(
+              `/company/update-company/${user.companyData.id}`,
+              {
+                employees: newEmployeeData,
+              }
+            ),
+            updatedStaffInEvent(data),
+          ]);
           openNotificationWithIcon("success", "Information updated.", 3);
           openNotificationWithIcon("warning", "Please log in again.", 3);
           dispatch(onLogout());

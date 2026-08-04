@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -11,6 +10,7 @@ import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 const fieldLabelStyle = {
   display: "block",
@@ -27,11 +27,11 @@ const AddNoteModal = ({ openAddNoteModal, setOpenAddNoteModal }) => {
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const queryClient = useQueryClient();
 
   const openNotificationWithIcon = (type, msg) => {
-    api.open({ message: type, description: msg });
+    notify(type.toLowerCase(), msg);
   };
 
   const [notes, setNotes] = useState(null);

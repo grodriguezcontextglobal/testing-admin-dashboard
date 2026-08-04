@@ -195,15 +195,19 @@ const Cash = () => {
             link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
           });
           messageApi.destroy;
-          await clearCacheMemory(
-            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-          );
-          await clearCacheMemory(
-            `eventSelected=${event.id}&company=${user.companyData.id}`
-          );
-          await clearCacheMemory(
-            `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
-          );
+          // All three cache keys are independent (different literal keys, none
+          // depends on another's result), so clear them concurrently.
+          await Promise.all([
+            clearCacheMemory(
+              `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+            ),
+            clearCacheMemory(
+              `eventSelected=${event.id}&company=${user.companyData.id}`
+            ),
+            clearCacheMemory(
+              `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+            ),
+          ]);
           dispatch(onAddPaymentIntentSelected(""));
           message.success("Cash transaction successfully!");
           navigator(

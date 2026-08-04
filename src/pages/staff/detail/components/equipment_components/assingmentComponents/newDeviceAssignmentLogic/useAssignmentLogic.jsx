@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,7 @@ import {
 } from "../components/newDevice/actions/AddDeviceToEvent";
 import { createNewLease } from "../components/newDevice/actions/CreateNewLease";
 import { singleItemInserting } from "../components/newDevice/actions/SingleItemInserting";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 
@@ -87,14 +88,12 @@ export const useAssignmentLogic = () => {
     formState: { errors },
   } = useForm();
   const queryClient = useQueryClient();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
     (msg) => {
-      api.open({
-        message: msg,
-      });
+      notify("error", msg);
     },
-    [api],
+    [notify],
   );
   const providersList = useQuery({
     queryKey: ["providersCompanyQuery", user?.companyData?.id],
@@ -254,21 +253,27 @@ export const useAssignmentLogic = () => {
           "Image is bigger than allow. Please resize the image or select a new one.",
         );
       }
-      const newInsertedItem = await singleItemInserting({
-        data,
-        user,
-        openNotificationWithIcon,
-        setLoadingStatus,
-        setValue,
-        img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-        moreInfo,
-        formatDate,
-        returningDate,
-        subLocationsSubmitted,
-        invalidateQueries,
-        dicSuppliers,
-      });
-      const verificationID = await verificationContractStaffMember();
+      // singleItemInserting (create the item) and verificationContractStaffMember
+      // (create the signed-document verification) are independent of each
+      // other's result — both are only joined together below in
+      // createNewLease — so run them concurrently instead of sequentially.
+      const [newInsertedItem, verificationID] = await Promise.all([
+        singleItemInserting({
+          data,
+          user,
+          openNotificationWithIcon,
+          setLoadingStatus,
+          setValue,
+          img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
+          moreInfo,
+          formatDate,
+          returningDate,
+          subLocationsSubmitted,
+          invalidateQueries,
+          dicSuppliers,
+        }),
+        verificationContractStaffMember(),
+      ]);
       await createNewLease({
         address: {
           street: data.address_street,

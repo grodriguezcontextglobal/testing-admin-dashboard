@@ -299,27 +299,54 @@ Possible job states (`status`): `pending` → `processing` → `done` | `failed`
 
 ## 9. Actionable checklist for the frontend
 
-- [ ] **Global:** accept `202` as success on all affected calls (ideally: any `2xx` + `ok:true`).
-- [ ] **Emails (`/api/nodemailer/*`):** adjust "sent" copy → "queued"; remove any blocking that
-      waited for actual send confirmation.
-- [ ] **Logs:** stop using `feedEvent` / `feedNotification` from the response.
-- [ ] **`error_log`:** (optional) handle the new `400`.
-- [ ] **`inserting-items-in-event-from-container`:** accept `202`.
-- [ ] **`upload/xlsx`:** remove the special `502` handling.
+- [x] **Global:** accept `202` as success on all affected calls (ideally: any `2xx` + `ok:true`).
+      — DONE (audit 2026-07-20): no strict `=== 201`/`=== 200` success gates anywhere in `src` (all
+      status checks are error-branch 4xx or unrelated domain-status comparisons); axios 2xx default intact.
+- [x] **Emails (`/api/nodemailer/*`):** adjust "sent" copy → "queued"; remove any blocking that
+      waited for actual send confirmation. — DONE (audited 2026-07-20): email components already
+      use "queued"/"will be sent shortly" copy, gate on `resp.data.ok` (202-safe), and don't block.
+      No strict 201 checks anywhere. Only leftover is a dev-only `LOG("...sent")` string, not UI.
+- [x] **Logs:** stop using `feedEvent` / `feedNotification` from the response. — DONE (audit
+      2026-07-20): `feed-event-log` is fire-and-forget (`ReplaceDevice.jsx:126`), `notification-feed-log`
+      has no callers, and `.feedEvent`/`.feedNotification` are read nowhere in `src`.
+- [x] **`error_log`:** (optional) handle the new `400`. — DONE (audit 2026-07-20):
+      `ErrorBoundaryComponent.jsx:97-108` wraps the call in try/catch and checks `data.ok`, so a 400 is
+      swallowed gracefully.
+- [ ] **`inserting-items-in-event-from-container`:** accept `202`. — N/A (audit 2026-07-20): NO
+      frontend callsite for this exact path. Closest is `POST /db_event/allocate-device-container-event`
+      (`ContainerForm.jsx:56`, fire-and-forget → already 202-safe). CONFIRM with backend whether this is
+      a rename or genuinely unintegrated.
+- [x] **`upload/xlsx`:** remove the special `502` handling. — DONE (audit 2026-07-20): no `502`
+      branch exists anywhere; the xlsx import (`DocumentInventoryXLSXUpload.jsx`) already uses the
+      job-queue pattern (`onTrackBackgroundJob` + `jobId`).
 - [ ] **PDF documents (`/api/document/upload`):** send `created_by` = logged-in user's uid; send
       `Idempotency-Key` header (stable UUID across StrictMode, see §4.1); implement polling of
       **`GET /api/jobs/owned/:jobId`** → `result.document` (see §4).
-- [ ] **Alphanumeric bulk inventory upload (`/api/db_item/bulk-item-alphanumeric`):** add `x-token`
+      — ⚠️ NOT DONE / BROKEN (audit 2026-07-20): `DocumentUpload.jsx` has `created_by` ✅ and
+      `Idempotency-Key` ✅, but `handleSubmit` still reads the synchronous `data.ok` — a `202 {jobId}`
+      has no `ok`, so every upload now falls into `message.error("Upload failed")` despite succeeding
+      server-side. A `pollJobStatus` poller is DEFINED (lines 28-53) but NEVER invoked. FIX: on 202,
+      dispatch `onTrackBackgroundJob({jobId, ...})` (shared tracker pattern) → read `result.document`.
+- [~] **Alphanumeric bulk inventory upload (`/api/db_item/bulk-item-alphanumeric`):** add `x-token`
       header (route now requires auth); add `Idempotency-Key` header; switch success handling from
       immediate `201` to `202 { jobId }` + global polling of `GET /api/jobs/owned/:jobId` before
       showing the success toast / navigating (see §5).
-- [ ] **Stripe:** nothing.
+      — PARTIAL (audit 2026-07-20): x-token ✅ (devitrakApi), Idempotency-Key ✅ (live paths), 202→
+      queued + global polling + success/clearCache/failed gated on `done` ✅ (`BackgroundJobsTracker`).
+      DEVIATIONS: `navigate("/inventory")` fires immediately on 202, NOT gated on `done`
+      (`BulkItemActionsOptions.jsx:111`; event flow updates optimistically — intentional); and dead hook
+      `useBulkItemMutations.jsx` (unimported) omits the Idempotency-Key.
+- [x] **Stripe:** nothing. — N/A by contract (no frontend change required).
 - [ ] (Optional) Admin panel using `GET /api/jobs/stats` and `GET /api/jobs/:jobId` (super_user).
-- [ ] **`update-items-based-on-alphanumeric-serial-number`:** add `x-token`; replace
+- [x] **`update-items-based-on-alphanumeric-serial-number`:** add `x-token`; replace
       `response.updated_count` with polling of `GET /api/jobs/owned/:jobId` → `result.updated_count`
-      (see §10.1).
-- [ ] **`event-items/bulk-update`:** add `x-token`; replace `response.total_updated` with polling of
+      (see §10.1). — DONE (audit 2026-07-20): all 3 callsites use devitrakApi (x-token) + `response.jobId`
+      + `onTrackBackgroundJob`; no synchronous `updated_count` read. Nit: the tracker toast doesn't
+      surface the row count (generic success message).
+- [x] **`event-items/bulk-update`:** add `x-token`; replace `response.total_updated` with polling of
       `GET /api/jobs/owned/:jobId` → `result.updated_count` — note the field rename (see §10.2).
+      — DONE (audit 2026-07-20): `ShippingInventoryModal.jsx` uses devitrakApi (x-token) + `response.jobId`
+      + `onTrackBackgroundJob`; no synchronous `total_updated` read. Same count-not-surfaced nit.
 
 ---
 

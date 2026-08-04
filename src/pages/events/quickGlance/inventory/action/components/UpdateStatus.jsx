@@ -1,6 +1,6 @@
 import { Grid, MenuItem, Select, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { Modal } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
@@ -18,6 +18,7 @@ import {
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 const menuOptions = [
   "Operational",
   "Network",
@@ -31,11 +32,9 @@ const UpdateStatus = ({ openUpdateStatusModal, setOpenUpdateStatusModal }) => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const queryClient = useQueryClient();
 

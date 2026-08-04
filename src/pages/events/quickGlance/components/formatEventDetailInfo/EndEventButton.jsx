@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { Modal } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,7 @@ import { formatDate } from "../../../../../components/utils/dateFormat";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const ModalToDisplayFunctionInProgress = lazy(
   () => import("./endEvent/ModalToDisplayFunctionInProgress"),
@@ -215,11 +216,9 @@ const EndEventButton = () => {
     };
   }, [trigger === true]);
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
 
   const removingAccessFromStaffMemberOnly = async () => {

@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { notification, Table } from "antd";
+import { notification, Table, Button } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +13,7 @@ import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 const UpdateListOfNotesPerConsumer = ({
   openDeleteNoteModal,
   setOpenDeleteNoteModal,
@@ -24,12 +25,9 @@ const UpdateListOfNotesPerConsumer = ({
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: type,
-      description: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const queryClient = useQueryClient();
 

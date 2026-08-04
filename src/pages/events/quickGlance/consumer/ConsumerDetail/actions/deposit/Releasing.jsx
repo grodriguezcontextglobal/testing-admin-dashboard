@@ -7,13 +7,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, notification } from "antd";
+import { Modal } from "antd";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
 import BlueButton from "../../../../../../../components/UX/buttons/BlueButton";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -21,13 +22,7 @@ const Releasing = ({
   refetchingTransactionFn,
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (type, title) => {
-    api.open({
-      message: title,
-      duration: 0,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const { paymentIntentDetailSelected, customer } = useSelector(
     (state) => state.stripe
   );
@@ -139,7 +134,7 @@ const Releasing = ({
         exact: true,
       });
       refetchingTransactionFn();
-      openNotificationWithIcon("Success", "Deposit was released.");
+      notify("success", "Deposit was released.", 0);
       await closeModal();
     }
   };

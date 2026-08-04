@@ -1,10 +1,11 @@
 import PropTypes from "prop-types";
 import { Grid, Typography } from "@mui/material";
-import { Modal, notification } from "antd";
+import { Modal } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { onAddCompanyAccountStripe } from "../../../../../../store/slices/adminSlice";
 import { onAddNewPaymentMethodInSubscription } from "../../../../../../store/slices/stripeSlice";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 
 const UpdateCreditCard = ({
   openUpdateCreditCardModal,
@@ -14,13 +15,10 @@ const UpdateCreditCard = ({
     (state) => state.stripe
   );
   const { companyAccountStripe } = useSelector((state) => state.admin);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const dispatch = useDispatch();
   const openNotificationWithIcon = (type, msg, dsct) => {
-    return api.open({
-      message: msg,
-      description: dsct,
-    });
+    return notify(type, msg, dsct);
   };
   const updateSubscriptionData = () => {
     const { subscriptionHistory } = companyAccountStripe;

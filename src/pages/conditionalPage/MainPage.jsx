@@ -1,10 +1,12 @@
 import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
-import { Divider, Dropdown } from "antd";
+import { Divider, Dropdown, message } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
+import { utils, writeFile } from "xlsx";
+import { devitrakApi } from "../../api/devitrakApi";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
@@ -13,6 +15,7 @@ import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20He
 import { Title } from "../../styles/global/Title";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
+import AdvanceGrades from "./components/modals/AdvanceGrades";
 import DeleteMember from "./components/modals/DeleteMember";
 import RegisterMembersToEvent from "./components/modals/RegisterMembersToEvent";
 import MainTable from "./tables/MainTable";
@@ -21,6 +24,7 @@ import MembersStatsRow from "./components/MembersStatsRow";
 import SchoolReadinessDashboard from "../school/dashboard/SchoolReadinessDashboard";
 import { getIndustryProfile } from "../../config/industryProfiles";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
+import { MEMBERS_EXPORT_COLUMNS, buildMembersExportRows } from "./utils/memberExportUtils";
 
 const MainPage = () => {
   const location = useLocation();
@@ -30,6 +34,7 @@ const MainPage = () => {
     getIndustryProfile(adminUser?.companyData?.industry).audience ?? "Members";
   const titleParams = String(slug || industryLabel).replace(/-/g, " ");
   const [addingNewMember, setAddingNewMember] = useState(false);
+  const [advancingGrades, setAdvancingGrades] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
   const [registeringToEvent, setRegisteringToEvent] = useState(false);
   const [activeView, setActiveView] = useState("all"); // "all" | "overdue"
@@ -41,7 +46,34 @@ const MainPage = () => {
   const canAddMembers = hasPermission("member:create", roleType);
   const canDeleteMembers = hasPermission("member:delete", roleType);
   const canNotifyMembers = hasPermission("member:notify", roleType);
-  const canManageMembers = canAddMembers || canDeleteMembers;
+  const canExportMembers = hasPermission("member:read", roleType);
+  const canAdvanceGrades = hasPermission("member:update", roleType);
+  const canManageMembers =
+    canAddMembers || canDeleteMembers || canExportMembers || canAdvanceGrades;
+
+  const handleExportMembers = async () => {
+    try {
+      const response = await devitrakApi.post("/db_member/consulting-member", {
+        company_id: user?.sqlInfo?.company_id,
+      });
+      const rows = buildMembersExportRows(response?.data?.members);
+      const wb = utils.book_new();
+      const aoa = [
+        MEMBERS_EXPORT_COLUMNS.map((c) => c.label),
+        ...rows.map((row) => MEMBERS_EXPORT_COLUMNS.map((c) => row[c.key])),
+      ];
+      const ws = utils.aoa_to_sheet(aoa);
+      ws["!cols"] = MEMBERS_EXPORT_COLUMNS.map(() => ({ width: 22 }));
+      ws["!autofilter"] = {
+        ref: `A1:${String.fromCharCode(64 + MEMBERS_EXPORT_COLUMNS.length)}1`,
+      };
+      utils.book_append_sheet(wb, ws, "Members");
+      writeFile(wb, `${(titleParams || "members").replace(/\s+/g, "_")}_export_${Date.now()}.xlsx`);
+      message.success("Members exported.");
+    } catch {
+      message.error("Failed to export members. Please try again.");
+    }
+  };
 
   // command-palette quick action: open the add-member modal on arrival (once)
   useEffect(() => {
@@ -78,8 +110,12 @@ const MainPage = () => {
   const manageMembersItems = buildManageMembersMenu({
     titleParams,
     onAdd: () => setAddingNewMember(true),
+    onAdvanceGrades: () => setAdvancingGrades(true),
+    onExport: handleExportMembers,
     onDelete: () => setRemovingMember(true),
     canAdd: canAddMembers,
+    canAdvanceGrades,
+    canExport: canExportMembers,
     canDelete: canDeleteMembers,
   });
 
@@ -229,6 +265,12 @@ const MainPage = () => {
         <DeleteMember
           openModal={removingMember}
           setOpenModal={setRemovingMember}
+        />
+      )}
+      {advancingGrades && (
+        <AdvanceGrades
+          openModal={advancingGrades}
+          setOpenModal={setAdvancingGrades}
         />
       )}
       {registeringToEvent && (

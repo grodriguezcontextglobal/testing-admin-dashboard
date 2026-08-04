@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -20,6 +19,7 @@ import DevitrakTermsAndConditions, {
   agreedAgreement,
 } from "./actions/DevitrakTermsAndConditions";
 import CompanyRegistration from "./ux/CompanyRegistration";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
@@ -51,14 +51,9 @@ const RegisterCompany = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { register, handleSubmit } = useForm();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder, api } = useStatusNotification();
   const openNotificationWithIcon = (type, title, msg, time) => {
-    api.open({
-      message: title,
-      description: msg,
-      duration: time,
-      key: `${type}`,
-    });
+    notify(type, title, { description: msg, duration: time, key: `${type}` });
   };
 
   const industryListQuery = useQuery({
@@ -274,7 +269,7 @@ const RegisterCompany = () => {
       openNotificationWithIcon("success", "Account created.", "Your new account was created. Please log in.", 3);
       navigate("/register/connected-account");
     } catch (error) {
-      notification.destroy("info");
+      api.destroy("info");
       openNotificationWithIcon("error", "Action failed", `Please try again later. ${error}`, 3);
       dispatch(onAddErrorMessage(error?.message ?? String(error)));
       setLoadingStatus(false);

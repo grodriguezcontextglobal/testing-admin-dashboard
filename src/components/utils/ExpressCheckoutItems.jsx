@@ -1,4 +1,4 @@
-import { message, notification, Space } from "antd";
+import { message, Space } from "antd";
 import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -11,6 +11,7 @@ import BlueButtonComponent from "../UX/buttons/BlueButton";
 import BlueButtonConfirmationComponent from "../UX/buttons/BlueButtonConfirmation";
 import Input from "../UX/inputs/Input";
 import ModalUX from "../UX/modal/ModalUX";
+import { useStatusNotification } from "../notification/alerts/useStatusNotification";
 
 const ExpressCheckoutItems = ({
   openReturnDeviceBulkModal,
@@ -24,11 +25,9 @@ const ExpressCheckoutItems = ({
   const { register, handleSubmit, setValue } = useForm();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [scannedDevice, setScannedDevice] = useState([]);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {
-    api.open({
-      message: msg,
-    });
+    notify(type.toLowerCase(), msg);
   };
   const closeModal = () => {
     setOpenReturnDeviceInBulkModal(false);

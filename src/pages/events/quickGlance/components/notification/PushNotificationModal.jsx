@@ -1,5 +1,4 @@
 import { Grid } from "@mui/material";
-import { notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -11,6 +10,7 @@ import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import Input from "../../../../../components/UX/inputs/Input";
 import { useMutation } from "@tanstack/react-query";
 import ReusableTextArea from "../../../../../components/UX/inputs/TextArea";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 /**
  * Push-notification broadcast to everyone attending this event who opted in
@@ -54,12 +54,9 @@ const PushNotificationModal = ({
       openNotificationWithIcon("Error", `${error}`);
     },
   });
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (msg, dscpt) => {
-    api.open({
-      message: msg,
-      description: dscpt,
-    });
+    notify(msg.toLowerCase(), msg, dscpt);
   };
   const renderTitle = () => {
     return (

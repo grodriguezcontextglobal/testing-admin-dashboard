@@ -1,4 +1,3 @@
-import { notification } from "antd";
 import { jwtDecode } from "jwt-decode";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +21,8 @@ import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage } from "./api/sessionHeaders";
+import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
+import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 // const InactivityLogout = lazy(() =>
 //   import("./utils/CheckingInactivityAndTakeAction")
 // );
@@ -33,9 +34,6 @@ const BackgroundJobsTracker = lazy(() =>
 const OfflineIndicator = lazy(() =>
   import("./components/offlineStatus/OfflineIndicator")
 );
-const InstallAppNotification = lazy(() =>
-  import("./components/installPrompt/InstallAppNotification")
-);
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -45,11 +43,9 @@ const App = () => {
   const location = useLocation();
   // const currentVersion = "1.0.0"; // Replace this with the current version of your app
   // useVersionCheck(currentVersion);
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg) => {
-    api.open({
-      description: msg,
-    });
+  const { notify, contextHolder } = useStatusNotification();
+  const openNotificationWithIcon = (type, msg) => {
+    notify(type, msg);
   };
 
   const isTokenValid = (token) => {
@@ -78,7 +74,7 @@ const App = () => {
       dispatch(onResetSubscriptionInfo());
       clearSessionStorage();
       dispatch(onLogout());
-      openNotificationWithIcon("Session has expired. Please sign in again.");
+      openNotificationWithIcon("error", "Session has expired. Please sign in again.");
       return window.location.reload(true);
     }
   };
@@ -105,7 +101,8 @@ const App = () => {
         sessionStorage.setItem("network-status", true);
         setTimeout(
           () =>
-            openNotificationWithIcon(
+            notify(
+              "warning",
               "The current internet connection is experiencing slowness. For improved performance, we recommend switching to a stronger network connection."
             ),
           3000
@@ -124,29 +121,30 @@ const App = () => {
   }, [status, adminToken, location.pathname]);
 
   return (
-    <Suspense
-      fallback={
-        <div style={CenteringGrid}>
-          <DevitrakLoading />
-        </div>
-      }
-    >
-      {renderNetworkStatusMessage()}
-      {contextHolder}
-      <InstallAppNotification />
-      {status === "authenticated" && adminToken ? (
-        // <InactivityLogout>
-        //   <AuthRoutes />
-        // </InactivityLogout>
-        <>
-          <BackgroundJobsTracker />
-          <OfflineIndicator />
-          <AuthRoutes />
-        </>
-      ) : (
-        <NoAuthRoutes />
-      )}
-    </Suspense>
+    <InstallPromptProvider>
+      <Suspense
+        fallback={
+          <div style={CenteringGrid}>
+            <DevitrakLoading />
+          </div>
+        }
+      >
+        {renderNetworkStatusMessage()}
+        {contextHolder}
+        {status === "authenticated" && adminToken ? (
+          // <InactivityLogout>
+          //   <AuthRoutes />
+          // </InactivityLogout>
+          <>
+            <BackgroundJobsTracker />
+            <OfflineIndicator />
+            <AuthRoutes />
+          </>
+        ) : (
+          <NoAuthRoutes />
+        )}
+      </Suspense>
+    </InstallPromptProvider>
   );
 };
 

@@ -7,7 +7,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -15,6 +14,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -22,12 +22,9 @@ const Releasing = ({
   rowRecord,
 }) => {
   const [transactionStatus, setTransactionStatus] = useState(false);
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, title) => {
-    api.open({
-      message: title,
-      duration: 0,
-    });
+    notify(type.toLowerCase(), title, 0);
   };
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);

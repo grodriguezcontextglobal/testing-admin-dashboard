@@ -1,5 +1,4 @@
 import { Grid } from "@mui/material";
-import { notification } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -11,6 +10,7 @@ import ModalUX from "../../UX/modal/ModalUX";
 import Input from "../../UX/inputs/Input";
 import { useMutation } from "@tanstack/react-query";
 import ReusableTextArea from "../../UX/inputs/TextArea";
+import { useStatusNotification } from "../alerts/useStatusNotification";
 
 const EmailNotification = ({
   customizedEmailNotificationModal,
@@ -47,12 +47,9 @@ const EmailNotification = ({
       openNotificationWithIcon("Error", `${error}`);
     },
   });
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (msg, dscpt) => {
-    api.open({
-      message: msg,
-      description: dscpt,
-    });
+    notify(msg.toLowerCase(), msg, dscpt);
   };
   const renderTitle = () => {
     return (

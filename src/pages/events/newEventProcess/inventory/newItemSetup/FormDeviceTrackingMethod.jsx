@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
@@ -21,6 +21,7 @@ import "./style.css";
 import { isCoordinatorLevel } from "../../../../../config/roles";
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const FormDeviceTrackingMethod = ({
   selectedItem,
@@ -47,11 +48,9 @@ const FormDeviceTrackingMethod = ({
   } = useSuppliers();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { setValue } = useForm();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (msg) => {
-    api.open({
-      description: msg,
-    });
+    notify("error", msg);
   };
 
   const dispatch = useDispatch();

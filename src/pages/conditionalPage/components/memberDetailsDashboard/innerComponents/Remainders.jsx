@@ -1,5 +1,5 @@
 import { Grid, OutlinedInput } from "@mui/material";
-import { Input, notification } from "antd";
+import { Input } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { useNavigate } from "react-router-dom";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 // import { data } from "../../../mock/mockData";
 
 const Remainders = () => {
@@ -18,12 +19,9 @@ const Remainders = () => {
     defaultValues: { subject: "", message: "" },
   });
   const [message, setMessage] = useState("");
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      message: msg,
-      description: dscpt,
-    });
+    notify(type.toLowerCase(), msg, dscpt);
   };
   const onChange = (e) => {
     return setMessage(e.target.value);

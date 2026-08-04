@@ -2,13 +2,14 @@ import {
   Grid,
   Typography
 } from "@mui/material";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onLogin } from "../../../../store/slices/adminSlice";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import "./Body.css";
 import BodyForm from "./BodyForm";
 const Body = () => {
@@ -32,11 +33,9 @@ const Body = () => {
     user?.data?.dailySummaries ?? ""
   );
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = () => {
-    api.open({
-      message: "Information updated",
-    });
+    notify("success", "Information updated");
   };
 
   const renderLabel = ({ bodyContent }) => {

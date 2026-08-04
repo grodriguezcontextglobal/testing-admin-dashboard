@@ -1,7 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { FormLabel, Stack, Typography } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { notification } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
 import { useCallback, useRef, useState } from "react";
@@ -11,6 +10,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Input from "../../components/UX/inputs/Input";
 import ModalUX from "../../components/UX/modal/ModalUX";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 
 const schema = yup.object().shape({
   email: yup
@@ -37,13 +37,13 @@ const ForgotPassword = ({ open, close }) => {
     queryFn: () => devitrakApi.get("/staff/__staff-search"),
   });
 
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
 
   const openNotification = useCallback(
     (type, msg) => {
-      api[type]?.({ message: msg }) ?? api.open({ message: msg });
+      notify(type, msg);
     },
-    [api],
+    [notify],
   );
 
   const findStaff = useCallback(() => {

@@ -1,6 +1,6 @@
 import { Button, Grid, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Result, message, notification } from "antd";
+import { Result, message } from "antd";
 import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +14,7 @@ import { BlueButtonText } from "../../styles/global/BlueButtonText";
 import { checkArray } from "../../components/utils/checkArray";
 import DeviceAssigned from "../../classes/deviceAssigned";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 
 const Confirmation = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -57,13 +58,9 @@ const Confirmation = () => {
   const clientSecret = new URLSearchParams(window.location.search).get(
     "payment_intent_client_secret"
   );
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotification = (type, mess, descript) => {
-    api.open({
-      message: mess,
-      description: descript,
-      duration: 0,
-    });
+    notify(type.toLowerCase(), mess, { description: descript, duration: 0 });
   };
   function handleBackAction() {
     return navigate(

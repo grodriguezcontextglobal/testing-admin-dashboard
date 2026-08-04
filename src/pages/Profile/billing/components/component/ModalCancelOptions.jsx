@@ -1,11 +1,12 @@
 import { Grid, Typography } from "@mui/material";
-import { Input, Modal, Popconfirm, Tooltip, notification } from "antd";
+import { Input, Modal, Popconfirm, Tooltip, notification, Button } from "antd";
 import { useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Icon } from "@iconify/react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { onAddCompanyAccountStripe } from "../../../../../store/slices/adminSlice";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 const { TextArea } = Input;
 const ModalCancelOptions = ({
   openCancelOptionsModal,
@@ -35,12 +36,9 @@ const ModalCancelOptions = ({
       </Typography>
     );
   };
-  const [api, contextHolder] = notification.useNotification();
+  const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg, dscpt) => {
-    api.open({
-      message: msg,
-      description: dscpt,
-    });
+    notify(type, msg, dscpt);
   };
   const [confirmLoading, setConfirmLoading] = useState(false);
   const priceOptions = [

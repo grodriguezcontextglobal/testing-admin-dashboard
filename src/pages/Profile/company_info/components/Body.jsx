@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { message, notification } from "antd";
+import { message } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,17 +8,15 @@ import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import SectionFooter from "../../../../components/documents/new_form_components/SectionFooter";
 import SectionHeader from "../../../../components/documents/new_form_components/SectionHeader";
 import { onLogout } from "../../../../store/slices/adminSlice";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import "./Body.css";
 import BodyForm from "./BodyForm.refactored";
 const Body = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg, time) => {
-    api.open({
-      message: msg,
-      duration: time,
-    });
+  const { notify, contextHolder, api } = useStatusNotification();
+  const openNotificationWithIcon = (type, msg, time) => {
+    notify(type, msg, time);
   };
   const originalDataRef = {
     companyName: user?.companyData?.company_name,
@@ -69,6 +67,7 @@ const Body = () => {
     ) {
       api.destroy();
       return openNotificationWithIcon(
+        "warning",
         "Please save updates before leave this tab.",
         2
       );
@@ -274,7 +273,7 @@ const Body = () => {
       };
     },
     onSuccess: () => {
-      openNotificationWithIcon("Company information updated successfully", 3);
+      openNotificationWithIcon("success", "Company information updated successfully", 3);
       dispatch(onLogout());
     },
     onError: (error) => {
@@ -294,7 +293,7 @@ const Body = () => {
       );
     },
     onSuccess: () => {
-      openNotificationWithIcon("Company logo removed successfully", 3);
+      openNotificationWithIcon("success", "Company logo removed successfully", 3);
     },
     onError: () => {
       message.error("Failed to remove company logo. Please try again.");

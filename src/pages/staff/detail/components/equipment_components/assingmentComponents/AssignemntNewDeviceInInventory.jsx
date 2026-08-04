@@ -11,7 +11,6 @@ import {
   Button,
   Divider,
   message,
-  notification,
   Tooltip,
 } from "antd";
 import { groupBy } from "lodash";
@@ -38,6 +37,7 @@ import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/Text
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import costValueInputFormat from "../../../../../inventory/utils/costValueInputFormat";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../../../../styles/global/reactInput.css";
 import "./style.css";
@@ -90,12 +90,7 @@ const AssignemntNewDeviceInInventory = () => {
     },
   });
   const navigate = useNavigate();
-  const [api, contextHolder] = notification.useNotification();
-  const openNotificationWithIcon = (msg) => {
-    api.open({
-      message: msg,
-    });
-  };
+  const { notify, contextHolder } = useStatusNotification();
   const companiesQuery = useQuery({
     queryKey: ["locationOptionsPerCompany"],
     queryFn: () =>
@@ -276,7 +271,7 @@ const AssignemntNewDeviceInInventory = () => {
     setValue("tax_location", "");
     setValue("container", "");
     setValue("containerSpotLimit", "0");
-    openNotificationWithIcon("Equipment assigned to staff member.");
+    notify("success", "Equipment assigned to staff member.");
     setLoadingStatus(false);
     queryClient.invalidateQueries({
       queryKey: ["staffMemberInfo"],
@@ -332,13 +327,14 @@ const AssignemntNewDeviceInInventory = () => {
     const dataDevices = itemsInInventoryQuery.data.data.items;
     const groupingByDeviceType = groupBy(dataDevices, "item_group");
     if (data.item_group === "")
-      return openNotificationWithIcon("A group of item must be provided.");
+      return notify("error", "A group of item must be provided.");
     if (data.tax_location === "")
-      return openNotificationWithIcon("A taxable location must be provided.");
+      return notify("error", "A taxable location must be provided.");
     if (data.ownership === "")
-      return openNotificationWithIcon("Ownership status must be provided.");
+      return notify("error", "Ownership status must be provided.");
     if (String(data.ownership).toLowerCase() === "rent" && !returningDate) {
-      return openNotificationWithIcon(
+      return notify(
+        "error",
         "As ownership was set as 'Rent', returning date must be provided.",
       );
     }
@@ -349,7 +345,8 @@ const AssignemntNewDeviceInInventory = () => {
         "serial_number",
       );
       if (dataRef[data.serial_number]?.length > 0) {
-        return openNotificationWithIcon(
+        return notify(
+          "error",
           "Device serial number already exists in company records.",
         );
       }
@@ -436,13 +433,14 @@ const AssignemntNewDeviceInInventory = () => {
       const respNewItem = await devitrakApi.post("/db_item/new_item", template);
       if (respNewItem.data.ok) {
         retrieveDataNewAddedItem(fullTemplate);
-        openNotificationWithIcon(
+        notify(
+          "success",
           "New item was created and stored in database.",
         );
       }
       return setLoadingStatus(false);
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      notify("error", `${error.message}`);
       setLoadingStatus(false);
     }
   };
