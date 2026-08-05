@@ -1,0 +1,514 @@
+/**
+ * ProfileShell — the layout both the member/student profile and the consumer
+ * profile render into. Everything here reads from styles/untitled-ui/tokens.css;
+ * no new palette is introduced.
+ *
+ * Semantic colour (critical / warning / success) is kept strictly separate from
+ * the action blue, so a red row always means "late" and never "selected".
+ */
+
+.profile-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------- Identity */
+
+.profile-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-identity__main {
+  display: flex;
+  flex: 1 1 460px;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.profile-identity__who {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.profile-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full, 9999px);
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-identity__text {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.profile-identity__name {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.014em;
+  color: var(--gray-900, #171d1a);
+  text-align: left;
+}
+
+.profile-chiprow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Facts — labels look like labels, values look like values. */
+.profile-facts {
+  display: grid;
+  gap: 20px 32px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--gray-200, #ddded6);
+}
+
+.profile-factgroup {
+  min-width: 0;
+}
+
+.profile-factgroup dt {
+  margin: 16px 0 8px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.profile-factgroup dd {
+  margin: 0 0 4px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-800, #2d302c);
+  overflow-wrap: anywhere;
+}
+
+.profile-factgroup dd:last-child {
+  margin-bottom: 0;
+}
+
+.profile-factgroup dd.is-muted {
+  color: var(--gray-500, #777b73);
+}
+
+.profile-factgroup dd a {
+  color: var(--gray-800, #2d302c);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gray-300, #c6c7bb);
+}
+
+.profile-factgroup dd a:hover {
+  color: var(--action-600, #155eef);
+  border-bottom-color: var(--action-200, #b2ccff);
+}
+
+/* The action rail is a fixed column, so buttons never slide sideways when a
+   record happens to have fewer fact groups than the one before it. */
+.profile-identity__rail {
+  display: flex;
+  flex: 0 0 232px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-identity__rail > * {
+  width: 100%;
+}
+
+@media (max-width: 860px) {
+  .profile-identity__rail {
+    flex: 1 1 100%;
+  }
+}
+
+/* ------------------------------------------------------------- Status chip */
+
+.profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border: 1px solid var(--gray-300, #c6c7bb);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--gray-50, #f7f7f4);
+  color: var(--gray-700, #454944);
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.profile-status__pip {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full, 9999px);
+  background: currentColor;
+}
+
+.profile-status--critical {
+  background: var(--error-50, #fbeae5);
+  border-color: var(--error-200, #eeb4a3);
+  color: var(--error-700, #9a3922);
+  font-weight: 600;
+}
+
+.profile-status--warning {
+  background: var(--warning-50, #fffaeb);
+  border-color: var(--warning-200, #fedf89);
+  color: var(--warning-700, #b54708);
+  font-weight: 600;
+}
+
+.profile-status--success {
+  background: var(--success-50, #ecfdf3);
+  border-color: var(--success-200, #abefc6);
+  color: var(--success-700, #067647);
+}
+
+.profile-status--action {
+  background: var(--action-50, #eff4ff);
+  border-color: var(--action-200, #b2ccff);
+  color: var(--action-700, #004eeb);
+}
+
+/* -------------------------------------------------------------- Stat tiles */
+
+.profile-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+}
+
+.profile-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px;
+  overflow: hidden;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-tile__value {
+  font-family: Inter, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 36px;
+  letter-spacing: -0.02em;
+  color: var(--gray-900, #171d1a);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-tile__label {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+.profile-tile__sub {
+  margin-top: 5px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--gray-500, #777b73);
+}
+
+/* The severity stripe is spent in exactly one place. */
+.profile-tile--critical {
+  border-color: var(--error-200, #eeb4a3);
+}
+
+.profile-tile--critical::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--error-500, #d15334);
+}
+
+.profile-tile--critical .profile-tile__value,
+.profile-tile--critical .profile-tile__sub {
+  color: var(--error-700, #9a3922);
+}
+
+.profile-tile--critical .profile-tile__sub {
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------------- Tabs */
+
+.profile-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-md, 8px);
+}
+
+.profile-tabs__item {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: var(--gray-500, #777b73);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.profile-tabs__item:hover {
+  color: var(--gray-700, #454944);
+}
+
+.profile-tabs__item.is-active,
+.profile-tabs__item[aria-current="page"] {
+  background: var(--base-white, #fff);
+  color: var(--gray-700, #454944);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-tabs__item:focus-visible {
+  outline: 2px solid var(--action-600, #155eef);
+  outline-offset: 1px;
+}
+
+/* ---------------------------------------------------------------- Section */
+
+.profile-section {
+  overflow: hidden;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 14px;
+}
+
+.profile-section__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--gray-900, #171d1a);
+  text-align: left;
+}
+
+.profile-section__description {
+  margin: 3px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+  text-align: left;
+}
+
+.profile-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-section__body {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* ------------------------------------------------------------ Table extras */
+
+.profile-table td .profile-date__exact {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.profile-date__relative {
+  display: block;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--gray-500, #777b73);
+}
+
+.profile-date__relative--critical {
+  color: var(--error-700, #9a3922);
+  font-weight: 500;
+}
+
+.profile-serial {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--gray-900, #171d1a);
+}
+
+.profile-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* Row actions stay out of the way until the row is hovered or keyboard-focused,
+   so a table of ten loans doesn't read as ten primary buttons. */
+.profile-row-actions__reveal {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.profile-table .ant-table-row:hover .profile-row-actions__reveal,
+.profile-table .ant-table-row:focus-within .profile-row-actions__reveal {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .profile-row-actions__reveal {
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------- Skeleton */
+
+.profile-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.profile-skeleton__bar {
+  height: 10px;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(
+    90deg,
+    var(--gray-100, #eeefe9) 25%,
+    var(--gray-50, #f7f7f4) 37%,
+    var(--gray-100, #eeefe9) 63%
+  );
+  background-size: 400% 100%;
+  animation: profile-skeleton-shimmer 1.6s ease infinite;
+}
+
+@keyframes profile-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-skeleton__bar {
+    animation: none;
+  }
+  .profile-tabs__item,
+  .profile-row-actions__reveal {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------ Error state */
+
+.profile-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.profile-error__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-lg, 10px);
+  background: var(--error-50, #fbeae5);
+  color: var(--error-600, #b8452a);
+}
+
+.profile-error__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}
+
+.profile-error__description {
+  margin: 0;
+  max-width: 42ch;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+}
+
+.profile-error__action {
+  margin-top: 16px;
+}

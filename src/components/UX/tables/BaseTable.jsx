@@ -7,6 +7,8 @@ const BaseTable = ({
   dataSource,
   enablePagination = true,
   pageSize = 10,
+  className,
+  style,
   ...props
 }) => {
   const paginationConfig = enablePagination
@@ -24,8 +26,11 @@ const BaseTable = ({
       dataSource={dataSource}
       pagination={paginationConfig}
       {...props}
-      className="table-ant-customized"
-      style={{width:"100%"}}
+      // Caller classes are merged rather than replaced, so a page can opt into
+      // extra table behaviour (e.g. hover-revealed row actions) without losing
+      // the shared antd overrides.
+      className={["table-ant-customized", className].filter(Boolean).join(" ")}
+      style={{ width: "100%", ...style }}
     />
   );
 };
@@ -35,6 +40,8 @@ BaseTable.propTypes = {
   dataSource: PropTypes.array.isRequired,
   enablePagination: PropTypes.bool,
   pageSize: PropTypes.number,
+  className: PropTypes.string,
+  style: PropTypes.object,
 };
 
 BaseTable.defaultProps = {

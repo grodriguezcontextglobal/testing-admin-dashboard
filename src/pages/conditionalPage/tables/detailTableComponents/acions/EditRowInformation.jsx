@@ -52,7 +52,7 @@ export const updateExpectedReturnDate = async ({
       // Use provided refetch (function) if available, otherwise rely on query invalidation
       if (queryClient) {
         queryClient.invalidateQueries({
-          queryKey: ["devicesAssignedActive"],
+          queryKey: ["memberAssignedDevices"],
           refetchActive: true,
         });
       }

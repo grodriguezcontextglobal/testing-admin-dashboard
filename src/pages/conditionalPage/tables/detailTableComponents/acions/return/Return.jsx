@@ -73,7 +73,7 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({
-        queryKey: ["devicesAssignedActive"],
+        queryKey: ["memberAssignedDevices"],
         exact: true,
         refetchType: "active",
         refetchActive: true,
