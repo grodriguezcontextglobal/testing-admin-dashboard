@@ -503,7 +503,14 @@ const AuthRoutes = () => {
                   />
                 </Route>
               </Route>
-              <Route path="search-result-page" element={<SearchResultPage />} />
+              <Route
+                path="search-result-page"
+                element={
+                  <ErrorBoundary>
+                    <SearchResultPage />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="subscription-company"
                 element={<SubscriptionMainPage />}
