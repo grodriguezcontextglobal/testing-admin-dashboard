@@ -38,9 +38,25 @@ const tabStyle = (active) => ({
   transition: "background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease",
 });
 
-const OPTIONS = ["View All", "Consumers", "Staff", "Devices", "Events"];
+// `key` drives the filter state; `label` is what the tab renders, so a district
+// can show "Students" over the Members bucket. Callers pass an industry-aware
+// list — see SearchMainPage.
+const DEFAULT_OPTIONS = [
+  { key: "View All", label: "View All" },
+  { key: "Consumers", label: "Consumers" },
+  { key: "Staff", label: "Staff" },
+  { key: "Inventory", label: "Inventory" },
+  { key: "Members", label: "Members" },
+  { key: "Devices", label: "Devices" },
+  { key: "Events", label: "Events" },
+];
 
-const HeaderSearch = ({ countingResults, setFilterOptions, initialFilters }) => {
+const HeaderSearch = ({
+  countingResults,
+  setFilterOptions,
+  initialFilters,
+  options = DEFAULT_OPTIONS,
+}) => {
   const [activedParams, setActivedParams] = useState(
     Array.isArray(initialFilters) ? initialFilters.filter(Boolean) : []
   );
@@ -56,20 +72,17 @@ const HeaderSearch = ({ countingResults, setFilterOptions, initialFilters }) => 
   };
 
   useMemo(() => {
-    const ref = {
-      "View All": activedParams.length < 1 ? 1 : 0,
-      Consumers: 0,
-      Staff: 0,
-      Devices: 0,
-      Posts: 0,
-      Events: 0,
-    };
+    const ref = { Posts: 0 };
+    for (let option of options) {
+      ref[option.key] = 0;
+    }
+    ref["View All"] = activedParams.length < 1 ? 1 : 0;
     for (let data of activedParams) {
       ref[data] = 1;
     }
     return setFilterOptions(ref);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activedParams]);
+  }, [activedParams, options]);
 
   return (
     <div
@@ -95,18 +108,18 @@ const HeaderSearch = ({ countingResults, setFilterOptions, initialFilters }) => 
         </Typography>
       </div>
       <div style={railStyle}>
-        {OPTIONS.map((item) => {
+        {options.map((item) => {
           const active =
-            item === "View All"
+            item.key === "View All"
               ? activedParams.length === 0
-              : activedParams.some((element) => element === item);
+              : activedParams.some((element) => element === item.key);
           return (
             <button
-              key={item}
+              key={item.key}
               style={tabStyle(active)}
-              onClick={() => handleActiveParams(item)}
+              onClick={() => handleActiveParams(item.key)}
             >
-              {item}
+              {item.label}
             </button>
           );
         })}
@@ -120,4 +133,10 @@ HeaderSearch.propTypes = {
   countingResults: PropTypes.func,
   setFilterOptions: PropTypes.func,
   initialFilters: PropTypes.array,
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      key: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ),
 };

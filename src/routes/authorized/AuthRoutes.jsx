@@ -500,7 +500,14 @@ const AuthRoutes = () => {
                   />
                 </Route>
               </Route>
-              <Route path="search-result-page" element={<SearchResultPage />} />
+              <Route
+                path="search-result-page"
+                element={
+                  <ErrorBoundary>
+                    <SearchResultPage />
+                  </ErrorBoundary>
+                }
+              />
               {/* subscription-company (PricingTable) route intentionally
                   removed — the pricing UI is a non-functional shell
                   (placeholder copy, dead buttons); no in-app link points to

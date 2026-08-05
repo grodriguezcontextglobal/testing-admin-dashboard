@@ -1,5 +1,13 @@
-import { Grid } from "@mui/material";
 import { message, Pagination } from "antd";
+import SearchSection from "./SearchSection";
+import {
+  cardGrid,
+  SECTION_NOTE,
+  sectionFooter,
+  SUBSECTION_LABEL,
+} from "../utils/sectionLayout";
+import CardAssignmentFound from "../utils/CardAssignmentFound";
+import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 
 const PAGE_SIZE = 10;
 import { useEffect, useState } from "react";
@@ -24,7 +32,17 @@ import CardDeviceFound from "../utils/CardDeviceFound";
 import NoDataFound from "../utils/NoDataFound";
 import ReleaseDeposit from "./ReleaseDeposit";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
-const SearchDeviceRef = ({ searchParams, data }) => {
+const ASSIGNMENT_PAGE_SIZE = 12;
+
+const SearchDeviceRef = ({
+  searchParams,
+  data,
+  assignments = null,
+  title = "Devices",
+  audience = null,
+  checkoutsTotal = null,
+  checkoutsHasMore = false,
+}) => {
   const location = useLocation();
   const [foundDeviceData, setFoundDeviceData] = useState(() =>
     (data.device ?? []).map((item) => ({
@@ -67,6 +85,26 @@ const SearchDeviceRef = ({ searchParams, data }) => {
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
+
+  // Open member/student assignments — the other way a unit ends up in someone's
+  // hands, for companies that don't run the event-checkout flow.
+  const assignmentRows = assignments?.assignments ?? [];
+  const assignmentTotal = Number(assignments?.total ?? assignmentRows.length);
+  const overdueCount = Number(assignments?.overdue ?? 0);
+  const [assignmentPage, setAssignmentPage] = useState(1);
+  useEffect(() => {
+    setAssignmentPage(1);
+  }, [searchParams, assignments]);
+  const pageAssignments = assignmentRows.slice(
+    (assignmentPage - 1) * ASSIGNMENT_PAGE_SIZE,
+    assignmentPage * ASSIGNMENT_PAGE_SIZE
+  );
+
+  // the detail page refetches by the :id in the URL, so a deep link is enough
+  const handleAssignmentDetail = (record) => {
+    dispatch(onAddMemberInfo(record));
+    return navigate(`/member/${record.member_id}/main`);
+  };
 
   const returningDevice = async (record) => {
     try {
@@ -280,66 +318,97 @@ const SearchDeviceRef = ({ searchParams, data }) => {
 
   return (
     <>
-      <Grid
-        container
-        style={{
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-        }}
-        key={`${location.key}`}
-        id={location.key}
+      <SearchSection
+        title={title}
+        subtitle={
+          overdueCount > 0
+            ? `Units currently in someone's hands — ${overdueCount} past its due date.`
+            : "Units currently in someone's hands."
+        }
       >
-        <Grid
-          style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignSelf: "flex-start", gap: "4px" }}
-          item
-          xs={12}
-          sm={12}
-          md={4}
-          lg={4}
-        >
-          <p style={{ fontFamily: "Inter", fontSize: "18px", fontWeight: 600, lineHeight: "28px", color: "var(--gray-900, #101828)", margin: 0 }}>
-            Devices
-          </p>
-          <p style={{ fontFamily: "Inter", fontSize: "14px", fontWeight: 400, lineHeight: "20px", color: "var(--gray-600, #475467)", margin: 0 }}>
-            Active event transactions matching your search.
-          </p>
-        </Grid>
-        <Grid item xs={12} sm={12} md={8} lg={8}>
-          <Grid
-            style={{ display: "flex", justifyContent: "flex-end" }}
-            container
-            gap={1}
-          >
-            {data.device && foundDeviceData.length > 0
-              ? pageDevices.map((item) => (
-                  <Grid key={item.data?.id} item xs={12} sm={12} md={4} lg={4}>
-                    <CardDeviceFound
-                      key={item.data?.id}
-                      props={item}
-                      fn={handleDeviceSearch}
-                      returnFn={returningDevice}
-                      loadingStatus={loadingStatus}
-                      returnLoading={returnLoading}
-                    />
-                  </Grid>
-                ))
-              : ternaryRender(loadingSearchingResult)}
-          </Grid>
-          {foundDeviceData.length > PAGE_SIZE && (
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
-              <Pagination
-                current={currentPage}
-                pageSize={PAGE_SIZE}
-                total={foundDeviceData.length}
-                onChange={setCurrentPage}
-                showSizeChanger={false}
-                showTotal={(total, range) => `${range[0]}–${range[1]} of ${total}`}
-              />
+        {foundDeviceData.length > 0 && (
+          <div style={{ width: "100%" }}>
+            {assignmentTotal > 0 && (
+              <p style={SUBSECTION_LABEL}>Event checkouts</p>
+            )}
+            <div style={cardGrid(280)} id={location.key}>
+              {pageDevices.map((item) => (
+                <CardDeviceFound
+                  key={item.data?.id}
+                  props={item}
+                  fn={handleDeviceSearch}
+                  returnFn={returningDevice}
+                  loadingStatus={loadingStatus}
+                  returnLoading={returnLoading}
+                />
+              ))}
             </div>
-          )}
-        </Grid>
-      </Grid>
+            {foundDeviceData.length > PAGE_SIZE && (
+              <div style={sectionFooter}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={PAGE_SIZE}
+                  total={foundDeviceData.length}
+                  onChange={setCurrentPage}
+                  showSizeChanger={false}
+                  showTotal={(total, range) =>
+                    `${range[0]}–${range[1]} of ${total}`
+                  }
+                />
+              </div>
+            )}
+            {checkoutsHasMore && checkoutsTotal > foundDeviceData.length && (
+              <p style={{ ...SECTION_NOTE, marginTop: "12px" }}>
+                Showing the first {foundDeviceData.length} of {checkoutsTotal}{" "}
+                event checkouts.
+              </p>
+            )}
+          </div>
+        )}
+
+        {pageAssignments.length > 0 && (
+          <div style={{ width: "100%" }}>
+            {foundDeviceData.length > 0 && (
+              <p style={SUBSECTION_LABEL}>
+                {audience ? `Assigned to ${audience}` : "Assigned"}
+              </p>
+            )}
+            <div style={cardGrid(280)}>
+              {pageAssignments.map((row) => (
+                <CardAssignmentFound
+                  key={row.lease_id}
+                  props={row}
+                  fn={handleAssignmentDetail}
+                />
+              ))}
+            </div>
+            {assignmentRows.length > ASSIGNMENT_PAGE_SIZE && (
+              <div style={sectionFooter}>
+                <Pagination
+                  current={assignmentPage}
+                  pageSize={ASSIGNMENT_PAGE_SIZE}
+                  total={assignmentRows.length}
+                  onChange={setAssignmentPage}
+                  showSizeChanger={false}
+                  showTotal={(total, range) =>
+                    `${range[0]}–${range[1]} of ${total}`
+                  }
+                />
+              </div>
+            )}
+            {assignments?.hasMore && (
+              <p style={{ ...SECTION_NOTE, marginTop: "12px" }}>
+                Showing the first {assignmentRows.length} of {assignmentTotal}{" "}
+                assignments, soonest due first.
+              </p>
+            )}
+          </div>
+        )}
+
+        {foundDeviceData.length === 0 &&
+          assignmentRows.length === 0 &&
+          ternaryRender(loadingSearchingResult)}
+      </SearchSection>
 
       {openReleaseDepositModal && (
         <ReleaseDeposit
