@@ -5,14 +5,16 @@
  * consent valid / missing / outdated / no-guardian). Emails use the reserved
  * `.test` TLD so nothing can accidentally reach a real inbox.
  *
- * DOBs are fixed dates chosen to yield the target age as of ~2026; the app
- * derives the exact age from the current date at runtime. The seeder
- * (loadDemoData.js) creates these as members on the company and stages each
- * one's DOB + consent client-side.
+ * DOBs are fixed dates chosen to yield the target age as of ~2026; the server
+ * derives minor / under-13 from the date at runtime. The seeder
+ * (loadDemoData.js) creates these as members with their date_of_birth and links
+ * a guardian for each minor.
  *
- * `consent`: "valid" | "outdated" | "missing" | "none"  (none = adult / n/a)
- * When `minor` is false but a DOB is under 13, the staged DOB still drives the
- * under-13 gate — used for the no-guardian and adult cases.
+ * `consent` records the INTENDED demo state, for reference only — the seeder
+ * does not (and cannot) create it. Guardian consent is an OTC email flow: the
+ * guardian agrees on the public consent page, so these states have to be
+ * produced by driving the real flow before the demo.
+ *   "valid" (agreed) | "outdated" (stale policy) | "missing" | "none" (adult)
  */
 export const DEMO_ROSTER = [
   {

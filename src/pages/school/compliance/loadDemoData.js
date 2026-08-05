@@ -1,21 +1,35 @@
 /**
- * "Load demo data" seeder for the school sales demo.
+ * "Load demo roster" seeder for the school sales demo.
  *
  * Idempotent: creates only the demo students that don't already exist on the
- * company (matched by email), then resolves every student's member_id and
- * stages their DOB + guardian consent client-side. Safe to run more than once —
- * it won't create duplicates.
+ * company (matched by email), each with a real `date_of_birth` so the server's
+ * derived minor / under-13 (COPPA) status is correct, and links a guardian for
+ * every minor so the guardian-consent flow has someone to request consent from.
  *
- * Backend writes are limited to /db_member/new-member on the current company
- * (the caller decides which company). No emails are sent (the .test roster
- * addresses never leave the app). The compliance layer (DOB + consent) is
- * purely client-side staging.
+ * Deliberately does NOT touch consent. Guardian consent is an OTC email flow —
+ * the guardian receives a link and agrees on the public consent page — so an
+ * "agreed" record cannot be fabricated from here, and calling
+ * sendConsentRequest would send real email. Consent states for the demo must be
+ * produced by driving the real flow (see demoRoster.js for the intended matrix).
+ *
+ * Backend writes: /db_member/new-member and /school/guardians/add on the
+ * company passed in by the caller.
  */
 import { devitrakApi } from "../../../api/devitrakApi";
 import { DEMO_ROSTER } from "./demoRoster";
-import { recordStagedConsent, resetStagedConsent } from "./stagedConsentStore";
-import { resetStagedDob, setStagedDob } from "./stagedProfileStore";
-import { DEFAULT_POLICY_VERSION } from "./consentModel";
+import {
+  saveGuardian,
+  searchGuardians,
+} from "../../conditionalPage/utils/guardianConsentApi";
+import {
+  buildExistingGuardianLinkPayload,
+  buildGuardianSearchPayload,
+  buildNewGuardianLinkPayload,
+  extractCreatedMemberId,
+  normalizeGuardianEmail,
+  selectGuardianByEmail,
+} from "../../conditionalPage/utils/guardianConsentUtils";
+import { calculateStudentAgeFlags } from "../../conditionalPage/utils/ageCalculationUtils";
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
@@ -26,38 +40,68 @@ const fetchMembers = async (companyId) => {
   return res?.data?.members ?? [];
 };
 
-const buildNewMemberPayload = (student, companyId) => ({
-  first_name: student.first_name,
-  last_name: student.last_name,
-  email: student.email,
-  phone: student.phone,
-  address_street: "",
-  address_city: student.school ?? "",
-  address_state: "CA",
-  address_zip: "",
-  address: `, ${student.school ?? ""}, CA `,
-  grade: student.grade ?? "",
-  homeroom: student.homeroom ?? "",
-  minor: !!student.minor,
-  parent_guardian_first_name: student.guardian?.first_name ?? "",
-  parent_guardian_last_name: student.guardian?.last_name ?? "",
-  parent_guardian_email: student.guardian?.email ?? "",
-  parent_guardian_phone_number: student.guardian?.phone ?? "",
-  company_id: companyId,
-});
+const buildNewMemberPayload = (student, companyId) => {
+  const flags = calculateStudentAgeFlags(student.date_of_birth);
+  return {
+    first_name: student.first_name,
+    last_name: student.last_name,
+    email: student.email,
+    phone: student.phone,
+    address_street: "",
+    address_city: student.school ?? "",
+    address_state: "CA",
+    address_zip: "",
+    address: `, ${student.school ?? ""}, CA `,
+    grade: student.grade ?? "",
+    homeroom: student.homeroom ?? "",
+    date_of_birth: student.date_of_birth ?? null,
+    // minor is derived from DOB (COPPA); sent for the legacy column's sake
+    minor: flags.dob_valid ? flags.minor : !!student.minor,
+    parent_guardian_first_name: student.guardian?.first_name ?? "",
+    parent_guardian_last_name: student.guardian?.last_name ?? "",
+    parent_guardian_email: student.guardian?.email ?? "",
+    parent_guardian_phone_number: student.guardian?.phone ?? "",
+    company_id: companyId,
+  };
+};
+
+/** Link (or create + link) the roster guardian for a student. */
+const linkGuardian = async ({ companyId, memberId, guardian }) => {
+  const email = normalizeGuardianEmail(guardian.email);
+  const found = await searchGuardians(
+    buildGuardianSearchPayload({ companyId, email })
+  );
+  const existing = selectGuardianByEmail(found?.guardians, email);
+  if (existing) {
+    await saveGuardian(
+      buildExistingGuardianLinkPayload({
+        companyId,
+        memberId,
+        guardianId: existing.id,
+        relationship: "guardian",
+      })
+    );
+    return;
+  }
+  await saveGuardian(
+    buildNewGuardianLinkPayload({
+      companyId,
+      memberId,
+      firstName: guardian.first_name,
+      lastName: guardian.last_name,
+      email,
+      phoneNumber: guardian.phone,
+      relationship: "guardian",
+    })
+  );
+};
 
 /**
- * Seed the demo roster onto `companyId` and stage each student's DOB + consent.
- * Returns a summary { created, ensured, stagedDob, stagedConsent, errors }.
+ * Seed the demo roster onto `companyId`.
+ * Returns { created, ensured, guardiansLinked, errors }.
  */
 export const loadDemoData = async ({ companyId }) => {
-  const summary = {
-    created: 0,
-    ensured: 0,
-    stagedDob: 0,
-    stagedConsent: 0,
-    errors: [],
-  };
+  const summary = { created: 0, ensured: 0, guardiansLinked: 0, errors: [] };
 
   let existing = [];
   try {
@@ -68,71 +112,44 @@ export const loadDemoData = async ({ companyId }) => {
   }
   const existingEmails = new Set(existing.map((m) => normalizeEmail(m.email)));
 
-  // 1. Create any missing students (idempotent by email).
+  // 1. Create missing students, linking each minor's guardian right away
+  //    (the guardian link needs the freshly created member_id).
   for (const student of DEMO_ROSTER) {
     if (existingEmails.has(normalizeEmail(student.email))) {
       summary.ensured += 1;
       continue;
     }
+    let createdMemberId = null;
     try {
-      await devitrakApi.post(
+      const res = await devitrakApi.post(
         "/db_member/new-member",
         buildNewMemberPayload(student, companyId)
       );
+      createdMemberId = extractCreatedMemberId(res?.data ?? res);
       summary.created += 1;
     } catch (e) {
       summary.errors.push(`Create ${student.email}: ${e.message}`);
-    }
-  }
-
-  // 2. Re-fetch (if we created anything) to resolve member_ids.
-  let all = existing;
-  if (summary.created > 0) {
-    try {
-      all = await fetchMembers(companyId);
-    } catch (e) {
-      summary.errors.push(`Could not re-read members after create: ${e.message}`);
-    }
-  }
-  const idByEmail = new Map(
-    all.map((m) => [normalizeEmail(m.email), m.member_id ?? m.id])
-  );
-
-  // 3. Stage DOB + consent for every student we can resolve.
-  for (const student of DEMO_ROSTER) {
-    const memberId = idByEmail.get(normalizeEmail(student.email));
-    if (memberId == null) {
-      summary.errors.push(`No member_id resolved for ${student.email}`);
       continue;
     }
-    if (student.date_of_birth) {
-      setStagedDob(memberId, student.date_of_birth);
-      summary.stagedDob += 1;
+
+    if (!student.guardian) continue;
+    if (!createdMemberId) {
+      summary.errors.push(
+        `No member_id returned for ${student.email}; guardian not linked.`
+      );
+      continue;
     }
-    if (student.consent === "valid" || student.consent === "outdated") {
-      recordStagedConsent({
-        member_id: memberId,
-        signer_name: `${student.guardian?.first_name ?? ""} ${
-          student.guardian?.last_name ?? ""
-        }`.trim(),
-        signer_email: student.guardian?.email ?? "",
-        policy_type: "AUP",
-        policy_version:
-          student.consent === "outdated" ? "0" : DEFAULT_POLICY_VERSION,
-        method: "e-signature",
+    try {
+      await linkGuardian({
+        companyId,
+        memberId: createdMemberId,
+        guardian: student.guardian,
       });
-      summary.stagedConsent += 1;
+      summary.guardiansLinked += 1;
+    } catch (e) {
+      summary.errors.push(`Link guardian for ${student.email}: ${e.message}`);
     }
   }
 
   return summary;
-};
-
-/**
- * Clear the staged compliance layer (DOB + consent) for a clean demo re-run.
- * Client-side only — does NOT delete the seeded members.
- */
-export const resetStagedDemoData = () => {
-  resetStagedConsent();
-  resetStagedDob();
 };
