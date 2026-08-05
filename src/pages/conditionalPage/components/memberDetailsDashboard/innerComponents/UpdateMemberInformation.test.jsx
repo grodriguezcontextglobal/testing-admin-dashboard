@@ -10,8 +10,8 @@ vi.mock("../../../../../api/devitrakApi", () => ({
 
 const navigateMock = vi.fn();
 vi.mock("react-router-dom", () => ({
-  useLocation: () => ({ pathname: "/member/42/update" }),
   useNavigate: () => navigateMock,
+  useParams: () => ({ id: "42" }),
 }));
 
 vi.mock("react-redux", () => ({
@@ -103,6 +103,33 @@ describe("UpdateMemberInformation", () => {
     memberResponse = { ...baseMember, date_of_birth: "2014-01-01" };
     renderPage();
     expect(await screen.findByTestId("guardian-info-section")).toHaveTextContent("42");
+  });
+
+  it("renders the guardian section when the record is flagged minor with no date of birth", async () => {
+    // Exactly what the school demo seeder produces: minor = 1 written
+    // directly, date_of_birth never set. Without the fallback these students
+    // show a guardian in the profile header and no way to edit them.
+    memberResponse = { ...baseMember, date_of_birth: null, minor: 1 };
+    renderPage();
+    expect(await screen.findByTestId("guardian-info-section")).toHaveTextContent("42");
+  });
+
+  it("still hides the guardian section for an adult with no date of birth", async () => {
+    memberResponse = { ...baseMember, date_of_birth: null, minor: 0 };
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByTestId("student-info-section")).toHaveTextContent("42")
+    );
+    expect(screen.queryByTestId("guardian-info-section")).not.toBeInTheDocument();
+  });
+
+  it("keys the member query by id so the profile header shares the cache entry", async () => {
+    renderPage();
+    await screen.findByTestId("student-info-section");
+    expect(devitrakApi.post).toHaveBeenCalledWith("/db_member/consulting-member", {
+      member_id: 42,
+      company_id: 137,
+    });
   });
 
   it("navigates back to the member page on Cancel", async () => {

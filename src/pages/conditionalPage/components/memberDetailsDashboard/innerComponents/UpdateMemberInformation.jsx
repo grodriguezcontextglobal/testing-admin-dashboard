@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import { getIndustryProfile } from "../../../../../config/industryProfiles";
@@ -21,31 +20,36 @@ const UpdateMemberInformation = () => {
   const { fields, representative } = getIndustryProfile(
     user?.companyData?.industry
   );
-  const location = useLocation();
   const navigate = useNavigate();
-  const slug = location.pathname.split("/").filter(Boolean)?.at(-2);
-  const [membersData, setMembersData] = useState(null);
+  const { id: memberId } = useParams();
   const companyId = user?.sqlInfo?.company_id;
 
   const memberInfoRetrieveQuery = useQuery({
-    queryKey: ["memberInfoRetrieveQuery"],
+    // Same key and same request as the profile shell's query, so the two share
+    // one cache entry. Saving a guardian here therefore refreshes the header's
+    // guardian block and consent chip instead of leaving them stale.
+    queryKey: ["memberInfoRetrieveQuery", String(memberId ?? "")],
     queryFn: () =>
       devitrakApi.post("/db_member/consulting-member", {
-        member_id: Number(slug),
+        member_id: Number(memberId),
         company_id: companyId,
       }),
-    enabled: !!slug,
+    enabled: !!memberId && !!companyId,
   });
 
-  useEffect(() => {
-    if (memberInfoRetrieveQuery?.data?.data?.members) {
-      setMembersData(memberInfoRetrieveQuery?.data?.data?.members?.at(-1));
-    }
-  }, [memberInfoRetrieveQuery.data]);
+  const members = memberInfoRetrieveQuery.data?.data?.members;
+  const membersData = Array.isArray(members) ? members.at(-1) : members ?? null;
 
   const ageFlags = membersData?.date_of_birth
     ? calculateAgeFlags(membersData.date_of_birth)
     : { age: null, minor: false, under_13: false };
+
+  // Prefer the age derived from date_of_birth, but fall back to the stored
+  // `minor` flag when there's no birthdate to derive from. Records can carry
+  // one without the other — the school demo seeder writes `minor` directly and
+  // never sets date_of_birth — and without this fallback those students show a
+  // guardian in the header with no way to edit them.
+  const requiresRepresentative = ageFlags.minor || membersData?.minor === 1;
 
   return (
     <>
@@ -56,7 +60,7 @@ const UpdateMemberInformation = () => {
         onSaved={() => memberInfoRetrieveQuery.refetch()}
       />
 
-      {fields.minor && ageFlags.minor && membersData && (
+      {fields.minor && requiresRepresentative && membersData && (
         <>
           <Divider />
           <GuardianInfoSection
