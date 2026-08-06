@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { read, utils } from "xlsx";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
@@ -95,6 +96,11 @@ const MultipleFromXLSX = ({ companyId = null }) => {
       if (fetching?.data?.ok) {
         setErrors([]);
         alert(fetching?.data?.message || "Successfully imported rows.");
+        registerStaffActivity({
+          action: "IMPORT",
+          target_model: "Member",
+          details: { count: rows.length },
+        });
       }
     } catch (error) {
       setErrors([`Failed to import rows: ${error?.message || String(error)}`]);

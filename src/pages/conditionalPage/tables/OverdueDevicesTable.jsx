@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, Select, Table, Tag, Input, message } from "antd";
 import { Typography } from "@mui/material";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../api/activityLog";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
@@ -114,6 +115,11 @@ const OverdueDevicesTable = () => {
       const res = await devitrakApi.post("/db_member/bulk-return", body);
       setBulkModalOpen(false);
       setBulkNote("");
+      registerStaffActivity({
+        action: "UNASSIGN",
+        target_model: "Lease",
+        details: { count: res?.data?.returned ?? 0, return_status: bulkStatus, grade: gradeFilter || undefined },
+      });
       message.success(
         `${res?.data?.returned ?? 0} lease(s) closed, ${res?.data?.devicesRestocked ?? 0
         } device(s) restocked.`
