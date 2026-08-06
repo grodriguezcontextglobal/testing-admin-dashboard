@@ -15,6 +15,7 @@ import {
   getRoleLabelGroupKey,
   getRoleScopeDimension,
   isCoordinatorLevel,
+  canViewStaffActivity,
 } from "./roles";
 
 // ─── ROLE_TYPES ──────────────────────────────────────────────────────────────
@@ -988,5 +989,87 @@ describe("Scoped roles — PERMISSIONS: category_assistant (inventory R/U only)"
   it("NO puede inventory:create / inventory:delete", () => {
     expect(hasPermission("inventory:create", role)).toBe(false);
     expect(hasPermission("inventory:delete", role)).toBe(false);
+  });
+});
+
+// ─── canViewStaffActivity — jerarquía de lectura de la bitácora (B2) ─────────
+// root_admin lee todo; cada rol con nivel definido en ROLE_LEVELS lee su
+// propio nivel y los inferiores (número mayor = menor privilegio). Los roles
+// sin nivel (scoped, R1 sin resolver) caen al rango más bajo como TARGET (todo
+// el mundo con nivel puede ver su actividad) pero nunca ven a nadie por rango
+// cuando son el VIEWER — su acceso a "mi propia actividad" se resuelve en
+// staffActivityLogUtils.js por id, no aquí.
+
+describe("canViewStaffActivity(viewerRoleType, targetRoleType)", () => {
+  it("root_admin lee actividad de todos los roles, incluidos los con scope", () => {
+    [
+      "admin",
+      "sale_manager",
+      "event_manager",
+      "inventory_manager",
+      "assistant",
+      "category_manager",
+    ].forEach((target) => {
+      expect(canViewStaffActivity("root_admin", target)).toBe(true);
+    });
+  });
+
+  it("admin lee admin y los roles inferiores, pero NO root_admin", () => {
+    expect(canViewStaffActivity("admin", "root_admin")).toBe(false);
+    ["admin", "sale_manager", "event_manager", "inventory_manager", "assistant"].forEach(
+      (target) => {
+        expect(canViewStaffActivity("admin", target)).toBe(true);
+      }
+    );
+  });
+
+  it("event_manager lee su propio nivel y los inferiores, NO admin ni sale_manager", () => {
+    expect(canViewStaffActivity("event_manager", "admin")).toBe(false);
+    expect(canViewStaffActivity("event_manager", "sale_manager")).toBe(false);
+    ["event_manager", "inventory_manager", "assistant"].forEach((target) => {
+      expect(canViewStaffActivity("event_manager", target)).toBe(true);
+    });
+  });
+
+  it("inventory_manager lee su propio nivel y los inferiores, NO los roles por encima", () => {
+    ["root_admin", "admin", "sale_manager", "event_manager"].forEach((target) => {
+      expect(canViewStaffActivity("inventory_manager", target)).toBe(false);
+    });
+    ["inventory_manager", "assistant"].forEach((target) => {
+      expect(canViewStaffActivity("inventory_manager", target)).toBe(true);
+    });
+  });
+
+  it("funciona igual con los strings canónicos F-01 (mismo nivel numérico que su par legacy)", () => {
+    expect(canViewStaffActivity("manager_event", "root_administrator")).toBe(false);
+    expect(canViewStaffActivity("manager_event", "associate_inventory")).toBe(true);
+  });
+
+  it("cualquier rol con nivel definido puede ver la actividad de un rol con scope (sin nivel -> rango más bajo)", () => {
+    ["root_admin", "admin", "sale_manager", "event_manager", "inventory_manager", "assistant"].forEach(
+      (viewer) => {
+        [
+          "inventory_location_manager",
+          "inventory_location_assistant",
+          "category_manager",
+          "category_assistant",
+        ].forEach((target) => {
+          expect(canViewStaffActivity(viewer, target)).toBe(true);
+        });
+      }
+    );
+  });
+
+  it("un rol con scope (sin nivel) nunca ve actividad de terceros por rango", () => {
+    ["category_manager", "inventory_location_manager"].forEach((viewer) => {
+      ["root_admin", "admin", "assistant", "category_manager"].forEach((target) => {
+        expect(canViewStaffActivity(viewer, target)).toBe(false);
+      });
+    });
+  });
+
+  it("retorna false cuando el viewer es undefined o un roleType desconocido", () => {
+    expect(canViewStaffActivity(undefined, "assistant")).toBe(false);
+    expect(canViewStaffActivity("super_hero", "assistant")).toBe(false);
   });
 });

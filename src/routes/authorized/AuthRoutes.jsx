@@ -463,10 +463,12 @@ const AuthRoutes = () => {
                   element={<NotificationsMainPage />}
                 />
                 <Route path="billing" element={<BillingMainPage />} />
-                <Route
-                  path="staff-activity"
-                  element={<StaffActivityMainPage />}
-                />
+                <Route element={<PermissionGuard action="staff:read" />}>
+                  <Route
+                    path="staff-activity"
+                    element={<StaffActivityMainPage />}
+                  />
+                </Route>
                 <Route path="company-info" element={<CompanyInfo />} />
                 <Route element={<PermissionGuard action="member:update" />}>
                   <Route path="school-compliance" element={<SchoolComplianceSettings />} />

@@ -1,46 +1,18 @@
 /* eslint-disable no-unused-vars */
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
 import { Select } from "antd";
-import { useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { devitrakApi } from "../../../../api/devitrakApi";
-import Body from "./Body";
+import { buildActionFilterOptions } from "../utils/staffActivityLogUtils";
 
-const Header = () => {
-  const { user } = useSelector((state) => state.admin);
-  const { eventsPerAdmin } = useSelector((state) => state.event);
-  const userSelectionRef = useRef("All");
-  const eventsSelectionRef = useRef("All");
-  const actionsSelectionRef = useRef("All");
-  const dispatch = useDispatch();
-  const activityLogQuery = useQuery({
-    queryKey: ["activity"],
-    queryFn: () => devitrakApi.get("/event-log/activity"),
-  });
-  useEffect(() => {
-    const controller = new AbortController();
-    activityLogQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
+const Header = ({ staffOptions, filters, onFiltersChange }) => {
   const onChangeUser = (value) => {
-    userSelectionRef.current = value;
+    onFiltersChange((prev) => ({ ...prev, staffMemberId: value }));
   };
   const onSearchUser = (value) => {
     // console.log("search:", value);
   };
 
-  const onChangeEvents = (value) => {
-    eventsSelectionRef.current = value;
-  };
-  const onSearchEvents = (value) => {
-    // console.log("search:", value);
-  };
   const onChangeActions = (value) => {
-    actionsSelectionRef.current = value;
+    onFiltersChange((prev) => ({ ...prev, action: value }));
   };
   const onSearchActions = (value) => {
     // console.log("search:", value);
@@ -49,200 +21,149 @@ const Header = () => {
   const filterOption = (input, option) =>
     (option?.label ?? "").toLowerCase().includes(input.toLowerCase());
   return (
-    <>
+    <Grid
+      style={{
+        padding: "5px",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+      container
+    >
       <Grid
         style={{
-          padding: "5px",
           display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
+          justifyContent: "space-between",
           alignItems: "center",
         }}
         container
       >
         <Grid
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          container
+          display={"flex"}
+          flexDirection={"column"}
+          alignSelf={"stretch"}
+          marginY={0}
+          item
+          xs={5}
+          sm={5}
+          md={6}
+        >
+          <Typography
+            textTransform={"none"}
+            style={{
+              color: "var(--gray-900, #171d1a)",
+              lineHeight: "38px",
+            }}
+            textAlign={"left"}
+            fontWeight={600}
+            fontFamily={"Inter"}
+            fontSize={"18px"}
+            lineHeight={"28px"}
+          >
+            View staff activity
+          </Typography>
+          <Typography
+            textTransform={"none"}
+            style={{
+              color: "var(--gray-600, #5d615a)",
+              lineHeight: "38px",
+            }}
+            textAlign={"left"}
+            fontWeight={400}
+            fontFamily={"Inter"}
+            fontSize={"14x"}
+            lineHeight={"20px"}
+          >
+            View all the activity of all your events’ staff and consumers.
+          </Typography>
+        </Grid>
+        <Grid
+          display={"flex"}
+          justifyContent={"flex-end"}
+          alignItems={"center"}
+          marginY={0}
+          gap={2}
+          item
+          xs={5}
+          sm={5}
+          md={6}
         >
           <Grid
-            display={"flex"}
-            flexDirection={"column"}
-            alignSelf={"stretch"}
-            marginY={0}
             item
-            xs={5}
-            sm={5}
-            md={6}
+            xs={6}
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            flexDirection={"column"}
           >
-            <Typography
-              textTransform={"none"}
+            <InputLabel style={{ width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                color={"var(--gray-600, #5d615a)"}
+                textAlign={"left"}
+                fontWeight={500}
+                fontFamily={"Inter"}
+                fontSize={"14x"}
+                lineHeight={"20px"}
+              >
+                Users
+              </Typography>
+            </InputLabel>
+            <Select
+              showSearch
+              placeholder="All"
+              optionFilterProp="children"
+              value={filters?.staffMemberId}
+              onChange={onChangeUser}
+              onSearch={onSearchUser}
+              filterOption={filterOption}
+              allowClear
               style={{
-                color: "var(--gray-900, #171d1a)",
-                lineHeight: "38px",
+                width: "100%",
               }}
-              textAlign={"left"}
-              fontWeight={600}
-              fontFamily={"Inter"}
-              fontSize={"18px"}
-              lineHeight={"28px"}
-            >
-              View staff activity
-            </Typography>
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "var(--gray-600, #5d615a)",
-                lineHeight: "38px",
-              }}
-              textAlign={"left"}
-              fontWeight={400}
-              fontFamily={"Inter"}
-              fontSize={"14x"}
-              lineHeight={"20px"}
-            >
-              View all the activity of all your events’ staff and consumers.
-            </Typography>
+              options={staffOptions}
+            />
           </Grid>
           <Grid
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-            marginY={0}
-            gap={2}
             item
-            xs={5}
-            sm={5}
-            md={6}
+            xs={6}
+            display={"flex"}
+            justifyContent={"flex-start"}
+            alignItems={"center"}
+            flexDirection={"column"}
           >
-            <Grid
-              item
-              xs={4}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              flexDirection={"column"}
-            >
-              <InputLabel style={{ width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  color={"var(--gray-600, #5d615a)"}
-                  textAlign={"left"}
-                  fontWeight={500}
-                  fontFamily={"Inter"}
-                  fontSize={"14x"}
-                  lineHeight={"20px"}
-                >
-                  Users
-                </Typography>
-              </InputLabel>
-              <Select
-                showSearch
-                placeholder="All"
-                optionFilterProp="children"
-                onChange={onChangeUser}
-                onSearch={onSearchUser}
-                filterOption={filterOption}
-                style={{
-                  width: "100%",
-                }}
-                options={
-                  []
-                  // userFilterOptions().map((option) => {
-                  // return {
-                  //   label: option?.name,
-                  //   value: option?.email,
-                  // };
-                  // })
-                }
-              />
-            </Grid>
-            <Grid
-              item
-              xs={4}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              flexDirection={"column"}
-            >
-              <InputLabel style={{ width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  color={"var(--gray-600, #5d615a)"}
-                  textAlign={"left"}
-                  fontWeight={500}
-                  fontFamily={"Inter"}
-                  fontSize={"14x"}
-                  lineHeight={"20px"}
-                >
-                  Events
-                </Typography>
-              </InputLabel>
-              <Select
-                showSearch
-                placeholder="All"
-                optionFilterProp="children"
-                onChange={onChangeEvents}
-                onSearch={onSearchEvents}
-                filterOption={filterOption}
-                style={{
-                  width: "100%",
-                }}
-                options={
-                  []
-                  //   eventsFilterOptions().map((option) => {
-                  //   return {
-                  //     label: option,
-                  //     value: option,
-                  //   };
-                  // })
-                }
-              />
-            </Grid>
-            <Grid
-              item
-              xs={4}
-              display={"flex"}
-              justifyContent={"flex-start"}
-              alignItems={"center"}
-              flexDirection={"column"}
-            >
-              <InputLabel style={{ width: "100%" }}>
-                <Typography
-                  textTransform={"none"}
-                  color={"var(--gray-600, #5d615a)"}
-                  textAlign={"left"}
-                  fontWeight={500}
-                  fontFamily={"Inter"}
-                  fontSize={"14x"}
-                  lineHeight={"20px"}
-                >
-                  Action
-                </Typography>
-              </InputLabel>
-              <Select
-                showSearch
-                placeholder="All"
-                optionFilterProp="children"
-                onChange={onChangeActions}
-                onSearch={onSearchActions}
-                filterOption={filterOption}
-                style={{
-                  width: "100%",
-                }}
-                options={[]}
-              />
-            </Grid>
+            <InputLabel style={{ width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                color={"var(--gray-600, #5d615a)"}
+                textAlign={"left"}
+                fontWeight={500}
+                fontFamily={"Inter"}
+                fontSize={"14x"}
+                lineHeight={"20px"}
+              >
+                Action
+              </Typography>
+            </InputLabel>
+            <Select
+              showSearch
+              placeholder="All"
+              optionFilterProp="children"
+              value={filters?.action}
+              onChange={onChangeActions}
+              onSearch={onSearchActions}
+              filterOption={filterOption}
+              allowClear
+              style={{
+                width: "100%",
+              }}
+              options={buildActionFilterOptions()}
+            />
           </Grid>
         </Grid>
       </Grid>
-      <div style={{ display: "none" }}>
-        <Body sortData={[]} />
-      </div>
-    </>
+    </Grid>
   );
 };
 
