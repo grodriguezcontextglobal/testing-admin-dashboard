@@ -110,41 +110,63 @@ export const loadDemoData = async ({ companyId }) => {
     summary.errors.push(`Could not read existing members: ${e.message}`);
     return summary;
   }
-  const existingEmails = new Set(existing.map((m) => normalizeEmail(m.email)));
+  const idByEmail = new Map(
+    existing.map((m) => [normalizeEmail(m.email), m.member_id ?? m.id])
+  );
 
-  // 1. Create missing students, linking each minor's guardian right away
-  //    (the guardian link needs the freshly created member_id).
+  // 1. Create whichever students are missing, remembering each new member_id.
   for (const student of DEMO_ROSTER) {
-    if (existingEmails.has(normalizeEmail(student.email))) {
+    const email = normalizeEmail(student.email);
+    if (idByEmail.has(email)) {
       summary.ensured += 1;
       continue;
     }
-    let createdMemberId = null;
     try {
       const res = await devitrakApi.post(
         "/db_member/new-member",
         buildNewMemberPayload(student, companyId)
       );
-      createdMemberId = extractCreatedMemberId(res?.data ?? res);
       summary.created += 1;
+      const createdId = extractCreatedMemberId(res?.data ?? res);
+      if (createdId) idByEmail.set(email, createdId);
     } catch (e) {
       summary.errors.push(`Create ${student.email}: ${e.message}`);
-      continue;
     }
+  }
 
+  // 2. If any create didn't hand back an id, re-read rather than skipping the
+  //    guardian link — the link is idempotent server-side, so a re-read costs
+  //    one request and keeps the roster complete.
+  const unresolved = DEMO_ROSTER.some(
+    (s) => s.guardian && !idByEmail.has(normalizeEmail(s.email))
+  );
+  if (unresolved) {
+    try {
+      const refreshed = await fetchMembers(companyId);
+      refreshed.forEach((m) => {
+        const email = normalizeEmail(m.email);
+        if (!idByEmail.has(email)) idByEmail.set(email, m.member_id ?? m.id);
+      });
+    } catch (e) {
+      summary.errors.push(`Could not re-read members after create: ${e.message}`);
+    }
+  }
+
+  // 3. Link guardians for every roster student, not just the ones created on
+  //    this run. Linking only after a successful create meant a second run —
+  //    the idempotent path this loader promises — linked nobody, and a partial
+  //    failure could never be repaired by running it again.
+  for (const student of DEMO_ROSTER) {
     if (!student.guardian) continue;
-    if (!createdMemberId) {
+    const memberId = idByEmail.get(normalizeEmail(student.email));
+    if (!memberId) {
       summary.errors.push(
-        `No member_id returned for ${student.email}; guardian not linked.`
+        `No member_id resolved for ${student.email}; guardian not linked.`
       );
       continue;
     }
     try {
-      await linkGuardian({
-        companyId,
-        memberId: createdMemberId,
-        guardian: student.guardian,
-      });
+      await linkGuardian({ companyId, memberId, guardian: student.guardian });
       summary.guardiansLinked += 1;
     } catch (e) {
       summary.errors.push(`Link guardian for ${student.email}: ${e.message}`);

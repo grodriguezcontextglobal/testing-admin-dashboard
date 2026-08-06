@@ -1,16 +1,13 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
 import { Button, Modal, message } from "antd";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { fetchSchoolSettings } from "../../Profile/school_compliance/utils/schoolComplianceUtils";
-import { fetchStudentConsent } from "../../conditionalPage/utils/guardianConsentApi";
-import {
-  getConsentStatusCopy,
-  normalizeConsentStatus,
-} from "../../conditionalPage/utils/guardianConsentUtils";
+import { fetchConsentStatusSummary } from "../../conditionalPage/utils/guardianConsentApi";
+import { getConsentStatusCopy } from "../../conditionalPage/utils/guardianConsentUtils";
 import { calculateStudentAgeFlags } from "../../conditionalPage/utils/ageCalculationUtils";
 import { loadDemoData } from "../compliance/loadDemoData";
 
@@ -147,29 +144,41 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
     [roster, enforcementOn]
   );
 
-  // One consent read per student who needs it — cached per member by react-query.
-  const consentQueries = useQueries({
-    queries: consentTargets.map((r) => ({
-      queryKey: ["studentConsentStatus", r.memberId, companyId],
-      queryFn: () => fetchStudentConsent(companyId, r.memberId),
-      enabled: !!companyId && !!r.memberId && isEducation,
-      staleTime: 60 * 1000,
-    })),
+  // One request for the whole district. This used to be a useQueries fan-out —
+  // one /school/consent per minor, ~961 on the demo district — which stayed
+  // invisible only because it's gated on enforcement being on, i.e. it fired
+  // for the first time during the demo it was built for.
+  const consentSummaryQuery = useQuery({
+    queryKey: ["schoolConsentStatus", companyId, requiredPolicyVersion],
+    queryFn: () =>
+      fetchConsentStatusSummary(companyId, {
+        policyVersion: requiredPolicyVersion,
+      }),
+    enabled: !!companyId && isEducation && enforcementOn,
+    staleTime: 60 * 1000,
   });
 
-  const consentLoading = consentQueries.some((q) => q.isLoading);
+  const consentLoading = enforcementOn && consentSummaryQuery.isLoading;
+  const consentStatuses = consentSummaryQuery.data?.statuses;
 
   const { kpis, attention } = useMemo(() => {
-    const rows = consentTargets.map((r, i) => ({
+    const rows = consentTargets.map((r) => ({
       ...r,
-      status: normalizeConsentStatus(consentQueries[i]?.data),
+      // The server derives status (including expiry and policy staleness), so
+      // there is nothing left to normalize client-side. Before the summary
+      // lands, treat it as unknown rather than "missing" — the latter would
+      // paint every student red while the request is in flight.
+      status: consentStatuses?.[r.memberId] ?? null,
     }));
 
     const under13 = roster.filter((r) => r.flags.under_13);
-    const agreed = rows.filter((r) => r.status === "agreed");
-    const outstanding = rows.filter((r) => r.status !== "agreed");
-    const coverage = rows.length
-      ? Math.round((agreed.length / rows.length) * 100)
+    // A student the summary didn't cover is unknown, not outstanding — counting
+    // nulls as outstanding would report a compliance gap that isn't there.
+    const known = rows.filter((r) => r.status !== null);
+    const agreed = known.filter((r) => r.status === "agreed");
+    const outstanding = known.filter((r) => r.status !== "agreed");
+    const coverage = known.length
+      ? Math.round((agreed.length / known.length) * 100)
       : 100;
 
     // under-13 first (COPPA), then by name
@@ -190,8 +199,10 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
       },
       attention: attentionRows,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- consentQueries is a new array each render; its data is keyed by consentTargets
-  }, [roster, consentTargets, JSON.stringify(consentQueries.map((q) => q.data ?? null))]);
+    // consentStatuses is a stable object reference from react-query's cache, so
+    // it can be a plain dependency. The previous fan-out had to stringify every
+    // consent payload on every render to get a comparable key.
+  }, [roster, consentTargets, consentStatuses]);
 
   const coverageColor =
     kpis.coverage >= 100

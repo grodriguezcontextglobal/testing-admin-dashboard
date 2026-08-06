@@ -16,6 +16,30 @@ export async function fetchStudentConsent(companyId, memberId) {
 }
 
 /**
+ * District-wide consent posture in a single request.
+ *
+ * Returns a `statuses` map keyed by member_id plus the aggregate counts.
+ * Prefer this over calling fetchStudentConsent per student: the readiness
+ * dashboard covers ~961 minors on the demo district, and one request per
+ * student is enough to trip a production rate limiter.
+ *
+ * @param {number} companyId
+ * @param {{ policyType?: string, policyVersion?: string|null }} [options]
+ * @returns {Promise<object>}
+ */
+export async function fetchConsentStatusSummary(
+  companyId,
+  { policyType = "AUP", policyVersion } = {}
+) {
+  const response = await devitrakApi.post("/school/consent/status", {
+    company_id: companyId,
+    policy_type: policyType,
+    ...(policyVersion ? { policy_version: policyVersion } : {}),
+  });
+  return response.data;
+}
+
+/**
  * Store a guardian record.
  *
  * @param {object} guardianPayload
