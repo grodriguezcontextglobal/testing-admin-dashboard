@@ -301,8 +301,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           item
           xs={2}
           sm={2}
-          md={8}
-          lg={8}
+          md={9}
+          lg={9}
         >
           <Badge
             color="inherit"
@@ -326,9 +326,16 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
               justifyContent: "flex-start",
               alignItems: "center",
               padding: 0,
-              // with the dynamic industry tab the row can exceed its grid at
-              // medium widths — wrap instead of overflowing under the search
-              flexWrap: "wrap",
+              // Keep every option on one line regardless of label width (the
+              // dynamic industry tab's title varies a lot, e.g. "Students").
+              // Wrapping used to push whichever item didn't fit onto its own
+              // row, landing it under the logo/name. Scroll instead of wrap
+              // so the row never breaks; it still never collides with the
+              // search box since it stays confined to its own flex item.
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": { display: "none" },
               minWidth: 0,
             }}
           >
@@ -405,8 +412,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           item
           xs={10}
           sm={10}
-          md={4}
-          lg={4}
+          md={3}
+          lg={3}
           sx={{
             // search stays visible on every breakpoint; on phones it shares
             // the row with the hamburger (left grid) and must not overflow
@@ -419,7 +426,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           }}
         >
           {/* {showSearch && ( */}
-          <form
+          {/* <form
             style={{
               margin: "0 5px 0 0",
               width: "100%",
@@ -432,11 +439,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             method="get"
             action="/search-result-page?search="
             id="search-form"
-          >
+          > */}
             {/* Read-only trigger: clicking (or Enter/Space) opens the ⌘K
                 command palette instead of editing text, so the navbar input
                 and the magnifier button share one unified global-search UX. */}
-            <Input
+            {/* <Input
               placeholder="Search"
               readOnly
               data-open-cmdk="true"
@@ -454,45 +461,15 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 ...OutlinedInputStyle,
                 boxSizing: "border-box",
                 cursor: "pointer",
+
               }}
               name={"searchValue"}
               value={searchValue}
               fullWidth
-            // endAdornment={
-            //   <div>
-            //     <button style={{
-            //       outline: "none",
-            //       border: "transparent",
-            //       margin: 0,
-            //       padding: "4.5px",
-            //       backgroundColor: "#0040C1", display: showSearch && searchValue?.length > 0 ? "flex" : "none",
-            //       borderRadius: "25%",
-            //       width: "25px",
-            //       height: "25px",
-            //     }} type="submit"
-            //       form="search-form">
-            //       {/* <SendIcon size="15" stroke="#fff" strokeWidth="2.5" /> */}
-            //       <img src={MagnifyIcon} alt="search-icon" />
-            //     </button>
-            //     <button style={{
-            //       outline: "none",
-            //       border: "transparent",
-            //       margin: 0,
-            //       padding: "4.5px",
-            //       backgroundColor: "#0040C1", display: showSearch && searchValue?.length > 0 ? "flex" : "none",
-            //       borderRadius: "25%",
-            //       width: "25px",
-            //       height: "25px",
-            //     }} type="button" onClick={() => handleResetSearchValue()}>
-            //       {/* <SendIcon size="15" stroke="#fff" strokeWidth="2.5" /> */}
-            //       <CircleDeleteIcon width="20" height="20" />
-            //     </button>
-            //   </div>
-            // }
             />
-          </form>
+          </form> */}
           {/* )} */}
-          {searchValue?.length > 0 && (
+          {/* {searchValue?.length > 0 && (
             <button
               style={{
                 outline: "none",
@@ -516,7 +493,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 </article>
               </div>
             </button>
-          )}
+          )} */}
           <button
             data-open-cmdk="true"
             onClick={toggleSearch}

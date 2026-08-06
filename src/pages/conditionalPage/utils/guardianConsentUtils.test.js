@@ -7,6 +7,7 @@ import {
   isConsentBlockingAssignment,
   isPolicyStale,
   normalizeConsentStatus,
+  resolveConsentRecord,
 } from "./guardianConsentUtils";
 
 describe("normalizeConsentStatus", () => {
@@ -53,6 +54,67 @@ describe("normalizeConsentStatus", () => {
 
   it("returns missing for unknown status", () => {
     expect(normalizeConsentStatus({ status: "unknown" })).toBe("missing");
+  });
+
+  it("returns agreed from the real POST /school/consent envelope (consents[], confirmed backend 2026-08-04)", () => {
+    expect(
+      normalizeConsentStatus({
+        ok: true,
+        count: 1,
+        consents: [
+          {
+            status: "agreed",
+            policy_version: "1",
+            requested_at: "2026-08-04T17:40:34.000Z",
+          },
+        ],
+      })
+    ).toBe("agreed");
+  });
+});
+
+describe("resolveConsentRecord", () => {
+  it("returns null for null, undefined, or array input", () => {
+    expect(resolveConsentRecord(null)).toBeNull();
+    expect(resolveConsentRecord(undefined)).toBeNull();
+    expect(resolveConsentRecord([])).toBeNull();
+  });
+
+  it("extracts the single record from a real consents[] envelope", () => {
+    const record = {
+      status: "agreed",
+      requested_at: "2026-08-04T17:40:34.000Z",
+    };
+    expect(
+      resolveConsentRecord({ ok: true, count: 1, consents: [record] })
+    ).toEqual(record);
+  });
+
+  it("picks the most recently requested record when there are several", () => {
+    const older = { status: "refused", requested_at: "2026-01-01T00:00:00.000Z" };
+    const newer = { status: "agreed", requested_at: "2026-08-04T17:40:34.000Z" };
+    expect(resolveConsentRecord({ consents: [older, newer] })).toEqual(newer);
+  });
+
+  it("falls through past an empty consents array to other shapes", () => {
+    expect(
+      resolveConsentRecord({ consents: [], consent: { status: "agreed" } })
+    ).toEqual({ status: "agreed" });
+  });
+
+  it("falls back to .consent, then .record, then .data.consent, then the whole response", () => {
+    expect(resolveConsentRecord({ consent: { status: "agreed" } })).toEqual({
+      status: "agreed",
+    });
+    expect(resolveConsentRecord({ record: { status: "refused" } })).toEqual({
+      status: "refused",
+    });
+    expect(
+      resolveConsentRecord({ data: { consent: { status: "pending" } } })
+    ).toEqual({ status: "pending" });
+    expect(resolveConsentRecord({ status: "expired" })).toEqual({
+      status: "expired",
+    });
   });
 });
 

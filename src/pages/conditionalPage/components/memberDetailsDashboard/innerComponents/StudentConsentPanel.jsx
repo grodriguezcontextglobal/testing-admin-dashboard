@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Badge, Divider, Spin, Tag } from "antd";
 import { useSelector } from "react-redux";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import {
   fetchStudentConsent,
   sendConsentRequest,
@@ -12,7 +13,11 @@ import {
   isConsentAgreed,
   normalizeConsentStatus,
 } from "../../../utils/guardianConsentUtils";
-import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import {
+  fetchSchoolConsentDocuments,
+  fetchSchoolSettings,
+} from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import { isDocumentExpired } from "../../../../Profile/Documents/utils/documentExpirationUtils";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const tagColorByStatus = {
@@ -52,8 +57,18 @@ function capitalizeStatus(status) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+// The real POST /school/consent response (confirmed 2026-08-04) is
+// `{ consents: [...] }` — plural, an array — not `.consent`/`.record`. Pick
+// the most recently requested record when there's more than one (e.g. a
+// stale request left behind after a policy version bump).
 function resolveConsentRecord(response) {
-  return response?.consent || response?.record || response?.data?.consent || null;
+  if (!response || typeof response !== "object") return null;
+  if (Array.isArray(response.consents) && response.consents.length > 0) {
+    return [...response.consents].sort(
+      (a, b) => new Date(b.requested_at || 0) - new Date(a.requested_at || 0)
+    )[0];
+  }
+  return response.consent || response.record || response.data?.consent || null;
 }
 
 export const StudentConsentPanel = ({
@@ -65,6 +80,10 @@ export const StudentConsentPanel = ({
   const { user } = useSelector((state) => state.admin);
   const queryClient = useQueryClient();
   const companyId = user?.sqlInfo?.company_id;
+  // /document/* is keyed by the Mongo company id, unlike /school/settings*
+  // and the consent-request endpoints, which use the SQL company_id. Matches
+  // the `companyData.id` convention already used by Documents.jsx.
+  const mongoCompanyId = user?.companyData?.id ?? null;
   const { notify, contextHolder } = useStatusNotification();
 
   const consentQuery = useQuery({
@@ -84,6 +103,22 @@ export const StudentConsentPanel = ({
     settingsQuery.data?.data?.settings?.required_consent_policy_version ??
     null;
   const effectivePolicyVersion = requiredPolicyVersion ?? settingsPolicyVersion;
+  const consentDocumentId =
+    settingsQuery.data?.settings?.consent_document_id ??
+    settingsQuery.data?.data?.settings?.consent_document_id ??
+    null;
+
+  const consentDocumentsQuery = useQuery({
+    queryKey: ["schoolConsentDocuments", mongoCompanyId],
+    queryFn: () => fetchSchoolConsentDocuments(mongoCompanyId),
+    enabled: !!mongoCompanyId,
+  });
+  const assignedConsentDocument = (consentDocumentsQuery.data ?? []).find(
+    (doc) => doc._id === consentDocumentId
+  );
+  const isAssignedDocumentExpired = isDocumentExpired(
+    assignedConsentDocument?.expiration_date
+  );
   const consentResponse = consentQuery.data?.data ?? consentQuery.data;
   const consentRecord = resolveConsentRecord(consentResponse);
   const consentStatus = normalizeConsentStatus(
@@ -107,6 +142,11 @@ export const StudentConsentPanel = ({
     .join(" ");
   const guardianEmail = memberData?.parent_guardian_email;
   const guardianPhone = memberData?.parent_guardian_phone_number;
+  // Document assignment (consent_document_id) isn't persisted by the backend
+  // yet — confirmed 2026-08-04: /school/settings/consent-enforcement accepts
+  // and echoes it but never stores it, so requiring it here would make
+  // sending permanently impossible. The hints below stay informational only
+  // until backend actually persists the assignment.
   const canSendRequest =
     Boolean(guardianEmail) && consentStatus !== "pending" && !isAgreed;
   const isResend = ["expired", "refused", "stale"].includes(consentStatus);
@@ -114,8 +154,14 @@ export const StudentConsentPanel = ({
 
   const sendConsentMutation = useMutation({
     mutationFn: (payload) => sendConsentRequest(payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries(["studentConsent", memberId]);
+      registerStaffActivity({
+        action: "CREATE",
+        target_model: "Consent",
+        target_id: response?.consent_id,
+        details: { member_id: memberId },
+      });
       notify("success", "Consent request sent");
     },
     onError: (err) => {
@@ -128,8 +174,14 @@ export const StudentConsentPanel = ({
 
   const resendConsentMutation = useMutation({
     mutationFn: (payload) => resendConsentRequest(payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries(["studentConsent", memberId]);
+      registerStaffActivity({
+        action: "UPDATE",
+        target_model: "Consent",
+        target_id: response?.consent_id,
+        details: { member_id: memberId },
+      });
       notify("success", "Consent request resent");
     },
     onError: (err) => {
@@ -160,6 +212,7 @@ export const StudentConsentPanel = ({
         member_id: memberId,
         policy_type: policyType,
         policy_version: effectivePolicyVersion || "1",
+        document_id: consentDocumentId,
       });
       return;
     }
@@ -169,6 +222,7 @@ export const StudentConsentPanel = ({
       guardian_id: null,
       policy_type: policyType,
       policy_version: effectivePolicyVersion || "1",
+      document_id: consentDocumentId,
     });
   };
 
@@ -244,6 +298,19 @@ export const StudentConsentPanel = ({
               disabled={!canSendRequest}
             />
           </div>
+          {!consentDocumentId ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="Assign a School Consent document in Compliance Settings before sending requests."
+            />
+          ) : isAssignedDocumentExpired ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="The assigned School Consent document has expired — update it in Compliance Settings before sending requests."
+            />
+          ) : null}
         </>
       ) : null}
     </div>

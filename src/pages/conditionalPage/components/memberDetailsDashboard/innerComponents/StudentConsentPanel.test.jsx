@@ -7,7 +7,10 @@ import {
   sendConsentRequest,
   resendConsentRequest,
 } from "../../../utils/guardianConsentApi";
-import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import {
+  fetchSchoolSettings,
+  fetchSchoolConsentDocuments,
+} from "../../../../Profile/school_compliance/utils/schoolComplianceUtils";
 
 vi.mock("../../../utils/guardianConsentApi", () => ({
   fetchStudentConsent: vi.fn(),
@@ -17,6 +20,7 @@ vi.mock("../../../utils/guardianConsentApi", () => ({
 
 vi.mock("../../../../Profile/school_compliance/utils/schoolComplianceUtils", () => ({
   fetchSchoolSettings: vi.fn(),
+  fetchSchoolConsentDocuments: vi.fn(),
 }));
 
 vi.mock("react-redux", () => ({
@@ -25,6 +29,7 @@ vi.mock("react-redux", () => ({
       admin: {
         user: {
           sqlInfo: { company_id: 137 },
+          companyData: { id: "mongo-company-137" },
         },
       },
     }),
@@ -61,8 +66,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   fetchSchoolSettings.mockResolvedValue({
     ok: true,
-    settings: { required_consent_policy_version: "1" },
+    settings: {
+      required_consent_policy_version: "1",
+      consent_document_id: "doc-1",
+    },
   });
+  fetchSchoolConsentDocuments.mockResolvedValue([
+    { _id: "doc-1", title: "AUP 2026", trigger_action: "school_consent" },
+  ]);
 });
 
 describe("StudentConsentPanel", () => {
@@ -103,6 +114,28 @@ describe("StudentConsentPanel", () => {
     });
     renderPanel();
     expect(await screen.findByText("Agreed")).toBeInTheDocument();
+  });
+
+  it("shows agreed status tag from the real POST /school/consent envelope (consents[], confirmed backend 2026-08-04)", async () => {
+    fetchStudentConsent.mockResolvedValue({
+      data: {
+        ok: true,
+        count: 1,
+        consents: [
+          {
+            status: "agreed",
+            policy_version: "1",
+            requested_at: "2026-08-04T17:40:34.000Z",
+            responded_at: "2026-08-04T17:43:02.000Z",
+          },
+        ],
+      },
+    });
+    renderPanel();
+    expect(await screen.findByText("Agreed")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /send consent request/i })
+    ).not.toBeInTheDocument();
   });
 
   it("shows refused status tag when consent is refused", async () => {
@@ -181,8 +214,56 @@ describe("StudentConsentPanel", () => {
         guardian_id: null,
         policy_type: "AUP",
         policy_version: "1",
+        document_id: "doc-1",
       });
     });
+  });
+
+  it("does not disable send button when no consent document is assigned, but shows a hint (backend doesn't persist consent_document_id yet)", async () => {
+    fetchSchoolSettings.mockResolvedValue({
+      ok: true,
+      settings: { required_consent_policy_version: "1" },
+    });
+    fetchStudentConsent.mockResolvedValue({ data: null });
+    renderPanel();
+    const button = await screen.findByRole("button", {
+      name: /send consent request/i,
+    });
+    expect(button).not.toBeDisabled();
+    expect(
+      screen.getByText(
+        /Assign a School Consent document in Compliance Settings/i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("does not disable send button when the assigned consent document has expired, but shows a hint", async () => {
+    fetchSchoolConsentDocuments.mockResolvedValue([
+      {
+        _id: "doc-1",
+        title: "AUP 2026",
+        trigger_action: "school_consent",
+        expiration_date: "2000-01-01T00:00:00.000Z",
+      },
+    ]);
+    fetchStudentConsent.mockResolvedValue({ data: null });
+    renderPanel();
+    const button = await screen.findByRole("button", {
+      name: /send consent request/i,
+    });
+    expect(button).not.toBeDisabled();
+    expect(
+      screen.getByText(/assigned School Consent document has expired/i)
+    ).toBeInTheDocument();
+  });
+
+  it("fetches consent documents using the Mongo company id, not the SQL one", async () => {
+    fetchStudentConsent.mockResolvedValue({ data: null });
+    renderPanel();
+    await screen.findByRole("button", { name: /send consent request/i });
+    expect(fetchSchoolConsentDocuments).toHaveBeenCalledWith(
+      "mongo-company-137"
+    );
   });
 
   it.each(["expired", "refused", "stale"])(
@@ -208,6 +289,7 @@ describe("StudentConsentPanel", () => {
           member_id: 42,
           policy_type: "AUP",
           policy_version: isStale ? "2" : "1",
+          document_id: "doc-1",
         });
       });
       expect(sendConsentRequest).not.toHaveBeenCalled();

@@ -234,22 +234,22 @@ const Body = () => {
           },
         };
 
-        if (stripeAccount.test) {
-          updatePromises.push(
-            devitrakApi.post("/stripe/company-account-stripe/update", {
-              ...stripeUpdateData,
-              connectedAccountId: stripeAccount.test,
-            })
-          );
-        }
-        if (stripeAccount.live) {
-          updatePromises.push(
-            devitrakApi.post("/stripe/company-account-stripe/update", {
-              ...stripeUpdateData,
-              connectedAccountId: stripeAccount.live,
-            })
-          );
-        }
+        // if (stripeAccount.test) {
+        //   updatePromises.push(
+        //     devitrakApi.post("/stripe/company-account-stripe/update", {
+        //       ...stripeUpdateData,
+        //       connectedAccountId: stripeAccount.test,
+        //     })
+        //   );
+        // }
+        // if (stripeAccount.live) {
+        //   updatePromises.push(
+        //     devitrakApi.post("/stripe/company-account-stripe/update", {
+        //       ...stripeUpdateData,
+        //       connectedAccountId: stripeAccount.live,
+        //     })
+        //   );
+        // }
       }
       const promiseResults = await Promise.all(updatePromises);
       const companyUpdateResult = promiseResults[0];

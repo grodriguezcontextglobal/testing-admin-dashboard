@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
+  fetchPublicConsentDocument,
   respondPublicConsent,
   retrievePublicConsent,
 } from "./guardianConsentPublicApi";
@@ -51,6 +52,18 @@ const GuardianConsentResponsePage = () => {
     queryFn: () => retrievePublicConsent(otc),
     enabled: Boolean(otc),
     retry: shouldRetryTransientError,
+  });
+
+  const consentDocumentId = consentData?.company?.consent_document_id ?? null;
+  // Not currently validated server-side (any identifying value works) — see
+  // fetchPublicConsentDocument's doc comment for the security follow-up.
+  const documentViewerId =
+    consentData?.guardian?.id ?? consentData?.student?.id ?? "guardian";
+
+  const { data: documentData } = useQuery({
+    queryKey: ["publicConsentDocument", consentDocumentId],
+    queryFn: () => fetchPublicConsentDocument(consentDocumentId, documentViewerId),
+    enabled: Boolean(consentDocumentId),
   });
 
   const submitMutation = useMutation({
@@ -300,27 +313,52 @@ const GuardianConsentResponsePage = () => {
           />
         )}
 
-        {consent?.consent_text && (
+        {documentData?.viewUrl ? (
           <>
             <Divider />
 
-            <Title level={5}>Consent details</Title>
+            <Title level={5}>Consent document</Title>
 
-            <div
-              data-testid="consent-text-scroll"
+            <iframe
+              src={documentData.viewUrl}
+              title={documentData.title || "Consent document"}
               style={{
-                maxHeight: 240,
-                overflowY: "auto",
+                width: "100%",
+                height: 420,
                 border: "1px solid #f0f0f0",
                 borderRadius: 6,
-                padding: "8px 12px",
               }}
-            >
-              <Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
-                {consent.consent_text}
-              </Paragraph>
-            </div>
+            />
+
+            <Paragraph type="secondary" style={{ marginTop: 8 }}>
+              <a href={documentData.viewUrl} target="_blank" rel="noreferrer">
+                Open in a new tab
+              </a>
+            </Paragraph>
           </>
+        ) : (
+          consent?.consent_text && (
+            <>
+              <Divider />
+
+              <Title level={5}>Consent details</Title>
+
+              <div
+                data-testid="consent-text-scroll"
+                style={{
+                  maxHeight: 240,
+                  overflowY: "auto",
+                  border: "1px solid #f0f0f0",
+                  borderRadius: 6,
+                  padding: "8px 12px",
+                }}
+              >
+                <Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
+                  {consent.consent_text}
+                </Paragraph>
+              </div>
+            </>
+          )
         )}
 
         <Divider />
