@@ -1,58 +1,81 @@
-import { Divider, message } from "antd";
-import { useDispatch, useSelector } from "react-redux";
+import { useQuery } from "@tanstack/react-query";
+import { message } from "antd";
+import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import Breadcrumb from "../../../../components/UX/breadcrumbs/Breadcrumb";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import RefactoredHeaderUntitledUiReact from "../../../../components/UX/header/DynamicHeaderCompnent";
-import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
-import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
-import { isCoordinatorLevel } from "../../../../config/roles";
-import { onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
+import {
+  ProfileIdentityCard,
+  StatusChip,
+} from "../../../../components/UX/profile";
+import {
+  hasPermission,
+  isCoordinatorLevel,
+  resolveRoleType,
+} from "../../../../config/roles";
+import { fetchStudentConsent } from "../../utils/guardianConsentApi";
+import {
+  getConsentStatusCopy,
+  normalizeConsentStatus,
+} from "../../utils/guardianConsentUtils";
 import {
   ASSIGNED_DEVICES_EXPORT_COLUMNS,
   buildAssignedDevicesExportRows,
   buildMemberProfileExportPairs,
 } from "../../utils/memberExportUtils";
 
-const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
-  const detailMemberInfo = memberInfo?.at(-1);
+// Consent that needs someone to act reads louder than consent that's merely
+// waiting. "agreed" gets no chip at all — good news belongs in the fact list,
+// not in the alarm row.
+const CONSENT_CHIP_TONE = {
+  refused: "critical",
+  expired: "critical",
+  stale: "warning",
+  missing: "warning",
+  pending: "neutral",
+};
+
+const CONSENT_CHIP_LABEL = {
+  refused: "Consent refused",
+  expired: "Consent expired",
+  stale: "Consent out of date",
+  missing: "Consent not requested",
+  pending: "Consent pending",
+};
+
+const titleCase = (value) =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
+
+const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMember }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  if (!detailMemberInfo) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <DevitrakLoading />
-      </div>
-    );
-  }
-  const style = {
-    titleNavigation: {
-      textTransform: "none",
-      textAlign: "left",
-      fontWeight: 600,
-      fontSize: "18px",
-      fontFamily: "Inter",
-      lineHeight: "28px",
-      color: "var(--blue-dark-600, #155EEF)",
-      cursor: "pointer"
-    },
-    breadcrumbTitle: {
-      ...TextFontsize18LineHeight28,
-      textTransform: "none",
-    },
-  };
+
+  const memberId = detailMemberInfo?.member_id;
+  const companyId = user?.sqlInfo?.company_id;
+  const isStudent = detailMemberInfo?.minor === 1;
+
+  // Only students carry guardian consent; don't fire this for every member.
+  const consentQuery = useQuery({
+    queryKey: ["studentConsent", memberId],
+    queryFn: () => fetchStudentConsent(companyId, memberId),
+    enabled: Boolean(isStudent && memberId && companyId),
+    retry: false,
+  });
+
+  const consentStatus = consentQuery.data
+    ? normalizeConsentStatus(consentQuery.data)
+    : null;
 
   const handleExportMemberData = async () => {
     try {
       const response = await devitrakApi.post(
         "/db_member/retrieve-members-assigned-devices",
         {
-          member_id: detailMemberInfo?.member_id,
-          company_id: user?.sqlInfo?.company_id,
+          member_id: memberId,
+          company_id: companyId,
           returned: 0,
         }
       );
@@ -94,71 +117,136 @@ const MemberInfoHeader = ({ memberInfo, groupName, setAddingNewMember }) => {
     }
   };
 
-  const breadcrumbItems = [
-    {
-      title: <p style={style.titleNavigation} onClick={() => { navigate("/members", { state: { referencing: groupName } }); dispatch(onRemoveMemberInfo()) }}>All {groupName}</p>,
-      link: "/members",
-      state: { referencing: groupName },
-    },
-    {
-      title: <p style={style.breadcrumbTitle}>{`${detailMemberInfo?.first_name}, ${detailMemberInfo?.last_name}`}</p>,
-    },
-  ];
+  const fullName = `${detailMemberInfo?.first_name ?? ""} ${
+    detailMemberInfo?.last_name ?? ""
+  }`.trim();
 
-  const actions = {
-    desktop: (
-      <div style={{ display: "flex", gap: 8 }}>
-        <GrayButtonComponent
-          title={"Export data (.xlsx)"}
-          func={handleExportMemberData}
-        />
-        {isCoordinatorLevel(user.roleType) && (
-          <BlueButtonComponent
-            title={"Add new member"}
-            func={() => setAddingNewMember(true)}
-          />
-        )}
-      </div>
+  const chips = [
+    deviceSummary?.overdue > 0 && (
+      <StatusChip
+        key="overdue"
+        tone="critical"
+        pip
+        label={`${deviceSummary.overdue} overdue`}
+        title={
+          deviceSummary.longestOverdueDays
+            ? `Longest overdue: ${deviceSummary.longestOverdueDays} days`
+            : undefined
+        }
+      />
     ),
-    mobile: (
-      <div style={{ display: "flex", gap: 8 }}>
-        <GrayButtonComponent
-          title={"Export"}
-          func={handleExportMemberData}
-        />
-        {isCoordinatorLevel(user.roleType) && (
-          <BlueButtonComponent
-            title={"Add new"}
-            func={() => setAddingNewMember(true)}
-          />
-        )}
-      </div>
+    consentStatus && CONSENT_CHIP_LABEL[consentStatus] && (
+      <StatusChip
+        key="consent"
+        tone={CONSENT_CHIP_TONE[consentStatus]}
+        pip={CONSENT_CHIP_TONE[consentStatus] !== "neutral"}
+        label={CONSENT_CHIP_LABEL[consentStatus]}
+        title={getConsentStatusCopy(consentStatus)}
+      />
     ),
-  };
+    detailMemberInfo?.grade && (
+      <StatusChip key="grade" label={`Grade ${detailMemberInfo.grade}`} />
+    ),
+    detailMemberInfo?.homeroom && (
+      <StatusChip key="homeroom" label={detailMemberInfo.homeroom} />
+    ),
+    detailMemberInfo?.external_id && (
+      <StatusChip key="external" label={detailMemberInfo.external_id} />
+    ),
+  ].filter(Boolean);
+
+  const guardianName = [
+    detailMemberInfo?.parent_guardian_first_name,
+    detailMemberInfo?.parent_guardian_last_name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const factGroups = [
+    {
+      label: "Contact",
+      items: [
+        detailMemberInfo?.email
+          ? { value: detailMemberInfo.email, href: `mailto:${detailMemberInfo.email}` }
+          : { value: "No email on file", muted: true },
+        // A missing phone shows as an em dash. The old placeholder
+        // "+1-000-000-0000" looked like a real number somebody could dial.
+        { value: detailMemberInfo?.phone_number || "—" },
+      ],
+    },
+    {
+      label: "Guardian",
+      items: [
+        { value: guardianName },
+        detailMemberInfo?.parent_guardian_email && {
+          value: detailMemberInfo.parent_guardian_email,
+          href: `mailto:${detailMemberInfo.parent_guardian_email}`,
+        },
+        { value: detailMemberInfo?.parent_guardian_phone_number },
+      ].filter(Boolean),
+    },
+    consentStatus && {
+      label: "Consent",
+      items: [
+        { value: `Device AUP · ${titleCase(consentStatus)}` },
+        { value: getConsentStatusCopy(consentStatus), muted: true },
+      ],
+    },
+  ].filter(Boolean);
+
+  // Same permissions that used to gate the tab-bar entries; they follow the
+  // actions to the rail rather than disappearing with the tabs.
+  const roleType = resolveRoleType(user);
+
+  const actions = (
+    <>
+      {hasPermission("member:assign_devices", roleType) && (
+        <BlueButtonComponent
+          title={"Assign devices"}
+          func={() => navigate(`/member/${memberId}/assignment`)}
+        />
+      )}
+      {hasPermission("member:notify", roleType) && (
+        <GrayButtonComponent
+          title={"Send reminder"}
+          func={() => navigate(`/member/${memberId}/reminders`)}
+        />
+      )}
+      <GrayButtonComponent
+        title={"Export data (.xlsx)"}
+        func={handleExportMemberData}
+      />
+      {isCoordinatorLevel(user.roleType) && (
+        <GrayButtonComponent
+          title={"Add new member"}
+          func={() => setAddingNewMember(true)}
+        />
+      )}
+    </>
+  );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <Breadcrumb path={breadcrumbItems} />
-      <Divider style={{ margin: "0.5rem 0" }} />
-      <RefactoredHeaderUntitledUiReact
-        title={`${detailMemberInfo?.first_name} ${detailMemberInfo?.last_name ?? ""}`}
-        subtitle={[
-          detailMemberInfo?.grade ? `Grade ${detailMemberInfo.grade}` : null,
-          detailMemberInfo?.homeroom || null,
-          detailMemberInfo?.external_id ? `External ID: ${detailMemberInfo.external_id}` : null,
-        ].filter(Boolean).join(" · ") || null}
-        actions={actions.desktop}
-        image={detailMemberInfo?.image_url}
-        centerContentComponentTitle={"Contact"}
-        email={detailMemberInfo?.email}
-        phone={detailMemberInfo?.phone_number ?? "+1-000-000-0000"}
-        isMinor={detailMemberInfo.minor === 1}
-        guardianName={`${detailMemberInfo.parent_guardian_first_name} ${detailMemberInfo.parent_guardian_last_name}`}
-        guardianEmail={detailMemberInfo.parent_guardian_email}
-        guardianPhone={detailMemberInfo.parent_guardian_phone_number}
-      />
-    </div>
+    <ProfileIdentityCard
+      name={fullName}
+      imageUrl={detailMemberInfo?.image_url}
+      chips={chips}
+      factGroups={factGroups}
+      actions={actions}
+      testId="member-identity"
+    />
   );
 };
 
-export default MemberInfoHeader;
+MemberProfileIdentity.propTypes = {
+  detailMemberInfo: PropTypes.object,
+  deviceSummary: PropTypes.object,
+  setAddingNewMember: PropTypes.func,
+};
+
+MemberProfileIdentity.defaultProps = {
+  detailMemberInfo: null,
+  deviceSummary: null,
+  setAddingNewMember: () => {},
+};
+
+export default MemberProfileIdentity;

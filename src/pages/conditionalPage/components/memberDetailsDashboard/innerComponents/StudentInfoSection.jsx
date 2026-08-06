@@ -15,6 +15,18 @@ import { useStatusNotification } from "../../../../../components/notification/al
 import { calculateAgeFlags } from "../../../utils/ageCalculationUtils";
 
 /**
+ * MySQL DATE columns arrive as full ISO timestamps ("2010-11-21T05:00:00.000Z").
+ * An <input type="date"> silently refuses anything but YYYY-MM-DD and renders
+ * blank, so the raw value has to be trimmed before it reaches the field —
+ * otherwise the date looks unset, submits empty, and wipes the record.
+ */
+const toDateInputValue = (value) => {
+  if (!value) return "";
+  const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : "";
+};
+
+/**
  * Student/member-only half of the member edit page — profile image, name,
  * contact, address, and (for Education companies) grade/homeroom/DOB.
  * Saves independently of guardian data via its own
@@ -107,7 +119,7 @@ const StudentInfoSection = ({
       setValue("zip", membersData?.address_zip);
       setValue("grade", membersData?.grade ?? "");
       setValue("homeroom", membersData?.homeroom ?? "");
-      setValue("date_of_birth", membersData?.date_of_birth ?? "");
+      setValue("date_of_birth", toDateInputValue(membersData?.date_of_birth));
       setAgeFlags(
         membersData?.date_of_birth
           ? calculateAgeFlags(membersData.date_of_birth)
@@ -140,7 +152,8 @@ const StudentInfoSection = ({
     if (saving) return;
     try {
       setSaving(true);
-      const flags = calculateAgeFlags(data?.date_of_birth);
+      const dateOfBirth = toDateInputValue(data?.date_of_birth);
+      const flags = calculateAgeFlags(dateOfBirth);
       const payload = {
         member_id: membersData?.member_id ?? membersData?.id,
         first_name: data?.first_name,
@@ -155,9 +168,14 @@ const StudentInfoSection = ({
         image_url: newImageUploaded ? newImageUploaded : membersData?.image_url,
         grade: data?.grade,
         homeroom: data?.homeroom,
-        minor: flags.minor,
-        under_13: flags.under_13,
-        date_of_birth: data?.date_of_birth,
+        date_of_birth: dateOfBirth,
+        // Only derive the flags when there's actually a birthdate to derive
+        // them from. Sending minor: 0 off an empty field is how a 15-year-old
+        // silently became an adult — which then hid the guardian editor and
+        // dropped the consent requirement.
+        ...(dateOfBirth
+          ? { minor: flags.minor, under_13: flags.under_13 }
+          : {}),
       };
       await updateMemberInfoMutation.mutateAsync(payload);
     } catch (error) {

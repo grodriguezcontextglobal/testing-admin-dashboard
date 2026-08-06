@@ -1,78 +1,68 @@
-import { Icon } from "@iconify/react";
-import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Card } from "antd";
 import { groupBy } from "lodash";
-import { useRef } from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Breadcrumb from "../../components/UX/breadcrumbs/Breadcrumb";
-import Chip from "../../components/UX/Chip/Chip";
-import PageSpinner from "../../components/utils/PageSpinner";
-import { Subtitle } from "../../styles/global/Subtitle";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
+import {
+  ProfileErrorState,
+  ProfileIdentityCard,
+  ProfileSection,
+  ProfileShell,
+  ProfileSkeleton,
+  ProfileStatTiles,
+  ProfileTabs,
+  StatusChip,
+} from "../../components/UX/profile";
 import TextFontsize18LineHeight28 from "../../styles/global/TextFontSize18LineHeight28";
 import CardActionsButton from "./components/CardActionsButton";
 import NotesRendering from "./components/NotesCard";
+import useConsumerAssignedDevices from "./hooks/useConsumerAssignedDevices";
+import ConsumerDevicesTable from "./tables/ConsumerDevicesTable";
 import StripeTransactionPerConsumer from "./tables/StripeTransactionPerConsumer";
 
-const cardTokens = {
-  borderRadius: "12px",
-  border: "1px solid var(--gray-200, #ddded6)",
-  background: "var(--base-white, #FFF)",
-  boxShadow: "var(--shadow-xs)",
-};
+// Every tab is a real destination with real content. There is no "Overview"
+// tab standing in for a summary — the stat tiles above the tabs are the
+// summary, and they stay visible from every tab.
+const TABS = [
+  { key: "devices", label: "Devices" },
+  { key: "transactions", label: "Transactions" },
+  { key: "notes", label: "Notes" },
+];
 
-const contactRowStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
+const currency = (value) =>
+  `$${Number(value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
 
-const StatTile = ({ value, label, accentColor, testId }) => (
-  <Card
-    data-testid={testId}
-    style={{ ...cardTokens, height: "100%" }}
-    styles={{ body: { padding: "20px 24px" } }}
-  >
-    <span
-      style={{
-        display: "block",
-        fontFamily: "Inter",
-        fontSize: "28px",
-        fontWeight: 600,
-        lineHeight: "38px",
-        color: accentColor ?? "var(--gray-900, #171d1a)",
-      }}
-    >
-      {value ?? 0}
-    </span>
-    <span
-      style={{
-        ...Subtitle,
-        display: "block",
-        fontSize: "13px",
-        lineHeight: "18px",
-        color: "var(--gray-500, #777b73)",
-        marginTop: "4px",
-      }}
-    >
-      {label}
-    </span>
-  </Card>
-);
+const breadcrumbLinkStyle = {
+  textTransform: "none",
+  textAlign: "left",
+  fontWeight: 600,
+  fontSize: "18px",
+  fontFamily: "Inter",
+  lineHeight: "28px",
+  color: "var(--blue-dark-600, #155EEF)",
+};
 
 const DetailPerConsumer = () => {
   const { customer } = useSelector((state) => state.customer);
   const { user } = useSelector((state) => state.admin);
-  const rowRef = useRef();
-  const customerInfoTemplate = {
-    ...customer,
-    id: customer.id ?? customer.uid,
-  };
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Tab lives in the URL, so a specific view of a consumer can be linked and
+  // survives a refresh.
+  const requestedTab = searchParams.get("tab");
+  const activeTab = TABS.some((tab) => tab.key === requestedTab)
+    ? requestedTab
+    : "devices";
+
+  const consumerId = customer?.id ?? customer?.uid;
 
   const transactionsConsumerQuery = useQuery({
-    queryKey: ["transactionsPerCustomer", customerInfoTemplate.id],
+    queryKey: ["transactionsPerCustomer", String(consumerId ?? "")],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         company: user.companyData.id,
@@ -82,217 +72,267 @@ const DetailPerConsumer = () => {
     enabled: !!user.companyData.id && !!customer.email,
   });
 
-  const refetchTransactions = () => transactionsConsumerQuery.refetch();
+  const transactionsList = transactionsConsumerQuery.data?.data?.list ?? [];
+  const paymentIntents = Object.keys(groupBy(transactionsList, "paymentIntent"));
 
-  if (transactionsConsumerQuery.isLoading) return <PageSpinner />;
+  const devicesQuery = useConsumerAssignedDevices({
+    consumerId,
+    companyId: user.companyData.id,
+    paymentIntents,
+  });
+  const deviceSummary = devicesQuery.summary;
 
-  if (transactionsConsumerQuery.data) {
-    const transactionsList =
-      transactionsConsumerQuery.data?.data?.list ?? [];
+  const eventsAttended = Object.keys(
+    groupBy(transactionsList, "eventSelected")
+  ).length;
 
-    const eventsAttendedForCustomer = Object.keys(
-      groupBy(transactionsList, "eventSelected"),
-    ).length;
+  const notesForCompany =
+    customer?.data?.notes?.filter(
+      (note) => note.company === user.companyData.id
+    ) ?? [];
 
-    const activeTransactionsCount = transactionsList.filter(
-      (item) => item.active === true,
-    ).length;
+  const fullName = `${customer?.name ?? ""} ${customer?.lastName ?? ""}`.trim();
 
-    const substractingNotesAddedForCompany = () => {
-      const result = customer?.data?.notes?.filter(
-        (ele) => ele.company === user.companyData.id,
-      );
-      if (result?.length > 0) return [...result];
-      return [];
-    };
+  const breadcrumbItems = [
+    {
+      title: (
+        <Link to="/consumers">
+          <p style={breadcrumbLinkStyle}>All consumers</p>
+        </Link>
+      ),
+    },
+    {
+      title: (
+        <p
+          data-testid="consumer-detail-title"
+          style={{ ...TextFontsize18LineHeight28, textTransform: "capitalize" }}
+        >
+          {fullName}
+        </p>
+      ),
+    },
+  ];
 
-    const fullName = `${customer?.name ?? ""} ${customer?.lastName ?? ""}`.trim();
-    const initials =
-      `${customer?.name?.at(0) ?? ""}${customer?.lastName?.at(0) ?? ""}`.toUpperCase();
+  const breadcrumb = <Breadcrumb path={breadcrumbItems} />;
 
-    const breadcrumbItems = [
-      {
-        title: (
-          <Link to="/consumers">
-            <p
-              style={{
-                textTransform: "none",
-                textAlign: "left",
-                fontWeight: 600,
-                fontSize: "18px",
-                fontFamily: "Inter",
-                lineHeight: "28px",
-                color: "var(--blue-dark-600, #155EEF)",
-              }}
-            >
-              All consumers
-            </p>
-          </Link>
-        ),
-      },
-      {
-        title: (
-          <p
-            data-testid="consumer-detail-title"
-            style={{
-              ...TextFontsize18LineHeight28,
-              textTransform: "capitalize",
-            }}
-          >
-            {fullName}
-          </p>
-        ),
-      },
-    ];
-
+  // Landing here without a selected consumer (a bookmarked URL, a hard reload)
+  // used to leave the query disabled and the page spinning forever. Say what
+  // happened instead.
+  if (!customer?.email) {
     return (
-      <Grid
-        key={customer.id}
-        data-testid="consumer-detail-page"
-        container
-        sx={{ padding: "16px 24px 24px" }}
-        ref={rowRef}
-      >
-        {/* Breadcrumb */}
-        <Grid item xs={12} sx={{ mb: 3 }}>
-          <Breadcrumb path={breadcrumbItems} />
-        </Grid>
-
-        {/* Identity header — avatar, name, status, contact + actions */}
-        <Grid item xs={12} sx={{ mb: 3 }}>
-          <Card style={cardTokens} styles={{ body: { padding: "24px" } }}>
-            <div
-              data-testid="consumer-header"
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: "24px",
-                width: "100%",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "16px",
-                  minWidth: 0,
-                  flex: "1 1 320px",
-                }}
-              >
-                <Avatar
-                  size={80}
-                  src={customer?.data?.profile_picture}
-                  shape="circle"
-                >
-                  {customer?.data?.profile_picture ? "" : initials}
-                </Avatar>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                    minWidth: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: "8px",
-                    }}
-                  >
-                    <h1
-                      data-testid="consumer-name"
-                      style={{
-                        ...TextFontsize18LineHeight28,
-                        color: "var(--gray-900, #171d1a)",
-                        textTransform: "capitalize",
-                        margin: 0,
-                      }}
-                    >
-                      {fullName}
-                    </h1>
-                    <Chip
-                      size="small"
-                      color={activeTransactionsCount > 0 ? "success" : "default"}
-                      label={
-                        activeTransactionsCount > 0
-                          ? "Active devices"
-                          : "No active devices"
-                      }
-                    />
-                  </div>
-                  <p style={{ ...Subtitle, margin: 0 }}>Consumer</p>
-                  <div style={contactRowStyle}>
-                    <Icon
-                      icon="tabler:mail"
-                      width={16}
-                      color="var(--gray-500, #777b73)"
-                    />
-                    <span style={{ ...Subtitle, color: "var(--gray-700, #484d47)" }}>
-                      {customer?.email ?? "—"}
-                    </span>
-                  </div>
-                  <div style={contactRowStyle}>
-                    <Icon
-                      icon="tabler:phone"
-                      width={16}
-                      color="var(--gray-500, #777b73)"
-                    />
-                    <span style={{ ...Subtitle, color: "var(--gray-700, #484d47)" }}>
-                      {customer?.phoneNumber || "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div style={{ flex: "0 1 320px", minWidth: "240px" }}>
-                <CardActionsButton refetching={refetchTransactions} />
-              </div>
-            </div>
-          </Card>
-        </Grid>
-
-        {/* Stat tiles + Notes */}
-        <Grid item xs={12} sx={{ mb: 3 }}>
-          <Grid container spacing={2} alignItems="stretch">
-            <Grid item xs={12} sm={6} md={3}>
-              <StatTile
-                value={transactionsList.length}
-                label="Transactions"
-                testId="stat-transactions"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatTile
-                value={eventsAttendedForCustomer}
-                label="Events attended"
-                testId="stat-events"
-              />
-            </Grid>
-            <Grid item xs={12} sm={12} md={6}>
-              <NotesRendering
-                title={"Notes"}
-                props={substractingNotesAddedForCompany()}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
-
-        {/* Transactions table */}
-        <Grid item xs={12}>
-          <Card style={cardTokens} styles={{ body: { padding: "24px" } }}>
-            <StripeTransactionPerConsumer
-              data={transactionsList}
-              refetching={refetchTransactions}
-            />
-          </Card>
-        </Grid>
-      </Grid>
+      <div data-testid="consumer-detail-page" style={{ padding: "16px 24px 24px" }}>
+        <ProfileShell breadcrumb={breadcrumb}>
+          <ProfileErrorState
+            title="No consumer selected"
+            description="Open a consumer from the list to see their profile."
+            action={
+              <Link to="/consumers">
+                <GrayButtonComponent title={"Back to all consumers"} />
+              </Link>
+            }
+          />
+        </ProfileShell>
+      </div>
     );
   }
+
+  // The old page had no error branch at all: a failed request fell through the
+  // `if (data)` and rendered `undefined` — a blank white screen with nothing to
+  // read and nothing to click.
+  if (transactionsConsumerQuery.isError) {
+    return (
+      <div data-testid="consumer-detail-page" style={{ padding: "16px 24px 24px" }}>
+        <ProfileShell breadcrumb={breadcrumb}>
+          <ProfileErrorState
+            title="Couldn't load this consumer"
+            description="The transaction service didn't respond. Nothing was changed."
+            action={
+              <GrayButtonComponent
+                title={"Try again"}
+                func={() => transactionsConsumerQuery.refetch()}
+              />
+            }
+          />
+        </ProfileShell>
+      </div>
+    );
+  }
+
+  if (transactionsConsumerQuery.isLoading) {
+    return (
+      <div data-testid="consumer-detail-page" style={{ padding: "16px 24px 24px" }}>
+        <ProfileShell breadcrumb={breadcrumb}>
+          <div style={{ padding: "8px 0" }}>
+            <ProfileSkeleton lines={5} />
+          </div>
+        </ProfileShell>
+      </div>
+    );
+  }
+
+  const chips = [
+    deviceSummary.lost > 0 && (
+      <StatusChip
+        key="lost"
+        tone="critical"
+        pip
+        label={`${deviceSummary.lost} lost`}
+      />
+    ),
+    <StatusChip
+      key="out"
+      tone={deviceSummary.out > 0 ? "success" : "neutral"}
+      pip={deviceSummary.out > 0}
+      // States a fact rather than a mood. The old chip read "Active devices" /
+      // "No active devices", which never said how many.
+      label={
+        deviceSummary.out > 0
+          ? `${deviceSummary.out} device${deviceSummary.out === 1 ? "" : "s"} out`
+          : "No devices out"
+      }
+    />,
+  ].filter(Boolean);
+
+  const factGroups = [
+    {
+      label: "Contact",
+      items: [
+        customer?.email
+          ? { value: customer.email, href: `mailto:${customer.email}` }
+          : { value: "No email on file", muted: true },
+        { value: customer?.phoneNumber || "—" },
+      ],
+    },
+    {
+      label: "Account",
+      items: [
+        { value: consumerId ? `ID ${consumerId}` : null },
+        {
+          value: `${notesForCompany.length} note${
+            notesForCompany.length === 1 ? "" : "s"
+          } on file`,
+          muted: true,
+        },
+      ],
+    },
+  ];
+
+  const statTiles = [
+    {
+      label: "Lost",
+      value: deviceSummary.lost,
+      tone: deviceSummary.lost > 0 ? "critical" : "neutral",
+      sub: deviceSummary.lost > 0 ? "Chargeable" : "None reported",
+      testId: "stat-lost",
+    },
+    {
+      label: "Devices out",
+      value: deviceSummary.out,
+      sub: deviceSummary.out === 0 ? "Nothing assigned" : null,
+      testId: "stat-devices-out",
+    },
+    {
+      label: "Value on loan",
+      value: currency(deviceSummary.valueOnLoan),
+      sub: "Replacement cost",
+      testId: "stat-value-on-loan",
+    },
+    {
+      label: "Events attended",
+      value: eventsAttended,
+      sub: `${transactionsList.length} transaction${
+        transactionsList.length === 1 ? "" : "s"
+      }`,
+      testId: "stat-events",
+    },
+  ];
+
+  const renderTab = () => {
+    if (activeTab === "transactions") {
+      return (
+        <ProfileSection
+          title="Transactions"
+          count={transactionsList.length}
+          testId="consumer-transactions-section"
+        >
+          <div style={{ padding: "0 20px 20px" }}>
+            <StripeTransactionPerConsumer
+              data={transactionsList}
+              refetching={transactionsConsumerQuery.refetch}
+            />
+          </div>
+        </ProfileSection>
+      );
+    }
+
+    if (activeTab === "notes") {
+      return (
+        <ProfileSection
+          title="Notes"
+          count={notesForCompany.length}
+          testId="consumer-notes-section"
+        >
+          <div style={{ padding: "0 20px 20px" }}>
+            <NotesRendering title={"Notes"} props={notesForCompany} />
+          </div>
+        </ProfileSection>
+      );
+    }
+
+    return (
+      <ProfileSection
+        title="Assigned devices"
+        count={devicesQuery.isLoading ? undefined : devicesQuery.rows.length}
+        description={
+          devicesQuery.rows.length > 0 ? "Lost first, then still out" : null
+        }
+        testId="consumer-devices-section"
+      >
+        <ConsumerDevicesTable
+          rows={devicesQuery.rows}
+          isLoading={devicesQuery.isLoading}
+          isError={devicesQuery.isError}
+          onRetry={() => devicesQuery.refetch()}
+        />
+      </ProfileSection>
+    );
+  };
+
+  return (
+    <div data-testid="consumer-detail-page" style={{ padding: "16px 24px 24px" }}>
+      <ProfileShell
+        breadcrumb={breadcrumb}
+        identity={
+          <ProfileIdentityCard
+            name={fullName}
+            imageUrl={customer?.data?.profile_picture}
+            chips={chips}
+            factGroups={factGroups}
+            actions={
+              <CardActionsButton refetching={transactionsConsumerQuery.refetch} />
+            }
+            testId="consumer-header"
+          />
+        }
+        stats={<ProfileStatTiles tiles={statTiles} testId="consumer-stats" />}
+        tabs={
+          <ProfileTabs
+            items={TABS}
+            activeKey={activeTab}
+            onSelect={(key) => {
+              // Merge rather than replace, so switching tabs doesn't drop any
+              // other query params the page was opened with.
+              const next = new URLSearchParams(searchParams);
+              next.set("tab", key);
+              setSearchParams(next, { replace: true });
+            }}
+          />
+        }
+      >
+        {renderTab()}
+      </ProfileShell>
+    </div>
+  );
 };
 
 export default DetailPerConsumer;
