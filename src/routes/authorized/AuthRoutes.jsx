@@ -510,10 +510,10 @@ const AuthRoutes = () => {
                   </ErrorBoundary>
                 }
               />
-              <Route
-                path="subscription-company"
-                element={<SubscriptionMainPage />}
-              />
+              {/* subscription-company (PricingTable) route intentionally
+                  removed — the pricing UI is a non-functional shell
+                  (placeholder copy, dead buttons); no in-app link points to
+                  it. Restore once a real subscription flow ships. */}
               <Route
                 path="confirm-subscription"
                 element={<ConfirmSubscription />}
