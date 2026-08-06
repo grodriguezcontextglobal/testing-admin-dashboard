@@ -1,6 +1,7 @@
 import { devitrakApi } from "../../../../api/devitrakApi";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import { verifyAndCreateLocation } from "./verifyLocationBeforeCreateNewInventory";
+import { buildSubLocationPath } from "./SubLocationRenderer";
 
 export const singleItemInserting = async ({
   data,
@@ -33,7 +34,7 @@ export const singleItemInserting = async ({
     company: user.company,
     location: data.location,
     current_location: data.location,
-    sub_location: JSON.stringify(subLocationsSubmitted),
+    sub_location: JSON.stringify(buildSubLocationPath(subLocationsSubmitted, data)),
     extra_serial_number: JSON.stringify(moreInfo),
     company_id: user.sqlInfo.company_id,
     return_date: data.ownership === "Rent" ? formatDate(returningDate) : null,

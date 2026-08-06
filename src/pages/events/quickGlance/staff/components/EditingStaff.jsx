@@ -1,7 +1,6 @@
 import { Grid, OutlinedInput, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Button,
   Card,
   Divider,
   Popconfirm,
@@ -21,10 +20,9 @@ import {
   onAddEventData,
   onAddEventStaff,
 } from "../../../../../store/slices/eventSlice";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
@@ -478,14 +476,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
                           key={member.id}
                           onConfirm={() => removeStaff(member)}
                         >
-                          <Button style={GrayButton}>
-                            <Typography
-                              textTransform={"uppercase"}
-                              style={GrayButtonText}
-                            >
-                              x
-                            </Typography>
-                          </Button>
+                          <GrayButtonComponent>x</GrayButtonComponent>
                         </Popconfirm>,
                       ]}
                       style={{ ...CardStyle, alignSelf: "flex-start" }}

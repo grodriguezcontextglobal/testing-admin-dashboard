@@ -4,6 +4,7 @@ import { useState } from "react";
 import { devitrakApi } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
@@ -228,23 +229,13 @@ const CreateSubLocationPathModal = ({
                 </div>
               ))}
             </div>
-            <button
-              type="button"
+            <GrayButtonComponent
+              buttonType="button"
               onClick={addSegment}
-              style={{
-                marginTop: "8px",
-                background: "none",
-                border: "1px dashed #D0D5DD",
-                borderRadius: "6px",
-                padding: "5px 14px",
-                cursor: "pointer",
-                color: "#475467",
-                fontSize: "13px",
-                width: "fit-content",
-              }}
+              styles={{ marginTop: "8px", width: "fit-content" }}
             >
-              + Add segment
-            </button>
+              Add segment
+            </GrayButtonComponent>
           </div>
 
           <div

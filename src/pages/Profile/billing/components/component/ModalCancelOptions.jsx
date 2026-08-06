@@ -1,10 +1,11 @@
 import { Grid, Typography } from "@mui/material";
-import { Input, Button, Modal, Popconfirm, Tooltip } from "antd";
+import { Input, Modal, Popconfirm, Tooltip, notification, Button } from "antd";
 import { useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Icon } from "@iconify/react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { onAddCompanyAccountStripe } from "../../../../../store/slices/adminSlice";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 const { TextArea } = Input;
 const ModalCancelOptions = ({
@@ -195,15 +196,15 @@ const ModalCancelOptions = ({
                 }}
                 onCancel={() => setOpenOptionFromDueDate(false)}
               >
-                <Button
-                  style={{
+                <GrayButtonComponent
+                  styles={{
                     width: "100%",
                   }}
+                  iconTrailing={<Icon icon="heroicons:question-mark-circle" />}
                   onClick={showPopconfirmOptionFromDueDate}
                 >
-                  Submit cancellation&nbsp;
-                  <Icon icon="heroicons:question-mark-circle" />
-                </Button>
+                  Submit cancellation
+                </GrayButtonComponent>
               </Popconfirm>
             </Tooltip>
           </Grid>

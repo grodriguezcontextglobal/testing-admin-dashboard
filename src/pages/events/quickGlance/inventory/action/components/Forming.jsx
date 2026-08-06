@@ -13,16 +13,14 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import checkTypeFetchResponse from "../../../../../../components/utils/checkTypeFetchResponse";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { CheckIcon } from "../../../../../components/icons/CheckIcon";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { CardStyle } from "../../../../../styles/global/CardStyle";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { GrayButton } from "../../../../../styles/global/GrayButton";
-import GrayButtonText from "../../../../../styles/global/GrayButtonText";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
@@ -477,17 +475,13 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                       Quantity
                     </Typography>
                   </InputLabel>
-                  <button
+                  <LightBlueButtonComponent
                     disabled={loadingStatus}
-                    type="submit"
-                    style={{
-                      ...LightBlueButton,
-                      ...CenteringGrid,
-                      width: "100%",
-                    }}
+                    buttonType="submit"
+                    styles={{ width: "100%" }}
                   >
-                    <p style={LightBlueButtonText}>Add item</p>
-                  </button>
+                    Add item
+                  </LightBlueButtonComponent>
                 </Grid>
               </Grid>
             </form>
@@ -600,9 +594,7 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
                           handleRemoveItemFromInventoryEvent(item)
                         }
                       >
-                        <button style={GrayButton}>
-                          <p style={GrayButtonText}>x</p>
-                        </button>
+                        <GrayButtonComponent>x</GrayButtonComponent>
                       </Popconfirm>,
                     ]}
                     style={{ ...CardStyle, alignSelf: "flex-start" }}

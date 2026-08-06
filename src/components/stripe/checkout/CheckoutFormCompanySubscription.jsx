@@ -4,10 +4,8 @@ import {
   useElements,
   PaymentElement,
 } from "@stripe/react-stripe-js";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { useLocation } from "react-router-dom";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 
 const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
   const stripe = useStripe();
@@ -112,20 +110,15 @@ const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
   return (
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
-      <button
-        style={{ ...BlueButton, margin: "1rem auto", width: "100%" }}
-        className="btn"
+      <BlueButtonComponent
+        buttonType="submit"
         disabled={loading || !stripe || !elements}
+        isLoading={loading}
         id="submit"
+        styles={{ margin: "1rem auto", width: "100%" }}
       >
-        <span style={{ ...BlueButtonText, ...CenteringGrid }} id="button-text">
-          {loading ? (
-            <div className="spinner" id="spinner"></div>
-          ) : (
-            `Authorize $${total}`
-          )}
-        </span>
-      </button>
+        {`Authorize $${total}`}
+      </BlueButtonComponent>
       {errorMessage && <div id="payment-message">{errorMessage}</div>}
     </form>
   );

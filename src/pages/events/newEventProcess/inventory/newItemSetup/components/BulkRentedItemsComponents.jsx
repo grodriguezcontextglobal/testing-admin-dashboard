@@ -1,5 +1,6 @@
 import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { Button, Divider } from "antd";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import DatePicker from "react-datepicker";
 import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
 import Chip from "../../../../../../components/UX/Chip/Chip";
@@ -52,15 +53,15 @@ export const renderingOptionsButtons = ({
 }) => {
   if (label === "Sub location") {
     return (
-      <Button
-        style={{
+      <GrayButtonComponent
+        styles={{
           display: "flex",
           margin: "10px 0 0",
         }}
         onClick={() => addingSubLocation(watch("sub_location"))}
       >
         Add sub location
-      </Button>
+      </GrayButtonComponent>
     );
   }
   if (
@@ -68,15 +69,15 @@ export const renderingOptionsButtons = ({
     watch("format_range_serial_number") === "Custom serial number"
   ) {
     return (
-      <Button
-        style={{
+      <GrayButtonComponent
+        styles={{
           display: "flex",
           margin: "10px 0 0",
         }}
         onClick={() => setAddSerialNumberField(true)}
       >
         Add serial number
-      </Button>
+      </GrayButtonComponent>
     );
   }
   if (
@@ -102,8 +103,8 @@ export const renderingOptionsButtons = ({
           gap: "10px",
         }}
       >
-        <Button
-          style={{
+        <GrayButtonComponent
+          styles={{
             display: "flex",
             margin: "10px 0 0",
           }}
@@ -112,9 +113,9 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "Click for scanning"
             : "Add serial number"}
-        </Button>
-        <Button
-          style={{
+        </GrayButtonComponent>
+        <GrayButtonComponent
+          styles={{
             display: "flex",
             margin: "10px 0 0",
           }}
@@ -123,7 +124,7 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "View scanned serial numbers"
             : "View inserted serial numbers"}
-        </Button>
+        </GrayButtonComponent>
       </div>
     );
   }

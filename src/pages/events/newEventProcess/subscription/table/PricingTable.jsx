@@ -1,9 +1,10 @@
 import { Grid, Typography } from "@mui/material";
-import { Button } from "antd";
 // import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import subscriptionsList from "../../../../../components/json/subscriptionList.json";
 import { onAddSubscription } from "../../../../../store/slices/subscriptionSlice";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 const PricingTable = ({
   handleSubmitEventPayment,
   value,
@@ -109,9 +110,9 @@ const PricingTable = ({
           >
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
           </Typography>
-          <Button
+          <BlueButtonComponent
             // disabled={eventsList?.length > 0}
-            style={{
+            styles={{
               border: "1px solid var(--blue-dark-600, #155EEF)",
               borderRadius: "8px",
               background: "var(--blue-dark-600, #155EEF)",
@@ -129,33 +130,11 @@ const PricingTable = ({
               );
             }}
           >
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "var(--base-white, #FFF",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              Get started
-            </Typography>
-          </Button>
-          <Button disabled>
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "#344054",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              Contact sales
-            </Typography>
-          </Button>
+            Get started
+          </BlueButtonComponent>
+          <GrayButtonComponent disabled>
+            Contact sales
+          </GrayButtonComponent>
         </Grid>
         <Grid
           display={"flex"}
@@ -202,9 +181,9 @@ const PricingTable = ({
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
           </Typography>
           {/* <Tooltip title="Function still in progress."> */}
-          <Button
+          <BlueButtonComponent
             disabled
-            style={{
+            styles={{
               border: "1px solid var(--blue-dark-600, #155EEF)",
               borderRadius: "8px",
               background: "var(--blue-dark-600, #155EEF)",
@@ -228,33 +207,11 @@ const PricingTable = ({
               );
             }}
           >
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "var(--base-white, #FFF",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              Get started
-            </Typography>
-          </Button>
-          <Button disabled>
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "#344054",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              Contact sales
-            </Typography>
-          </Button>
+            Get started
+          </BlueButtonComponent>
+          <GrayButtonComponent disabled>
+            Contact sales
+          </GrayButtonComponent>
         </Grid>
         <Grid
           display={"flex"}
@@ -301,9 +258,9 @@ const PricingTable = ({
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
           </Typography>
           {/* <Tooltip title="Function still in progress."> */}
-          <Button
+          <BlueButtonComponent
             disabled
-            style={{
+            styles={{
               // width: "fit-content",
               border: "1px solid var(--blue-dark-600, #155EEF)",
               borderRadius: "8px",
@@ -328,33 +285,11 @@ const PricingTable = ({
               );
             }}
           >
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "var(--base-white, #FFF",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              Get started
-            </Typography>
-          </Button>
-          <Button disabled={true}>
-            <Typography
-              textTransform={"none"}
-              style={{
-                color: "#344054",
-                fontSize: "14px",
-                fontWeight: "600",
-                fontFamily: "Inter",
-                lineHeight: "20px",
-              }}
-            >
-              Contact sales
-            </Typography>
-          </Button>
+            Get started
+          </BlueButtonComponent>
+          <GrayButtonComponent disabled={true}>
+            Contact sales
+          </GrayButtonComponent>
           {/* </Tooltip> */}
         </Grid>
       </Grid>

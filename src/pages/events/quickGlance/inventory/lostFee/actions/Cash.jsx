@@ -1,5 +1,4 @@
 import {
-  Button,
   FormControl,
   Grid,
   InputAdornment,
@@ -17,11 +16,10 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../../components/animation/DevitrakLoading";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
-import { BlueButton } from "../../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 const Cash = () => {
   const navigator = useNavigate();
   const { choice, company, event } = useSelector((state) => state.event);
@@ -306,28 +304,18 @@ const Cash = () => {
               md={3}
               lg={2}
             >
-              <Button
-                style={{
-                  ...BlueButton,
-                  width: "fit-content",
-                }}
+              <BlueButtonComponent
+                styles={{ width: "fit-content" }}
                 onClick={() => handleBackAction()}
               >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Cancel
-                </Typography>
-              </Button>{" "}
-              <Button
-                style={{
-                  ...BlueButton,
-                  width: "fit-content",
-                }}
-                type="submit"
+                Cancel
+              </BlueButtonComponent>{" "}
+              <BlueButtonComponent
+                styles={{ width: "fit-content" }}
+                buttonType="submit"
               >
-                <Typography textTransform={"none"} style={BlueButtonText}>
-                  Submit
-                </Typography>
-              </Button>
+                Submit
+              </BlueButtonComponent>
             </Grid>
           </Grid>
         </form>

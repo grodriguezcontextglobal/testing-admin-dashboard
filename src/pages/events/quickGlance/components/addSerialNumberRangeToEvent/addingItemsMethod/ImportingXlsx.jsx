@@ -1,5 +1,4 @@
-import { DownloadOutlined } from "@ant-design/icons";
-import { Button, message, Tooltip } from "antd";
+import { message, Tooltip } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { read, utils, writeFile } from "xlsx";
@@ -447,13 +446,12 @@ const ImportingXlsx = ({
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span>Import Template Guide</span>
               <Tooltip title="Download Template">
-                <Button
-                  type="primary"
-                  shape="round"
-                  icon={<DownloadOutlined />}
+                <BlueButtonComponent
                   onClick={handleDownloadTemplate}
-                  size="small"
-                >Download Template</Button>
+                  size="sm"
+                >
+                  Download Template
+                </BlueButtonComponent>
               </Tooltip>
             </div>
           }

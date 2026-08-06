@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import XCloseIcon from "../../../../components/icons/XCloseIcon";
 import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 import Input from "../../../../components/UX/inputs/Input";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -139,6 +140,8 @@ const MainPage = () => {
             LightBlueButtonText={LightBlueButtonText}
             BlueButton={BlueButton}
             BlueButtonText={BlueButtonText}
+            prefillLocation={decodeURI(locationName.slice(1))}
+            prefillSubLocations={subLocations}
           />
         </Grid>
         <Divider />
@@ -238,20 +241,21 @@ const MainPage = () => {
               endAdornment={
                 <InputAdornment position="end">
                   <IconButton
+                    aria-label="Clear search"
                     style={{
-                      backgroundColor: "var(--danger-action)",
                       display:
                         searchedValueItem && searchedValueItem?.length > 0
                           ? "flex"
                           : "none",
-                          aspectRatio:2/1,
+                      padding: 4,
+                      borderRadius: "9999px",
                     }}
                     onClick={() => {
                       setSearchedValueItem(null);
                       setValue("searchDevice", "");
                     }}
                   >
-                    <p style={{ color: "#fff", fontSize: "1rem", fontWeight: 600, aspectRatio:1 }}>x</p>
+                    <XCloseIcon width={18} height={18} />
                   </IconButton>
                 </InputAdornment>
               }

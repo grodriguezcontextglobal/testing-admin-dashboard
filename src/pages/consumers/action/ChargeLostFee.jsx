@@ -4,13 +4,10 @@ import {
   InputAdornment,
   InputLabel,
   OutlinedInput,
-  Typography,
 } from "@mui/material";
-import { Button } from "antd";
 import { useForm } from "react-hook-form";
 import ModalUX from "../../../components/UX/modal/ModalUX";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 
@@ -86,23 +83,12 @@ const ChargeLostFee = ({ openModal, setOpenModal, record }) => {
               </FormHelperText>
             </div>
 
-            <Button
-              type="submit"
-              style={{
-                ...BlueButton,
-                width: "100%",
-              }}
+            <BlueButtonComponent
+              buttonType="submit"
+              styles={{ width: "100%" }}
             >
-              <Typography
-                textTransform={"none"}
-                style={{
-                  ...BlueButtonText,
-                  width: "100%",
-                }}
-              >
-                Charge lost fee to customer
-              </Typography>
-            </Button>
+              Charge lost fee to customer
+            </BlueButtonComponent>
           </form>
         </Grid>
       </Grid>

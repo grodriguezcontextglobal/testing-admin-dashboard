@@ -1,6 +1,7 @@
 import { Grid, IconButton, InputAdornment, OutlinedInput } from "@mui/material";
 import { groupBy, uniqueId } from "lodash";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
+import XCloseIcon from "../../../../components/icons/XCloseIcon";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import TableDeviceCategory from "../categoryDetail/components/Table";
 import TableItemBrand from "../BrandDetail/components/Table";
@@ -114,14 +115,14 @@ export const BodyComponent = ({
             endAdornment={
               <InputAdornment position="end">
                 <IconButton
+                  aria-label="Clear search"
                   style={{
                     background: "transparent",
                     outline: "none",
-                    color: "var(--danger-action)",
+                    padding: 4,
+                    borderRadius: "9999px",
                     display:
                       watch("searchDevice") ||
-                      watch("searchDevice") !== "" ||
-                      watch("searchDevice") !== null ||
                       (searchedValueItem && searchedValueItem?.length > 0)
                         ? "flex"
                         : "none",
@@ -131,7 +132,7 @@ export const BodyComponent = ({
                     setValue("searchDevice", "");
                   }}
                 >
-                  x
+                  <XCloseIcon width={18} height={18} />
                 </IconButton>
               </InputAdornment>
             }

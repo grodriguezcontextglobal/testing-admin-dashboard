@@ -16,6 +16,7 @@ import { onAddStaffProfile } from "../../../../store/slices/staffDetailSlide";
 // import { onAddSubscription } from "../../../../store/slices/subscriptionSlice";
 import "../../../../styles/global/ant-table.css";
 import BaseTable from "../../../../components/UX/tables/BaseTable";
+import TextLink from "../../../../components/UX/buttons/TextLink";
 const TableDetailPerDevice = ({ dataFound }) => {
   const { user } = useSelector((state) => state.admin);
   // const { eventsPerAdmin } = useSelector((state) => state.event);
@@ -209,31 +210,20 @@ const TableDetailPerDevice = ({ dataFound }) => {
           }
         };
         return (
-          <button
+          <TextLink
             onClick={() =>
               record.warehouse === 1
                 ? navigate(`/inventory/location?${record.location}&search=`)
                 : navigateFn(event_name)
             }
             style={{
-              backgroundColor: "transparent",
-              outline: "none",
               margin: "auto",
-              display: "flex",
               justifyContent: "flex-start",
-              alignItems: "center",
               width: "100%",
             }}
           >
-            <p
-              style={{
-                ...columnsStyles,
-                color: "var(--blue-dark-600)",
-              }}
-            >
-              {renderingEventName()}
-            </p>
-          </button>
+            {renderingEventName()}
+          </TextLink>
         );
       },
     },

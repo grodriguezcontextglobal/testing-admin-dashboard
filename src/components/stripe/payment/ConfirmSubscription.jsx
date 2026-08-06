@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Button, Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Result } from "antd";
 import { useEffect } from "react";
@@ -12,6 +12,7 @@ import {
   onAddSubscriptionRecord,
 } from "../../../store/slices/subscriptionSlice";
 import { checkArray } from "../../utils/checkArray";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 // import "../../style/pages/admin/confirmedPaymentAdmin.css";
 const ConfirmSubscription = () => {
   const { user } = useSelector((state) => state.admin);
@@ -132,30 +133,12 @@ const ConfirmSubscription = () => {
                   alignItems: "center",
                 }}
                 extra={[
-                  <Button
-                    style={{
-                      width: "fit-content",
-                      border: "1px solid var(--blue-dark-600, #155EEF)",
-                      borderRadius: "8px",
-                      background: "var(--blue-dark-600, #155EEF)",
-                      boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-                    }}
+                  <BlueButtonComponent
                     onClick={() => navigate("/")}
                     key="console"
                   >
-                    <Typography
-                      textTransform={"none"}
-                      style={{
-                        color: "var(--base-white, #FFF",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        fontFamily: "Inter",
-                        lineHeight: "20px",
-                      }}
-                    >
-                      Return to main page
-                    </Typography>
-                  </Button>,
+                    Return to main page
+                  </BlueButtonComponent>,
                 ]}
               />
             </Grid>

@@ -1,11 +1,12 @@
 import { Grid, Typography } from "@mui/material";
-import { Button, Card, message } from "antd";
+import { Card, message } from "antd";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { QRCode } from "../../../../components/shared-assets/qr-code";
 import { DownloadIcon } from "../../../../components/icons/DownloadIcon";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
+import TextLink from "../../../../components/UX/buttons/TextLink";
 
 const DEVITRAK_LOGO =
   "https://res.cloudinary.com/dpdzkhh07/image/upload/v1729629315/maskable_icon_white_background_t80s7n.png";
@@ -78,30 +79,14 @@ const QRCodeDisplay = () => {
             alignItems="center"
             textAlign="center"
           >
-            <Button
-              style={{
-                width: "fit-content",
-                border: "transparent",
-                outline: "transparent",
-                background: "none",
-                marginRight: "16px",
-              }}
+            <TextLink
+              color="brand"
+              iconLeading={<DownloadIcon />}
               onClick={downloadQRCode}
+              style={{ marginRight: "16px" }}
             >
-              <Typography
-                textTransform="none"
-                style={{ width: "fit-content" }}
-                color="var(--blue-dark-700, #004EEB)"
-                fontFamily="Inter"
-                fontSize="14px"
-                fontStyle="normal"
-                fontWeight="600"
-                lineHeight="20px"
-              >
-                <DownloadIcon />
-                &nbsp;Download as SVG
-              </Typography>
-            </Button>
+              Download as SVG
+            </TextLink>
           </Grid>,
         ]}
       >

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Button, message } from "antd";
+import { message } from "antd";
 import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { saveAs } from "file-saver";
 import { useCallback, useState } from "react";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BaseTable from "../../../../components/UX/tables/BaseTable";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -124,14 +125,13 @@ const ExpandedShipmentView = ({ package_list, record }) => {
     return (
         <div style={{ width: "100%", display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                <Button
-                    type="default"
+                <GrayButtonComponent
                     onClick={handleDownloadReport}
-                    loading={isExporting}
+                    isLoading={isExporting}
                     disabled={isExporting}
                 >
                     Download Report
-                </Button>
+                </GrayButtonComponent>
             </div>
             <BaseTable columns={columns} dataSource={packageData} enablePagination={true} pageSize={10} />
         </div>

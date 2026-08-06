@@ -126,6 +126,19 @@ const useBulkActionLogic = () => {
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
+  // Registered sub-location paths per location (includes empty ones with no
+  // items yet) so the "Sub location" dropdown can list a location's defined
+  // sub-locations, not only those inferred from existing inventory.
+  const locationPathsTreeQuery = useQuery({
+    queryKey: ["locationPathsTree", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.get(
+        `/db_location/companies/${user.sqlInfo.company_id}/location-paths-tree`,
+      ),
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 2 * 60 * 1000,
+  });
+
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: ({ template, idempotencyKey }) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template, {
@@ -290,13 +303,48 @@ const useBulkActionLogic = () => {
   ]);
   qtyDiff();
 
+  // Sub-location names DEFINED for a location via registered paths (from the
+  // paths tree), collected across every depth so the dropdown lists them even
+  // when the location holds no inventory yet.
+  const definedSubLocationsForLocation = (locationName) => {
+    if (!locationName) return [];
+    const body = locationPathsTreeQuery?.data?.data;
+    const tree = body?.locations || body?.data || body || {};
+    const node = tree?.[locationName];
+    if (!node || !node.children) return [];
+    const names = new Set();
+    const walk = (children) => {
+      Object.keys(children || {}).forEach((seg) => {
+        if (seg && seg !== "null") names.add(seg);
+        if (children[seg]?.children) walk(children[seg].children);
+      });
+    };
+    walk(node.children);
+    return Array.from(names);
+  };
+
   const subLocationsOptions = useMemo(
-    () =>
-      retrieveExistingSubLocationsForCompanyInventory(
+    () => {
+      const selected = watch("location");
+      const fromItems = retrieveExistingSubLocationsForCompanyInventory(
         itemsInInventoryQuery?.data?.data?.items,
-        watch("location"),
-      ),
-    [watch("location")],
+        selected,
+      );
+      const fromDefined = definedSubLocationsForLocation(selected).map((v) => ({
+        value: v,
+      }));
+      const seen = new Set();
+      const merged = [];
+      [...fromDefined, ...fromItems].forEach((opt) => {
+        if (opt?.value && !seen.has(opt.value)) {
+          seen.add(opt.value);
+          merged.push(opt);
+        }
+      });
+      return merged.sort((a, b) => a.value.localeCompare(b.value));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [watch("location"), locationPathsTreeQuery.data, itemsInInventoryQuery.data],
   );
 
   const handleAddSubLocationInput = () => {
@@ -622,6 +670,32 @@ const useBulkActionLogic = () => {
   useEffect(() => {
     setValue("location", watch("tax_location"));
   }, [watch("tax_location")]);
+
+  // Pre-fill the location / sub-location when the user arrived here from a
+  // specific location or sub-location page (the caller passes them via
+  // react-router navigation state). Runs once on mount; runs after the
+  // tax_location sync above so the pre-filled location wins on load.
+  useEffect(() => {
+    const prefill = locationInApp.state;
+    if (!prefill) return;
+    if (prefill.location) {
+      setValue("location", prefill.location);
+    }
+    const subs = (Array.isArray(prefill.sub_location) ? prefill.sub_location : [])
+      .map((s) => String(s).trim())
+      .filter((s) => s && s !== "undefined" && s !== "null");
+    if (subs.length > 0) {
+      // Put the leaf in the visible field and keep any ancestors as chips;
+      // buildSubLocationPath recombines them on submit.
+      const ancestors = subs.slice(0, -1);
+      if (ancestors.length > 0) {
+        setSubLocationsSubmitted(ancestors);
+      }
+      setValue("sub_location", subs[subs.length - 1]);
+      setDisplaySublocationFields(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     // acceptAndGenerateImage,

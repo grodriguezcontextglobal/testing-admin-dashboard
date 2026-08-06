@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { onAddSubscription } from "../../store/slices/subscriptionSlice";
 import "../../style/component/subscription/Format.css";
-import { Box, Button, ListItemIcon, Typography } from "@mui/material";
+import { Box, ListItemIcon, Typography } from "@mui/material";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 
 const UpgradeSubscriptionFormat = ({ props }) => {
   const dispatch = useDispatch();
@@ -35,14 +36,12 @@ const UpgradeSubscriptionFormat = ({ props }) => {
       <Typography variant="body1">
         Price: <strong>${price}</strong>
       </Typography>
-      <Button
-        variant="contained"
-        color="primary"
+      <BlueButtonComponent
         onClick={() => handleSelectSubscription(props)}
-        sx={{ mt: 2 }}
+        styles={{ marginTop: "16px" }}
       >
         SELECT
-      </Button>
+      </BlueButtonComponent>
       <Typography variant="body1" component="p" sx={{ mt: 2 }}>
         <ListItemIcon>
           <Icon icon="ic:outline-check" color="#1e73be" />

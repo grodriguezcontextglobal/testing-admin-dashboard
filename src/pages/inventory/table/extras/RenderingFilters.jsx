@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput } from "@mui/material";
 import { hasPermission } from "../../../../config/roles";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Switch } from "antd";
+import { Button, Switch } from "antd";
 import { PropTypes } from "prop-types";
 import { createContext, useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -13,9 +13,7 @@ import CalendarCheckIcon from "../../../../components/icons/CalendarCheckIcon";
 import RefreshIcon from "../../../../components/icons/RefreshIcon";
 import { RightChevronIcon } from "../../../../components/icons/RightChevronIcon";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
-import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../styles/global/Subtitle";
@@ -178,15 +176,30 @@ const RenderingFilters = ({
     staleTime: 2 * 60 * 1000,
   });
 
-  // const locationPathsTreeQuery = useQuery({
-  //   queryKey: ["locationPathsTree", user.sqlInfo.company_id],
-  //   queryFn: () =>
-  //     devitrakApi.get(
-  //       `/db_location/companies/${user.sqlInfo.company_id}/location-paths-tree`
-  //     ),
-  //   enabled: !!user.sqlInfo.company_id,
-  //   staleTime: 2 * 60 * 1000,
-  // });
+  // Definition-based tree: every registered location + sub-location path,
+  // including empty (device-less) ones. Merged into the display tree below so
+  // users can browse/build their full location structure before adding
+  // inventory. Invalidated on location/sub-location create.
+  const locationPathsTreeQuery = useQuery({
+    queryKey: ["locationPathsTree", user.sqlInfo.company_id],
+    queryFn: () =>
+      devitrakApi.get(
+        `/db_location/companies/${user.sqlInfo.company_id}/location-paths-tree`
+      ),
+    enabled: !!user.sqlInfo.company_id,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Response follows the sibling endpoint convention ({ ok, data: <tree> }),
+  // but fall back to the raw body in case it returns the tree directly.
+  const pathsTreeData = (() => {
+    const body = locationPathsTreeQuery?.data?.data;
+    if (!body || typeof body !== "object") return {};
+    // The tree lives under a wrapper key (locations/data/tree); fall back to the
+    // raw body only if it already looks like the tree.
+    const candidate = body.locations ?? body.data ?? body.tree ?? body;
+    return candidate && typeof candidate === "object" ? candidate : {};
+  })();
 
   // const [openPathModal, setOpenPathModal] = useState(false);
 
@@ -226,63 +239,7 @@ const RenderingFilters = ({
     setGroupBy(key);
   };
 
-  const [selectedLocations, setSelectedLocations] = useState(new Set());
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const handleSelectLocation = (locationId) => {
-    setSelectedLocations((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(locationId)) {
-        newSet.delete(locationId);
-      } else {
-        newSet.add(locationId);
-      }
-      return newSet;
-    });
-  };
-  const [
-    openSelectedLocationForDeletingModal,
-    setOpenSelectedLocationForDeletingModal,
-  ] = useState(false);
-  const handleDeleteSelectedLocations = () => {
-    if (selectedLocations.size === 0) return;
-    return setOpenSelectedLocationForDeletingModal(true);
-  };
-  const deletingSelectedLocations = async () => {
-    setIsDeleting(true);
-    try {
-      // Convert Set to Array for iteration
-      const idsToDelete = Array.from(selectedLocations);
-
-      // Execute deletions
-      // Using Promise.all for parallel execution, or sequential if dependency needed.
-      // Assuming independent deletions.
-      await Promise.all(
-        idsToDelete.map((id) =>
-          devitrakApi.post(`/db_location/locations/${id}`)
-        )
-      );
-
-      message.success("Selected locations deleted successfully.");
-
-      // Clear selection
-      setSelectedLocations(new Set());
-      setOpenSelectedLocationForDeletingModal(false);
-
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries("structuredCompanyInventory");
-      queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
-      await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
-
-      // Refetch
-      await locationsAndSublocationsWithTypes.refetch();
-    } catch (error) {
-      console.error("Error deleting locations:", error);
-      message.error("Failed to delete some locations. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleEditClick = (sectionKey) => {
     setEditingSection(sectionKey);
@@ -492,6 +449,41 @@ const RenderingFilters = ({
         locationsAndSublocationsWithTypes?.data?.data?.data
         ? locationsAndSublocationsWithTypes.data.data.data
         : {};
+
+    // Overlay the registered paths so empty (device-less) locations and
+    // sub-locations still appear and are expandable. Device counts win where
+    // present; path-only nodes come in as empty (total 0). Guarded: if the
+    // paths tree is unavailable, the display tree is untouched (no regression).
+    const mergePathsIntoTree = (deviceTree, pathsTree) => {
+      const dev = deviceTree && typeof deviceTree === "object" ? deviceTree : {};
+      const paths = pathsTree && typeof pathsTree === "object" ? pathsTree : {};
+      const out = {};
+      for (const [name, dNode] of Object.entries(dev)) {
+        const pNode = paths[name];
+        out[name] = {
+          ...dNode,
+          children: mergePathsIntoTree(
+            dNode?.children && typeof dNode.children === "object"
+              ? dNode.children
+              : {},
+            pNode?.children || {}
+          ),
+        };
+      }
+      for (const [name, pNode] of Object.entries(paths)) {
+        if (out[name]) continue;
+        out[name] = {
+          total: 0,
+          available: 0,
+          location_id: pNode?.location_id,
+          children: mergePathsIntoTree({}, pNode?.children || {}),
+        };
+      }
+      return out;
+    };
+    if (pathsTreeData && Object.keys(pathsTreeData).length > 0) {
+      source = mergePathsIntoTree(source, pathsTreeData);
+    }
 
     // Filter source tree if allowedLocations is restricted (not null)
     if (allowedLocations !== null && Array.isArray(allowedLocations)) {
@@ -791,10 +783,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("location_1")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("location_1")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <div
@@ -817,14 +809,6 @@ const RenderingFilters = ({
               >
                 <EditIcon />
               </Button>
-              {selectedLocations.size > 0 && (
-                <DangerButtonComponent
-                  func={handleDeleteSelectedLocations}
-                  style={{ margin: "0 1.5rem" }}
-                  loading={isDeleting}
-                  title={`Delete Selected (${selectedLocations.size})`}
-                />
-              )}
               <div
                 style={{
                   marginLeft: "20px",
@@ -856,8 +840,6 @@ const RenderingFilters = ({
       identifierRender: 1,
       show: true,
       columns: [{ title: "Name", dataIndex: "name", key: "name" }],
-      selectedLocations: selectedLocations,
-      onSelectLocation: handleSelectLocation,
     },
     {
       key: "category_name",
@@ -870,10 +852,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("category_name")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("category_name")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -914,10 +896,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("item_group")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("item_group")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -958,8 +940,8 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("brand")}>Save</Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              <BlueButtonComponent onClick={() => handleNameUpdate("brand")}>Save</BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -1000,10 +982,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("ownership")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("ownership")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -1044,10 +1026,10 @@ const RenderingFilters = ({
                 onChange={(e) => setSectionName(e.target.value)}
                 style={{ ...OutlinedInputStyle, width: "200px" }}
               />
-              <Button onClick={() => handleNameUpdate("assignedToStaffMember")}>
+              <BlueButtonComponent onClick={() => handleNameUpdate("assignedToStaffMember")}>
                 Save
-              </Button>
-              <Button onClick={() => setEditingSection(null)}>Cancel</Button>
+              </BlueButtonComponent>
+              <GrayButtonComponent onClick={() => setEditingSection(null)}>Cancel</GrayButtonComponent>
             </div>
           ) : (
             <>
@@ -1372,8 +1354,6 @@ const RenderingFilters = ({
                       data={item.data}
                       setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                       setOpenDetails={setOpenDetails}
-                      selectedLocations={item.selectedLocations}
-                      onSelectLocation={item.onSelectLocation}
                     />
                   ))}{" "}
               </Grid>
@@ -1453,39 +1433,6 @@ const RenderingFilters = ({
         </AdvanceSearchContext.Provider>
       )}
       {/* </> */}
-      {openSelectedLocationForDeletingModal && (
-        <ModalUX
-          title="Delete Selected Locations"
-          body={`Are you sure you want to delete ${selectedLocations.size} selected location(s)? This action cannot be undone.`}
-          openDialog={openSelectedLocationForDeletingModal}
-          footer={[
-            <div
-              key="footer-deleting-locations-modal"
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <GrayButtonComponent
-                key={"cancel-button-deleting-locations-modal"}
-                title={"Cancel"}
-                func={() => {
-                  setSelectedLocations(new Set());
-                  setOpenSelectedLocationForDeletingModal(false);
-                }}
-              />
-              <DangerButtonComponent
-                key={"accepting-button-deleting-locations-modal"}
-                func={deletingSelectedLocations}
-                loadingState={isDeleting}
-                title={"Delete"}
-              />
-            </div>,
-          ]}
-        />
-      )}
     </Grid>
   );
 };

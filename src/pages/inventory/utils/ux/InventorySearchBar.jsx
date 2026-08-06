@@ -2,11 +2,12 @@ import { Grid, Typography } from "@mui/material";
 import { isCoordinatorLevel } from "../../../../config/roles";
 import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
-import { Button as AntButton, Divider, Tag } from "antd";
+import { Divider, Tag } from "antd";
 import { useContext, useState } from "react";
 import { useSelector } from "react-redux";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
+import TextLink from "../../../../components/UX/buttons/TextLink";
 import FilterLinesIcon from "../../../../components/icons/FilterLinesIcon";
 import SearchLgIcon from "../../../../components/icons/SearchLgIcon";
 import XCloseIcon from "../../../../components/icons/XCloseIcon";
@@ -258,13 +259,13 @@ const InventorySearchBar = ({
               {dictionary[filter.value] ?? String(filter.value)}
             </Tag>
           ))}
-          <AntButton
-            type="link"
+          <TextLink
+            color="gray"
             onClick={clearAllFilters}
             style={{ padding: "0 4px", fontSize: "13px" }}
           >
             Clear all
-          </AntButton>
+          </TextLink>
         </div>
       )}
       {showFilters && (

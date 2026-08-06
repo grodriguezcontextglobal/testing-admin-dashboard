@@ -170,7 +170,7 @@ const ExpressCheckInDevices = ({
           placeholder="Scan serial number to check in."
           fullWidth
         />
-        <BlueButtonComponent style={{ width: "100%" }} buttonType="submit" title="Add" />
+        <BlueButtonComponent styles={{ width: "100%" }} buttonType="submit" title="Add" />
       </form>
       <div
         style={{

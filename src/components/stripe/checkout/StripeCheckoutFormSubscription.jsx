@@ -6,10 +6,8 @@ import {
 import { useEffect, useState } from "react";
 // import "./checkoutStyles.css";
 import { useSelector } from "react-redux";
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { useLocation } from "react-router-dom";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 
 export const StripeCheckoutFormSubscription = () => {
   const { subscription } = useSelector((state) => state.subscription);
@@ -98,20 +96,15 @@ export const StripeCheckoutFormSubscription = () => {
   return (
     <form id="payment-form" onSubmit={handleSubmit}>
       <PaymentElement options={paymentElementStyle} id="payment-element" />
-      <button
-        style={{ ...BlueButton, width: "100%" }}
-        className="btn"
+      <BlueButtonComponent
+        buttonType="submit"
         disabled={isLoading || !stripe || !elements}
+        isLoading={isLoading}
         id="submit"
+        styles={{ width: "100%" }}
       >
-        <span style={{ ...BlueButtonText, ...CenteringGrid }} id="button-text">
-          {isLoading ? (
-            <div className="spinner" id="spinner"></div>
-          ) : (
-            `charge $${subscription.total}`
-          )}
-        </span>
-      </button>
+        {`charge $${subscription.total}`}
+      </BlueButtonComponent>
       {message && <div id="payment-message">{message}</div>}
     </form>
   );

@@ -2,6 +2,7 @@ import { Grid, InputLabel, Stack } from "@mui/material";
 import Chip from "../../../../../components/UX/Chip/Chip";
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
+import TextLink from "../../../../../components/UX/buttons/TextLink";
 
 
 const RentalEquipmentInventory = ({ rentalAnalysis, navigate }) => {
@@ -14,12 +15,9 @@ const RentalEquipmentInventory = ({ rentalAnalysis, navigate }) => {
     { title: "Device", dataIndex: "item_group", key: "item_group" },
     {
       title: "Serial", dataIndex: "serial_number", key: "serial_number", render: (text, record) => (
-        <p
-          style={{ cursor: "pointer", color: "var(--blue700)" }}
-          onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}
-        >
+        <TextLink onClick={() => navigate(`/inventory/item?id=${record.item_id}`)}>
           {text}
-        </p>
+        </TextLink>
       ),
     },
     { title: "Location", dataIndex: "location", key: "location" },

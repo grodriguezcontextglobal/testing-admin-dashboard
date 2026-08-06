@@ -2,6 +2,8 @@ import { useRoleLabel } from "../../../../hooks/useRoleLabel";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import Chip from "../../../../components/UX/Chip/Chip";
 import Input from "../../../../components/UX/inputs/Input";
+import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import "./BodyRendering.css";
 
 const BodyRendering = ({
@@ -26,16 +28,10 @@ const BodyRendering = ({
           </p>
         </div>
         <div className="profile-form__actions">
-          <button type="button" className="btn btn--secondary" onClick={onCancel}>
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="btn btn--primary"
-            disabled={loading}
-          >
+          <GrayButtonComponent onClick={onCancel}>Cancel</GrayButtonComponent>
+          <BlueButtonComponent buttonType="submit" disabled={loading}>
             Save
-          </button>
+          </BlueButtonComponent>
         </div>
       </div>
       <div className="profile-form__content">
@@ -112,13 +108,9 @@ const BodyRendering = ({
                     </span>
                   </div>
                 )}
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  onClick={removeUploadedProfileImage}
-                >
+                <GrayButtonComponent onClick={removeUploadedProfileImage}>
                   Remove
-                </button>
+                </GrayButtonComponent>
               </div>
               <div className="photo-section__uploader">
                 <ImageUploaderUX
@@ -170,16 +162,10 @@ const BodyRendering = ({
         </div>
       </div>
       <div className="profile-form__footer">
-        <button type="button" className="btn btn--secondary" onClick={onCancel}>
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="btn btn--primary"
-          disabled={loading}
-        >
+        <GrayButtonComponent onClick={onCancel}>Cancel</GrayButtonComponent>
+        <BlueButtonComponent buttonType="submit" disabled={loading}>
           Save
-        </button>
+        </BlueButtonComponent>
       </div>
     </form>
   );

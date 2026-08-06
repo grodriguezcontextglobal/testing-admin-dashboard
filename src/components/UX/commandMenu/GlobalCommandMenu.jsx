@@ -150,7 +150,21 @@ const GlobalCommandMenu = () => {
           ? [{ key: "Consumers", label: "Consumers", icon: "tabler:users" }]
           : []),
         { key: "Staff", label: "Staff", icon: "tabler:id-badge-2" },
-        { key: "Devices", label: "Devices", icon: "tabler:device-mobile" },
+        { key: "Inventory", label: "Inventory", icon: "tabler:box" },
+        ...(membersAudience
+          ? [
+              {
+                key: "Members",
+                label: membersAudience,
+                icon: industryProfile.icon,
+              },
+            ]
+          : []),
+        {
+          key: "Devices",
+          label: membersAudience ? "Assigned" : "Devices",
+          icon: "tabler:device-mobile",
+        },
         { key: "Events", label: "Events", icon: "tabler:calendar-event" },
       ]}
       onSearchAll={(q, scope) =>

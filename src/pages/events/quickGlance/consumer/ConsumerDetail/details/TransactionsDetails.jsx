@@ -1,10 +1,11 @@
 import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Search, Trash2, RefreshCw } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import StripeTransactionTable from "../StripeTransactionTable";
+import TextLink from "../../../../../../components/UX/buttons/TextLink";
 const TransactionsDetails = () => {
   const [searchValue, setSearchValue] = useState("");
   const [trigger, setTrigger] = useState(false);
@@ -101,27 +102,9 @@ const TransactionsDetails = () => {
           >
             Transactions
           </p>
-          <button
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              outline: "none",
-              backgroundColor: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--blue-dark-600, #155eef)",
-              fontWeight: 500,
-              fontSize: "12px",
-              fontFamily: "Inter",
-              lineHeight: "28px",
-              padding: "0px 8px",
-            }}
-            onClick={() => refetchingTrigger()}
-          >
-            <RefreshCw size={14} />
+          <TextLink color="brand" onClick={() => refetchingTrigger()}>
             Refresh
-          </button>
+          </TextLink>
         </Grid>
         <Grid item xs={12}>
           <StripeTransactionTable

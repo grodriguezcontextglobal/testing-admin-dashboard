@@ -1,5 +1,5 @@
 import { InputLabel, OutlinedInput, Typography } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Divider } from "antd";
 import DatePicker from "react-datepicker";
 import Chip from "../../../../components/UX/Chip/Chip";
 // import { WhiteCirclePlusIcon } from "../../../../components/icons/WhiteCirclePlusIcon";
@@ -15,6 +15,7 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
 // import ScanningMethod from "./ScanningMethod";
 // import ScanningModal from "./ScanningModal";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 
 export const renderTitle = () => {
   return (
@@ -71,7 +72,7 @@ export const renderingOptionsButtons = ({
   ) {
     return (
       <BlueButtonComponent
-        style={{
+        styles={{
           display: "flex",
           margin: "10px 0 0",
         }}
@@ -102,8 +103,8 @@ export const renderingOptionsButtons = ({
           gap: "10px",
         }}
       >
-        <Button
-          style={{
+        <GrayButtonComponent
+          styles={{
             display: "flex",
             margin: "10px 0 0",
           }}
@@ -112,9 +113,9 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "Click for scanning"
             : "Add serial number"}
-        </Button>
-        <Button
-          style={{
+        </GrayButtonComponent>
+        <GrayButtonComponent
+          styles={{
             display: "flex",
             margin: "10px 0 0",
           }}
@@ -123,16 +124,16 @@ export const renderingOptionsButtons = ({
           {watch("feed_serial_number") === "Scanning"
             ? "View scanned serial numbers"
             : "View inserted serial numbers"}
-        </Button>
-        <Button
-          style={{
+        </GrayButtonComponent>
+        <GrayButtonComponent
+          styles={{
             display: "flex",
             margin: "10px 0 0",
           }}
           onClick={() => setUpdateAllItems(true)}
         >
           Update all items{" "}
-        </Button>
+        </GrayButtonComponent>
       </div>
     );
   }
@@ -414,11 +415,9 @@ export const renderingOptionsForSubLocations = ({
 }) => {
   const addSublocationButton = () => {
     return (
-      <Button
+      <BlueButtonComponent
         onClick={() => setDisplaySublocationFields(true)}
-        style={{
-          ...BlueButton,
-          ...CenteringGrid,
+        styles={{
           alignSelf: "stretch",
           display:
             item === "Main location" && !displaySublocationFields
@@ -428,18 +427,16 @@ export const renderingOptionsForSubLocations = ({
           borderRadius: "8px",
         }}
       >
-        <p style={BlueButtonText}>Add sub location</p>
-      </Button>
+        Add sub location
+      </BlueButtonComponent>
     );
   };
 
   const addEndingSerialNumberSequenceButton = () => {
     return (
-      <Button
+      <BlueButtonComponent
         onClick={() => setDisplaySublocationFields(true)}
-        style={{
-          ...BlueButton,
-          ...CenteringGrid,
+        styles={{
           alignSelf: "stretch",
           display:
             item === "Main location" && !displaySublocationFields
@@ -449,21 +446,19 @@ export const renderingOptionsForSubLocations = ({
           borderRadius: "8px",
         }}
       >
-        <p style={BlueButtonText}>Add sub location</p>
-      </Button>
+        Add sub location
+      </BlueButtonComponent>
     );
   };
 
   const removeAllSubLocationsButton = () => {
     return (
-      <Button
+      <BlueButtonComponent
         onClick={() => {
           setDisplaySublocationFields(false);
           setSubLocationsSubmitted([]);
         }}
-        style={{
-          ...BlueButton,
-          ...CenteringGrid,
+        styles={{
           alignSelf: "stretch",
           display:
             item === "Main location" && displaySublocationFields
@@ -473,8 +468,8 @@ export const renderingOptionsForSubLocations = ({
           borderRadius: "8px",
         }}
       >
-        <p style={BlueButtonText}>Remove all sub location</p>
-      </Button>
+        Remove all sub location
+      </BlueButtonComponent>
     );
   };
   return {

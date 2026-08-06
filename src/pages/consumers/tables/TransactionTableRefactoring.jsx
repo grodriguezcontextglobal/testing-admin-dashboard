@@ -4,11 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 
-import { BlueButton } from "../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { DangerButton } from "../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../styles/global/DangerButtonText";
+import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ExpandedRow from "./ExpandedRow";
 import { groupBy } from "lodash";
@@ -276,63 +273,27 @@ const TransactionTableRefactoring = () => {
               gap: "5px",
             }}
           >
-            <button
-              style={{
-                ...DangerButton,
-                ...CenteringGrid,
-                outline: "none",
-                display: `${
+            <DangerButtonComponent
+              styles={{
+                display:
                   checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
                     ? "none"
-                    : "flex"
-                }`,
+                    : "flex",
               }}
             >
-              <p
-                style={{
-                  ...DangerButtonText,
-                  display: `${
-                    checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1]?.length < 13
-                      ? "none"
-                      : "flex"
-                  }`,
-                  border: "transparent",
-                  outline: "none",
-                }}
-              >
-                Capture
-              </p>
-            </button>
+              Capture
+            </DangerButtonComponent>
 
-            <button
-              style={{
-                ...BlueButton,
-                ...CenteringGrid,
-                outline: "none",
-                display: `${
+            <BlueButtonComponent
+              styles={{
+                display:
                   checkPaymentID[1] === "cash" || checkPaymentID[1]?.length < 13
                     ? "none"
-                    : "flex"
-                }`,
+                    : "flex",
               }}
             >
-              <p
-                style={{
-                  ...BlueButtonText,
-                  display: `${
-                    checkPaymentID[1] === "cash" ||
-                    checkPaymentID[1]?.length < 13
-                      ? "none"
-                      : "flex"
-                  }`,
-                  border: "transparent",
-                  outline: "none",
-                }}
-              >
-                Release
-              </p>
-            </button>
+              Release
+            </BlueButtonComponent>
           </div>
         );
       },

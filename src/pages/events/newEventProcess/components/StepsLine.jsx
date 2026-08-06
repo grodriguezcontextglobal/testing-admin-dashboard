@@ -1,9 +1,9 @@
-import { Box, Typography } from "@mui/material";
-import { Button, Steps, message } from "antd";
+import { Box } from "@mui/material";
+import { Steps, message } from "antd";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Subtitle } from "../../../../styles/global/Subtitle";
 import { useSelector } from "react-redux";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import "./StepsLine.css";
 
 const StepsLine = () => {
@@ -108,9 +108,9 @@ const StepsLine = () => {
       />
       {contextHolder}
       {current > 0 && (
-        <Button
+        <GrayButtonComponent
           onClick={() => prev()}
-          style={{
+          styles={{
             display: "flex",
             padding: "8px 14px",
             justifyContent: "center",
@@ -125,14 +125,8 @@ const StepsLine = () => {
             maxHeight: "4dvh",
           }}
         >
-
-          <Typography
-            textTransform={"none"}
-            style={{ ...Subtitle, fontWeight: 600 }}
-          >
-            Previous step
-          </Typography>
-        </Button>
+          Previous step
+        </GrayButtonComponent>
       )}
     </Box>
   );

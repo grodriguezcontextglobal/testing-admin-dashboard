@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material";
-import { Button, Popconfirm } from "antd";
+import { notification, Popconfirm, Button } from "antd";
 import { groupBy } from "lodash";
 import { Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,10 +7,9 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import ModalToDisplayFunctionInProgress from "./endEvent/ModalToDisplayFunctionInProgress";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 
 const EndingEventButton = () => {
@@ -482,22 +481,16 @@ const EndingEventButton = () => {
             }}
             className="popconfirm-event-end"
           >
-            <Button
-              style={{
-                ...BlueButton,
-                ...CenteringGrid,
+            <BlueButtonComponent
+              styles={{
                 width: "100%",
-                background: `${
-                  event.active
-                    ? "var(--blue-dark-600)"
-                    : "var(--disabled-blue-button)"
-                }`,
+                background: event.active
+                  ? "var(--blue-dark-600)"
+                  : "var(--disabled-blue-button)",
               }}
             >
-              <Typography textTransform={"none"} style={BlueButtonText}>
-                &nbsp;End event
-              </Typography>
-            </Button>
+              End event
+            </BlueButtonComponent>
           </Popconfirm>
         </Grid>
       </Grid>

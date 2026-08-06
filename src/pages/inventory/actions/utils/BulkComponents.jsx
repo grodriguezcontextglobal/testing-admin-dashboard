@@ -1,7 +1,6 @@
 import { InputLabel, Typography } from "@mui/material";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
-import { TextFontSize20LineHeight30 } from "../../../../styles/global/TextFontSize20HeightLine30";
 import { Divider } from "antd";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { BlueButton } from "../../../../styles/global/BlueButton";
@@ -29,8 +28,7 @@ export const renderTitle = () => {
         <Typography
           textAlign={"left"}
           textTransform={"none"}
-          style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
-          color={"var(--gray-600, #475467)"}
+          style={{ ...Subtitle, textWrap: "balance" }}
         >
           Create multiple devices at once by entering a base identifier and a number range. Each device in the range will be added to your inventory automatically.        </Typography>
       </InputLabel>
@@ -67,7 +65,7 @@ export const renderingOptionsButtons = ({
       <BlueButtonComponent
         title={"Add serial number"}
         func={() => setAddSerialNumberField(true)}
-        style={{
+        styles={{
           display: "flex",
           margin: "10px 0 0",
         }}
@@ -368,8 +366,7 @@ export const renderTitleSingleItem = () => {
         <Typography
           textAlign={"left"}
           textTransform={"none"}
-          style={{ ...TextFontSize20LineHeight30, textWrap: "balance" }}
-          color={"var(--gray-600, #475467)"}
+          style={{ ...Subtitle, textWrap: "balance" }}
         >
           Item serial number can be created by inputting a serial number base to
           define the category of item depending on your inventory.

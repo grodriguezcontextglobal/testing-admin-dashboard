@@ -8,11 +8,12 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { Grid, InputLabel, Typography } from "@mui/material";
-import { Button, Divider } from "antd";
+import { Divider } from "antd";
 import { devitrakApi } from "../../../apis/devitrakApi";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddNewPaymentMethodInSubscription } from "../../../store/slices/stripeSlice";
 import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+import BlueButtonComponent from "../../UX/buttons/BlueButton";
 const stripePromise = loadStripe(ConfigEnvExport.stripe_public_key)
 
 const FormAddNewCreditCardInfo = () => {
@@ -110,9 +111,9 @@ const FormAddNewCreditCardInfo = () => {
           md={12}
           lg={12}
         >
-          <Button htmlType="submit">
-            <Typography>Update</Typography>
-          </Button>
+          <BlueButtonComponent buttonType="submit">
+            Update
+          </BlueButtonComponent>
         </Grid>
       </form>
     </Grid>

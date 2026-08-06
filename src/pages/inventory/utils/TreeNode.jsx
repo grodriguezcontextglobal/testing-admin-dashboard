@@ -1,6 +1,7 @@
 // TreeNode.jsx
+import { Icon } from "@iconify/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Checkbox, message } from "antd";
+import { message, Modal } from "antd";
 import PropTypes from "prop-types";
 import { useId, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -27,8 +28,7 @@ const TreeNode = ({
   onUpdateLocation,
   setTypePerLocationInfoModal,
   setOpenDetails,
-  selectedLocations,
-  onSelectLocation,
+  rootLocationId = null,
 }) => {
   const { user } = useSelector((state) => state.admin);
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +41,9 @@ const TreeNode = ({
 
   const { total, available, children, types } = nodeData;
   const nodeId = nodeData?.location_id || nodeData?._id || nodeData?.id;
-  const isSelectable = total === 0;
+  // The owning top-level location's id, threaded down through recursion so
+  // sub-location nodes (which carry no id of their own) can be targeted.
+  const effectiveRootId = rootLocationId ?? nodeId;
   const subLocationNames = children
     ? Object.keys(children).filter((key) => key !== "null")
     : [];
@@ -124,6 +126,67 @@ const TreeNode = ({
   const handleCancel = () => {
     setEditedName(nodeName);
     setIsEditing(false);
+  };
+
+  // A node is deletable when it's empty AND either a top-level location (has an
+  // id) or a sub-location path under a known location. Sub-location paths are
+  // identified by (company_id, location_id, path segments).
+  const isTopLevelLocation = !!nodeId;
+  const isSubLocationPath = !nodeId && depth > 0 && !!effectiveRootId;
+  const canDelete =
+    canManageLocation && !hasDevices && (isTopLevelLocation || isSubLocationPath);
+
+  // Delete an empty location or sub-location. For sub-locations the whole
+  // (empty) subtree is removed by the backend, so we say so in the prompt.
+  const handleDeleteEmpty = () => {
+    if (!canDelete) return;
+    const childCount = subLocationNames.length;
+    const content = isTopLevelLocation
+      ? "This empty location will be permanently removed. This can't be undone."
+      : childCount > 0
+      ? `"${nodeName}" and its ${childCount} empty sub-location${
+          childCount === 1 ? "" : "s"
+        } will be permanently removed. This can't be undone.`
+      : "This empty sub-location will be permanently removed. This can't be undone.";
+
+    Modal.confirm({
+      title: `Delete "${nodeName}"?`,
+      content,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      centered: true,
+      onOk: async () => {
+        try {
+          if (isTopLevelLocation) {
+            await devitrakApi.post(`/db_location/locations/${nodeId}`);
+          } else {
+            const response = await devitrakApi.post(
+              "/db_location/sub-location-path/delete",
+              {
+                company_id: user.sqlInfo.company_id,
+                location_id: effectiveRootId,
+                sub_location_path: path.slice(1),
+              }
+            );
+            if (!response?.data?.ok) {
+              throw new Error(response?.data?.msg || "Delete failed");
+            }
+          }
+          message.success(`"${nodeName}" deleted`);
+          queryClient.invalidateQueries("structuredCompanyInventory");
+          queryClient.invalidateQueries("locationsAndSublocationsWithTypes");
+          queryClient.invalidateQueries(["locationPathsTree"]);
+          await clearCacheMemory(`company_id=${user.sqlInfo.company_id}`);
+        } catch (error) {
+          console.error("Error deleting location:", error);
+          message.error(
+            error.response?.data?.msg ||
+              "Failed to delete. Please try again."
+          );
+        }
+      },
+    });
   };
 
   const navigateToLocation = (location) => {
@@ -230,11 +293,7 @@ const TreeNode = ({
     }
   };
 
-  const rowClassNames = [
-    "tree-row",
-    depth > 0 ? "tree-row--child" : "",
-    selectedLocations?.has(nodeId) ? "tree-row--selected" : "",
-  ]
+  const rowClassNames = ["tree-row", depth > 0 ? "tree-row--child" : ""]
     .filter(Boolean)
     .join(" ");
 
@@ -256,13 +315,6 @@ const TreeNode = ({
           </button>
         ) : (
           <span className="tree-row__chevron" aria-hidden="true" />
-        )}
-        {canManageLocation && nodeId && onSelectLocation && isSelectable && (
-          <Checkbox
-            checked={selectedLocations?.has(nodeId)}
-            onChange={() => onSelectLocation(nodeId)}
-            title="Select empty location for deletion"
-          />
         )}
         {isEditing ? (
           <span
@@ -360,6 +412,30 @@ const TreeNode = ({
             >
               <RightNarrowInCircle />
             </button>
+            {canDelete && (
+              <button
+                type="button"
+                className="tree-row__action-btn tree-row__action-btn--danger"
+                onClick={handleDeleteEmpty}
+                title={
+                  isTopLevelLocation
+                    ? "Delete empty location"
+                    : "Delete empty sub-location"
+                }
+                aria-label={
+                  isTopLevelLocation
+                    ? "Delete empty location"
+                    : "Delete empty sub-location"
+                }
+              >
+                <Icon
+                  icon="tabler:trash"
+                  width={18}
+                  height={18}
+                  color="var(--error-600, #d92d20)"
+                />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -378,8 +454,7 @@ const TreeNode = ({
                 onUpdateLocation={onUpdateLocation}
                 setTypePerLocationInfoModal={setTypePerLocationInfoModal}
                 setOpenDetails={setOpenDetails}
-                selectedLocations={selectedLocations}
-                onSelectLocation={onSelectLocation}
+                rootLocationId={effectiveRootId}
               />
             ))}
         </div>
@@ -406,6 +481,5 @@ TreeNode.propTypes = {
   onUpdateLocation: PropTypes.func,
   setTypePerLocationInfoModal: PropTypes.func,
   setOpenDetails: PropTypes.func,
-  selectedLocations: PropTypes.instanceOf(Set),
-  onSelectLocation: PropTypes.func,
+  rootLocationId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };

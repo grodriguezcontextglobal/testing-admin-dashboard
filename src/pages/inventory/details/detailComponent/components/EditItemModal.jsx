@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, message } from "antd";
+import { message, notification, Button } from "antd";
 import { groupBy } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -9,10 +9,8 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import ReusableCard from "../../../../../components/UX/cards/ReusableCard";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import { onTrackBackgroundJob } from "../../../../../store/slices/backgroundJobsSlice";
-import { BlueButton } from "../../../../../styles/global/BlueButton";
-import { BlueButtonText } from "../../../../../styles/global/BlueButtonText";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
 import "../../../../../styles/global/reactInput.css";
 import "../../../actions/style.css";
@@ -288,11 +286,9 @@ const EditItemModal = ({
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
       return (
-        <Button
+        <BlueButtonComponent
           onClick={() => setDisplaySublocationFields(true)}
-          style={{
-            ...BlueButton,
-            ...CenteringGrid,
+          styles={{
             alignSelf: "stretch",
             display:
               item === "Main location" && !displaySublocationFields
@@ -302,21 +298,19 @@ const EditItemModal = ({
             borderRadius: "8px",
           }}
         >
-          <p style={BlueButtonText}>Add sub location</p>
-        </Button>
+          Add sub location
+        </BlueButtonComponent>
       );
     };
 
     const removeAllSubLocationsButton = () => {
       return (
-        <Button
+        <BlueButtonComponent
           onClick={() => {
             setDisplaySublocationFields(false);
             setSubLocationsSubmitted([]);
           }}
-          style={{
-            ...BlueButton,
-            ...CenteringGrid,
+          styles={{
             alignSelf: "stretch",
             display:
               item === "Main location" && displaySublocationFields
@@ -326,8 +320,8 @@ const EditItemModal = ({
             borderRadius: "8px",
           }}
         >
-          <p style={BlueButtonText}>Remove all sub location</p>
-        </Button>
+          Remove all sub location
+        </BlueButtonComponent>
       );
     };
     return {

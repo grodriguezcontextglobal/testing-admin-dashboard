@@ -6,6 +6,7 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
+import TextLink from "../../../../../components/UX/buttons/TextLink";
 const TableDetailPerDevice = ({ searching }) => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { event } = useSelector((state) => state.event);
@@ -126,24 +127,12 @@ const TableDetailPerDevice = ({ searching }) => {
           ("" + a.eventSelected).localeCompare(b.eventSelected),
       },
       render: (eventSelected) => (
-        <button
+        <TextLink
           onClick={() => navigate("/events/event-quickglance")}
-          style={{
-            margin: "auto",
-            cursor: "pointer",
-            outline: "none",
-            backgroundColor: "transparent",
-          }}
+          style={{ margin: "auto" }}
         >
-          <p
-            style={{
-              ...renderRowStyle,
-              color: "var(--blue-dark-600, #155EEF)",
-            }}
-          >
-            {eventSelected}
-          </p>
-        </button>
+          {eventSelected}
+        </TextLink>
       ),
     },
     {
@@ -215,25 +204,9 @@ const TableDetailPerDevice = ({ searching }) => {
         compare: (a, b) => ("" + a.user).localeCompare(b.user),
       },
       render: (_, record) => (
-        <button
-          onClick={() => handleConsumerNavigation(record)}
-          style={{
-            margin: 0,
-            padding: 0,
-            cursor: "pointer",
-            backgroundColor: "transparent",
-            outline: "none",
-          }}
-        >
-          <p
-            style={{
-              ...renderRowStyle,
-              color: "var(--blue-dark-600, #155EEF)",
-            }}
-          >
-            {record.user}
-          </p>
-        </button>
+        <TextLink onClick={() => handleConsumerNavigation(record)}>
+          {record.user}
+        </TextLink>
       ),
     },
   ];

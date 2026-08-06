@@ -1,4 +1,3 @@
-import { Grid } from "@mui/material";
 import { Pagination } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,6 +6,11 @@ import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import CardSearchConsumersFound from "../utils/CardSearchConsumerFound";
 import NoDataFound from "../utils/NoDataFound";
+import SearchSection from "./SearchSection";
+import {
+  cardGrid,
+  sectionFooter,
+} from "../utils/sectionLayout";
 
 const PAGE_SIZE = 10;
 const SearchConsumerRef = ({ data }) => {
@@ -68,56 +72,36 @@ const SearchConsumerRef = ({ data }) => {
   };
 
   return (
-    <Grid
-      container
-      style={{
-        display: "flex",
-        justifyContent: "flex-start",
-        alignItems: "center",
-      }}
+    <SearchSection
+      title="Consumers"
+      subtitle="All consumers matching your search."
     >
-      <Grid
-        style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", alignSelf: "flex-start", gap: "4px" }}
-        item
-        xs={12}
-        sm={12}
-        md={4}
-        lg={4}
-      >
-        <p style={{ fontFamily: "Inter", fontSize: "18px", fontWeight: 600, lineHeight: "28px", color: "var(--gray-900, #101828)", margin: 0 }}>
-          Consumers
-        </p>
-        <p style={{ fontFamily: "Inter", fontSize: "14px", fontWeight: 400, lineHeight: "20px", color: "var(--gray-600, #475467)", margin: 0 }}>
-          All consumers matching your search.
-        </p>
-      </Grid>
-
-      <Grid item xs={12} sm={12} md={8} lg={8}>
-        <Grid style={{ display: "flex", justifyContent: "flex-end" }} container gap={1}>
-          {pageConsumers.length > 0 ? (
-            pageConsumers.map((item) => (
-              <Grid key={item.id} item xs={12} sm={12} md={3} lg={3}>
-                <CardSearchConsumersFound props={item} fn={handleConsumerInfo} />
-              </Grid>
-            ))
-          ) : (
-            <NoDataFound />
-          )}
-        </Grid>
-        {allConsumers.length > PAGE_SIZE && (
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
-            <Pagination
-              current={currentPage}
-              pageSize={PAGE_SIZE}
-              total={allConsumers.length}
-              onChange={setCurrentPage}
-              showSizeChanger={false}
-              showTotal={(total, range) => `${range[0]}–${range[1]} of ${total}`}
+      {pageConsumers.length > 0 ? (
+        <div style={cardGrid(280)}>
+          {pageConsumers.map((item) => (
+            <CardSearchConsumersFound
+              key={item.id}
+              props={item}
+              fn={handleConsumerInfo}
             />
-          </div>
-        )}
-      </Grid>
-    </Grid>
+          ))}
+        </div>
+      ) : (
+        <NoDataFound />
+      )}
+      {allConsumers.length > PAGE_SIZE && (
+        <div style={sectionFooter}>
+          <Pagination
+            current={currentPage}
+            pageSize={PAGE_SIZE}
+            total={allConsumers.length}
+            onChange={setCurrentPage}
+            showSizeChanger={false}
+            showTotal={(total, range) => `${range[0]}–${range[1]} of ${total}`}
+          />
+        </div>
+      )}
+    </SearchSection>
   );
   // }
 };

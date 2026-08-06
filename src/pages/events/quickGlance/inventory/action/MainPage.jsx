@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Card, Popconfirm, message } from "antd";
+import { Card, Popconfirm, message, notification, Button } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -17,14 +17,12 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
-import { DangerButton } from "../../../../../styles/global/DangerButton";
-import { DangerButtonText } from "../../../../../styles/global/DangerButtonText";
-import { LightBlueButton } from "../../../../../styles/global/LightBlueButton";
-import LightBlueButtonText from "../../../../../styles/global/LightBlueButtonText";
 import Choice from "../lostFee/Choice";
 import UpdateStatus from "./components/UpdateStatus";
 import { Replace } from "./Replace";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 const ActionsMainPage = () => {
   const [openLostModal, setOpenLostModal] = useState(false);
@@ -264,62 +262,25 @@ const ActionsMainPage = () => {
                 md={12}
                 lg={12}
               >
-                <Button
-                  onClick={() => handleLostSingleDevice()}
-                  style={{ ...DangerButton, outline: "none" }}
-                >
-                  <p
-                    style={{
-                      ...DangerButtonText,
-                      textTransform: "capitalize",
-                      textAlign: "left",
-                    }}
-                  >
-                    lost
-                  </p>
-                </Button>
-                <Button
-                  onClick={() => exchangeDefectedDevice()}
-                  style={{ ...DangerButton, outline: "none" }}
-                >
-                  <p
-                    style={{
-                      ...DangerButtonText,
-                      textTransform: "capitalize",
-                      textAlign: "left",
-                    }}
-                  >
-                    exchange
-                  </p>
-                </Button>
+                <DangerButtonComponent onClick={() => handleLostSingleDevice()}>
+                  Lost
+                </DangerButtonComponent>
+                <DangerButtonComponent onClick={() => exchangeDefectedDevice()}>
+                  Exchange
+                </DangerButtonComponent>
                 <Popconfirm
                   title="Are you sure?"
                   onConfirm={() => handleReturnDevice()}
                 >
-                  <Button style={{ ...LightBlueButton, outline: "none" }}>
-                    <p style={{ ...LightBlueButtonText, textAlign: "left" }}>
-                      Return
-                    </p>
-                  </Button>
+                  <LightBlueButtonComponent>Return</LightBlueButtonComponent>
                 </Popconfirm>
               </Grid>
             </Grid>
           ) : (
             <Grid item xs={12} sm={12} md={4} lg={3}>
-              <Button
-                onClick={() => setModalUpdateStatus(true)}
-                style={{ ...DangerButton, outline: "none" }}
-              >
-                <p
-                  style={{
-                    ...DangerButtonText,
-                    textTransform: "capitalize",
-                    textAlign: "left",
-                  }}
-                >
-                  edit status
-                </p>
-              </Button>
+              <DangerButtonComponent onClick={() => setModalUpdateStatus(true)}>
+                Edit Status
+              </DangerButtonComponent>
             </Grid>
           )}
         </Card>
