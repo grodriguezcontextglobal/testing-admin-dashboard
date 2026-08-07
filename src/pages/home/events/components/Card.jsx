@@ -11,7 +11,7 @@ import convertMilitaryToRegularTime from "../../../events/utils/militaryTimeTran
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { useState } from "react";
 
-const Card = ({ props, checkStatus, checkActiveEvent, quickGlance }) => {
+const Card = ({ props, checkActiveEvent, quickGlance }) => {
   const cardStyle = {
     ...CardStyle,
     border: "1px solid var(--gray-200)",

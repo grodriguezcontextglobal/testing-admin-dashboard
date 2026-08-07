@@ -13,7 +13,6 @@ import { groupBy, orderBy } from "lodash";
 import validatingInputFields from "../utils/validatingInputFields";
 import {
   bulkItemUpdateAlphanumeric,
-  bulkItemUpdateSequential,
   storeAndGenerateImageUrl,
   updateAllItemsBasedOnParameters,
 } from "../utils/EditBulkActionOptions";

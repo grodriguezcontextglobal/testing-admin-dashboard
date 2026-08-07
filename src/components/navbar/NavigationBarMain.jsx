@@ -32,29 +32,23 @@ import {
 } from "../../store/slices/devicesHandleSlice";
 import { onResetEventInfo } from "../../store/slices/eventSlice";
 import { onResetHelpers } from "../../store/slices/helperSlice";
-import { onResetResult } from "../../store/slices/searchBarResultSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import CenteringGrid from "../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 // import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 // import { ProfileIcon } from "../icons/ProfileIcon";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import { getIndustryProfile } from "../../config/industryProfiles";
-import Input from "../UX/inputs/Input";
-import { CircleDeleteIcon } from "../icons/CircleDeleteIcon";
 import MenuIcon from "../icons/MenuIcon";
-import { SendIcon } from "../icons/SendIcon";
 import { Icon } from "@iconify/react";
 import MagnifyIcon from "../icons/search-lg.svg";
 import colorMark from "../../assets/maskable_icon_white_background.png";
 import DevitrakWordmark from "../icons/DevitrakWordmark";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
-import MobileSidebarNav from "./component/MobileSidebarNav";
 import "./style/style.css";
 const { PropTypes } = pkg;
 // Same icons as the command menu navigation group (tabler set)
@@ -93,10 +87,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // const { register, handleSubmit, watch } = useForm()
   const { window } = props;
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showSearch] = useState(false); // inline search retired — magnifier opens the ⌘K palette
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
-  const [searchValue, setSearchValue] = useState("");
   // const [rowId, setRowId] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -124,29 +116,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
     setMobileOpen((prevState) => !prevState);
   };
 
-  const onChange = (e) => {
-    return setSearchValue(e.target.value);
-  };
-  const handleResetSearchValue = () => {
-    setSearchValue("");
-    return dispatch(onResetResult());
-  };
-
   const toggleSearch = () => {
     // Global search now lives in the command menu (⌘K) — Untitled UI pattern.
     window.dispatchEvent(new CustomEvent("devitrak:open-cmdk"));
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    return navigate(`/search-result-page?search=${searchValue}`, {
-      state: { search: searchValue, count: 0 },
-      flushSync: true,
-      replace: true,
-      relative: false,
-      window: true,
-    });
-  };
   const hiddenNavTabs = getIndustryProfile(
     user?.companyData?.industry
   ).hiddenNavTabs;

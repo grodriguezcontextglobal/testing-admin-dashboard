@@ -219,38 +219,6 @@ const Body = () => {
         devitrakApi.post("/db_company/update_company", dbCompanyUpdatePayload),
       ];
 
-      const stripeAccount = user.companyData.stripe_connected_account;
-      if (stripeAccount && (stripeAccount.live || stripeAccount.test)) {
-        const stripeUpdateData = {
-          company_email: data.email,
-          company_name: data.companyName,
-          company_phone: data.mainPhoneNumber,
-          website: data.website,
-          address: {
-            street: data.street,
-            city: data.city,
-            state: data.state,
-            postal_code: data.zipCode,
-          },
-        };
-
-        // if (stripeAccount.test) {
-        //   updatePromises.push(
-        //     devitrakApi.post("/stripe/company-account-stripe/update", {
-        //       ...stripeUpdateData,
-        //       connectedAccountId: stripeAccount.test,
-        //     })
-        //   );
-        // }
-        // if (stripeAccount.live) {
-        //   updatePromises.push(
-        //     devitrakApi.post("/stripe/company-account-stripe/update", {
-        //       ...stripeUpdateData,
-        //       connectedAccountId: stripeAccount.live,
-        //     })
-        //   );
-        // }
-      }
       const promiseResults = await Promise.all(updatePromises);
       const companyUpdateResult = promiseResults[0];
       const dbCompanyUpdateResult = promiseResults[1];

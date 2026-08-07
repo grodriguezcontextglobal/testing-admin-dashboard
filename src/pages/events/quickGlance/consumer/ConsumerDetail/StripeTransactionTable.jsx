@@ -19,7 +19,6 @@ import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAd
 import ExpandedRowInTable from "./ExpandedRowInTable";
 // import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
 import { groupBy } from "lodash";
-import Loading from "../../../../../components/animation/Loading";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";

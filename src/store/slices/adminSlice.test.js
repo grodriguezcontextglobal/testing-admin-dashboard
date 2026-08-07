@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import reducer, { onLogin, onLogout, onChecking } from "./adminSlice";
+import reducer, { onLogin, onLogout } from "./adminSlice";
 
 const initialState = reducer(undefined, { type: "@@INIT" });
 

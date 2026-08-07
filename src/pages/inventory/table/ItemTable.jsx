@@ -72,7 +72,6 @@ const ItemTable = ({
   downloadDataReport,
   // total,
   // searchedResult,
-  dataFilterOptions,
   setOpenCreateLocationModal,
   setTypePerLocationInfoModal,
   setOpenDetails,
