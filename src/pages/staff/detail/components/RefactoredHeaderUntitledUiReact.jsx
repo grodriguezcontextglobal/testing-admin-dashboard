@@ -4,18 +4,24 @@ import { Avatar } from "antd";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import Chip from "../../../../components/UX/Chip/Chip";
+import { useRoleLabel } from "../../../../hooks/useRoleLabel";
 import "./RefactoredHeaderUntitledUiReact.css";
-
-const ROLE_LABEL = {
-  "0": "Root Admin",
-  "1": "Admin",
-  "2": "User",
-};
 
 const RefactoredHeaderUntitledUiReact = ({ actions, statusChip }) => {
   const isMobile = useMediaQuery("only screen and (max-width: 768px)");
   const { profile } = useSelector((state) => state.staffDetail);
   const info = profile.adminUserInfo || {};
+  const roleLabel = useRoleLabel();
+
+  // The role shown here is the member's role IN THIS COMPANY (profile.role /
+  // profile.roleType), not adminUserInfo.role — the AdminUser document's own
+  // field, which is not what UpdateRoleInCompany writes when someone's role
+  // changes, so reading it left this chip stale right after an edit.
+  // Prefer roleType: it's the canonical string and the only representation
+  // the scoped roles (category_manager, inventory_location_manager, …) have —
+  // they carry no legacy numeric equivalent. `||`, not `??`, so a blank
+  // roleType still falls back to the numeric role instead of rendering empty.
+  const roleName = roleLabel(profile.roleType || profile.role);
 
   const initials =
     info.name?.at(0) && info.lastName?.at(0)
@@ -37,11 +43,7 @@ const RefactoredHeaderUntitledUiReact = ({ actions, statusChip }) => {
               {statusChip}
             </div>
             <div className="mh-role-row">
-              <Chip
-                size="small"
-                color="info"
-                label={ROLE_LABEL[info?.role] ?? "—"}
-              />
+              <Chip size="small" color="info" label={roleName || "—"} />
             </div>
           </div>
         </div>
