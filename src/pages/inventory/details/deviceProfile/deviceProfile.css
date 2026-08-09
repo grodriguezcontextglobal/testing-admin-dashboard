@@ -1,0 +1,422 @@
+/**
+ * Device profile layout.
+ *
+ * Deliberately thin: the shell, identity card, stat tiles and tabs all come
+ * from profileShell.css so the device page and the people pages stay one
+ * visual language. Only the two-column body and the cards inside it are new.
+ */
+
+.device-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 316px;
+  gap: 18px;
+  align-items: start;
+  width: 100%;
+}
+
+@media (max-width: 1080px) {
+  .device-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.device-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.device-card {
+  background: var(--basewhite, #fff);
+  border: 1px solid var(--gray200, #eaecf0);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.06),
+    0 1px 3px rgba(16, 24, 40, 0.1);
+  padding: 20px 22px;
+  min-width: 0;
+}
+
+.device-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.device-card__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--gray900, #0f1728);
+}
+
+.device-card__note {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  color: var(--gray500, #667084);
+}
+
+/* spec rows -------------------------------------------------------------- */
+
+.device-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0 28px;
+}
+
+.device-spec-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.device-spec {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--gray200, #eaecf0);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+}
+
+.device-spec:last-child {
+  border-bottom: 0;
+}
+
+.device-spec__key {
+  color: var(--gray500, #667084);
+  white-space: nowrap;
+}
+
+.device-spec__value {
+  color: var(--gray900, #0f1728);
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* rail cards ------------------------------------------------------------- */
+
+.device-linkcard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  padding: 11px 12px;
+  border: 1px solid var(--gray200, #eaecf0);
+  border-radius: 9px;
+  background: var(--gray-modern--50, #f8f9fb);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.device-linkcard:hover,
+.device-linkcard:focus-visible {
+  border-color: var(--blue-dark-600, #155dee);
+  background: var(--blue-dark--100, #d1e0ff);
+}
+
+.device-linkcard__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--gray100, #f2f3f6);
+  color: var(--gray600, #475466);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.device-linkcard__title {
+  display: block;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--gray900, #0f1728);
+}
+
+.device-linkcard__sub {
+  display: block;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  color: var(--gray500, #667084);
+}
+
+.device-meter {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--gray100, #f2f3f6);
+  overflow: hidden;
+  margin: 10px 0 7px;
+}
+
+.device-meter__fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--blue-dark-600, #155dee);
+}
+
+.device-rail__text {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  color: var(--gray600, #475466);
+}
+
+.device-rail__text strong {
+  color: var(--gray900, #0f1728);
+  font-weight: 650;
+}
+
+/* utilization sparkline -------------------------------------------------- */
+
+.device-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 24px;
+  margin-top: 2px;
+}
+
+.device-spark__bar {
+  display: block;
+  width: 4px;
+  border-radius: 1px;
+  background: var(--gray300, #cfd4dc);
+}
+
+.device-spark__bar--out {
+  background: var(--blue-dark-600, #155dee);
+}
+
+/* chip row inside the identity card -------------------------------------- */
+
+.device-chiprow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* assign drawer ---------------------------------------------------------- */
+
+.assign-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: Inter, sans-serif;
+  text-align: left;
+}
+
+.assign-drawer__sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gray500, #667084);
+}
+
+.assign-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.assign-field > label {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--gray900, #0f1728);
+}
+
+.assign-hint {
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--gray500, #667084);
+}
+
+.assign-results {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gray200, #eaecf0);
+  border-radius: 9px;
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.assign-result {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--basewhite, #fff);
+  border: 0;
+  border-bottom: 1px solid var(--gray200, #eaecf0);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s ease;
+}
+
+.assign-result:last-child {
+  border-bottom: 0;
+}
+
+.assign-result:hover:not(:disabled) {
+  background: var(--gray-modern--50, #f8f9fb);
+}
+
+.assign-result.is-selected {
+  background: var(--blue-dark--100, #d1e0ff);
+}
+
+.assign-result:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.assign-result__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: var(--gray100, #f2f3f6);
+  color: var(--gray600, #475466);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.assign-result__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.assign-result__name {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--gray900, #0f1728);
+}
+
+.assign-result__meta {
+  display: block;
+  font-size: 12px;
+  color: var(--gray500, #667084);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assign-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.assign-chip--member {
+  color: var(--blue-dark-600, #155dee);
+  background: var(--blue-dark--100, #d1e0ff);
+}
+
+.assign-chip--staff {
+  color: #6941c6;
+  background: var(--primary50, #f9f5ff);
+}
+
+.assign-notice {
+  display: flex;
+  gap: 10px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 19px;
+  border: 1px solid transparent;
+}
+
+.assign-notice a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.assign-notice--success {
+  background: var(--success50, #ebfdf2);
+  color: var(--success700, #027947);
+  border-color: rgba(2, 121, 71, 0.24);
+}
+
+.assign-notice--info,
+.assign-notice--neutral {
+  background: var(--blue-dark--100, #d1e0ff);
+  color: var(--blue-dark--800, #0040c1);
+  border-color: rgba(21, 93, 238, 0.24);
+}
+
+.assign-notice--warning {
+  background: #fff4ed;
+  color: #b93815;
+  border-color: rgba(185, 56, 21, 0.24);
+}
+
+.assign-notice--critical {
+  background: #fef3f2;
+  color: var(--error-700, #b42318);
+  border-color: rgba(180, 35, 24, 0.24);
+}
+
+.assign-presets {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.assign-preset {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 15px;
+  cursor: pointer;
+  border: 1px solid var(--gray300a, #d0d5dd);
+  background: var(--basewhite, #fff);
+  color: var(--gray600, #475466);
+  transition: all 0.14s ease;
+}
+
+.assign-preset:hover:not(:disabled) {
+  border-color: var(--gray500, #667084);
+  color: var(--gray900, #0f1728);
+}
+
+.assign-preset.is-active {
+  background: var(--blue-dark-600, #155dee);
+  border-color: var(--blue-dark-600, #155dee);
+  color: #fff;
+}
+
+.assign-foot {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.assign-foot > * {
+  flex: 1;
+  min-width: 0;
+}
