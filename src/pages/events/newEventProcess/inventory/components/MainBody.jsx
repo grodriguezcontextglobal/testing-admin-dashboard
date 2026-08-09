@@ -1,17 +1,14 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { Select } from "antd";
-import { useState } from "react";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
-import { useStaffRoleAndLocations } from "../../../../../utils/checkStaffRoleAndLocations";
 import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
 import SelectedItemsRendered from "./SelectedItemsRendered";
-import BannerReusableComponentUntitleUI from "../../../../../components/UX/banner/BannerReusableComponentUntitleUI";
 
 const MainBody = ({
   AddingEventCreated,
@@ -38,10 +35,6 @@ const MainBody = ({
   register,
   handleSubmit,
 }) => {
-  const { isAdmin, locationsAssignPermission } = useStaffRoleAndLocations();
-  const [openDrawer, setOpenDrawer] = useState(
-    locationsAssignPermission.length === 0,
-  );
   return (
     <Grid
       container

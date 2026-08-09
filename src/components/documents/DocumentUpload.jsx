@@ -64,6 +64,13 @@ const DocumentUpload = ({ activeTab, refetch }) => {
     formDataToSend.append("at_", new Date().toISOString());
     formDataToSend.append("requires_signature", false);
     formDataToSend.append("document_type", "document");
+    // Only a document explicitly tagged for the school consent flow may be
+    // served through the unauthenticated guardian-facing public endpoint —
+    // every other trigger_action must stay private by default.
+    formDataToSend.append(
+      "public_document",
+      values.trigger_action === "school_consent"
+    );
     // Append all form fields (skip empty values so we never send "undefined")
     Object.keys(values).forEach((key) => {
       if (values[key] === undefined || values[key] === null) return;
@@ -127,6 +134,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
   // (e.g. custom values) — fall back to the raw industry string rather than
   // crashing the whole Documents tab.
   const representative = industries[industry]?.[0] ?? industry;
+  const isEducation = industry === "Education";
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical" style={{ margin: "1rem 0" }}>
       <SectionHeader
@@ -169,6 +177,9 @@ const DocumentUpload = ({ activeTab, refetch }) => {
               <Select.Option value="onboarding">Staff</Select.Option>
               <Select.Option value="event">Event</Select.Option>
               <Select.Option value="consumer">Consumer</Select.Option>
+              {isEducation && (
+                <Select.Option value="school_consent">School Consent</Select.Option>
+              )}
               <Select.Option value={`${representative}`}>{representative}</Select.Option>
             </Select>
           </Form.Item>

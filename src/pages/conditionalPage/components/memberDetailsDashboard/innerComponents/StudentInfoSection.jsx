@@ -4,6 +4,7 @@ import { Avatar } from "antd";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import ImageUploaderFormat from "../../../../../classes/imageCloudinaryFormat";
 import { convertToBase64 } from "../../../../../components/utils/convertToBase64";
 import ImageUploaderUX from "../../../../../components/utils/UX/ImageUploaderUX";
@@ -55,12 +56,18 @@ const StudentInfoSection = ({
         company_id: companyId,
         ...data,
       }),
-    onSuccess: () => {
+    onSuccess: (_response, variables) => {
       notify(
         "success",
         "Student information updated successfully",
         "The student information has been updated successfully."
       );
+      registerStaffActivity({
+        action: "UPDATE",
+        target_model: "Member",
+        target_id: variables?.member_id ?? membersData?.member_id ?? membersData?.id,
+        details: { fields: Object.keys(variables ?? {}) },
+      });
       onSaved?.();
     },
     onError: (error) => {

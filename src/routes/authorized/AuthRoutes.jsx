@@ -150,9 +150,6 @@ const SchoolComplianceSettings = lazy(() =>
 const RolesManagementMainPage = lazy(() =>
   import("../../pages/Profile/roles_management/RolesManagementMainPage")
 );
-const SubscriptionMainPage = lazy(() =>
-  import("../../pages/subscription/MainPage")
-);
 const ConfirmSubscription = lazy(() =>
   import("../../components/stripe/payment/ConfirmSubscription")
 );
@@ -466,10 +463,12 @@ const AuthRoutes = () => {
                   element={<NotificationsMainPage />}
                 />
                 <Route path="billing" element={<BillingMainPage />} />
-                <Route
-                  path="staff-activity"
-                  element={<StaffActivityMainPage />}
-                />
+                <Route element={<PermissionGuard action="staff:read" />}>
+                  <Route
+                    path="staff-activity"
+                    element={<StaffActivityMainPage />}
+                  />
+                </Route>
                 <Route path="company-info" element={<CompanyInfo />} />
                 <Route element={<PermissionGuard action="member:update" />}>
                   <Route path="school-compliance" element={<SchoolComplianceSettings />} />
@@ -511,10 +510,10 @@ const AuthRoutes = () => {
                   </ErrorBoundary>
                 }
               />
-              <Route
-                path="subscription-company"
-                element={<SubscriptionMainPage />}
-              />
+              {/* subscription-company (PricingTable) route intentionally
+                  removed — the pricing UI is a non-functional shell
+                  (placeholder copy, dead buttons); no in-app link points to
+                  it. Restore once a real subscription flow ships. */}
               <Route
                 path="confirm-subscription"
                 element={<ConfirmSubscription />}

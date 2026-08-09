@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GuardianConsentResponsePage from "./GuardianConsentResponsePage";
 import {
+  fetchPublicConsentDocument,
   respondPublicConsent,
   retrievePublicConsent,
 } from "./guardianConsentPublicApi";
@@ -11,6 +12,7 @@ import {
 vi.mock("./guardianConsentPublicApi", () => ({
   retrievePublicConsent: vi.fn(),
   respondPublicConsent: vi.fn(),
+  fetchPublicConsentDocument: vi.fn(),
 }));
 
 const mockNotify = vi.fn();
@@ -147,6 +149,62 @@ describe("GuardianConsentResponsePage", () => {
     expect(container).toHaveTextContent(pendingConsent.consent.consent_text);
     expect(container.style.maxHeight).toBe("240px");
     expect(container.style.overflowY).toBe("auto");
+  });
+
+  it("renders the consent document iframe when the company has an assigned consent_document_id", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      company: { ...pendingConsent.company, consent_document_id: "doc-1" },
+    });
+    fetchPublicConsentDocument.mockResolvedValue({
+      title: "School Consent",
+      viewUrl: "https://s3.example.com/signed-school-consent.pdf",
+    });
+    renderPage();
+
+    const iframe = await screen.findByTitle("School Consent");
+    expect(iframe.tagName).toBe("IFRAME");
+    expect(iframe).toHaveAttribute(
+      "src",
+      "https://s3.example.com/signed-school-consent.pdf"
+    );
+    // pendingConsent's guardian/student fixtures carry no `id` — confirms
+    // the "guardian" literal fallback is used rather than crashing/passing undefined.
+    expect(fetchPublicConsentDocument).toHaveBeenCalledWith("doc-1", "guardian");
+  });
+
+  it("does not fetch a document, and falls back to consent_text, when no consent_document_id is assigned", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    renderPage();
+    await screen.findByTestId("consent-text-scroll");
+    expect(fetchPublicConsentDocument).not.toHaveBeenCalled();
+    expect(screen.queryByTitle(/consent document/i)).not.toBeInTheDocument();
+  });
+
+  it("prefers the document over consent_text when both are present", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      company: { ...pendingConsent.company, consent_document_id: "doc-1" },
+    });
+    fetchPublicConsentDocument.mockResolvedValue({
+      title: "School Consent",
+      viewUrl: "https://s3.example.com/signed-school-consent.pdf",
+    });
+    renderPage();
+    await screen.findByTitle("School Consent");
+    expect(screen.queryByTestId("consent-text-scroll")).not.toBeInTheDocument();
+  });
+
+  it("renders neither block, without crashing, when a document is assigned but has no viewUrl yet", async () => {
+    retrievePublicConsent.mockResolvedValue({
+      ...pendingConsent,
+      consent: { ...pendingConsent.consent, consent_text: undefined },
+      company: { ...pendingConsent.company, consent_document_id: "doc-1" },
+    });
+    fetchPublicConsentDocument.mockResolvedValue({ title: null, viewUrl: null });
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Agree" })).toBeInTheDocument();
+    expect(screen.queryByTestId("consent-text-scroll")).not.toBeInTheDocument();
   });
 
   it("shows already responded result when consent already agreed", async () => {

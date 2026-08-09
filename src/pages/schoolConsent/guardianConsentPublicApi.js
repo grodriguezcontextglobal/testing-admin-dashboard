@@ -46,3 +46,27 @@ export async function respondPublicConsent(otc, decision, signerName) {
   });
   return response.data;
 }
+
+/**
+ * Fetch the title + a viewable URL for the school's assigned consent
+ * document, so the guardian can read it before deciding. Reuses the same
+ * document metadata/download endpoints the authenticated Documents module
+ * uses (confirmed 2026-08-04 to respond without any auth headers or a real
+ * `viewerId`) — see FRONTEND_backend_security_report_company_scoping.md for
+ * the follow-up on hardening that server-side.
+ *
+ * @param {string} documentId - `company.consent_document_id` from retrievePublicConsent
+ * @param {string} [viewerId] - passed through to the download endpoint; not
+ *   currently validated server-side, so any identifying value works
+ * @returns {Promise<{title: string|null, viewUrl: string|null}>}
+ */
+export async function fetchPublicConsentDocument(documentId, viewerId = "guardian") {
+  const [docResponse, downloadResponse] = await Promise.all([
+    publicApi.get(`/document/${documentId}`),
+    publicApi.get(`/document/download/${documentId}/${viewerId}`),
+  ]);
+  return {
+    title: docResponse.data?.document?.title ?? null,
+    viewUrl: downloadResponse.data?.downloadUrl ?? null,
+  };
+}

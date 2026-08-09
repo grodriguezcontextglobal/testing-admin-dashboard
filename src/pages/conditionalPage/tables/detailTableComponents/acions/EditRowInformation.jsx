@@ -1,4 +1,5 @@
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import { message } from "antd";
 import { formatDate } from "../../../../../components/utils/dateFormat";
 
@@ -48,6 +49,12 @@ export const updateExpectedReturnDate = async ({
     );
 
     if (resp?.data?.ok) {
+      registerStaffActivity({
+        action: "UPDATE",
+        target_model: "Lease",
+        target_id: updateInfo.record.member_id,
+        details: { device_id: updateInfo.record.device_id, expected_return_date: payload.update.expected_return_date },
+      });
       setUpdateInfo({});
       // Use provided refetch (function) if available, otherwise rely on query invalidation
       if (queryClient) {

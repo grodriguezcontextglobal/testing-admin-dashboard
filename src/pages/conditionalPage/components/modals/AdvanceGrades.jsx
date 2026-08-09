@@ -5,6 +5,7 @@ import { Typography } from "antd";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../api/activityLog";
 import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -98,6 +99,12 @@ const AdvanceGrades = ({ openModal, setOpenModal }) => {
             member_id: item.member_id,
             company_id: user?.sqlInfo?.company_id,
             grade: item.nextGrade,
+          });
+          registerStaffActivity({
+            action: "UPDATE",
+            target_model: "Member",
+            target_id: item.member_id,
+            details: { grade: item.nextGrade, reason: "grade_advancement" },
           });
           succeeded += 1;
         } catch {

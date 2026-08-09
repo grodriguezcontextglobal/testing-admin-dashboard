@@ -13,6 +13,7 @@ import { useState } from "react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Divider, message } from "antd";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../../api/activityLog";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,12 +72,18 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         return response.data;
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["memberAssignedDevices"],
         exact: true,
         refetchType: "active",
         refetchActive: true,
+      });
+      registerStaffActivity({
+        action: "UNASSIGN",
+        target_model: "Lease",
+        target_id: storedRecord.member_id,
+        details: { device_id: storedRecord.device_id, outcome: variables?.outcome },
       });
       await sentReturnEmailNotification();
       setStoredRecord({});
@@ -185,7 +192,7 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             placeholder={
               watch("outcome") === "lost"
                 ? "e.g. Reported lost by student on 6/2"
-                : "e.g. Cracked screen — charged to account"
+                : "e.g. Cracked screen — marked as returned"
             }
             style={{ ...OutlinedInputStyle, width: "100%" }}
             multiline

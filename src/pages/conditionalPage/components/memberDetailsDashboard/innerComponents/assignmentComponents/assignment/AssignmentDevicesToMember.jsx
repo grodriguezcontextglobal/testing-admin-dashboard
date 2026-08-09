@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getIndustryProfile } from "../../../../../../../config/industryProfiles";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../../../api/activityLog";
 import DevitrakLoading from "../../../../../../../components/animation/DevitrakLoading";
 import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../../../components/icons/CheckIcon";
@@ -249,6 +250,12 @@ const AssignmentDevicesToMember = () => {
       if (!newLease?.data?.ok) {
         throw new Error("Failed to create the device lease record.");
       }
+      registerStaffActivity({
+        action: "ASSIGN",
+        target_model: "Lease",
+        target_id: memberInfo.member_id,
+        details: { device_id: data.item_id },
+      });
     }
     return (verificationInfo._id =
       verificationContractID.data.verificationInfo._id);
