@@ -36,113 +36,121 @@ export default defineConfig(({ mode }) => {
     plugins: [
       million.vite({ auto: true }),
       react(),
-      ...(apiOriginPattern
-        ? [
-          VitePWA({
-            registerType: "prompt",
-            injectRegister: null,
-            includeAssets: ["devitrak-logo-white.svg"],
-            // Without this, vite-plugin-pwa only emits the manifest/service
-            // worker on `vite build` — the dev server (`npm run dev`,
-            // docker compose up) never registers a service worker, so the
-            // browser has nothing to base an install decision on and
-            // `beforeinstallprompt` never fires. This is why the install
-            // banner/footer link never appeared while testing against the
-            // dev server.
-            devOptions: {
-              enabled: true,
-              type: "module",
+      // Registered unconditionally, on purpose. This used to be wrapped in
+      // `apiOriginPattern ? [...] : []`, so an environment without
+      // VITE_APP_DEVITRACK_API (a fresh clone, CI) skipped the plugin
+      // entirely — and ServiceWorkerUpdateNotifier.jsx imports
+      // "virtual:pwa-register" unconditionally, so `vite build` died with a
+      // Rollup resolve error naming that component rather than the missing
+      // env var. Only the API runtime-caching rules actually need the
+      // origins; see workbox.runtimeCaching below.
+      VitePWA({
+        registerType: "prompt",
+        injectRegister: null,
+        includeAssets: ["devitrak-logo-white.svg"],
+        // Without this, vite-plugin-pwa only emits the manifest/service
+        // worker on `vite build` — the dev server (`npm run dev`,
+        // docker compose up) never registers a service worker, so the
+        // browser has nothing to base an install decision on and
+        // `beforeinstallprompt` never fires. This is why the install
+        // banner/footer link never appeared while testing against the
+        // dev server.
+        devOptions: {
+          enabled: true,
+          type: "module",
+        },
+        manifest: {
+          id: "/",
+          name: "Devitrak",
+          short_name: "Devitrak",
+          description: "Devitrak admin dashboard",
+          theme_color: "#1976d2",
+          background_color: "#ffffff",
+          display: "standalone",
+          start_url: "/",
+          scope: "/",
+          // Chrome's install criteria need a 192px and a 512px icon with
+          // the default "any" purpose — the two pwa-* entries below cover
+          // that and must stay. The maskable entry is additive: Android
+          // applies its own mask (circle/squircle) and crops anything
+          // outside the central 80% safe zone, so it needs artwork with
+          // margin and a full-bleed background, which a plain "any" icon
+          // usually isn't. One 512px maskable is enough — the launcher
+          // downscales it; the 48/72/96/128/384 variants the generator
+          // emits are pre-mask Android legacy and only bloat the
+          // precache.
+          icons: [
+            { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
+            { src: "pwa-512x512.png", sizes: "512x512", type: "image/png" },
+            {
+              src: "maskable_icon_x512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "maskable",
             },
-            manifest: {
-              id: "/",
-              name: "Devitrak",
-              short_name: "Devitrak",
-              description: "Devitrak admin dashboard",
-              theme_color: "#1976d2",
-              background_color: "#ffffff",
-              display: "standalone",
-              start_url: "/",
-              scope: "/",
-              // Chrome's install criteria need a 192px and a 512px icon with
-              // the default "any" purpose — the two pwa-* entries below cover
-              // that and must stay. The maskable entry is additive: Android
-              // applies its own mask (circle/squircle) and crops anything
-              // outside the central 80% safe zone, so it needs artwork with
-              // margin and a full-bleed background, which a plain "any" icon
-              // usually isn't. One 512px maskable is enough — the launcher
-              // downscales it; the 48/72/96/128/384 variants the generator
-              // emits are pre-mask Android legacy and only bloat the
-              // precache.
-              icons: [
-                { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
-                { src: "pwa-512x512.png", sizes: "512x512", type: "image/png" },
-                {
-                  src: "maskable_icon_x512.png",
-                  sizes: "512x512",
-                  type: "image/png",
-                  purpose: "maskable",
-                },
-              ],
+          ],
+        },
+        workbox: {
+          // SPA shell: any navigation falls back to the cached index.html
+          // when offline, so the client-side router can still render
+          // whichever screen the user reaches. "Recent screens" is then
+          // bounded naturally by the GET cache below, not by an
+          // allowlist of routes.
+          navigateFallback: "/index.html",
+          // Every entry below keys off the API origins, so without them
+          // there is nothing to register. The service worker still ships —
+          // shell precache, manifest, update prompt — it just doesn't wrap
+          // the network layer.
+          runtimeCaching: apiOriginPattern ? [
+            {
+              urlPattern: apiOriginPattern,
+              method: "GET",
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "devitrak-recent-data",
+                networkTimeoutSeconds: 4,
+                expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 },
+              },
             },
-            workbox: {
-              // SPA shell: any navigation falls back to the cached index.html
-              // when offline, so the client-side router can still render
-              // whichever screen the user reaches. "Recent screens" is then
-              // bounded naturally by the GET cache below, not by an
-              // allowlist of routes.
-              navigateFallback: "/index.html",
-              runtimeCaching: [
-                {
-                  urlPattern: apiOriginPattern,
-                  method: "GET",
-                  handler: "NetworkFirst",
-                  options: {
-                    cacheName: "devitrak-recent-data",
-                    networkTimeoutSeconds: 4,
-                    expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 },
-                  },
+            // Mutation queue: if the device has no network, queue the
+            // POST/PUT and auto-retry once connectivity returns.
+            // Complements (does not replace) the backend's own async
+            // job queue — see FRONTEND_task_queue_changes.md /
+            // backgroundJobsSlice.js. devitrakAWSApi is intentionally
+            // NOT covered here: it's built outside the shared axios
+            // instances/interceptor in src/api/devitrakApi.jsx.
+            {
+              urlPattern: apiOriginPattern,
+              method: "POST",
+              handler: "NetworkOnly",
+              options: {
+                // Workbox requires a unique Queue name per
+                // BackgroundSyncPlugin instance — one is created per
+                // runtimeCaching entry, so POST and PUT each need
+                // their own name even though they're conceptually the
+                // same "mutation queue" (reusing one name here throws
+                // duplicate-queue-name at service-worker startup and
+                // was silently breaking SW activation).
+                backgroundSync: {
+                  name: "devitrak-mutations-queue-post",
+                  options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
                 },
-                // Mutation queue: if the device has no network, queue the
-                // POST/PUT and auto-retry once connectivity returns.
-                // Complements (does not replace) the backend's own async
-                // job queue — see FRONTEND_task_queue_changes.md /
-                // backgroundJobsSlice.js. devitrakAWSApi is intentionally
-                // NOT covered here: it's built outside the shared axios
-                // instances/interceptor in src/api/devitrakApi.jsx.
-                {
-                  urlPattern: apiOriginPattern,
-                  method: "POST",
-                  handler: "NetworkOnly",
-                  options: {
-                    // Workbox requires a unique Queue name per
-                    // BackgroundSyncPlugin instance — one is created per
-                    // runtimeCaching entry, so POST and PUT each need
-                    // their own name even though they're conceptually the
-                    // same "mutation queue" (reusing one name here throws
-                    // duplicate-queue-name at service-worker startup and
-                    // was silently breaking SW activation).
-                    backgroundSync: {
-                      name: "devitrak-mutations-queue-post",
-                      options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
-                    },
-                  },
-                },
-                {
-                  urlPattern: apiOriginPattern,
-                  method: "PUT",
-                  handler: "NetworkOnly",
-                  options: {
-                    backgroundSync: {
-                      name: "devitrak-mutations-queue-put",
-                      options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
-                    },
-                  },
-                },
-              ],
+              },
             },
-          }),
-        ]
-        : []),
+            {
+              urlPattern: apiOriginPattern,
+              method: "PUT",
+              handler: "NetworkOnly",
+              options: {
+                backgroundSync: {
+                  name: "devitrak-mutations-queue-put",
+                  options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
+                },
+              },
+            },
+          ] : [],
+        },
+      }),
     ],
     build: {
       brotliSize: false,
