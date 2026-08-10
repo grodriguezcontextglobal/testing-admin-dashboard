@@ -57,8 +57,9 @@ const StatusBadge = ({ status }) => {
 /**
  * "Fast forward" — bulk end-of-year grade advancement for every student in
  * the company. Grade is free text (no backend catalog), so the plan
- * (gradeAdvancementUtils) walks a fixed K→1→...→12→Graduated sequence;
- * unrecognized grade values are shown for manual review and never touched.
+ * (gradeAdvancementUtils) canonicalises each value and walks a fixed
+ * PK3→PK4→K→1→...→12→Graduated sequence; unrecognized grade values are
+ * shown for manual review and never touched.
  * Applies one PATCH /db_member/update-member-info per student that actually
  * changes (advanced/graduated) — there's no bulk-grade endpoint yet.
  */
