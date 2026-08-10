@@ -61,9 +61,9 @@ const TableItemBrand = ({
   const listItemsQuery = useQuery({
     queryKey: queryKeys.items,
     queryFn: () =>
-      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: "select * from item_inv where brand = ? and company_id = ?",
-        values: [brandName, user.sqlInfo.company_id],
+      devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.byAttribute",
+        params: { attribute: "brand", value: brandName },
       }),
     enabled: !!user.sqlInfo?.company_id && !!brandName,
     staleTime: 5 * 60 * 1000, // 5 minutes

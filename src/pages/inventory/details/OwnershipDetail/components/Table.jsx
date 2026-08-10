@@ -36,9 +36,12 @@ const TableItemOwnership = ({
       decodeURI(ownership[0].slice(1)),
     ],
     queryFn: () =>
-      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: "select * from item_inv where ownership = ? and company_id = ?",
-        values: [decodeURI(ownership[0].slice(1)), user.sqlInfo.company_id],
+      devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.byAttribute",
+        params: {
+          attribute: "ownership",
+          value: decodeURI(ownership[0].slice(1)),
+        },
       }),
     enabled: !!user.sqlInfo.company_id,
   });

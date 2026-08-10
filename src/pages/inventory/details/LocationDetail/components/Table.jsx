@@ -32,9 +32,12 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
-      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: "select * from item_inv where location = ? and company_id = ?",
-        values: [decodeURI(locationName[0].slice(1)), user.sqlInfo.company_id],
+      devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.byAttribute",
+        params: {
+          attribute: "location",
+          value: decodeURI(locationName[0].slice(1)),
+        },
       }),
     refetchOnMount: false,
     enabled: !!user.sqlInfo.company_id,
