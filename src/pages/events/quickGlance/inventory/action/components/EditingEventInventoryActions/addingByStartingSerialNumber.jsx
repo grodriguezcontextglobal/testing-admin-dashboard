@@ -282,40 +282,38 @@ const useAddingByStartingSerialNumber = ({
       return message.warning("Please enter a valid quantity.");
     try {
       setLoadingStatus(true);
-      const query1 = `Select * from item_inv where company_id = ? and warehouse = 1 and enableAssignFeature = 1 and location = ? and item_group = ? and category_name = ? and serial_number = ?`;
-      const values1 = [
-        user.sqlInfo.company_id,
-        valueItemSelected.location,
-        valueItemSelected.item_group,
-        valueItemSelected.category_name,
-        startingSerial,
-        // quantity,
-      ];
+      // warehouse = 1 and enableAssignFeature = 1 are inherent to the
+      // "assignable" entries, and company_id comes from the s-company-lq
+      // header, so none of the three is sent.
       const result1 = await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
+        "/db_event/inventory-query",
         {
-          query: query1,
-          values: values1,
+          queryName: "inventory.assignableExactSerial",
+          params: {
+            location: valueItemSelected.location,
+            itemGroup: valueItemSelected.item_group,
+            categoryName: valueItemSelected.category_name,
+            serialNumber: startingSerial,
+          },
         }
       );
       if (result1.data.result.length < 1)
         return message.warning(
           "Starting serial not found or no available items from that serial."
         );
-      const query = `Select item_id, serial_number, location, container, category_name, item_group from item_inv where company_id = ? and warehouse = 1 and enableAssignFeature = 1 and location = ? and item_group = ? and category_name = ? and serial_number >= ? Order by serial_number Asc limit ?`;
-      const values = [
-        user.sqlInfo.company_id,
-        valueItemSelected.location,
-        valueItemSelected.item_group,
-        valueItemSelected.category_name,
-        startingSerial,
-        quantity,
-      ];
+      // `quantity` is the old LIMIT and must be a positive integer — the guard
+      // above already rejects anything else before we get here.
       const response = await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
+        "/db_event/inventory-query",
         {
-          query,
-          values,
+          queryName: "inventory.assignableFromSerial",
+          params: {
+            location: valueItemSelected.location,
+            itemGroup: valueItemSelected.item_group,
+            categoryName: valueItemSelected.category_name,
+            startingSerial,
+            quantity,
+          },
         }
       );
       const deviceInfo = Array.isArray(response.data?.result)

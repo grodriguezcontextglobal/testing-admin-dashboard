@@ -287,30 +287,20 @@ const useAddingItemsToEventInventoryOneByOne = ({
     try {
       setLoadingStatus(true);
 
-      // Fetch available items matching submitted serials (parameterized IN)
-      const deviceInfoQuery = `
-        Select item_id, serial_number, location, container, category_name, item_group
-        from item_inv
-        where company_id = ?
-          and warehouse = 1
-          and enableAssignFeature = 1
-          and location = ?
-          and item_group = ?
-          and category_name = ?
-          and serial_number in (${serials.map(() => "?").join(",")})
-      `;
-      const deviceInfoValues = [
-        user.sqlInfo.company_id,
-        valueItemSelected.location,
-        valueItemSelected.item_group,
-        valueItemSelected.category_name,
-        ...serials,
-      ];
+      // Fetch available items matching submitted serials. This call site was
+      // already interpolating placeholders (`?`) rather than values, so unlike
+      // the assignment screens there was no injection here — the win is just
+      // that the SQL no longer leaves the client.
       const deviceInfoResponse = await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
+        "/db_event/inventory-query",
         {
-          query: deviceInfoQuery,
-          values: deviceInfoValues,
+          queryName: "inventory.assignableBySerials",
+          params: {
+            location: valueItemSelected.location,
+            itemGroup: valueItemSelected.item_group,
+            categoryName: valueItemSelected.category_name,
+            serialNumbers: serials,
+          },
         }
       );
       const deviceInfo = Array.isArray(deviceInfoResponse.data?.result)
