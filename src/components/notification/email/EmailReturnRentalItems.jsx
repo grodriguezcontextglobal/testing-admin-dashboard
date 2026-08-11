@@ -10,8 +10,6 @@ const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user })
       total: 1,
       step: "Preparing email notification",
     });
-    let query;
-    let values;
     const supplierInfo = await devitrakApi.post(
       `/company/provider-company/${supplier_id}`,
       {
@@ -21,22 +19,14 @@ const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user })
     );
     const props = Array.from(items);
 
-    // Create proper SQL placeholders for the IN clause
-    const placeholders = props.map(() => "?").join(",");
-
-    if (supplier_id) {
-      query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ? AND supplier_info = ?`;
-      values = [...props, "Rent", user.sqlInfo.company_id, supplier_id];
-    } else {
-      query = `SELECT item_id, serial_number, item_group FROM item_inv WHERE item_id IN (${placeholders}) AND ownership = ? AND company_id = ?`;
-      values = [...props, "Rent", user.sqlInfo.company_id];
-    }
-
+    // `ownership = 'Rent'` and the company scope are baked into the catalog
+    // entry, so neither is sent. supplierId is optional — undefined drops the
+    // supplier_info clause, which is what the old else-branch did.
     const itemsData = await devitrakApi.post(
-      "/db_company/inventory-based-on-submitted-parameters",
+      "/db_company/inventory-query",
       {
-        query: query,
-        values: values,
+        queryName: "inventory.itemsByIds",
+        params: { itemIds: props, supplierId: supplier_id || undefined },
       }
     );
     if (itemsData.data.result.length === 0) {
