@@ -375,7 +375,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         });
         await devitrakApi.post("/db_item/item-out-warehouse", {
           warehouse: false,
-          logistic_status: "allocated",
+          logistic_status: "in-event",
           company_id: user.sqlInfo.company_id,
           item_group: database[0].item_group,
           startingNumber: database[0].serial_number,
@@ -514,6 +514,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         quantity: props.quantity,
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
+        logistic_status: "in-event",
       });
       await createDeviceRecordInNoSQLDatabase(props);
     } catch (error) {
