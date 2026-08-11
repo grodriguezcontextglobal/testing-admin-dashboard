@@ -140,37 +140,50 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       const devicesFetchedPool = selectedDevicesPool.data.receiversInventory;
       const ids = [...devicesFetchedPool.map((item) => item.id)];
       await devitrakApi.post(`/receiver/delete-bulk-devices-pool`, { ids });
-      await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
-        {
-          query:
-            "UPDATE item_inv set warehouse = 1, update_at = NOW() WHERE item_group IN (?) AND category_name IN (?) AND serial_number IN (?) AND company_id = ?",
-          values: [
-            [devicesFetchedPool[0].type],
-            [props.category],
-            [...devicesFetchedPool.map((item) => item.device)],
-            user.sqlInfo.company_id,
-          ],
-        },
-      );
-      const responseItem = await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
-        {
-          query: `SELECT item_id FROM item_inv WHERE item_group = ? AND category_name = ? AND serial_number IN (${devicesFetchedPool
-            .map((item) => `${item.device}`)
-            .join(",")})`,
-          values: [devicesFetchedPool[0].type, props.category],
-        },
-      );
-      await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
-        {
-          query: `DELETE FROM item_inv_assigned_event WHERE event_id = ? AND item_id IN (${responseItem.data.result
-            .map((item) => `${item.item_id}`)
-            .join(",")})`,
-          values: [event.sql.event_id],
-        },
-      );
+      // One atomic call replaces three: UPDATE warehouse, SELECT item_id,
+      // DELETE assignments. As three independent transactions a failure
+      // between the first and the last left stock marked returned to the
+      // warehouse *and* still assigned to the event, with nothing to
+      // reconcile it. item_ids are no longer sent — the server derives them
+      // from company-scoped rows, which is what closes the old DELETE that
+      // took ids straight from the browser with no company filter.
+      let returnResult;
+      try {
+        returnResult = await devitrakApi.post(
+          "/db_event/return-event-devices",
+          {
+            event_id: event.sql.event_id,
+            item_group: devicesFetchedPool[0].type,
+            category_name: props.category,
+            serial_numbers: devicesFetchedPool.map((item) => item.device),
+          },
+        );
+      } catch (error) {
+        // Deliberately re-thrown: the caller updates the event UI on the line
+        // after this one, so swallowing here would report the devices as
+        // removed when they were not. Today an error propagates as an
+        // unhandled rejection, which stops the same UI update but tells the
+        // user nothing — this keeps the stop and adds the message.
+        const noneMatched = error?.response?.status === 404;
+        notify(
+          "error",
+          noneMatched
+            ? "None of those serial numbers were found in this company's inventory. Nothing was returned."
+            : "Returning the devices to stock failed. The event was not changed.",
+        );
+        throw error;
+      }
+
+      // A partial return is still a return for the serials that matched, so
+      // this warns rather than failing — but it must be visible, since the
+      // event will show the items as removed either way.
+      const skipped = Number(returnResult?.data?.skipped_serials) || 0;
+      if (skipped > 0) {
+        notify(
+          "warning",
+          `${skipped} serial number(s) were skipped — they do not exist or belong to another company. The rest were returned to stock.`,
+        );
+      }
     }
   };
 
