@@ -89,12 +89,13 @@ const DownLoadReportButton = () => {
       const itemsPromise =
         deviceIds.length > 0
           ? devitrakApi.post(
-              "/db_event/inventory-based-on-submitted-parameters",
+              "/db_event/inventory-query",
               {
-                query: `SELECT item_id, item_group, brand, serial_number, location, warehouse, cost, category_name FROM item_inv WHERE item_id IN (${deviceIds
-                  .map(() => "?")
-                  .join(",")})`,
-                values: deviceIds,
+                // This entry now filters by company, which the legacy query did
+                // not. Safe here: deviceIds come from this company's own lease
+                // rows, so the scope can only exclude what we never wanted.
+                queryName: "inventory.itemsSummaryByIds",
+                params: { itemIds: deviceIds },
               }
             )
           : Promise.resolve(null);

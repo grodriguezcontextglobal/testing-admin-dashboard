@@ -50,18 +50,17 @@ export const UpdateEventInventorySubmittingStartingSerialNumber = ({
     const check = async () => {
       try {
         setCheckingSerial(true);
-        const query =
-          "Select * from item_inv where company_id = ? and warehouse = 1 and enableAssignFeature = 1 and location = ? and item_group = ? and category_name = ? and serial_number = ?";
-        const values = [
-          user.sqlInfo.company_id,
-          valueItemSelected.location,
-          valueItemSelected.item_group,
-          valueItemSelected.category_name,
-          starting,
-        ];
         const res = await devitrakApi.post(
-          "/db_event/inventory-based-on-submitted-parameters",
-          { query, values },
+          "/db_event/inventory-query",
+          {
+            queryName: "inventory.assignableExactSerial",
+            params: {
+              location: valueItemSelected.location,
+              itemGroup: valueItemSelected.item_group,
+              categoryName: valueItemSelected.category_name,
+              serialNumber: starting,
+            },
+          },
         );
         const rows = res?.data?.result || [];
         setSerialExists(rows.length > 0);
