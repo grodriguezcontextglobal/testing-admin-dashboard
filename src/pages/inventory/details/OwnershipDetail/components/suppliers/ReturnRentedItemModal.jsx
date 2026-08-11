@@ -133,129 +133,29 @@ const ReturnRentedItemModal = ({
 
       setLoading(true);
       try {
-        let query = "";
-        let countQuery = "";
-        let values = [];
-        let countValues = [];
-
         const offset = (page - 1) * pageSize;
 
-        if (supplier_id) {
-          if (search) {
-            query = `
-            SELECT item_id, serial_number, item_group
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ? AND supplier_info = ? 
-            AND (CAST(item_id AS CHAR) LIKE ? OR serial_number LIKE ?)
-            LIMIT ? OFFSET ?
-          `;
-            countQuery = `
-            SELECT COUNT(*) as total 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ? AND supplier_info = ? 
-            AND (CAST(item_id AS CHAR) LIKE ? OR serial_number LIKE ?)
-          `;
-            const searchPattern = `%${search}%`;
-            values = [
-              "Rent",
-              user.sqlInfo.company_id,
-              supplier_id,
-              searchPattern,
-              searchPattern,
-              pageSize,
-              offset,
-            ];
-            countValues = [
-              "Rent",
-              user.sqlInfo.company_id,
-              supplier_id,
-              searchPattern,
-              searchPattern,
-            ];
-          } else {
-            query = `
-            SELECT item_id, serial_number, item_group 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ? AND supplier_info = ?
-            LIMIT ? OFFSET ?
-          `;
-            countQuery = `
-            SELECT COUNT(*) as total 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ? AND supplier_info = ?
-          `;
-            values = [
-              "Rent",
-              user.sqlInfo.company_id,
-              supplier_id,
-              pageSize,
-              offset,
-            ];
-            countValues = ["Rent", user.sqlInfo.company_id, supplier_id];
-          }
-        } else {
-          if (search) {
-            query = `
-            SELECT item_id, serial_number, item_group 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ? 
-            AND (CAST(item_id AS CHAR) LIKE ? OR serial_number LIKE ?)
-            LIMIT ? OFFSET ?
-          `;
-            countQuery = `
-            SELECT COUNT(*) as total 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ? 
-            AND (CAST(item_id AS CHAR) LIKE ? OR serial_number LIKE ?)
-          `;
-            const searchPattern = `%${search}%`;
-            values = [
-              "Rent",
-              user.sqlInfo.company_id,
-              searchPattern,
-              searchPattern,
-              pageSize,
-              offset,
-            ];
-            countValues = [
-              "Rent",
-              user.sqlInfo.company_id,
-              searchPattern,
-              searchPattern,
-            ];
-          } else {
-            query = `
-            SELECT item_id, serial_number, item_group 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ?
-            LIMIT ? OFFSET ?
-          `;
-            countQuery = `
-            SELECT COUNT(*) as total 
-            FROM item_inv 
-            WHERE ownership = ? AND company_id = ?
-          `;
-            values = ["Rent", user.sqlInfo.company_id, pageSize, offset];
-            countValues = ["Rent", user.sqlInfo.company_id];
-          }
-        }
+        // One catalog entry each, sharing a single filter object: the list and
+        // the total can no longer disagree, which the four hand-built
+        // query/countQuery variants this replaces could drift into. Passing
+        // undefined rather than "" when not filtering, so the server omits the
+        // clause instead of matching on LIKE '%%'. `ownership = 'Rent'` and the
+        // company scope are both baked into the entry.
+        const filters = {
+          supplierId: supplier_id || undefined,
+          search: search || undefined,
+        };
 
         // Fetch both data and count in parallel
         const [dataResult, countResult] = await Promise.all([
-          devitrakApi.post(
-            "/db_company/inventory-based-on-submitted-parameters",
-            {
-              query: query,
-              values: values,
-            }
-          ),
-          devitrakApi.post(
-            "/db_company/inventory-based-on-submitted-parameters",
-            {
-              query: countQuery,
-              values: countValues,
-            }
-          ),
+          devitrakApi.post("/db_company/inventory-query", {
+            queryName: "inventory.rentedPage",
+            params: { ...filters, pageSize, offset },
+          }),
+          devitrakApi.post("/db_company/inventory-query", {
+            queryName: "inventory.rentedCount",
+            params: filters,
+          }),
         ]);
 
         if (dataResult.data && countResult.data) {
@@ -269,7 +169,9 @@ const ReturnRentedItemModal = ({
         setLoading(false);
       }
     },
-    [supplier_id, pageSize, user.sqlInfo.company_id, isUsingProvidedData]
+    // company_id is no longer read here — the server takes it from the
+    // s-company-lq header — so it is no longer a dependency.
+    [supplier_id, pageSize, isUsingProvidedData]
   );
 
   useEffect(() => {
@@ -470,25 +372,14 @@ const ReturnRentedItemModal = ({
         // Use all items from provided data
         allItemIds = data.map((item) => item.item_id);
       } else {
-        // Get all item IDs for the current filter (existing logic)
-        let getAllQuery = "";
-        let getAllValues = [];
-
-        if (supplier_id) {
-          getAllQuery =
-            "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ? AND supplier_info = ?";
-          getAllValues = ["Rent", user.sqlInfo.company_id, supplier_id];
-        } else {
-          getAllQuery =
-            "SELECT item_id, serial_number, item_group FROM item_inv WHERE ownership = ? AND company_id = ?";
-          getAllValues = ["Rent", user.sqlInfo.company_id];
-        }
-
+        // Get all item IDs for the current filter — same entry as the paged
+        // list, minus the paging params, so "return all" can't act on a
+        // different set than the screen showed.
         const allItemsResult = await devitrakApi.post(
-          "/db_company/inventory-based-on-submitted-parameters",
+          "/db_company/inventory-query",
           {
-            query: getAllQuery,
-            values: getAllValues,
+            queryName: "inventory.rentedAll",
+            params: { supplierId: supplier_id || undefined },
           }
         );
 
