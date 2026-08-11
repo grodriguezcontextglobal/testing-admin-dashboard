@@ -110,7 +110,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
         });
         // Payload envelope mirrors DeleteItemModal.jsx's use of the same
         // generic nodemailer endpoint.
-        return devitrakApi.post("/nodemailer/internal-single-email-notification", {
+        return devitrakApi.post("/nodemailer/customize-message-notification", {
           staff: email.to,
           subject: email.subject,
           message: email.message,
