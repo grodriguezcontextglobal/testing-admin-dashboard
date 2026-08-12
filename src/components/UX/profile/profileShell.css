@@ -407,24 +407,25 @@
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
+  white-space: nowrap;
 }
 
-/* Row actions stay out of the way until the row is hovered or keyboard-focused,
-   so a table of ten loans doesn't read as ten primary buttons. */
-.profile-row-actions__reveal {
-  opacity: 0;
-  transition: opacity 0.12s ease;
+/* Row actions used to fade in on hover (a `__reveal` wrapper at opacity 0). That
+   hid the only two actions the table exists for, and hid them completely on
+   touch. Emphasis is handled by using secondary buttons, not by hiding them. */
+
+/* Denser cells than the global table. Seven columns at the shared 24px of
+   horizontal padding spend ~340px on whitespace alone, which pushed this table
+   past its container and put a horizontal scrollbar under a page that has room
+   to spare. Headers wrap for the same reason — "Serial Number" on two lines
+   costs nothing next to a scrollbar. */
+.table-ant-customized.profile-table .ant-table-thead > tr > th {
+  padding: 10px 12px;
+  white-space: normal;
 }
 
-.profile-table .ant-table-row:hover .profile-row-actions__reveal,
-.profile-table .ant-table-row:focus-within .profile-row-actions__reveal {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .profile-row-actions__reveal {
-    opacity: 1;
-  }
+.table-ant-customized.profile-table .ant-table-tbody > tr > td {
+  padding: 12px;
 }
 
 /* --------------------------------------------------------------- Skeleton */
@@ -462,8 +463,7 @@
   .profile-skeleton__bar {
     animation: none;
   }
-  .profile-tabs__item,
-  .profile-row-actions__reveal {
+  .profile-tabs__item {
     transition: none;
   }
 }

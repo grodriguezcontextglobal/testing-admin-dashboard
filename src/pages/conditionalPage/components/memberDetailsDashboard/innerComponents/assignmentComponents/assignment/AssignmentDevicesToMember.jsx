@@ -19,6 +19,10 @@ import DevitrakLoading from "../../../../../../../components/animation/DevitrakL
 import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../../../components/icons/CheckIcon";
 import { formatDate } from "../../../../../../../components/utils/dateFormat";
+import {
+  parseDateInputValue,
+  todayDateInputValue,
+} from "../../../../../utils/leaseDateUtils";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../../components/UX/buttons/GrayButton";
 import { AntSelectorStyle } from "../../../../../../../styles/global/AntSelectorStyle";
@@ -96,11 +100,14 @@ const AssignmentDevicesToMember = () => {
   let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
   const navigate = useNavigate();
-  // Initialize expected return date with today's date in the form
+  // Initialize expected return date with today's date in the form.
+  // YYYY-MM-DD, not the full "YYYY-MM-DD HH:mm:ss" stamp: `<input type="date">`
+  // rejects a value carrying a time outright, so the default was invisible — the
+  // field rendered empty while the form state claimed a default.
+  const defaultDueDate = useMemo(() => todayDateInputValue(), []);
   useEffect(() => {
-    // Set default expected return date to today
-    setValue("expectedReturnDate", dateToUse);
-  }, [dateToUse, setValue]);
+    setValue("expectedReturnDate", defaultDueDate);
+  }, [defaultDueDate, setValue]);
 
 
   const { role, locationsAssignPermission } = useStaffRoleAndLocations();
@@ -253,6 +260,13 @@ const AssignmentDevicesToMember = () => {
   };
   const createNewLease = async (props) => {
     const verificationContractID = await verificationContractMember();
+    // parseDateInputValue, not new Date(): the field hands over "2026-08-20",
+    // which new Date reads as midnight UTC, and formatDate then writes local
+    // components — so a device picked to be due on the 20th was stored as due
+    // the 19th at 20:00 anywhere west of Greenwich. Resolved once for the whole
+    // batch so every device in one handover carries the same due date.
+    const dueDate = parseDateInputValue(props.expectedReturnDate);
+    const expectedReturnDate = dueDate ? formatDate(dueDate) : dateToUse;
     for (let data of props.deviceInfo) {
       const newLease = await devitrakApi.post(
         "/db_member/new-member-assigned-device-lease",
@@ -263,9 +277,7 @@ const AssignmentDevicesToMember = () => {
           member_id: memberInfo.member_id,
           device_id: data.item_id,
           verification_id: verificationContractID.data.verificationInfo._id,
-          expected_return_date: props.expectedReturnDate
-            ? formatDate(new Date(props.expectedReturnDate))
-            : dateToUse,
+          expected_return_date: expectedReturnDate,
           returned: 0,
           assigned_date: formatDate(new Date()),
         }

@@ -15,6 +15,18 @@
 .react-datepicker-wrapper {
   width: 100%;
 }
+/* The calendar is rendered into #member-due-date-calendar on <body> (portalId in
+   columns.jsx) so the table's scroll container cannot clip it. It still has to
+   win against the sticky table header, which carries its own z-index. */
+#member-due-date-calendar {
+  position: relative;
+  z-index: 1000;
+}
+
+.react-datepicker-popper {
+  z-index: 1000;
+}
+
 .react-datepicker {
   font-family: "Inter", sans-serif;
   font-size: 0.8rem;

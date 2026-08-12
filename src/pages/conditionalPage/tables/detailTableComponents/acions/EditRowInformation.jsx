@@ -2,6 +2,7 @@ import { devitrakApi } from "../../../../../api/devitrakApi";
 import { registerStaffActivity } from "../../../../../api/activityLog";
 import { message } from "antd";
 import { formatDate } from "../../../../../components/utils/dateFormat";
+import { parseDateInputValue } from "../../../utils/leaseDateUtils";
 
 /**
  * Update expected return date for a member lease row.
@@ -15,12 +16,12 @@ export const updateExpectedReturnDate = async ({
 }) => {
   if (!updateInfo || !updateInfo.record) return;
   try {
-    // Use the newly selected date from updateInfo.expected_return_date
-    const newDate = updateInfo?.expected_return_date
-      ? new Date(updateInfo.expected_return_date)
-      : null;
+    // Use the newly selected date from updateInfo.expected_return_date. The
+    // picker hands over a Date, but this goes through the same parser as the
+    // assignment form so a date-only string can never lose a day here either.
+    const newDate = parseDateInputValue(updateInfo?.expected_return_date);
 
-    if (!newDate || Number.isNaN(newDate.getTime())) {
+    if (!newDate) {
       return message.error("Please select a valid expected return date.");
     }
 
