@@ -19,6 +19,7 @@ import { mapReturnToReceipt } from "../../../../../payment/utils/receiptUtils";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FEATURE_MEMBER_FEES } from "../../../../../../config/featureFlags";
+import { hasPermission, resolveRoleType } from "../../../../../../config/roles";
 import {
   buildFeeFields,
   buildLostItemPayload,
@@ -47,6 +48,12 @@ const Return = ({
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector((state) => state.member);
   const queryClient = useQueryClient();
+  // Same gate as the collection modal in DetailMemberInfo. Recording a fee that
+  // this staff member is not allowed to collect writes an amount nobody in the
+  // room can settle, so the two must agree on who may put money on a lease.
+  const canRecordFee =
+    FEATURE_MEMBER_FEES &&
+    hasPermission("member:charge_fee", resolveRoleType(user));
   const returnItemToInventoryCompany = useMutation({
     mutationKey: ["returnItemToInventoryCompany"],
     mutationFn: async (data) =>
@@ -122,7 +129,11 @@ const Return = ({
         target_id: storedRecord.member_id,
         details: { device_id: storedRecord.device_id, outcome: variables?.outcome },
       });
-      await sentReturnEmailNotification();
+      await sentReturnEmailNotification({
+        outcome: variables?.outcome,
+        note: variables?.note,
+        fee: variables?.fee,
+      });
       // Hand the recorded fee up before tearing down, so the amount just
       // entered can be collected without retyping it. The lease row is already
       // closed at this point — declining the charge loses the collection, not
@@ -154,14 +165,21 @@ const Return = ({
       }
     },
   });
-  const sentReturnEmailNotification = async () => {
+  const sentReturnEmailNotification = async ({ outcome, note, fee }) => {
     // Routed through the shared recipient resolver: a minor's notices go to the
     // guardian on file, never to the student. This used to post
     // memberInfo.email unconditionally, which mailed a 15-year-old about their
     // own lost laptop.
-    const { payload, recipient } = buildReturnNotification({
+    //
+    // The endpoint is chosen by outcome. All three used to hit the
+    // return-confirmation template, so the guardian of a lost laptop was told it
+    // came back successfully.
+    const { endpoint, payload, recipient } = buildReturnNotification({
       member: memberInfo,
       record: storedRecord,
+      outcome,
+      note,
+      fee,
     });
     if (!payload) {
       // Say so instead of silently sending nothing — or worse, sending it to
@@ -170,15 +188,26 @@ const Return = ({
         `Device saved, but no notification was sent: ${recipient.error}`
       );
     }
-    const response = await devitrakApi.post(
-      "/nodemailer/member-lease-return-device-notification",
-      payload
-    );
-    if (response.data && response.data.ok) {
-      return message.success(
-        recipient.isGuardian
-          ? `Device saved. A notification was queued to the guardian (${recipient.email}).`
-          : `Device saved. A notification was queued to ${recipient.email}.`
+    const noun = outcome === "lost" ? "loss notice" : "notification";
+    // A mail failure must not cost the receipt or the fee collection: this runs
+    // inside onSuccess, before both, so an unhandled rejection here used to take
+    // the rest of the flow down with it. The record is already saved either way,
+    // so the honest outcome is a warning naming who was NOT reached.
+    try {
+      const response = await devitrakApi.post(endpoint, payload);
+      if (response.data && response.data.ok) {
+        return message.success(
+          recipient.isGuardian
+            ? `Device saved. A ${noun} was queued to the guardian (${recipient.email}).`
+            : `Device saved. A ${noun} was queued to ${recipient.email}.`
+        );
+      }
+      return message.warning(
+        `Device saved, but the ${noun} to ${recipient.email} was not accepted. Contact them directly.`
+      );
+    } catch {
+      return message.warning(
+        `Device saved, but the ${noun} could not be sent to ${recipient.email}. Contact them directly.`
       );
     }
   };
@@ -193,7 +222,7 @@ const Return = ({
       } else {
         await returnItemToInventoryCompany.mutateAsync(data);
       }
-      const fee = FEATURE_MEMBER_FEES
+      const fee = canRecordFee
         ? buildFeeFields({
             outcome,
             feeAmount: data.fee_amount,
@@ -267,7 +296,7 @@ const Return = ({
             multiline
           />
         </Grid>
-        {FEATURE_MEMBER_FEES &&
+        {canRecordFee &&
           (watch("outcome") === "damaged" || watch("outcome") === "lost") && (
             <Grid margin={"1rem auto 0"} item xs={12} sm={12} md={12} lg={12}>
               <Typography>Fee to charge (optional)</Typography>

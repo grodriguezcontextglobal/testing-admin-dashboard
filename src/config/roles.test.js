@@ -1073,3 +1073,38 @@ describe("canViewStaffActivity(viewerRoleType, targetRoleType)", () => {
     expect(canViewStaffActivity("super_hero", "assistant")).toBe(false);
   });
 });
+
+// ─── PERMISSIONS — member:charge_fee (cobrar una multa a una familia) ────────
+// Bug de prueba manual: el modal de cobro se gateaba con
+// "transaction:stripe_create", que es una clave placeholder de F-01 con array
+// VACÍO (los roles se asignan en F-04). Resultado: NINGÚN rol podía abrir el
+// formulario de tarjeta, ni root_admin. El gate necesita una clave propia del
+// dominio member con roles reales.
+//
+// Forma EVENT_D (igual que member:delete): assistant queda fuera a propósito —
+// quien ve la lista de alumnos no debe poder cobrarle a una familia.
+
+describe("PERMISSIONS — member:charge_fee", () => {
+  it("existe y NO está vacía (el gate del cobro no puede depender de un placeholder)", () => {
+    expect(PERMISSIONS["member:charge_fee"]).toBeDefined();
+    expect(Array.isArray(PERMISSIONS["member:charge_fee"])).toBe(true);
+    expect(PERMISSIONS["member:charge_fee"].length).toBeGreaterThan(0);
+  });
+
+  it("root_admin, admin y event_manager pueden cobrar", () => {
+    ["root_admin", "admin", "event_manager"].forEach((role) => {
+      expect(hasPermission("member:charge_fee", role)).toBe(true);
+    });
+  });
+
+  it("assistant NO puede cobrar aunque tenga el resto del dominio member", () => {
+    expect(hasPermission("member:read", "assistant")).toBe(true);
+    expect(hasPermission("member:charge_fee", "assistant")).toBe(false);
+  });
+
+  it("sale_manager e inventory_manager no tienen nada que ver con alumnos", () => {
+    ["sale_manager", "inventory_manager"].forEach((role) => {
+      expect(hasPermission("member:charge_fee", role)).toBe(false);
+    });
+  });
+});

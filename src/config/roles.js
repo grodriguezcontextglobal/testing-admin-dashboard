@@ -302,6 +302,12 @@ export const PERMISSIONS = {
   "member:assign_devices": EVENT_CRU,
   "member:notify": EVENT_CRU,
   "nav:members": EVENT_CRU,
+  // Taking money off a family is EVENT_D-shaped like member:delete, not CRU:
+  // whoever can see the roster must not be able to bill it. This is deliberately
+  // NOT "transaction:stripe_create" — that key is an F-01 placeholder with an
+  // empty array until F-04, so gating on it hid the charge form from every role
+  // including root_admin.
+  "member:charge_fee": EVENT_D,
 
   // ── F-01: new permission keys — no roles assigned yet ───────────────────────
 

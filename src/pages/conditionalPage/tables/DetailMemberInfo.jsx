@@ -37,11 +37,18 @@ const DetailMemberInfo = () => {
 
   // Taking money is gated twice on purpose: by the same flag that gates the
   // rest of B1 (so nothing changes in production until fees are turned on
-  // deliberately), and by the Stripe-charge permission, so an assistant who can
-  // see the roster cannot bill a family.
+  // deliberately), and by a permission, so an assistant who can see the roster
+  // cannot bill a family.
+  //
+  // The permission used to be "transaction:stripe_create". That is an F-01
+  // placeholder whose role list is EMPTY until F-04 assigns it, so the gate was
+  // false for everyone — root_admin included. The symptom was not an error but
+  // an absence: the return flow recorded the fee, printed the declaration, and
+  // then silently swallowed the collection, because handleFeePending below bails
+  // when this is false. "member:charge_fee" is a real member-domain key.
   const canChargeFee =
     FEATURE_MEMBER_FEES &&
-    hasPermission("transaction:stripe_create", resolveRoleType(user));
+    hasPermission("member:charge_fee", resolveRoleType(user));
 
   // Same hook (and therefore the same cache entry) the stat tiles read, so the
   // header and the table can never disagree about what this member is holding.

@@ -256,6 +256,87 @@ export const mapAssignmentToReceipt = ({
   };
 };
 
+/** Dollars → cents, rounded. 0 for anything unusable, never NaN. */
+const dollarsToCents = (value) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return 0;
+  return Math.round(amount * 100);
+};
+
+/**
+ * Receipt for a device fee that was just paid by card.
+ *
+ * The counterpart to mapReturnToReceipt, which deliberately prints no money: the
+ * declaration proves the device is gone, this proves the debt was settled.
+ * Without it a family paid and got nothing to show for it, since the charge
+ * flow's only trace was the Stripe dashboard and the activity log.
+ *
+ * Built from what the charge modal holds rather than read back from
+ * /transaction/transaction, because the member fee charge does not write a
+ * transaction document — so there is nothing to look up, and hence no QR (see
+ * ReceiptModal callers).
+ *
+ * Amounts come in as DOLLARS (what staff typed), matching the rest of this
+ * module and unlike the cents the Stripe layer speaks.
+ *
+ * @param {object} args
+ * @param {object} args.member the student the fee is about
+ * @param {Array<{serial_number?: string, reason?: string, amount?: number|string}>} args.lines
+ * @param {string} args.paymentIntent Stripe payment intent id
+ * @param {string} args.payerEmail address that was actually billed
+ * @param {boolean} [args.billedGuardian] true when the guardian paid for a minor
+ * @param {string} args.company company name
+ * @param {string|Date} args.date
+ */
+export const mapFeeChargeToReceipt = ({
+  member,
+  lines,
+  paymentIntent,
+  payerEmail,
+  billedGuardian = false,
+  company,
+  date,
+} = {}) => {
+  const items = Array.isArray(lines) ? lines : [];
+  // Summed in cents and divided once: adding dollars first turns 19.99 × 3 into
+  // 59.97000000000001, and a total a cent off on a signed document is a support
+  // call nobody can explain.
+  const totalCents = items.reduce(
+    (sum, item) => sum + dollarsToCents(item?.amount),
+    0
+  );
+  return {
+    kind: RECEIPT_KIND.PAYMENT,
+    title: "Device fee receipt",
+    idLabel: "Transaction ID",
+    partyLabel: "Billed to",
+    paymentIntent: `${paymentIntent ?? ""}`,
+    id: `${paymentIntent ?? ""}`.trim() || "—",
+    date: `${date ?? ""}`,
+    // The student's name with the guardian's address on purpose: the family
+    // needs to know which child this is about, and the school needs to know
+    // which address paid.
+    payer: {
+      name: [member?.first_name, member?.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim(),
+      email: `${payerEmail ?? ""}`,
+    },
+    lines: items.map((item) => ({
+      label:
+        [`${item?.serial_number ?? ""}`.trim(), `${item?.reason ?? ""}`.trim()]
+          .filter(Boolean)
+          .join(" — ") || "Device fee",
+      amount: dollarsToCents(item?.amount) / 100,
+    })),
+    total: totalCents / 100,
+    status: RECEIPT_STATUS.PAID,
+    company: `${company ?? ""}`,
+    reference: billedGuardian ? "Paid by the guardian on file" : "",
+  };
+};
+
 /**
  * Constancia for closing a lease: what was returned, in what state, and what it
  * was declared as.

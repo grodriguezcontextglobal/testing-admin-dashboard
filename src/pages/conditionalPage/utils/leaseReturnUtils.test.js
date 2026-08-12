@@ -5,6 +5,8 @@ import {
   shouldOfferFeeCollection,
   buildLostItemPayload,
   buildReturnNotification,
+  RETURN_NOTIFICATION_ENDPOINT,
+  INCIDENT_NOTIFICATION_ENDPOINT,
 } from "./leaseReturnUtils";
 
 const record = {
@@ -100,6 +102,100 @@ describe("buildReturnNotification — a un menor se le avisa al guardián", () =
   it("no arma payload sin miembro", () => {
     expect(buildReturnNotification({ record }).payload).toBeNull();
     expect(buildReturnNotification({}).payload).toBeNull();
+  });
+});
+
+// El bug reportado en prueba manual: al declarar un equipo PERDIDO, el guardián
+// recibió el correo de "devolución exitosa". El payload y el endpoint eran los
+// mismos para los tres outcomes, así que el backend no tenía forma de elegir
+// otra plantilla. Decirle a una familia que el equipo volvió bien cuando se
+// perdió no es solo un correo feo: queda como constancia de una devolución que
+// nunca ocurrió.
+describe("buildReturnNotification — el aviso distingue devolución de incidente", () => {
+  const adult = { first_name: "Ada", last_name: "L", email: "ada@s.edu", minor: 0 };
+
+  it("una devolución normal sigue usando el endpoint (y payload) que ya existe", () => {
+    const { endpoint, payload } = buildReturnNotification({
+      member: adult,
+      record,
+      outcome: "returned",
+    });
+    expect(endpoint).toBe(RETURN_NOTIFICATION_ENDPOINT);
+    expect(payload.outcome).toBeUndefined();
+  });
+
+  it("sin outcome se asume devolución — no inventa un incidente", () => {
+    expect(buildReturnNotification({ member: adult, record }).endpoint).toBe(
+      RETURN_NOTIFICATION_ENDPOINT
+    );
+  });
+
+  it("perdido y dañado van al aviso de incidente, no al de devolución", () => {
+    ["lost", "damaged"].forEach((outcome) => {
+      const { endpoint } = buildReturnNotification({
+        member: adult,
+        record,
+        outcome,
+      });
+      expect(endpoint).toBe(INCIDENT_NOTIFICATION_ENDPOINT);
+      expect(endpoint).not.toBe(RETURN_NOTIFICATION_ENDPOINT);
+    });
+  });
+
+  it("el incidente lleva outcome, etiqueta legible y nota de condición", () => {
+    const { payload } = buildReturnNotification({
+      member: adult,
+      record,
+      outcome: "lost",
+      note: "Reportado perdido el 6/2",
+    });
+    expect(payload.outcome).toBe("lost");
+    expect(payload.outcomeLabel).toBe("Declared lost — device not recovered");
+    expect(payload.conditionNote).toBe("Reportado perdido el 6/2");
+  });
+
+  it("informa el monto de la multa solo cuando se registró una", () => {
+    const withFee = buildReturnNotification({
+      member: adult,
+      record,
+      outcome: "lost",
+      fee: { fee_amount: 250, fee_reason: "Not recovered" },
+    });
+    expect(withFee.payload.feeAmount).toBe(250);
+
+    const withoutFee = buildReturnNotification({
+      member: adult,
+      record,
+      outcome: "lost",
+      fee: {},
+    });
+    expect(withoutFee.payload.feeAmount).toBeNull();
+  });
+
+  it("el destinatario del incidente se resuelve igual: guardián si es menor", () => {
+    const { payload, recipient } = buildReturnNotification({
+      member: {
+        first_name: "Blaise",
+        last_name: "P",
+        email: "teen@s.edu",
+        minor: 1,
+        parent_guardian_email: "parent@home.com",
+      },
+      record,
+      outcome: "lost",
+    });
+    expect(payload.member.email).toBe("parent@home.com");
+    expect(recipient.isGuardian).toBe(true);
+  });
+
+  it("sin destinatario resoluble no hay endpoint que llamar", () => {
+    const { endpoint, payload } = buildReturnNotification({
+      member: { minor: 1, parent_guardian_email: "" },
+      record,
+      outcome: "lost",
+    });
+    expect(payload).toBeNull();
+    expect(endpoint).toBeNull();
   });
 });
 

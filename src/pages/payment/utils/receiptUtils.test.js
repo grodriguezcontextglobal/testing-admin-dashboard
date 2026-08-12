@@ -13,6 +13,7 @@ import {
   formatReceiptDate,
   receiptTotal,
   mapTransactionToReceipt,
+  mapFeeChargeToReceipt,
 } from "./receiptUtils";
 
 const transaction = {
@@ -388,5 +389,106 @@ describe("mapReturnToReceipt — constancia for closing a lease", () => {
     expect(empty.lines[0].label).toBe("Item");
     expect(empty.lines[1].label).toBe("Outcome: —");
     expect(empty.total).toBeNull();
+  });
+});
+
+describe("mapFeeChargeToReceipt — proof that a device fee was settled", () => {
+  const base = {
+    member: { first_name: "Blaise", last_name: "Pascal", email: "b@school.edu" },
+    lines: [{ serial_number: "SN-1", reason: "Lost — not recovered", amount: 250 }],
+    paymentIntent: "pi_3AbCdEfGhIjKlMnO",
+    payerEmail: "parent@home.com",
+    billedGuardian: true,
+    company: "Bridges Academy",
+    date: "2026-06-02T15:04:05.000Z",
+  };
+
+  // The whole point of this document: the loss declaration prints no money, so
+  // without this there was no paper anywhere saying the debt was settled.
+  it("is a paid payment receipt, unlike the loss declaration", () => {
+    const receipt = mapFeeChargeToReceipt(base);
+    expect(receipt.kind).toBe(RECEIPT_KIND.PAYMENT);
+    expect(receipt.status).toBe(RECEIPT_STATUS.PAID);
+    expect(receipt.title).toBe("Device fee receipt");
+  });
+
+  it("carries the Stripe transaction id so the charge can be traced", () => {
+    const receipt = mapFeeChargeToReceipt(base);
+    expect(receipt.idLabel).toBe("Transaction ID");
+    expect(receipt.id).toBe("pi_3AbCdEfGhIjKlMnO");
+    expect(mapFeeChargeToReceipt({ ...base, paymentIntent: "" }).id).toBe("—");
+  });
+
+  // Names the student on the document but the guardian's address, because that
+  // is who actually paid — a receipt that hides either one is useless to both.
+  it("names the student and the address that was billed", () => {
+    const receipt = mapFeeChargeToReceipt(base);
+    expect(receipt.partyLabel).toBe("Billed to");
+    expect(receipt.payer.name).toBe("Blaise Pascal");
+    expect(receipt.payer.email).toBe("parent@home.com");
+    expect(receipt.reference).toMatch(/guardian/i);
+  });
+
+  it("says nothing about a guardian when the member paid directly", () => {
+    const receipt = mapFeeChargeToReceipt({
+      ...base,
+      billedGuardian: false,
+      payerEmail: "b@school.edu",
+    });
+    expect(receipt.reference).toBe("");
+    expect(receipt.payer.email).toBe("b@school.edu");
+  });
+
+  it("prints device, reason and amount per line, in dollars", () => {
+    const receipt = mapFeeChargeToReceipt(base);
+    expect(receipt.lines).toEqual([
+      { label: "SN-1 — Lost — not recovered", amount: 250 },
+    ]);
+    expect(receipt.total).toBe(250);
+  });
+
+  it("drops the reason when there is none rather than printing an empty dash", () => {
+    const receipt = mapFeeChargeToReceipt({
+      ...base,
+      lines: [{ serial_number: "SN-9", amount: "40" }],
+    });
+    expect(receipt.lines[0].label).toBe("SN-9");
+    expect(receipt.total).toBe(40);
+  });
+
+  // Same trap as the Stripe amount: 19.99 * 3 in floats is 59.97000000000001,
+  // and a total that renders a cent off on a signed document is a support call.
+  it("totals through cents so float dust never reaches the paper", () => {
+    const receipt = mapFeeChargeToReceipt({
+      ...base,
+      lines: [
+        { serial_number: "A", amount: 19.99 },
+        { serial_number: "B", amount: 19.99 },
+        { serial_number: "C", amount: 19.99 },
+      ],
+    });
+    expect(receipt.total).toBe(59.97);
+  });
+
+  it("ignores unusable amounts instead of printing NaN", () => {
+    const receipt = mapFeeChargeToReceipt({
+      ...base,
+      lines: [
+        { serial_number: "A", amount: "abc" },
+        { serial_number: "B", amount: 30 },
+      ],
+    });
+    expect(receipt.lines[0].amount).toBe(0);
+    expect(receipt.total).toBe(30);
+  });
+
+  it("survives being called with nothing", () => {
+    for (const bad of [undefined, {}]) {
+      const receipt = mapFeeChargeToReceipt(bad);
+      expect(receipt.lines).toEqual([]);
+      expect(receipt.total).toBe(0);
+      expect(receipt.status).toBe(RECEIPT_STATUS.PAID);
+      expect(receipt.payer.name).toBe("");
+    }
   });
 });

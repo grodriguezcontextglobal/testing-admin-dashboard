@@ -17,6 +17,8 @@ import StripeElementMemberFeeTransaction from "../../../../../../components/stri
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
 import ModalUX from "../../../../../../components/UX/modal/ModalUX";
+import ReceiptModal from "../../../../../payment/components/ReceiptModal";
+import { mapFeeChargeToReceipt } from "../../../../../payment/utils/receiptUtils";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
@@ -40,18 +42,22 @@ import {
  * shared with it is the live direct-charge endpoint,
  * /stripe/create-payment-intent-subscription.
  *
- * Two things it does that the original did not:
+ * Three things it does that the original did not:
  * - Names the payer. A minor is never billed directly; the guardian on file is,
  *   and the modal says so before staff types a card. If no guardian is on file
  *   the charge is blocked instead of quietly falling through to the student.
  * - Surfaces the failure. The original's submit handler ended in
  *   `catch { return null }`, so a rejected intent looked like a dead button.
+ * - Hands over paper. A successful charge offers a printable receipt; the loss
+ *   declaration carries no money on purpose, so this was the only document that
+ *   could show the debt had been settled and it did not exist.
  *
  * SCOPE — this collects money; it does not yet record the debt. Writing
  * fee_amount / fee_reason onto the lease row is FRONTEND_school_backend_asks.md
  * §B1.1, still unimplemented server-side and gated by FEATURE_MEMBER_FEES. So a
  * charge made here is recorded in Stripe and in the activity log, but does not
- * appear as a settled fee on the member until that ships.
+ * appear as a settled fee on the member until that ships. The payer also gets no
+ * confirmation EMAIL yet — that template is §B3.
  */
 const ChargeMemberDeviceFee = ({
   openModal,
@@ -61,6 +67,7 @@ const ChargeMemberDeviceFee = ({
   prefillLines = [],
 }) => {
   const { memberInfo } = useSelector((state) => state.member);
+  const { user } = useSelector((state) => state.admin);
   // Seeded from prefillLines so the return flow can hand over the fee it just
   // recorded instead of making staff retype an amount they already entered.
   // Read once on mount, which is correct because the caller renders this
@@ -71,6 +78,7 @@ const ChargeMemberDeviceFee = ({
   const [clientSecret, setClientSecret] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
+  const [paidReceipt, setPaidReceipt] = useState(null);
   const chargedAmountRef = useRef(0);
 
   const { register, handleSubmit, setValue } = useForm({
@@ -160,6 +168,22 @@ const ChargeMemberDeviceFee = ({
   };
 
   const onChargeSucceeded = (paymentIntent) => {
+    // Proof the debt was settled. The loss declaration deliberately prints no
+    // money, so without this the family paid and walked away with nothing on
+    // paper — the only trace was Stripe and the activity log, neither of which
+    // they can see. No QR: nothing writes a transaction document for a member
+    // fee, so a scan would open a page that cannot look the charge up.
+    setPaidReceipt(
+      mapFeeChargeToReceipt({
+        member: memberInfo,
+        lines: feeLines,
+        paymentIntent: paymentIntent?.id,
+        payerEmail: payer.email,
+        billedGuardian: payer.isGuardian,
+        company: user?.company,
+        date: new Date().toISOString(),
+      })
+    );
     registerStaffActivity({
       // No CHARGE verb exists in ACTIVITY_LOG_ACTIONS yet; CREATE + Fee keeps
       // the row inside the catalog the log filter and backend already accept.
@@ -342,23 +366,40 @@ const ChargeMemberDeviceFee = ({
   );
 
   return (
-    <ModalUX
-      title={
-        <Typography
-          textTransform={"none"}
-          marginY={2}
-          style={{ ...TextFontSize30LineHeight38, textWrap: "balance" }}
-        >
-          Charge device fee
-        </Typography>
-      }
-      openDialog={openModal}
-      closeModal={closeModal}
-      body={modalBody}
-      width={900}
-      footer={[]}
-      modalStyles={{ top: "10dvh", zIndex: 30 }}
-    />
+    <>
+      <ModalUX
+        title={
+          <Typography
+            textTransform={"none"}
+            marginY={2}
+            style={{ ...TextFontSize30LineHeight38, textWrap: "balance" }}
+          >
+            Charge device fee
+          </Typography>
+        }
+        // Chained, not stacked — same reason the declaration and this modal are:
+        // with both on screen it is not clear which one a Close button belongs
+        // to. The card form steps aside once the money is in.
+        openDialog={openModal && !paidReceipt}
+        closeModal={closeModal}
+        body={modalBody}
+        width={900}
+        footer={[]}
+        modalStyles={{ top: "10dvh", zIndex: 30 }}
+      />
+      {paidReceipt && (
+        <ReceiptModal
+          openModal={Boolean(paidReceipt)}
+          setOpenModal={() => setPaidReceipt(null)}
+          receipt={paidReceipt}
+          title={"Fee paid — print the receipt?"}
+          onClose={() => {
+            setPaidReceipt(null);
+            setOpenModal(false);
+          }}
+        />
+      )}
+    </>
   );
 };
 

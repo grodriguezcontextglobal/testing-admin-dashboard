@@ -80,10 +80,39 @@ export const buildLostItemPayload = ({ record, companyId } = {}) => {
   };
 };
 
+/** Confirmation that a device came back. Live template. */
+export const RETURN_NOTIFICATION_ENDPOINT =
+  "/nodemailer/member-lease-return-device-notification";
+
 /**
- * Payload for POST /nodemailer/member-lease-return-device-notification, sent to
- * whoever is responsible for the member.
+ * A device that did NOT come back in one piece — lost or damaged. Separate
+ * endpoint because the template has to say something else entirely; see
+ * FRONTEND_school_backend_asks.md §B3.
+ */
+export const INCIDENT_NOTIFICATION_ENDPOINT =
+  "/nodemailer/member-device-incident-notification";
+
+/** Same wording the printed declaration uses, so paper and email agree. */
+const OUTCOME_LABEL = {
+  returned: "Returned",
+  damaged: "Returned damaged",
+  lost: "Declared lost — device not recovered",
+};
+
+/**
+ * Notification for a closed lease: which endpoint to call, and with what.
  *
+ * Routed by outcome. Every outcome used to post the same payload to the
+ * return-confirmation endpoint, so declaring a laptop lost mailed the guardian
+ * that it had been returned successfully — a message that is not merely wrong
+ * but stands as evidence of a return that never happened. A lost or damaged
+ * device is an incident and gets its own template with the outcome, the
+ * condition note and the fee, if one was recorded.
+ *
+ * The `returned` payload is left byte-identical to what shipped, so the live
+ * template keeps rendering exactly as it does today.
+ *
+ * Recipient resolution is unchanged and shared:
  * The return notice used to go to `member.email` unconditionally, which mailed a
  * 15-year-old about their own lost laptop instead of their guardian. Being a
  * minor — not being under 13 — is the gate here, and it is the same
@@ -93,30 +122,53 @@ export const buildLostItemPayload = ({ record, companyId } = {}) => {
  * The member's own NAME stays in the body: the guardian needs to know which
  * student this is about.
  *
- * Returns `{ payload: null, recipient }` when nobody can be resolved. Falling
- * back to the student's address is the bug being fixed, so it is not an option.
+ * Returns `{ payload: null, endpoint: null, recipient }` when nobody can be
+ * resolved. Falling back to the student's address is the bug being fixed, so it
+ * is not an option.
  *
- * @param {{member: object, record: object}} args
- * @returns {{payload: object|null, recipient: {email: string|null, isGuardian: boolean, error: string|null}}}
+ * @param {{member: object, record: object, outcome?: string, note?: string,
+ *   fee?: {fee_amount?: number}}} args
+ * @returns {{endpoint: string|null, payload: object|null,
+ *   recipient: {email: string|null, isGuardian: boolean, error: string|null}}}
  */
-export const buildReturnNotification = ({ member, record } = {}) => {
+export const buildReturnNotification = ({
+  member,
+  record,
+  outcome = "returned",
+  note,
+  fee,
+} = {}) => {
   const recipient = getConfirmationRecipient(member ?? {});
-  if (!recipient.email) return { payload: null, recipient };
-  return {
-    payload: {
-      member: {
-        firstName: member?.first_name,
-        lastName: member?.last_name,
-        email: recipient.email,
-      },
-      devices: [
-        {
-          device: {
-            serialNumber: record?.device_serial_number,
-            deviceType: record?.device_category_name,
-          },
+  if (!recipient.email) return { endpoint: null, payload: null, recipient };
+  const payload = {
+    member: {
+      firstName: member?.first_name,
+      lastName: member?.last_name,
+      email: recipient.email,
+    },
+    devices: [
+      {
+        device: {
+          serialNumber: record?.device_serial_number,
+          deviceType: record?.device_category_name,
         },
-      ],
+      },
+    ],
+  };
+  if (!isChargeableOutcome(outcome)) {
+    return { endpoint: RETURN_NOTIFICATION_ENDPOINT, payload, recipient };
+  }
+  const amount = Number(fee?.fee_amount);
+  return {
+    endpoint: INCIDENT_NOTIFICATION_ENDPOINT,
+    payload: {
+      ...payload,
+      outcome,
+      outcomeLabel: OUTCOME_LABEL[outcome] ?? outcome,
+      conditionNote: `${note ?? ""}`.trim() || null,
+      // null, not 0: "no fee was charged" and "a $0 fee was charged" read the
+      // same on paper but not to a family asking what they owe.
+      feeAmount: Number.isFinite(amount) && amount > 0 ? amount : null,
     },
     recipient,
   };
