@@ -92,19 +92,54 @@ describe("findWarehouseManager — only active staff", () => {
   });
 });
 
-describe("findWarehouseManager — returns exactly one, deterministically", () => {
-  it("returns a single manager, not a list", () => {
-    const result = findWarehouseManager([
-      employee({ firstName: "Bruno" }),
-      employee({ firstName: "Ana" }),
-    ]);
-    expect(result).toEqual({ name: "Ana Ruiz", email: "ana@x.com" });
+describe("findWarehouseManager — returns exactly one, chosen at random", () => {
+  const roster = [
+    employee({ firstName: "Ana", user: "a@x.com" }),
+    employee({ firstName: "Bruno", user: "b@x.com" }),
+    employee({ firstName: "Carla", user: "c@x.com" }),
+  ];
+
+  it("returns a single manager object, never a list", () => {
+    const result = findWarehouseManager(roster);
+    expect(Array.isArray(result)).toBe(false);
+    expect(Object.keys(result).sort()).toEqual(["email", "name"]);
   });
 
-  it("picks the same one regardless of roster order", () => {
-    const a = employee({ firstName: "Bruno", user: "b@x.com" });
-    const b = employee({ firstName: "Ana", user: "a@x.com" });
-    expect(findWarehouseManager([a, b])).toEqual(findWarehouseManager([b, a]));
+  it("always returns one of the actual managers", () => {
+    const valid = new Set(["Ana Ruiz", "Bruno Ruiz", "Carla Ruiz"]);
+    for (let i = 0; i < 200; i += 1) {
+      expect(valid.has(findWarehouseManager(roster).name)).toBe(true);
+    }
+  });
+
+  it("keeps name and email from the same person, never mixed", () => {
+    const emailByName = {
+      "Ana Ruiz": "a@x.com",
+      "Bruno Ruiz": "b@x.com",
+      "Carla Ruiz": "c@x.com",
+    };
+    for (let i = 0; i < 200; i += 1) {
+      const picked = findWarehouseManager(roster);
+      expect(picked.email).toBe(emailByName[picked.name]);
+    }
+  });
+
+  // Guards against "random" silently collapsing to index 0 — the odds of a
+  // real random pick missing any of three across 300 draws are ~0.
+  it("does not always return the same one", () => {
+    const seen = new Set();
+    for (let i = 0; i < 300; i += 1) {
+      seen.add(findWarehouseManager(roster).name);
+    }
+    expect(seen.size).toBe(3);
+  });
+
+  it("is still deterministic when there is only one manager", () => {
+    const single = [employee({ firstName: "Solo", user: "s@x.com" })];
+    expect(findWarehouseManager(single)).toEqual({
+      name: "Solo Ruiz",
+      email: "s@x.com",
+    });
   });
 });
 

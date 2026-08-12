@@ -33,10 +33,11 @@ const fullName = (employee) =>
  * Deliberately excludes inactive and still-Pending staff: naming someone who
  * no longer works there as the person in charge is worse than showing nobody.
  *
- * Only one is returned, per product decision. Ties are broken by name so the
- * pill doesn't change between renders just because the roster came back in a
- * different order — the same reason the role donut sorts its level-less
- * entries by key.
+ * Only one is returned, per product decision, picked at random when a company
+ * has several. Note the consequence: the name is not stable across reloads, so
+ * two people looking at the same company can see different managers. The
+ * caller memoises it, which keeps it fixed for the life of the mount — switch
+ * this to a sort if the pill should ever be reproducible.
  *
  * Scoped location managers (inventory_location_manager) are NOT matched: they
  * are in charge of specific locations, not the warehouse as a whole. Add that
@@ -58,11 +59,11 @@ export const findWarehouseManager = (employees) => {
       if (raw === undefined || raw === null || raw === "") return false;
       return getRoleLabelGroupKey(raw) === WAREHOUSE_MANAGER_CONCEPT;
     })
-    .filter((employee) => fullName(employee).length > 0)
-    .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+    .filter((employee) => fullName(employee).length > 0);
 
   if (managers.length === 0) return null;
-  return { name: fullName(managers[0]), email: managers[0]?.user };
+  const picked = managers[Math.floor(Math.random() * managers.length)];
+  return { name: fullName(picked), email: picked?.user };
 };
 
 export default findWarehouseManager;
