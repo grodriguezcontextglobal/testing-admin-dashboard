@@ -5,23 +5,36 @@ import ModalUX from "../../../components/UX/modal/ModalUX";
 import ReceiptDocument from "./ReceiptDocument";
 
 /**
- * Shows a transaction's receipt with a QR on it and hands it to the printer.
+ * Shows a receipt and hands it to the printer.
  *
- * The QR encodes the receipt page for this same transaction, so a paper copy
- * stays useful after it leaves the desk: scanning it shows the current status,
- * which is how a void applied later becomes visible to whoever is holding the
- * printout.
+ * Takes the mapped receipt view model, so the same modal serves a payment
+ * receipt (mapTransactionToReceipt) and a device handover slip
+ * (mapAssignmentToReceipt).
  *
  * Printing is plain window.print() against the print rules in receipt.css
  * rather than a PDF library — the document is a handful of rows, and every
  * browser already has a print-to-PDF path.
+ *
+ * @param {object} receipt mapped receipt view model
+ * @param {string} [qrValue] URL for the QR; omit to print without one
+ * @param {Function} [onClose] extra teardown on close (e.g. navigation)
  */
-const ReceiptModal = ({ openModal, setOpenModal, transaction }) => {
-  const closeModal = () => setOpenModal(false);
+const ReceiptModal = ({
+  openModal,
+  setOpenModal,
+  receipt,
+  qrValue,
+  title = "Receipt",
+  onClose,
+}) => {
+  const closeModal = () => {
+    setOpenModal(false);
+    onClose?.();
+  };
 
   const body = (
     <div style={{ backgroundColor: "#ffffff", padding: "8px" }}>
-      <ReceiptDocument transaction={transaction} />
+      <ReceiptDocument receipt={receipt} qrValue={qrValue} />
       <div
         className="receipt__no-print"
         style={{
@@ -39,7 +52,7 @@ const ReceiptModal = ({ openModal, setOpenModal, transaction }) => {
 
   return (
     <ModalUX
-      title={"Receipt"}
+      title={title}
       openDialog={openModal}
       closeModal={closeModal}
       body={body}
@@ -52,7 +65,10 @@ const ReceiptModal = ({ openModal, setOpenModal, transaction }) => {
 ReceiptModal.propTypes = {
   openModal: PropTypes.bool,
   setOpenModal: PropTypes.func.isRequired,
-  transaction: PropTypes.object,
+  receipt: PropTypes.object,
+  qrValue: PropTypes.string,
+  title: PropTypes.string,
+  onClose: PropTypes.func,
 };
 
 export default ReceiptModal;

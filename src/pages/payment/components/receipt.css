@@ -68,6 +68,14 @@
   border: 1px solid var(--warning-200, #fedf89);
 }
 
+/* Assignment still open — informational, not a warning: nothing is wrong, the
+   device is simply still out. */
+.receipt__band--open {
+  background: var(--blue-50, #eff8ff);
+  color: var(--blue-700, #175cd3);
+  border: 1px solid var(--blue-200, #b2ddff);
+}
+
 .receipt__meta {
   margin: 0;
   font-size: 13px;

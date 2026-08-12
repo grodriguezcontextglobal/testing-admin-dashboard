@@ -5,7 +5,10 @@ import { devitrakApi } from "../../api/devitrakApi";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import ReceiptDocument from "./components/ReceiptDocument";
-import { readPaymentIntentFromSearch } from "./utils/receiptUtils";
+import {
+  mapTransactionToReceipt,
+  readPaymentIntentFromSearch,
+} from "./utils/receiptUtils";
 
 /**
  * The page a receipt QR opens.
@@ -118,9 +121,11 @@ const ReceiptPage = () => {
     );
   }
 
-  // showQr={false}: the reader is already here, and a QR pointing at the page
-  // you are looking at is noise.
-  return frame(<ReceiptDocument transaction={receiptQuery.data} showQr={false} />);
+  // No qrValue: the reader is already here, and a QR pointing at the page you
+  // are looking at is noise.
+  return frame(
+    <ReceiptDocument receipt={mapTransactionToReceipt(receiptQuery.data)} />
+  );
 };
 
 export default ReceiptPage;

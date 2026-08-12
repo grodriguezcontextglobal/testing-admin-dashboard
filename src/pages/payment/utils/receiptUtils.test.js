@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   RECEIPT_ROUTE,
   RECEIPT_STATUS,
+  RECEIPT_KIND,
+  mapAssignmentToReceipt,
   buildReceiptUrl,
   readPaymentIntentFromSearch,
   resolveReceiptStatus,
@@ -228,6 +230,80 @@ describe("mapTransactionToReceipt", () => {
       expect(mapped.total).toBe(0);
       expect(mapped.status).toBe(RECEIPT_STATUS.UNKNOWN);
       expect(mapped.payer.name).toBe("");
+    }
+  });
+
+  it("labels itself as a payment receipt", () => {
+    expect(receipt.kind).toBe(RECEIPT_KIND.PAYMENT);
+    expect(receipt.partyLabel).toBe("Billed to");
+    expect(receipt.total).not.toBeNull();
+  });
+});
+
+describe("mapAssignmentToReceipt — a handover slip, not an invoice", () => {
+  const args = {
+    member: { first_name: "Blaise", last_name: "Pascal", email: "b@school.edu" },
+    devices: [
+      { serial_number: "SN-1", item_group: "Chromebook" },
+      { serial_number: "SN-2", item_group: "Charger" },
+    ],
+    company: "Bridges Academy",
+    date: "2026-06-02T15:04:05.000Z",
+    staffName: "Ada Lovelace",
+    reference: "Due 2026-06-16",
+  };
+  const receipt = mapAssignmentToReceipt(args);
+
+  it("names who it was issued to", () => {
+    expect(receipt.partyLabel).toBe("Issued to");
+    expect(receipt.payer).toEqual({
+      name: "Blaise Pascal",
+      email: "b@school.edu",
+    });
+  });
+
+  it("credits the staff member who handed it over", () => {
+    expect(receipt.idLabel).toBe("Issued by");
+    expect(receipt.id).toBe("Ada Lovelace");
+  });
+
+  it("lists each device with its serial and type", () => {
+    expect(receipt.lines).toEqual([
+      { label: "SN-1 — Chromebook", amount: null },
+      { label: "SN-2 — Charger", amount: null },
+    ]);
+  });
+
+  // The distinction that keeps a handover slip from reading like an invoice:
+  // no amount column at all, rather than a column full of $0.00.
+  it("carries no money", () => {
+    expect(receipt.total).toBeNull();
+    expect(receipt.lines.every((line) => line.amount === null)).toBe(true);
+    expect(receipt.kind).toBe(RECEIPT_KIND.ASSIGNMENT);
+  });
+
+  it("is open while the device is out and returned once it is back", () => {
+    expect(receipt.status).toBe(RECEIPT_STATUS.OPEN);
+    expect(mapAssignmentToReceipt({ ...args, returned: true }).status).toBe(
+      RECEIPT_STATUS.RETURNED
+    );
+  });
+
+  it("falls back to a label when a device has no serial or type", () => {
+    const mapped = mapAssignmentToReceipt({ ...args, devices: [{}] });
+    expect(mapped.lines[0].label).toBe("Item");
+  });
+
+  it("shows a dash rather than a blank when the staff name is missing", () => {
+    expect(mapAssignmentToReceipt({ ...args, staffName: "" }).id).toBe("—");
+  });
+
+  it("survives being called with nothing", () => {
+    for (const bad of [undefined, {}]) {
+      const mapped = mapAssignmentToReceipt(bad);
+      expect(mapped.lines).toEqual([]);
+      expect(mapped.payer.name).toBe("");
+      expect(mapped.total).toBeNull();
     }
   });
 });

@@ -51,6 +51,8 @@ import {
   getConsentStatusCopy,
 } from "../../../../../utils/guardianConsentUtils";
 import { fetchSchoolSettings } from "../../../../../../../pages/Profile/school_compliance/utils/schoolComplianceUtils";
+import ReceiptModal from "../../../../../../payment/components/ReceiptModal";
+import { mapAssignmentToReceipt } from "../../../../../../payment/utils/receiptUtils";
 
 const AssignmentDevicesToMember = () => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -85,6 +87,10 @@ const AssignmentDevicesToMember = () => {
   const sendContractEmail = shouldSendContractEmail(memberInfo, addContracts);
   const [contractList, setContractList] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  // Handover slip, offered after a successful assignment. Optional by design —
+  // the modal's Close button skips it. Both answers navigate to the member
+  // page, so the flow ends in the same place either way.
+  const [assignmentReceipt, setAssignmentReceipt] = useState(null);
   const verificationInfo = {};
   const dateToUse = useMemo(() => formatDate(new Date()), []);
   let dataFound = useRef([]);
@@ -315,7 +321,22 @@ const AssignmentDevicesToMember = () => {
         ""
       );
       setLoadingStatus(false);
-      return navigate(`/member/${memberInfo?.member_id}/main`);
+      // Offer the receipt before leaving: navigating first unmounts the prompt.
+      // Whichever button is used, closing it navigates to the member page, so a
+      // staff member who does not want a printout ends up exactly where the
+      // flow used to take them.
+      return setAssignmentReceipt(
+        mapAssignmentToReceipt({
+          member: memberInfo,
+          devices: deviceInfo,
+          company: user?.company,
+          date: stampTime,
+          staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
+          reference: watch("expectedReturnDate")
+            ? `Due ${watch("expectedReturnDate")}`
+            : "",
+        })
+      );
     }
   };
   const verificationContractMember = async () => {
@@ -1086,6 +1107,20 @@ const AssignmentDevicesToMember = () => {
             </Grid>
           </form>
         </Grid>
+      )}
+      {/* No QR on a handover slip. The lookup behind it needs member_id +
+          company_id, both small sequential integers, so a scannable URL would
+          be trivially enumerable against records that carry a student's name
+          and a guardian's email. The device's current status is already on the
+          member's profile, where it is behind the session. */}
+      {assignmentReceipt && (
+        <ReceiptModal
+          openModal={Boolean(assignmentReceipt)}
+          setOpenModal={() => setAssignmentReceipt(null)}
+          receipt={assignmentReceipt}
+          title={"Print a receipt for this handover?"}
+          onClose={() => navigate(`/member/${memberInfo?.member_id}/main`)}
+        />
       )}
     </>
   );

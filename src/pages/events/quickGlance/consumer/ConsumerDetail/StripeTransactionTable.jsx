@@ -25,6 +25,10 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import ReceiptModal from "../../../../payment/components/ReceiptModal";
+import {
+  buildReceiptUrl,
+  mapTransactionToReceipt,
+} from "../../../../payment/utils/receiptUtils";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -457,7 +461,11 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         <ReceiptModal
           openModal={openReceiptModal}
           setOpenModal={setOpenReceiptModal}
-          transaction={receiptTransaction}
+          receipt={mapTransactionToReceipt(receiptTransaction)}
+          qrValue={buildReceiptUrl(
+            window.location.origin,
+            receiptTransaction?.paymentIntent
+          )}
         />
       )}
     </>

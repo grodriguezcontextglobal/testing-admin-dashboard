@@ -23,6 +23,15 @@ export const RECEIPT_STATUS = {
   PAID: "paid",
   VOID: "void",
   UNKNOWN: "unknown",
+  // Assignment receipts: the device is still out, or it came back. There is no
+  // "void" for an assignment — a return is the closing event.
+  OPEN: "open",
+  RETURNED: "returned",
+};
+
+export const RECEIPT_KIND = {
+  PAYMENT: "payment",
+  ASSIGNMENT: "assignment",
 };
 
 /**
@@ -157,7 +166,12 @@ export const mapTransactionToReceipt = (transaction) => {
   );
 
   return {
+    kind: RECEIPT_KIND.PAYMENT,
+    title: "Transaction receipt",
+    idLabel: "Transaction ID",
+    partyLabel: "Billed to",
     paymentIntent: `${transaction?.paymentIntent ?? ""}`,
+    id: `${transaction?.paymentIntent ?? ""}`,
     date: `${transaction?.date ?? ""}`,
     payer: {
       name: [consumer?.name, consumer?.lastName].filter(Boolean).join(" ").trim(),
@@ -168,5 +182,65 @@ export const mapTransactionToReceipt = (transaction) => {
     status: resolveReceiptStatus(transaction),
     company: `${transaction?.provider ?? ""}`,
     reference: `${transaction?.eventSelected ?? ""}`,
+  };
+};
+
+/**
+ * Receipt for a device assignment (school vertical): what a student was handed,
+ * when, and by whom.
+ *
+ * Not a payment, so there is no money column and no void — `total: null` tells
+ * the document to leave the amount column out entirely, and the status is
+ * open/returned rather than paid/void.
+ *
+ * Built from what the assignment flow already holds at the moment of handover
+ * rather than read back from the server, so a receipt can be printed
+ * immediately without waiting on a round trip.
+ *
+ * @param {object} args
+ * @param {object} args.member member record (first_name, last_name, email)
+ * @param {Array<object>} args.devices assigned items (serial_number, item_group)
+ * @param {string} args.company company name
+ * @param {string|Date} args.date handover time
+ * @param {string} [args.staffName] who handed it over
+ * @param {string} [args.reference] e.g. expected return date
+ * @param {boolean} [args.returned] true once the device is back
+ */
+export const mapAssignmentToReceipt = ({
+  member,
+  devices,
+  company,
+  date,
+  staffName,
+  reference,
+  returned = false,
+} = {}) => {
+  const items = Array.isArray(devices) ? devices : [];
+  return {
+    kind: RECEIPT_KIND.ASSIGNMENT,
+    title: "Assignment receipt",
+    idLabel: "Issued by",
+    partyLabel: "Issued to",
+    id: `${staffName ?? ""}`.trim() || "—",
+    date: `${date ?? ""}`,
+    payer: {
+      name: [member?.first_name, member?.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim(),
+      email: `${member?.email ?? ""}`,
+    },
+    lines: items.map((item) => ({
+      label:
+        [item?.serial_number, item?.item_group].filter(Boolean).join(" — ") ||
+        "Item",
+      // null, not 0: an assignment has no price, and a "$0.00" column on a
+      // handover slip reads like the device was free rather than borrowed.
+      amount: null,
+    })),
+    total: null,
+    status: returned ? RECEIPT_STATUS.RETURNED : RECEIPT_STATUS.OPEN,
+    company: `${company ?? ""}`,
+    reference: `${reference ?? ""}`,
   };
 };

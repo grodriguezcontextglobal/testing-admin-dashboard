@@ -2,10 +2,8 @@ import PropTypes from "prop-types";
 import { QRCode } from "../../../components/shared-assets/qr-code";
 import {
   RECEIPT_STATUS,
-  buildReceiptUrl,
   formatReceiptAmount,
   formatReceiptDate,
-  mapTransactionToReceipt,
 } from "../utils/receiptUtils";
 import "./receipt.css";
 
@@ -19,29 +17,38 @@ const BAND = {
     className: "receipt__band--unknown",
     label: "Status unavailable — verify before relying on this receipt",
   },
+  [RECEIPT_STATUS.OPEN]: {
+    className: "receipt__band--open",
+    label: "Checked out — device is the holder's responsibility until returned",
+  },
+  [RECEIPT_STATUS.RETURNED]: {
+    className: "receipt__band--paid",
+    label: "Returned",
+  },
 };
 
 /**
- * The receipt itself: rendered in a modal for printing, and by ReceiptPage when
- * someone scans the QR.
+ * Renders a receipt from the normalized view model produced by
+ * mapTransactionToReceipt (a payment) or mapAssignmentToReceipt (a device
+ * handover).
  *
- * Both surfaces render this same component on purpose. If the printed copy and
- * the scanned page were built separately they would drift, and the point of the
- * QR is that the scan shows the CURRENT state of the same transaction the paper
- * describes — including a void applied after printing.
+ * Takes the mapped model rather than a raw document precisely so a second
+ * receipt type did not require a second copy of this markup — two documents
+ * that must look alike but are maintained separately drift apart.
  *
- * @param {object} transaction raw transaction document
- * @param {boolean} [showQr] hide it on the scanned page, where it is redundant
- * @param {string} [origin] overrides window.location.origin (tests, SSR)
+ * The same component serves the printed copy and the scanned page, so a scan
+ * always shows the same layout the paper does, with the status re-read.
+ *
+ * @param {object} receipt mapped receipt view model
+ * @param {string} [qrValue] URL to encode; omit to leave the QR off
  */
-const ReceiptDocument = ({ transaction, showQr = true, origin }) => {
-  const receipt = mapTransactionToReceipt(transaction);
-  const band = BAND[receipt.status] ?? BAND[RECEIPT_STATUS.UNKNOWN];
-  const isVoid = receipt.status === RECEIPT_STATUS.VOID;
-
-  const resolvedOrigin =
-    origin ?? (typeof window !== "undefined" ? window.location.origin : "");
-  const qrValue = buildReceiptUrl(resolvedOrigin, receipt.paymentIntent);
+const ReceiptDocument = ({ receipt, qrValue }) => {
+  const band = BAND[receipt?.status] ?? BAND[RECEIPT_STATUS.UNKNOWN];
+  const isVoid = receipt?.status === RECEIPT_STATUS.VOID;
+  const lines = Array.isArray(receipt?.lines) ? receipt.lines : [];
+  // null total means this document carries no money at all (a handover slip),
+  // so the amount column is dropped rather than filled with $0.00.
+  const showAmounts = receipt?.total !== null && receipt?.total !== undefined;
 
   return (
     <div className="receipt" data-testid="receipt-document">
@@ -53,8 +60,8 @@ const ReceiptDocument = ({ transaction, showQr = true, origin }) => {
 
       <div className="receipt__head">
         <div>
-          <p className="receipt__company">{receipt.company || "Receipt"}</p>
-          <p className="receipt__title">Transaction receipt</p>
+          <p className="receipt__company">{receipt?.company || "Receipt"}</p>
+          <p className="receipt__title">{receipt?.title || "Receipt"}</p>
         </div>
       </div>
 
@@ -66,51 +73,57 @@ const ReceiptDocument = ({ transaction, showQr = true, origin }) => {
 
       <dl className="receipt__meta">
         <dt>Date</dt>
-        <dd>{formatReceiptDate(receipt.date)}</dd>
-        <dt>Reference</dt>
-        <dd>{receipt.reference || "—"}</dd>
-        <dt>Billed to</dt>
-        <dd>{receipt.payer.name || "—"}</dd>
-        {receipt.payer.email && (
+        <dd>{formatReceiptDate(receipt?.date)}</dd>
+        {receipt?.reference && (
+          <>
+            <dt>Reference</dt>
+            <dd>{receipt.reference}</dd>
+          </>
+        )}
+        <dt>{receipt?.partyLabel || "Billed to"}</dt>
+        <dd>{receipt?.payer?.name || "—"}</dd>
+        {receipt?.payer?.email && (
           <>
             <dt>Email</dt>
             <dd>{receipt.payer.email}</dd>
           </>
         )}
-        <dt>Transaction ID</dt>
-        <dd>{receipt.paymentIntent || "—"}</dd>
+        <dt>{receipt?.idLabel || "Reference ID"}</dt>
+        <dd>{receipt?.id || "—"}</dd>
       </dl>
 
       <table className="receipt__lines">
         <thead>
           <tr>
             <th>Item</th>
-            <th>Amount</th>
+            {showAmounts && <th>Amount</th>}
           </tr>
         </thead>
         <tbody>
-          {receipt.lines.length > 0 ? (
-            receipt.lines.map((line, index) => (
+          {lines.length > 0 ? (
+            lines.map((line, index) => (
               <tr key={`${line.label}-${index}`}>
                 <td>{line.label}</td>
-                <td>{formatReceiptAmount(line.amount)}</td>
+                {showAmounts && <td>{formatReceiptAmount(line.amount)}</td>}
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={2}>No items on this transaction.</td>
+              <td colSpan={showAmounts ? 2 : 1}>Nothing on this receipt.</td>
             </tr>
           )}
-          <tr className="receipt__total">
-            <td>Total</td>
-            <td>{formatReceiptAmount(receipt.total)}</td>
-          </tr>
+          {showAmounts && (
+            <tr className="receipt__total">
+              <td>Total</td>
+              <td>{formatReceiptAmount(receipt.total)}</td>
+            </tr>
+          )}
         </tbody>
       </table>
 
-      {/* No QR when there is no identifier to encode — it would scan into a
-          page that cannot look anything up. */}
-      {showQr && qrValue && (
+      {/* No QR unless the caller supplied a target — one that scans into a page
+          which cannot look anything up is worse than none. */}
+      {qrValue && (
         <div className="receipt__qr">
           <QRCode size="sm" value={qrValue} />
           <p className="receipt__qr-hint">
@@ -124,17 +137,29 @@ const ReceiptDocument = ({ transaction, showQr = true, origin }) => {
 };
 
 ReceiptDocument.propTypes = {
-  transaction: PropTypes.shape({
-    paymentIntent: PropTypes.string,
-    active: PropTypes.bool,
+  receipt: PropTypes.shape({
+    kind: PropTypes.string,
+    title: PropTypes.string,
+    company: PropTypes.string,
+    status: PropTypes.string,
     date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
-    provider: PropTypes.string,
-    eventSelected: PropTypes.string,
-    consumerInfo: PropTypes.object,
-    device: PropTypes.array,
+    reference: PropTypes.string,
+    partyLabel: PropTypes.string,
+    payer: PropTypes.shape({
+      name: PropTypes.string,
+      email: PropTypes.string,
+    }),
+    idLabel: PropTypes.string,
+    id: PropTypes.string,
+    lines: PropTypes.arrayOf(
+      PropTypes.shape({
+        label: PropTypes.string,
+        amount: PropTypes.number,
+      })
+    ),
+    total: PropTypes.number,
   }),
-  showQr: PropTypes.bool,
-  origin: PropTypes.string,
+  qrValue: PropTypes.string,
 };
 
 export default ReceiptDocument;
