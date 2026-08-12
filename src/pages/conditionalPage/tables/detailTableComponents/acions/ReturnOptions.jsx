@@ -75,6 +75,7 @@ const ReturnOptions = ({
   setStoredRecord,
   modalHandler,
   onFeePending,
+  onDeclarationRecorded,
 }) => {
   // const [checked, setChecked] = useState(true);
   return (
@@ -91,7 +92,13 @@ const ReturnOptions = ({
       </div>
       <Divider />
       {checked ? ( */}
-      <Return storedRecord={storedRecord} modalHandler={modalHandler} setStoredRecord={setStoredRecord} onFeePending={onFeePending} />
+      <Return
+        storedRecord={storedRecord}
+        modalHandler={modalHandler}
+        setStoredRecord={setStoredRecord}
+        onFeePending={onFeePending}
+        onDeclarationRecorded={onDeclarationRecorded}
+      />
       {/* ) : (
         <Lost storedRecord={storedRecord} modalHandler={modalHandler} />
       )} */}

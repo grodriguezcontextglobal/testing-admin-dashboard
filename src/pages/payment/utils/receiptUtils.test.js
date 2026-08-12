@@ -4,6 +4,7 @@ import {
   RECEIPT_STATUS,
   RECEIPT_KIND,
   mapAssignmentToReceipt,
+  mapReturnToReceipt,
   buildReceiptUrl,
   readPaymentIntentFromSearch,
   resolveReceiptStatus,
@@ -305,5 +306,87 @@ describe("mapAssignmentToReceipt — a handover slip, not an invoice", () => {
       expect(mapped.payer.name).toBe("");
       expect(mapped.total).toBeNull();
     }
+  });
+});
+
+describe("mapReturnToReceipt — constancia for closing a lease", () => {
+  const base = {
+    member: { first_name: "Blaise", last_name: "Pascal", email: "b@school.edu" },
+    record: { device_serial_number: "SN-1", device_category_name: "Laptop" },
+    company: "Bridges Academy",
+    date: "2026-06-02T15:04:05.000Z",
+    staffName: "Ada Lovelace",
+  };
+
+  it("titles a loss declaration differently from a plain return", () => {
+    expect(mapReturnToReceipt({ ...base, outcome: "lost" }).title).toBe(
+      "Lost device declaration"
+    );
+    expect(mapReturnToReceipt({ ...base, outcome: "returned" }).title).toBe(
+      "Device return receipt"
+    );
+  });
+
+  // A "Returned" band on a loss declaration would state the opposite of what
+  // happened, which is why lost has its own status rather than reusing RETURNED.
+  it("never says returned on a loss declaration", () => {
+    expect(mapReturnToReceipt({ ...base, outcome: "lost" }).status).toBe(
+      RECEIPT_STATUS.DECLARED_LOST
+    );
+    expect(mapReturnToReceipt({ ...base, outcome: "returned" }).status).toBe(
+      RECEIPT_STATUS.RETURNED
+    );
+    expect(mapReturnToReceipt({ ...base, outcome: "damaged" }).status).toBe(
+      RECEIPT_STATUS.RETURNED
+    );
+  });
+
+  it("spells out the outcome in plain language", () => {
+    const lost = mapReturnToReceipt({ ...base, outcome: "lost" });
+    expect(lost.lines[1].label).toBe(
+      "Outcome: Declared lost — device not recovered"
+    );
+  });
+
+  it("lists the device and credits who recorded it", () => {
+    const receipt = mapReturnToReceipt({ ...base, outcome: "lost" });
+    expect(receipt.lines[0].label).toBe("SN-1 — Laptop");
+    expect(receipt.idLabel).toBe("Recorded by");
+    expect(receipt.id).toBe("Ada Lovelace");
+    expect(receipt.partyLabel).toBe("Held by");
+    expect(receipt.payer.name).toBe("Blaise Pascal");
+  });
+
+  it("includes the condition note only when there is one", () => {
+    const withNote = mapReturnToReceipt({
+      ...base,
+      outcome: "lost",
+      note: "Reported lost on 6/2",
+    });
+    expect(withNote.lines).toHaveLength(3);
+    expect(withNote.lines[2].label).toBe("Condition: Reported lost on 6/2");
+    expect(mapReturnToReceipt({ ...base, outcome: "lost" }).lines).toHaveLength(2);
+    expect(
+      mapReturnToReceipt({ ...base, outcome: "lost", note: "   " }).lines
+    ).toHaveLength(2);
+  });
+
+  // The fee gets collected on its own receipt. An amount printed here would read
+  // as already paid.
+  it("carries no money even when a fee was recorded", () => {
+    const receipt = mapReturnToReceipt({ ...base, outcome: "lost" });
+    expect(receipt.total).toBeNull();
+    expect(receipt.lines.every((line) => line.amount === null)).toBe(true);
+    expect(receipt.kind).toBe(RECEIPT_KIND.RETURN);
+  });
+
+  it("survives an unknown outcome and an empty call", () => {
+    expect(mapReturnToReceipt({ ...base, outcome: "weird" }).lines[1].label).toBe(
+      "Outcome: weird"
+    );
+    const empty = mapReturnToReceipt();
+    expect(empty.lines[0].label).toBe("Item");
+    expect(empty.lines[1].label).toBe("Outcome: —");
+    expect(empty.total).toBeNull();
   });
 });

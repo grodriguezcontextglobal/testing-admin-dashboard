@@ -15,6 +15,7 @@ import { FEATURE_MEMBER_FEES } from "../../../config/featureFlags";
 import { hasPermission, resolveRoleType } from "../../../config/roles";
 import "../../../styles/global/ant-table.css";
 import useMemberAssignedDevices from "../hooks/useMemberAssignedDevices";
+import ReceiptModal from "../../payment/components/ReceiptModal";
 import ChargeMemberDeviceFee from "./detailTableComponents/acions/fee/ChargeMemberDeviceFee";
 import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
 import { columns } from "./detailTableComponents/columns";
@@ -30,6 +31,8 @@ const DetailMemberInfo = () => {
   const [storedRecord, setStoredRecord] = useState(null);
   const [chargingFee, setChargingFee] = useState(false);
   const [prefilledFeeLines, setPrefilledFeeLines] = useState([]);
+  const [pendingFeeLine, setPendingFeeLine] = useState(null);
+  const [declarationReceipt, setDeclarationReceipt] = useState(null);
   const queryClient = useQueryClient();
 
   // Taking money is gated twice on purpose: by the same flag that gates the
@@ -48,15 +51,26 @@ const DetailMemberInfo = () => {
   );
   const rows = devicesQuery.rows;
 
-  // Bridges recording a fee to collecting it: Return closes the lease with the
-  // amount, then hands that line straight to the charge modal so nobody retypes
-  // it. Only offered to staff allowed to charge — an assistant who can close a
-  // lost lease still cannot bill for it, and for them the fee stays recorded and
-  // uncollected, which is the same place the flow ended before.
+  // Closing a lease can produce two follow-ups: a constancia to print, and a fee
+  // to collect. They are chained rather than stacked — the receipt opens first,
+  // and the charge modal opens when it closes. Two modals on screen at once made
+  // it unclear which one the Close button belonged to.
   const handleFeePending = (feeLine) => {
     if (!canChargeFee) return;
-    setPrefilledFeeLines([feeLine]);
-    setChargingFee(true);
+    setPendingFeeLine(feeLine);
+  };
+
+  const handleDeclarationRecorded = (receipt) => {
+    setDeclarationReceipt(receipt);
+  };
+
+  const handleDeclarationClosed = () => {
+    setDeclarationReceipt(null);
+    if (pendingFeeLine) {
+      setPrefilledFeeLines([pendingFeeLine]);
+      setPendingFeeLine(null);
+      setChargingFee(true);
+    }
   };
 
   const bodyModal = (
@@ -65,6 +79,7 @@ const DetailMemberInfo = () => {
       setStoredRecord={setStoredRecord}
       modalHandler={setChecked}
       onFeePending={handleFeePending}
+      onDeclarationRecorded={handleDeclarationRecorded}
     />
   );
 
@@ -158,6 +173,17 @@ const DetailMemberInfo = () => {
           openDialog={checked}
           closeModal={() => setChecked(false)}
           body={bodyModal}
+        />
+      )}
+      {/* No QR: same reason as the handover slip — the lookup behind it would
+          need enumerable member/company ids on a document naming a student. */}
+      {declarationReceipt && (
+        <ReceiptModal
+          openModal={Boolean(declarationReceipt)}
+          setOpenModal={() => setDeclarationReceipt(null)}
+          receipt={declarationReceipt}
+          title={"Print this record?"}
+          onClose={handleDeclarationClosed}
         />
       )}
       {chargingFee && (

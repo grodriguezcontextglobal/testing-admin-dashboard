@@ -15,11 +15,14 @@ import { Divider, message } from "antd";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { registerStaffActivity } from "../../../../../../api/activityLog";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
+import { mapReturnToReceipt } from "../../../../../payment/utils/receiptUtils";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FEATURE_MEMBER_FEES } from "../../../../../../config/featureFlags";
 import {
   buildFeeFields,
+  buildLostItemPayload,
+  buildReturnNotification,
   shouldOfferFeeCollection,
 } from "../../../../utils/leaseReturnUtils";
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
@@ -29,8 +32,16 @@ const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
  *   was recorded, so the caller can offer to collect it right away. Lifted to
  *   the caller rather than opening a charge modal from inside this one, because
  *   this component lives inside a modal that is closing at that moment.
+ * @param {Function} [onDeclarationRecorded] receives the constancia for what was
+ *   just recorded, so the caller can offer to print it. Same lifting reason.
  */
-const Return = ({ storedRecord, modalHandler, setStoredRecord, onFeePending }) => {
+const Return = ({
+  storedRecord,
+  modalHandler,
+  setStoredRecord,
+  onFeePending,
+  onDeclarationRecorded,
+}) => {
   const { register, handleSubmit, watch } = useForm();
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
@@ -48,6 +59,23 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord, onFeePending }) =
         item_group: storedRecord.device_item_group,
         company_id: user.sqlInfo.company_id,
       }),
+    onError: (error) => {
+      setLoading(false);
+      throw new Error(error);
+    },
+  });
+  // A lost device is taken off the member WITHOUT being restocked. Skipping the
+  // restock was already correct; what was missing is any write at all, which
+  // left the item sitting at logistic_status "assigned" after its lease closed.
+  const markItemAsLost = useMutation({
+    mutationFn: async () => {
+      const payload = buildLostItemPayload({
+        record: storedRecord,
+        companyId: user.sqlInfo.company_id,
+      });
+      if (!payload) return null;
+      return await devitrakApi.post("/db_item/item-out-warehouse", payload);
+    },
     onError: (error) => {
       setLoading(false);
       throw new Error(error);
@@ -100,9 +128,22 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord, onFeePending }) =
       // closed at this point — declining the charge loses the collection, not
       // the record.
       const pendingFee = variables?.fee;
+      // Constancia of what was just recorded. Built before the record is
+      // cleared, and handed up because this component lives inside the modal
+      // that is about to close.
+      const receipt = mapReturnToReceipt({
+        member: memberInfo,
+        record: storedRecord,
+        outcome: variables?.outcome,
+        note: variables?.note,
+        company: user?.company,
+        date: new Date().toISOString(),
+        staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
+      });
       setStoredRecord({});
       modalHandler(false);
       setLoading(false);
+      onDeclarationRecorded?.(receipt);
       if (onFeePending && shouldOfferFeeCollection(pendingFee)) {
         onFeePending({
           serial_number: storedRecord.device_serial_number,
@@ -114,27 +155,30 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord, onFeePending }) =
     },
   });
   const sentReturnEmailNotification = async () => {
+    // Routed through the shared recipient resolver: a minor's notices go to the
+    // guardian on file, never to the student. This used to post
+    // memberInfo.email unconditionally, which mailed a 15-year-old about their
+    // own lost laptop.
+    const { payload, recipient } = buildReturnNotification({
+      member: memberInfo,
+      record: storedRecord,
+    });
+    if (!payload) {
+      // Say so instead of silently sending nothing — or worse, sending it to
+      // the student. The device record itself is already saved at this point.
+      return message.warning(
+        `Device saved, but no notification was sent: ${recipient.error}`
+      );
+    }
     const response = await devitrakApi.post(
       "/nodemailer/member-lease-return-device-notification",
-      {
-        member: {
-          firstName: memberInfo?.first_name,
-          lastName: memberInfo?.last_name,
-          email: memberInfo?.email,
-        },
-        devices: [
-          {
-            device: {
-              serialNumber: storedRecord.device_serial_number,
-              deviceType: storedRecord.device_category_name,
-            },
-          },
-        ],
-      }
+      payload
     );
     if (response.data && response.data.ok) {
       return message.success(
-        `Return device success. An email notification to ${memberInfo?.email} has been queued.`
+        recipient.isGuardian
+          ? `Device saved. A notification was queued to the guardian (${recipient.email}).`
+          : `Device saved. A notification was queued to ${recipient.email}.`
       );
     }
   };
@@ -142,8 +186,11 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord, onFeePending }) =
     const outcome = data.outcome || "returned";
     try {
       setLoading(true);
-      // Lost devices never come back — skip the warehouse restock.
-      if (outcome !== "lost") {
+      // Lost devices never come back — no restock. They still need an inventory
+      // write, or the item stays "assigned" after the lease is closed.
+      if (outcome === "lost") {
+        await markItemAsLost.mutateAsync();
+      } else {
         await returnItemToInventoryCompany.mutateAsync(data);
       }
       const fee = FEATURE_MEMBER_FEES

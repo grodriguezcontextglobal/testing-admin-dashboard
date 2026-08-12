@@ -27,11 +27,22 @@ export const RECEIPT_STATUS = {
   // "void" for an assignment — a return is the closing event.
   OPEN: "open",
   RETURNED: "returned",
+  // A closed lease whose hardware never came back. Distinct from RETURNED so a
+  // declaration cannot print a band that says the device was returned.
+  DECLARED_LOST: "declared_lost",
 };
 
 export const RECEIPT_KIND = {
   PAYMENT: "payment",
   ASSIGNMENT: "assignment",
+  RETURN: "return",
+};
+
+/** Outcome labels for a return/lost declaration receipt. */
+const RETURN_OUTCOME_LABEL = {
+  returned: "Returned",
+  damaged: "Returned damaged",
+  lost: "Declared lost — device not recovered",
 };
 
 /**
@@ -242,5 +253,74 @@ export const mapAssignmentToReceipt = ({
     status: returned ? RECEIPT_STATUS.RETURNED : RECEIPT_STATUS.OPEN,
     company: `${company ?? ""}`,
     reference: `${reference ?? ""}`,
+  };
+};
+
+/**
+ * Constancia for closing a lease: what was returned, in what state, and what it
+ * was declared as.
+ *
+ * Exists because declaring a device lost produced no paper at all — the lease
+ * row closes and disappears from the member's open-loans table, so staff had
+ * nothing to hand over or file as proof of the declaration.
+ *
+ * Carries no money even when a fee was recorded: the fee is collected on its own
+ * receipt, and printing an amount here would look like it had been paid.
+ *
+ * @param {object} args
+ * @param {object} args.member member record
+ * @param {object} args.record the closed lease row (device_serial_number, ...)
+ * @param {string} args.outcome "returned" | "damaged" | "lost"
+ * @param {string} [args.note] condition note
+ * @param {string} args.company company name
+ * @param {string|Date} args.date
+ * @param {string} [args.staffName] who recorded it
+ */
+export const mapReturnToReceipt = ({
+  member,
+  record,
+  outcome,
+  note,
+  company,
+  date,
+  staffName,
+} = {}) => {
+  const serial = `${record?.device_serial_number ?? ""}`.trim();
+  const type = `${record?.device_category_name ?? ""}`.trim();
+  return {
+    kind: RECEIPT_KIND.RETURN,
+    title:
+      outcome === "lost" ? "Lost device declaration" : "Device return receipt",
+    idLabel: "Recorded by",
+    partyLabel: "Held by",
+    id: `${staffName ?? ""}`.trim() || "—",
+    date: `${date ?? ""}`,
+    payer: {
+      name: [member?.first_name, member?.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim(),
+      email: `${member?.email ?? ""}`,
+    },
+    lines: [
+      {
+        label: [serial, type].filter(Boolean).join(" — ") || "Item",
+        amount: null,
+      },
+      {
+        label: `Outcome: ${RETURN_OUTCOME_LABEL[outcome] ?? outcome ?? "—"}`,
+        amount: null,
+      },
+      ...(`${note ?? ""}`.trim()
+        ? [{ label: `Condition: ${String(note).trim()}`, amount: null }]
+        : []),
+    ],
+    total: null,
+    status:
+      outcome === "lost"
+        ? RECEIPT_STATUS.DECLARED_LOST
+        : RECEIPT_STATUS.RETURNED,
+    company: `${company ?? ""}`,
+    reference: "",
   };
 };

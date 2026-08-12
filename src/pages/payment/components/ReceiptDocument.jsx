@@ -25,6 +25,10 @@ const BAND = {
     className: "receipt__band--paid",
     label: "Returned",
   },
+  [RECEIPT_STATUS.DECLARED_LOST]: {
+    className: "receipt__band--void",
+    label: "Declared lost — device was not recovered",
+  },
 };
 
 /**
