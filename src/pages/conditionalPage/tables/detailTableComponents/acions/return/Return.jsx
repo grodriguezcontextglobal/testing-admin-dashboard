@@ -18,10 +18,19 @@ import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FEATURE_MEMBER_FEES } from "../../../../../../config/featureFlags";
-import { buildFeeFields } from "../../../../utils/leaseReturnUtils";
+import {
+  buildFeeFields,
+  shouldOfferFeeCollection,
+} from "../../../../utils/leaseReturnUtils";
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
-const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
+/**
+ * @param {Function} [onFeePending] called instead of a plain close when a fee
+ *   was recorded, so the caller can offer to collect it right away. Lifted to
+ *   the caller rather than opening a charge modal from inside this one, because
+ *   this component lives inside a modal that is closing at that moment.
+ */
+const Return = ({ storedRecord, modalHandler, setStoredRecord, onFeePending }) => {
   const { register, handleSubmit, watch } = useForm();
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
@@ -86,9 +95,22 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         details: { device_id: storedRecord.device_id, outcome: variables?.outcome },
       });
       await sentReturnEmailNotification();
+      // Hand the recorded fee up before tearing down, so the amount just
+      // entered can be collected without retyping it. The lease row is already
+      // closed at this point — declining the charge loses the collection, not
+      // the record.
+      const pendingFee = variables?.fee;
       setStoredRecord({});
       modalHandler(false);
       setLoading(false);
+      if (onFeePending && shouldOfferFeeCollection(pendingFee)) {
+        onFeePending({
+          serial_number: storedRecord.device_serial_number,
+          device_id: storedRecord.device_id,
+          amount: pendingFee.fee_amount,
+          reason: pendingFee.fee_reason,
+        });
+      }
     },
   });
   const sentReturnEmailNotification = async () => {

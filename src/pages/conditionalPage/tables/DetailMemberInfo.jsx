@@ -29,6 +29,7 @@ const DetailMemberInfo = () => {
   const [checked, setChecked] = useState(false);
   const [storedRecord, setStoredRecord] = useState(null);
   const [chargingFee, setChargingFee] = useState(false);
+  const [prefilledFeeLines, setPrefilledFeeLines] = useState([]);
   const queryClient = useQueryClient();
 
   // Taking money is gated twice on purpose: by the same flag that gates the
@@ -47,11 +48,23 @@ const DetailMemberInfo = () => {
   );
   const rows = devicesQuery.rows;
 
+  // Bridges recording a fee to collecting it: Return closes the lease with the
+  // amount, then hands that line straight to the charge modal so nobody retypes
+  // it. Only offered to staff allowed to charge — an assistant who can close a
+  // lost lease still cannot bill for it, and for them the fee stays recorded and
+  // uncollected, which is the same place the flow ended before.
+  const handleFeePending = (feeLine) => {
+    if (!canChargeFee) return;
+    setPrefilledFeeLines([feeLine]);
+    setChargingFee(true);
+  };
+
   const bodyModal = (
     <ReturnOptions
       storedRecord={storedRecord}
       setStoredRecord={setStoredRecord}
       modalHandler={setChecked}
+      onFeePending={handleFeePending}
     />
   );
 
@@ -130,7 +143,10 @@ const DetailMemberInfo = () => {
           canChargeFee ? (
             <GrayButtonComponent
               title={"Charge device fee"}
-              func={() => setChargingFee(true)}
+              func={() => {
+                setPrefilledFeeLines([]);
+                setChargingFee(true);
+              }}
             />
           ) : null
         }
@@ -149,6 +165,7 @@ const DetailMemberInfo = () => {
           openModal={chargingFee}
           setOpenModal={setChargingFee}
           devices={rows}
+          prefillLines={prefilledFeeLines}
         />
       )}
     </>

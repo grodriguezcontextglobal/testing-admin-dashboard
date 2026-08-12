@@ -70,7 +70,12 @@ import Return from "./return/Return";
 //   );
 // };
 
-const ReturnOptions = ({ storedRecord, setStoredRecord, modalHandler }) => {
+const ReturnOptions = ({
+  storedRecord,
+  setStoredRecord,
+  modalHandler,
+  onFeePending,
+}) => {
   // const [checked, setChecked] = useState(true);
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -86,7 +91,7 @@ const ReturnOptions = ({ storedRecord, setStoredRecord, modalHandler }) => {
       </div>
       <Divider />
       {checked ? ( */}
-      <Return storedRecord={storedRecord} modalHandler={modalHandler} setStoredRecord={setStoredRecord} />
+      <Return storedRecord={storedRecord} modalHandler={modalHandler} setStoredRecord={setStoredRecord} onFeePending={onFeePending} />
       {/* ) : (
         <Lost storedRecord={storedRecord} modalHandler={modalHandler} />
       )} */}

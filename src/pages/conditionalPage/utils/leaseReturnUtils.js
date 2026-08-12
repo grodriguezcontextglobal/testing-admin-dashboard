@@ -30,3 +30,19 @@ export const buildFeeFields = ({ outcome, feeAmount, feeReason } = {}) => {
   const reason = String(feeReason ?? "").trim() || outcome;
   return { fee_amount: amount, fee_reason: reason };
 };
+
+/**
+ * Whether closing this lease should offer to collect the fee straight away.
+ *
+ * Takes the object buildFeeFields produced, so the two can never disagree about
+ * what counts as a fee: an empty object (plain return, fees flag off, or a blank
+ * amount) must not pop a payment form at a staff member who was only recording
+ * a return.
+ *
+ * @param {{fee_amount?: number}} fee
+ * @returns {boolean}
+ */
+export const shouldOfferFeeCollection = (fee) => {
+  const amount = Number(fee?.fee_amount);
+  return Number.isFinite(amount) && amount > 0;
+};

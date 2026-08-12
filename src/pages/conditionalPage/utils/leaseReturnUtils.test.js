@@ -1,5 +1,37 @@
 import { describe, it, expect } from "vitest";
-import { isChargeableOutcome, buildFeeFields } from "./leaseReturnUtils";
+import {
+  isChargeableOutcome,
+  buildFeeFields,
+  shouldOfferFeeCollection,
+} from "./leaseReturnUtils";
+
+describe("shouldOfferFeeCollection", () => {
+  it("true cuando buildFeeFields produjo un monto positivo", () => {
+    expect(
+      shouldOfferFeeCollection(
+        buildFeeFields({ outcome: "lost", feeAmount: 250 })
+      )
+    ).toBe(true);
+  });
+
+  // El caso que importa: un retorno normal no debe abrirle un formulario de
+  // pago a quien solo estaba registrando una devolución.
+  it("false para el objeto vacío que devuelve un retorno sin cargo", () => {
+    expect(
+      shouldOfferFeeCollection(buildFeeFields({ outcome: "returned" }))
+    ).toBe(false);
+    expect(
+      shouldOfferFeeCollection(buildFeeFields({ outcome: "lost", feeAmount: 0 }))
+    ).toBe(false);
+    expect(shouldOfferFeeCollection({})).toBe(false);
+  });
+
+  it("false sin argumento o con un monto inutilizable", () => {
+    for (const bad of [undefined, null, { fee_amount: "" }, { fee_amount: "x" }, { fee_amount: -5 }]) {
+      expect(shouldOfferFeeCollection(bad)).toBe(false);
+    }
+  });
+});
 
 describe("isChargeableOutcome", () => {
   it("true para damaged/lost", () => {

@@ -58,9 +58,16 @@ const ChargeMemberDeviceFee = ({
   setOpenModal,
   devices = [],
   record = null,
+  prefillLines = [],
 }) => {
   const { memberInfo } = useSelector((state) => state.member);
-  const [feeLines, setFeeLines] = useState([]);
+  // Seeded from prefillLines so the return flow can hand over the fee it just
+  // recorded instead of making staff retype an amount they already entered.
+  // Read once on mount, which is correct because the caller renders this
+  // conditionally — a fresh mount per open.
+  const [feeLines, setFeeLines] = useState(() =>
+    Array.isArray(prefillLines) ? prefillLines : []
+  );
   const [clientSecret, setClientSecret] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
@@ -367,6 +374,14 @@ ChargeMemberDeviceFee.propTypes = {
   record: PropTypes.shape({
     device_serial_number: PropTypes.string,
   }),
+  prefillLines: PropTypes.arrayOf(
+    PropTypes.shape({
+      serial_number: PropTypes.string,
+      device_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      amount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      reason: PropTypes.string,
+    })
+  ),
 };
 
 export default ChargeMemberDeviceFee;
