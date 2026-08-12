@@ -18,6 +18,11 @@ const LegalDocumentModal = ({
   profile,
   selectedDocuments,
   setSelectedDocuments,
+  // COPPA: true when the member is under 13, in which case the guardian is
+  // emailed no matter what. The caller sends the mail off its own derived
+  // flag, so this only has to stop the UI offering a toggle that would not be
+  // honoured.
+  emailRequired = false,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useSelector((state) => state.admin);
@@ -223,7 +228,7 @@ const LegalDocumentModal = ({
         </Box>
       )}
 
-      {!foldersExisting && (
+      {!foldersExisting && !emailRequired && (
         <>
           <Divider />
           <InputLabel
@@ -245,7 +250,20 @@ const LegalDocumentModal = ({
         </>
       )}
 
-      {(addContracts || foldersExisting) && (
+      {/* Under 13: no toggle, because the email is sent regardless. Showing a
+          switchable control here would imply the staff member can decline it. */}
+      {!foldersExisting && emailRequired && (
+        <>
+          <Divider />
+          <p style={{ ...Subtitle, marginBottom: "0.2rem", width: "100%" }}>
+            This student is under 13, so their guardian is always emailed a copy
+            of this assignment — that notice cannot be turned off. Attach any
+            legal documents below and they will be included.
+          </p>
+        </>
+      )}
+
+      {(addContracts || foldersExisting || emailRequired) && (
         <div
           style={{
             width: "100%",

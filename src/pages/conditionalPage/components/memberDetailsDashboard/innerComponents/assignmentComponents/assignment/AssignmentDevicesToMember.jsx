@@ -42,6 +42,10 @@ import {
 } from "../../../../../utils/consentCheckUtils";
 import { fetchStudentConsent } from "../../../../../utils/guardianConsentApi";
 import {
+  isContractEmailRequired,
+  shouldSendContractEmail,
+} from "../../../../../utils/contractEmailPolicy";
+import {
   normalizeConsentStatus,
   isConsentBlockingAssignment,
   getConsentStatusCopy,
@@ -60,6 +64,25 @@ const AssignmentDevicesToMember = () => {
   const [checkingSerialNumberInputted, setCheckingSerialNumberInputted] =
     useState(false);
   const [addContracts, setAddContracts] = useState(false);
+  // COPPA: handing a device to a member under 13 always notifies the guardian,
+  // so the staff member cannot opt out of the email. Being a minor is NOT
+  // enough on its own — 13-17 keeps the email optional, which is why this
+  // reads under_13 rather than minor.
+  //
+  // The recipient is guaranteed: emailContractToMember already routes to
+  // parent_guardian_email whenever the member is a minor, and the guardian
+  // gate further down blocks the assignment outright when a minor has no
+  // complete guardian on file.
+  //
+  // Derived rather than forced into addContracts via an effect, so the two can
+  // never drift apart — and so unchecking the box can't silently win.
+  //
+  // The coercion lives in contractEmailPolicy because under_13 arrives as
+  // 1/0, "1"/"0" or true/false depending on the path, and a bare
+  // Boolean(under_13) reads the string "0" as true — which would have forced
+  // the email for members who are not under 13.
+  const contractEmailRequired = isContractEmailRequired(memberInfo);
+  const sendContractEmail = shouldSendContractEmail(memberInfo, addContracts);
   const [contractList, setContractList] = useState([]);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const verificationInfo = {};
@@ -266,7 +289,7 @@ const AssignmentDevicesToMember = () => {
         data: [...deviceInfo.map((item) => item.serial_number)],
       });
       await createNewLease({ ...props.template, deviceInfo });
-      if (addContracts) {
+      if (sendContractEmail) {
         await emailContractToMember({
           contractList: contractList,
           items: deviceInfo.map((d) => ({
@@ -819,6 +842,7 @@ const AssignmentDevicesToMember = () => {
                 </div>
               </div>
               <LegalDocumentModal
+                emailRequired={contractEmailRequired}
                 addContracts={addContracts}
                 setAddContracts={setAddContracts}
                 setValue={setValue}
