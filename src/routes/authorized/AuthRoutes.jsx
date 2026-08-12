@@ -141,6 +141,9 @@ const RedirectionPage = lazy(() =>
 const ConsumerDeviceLostFeeCreditCard = lazy(() =>
   import("../../pages/consumers/components/markedLostOption/CreditCard")
 );
+// Target of the receipt QR. Also registered in NoAuthRoutes — whoever scans may
+// or may not have a session, and this tree's catch-all is the error page.
+const ReceiptPage = lazy(() => import("../../pages/payment/ReceiptPage"));
 const CompanyInfo = lazy(() =>
   import("../../pages/Profile/company_info/MainPage")
 );
@@ -577,6 +580,10 @@ const AuthRoutes = () => {
                 path="/display-contracts"
                 element={<LandingPageForDownloadableDocuments />}
               />
+              {/* Not permission-guarded: this is the same receipt the payer was
+                  already handed, reached by scanning it. Guarding it would break
+                  the scan for the staff who print receipts. */}
+              <Route path="/receipt" element={<ReceiptPage />} />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>

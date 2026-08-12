@@ -13,6 +13,9 @@ import LandingPageForDownloadableDocuments from "../../pages/authentication/Land
 import ForceLogout from "../../pages/authentication/ForceLogout";
 import AttendanceConfirmationLanding from "../../pages/authentication/AttendanceConfirmationLanding";
 import GuardianConsentResponsePage from "../../pages/schoolConsent/GuardianConsentResponsePage";
+// Also registered in AuthRoutes — a receipt QR may be scanned with or without a
+// session, and this tree's catch-all redirects to /login.
+import ReceiptPage from "../../pages/payment/ReceiptPage";
 
 const NoAuthRoutes = () => {
   return (
@@ -33,6 +36,7 @@ const NoAuthRoutes = () => {
         <Route path="/my-devices" element={<MyDevicesPortal />} />
         <Route path="/attendance-confirmation" element={<AttendanceConfirmationLanding />} />
         <Route path="/school/consent/respond" element={<GuardianConsentResponsePage />} />
+        <Route path="/receipt" element={<ReceiptPage />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>

@@ -24,6 +24,7 @@ import Releasing from "./actions/deposit/Releasing";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
+import ReceiptModal from "../../../../payment/components/ReceiptModal";
 const { PropTypes } = pkg;
 
 const StripeTransactionTable = ({ searchValue, triggering }) => {
@@ -32,6 +33,8 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const [openCancelingDepositModal, setOpenCancelingDepositModal] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [openReceiptModal, setOpenReceiptModal] = useState(false);
+  const [receiptTransaction, setReceiptTransaction] = useState(null);
   const { event } = useSelector((state) => state.event);
   const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
@@ -324,6 +327,18 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
                 </Popconfirm>
               </Grid>
             )}
+          {/* Own full-width row so it cannot disturb the md sizing the refund
+              and deposit actions above depend on. Offered for voided
+              transactions too — a receipt showing the void is the point. */}
+          <Grid item xs={12} sm={12} md={12} display={"flex"} justifyContent={"flex-end"}>
+            <GrayButtonComponent
+              title={"Receipt"}
+              func={() => {
+                setReceiptTransaction(record);
+                setOpenReceiptModal(true);
+              }}
+            />
+          </Grid>
         </Grid>
       ),
     },
@@ -438,6 +453,13 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         />
       )}
       {openModalToAssignDevice && <ModalAddingDeviceFromSearchbar />}
+      {openReceiptModal && (
+        <ReceiptModal
+          openModal={openReceiptModal}
+          setOpenModal={setOpenReceiptModal}
+          transaction={receiptTransaction}
+        />
+      )}
     </>
   );
 };
