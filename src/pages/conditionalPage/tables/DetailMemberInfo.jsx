@@ -11,8 +11,11 @@ import {
   ProfileSkeleton,
 } from "../../../components/UX/profile";
 import BaseTable from "../../../components/UX/tables/BaseTable";
+import { FEATURE_MEMBER_FEES } from "../../../config/featureFlags";
+import { hasPermission, resolveRoleType } from "../../../config/roles";
 import "../../../styles/global/ant-table.css";
 import useMemberAssignedDevices from "../hooks/useMemberAssignedDevices";
+import ChargeMemberDeviceFee from "./detailTableComponents/acions/fee/ChargeMemberDeviceFee";
 import ReturnOptions from "./detailTableComponents/acions/ReturnOptions";
 import { columns } from "./detailTableComponents/columns";
 
@@ -25,7 +28,16 @@ const DetailMemberInfo = () => {
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checked, setChecked] = useState(false);
   const [storedRecord, setStoredRecord] = useState(null);
+  const [chargingFee, setChargingFee] = useState(false);
   const queryClient = useQueryClient();
+
+  // Taking money is gated twice on purpose: by the same flag that gates the
+  // rest of B1 (so nothing changes in production until fees are turned on
+  // deliberately), and by the Stripe-charge permission, so an assistant who can
+  // see the roster cannot bill a family.
+  const canChargeFee =
+    FEATURE_MEMBER_FEES &&
+    hasPermission("transaction:stripe_create", resolveRoleType(user));
 
   // Same hook (and therefore the same cache entry) the stat tiles read, so the
   // header and the table can never disagree about what this member is holding.
@@ -114,6 +126,14 @@ const DetailMemberInfo = () => {
         count={devicesQuery.isLoading ? undefined : rows.length}
         description={rows.length > 0 ? "Overdue first, then by due date" : null}
         testId="member-devices-section"
+        actions={
+          canChargeFee ? (
+            <GrayButtonComponent
+              title={"Charge device fee"}
+              func={() => setChargingFee(true)}
+            />
+          ) : null
+        }
       >
         {renderBody()}
       </ProfileSection>
@@ -122,6 +142,13 @@ const DetailMemberInfo = () => {
           openDialog={checked}
           closeModal={() => setChecked(false)}
           body={bodyModal}
+        />
+      )}
+      {chargingFee && (
+        <ChargeMemberDeviceFee
+          openModal={chargingFee}
+          setOpenModal={setChargingFee}
+          devices={rows}
         />
       )}
     </>

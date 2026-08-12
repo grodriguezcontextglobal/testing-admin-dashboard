@@ -1,0 +1,372 @@
+import {
+  Chip,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography,
+} from "@mui/material";
+import { Alert, Divider, Select } from "antd";
+import PropTypes from "prop-types";
+import { useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../../api/activityLog";
+import StripeElementMemberFeeTransaction from "../../../../../../components/stripe/elements/StripeElementMemberFeeTransaction";
+import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
+import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
+import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
+import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
+import { Subtitle } from "../../../../../../styles/global/Subtitle";
+import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
+import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
+import {
+  buildFeeChargeSummary,
+  canSubmitFeeCharge,
+  formatStripeAmount,
+  resolveFeePayer,
+  totalFeeCents,
+} from "../../../../utils/memberFeeChargeUtils";
+
+/**
+ * Charges a device fee (lost / damaged) to a member, collecting the card on the
+ * spot.
+ *
+ * Copied from the event Services flow (ServicesTransaction.jsx) rather than
+ * reused: that one is bound to `event.extraServices`, the event's admin list and
+ * the `customer` in the stripe slice, none of which exist for a member. What is
+ * shared with it is the live direct-charge endpoint,
+ * /stripe/create-payment-intent-subscription.
+ *
+ * Two things it does that the original did not:
+ * - Names the payer. A minor is never billed directly; the guardian on file is,
+ *   and the modal says so before staff types a card. If no guardian is on file
+ *   the charge is blocked instead of quietly falling through to the student.
+ * - Surfaces the failure. The original's submit handler ended in
+ *   `catch { return null }`, so a rejected intent looked like a dead button.
+ *
+ * SCOPE — this collects money; it does not yet record the debt. Writing
+ * fee_amount / fee_reason onto the lease row is FRONTEND_school_backend_asks.md
+ * §B1.1, still unimplemented server-side and gated by FEATURE_MEMBER_FEES. So a
+ * charge made here is recorded in Stripe and in the activity log, but does not
+ * appear as a settled fee on the member until that ships.
+ */
+const ChargeMemberDeviceFee = ({
+  openModal,
+  setOpenModal,
+  devices = [],
+  record = null,
+}) => {
+  const { memberInfo } = useSelector((state) => state.member);
+  const [feeLines, setFeeLines] = useState([]);
+  const [clientSecret, setClientSecret] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
+  const chargedAmountRef = useRef(0);
+
+  const { register, handleSubmit, setValue } = useForm({
+    defaultValues: {
+      serial_number: record?.device_serial_number ?? "",
+      amount: "",
+      reason: "",
+    },
+  });
+
+  const payer = useMemo(() => resolveFeePayer(memberInfo), [memberInfo]);
+  const totalCents = totalFeeCents(feeLines);
+  const guard = canSubmitFeeCharge({ lines: feeLines, member: memberInfo });
+
+  const closeModal = () => {
+    setOpenModal(false);
+  };
+
+  const deviceOptions = useMemo(
+    () =>
+      (Array.isArray(devices) ? devices : [])
+        .map((device) => `${device?.device_serial_number ?? ""}`.trim())
+        .filter(Boolean)
+        .map((serial) => ({ label: serial, value: serial })),
+    [devices]
+  );
+
+  const addFeeLine = (data) => {
+    setSubmitError(null);
+    setFeeLines((current) => [
+      ...current,
+      {
+        serial_number: data.serial_number,
+        device_id: devices?.find(
+          (device) => device?.device_serial_number === data.serial_number
+        )?.device_id,
+        amount: data.amount,
+        reason: data.reason,
+      },
+    ]);
+    setValue("amount", "");
+    setValue("reason", "");
+  };
+
+  const removeFeeLine = (indexToDrop) => {
+    setFeeLines((current) =>
+      current.filter((_, index) => index !== indexToDrop)
+    );
+  };
+
+  const createPaymentIntent = async () => {
+    if (!guard.ok) {
+      setSubmitError(guard.reason);
+      return;
+    }
+    setSubmitError(null);
+    setCreatingIntent(true);
+    chargedAmountRef.current = totalCents;
+    try {
+      const response = await devitrakApi.post(
+        "/stripe/create-payment-intent-subscription",
+        {
+          customerEmail: payer.email,
+          total: totalCents,
+        }
+      );
+      const secret =
+        response?.data?.paymentSubscription?.client_secret ?? null;
+      if (!secret) {
+        // A 200 without a secret still means no card can be collected — say so
+        // rather than rendering an empty Stripe element.
+        setSubmitError(
+          "The payment could not be started. Please try again or contact support."
+        );
+        return;
+      }
+      setClientSecret(secret);
+    } catch (error) {
+      setSubmitError(
+        error?.response?.data?.message ??
+          error?.message ??
+          "The payment could not be started."
+      );
+    } finally {
+      setCreatingIntent(false);
+    }
+  };
+
+  const onChargeSucceeded = (paymentIntent) => {
+    registerStaffActivity({
+      // No CHARGE verb exists in ACTIVITY_LOG_ACTIONS yet; CREATE + Fee keeps
+      // the row inside the catalog the log filter and backend already accept.
+      action: "CREATE",
+      target_model: "Fee",
+      target_id: memberInfo?.member_id ?? memberInfo?.id,
+      details: {
+        amount_cents: chargedAmountRef.current,
+        devices: buildFeeChargeSummary(feeLines),
+        payer_email: payer.email,
+        billed_guardian: payer.isGuardian,
+        payment_intent: paymentIntent?.id,
+      },
+    });
+  };
+
+  const modalBody = (
+    <div
+      style={{
+        minWidth: "fit-content",
+        backgroundColor: "#ffffff",
+        padding: "20px",
+      }}
+    >
+      <Typography marginY={2} style={{ ...TextFontsize18LineHeight28 }}>
+        {`Fee for ${memberInfo?.first_name ?? ""} ${
+          memberInfo?.last_name ?? ""
+        }`.trim()}
+      </Typography>
+
+      {/* Who gets billed is not obvious for a student, so it is stated up front
+          rather than discovered from the receipt. */}
+      {payer.email ? (
+        <Alert
+          type="info"
+          showIcon
+          message={
+            payer.isGuardian
+              ? `Billing the guardian on file: ${payer.email}`
+              : `Billing the member: ${payer.email}`
+          }
+        />
+      ) : (
+        <Alert type="error" showIcon message={payer.error} />
+      )}
+
+      <Divider />
+
+      <form
+        style={{ width: "100%", display: clientSecret !== null ? "none" : "block" }}
+        onSubmit={handleSubmit(addFeeLine)}
+      >
+        <Grid
+          display={"flex"}
+          justifyContent={"space-between"}
+          alignItems={"center"}
+          gap={2}
+          container
+        >
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Device
+              </Typography>
+            </InputLabel>
+            {/* A select when the member's assigned devices are known, a plain
+                field when they are not — a lost device may already be off the
+                assignment list by the time the fee is collected. */}
+            {deviceOptions.length > 0 ? (
+              <Select
+                defaultValue={record?.device_serial_number ?? ""}
+                style={{ width: "100%" }}
+                options={deviceOptions}
+                onChange={(value) => setValue("serial_number", value)}
+              />
+            ) : (
+              <OutlinedInput
+                {...register("serial_number")}
+                style={{ ...OutlinedInputStyle, width: "100%" }}
+                placeholder="Serial number"
+                fullWidth
+              />
+            )}
+          </Grid>
+          <Grid item xs={6} sm={6} md={3} lg={3}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Amount
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              {...register("amount")}
+              type="number"
+              inputProps={{ min: 0, step: "0.01" }}
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="250.00"
+              required
+              startAdornment={<InputAdornment position="start">$</InputAdornment>}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} sm={12} md={4} lg={4}>
+            <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
+              <Typography
+                textTransform={"none"}
+                textAlign={"left"}
+                style={{ ...Subtitle, fontWeight: 500 }}
+              >
+                Reason
+              </Typography>
+            </InputLabel>
+            <OutlinedInput
+              {...register("reason")}
+              style={{ ...OutlinedInputStyle, width: "100%" }}
+              placeholder="Lost — not recovered"
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+        <LightBlueButtonComponent
+          buttonType="submit"
+          title="Add fee"
+          styles={{ marginTop: "1rem" }}
+        />
+      </form>
+
+      {feeLines.length > 0 && (
+        <>
+          <Divider />
+          {feeLines.map((line, index) => (
+            <Chip
+              key={`${line.serial_number}-${line.amount}-${index}`}
+              label={`${line.serial_number || "Device"} — ${formatStripeAmount(
+                totalFeeCents([line])
+              )}${line.reason ? ` (${line.reason})` : ""}`}
+              style={{ margin: "0.5rem" }}
+              onDelete={
+                clientSecret === null ? () => removeFeeLine(index) : undefined
+              }
+            />
+          ))}
+        </>
+      )}
+
+      {submitError && (
+        <Alert
+          type="error"
+          showIcon
+          message={submitError}
+          style={{ marginTop: "1rem" }}
+        />
+      )}
+
+      {totalCents > 0 && clientSecret === null && (
+        <BlueButtonComponent
+          func={createPaymentIntent}
+          disabled={creatingIntent || !guard.ok}
+          loadingState={creatingIntent}
+          title={`Total to charge: ${formatStripeAmount(
+            totalCents
+          )} | Continue to card details`}
+          styles={{ ...CenteringGrid, width: "100%", marginTop: "1rem" }}
+        />
+      )}
+
+      <StripeElementMemberFeeTransaction
+        clientSecret={clientSecret}
+        total={chargedAmountRef.current}
+        onSucceeded={onChargeSucceeded}
+      />
+    </div>
+  );
+
+  return (
+    <ModalUX
+      title={
+        <Typography
+          textTransform={"none"}
+          marginY={2}
+          style={{ ...TextFontSize30LineHeight38, textWrap: "balance" }}
+        >
+          Charge device fee
+        </Typography>
+      }
+      openDialog={openModal}
+      closeModal={closeModal}
+      body={modalBody}
+      width={900}
+      footer={[]}
+      modalStyles={{ top: "10dvh", zIndex: 30 }}
+    />
+  );
+};
+
+ChargeMemberDeviceFee.propTypes = {
+  openModal: PropTypes.bool,
+  setOpenModal: PropTypes.func.isRequired,
+  devices: PropTypes.arrayOf(
+    PropTypes.shape({
+      device_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      device_serial_number: PropTypes.string,
+    })
+  ),
+  record: PropTypes.shape({
+    device_serial_number: PropTypes.string,
+  }),
+};
+
+export default ChargeMemberDeviceFee;
