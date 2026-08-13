@@ -6,6 +6,8 @@ import {
   totalFeeCents,
   buildFeeChargeSummary,
   canSubmitFeeCharge,
+  buildFeeSettlements,
+  buildFeeReceiptNotification,
 } from "./memberFeeChargeUtils";
 
 const adult = {
@@ -205,5 +207,127 @@ describe("canSubmitFeeCharge — the guard before hitting Stripe", () => {
   it("blocks with no member at all", () => {
     expect(canSubmitFeeCharge({ lines, member: null }).ok).toBe(false);
     expect(canSubmitFeeCharge({ lines }).ok).toBe(false);
+  });
+});
+
+// ─── Lo que pasa DESPUÉS de que la tarjeta pasa ───────────────────────────────
+// El cobro dejaba de existir en el momento en que Stripe decía "succeeded": no
+// se registraba la deuda como saldada (B1.3) ni se le avisaba a quien pagó
+// (B3.2). Ambos endpoints ya existen en el backend.
+
+describe("buildFeeSettlements — reportar el cobro contra el lease", () => {
+  const args = {
+    member: { member_id: 158 },
+    companyId: 62,
+    paymentIntent: "pi_3AbCdEfGhIjKlMnO",
+    lines: [
+      { serial_number: "SN-1", device_id: 900, amount: 250, reason: "Lost" },
+    ],
+  };
+
+  it("arma un payload por dispositivo cobrado", () => {
+    expect(buildFeeSettlements(args)).toEqual([
+      {
+        company_id: 62,
+        member_id: 158,
+        device_id: 900,
+        paid_amount: 250,
+        payment_intent: "pi_3AbCdEfGhIjKlMnO",
+        payment_method: "credit_card",
+        status: "paid",
+      },
+    ]);
+  });
+
+  // Un cobro puede cubrir varios equipos; el endpoint identifica UN lease, así
+  // que hace falta una llamada por línea, cada una con su propio monto.
+  it("divide un cobro de varios equipos por lease, no manda el total en cada uno", () => {
+    const settlements = buildFeeSettlements({
+      ...args,
+      lines: [
+        { serial_number: "SN-1", device_id: 900, amount: 250 },
+        { serial_number: "SN-2", device_id: 901, amount: 40 },
+      ],
+    });
+    expect(settlements).toHaveLength(2);
+    expect(settlements.map((s) => s.device_id)).toEqual([900, 901]);
+    expect(settlements.map((s) => s.paid_amount)).toEqual([250, 40]);
+  });
+
+  it("redondea a centavos: nunca manda 19.990000000000002", () => {
+    const [settlement] = buildFeeSettlements({
+      ...args,
+      lines: [{ device_id: 900, amount: "19.99" }],
+    });
+    expect(settlement.paid_amount).toBe(19.99);
+  });
+
+  // Sin device_id no hay lease que saldar. Mandarlo igual haría que el backend
+  // creara o tocara la fila equivocada.
+  it("descarta líneas sin device_id en lugar de mandar un lease indefinido", () => {
+    expect(
+      buildFeeSettlements({
+        ...args,
+        lines: [{ serial_number: "SN-9", amount: 50 }],
+      })
+    ).toEqual([]);
+  });
+
+  it("no arma nada sin member, sin company o sin payment intent", () => {
+    expect(buildFeeSettlements({ ...args, member: {} })).toEqual([]);
+    expect(buildFeeSettlements({ ...args, companyId: null })).toEqual([]);
+    expect(buildFeeSettlements({ ...args, paymentIntent: "" })).toEqual([]);
+    expect(buildFeeSettlements()).toEqual([]);
+  });
+});
+
+describe("buildFeeReceiptNotification — el correo de multa pagada", () => {
+  const args = {
+    member: { first_name: "Blaise", last_name: "Pascal" },
+    payer: { email: "parent@home.com", isGuardian: true },
+    lines: [
+      { serial_number: "SN-1", amount: 250, reason: "Lost — not recovered" },
+    ],
+    paymentIntent: "pi_3AbCdEfGhIjKlMnO",
+    company: "Bridges Academy",
+    date: "2026-08-13T20:15:00.000Z",
+  };
+
+  it("manda al correo que realmente se cobró, no al del alumno", () => {
+    const payload = buildFeeReceiptNotification(args);
+    expect(payload.member.email).toBe("parent@home.com");
+    expect(payload.billedGuardian).toBe(true);
+  });
+
+  it("nombra al alumno para que el guardián sepa de quién se trata", () => {
+    const payload = buildFeeReceiptNotification(args);
+    expect(payload.member.firstName).toBe("Blaise");
+    expect(payload.member.lastName).toBe("Pascal");
+  });
+
+  it("manda montos en dólares y un total que cuadra con las líneas", () => {
+    const payload = buildFeeReceiptNotification({
+      ...args,
+      lines: [
+        { serial_number: "SN-1", amount: 19.99 },
+        { serial_number: "SN-2", amount: 19.99 },
+        { serial_number: "SN-3", amount: 19.99 },
+      ],
+    });
+    expect(payload.lines.map((l) => l.amount)).toEqual([19.99, 19.99, 19.99]);
+    expect(payload.total).toBe(59.97);
+  });
+
+  it("incluye el payment intent como referencia de disputa", () => {
+    expect(buildFeeReceiptNotification(args).paymentIntent).toBe(
+      "pi_3AbCdEfGhIjKlMnO"
+    );
+  });
+
+  it("no arma payload sin destinatario — no hay a quién mandarlo", () => {
+    expect(
+      buildFeeReceiptNotification({ ...args, payer: { email: null } })
+    ).toBeNull();
+    expect(buildFeeReceiptNotification()).toBeNull();
   });
 });

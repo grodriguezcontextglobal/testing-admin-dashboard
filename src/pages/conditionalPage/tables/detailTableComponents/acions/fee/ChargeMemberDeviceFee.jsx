@@ -6,7 +6,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import { Alert, Divider, Select } from "antd";
+import { Alert, Divider, Select, message } from "antd";
 import PropTypes from "prop-types";
 import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +26,8 @@ import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFont
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import {
   buildFeeChargeSummary,
+  buildFeeReceiptNotification,
+  buildFeeSettlements,
   canSubmitFeeCharge,
   formatStripeAmount,
   resolveFeePayer,
@@ -167,6 +169,81 @@ const ChargeMemberDeviceFee = ({
     }
   };
 
+  /**
+   * Records the payment against the lease and mails the payer a receipt.
+   *
+   * Both run AFTER the money has moved, which sets the error policy: nothing here
+   * can be retried by re-charging, so a failure must be stated loudly with the
+   * payment intent attached rather than swallowed. A silent failure here is worse
+   * than the original bug — the school would believe the debt was cleared.
+   */
+  const recordSettlementAndNotify = async (paymentIntent) => {
+    const settlements = buildFeeSettlements({
+      member: memberInfo,
+      companyId: user?.sqlInfo?.company_id,
+      lines: feeLines,
+      paymentIntent: paymentIntent?.id,
+    });
+    const notification = buildFeeReceiptNotification({
+      member: memberInfo,
+      payer,
+      lines: feeLines,
+      paymentIntent: paymentIntent?.id,
+      company: user?.company,
+      date: new Date().toISOString(),
+    });
+
+    // Settled one lease at a time on purpose — see buildFeeSettlements. Run in
+    // sequence so a mid-way failure names how far it got.
+    const unsettled = [];
+    for (const settlement of settlements) {
+      try {
+        const response = await devitrakApi.post(
+          "/db_member/settle-member-fee",
+          settlement
+        );
+        if (!response?.data?.ok) unsettled.push(settlement.device_id);
+      } catch {
+        unsettled.push(settlement.device_id);
+      }
+    }
+
+    let mailFailed = false;
+    if (notification) {
+      try {
+        // 202 from the mail queue counts as sent — the job survives a SendGrid
+        // outage, so a queued receipt is a delivered one as far as staff care.
+        const response = await devitrakApi.post(
+          "/nodemailer/member-device-fee-receipt-notification",
+          notification
+        );
+        mailFailed = !response?.data?.ok;
+      } catch {
+        mailFailed = true;
+      }
+    }
+
+    // Reported through `message`, not the modal's own Alert: by the time these
+    // resolve the receipt is on screen and this modal is hidden behind it, so an
+    // inline Alert would never be read. antd messages render above modals.
+    // submitError is set too, for a staff member who stays in the charge form.
+    if (unsettled.length > 0) {
+      const text = `The card WAS charged (${paymentIntent?.id}) but the fee could not be marked as paid for device(s) ${unsettled.join(
+        ", "
+      )}. Record it manually — do not charge again.`;
+      setSubmitError(text);
+      // Duration 0: this one does not get to scroll past. A dismissed-too-soon
+      // toast here means a family gets chased for a debt they already settled.
+      message.error({ content: text, duration: 0, key: "fee-settle-failed" });
+    } else if (mailFailed || !notification) {
+      const text = `Payment recorded. The receipt email could not be sent to ${
+        payer.email ?? "the payer"
+      } — print the receipt instead.`;
+      setSubmitError(text);
+      message.warning({ content: text, duration: 8 });
+    }
+  };
+
   const onChargeSucceeded = (paymentIntent) => {
     // Proof the debt was settled. The loss declaration deliberately prints no
     // money, so without this the family paid and walked away with nothing on
@@ -198,6 +275,11 @@ const ChargeMemberDeviceFee = ({
         payment_intent: paymentIntent?.id,
       },
     });
+
+    // Not awaited: the receipt must appear the instant the charge clears. The
+    // settlement reports its own failure into submitError, which renders inside
+    // this same modal behind the receipt.
+    recordSettlementAndNotify(paymentIntent);
   };
 
   const modalBody = (

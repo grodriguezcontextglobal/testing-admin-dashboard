@@ -112,9 +112,9 @@ export const MEMBER_IMPORT_COLUMNS = [
     header: "date_of_birth",
     title: "Date of Birth",
     width: 120,
-    example: "2010-06-15",
+    example: "06-15-2010",
     description:
-      "YYYY-MM-DD. This is what decides whether the member is a minor, and therefore whether notices go to a guardian instead of to them. Leave it out and the row is treated as an adult.",
+      "MM-DD-YYYY. This is what decides whether the member is a minor, and therefore whether notices go to a guardian instead of to them. Leave it out and the row is treated as an adult.",
   },
   {
     header: "grade",
@@ -222,6 +222,84 @@ export const buildTemplateRow = () =>
     {}
   );
 
+/** Excel's day-zero. 1899-12-30, not 12-31, because of the 1900 leap-year bug. */
+const EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30);
+const MS_PER_DAY = 86400000;
+
+const pad = (value) => String(value).padStart(2, "0");
+const toIsoDay = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
+
+/**
+ * Normalizes whatever a spreadsheet put in the date-of-birth cell into
+ * `YYYY-MM-DD`, or null when it cannot be read.
+ *
+ * This exists because `calculateAge` requires `typeof dob === "string"`, and a
+ * cell Excel has formatted as a date is NOT a string: `sheet_to_json` hands back
+ * the serial number (40344) or, with cellDates, a Date. Both fell straight
+ * through to `age: null` → `minor: false`, and no warning fired either, because
+ * the field looked populated. A minor imported as an adult is the bug that mails
+ * a 15-year-old about their own lost laptop instead of their guardian — the exact
+ * defect fixed twice already this month, arriving by a third route.
+ *
+ * Accepts, in order: a Date, an Excel serial, ISO `YYYY-MM-DD`, and the
+ * `MM-DD-YYYY` the template documents (with `/` or `-`). `DD-MM-YYYY` is taken
+ * only when the first number cannot be a month, which is a fact rather than a
+ * guess; a genuinely ambiguous `06-07-2010` is read as the documented MM-DD.
+ *
+ * @param {string|number|Date} value
+ * @returns {string|null} YYYY-MM-DD
+ */
+export const parseImportedDob = (value) => {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime())
+      ? null
+      : toIsoDay(value.getFullYear(), value.getMonth() + 1, value.getDate());
+  }
+
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    const date = new Date(EXCEL_EPOCH_UTC + value * MS_PER_DAY);
+    if (Number.isNaN(date.getTime())) return null;
+    // Read back in UTC: the serial is a whole day count, so any local-timezone
+    // conversion here could only move it off by one — the same off-by-one that
+    // put lease due dates a day early.
+    return toIsoDay(
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate()
+    );
+  }
+
+  const raw = `${value ?? ""}`.trim();
+  if (!raw) return null;
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw);
+  if (iso) {
+    const [, year, month, day] = iso.map(Number);
+    return isRealDate(year, month, day) ? toIsoDay(year, month, day) : null;
+  }
+
+  const slashed = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(raw);
+  if (slashed) {
+    const [, first, second, year] = slashed.map(Number);
+    // first > 12 can only be a day, so DD-MM-YYYY is a reading, not a guess.
+    const [month, day] = first > 12 ? [second, first] : [first, second];
+    return isRealDate(year, month, day) ? toIsoDay(year, month, day) : null;
+  }
+
+  return null;
+};
+
+/** Rejects 2026-02-31 and friends, which the Date constructor rolls forward. */
+function isRealDate(year, month, day) {
+  if (!year || !month || !day || month > 12 || day > 31) return false;
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
 /** Resolves a normalized header token to its canonical target key, or null. */
 export const resolveKey = (normalizedKey) => {
   for (const target in headerAliasMap) {
@@ -267,8 +345,22 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
       );
     }
 
-    // Calculate minor from DOB; fall back to manual minor column for backward compat
-    const dob = normalizedRow["date_of_birth"] || "";
+    // Calculate minor from DOB; fall back to manual minor column for backward
+    // compat. The raw cell is normalized first — see parseImportedDob: an Excel
+    // date cell arrives as a serial number, and passing that straight to the age
+    // calculator silently produced an adult.
+    const rawDob = normalizedRow["date_of_birth"];
+    const hasDobCell = `${rawDob ?? ""}`.trim() !== "";
+    const dob = parseImportedDob(rawDob) || "";
+    if (hasDobCell && !dob) {
+      // An error, not a warning: whoever filled that cell meant to state an age,
+      // and getting it wrong flips who receives every notice about the member.
+      errors.push(
+        `Row ${
+          idx + 1
+        }: date of birth "${rawDob}" could not be read. Use MM-DD-YYYY (e.g. 06-15-2010).`
+      );
+    }
     const { minor: calculatedMinor, under_13 } = calculateStudentAgeFlags(dob);
     const manualMinor = /true|1|yes/i.test(String(normalizedRow.minor));
     const isMinor = dob ? calculatedMinor : manualMinor;

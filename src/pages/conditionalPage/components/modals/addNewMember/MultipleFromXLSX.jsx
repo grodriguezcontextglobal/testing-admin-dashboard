@@ -42,12 +42,6 @@ const columns = [
   },
   { title: "Address", dataIndex: "address", key: "address", responsive: ["xl"] },
   {
-    title: "Minor",
-    dataIndex: "minor",
-    key: "minor",
-    render: (minor) => <span style={cellStyle}>{minor ? "Yes" : "No"}</span>,
-  },
-  {
     title: "Guardian",
     key: "guardian",
     responsive: ["lg"],
@@ -62,7 +56,7 @@ const columns = [
   render: c.render || ((v) => <span style={cellStyle}>{v}</span>),
 }));
 
-const MultipleFromXLSX = ({ companyId = null }) => {
+const MultipleFromXLSX = ({ companyId = null, closingModal }) => {
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState([]);
   const [errors, setErrors] = useState([]);
@@ -119,6 +113,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           target_model: "Member",
           details: { count: rows.length },
         });
+      return closingModal(false);
       }
     } catch (error) {
       setErrors([`Failed to import rows: ${error?.message || String(error)}`]);
@@ -167,7 +162,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
             are required.
           </li>
           <li style={sectionText}>
-            <strong>date_of_birth</strong> (YYYY-MM-DD) decides who is a minor,
+            <strong>date_of_birth</strong> (MM-DD-YYYY) decides who is a minor,
             and therefore whether notices go to a guardian. A row without it is
             imported as an adult.
           </li>
@@ -243,8 +238,13 @@ const MultipleFromXLSX = ({ companyId = null }) => {
           borderTop: "1px solid var(--gray-200, #EAECF0)",
         }}
       >
+        {/* Errors block the import. They used to be advisory only: a file with
+            "missing required field(s)" or an unreadable date of birth imported
+            anyway, which is how a minor ends up on file as an adult. Warnings
+            (amber) still let it through — those rows are valid, just worth
+            reading. */}
         <BlueButtonComponent
-          isDisabled={!rows.length || importing}
+          isDisabled={!rows.length || importing || errors.length > 0}
           isLoading={importing}
           func={handleImport}
           title="Import"

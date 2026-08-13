@@ -4,6 +4,7 @@ import {
   buildTemplateRow,
   headerAliasMap,
   normalizeHeader,
+  parseImportedDob,
   resolveKey,
   validateAndNormalizeRows,
 } from "./xlsxImportUtils";
@@ -322,5 +323,95 @@ describe("edad indeterminable — avisa, no bloquea", () => {
     expect(
       validateAndNormalizeRows([{ ...adultRow, minor: "false" }], 62).warnings
     ).toEqual([]);
+  });
+});
+
+// ─── Fecha de nacimiento: lo que Excel entrega de verdad ─────────────────────
+// calculateAge exige `typeof dob === "string"`, y una celda con formato de fecha
+// en Excel NO llega como string: sheet_to_json la devuelve como número de serie
+// (40344) o como Date. En ambos casos la edad quedaba en null, el alumno entraba
+// como ADULTO, y no había ni aviso porque el campo venía "lleno". Es el mismo
+// fallo que le manda al chico de 15 el aviso de su propio laptop perdido.
+
+describe("parseImportedDob — normaliza a YYYY-MM-DD", () => {
+  it("acepta el número de serie de Excel, que es lo que manda una celda de fecha", () => {
+    expect(parseImportedDob(40344)).toBe("2010-06-15");
+    expect(parseImportedDob(42167)).toBe("2015-06-12");
+  });
+
+  it("acepta un Date (sheet_to_json con cellDates)", () => {
+    expect(parseImportedDob(new Date(2010, 5, 15))).toBe("2010-06-15");
+  });
+
+  it("acepta el MM-DD-YYYY que documenta la plantilla", () => {
+    expect(parseImportedDob("06-15-2010")).toBe("2010-06-15");
+    expect(parseImportedDob("6/15/2010")).toBe("2010-06-15");
+  });
+
+  it("acepta ISO sin tocarlo", () => {
+    expect(parseImportedDob("2010-06-15")).toBe("2010-06-15");
+  });
+
+  // 15 no puede ser un mes: no hay ambigüedad que adivinar, y la alternativa es
+  // que el alumno entre como adulto.
+  it("acepta DD-MM-YYYY cuando el día es inequívoco", () => {
+    expect(parseImportedDob("15-06-2010")).toBe("2010-06-15");
+  });
+
+  it("devuelve null para lo que no se puede leer, en vez de una fecha inventada", () => {
+    for (const bad of ["", "   ", "ayer", "13-13-2010", "0", null, undefined, {}]) {
+      expect(parseImportedDob(bad)).toBeNull();
+    }
+  });
+});
+
+describe("date_of_birth en la importación", () => {
+  const base = {
+    "First Name": "Blaise",
+    "Last Name": "Pascal",
+    Email: "b@school.edu",
+    Phone: "555-0100",
+    parent_guardian_first_name: "Guardian",
+    parent_guardian_last_name: "One",
+    parent_guardian_email: "g@home.com",
+    parent_guardian_phone_number: "555-0101",
+  };
+
+  it("detecta al menor desde una celda de fecha de Excel, no solo desde texto", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...base, date_of_birth: 42167 }],
+      62
+    );
+    expect(rows[0].date_of_birth).toBe("2015-06-12");
+    expect(rows[0].minor).toBe(true);
+  });
+
+  it("guarda la fecha normalizada, no el número de serie", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...base, date_of_birth: new Date(2015, 5, 12) }],
+      62
+    );
+    expect(rows[0].date_of_birth).toBe("2015-06-12");
+  });
+
+  // Una fecha ilegible con la columna presente es un error, no un aviso: quien
+  // llenó esa celda quiso declarar una edad, y equivocarse invierte a quién le
+  // llegan los avisos del equipo.
+  it("es un error cuando la fecha viene pero no se puede leer", () => {
+    const { errors, rows } = validateAndNormalizeRows(
+      [{ ...base, date_of_birth: "ayer" }],
+      62
+    );
+    expect(errors.join(" ")).toMatch(/date of birth/i);
+    expect(rows[0].date_of_birth).toBe("");
+  });
+
+  it("un adulto con fecha legible no genera ni error ni aviso", () => {
+    const { errors, warnings } = validateAndNormalizeRows(
+      [{ ...base, date_of_birth: "01-01-1990" }],
+      62
+    );
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
   });
 });

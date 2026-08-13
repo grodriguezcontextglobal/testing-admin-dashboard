@@ -208,7 +208,7 @@ const SchoolComplianceSettings = () => {
           </div>
 
           {/* Required consent policy version */}
-          <div
+          {/* <div
             style={{
               padding: "16px",
               border: "1px solid var(--gray-200, #ddded6)",
@@ -250,7 +250,7 @@ const SchoolComplianceSettings = () => {
               }}
               placeholder="e.g. 1"
             />
-          </div>
+          </div> */}
 
           {/* School consent document assignment */}
           <div
