@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  MEMBER_IMPORT_COLUMNS,
+  buildTemplateRow,
+  headerAliasMap,
   normalizeHeader,
   resolveKey,
   validateAndNormalizeRows,
@@ -158,5 +161,166 @@ describe("validateAndNormalizeRows", () => {
     );
     expect(rows[0].under_13).toBe(false);
     expect(rows[0].minor).toBe(true);
+  });
+});
+
+// ─── La plantilla y el importador no pueden divergir ─────────────────────────
+// El bug que esto corrige: el importador aceptaba grade y homeroom desde hacía
+// tiempo, pero la plantilla que descarga el colegio no ofrecía esas columnas, así
+// que NADIE las mandó nunca. Todos los alumnos importados quedaron sin grado —
+// justo el campo por el que filtra OverdueDevicesTable y sobre el que opera
+// AdvanceGrades. Dos listas mantenidas a mano en archivos distintos siempre
+// terminan así; estos dos tests son lo que lo impide.
+
+describe("MEMBER_IMPORT_COLUMNS — plantilla ↔ importador", () => {
+  it("toda columna de la plantilla la reconoce el importador", () => {
+    MEMBER_IMPORT_COLUMNS.forEach((column) => {
+      expect(
+        resolveKey(normalizeHeader(column.header)),
+        `la plantilla ofrece "${column.header}" y el importador lo ignoraría`
+      ).not.toBeNull();
+    });
+  });
+
+  it("todo campo importable aparece en la plantilla", () => {
+    // Exenciones, con motivo — no son olvidos:
+    //   address: se arma desde street/city/state/zip; ofrecer las dos formas
+    //            invita a que se contradigan.
+    //   minor:   se deriva de date_of_birth. Sigue siendo un alias aceptado para
+    //            archivos viejos sin fecha de nacimiento, pero pedirlo en la
+    //            plantilla crearía dos fuentes de verdad para la misma cosa.
+    const DERIVED = ["address", "minor"];
+    const offered = new Set(
+      MEMBER_IMPORT_COLUMNS.map((column) => resolveKey(normalizeHeader(column.header)))
+    );
+    Object.keys(headerAliasMap)
+      .filter((target) => !DERIVED.includes(target))
+      .forEach((target) => {
+        expect(
+          offered.has(target),
+          `el importador acepta "${target}" pero la plantilla no lo ofrece`
+        ).toBe(true);
+      });
+  });
+
+  it("los campos obligatorios de la plantilla son los que valida el importador", () => {
+    const required = MEMBER_IMPORT_COLUMNS.filter((c) => c.required).map((c) =>
+      resolveKey(normalizeHeader(c.header))
+    );
+    expect(required.sort()).toEqual(
+      ["first name", "last name", "email", "phone"].sort()
+    );
+  });
+
+  it("cada columna trae ejemplo y descripción para la guía y la plantilla", () => {
+    MEMBER_IMPORT_COLUMNS.forEach((column) => {
+      expect(column.title, `${column.header} sin title`).toBeTruthy();
+      expect(column.description, `${column.header} sin description`).toBeTruthy();
+      expect(column.example, `${column.header} sin example`).toBeDefined();
+    });
+  });
+});
+
+describe("buildTemplateRow — la fila de ejemplo del .xlsx", () => {
+  it("usa los headers de la plantilla como claves", () => {
+    const row = buildTemplateRow();
+    MEMBER_IMPORT_COLUMNS.forEach((column) => {
+      expect(Object.keys(row)).toContain(column.header);
+    });
+  });
+
+  // El viaje completo: lo que el colegio descarga tiene que volver a entrar sin
+  // perder nada. Si esto pasa, la plantilla es utilizable tal cual.
+  it("sobrevive el viaje de vuelta por el importador, sin errores", () => {
+    const { rows, errors } = validateAndNormalizeRows([buildTemplateRow()], 62);
+    expect(errors).toEqual([]);
+    expect(rows[0]).toMatchObject({
+      first_name: expect.any(String),
+      grade: expect.any(String),
+      homeroom: expect.any(String),
+      external_id: expect.any(String),
+      date_of_birth: expect.any(String),
+      company_id: 62,
+    });
+    expect(rows[0].grade).not.toBe("");
+    expect(rows[0].homeroom).not.toBe("");
+    expect(rows[0].external_id).not.toBe("");
+  });
+});
+
+describe("columnas que antes se perdían", () => {
+  const base = {
+    "First Name": "Blaise",
+    "Last Name": "Pascal",
+    Email: "b@school.edu",
+    Phone: "555-0100",
+    date_of_birth: "2015-06-12",
+    parent_guardian_first_name: "Guardian",
+    parent_guardian_last_name: "One",
+    parent_guardian_email: "g@home.com",
+    parent_guardian_phone_number: "555-0101",
+  };
+
+  it("transporta grade y homeroom", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...base, Grade: "6", Homeroom: "Rivera 7B" }],
+      62
+    );
+    expect(rows[0].grade).toBe("6");
+    expect(rows[0].homeroom).toBe("Rivera 7B");
+  });
+
+  it("transporta image_url", () => {
+    const { rows } = validateAndNormalizeRows(
+      [{ ...base, "Image URL": "https://cdn.school.edu/b.jpg" }],
+      62
+    );
+    expect(rows[0].image_url).toBe("https://cdn.school.edu/b.jpg");
+  });
+
+  it("acepta external_id además del header ambiguo 'id'", () => {
+    expect(
+      validateAndNormalizeRows([{ ...base, external_id: "ED_9" }], 62).rows[0]
+        .external_id
+    ).toBe("ED_9");
+    expect(
+      validateAndNormalizeRows([{ ...base, id: "ED_9" }], 62).rows[0].external_id
+    ).toBe("ED_9");
+  });
+});
+
+// Sin fecha de nacimiento el importador cae al valor manual de `minor`, y si
+// tampoco viene, el alumno entra como ADULTO. Eso es exactamente lo que manda
+// los avisos de equipo perdido al menor en vez de a su representante. No se
+// bloquea la importación (una empresa no-colegio importa adultos legítimamente),
+// pero tiene que decirlo.
+describe("edad indeterminable — avisa, no bloquea", () => {
+  const adultRow = {
+    "First Name": "Ada",
+    "Last Name": "Lovelace",
+    Email: "ada@x.com",
+    Phone: "555-0000",
+  };
+
+  it("avisa cuando no hay fecha de nacimiento ni columna minor", () => {
+    const { warnings, errors, rows } = validateAndNormalizeRows([adultRow], 62);
+    expect(errors).toEqual([]);
+    expect(rows[0].minor).toBe(false);
+    expect(warnings.join(" ")).toMatch(/date of birth/i);
+    expect(warnings.join(" ")).toMatch(/adult/i);
+  });
+
+  it("no avisa cuando la fecha de nacimiento resuelve la edad", () => {
+    const { warnings } = validateAndNormalizeRows(
+      [{ ...adultRow, date_of_birth: "1990-01-01" }],
+      62
+    );
+    expect(warnings).toEqual([]);
+  });
+
+  it("no avisa cuando la columna minor viene explícita", () => {
+    expect(
+      validateAndNormalizeRows([{ ...adultRow, minor: "false" }], 62).warnings
+    ).toEqual([]);
   });
 });

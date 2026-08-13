@@ -23,25 +23,39 @@ const cellStyle = {
   color: "var(--gray-600, #475467)",
 };
 
+// Grade, homeroom and date of birth are previewed because they are the columns
+// the template only started offering recently — without them on screen there is
+// no way to confirm the file actually carried them before pressing Import.
 const columns = [
   { title: "First Name", dataIndex: "first_name", key: "first_name" },
   { title: "Last Name", dataIndex: "last_name", key: "last_name" },
   { title: "Email", dataIndex: "email", key: "email", responsive: ["lg"] },
   { title: "Phone", dataIndex: "phone", key: "phone", responsive: ["lg"] },
   { title: "External ID", dataIndex: "external_id", key: "external_id", responsive: ["lg"] },
-  { title: "Address", dataIndex: "address", key: "address", responsive: ["lg"] },
+  { title: "Grade", dataIndex: "grade", key: "grade" },
+  { title: "Homeroom", dataIndex: "homeroom", key: "homeroom", responsive: ["lg"] },
+  {
+    title: "Date of Birth",
+    dataIndex: "date_of_birth",
+    key: "date_of_birth",
+    responsive: ["lg"],
+  },
+  { title: "Address", dataIndex: "address", key: "address", responsive: ["xl"] },
   {
     title: "Minor",
     dataIndex: "minor",
     key: "minor",
-    render: (minor) => (minor ? "Yes" : "No"),
+    render: (minor) => <span style={cellStyle}>{minor ? "Yes" : "No"}</span>,
   },
   {
     title: "Guardian",
     key: "guardian",
     responsive: ["lg"],
-    render: (_, r) =>
-      `${r.parent_guardian_first_name} ${r.parent_guardian_last_name}`.trim(),
+    render: (_, r) => (
+      <span style={cellStyle}>
+        {`${r.parent_guardian_first_name} ${r.parent_guardian_last_name}`.trim()}
+      </span>
+    ),
   },
 ].map((c) => ({
   ...c,
@@ -52,6 +66,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState([]);
   const [errors, setErrors] = useState([]);
+  const [warnings, setWarnings] = useState([]);
   const [columnsDetected, setColumnsDetected] = useState([]);
   const [importing, setImporting] = useState(false);
   const { user } = useSelector((state) => state.admin);
@@ -70,10 +85,12 @@ const MultipleFromXLSX = ({ companyId = null }) => {
         user?.sqlInfo?.company_id || companyId
       );
       setErrors(result.errors);
+      setWarnings(result.warnings);
       setColumnsDetected(result.columnsDetected);
       setRows(result.rows);
     } catch (err) {
       setErrors([`Failed to read file: ${err?.message || String(err)}`]);
+      setWarnings([]);
       setRows([]);
     }
   };
@@ -82,6 +99,7 @@ const MultipleFromXLSX = ({ companyId = null }) => {
     setFileName("");
     setRows([]);
     setErrors([]);
+    setWarnings([]);
     setColumnsDetected([]);
   };
 
@@ -148,6 +166,15 @@ const MultipleFromXLSX = ({ companyId = null }) => {
             If minor is true, guardian first name, last name, email, and phone
             are required.
           </li>
+          <li style={sectionText}>
+            <strong>date_of_birth</strong> (YYYY-MM-DD) decides who is a minor,
+            and therefore whether notices go to a guardian. A row without it is
+            imported as an adult.
+          </li>
+          <li style={sectionText}>
+            Also carried when present: grade, homeroom, external_id, image_url.
+            Download the template for the full column list.
+          </li>
         </ul>
       </div>
 
@@ -163,6 +190,21 @@ const MultipleFromXLSX = ({ companyId = null }) => {
               style={{ ...cellStyle, color: "var(--error, #B42318)" }}
             >
               {e}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Separate colour from errors on purpose: these rows will import, and
+          burying them in a red wall trains people to ignore the wall. */}
+      {warnings.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          {warnings.map((w, i) => (
+            <span
+              key={i}
+              style={{ ...cellStyle, color: "var(--warning-600, #DC6803)" }}
+            >
+              {w}
             </span>
           ))}
         </div>
