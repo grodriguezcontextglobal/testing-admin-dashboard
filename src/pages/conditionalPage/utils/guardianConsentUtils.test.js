@@ -6,6 +6,7 @@ import {
   isConsentAgreed,
   isAssignmentBlockedByConsent,
   isConsentBlockingAssignment,
+  isConsentRequiredForMember,
   resolveConsentEnforcement,
   isPolicyStale,
   normalizeConsentStatus,
@@ -281,55 +282,127 @@ describe("resolveConsentEnforcement — lee la llave que el servidor manda de ve
   });
 });
 
-describe("isAssignmentBlockedByConsent — espeja la regla del servidor", () => {
-  const off = { enforce: false, enforce_under_13: false };
+// Cada toggle es un ALCANCE DE EDAD, no un interruptor general. Antes los dos
+// prendían el mismo enforcement sin mirar edad, así que "Require COPPA consent
+// for under-13" bloqueaba también a los adultos.
+describe("isConsentRequiredForMember — cada toggle cubre su propia edad", () => {
+  const OFF = { enforce: false, enforce_under_13: false };
+
+  // Apagados no se verifica edad: se asigna sin preguntar por consentimiento.
+  it("con ambos apagados no exige consentimiento a nadie", () => {
+    for (const who of [
+      { isMinor: true, isUnder13: true },
+      { isMinor: true, isUnder13: false },
+      { isMinor: false, isUnder13: false },
+    ]) {
+      expect(isConsentRequiredForMember({ ...who, settings: OFF })).toBe(false);
+    }
+  });
+
+  it("`enforce` cubre a todo menor de 18, incluidos los de menos de 13", () => {
+    const settings = { enforce: true };
+    expect(
+      isConsentRequiredForMember({ isMinor: true, isUnder13: false, settings })
+    ).toBe(true);
+    expect(
+      isConsentRequiredForMember({ isMinor: true, isUnder13: true, settings })
+    ).toBe(true);
+  });
+
+  it("`enforce` no alcanza a un adulto", () => {
+    expect(
+      isConsentRequiredForMember({
+        isMinor: false,
+        isUnder13: false,
+        settings: { enforce: true },
+      })
+    ).toBe(false);
+  });
+
+  // El punto del cambio: COPPA solo, exige a los de menos de 13 y a nadie más.
+  it("`enforce_under_13` solo exige a los menores de 13", () => {
+    const settings = { enforce: false, enforce_under_13: true };
+    expect(
+      isConsentRequiredForMember({ isMinor: true, isUnder13: true, settings })
+    ).toBe(true);
+    expect(
+      isConsentRequiredForMember({ isMinor: true, isUnder13: false, settings })
+    ).toBe(false);
+    expect(
+      isConsentRequiredForMember({ isMinor: false, isUnder13: false, settings })
+    ).toBe(false);
+  });
+
+  // Respuesta a "¿qué cambia con ambos ON?": nada. under-18 ya contiene
+  // under-13, así que el segundo toggle no agrega ningún requisito mientras el
+  // consentimiento COPPA no sea un registro distinto del AUP.
+  it("ambos encendidos equivale a `enforce` solo", () => {
+    const both = { enforce: true, enforce_under_13: true };
+    const onlyMinors = { enforce: true, enforce_under_13: false };
+    for (const who of [
+      { isMinor: true, isUnder13: true },
+      { isMinor: true, isUnder13: false },
+      { isMinor: false, isUnder13: false },
+    ]) {
+      expect(isConsentRequiredForMember({ ...who, settings: both })).toBe(
+        isConsentRequiredForMember({ ...who, settings: onlyMinors })
+      );
+    }
+  });
+
+  it("tolera el nombre viejo de la llave para el alcance de menores", () => {
+    expect(
+      isConsentRequiredForMember({
+        isMinor: true,
+        isUnder13: false,
+        settings: { enforce_member_consent: true },
+      })
+    ).toBe(true);
+  });
+});
+
+describe("isAssignmentBlockedByConsent", () => {
+  const ON = { enforce: true };
 
   it.each(["missing", "pending", "refused", "expired", "stale"])(
-    "bloquea a un menor con consentimiento %s AUNQUE la empresa no lo exija",
+    "bloquea un consentimiento %s cuando la edad del miembro está cubierta",
     (consentStatus) => {
       expect(
-        isAssignmentBlockedByConsent({ consentStatus, settings: off, isMinor: true })
+        isAssignmentBlockedByConsent({
+          consentStatus,
+          settings: ON,
+          isMinor: true,
+        })
       ).toBe(true);
     }
   );
 
-  it("no bloquea a un menor con consentimiento acordado", () => {
+  it("no bloquea cuando el consentimiento está acordado", () => {
     expect(
       isAssignmentBlockedByConsent({
         consentStatus: "agreed",
-        settings: off,
+        settings: ON,
         isMinor: true,
       })
     ).toBe(false);
   });
 
-  // El piso es solo para menores: un adulto sin consentimiento se asigna igual
-  // salvo que la empresa haya decidido exigirlo.
-  it("no bloquea a un adulto sin consentimiento si la empresa no lo exige", () => {
+  it("no bloquea a quien el enforcement no cubre, sin importar su status", () => {
     expect(
       isAssignmentBlockedByConsent({
         consentStatus: "missing",
-        settings: off,
-        isMinor: false,
+        settings: { enforce: false, enforce_under_13: true },
+        isMinor: true,
+        isUnder13: false,
       })
     ).toBe(false);
   });
 
-  it("bloquea a un adulto sin consentimiento cuando la empresa sí lo exige", () => {
-    expect(
-      isAssignmentBlockedByConsent({
-        consentStatus: "missing",
-        settings: { enforce: true },
-        isMinor: false,
-      })
-    ).toBe(true);
-  });
-
-  it("un estado desconocido no cuenta como acordado", () => {
+  it("un status desconocido no cuenta como acordado", () => {
     expect(
       isAssignmentBlockedByConsent({
         consentStatus: undefined,
-        settings: off,
+        settings: ON,
         isMinor: true,
       })
     ).toBe(true);

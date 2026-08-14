@@ -5,14 +5,13 @@ import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils
 import {
   getConsentStatusMessage,
   hasValidConsent,
-  isConsentRequired,
 } from "../../../../conditionalPage/utils/consentCheckUtils";
 import { fetchStudentConsent } from "../../../../conditionalPage/utils/guardianConsentApi";
 import {
   getConsentStatusCopy,
   isAssignmentBlockedByConsent,
+  isConsentRequiredForMember,
   normalizeConsentStatus,
-  resolveConsentEnforcement,
 } from "../../../../conditionalPage/utils/guardianConsentUtils";
 
 /**
@@ -39,21 +38,24 @@ export function useAssignmentConsentGate(member) {
   });
 
   const schoolSettings = settingsQuery.data?.settings || {};
-  const enforcing = resolveConsentEnforcement(schoolSettings);
-  // Scoped to Education for the same reason the member flow scopes it: the AUP
-  // consent regime is a school rule, and a non-school company keeps its old
-  // behaviour rather than being newly blocked.
+  // Scoped to Education for the same reason the member flow scopes it: the
+  // consent regime is a school rule.
   const memberIsMinor = isEducation && Number(member?.minor) === 1;
+  const memberIsUnder13 = isEducation && Boolean(member?.under_13);
+  // Each toggle is an age scope: with both off, no age is checked and there is
+  // nothing to fetch. This condition used to read `enforce_member_consent`, a key
+  // /school/settings does not return, so the query never ran and the gate had no
+  // status to judge — the server was the first thing to notice.
+  const consentApplies = isConsentRequiredForMember({
+    isMinor: memberIsMinor,
+    isUnder13: memberIsUnder13,
+    settings: schoolSettings,
+  });
 
-  // A minor's status is fetched whether or not the company enforces consent:
-  // the server's refusal does not consult the company setting, so neither can
-  // this gate. `enforcing` also read a key the settings endpoint never returns
-  // (`enforce_member_consent`), which meant this query was effectively disabled.
   const consentQuery = useQuery({
     queryKey: ["studentConsentStatus", memberId, companyId],
     queryFn: () => fetchStudentConsent(companyId, memberId),
-    enabled:
-      Boolean(memberId) && isEducation && (memberIsMinor || enforcing),
+    enabled: Boolean(memberId) && consentApplies,
     staleTime: 60 * 1000,
   });
 
@@ -98,24 +100,14 @@ export function useAssignmentConsentGate(member) {
     schoolSettings.required_consent_policy_version
   );
 
-  // Mirrors the server's floor: a minor without agreed consent is never
-  // assignable, whatever the company set. This branch used to defer entirely to
-  // the company policy, so a school with enforcement off got a green gate here
-  // and a CONSENT_REQUIRED from the lease endpoint one warehouse write later.
   const blocking = consentQuery.isSuccess
     ? isAssignmentBlockedByConsent({
         consentStatus,
         settings: schoolSettings,
         isMinor: memberIsMinor,
+        isUnder13: memberIsUnder13,
       })
-    : (memberIsMinor && !hasValidConsent(member.consent)) ||
-      isConsentRequired({
-        isMinor,
-        isUnder13: Boolean(member.under_13),
-        enforceMemberConsent: resolveConsentEnforcement(schoolSettings),
-        enforceUnder13: Boolean(schoolSettings.enforce_under_13),
-        consentExists: hasValidConsent(member.consent),
-      });
+    : consentApplies && !hasValidConsent(member.consent);
 
   if (blocking) {
     return {

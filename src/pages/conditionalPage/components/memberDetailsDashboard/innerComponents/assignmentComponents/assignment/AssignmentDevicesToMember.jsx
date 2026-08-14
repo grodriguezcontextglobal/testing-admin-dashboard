@@ -52,7 +52,7 @@ import {
 import {
   normalizeConsentStatus,
   isAssignmentBlockedByConsent,
-  resolveConsentEnforcement,
+  isConsentRequiredForMember,
   getConsentStatusCopy,
 } from "../../../../../utils/guardianConsentUtils";
 import { buildAssignmentRollbackPayload } from "../../../../../utils/leaseReturnUtils";
@@ -156,19 +156,24 @@ const AssignmentDevicesToMember = () => {
     staleTime: 5 * 60 * 1000,
   });
   const schoolSettings = schoolSettingsQuery.data?.settings || {};
-  // The consent floor is a school regime (AUP for minors), so it is scoped to the
-  // Education profile. A non-school company with minor members is left exactly as
-  // it was rather than newly blocked on a rule we have not seen it enforce — and
-  // if the server does refuse those too, the rollback below now covers it.
   const memberIsMinor = isEducation && Number(memberInfo?.minor) === 1;
-  // Fetch real consent status from server.
-  //
-  // Was gated on `schoolSettings.enforce_member_consent`, a key /school/settings
-  // does not return — so the condition read `undefined` and the query never ran
-  // for any company that had not also switched on enforce_under_13. Without the
-  // status there was nothing to block on, and the first thing to notice the
-  // missing consent was the server, one warehouse write too late. A minor is now
-  // always fetched, because the server's rule applies to minors unconditionally.
+  const memberIsUnder13 = isEducation && Boolean(memberInfo?.under_13);
+  // Whether consent even applies to this member: each toggle is an age scope, so
+  // with both off no age is checked and the assignment proceeds. An earlier
+  // version of this gate blocked every minor regardless of the settings, which
+  // asked a school for consent it had explicitly not turned on.
+  const consentApplies = isConsentRequiredForMember({
+    isMinor: memberIsMinor,
+    isUnder13: memberIsUnder13,
+    settings: schoolSettings,
+  });
+  // Fetch real consent status from server, exactly when it could change the
+  // answer. Was gated on `schoolSettings.enforce_member_consent`, a key
+  // /school/settings does not return — so the condition read `undefined` and the
+  // query never ran for any company that had not also switched on
+  // enforce_under_13. Without the status there was nothing to block on, and the
+  // first thing to notice the missing consent was the server, one warehouse write
+  // too late.
   const consentQuery = useQuery({
     queryKey: [
       "studentConsentStatus",
@@ -176,10 +181,7 @@ const AssignmentDevicesToMember = () => {
       user.sqlInfo.company_id,
     ],
     queryFn: () => fetchStudentConsent(user.sqlInfo.company_id, memberInfo.member_id),
-    enabled:
-      !!memberInfo?.member_id &&
-      isEducation &&
-      (memberIsMinor || resolveConsentEnforcement(schoolSettings)),
+    enabled: !!memberInfo?.member_id && consentApplies,
     staleTime: 1 * 60 * 1000,
   });
   const consentData = consentQuery.data;
@@ -187,14 +189,11 @@ const AssignmentDevicesToMember = () => {
     consentData,
     schoolSettings.required_consent_policy_version
   );
-  // A minor's consent status is needed whether or not the company switched
-  // enforcement on, because the SERVER refuses the lease for a minor regardless —
-  // it answers CONSENT_REQUIRED and the device has already left the warehouse by
-  // then. Mirroring the server's floor is the whole point.
   const isConsentBlocking = isAssignmentBlockedByConsent({
     consentStatus,
     settings: schoolSettings,
     isMinor: memberIsMinor,
+    isUnder13: memberIsUnder13,
   });
   const optionsToRenderInSelector = () => {
     const result = [];
@@ -494,34 +493,24 @@ const AssignmentDevicesToMember = () => {
             // Pre-assignment consent gate: block before any warehouse mutation.
             //
             // This is the check that let the reported bug through. It read
-            // `enforce_member_consent` (a key the settings endpoint does not
-            // return) and otherwise deferred to the company's opt-in policy —
-            // while the server refuses a minor's lease no matter what the company
-            // set. So the gate passed, the device left the warehouse, and the
-            // lease came back CONSENT_REQUIRED.
-            const memberUnder13Check = Boolean(memberInfo.under_13);
-            const enforceConsentCheck = resolveConsentEnforcement(schoolSettings);
-            const enforceUnder13Check = Boolean(schoolSettings.enforce_under_13);
+            // `enforce_member_consent`, a key /school/settings does not return, so
+            // enforcement evaluated as OFF even for a school that had switched it
+            // ON. The gate passed, the device left the warehouse, and the lease
+            // came back CONSENT_REQUIRED with nothing recorded.
+            const memberUnder13Check = memberIsUnder13;
             const consentAlreadyExistsCheck = hasValidConsent(memberInfo.consent);
 
-            // Real consent status when the endpoint answered. When it did not, a
-            // minor is still blocked unless a valid consent is already on the
-            // member record — the server would refuse anyway, and refusing here
-            // costs a message while refusing there costs a device off the shelf.
+            // Real consent status when the endpoint answered; the record on the
+            // member when it did not. Both defer to the same age scopes, so a
+            // company with both toggles off is never asked for consent.
             const preCheckConsentBlocking = consentQuery.isSuccess
               ? isAssignmentBlockedByConsent({
                   consentStatus,
                   settings: schoolSettings,
                   isMinor: memberIsMinor,
-                })
-              : (memberIsMinor && !consentAlreadyExistsCheck) ||
-                isConsentRequired({
-                  isMinor: memberIsMinor,
                   isUnder13: memberUnder13Check,
-                  enforceMemberConsent: enforceConsentCheck,
-                  enforceUnder13: enforceUnder13Check,
-                  consentExists: consentAlreadyExistsCheck,
-                });
+                })
+              : consentApplies && !consentAlreadyExistsCheck;
 
             if (preCheckConsentBlocking) {
               const consentMsg = consentQuery.isSuccess

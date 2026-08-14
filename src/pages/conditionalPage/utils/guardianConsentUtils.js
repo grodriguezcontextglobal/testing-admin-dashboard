@@ -109,36 +109,63 @@ export function isConsentBlockingAssignment(consentStatus, settings) {
  * @returns {boolean}
  */
 export function resolveConsentEnforcement(settings) {
-  const members = settings?.enforce ?? settings?.enforce_member_consent ?? false;
-  return Boolean(members) || Boolean(settings?.enforce_under_13);
+  return enforcesMinorConsent(settings) || enforcesUnder13Consent(settings);
+}
+
+/** Company requires consent for every minor (under 18). */
+const enforcesMinorConsent = (settings) =>
+  Boolean(settings?.enforce ?? settings?.enforce_member_consent ?? false);
+
+/** Company requires consent for under-13s specifically (COPPA). */
+const enforcesUnder13Consent = (settings) => Boolean(settings?.enforce_under_13);
+
+/**
+ * Does THIS member need a recorded consent before receiving a device?
+ *
+ * Each toggle is an AGE SCOPE, not a general switch. Both used to flip the same
+ * age-blind enforcement, which had two consequences worth naming:
+ * "Require COPPA consent for under-13" also blocked adults, and with both off an
+ * earlier version of this module blocked every minor regardless — consent was
+ * being asked for on a company that had explicitly not asked for it.
+ *
+ *   both off        -> no age is checked at all; assignment proceeds
+ *   enforce         -> every minor (under 18), under-13s included
+ *   enforce_under_13-> under-13s only; a 15-year-old is not covered
+ *   both on         -> identical to `enforce` alone. under-18 already contains
+ *                      under-13, so the second toggle adds no requirement while
+ *                      COPPA consent is not a separate policy_type record.
+ *
+ * @param {{isMinor: boolean, isUnder13: boolean, settings: object}} args
+ * @returns {boolean}
+ */
+export function isConsentRequiredForMember({
+  isMinor = false,
+  isUnder13 = false,
+  settings,
+} = {}) {
+  if (isUnder13 && enforcesUnder13Consent(settings)) return true;
+  if (isMinor && enforcesMinorConsent(settings)) return true;
+  return false;
 }
 
 /**
- * The real pre-assignment verdict: may this member receive a device right now?
+ * The pre-assignment verdict: may this member receive a device right now?
  *
- * Mirrors the server, which is the part that was wrong. The frontend modelled
- * consent as an OPT-IN company policy, so a school with enforcement off passed
- * its own check and then got `CONSENT_REQUIRED` from
- * POST /db_member/new-member-assigned-device-lease — after the device had already
- * been taken out of the warehouse. The server's rule has a floor the company
- * cannot lower: a MINOR without agreed consent is never assignable. Company
- * settings can only widen that (to adults), never narrow it.
+ * Blocks only when the company's settings cover this member's age AND consent is
+ * not agreed. Takes an object rather than positional args so adding an age scope
+ * later cannot silently change what existing callers mean.
  *
- * Takes an object so a caller cannot silently drop `isMinor` and quietly get the
- * old, looser behaviour back — the reason this is a new function rather than a
- * third parameter on isConsentBlockingAssignment.
- *
- * @param {{consentStatus: string, settings: object, isMinor: boolean}} args
+ * @param {{consentStatus: string, settings: object, isMinor: boolean, isUnder13: boolean}} args
  * @returns {boolean}
  */
 export function isAssignmentBlockedByConsent({
   consentStatus,
   settings,
-  isMinor,
+  isMinor = false,
+  isUnder13 = false,
 } = {}) {
-  const agreed = consentStatus === "agreed";
-  if (isMinor) return !agreed;
-  return isConsentBlockingAssignment(consentStatus, settings);
+  if (!isConsentRequiredForMember({ isMinor, isUnder13, settings })) return false;
+  return consentStatus !== "agreed";
 }
 
 /**
