@@ -16,6 +16,21 @@ const PAGE_PANEL = { ...PANEL, padding: "24px", margin: "24px" };
 // full width of the section it replaces
 const SECTION_PANEL = { ...PANEL, padding: "16px 20px", width: "100%" };
 
+const PANEL = {
+  border: "1px solid var(--error-300, #FDA29B)",
+  background: "var(--error-25, #FFFBFA)",
+  borderRadius: "12px",
+  fontFamily: "Inter, system-ui, sans-serif",
+  color: "var(--error-700, #B42318)",
+};
+
+// page-level: the original look, kept so existing usages don't shift
+const PAGE_PANEL = { ...PANEL, padding: "24px", margin: "24px" };
+
+// section-level: sits inline inside a results section, so no outer margin and
+// full width of the section it replaces
+const SECTION_PANEL = { ...PANEL, padding: "16px 20px", width: "100%" };
+
 /**
  * Catches render-time errors in its children so a single component throwing
  * shows a readable fallback instead of blanking the whole page.
