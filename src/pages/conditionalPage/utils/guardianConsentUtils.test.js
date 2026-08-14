@@ -4,7 +4,9 @@ import {
   buildGuardianPayload,
   getConsentStatusCopy,
   isConsentAgreed,
+  isAssignmentBlockedByConsent,
   isConsentBlockingAssignment,
+  resolveConsentEnforcement,
   isPolicyStale,
   normalizeConsentStatus,
   resolveConsentRecord,
@@ -245,5 +247,91 @@ describe("getConsentStatusCopy", () => {
     ["other", "Unknown consent status."],
   ])("returns copy for %s status", (status, copy) => {
     expect(getConsentStatusCopy(status)).toBe(copy);
+  });
+});
+
+// ─── El piso del servidor ────────────────────────────────────────────────────
+// Bug de prueba manual (2026-08-14): se asignó un equipo a un menor sin
+// consentimiento. El servidor devolvió CONSENT_REQUIRED y rechazó el lease —
+// pero el equipo YA había salido del almacén, así que quedó "assigned" sin
+// ninguna fila que diga quién lo tiene.
+//
+// La causa de que el gate no disparara: el frontend modelaba el consentimiento
+// como una política OPCIONAL por empresa (settings.enforce), y el servidor lo
+// aplica SIEMPRE que el miembro es menor. Un colegio con enforcement apagado
+// pasaba el chequeo local y chocaba con el servidor.
+
+describe("resolveConsentEnforcement — lee la llave que el servidor manda de verdad", () => {
+  it("lee `enforce`, que es lo que devuelve /school/settings", () => {
+    expect(resolveConsentEnforcement({ enforce: true })).toBe(true);
+    expect(resolveConsentEnforcement({ enforce_under_13: true })).toBe(true);
+    expect(resolveConsentEnforcement({ enforce: false })).toBe(false);
+  });
+
+  // `enforce_member_consent` es la llave que leían AssignmentDevicesToMember y
+  // useAssignmentConsentGate. No existe en la respuesta: el chequeo evaluaba
+  // undefined y por eso el enforcement se leía como apagado siempre.
+  it("tolera el nombre viejo `enforce_member_consent` en lugar de ignorarlo", () => {
+    expect(resolveConsentEnforcement({ enforce_member_consent: true })).toBe(true);
+  });
+
+  it("apagado por defecto cuando no hay settings", () => {
+    expect(resolveConsentEnforcement(undefined)).toBe(false);
+    expect(resolveConsentEnforcement({})).toBe(false);
+  });
+});
+
+describe("isAssignmentBlockedByConsent — espeja la regla del servidor", () => {
+  const off = { enforce: false, enforce_under_13: false };
+
+  it.each(["missing", "pending", "refused", "expired", "stale"])(
+    "bloquea a un menor con consentimiento %s AUNQUE la empresa no lo exija",
+    (consentStatus) => {
+      expect(
+        isAssignmentBlockedByConsent({ consentStatus, settings: off, isMinor: true })
+      ).toBe(true);
+    }
+  );
+
+  it("no bloquea a un menor con consentimiento acordado", () => {
+    expect(
+      isAssignmentBlockedByConsent({
+        consentStatus: "agreed",
+        settings: off,
+        isMinor: true,
+      })
+    ).toBe(false);
+  });
+
+  // El piso es solo para menores: un adulto sin consentimiento se asigna igual
+  // salvo que la empresa haya decidido exigirlo.
+  it("no bloquea a un adulto sin consentimiento si la empresa no lo exige", () => {
+    expect(
+      isAssignmentBlockedByConsent({
+        consentStatus: "missing",
+        settings: off,
+        isMinor: false,
+      })
+    ).toBe(false);
+  });
+
+  it("bloquea a un adulto sin consentimiento cuando la empresa sí lo exige", () => {
+    expect(
+      isAssignmentBlockedByConsent({
+        consentStatus: "missing",
+        settings: { enforce: true },
+        isMinor: false,
+      })
+    ).toBe(true);
+  });
+
+  it("un estado desconocido no cuenta como acordado", () => {
+    expect(
+      isAssignmentBlockedByConsent({
+        consentStatus: undefined,
+        settings: off,
+        isMinor: true,
+      })
+    ).toBe(true);
   });
 });

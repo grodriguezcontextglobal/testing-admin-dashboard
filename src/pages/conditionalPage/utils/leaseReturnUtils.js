@@ -80,6 +80,47 @@ export const buildLostItemPayload = ({ record, companyId } = {}) => {
   };
 };
 
+/**
+ * Payload that puts devices back in stock after an assignment failed partway.
+ *
+ * Both assignment surfaces take the device out of the warehouse and THEN create
+ * the lease. When the lease is rejected — a minor without recorded consent
+ * returns `CONSENT_REQUIRED` — the device was left at logistic_status "assigned"
+ * with warehouse 0 and no lease row anywhere: in use, unavailable, and no record
+ * of who has it. This is the undo.
+ *
+ * Same endpoint as the hand-out (`/db_item/item-out-warehouse`), which despite
+ * its name just sets warehouse + logistic_status for a list of serials.
+ * `in-stock` is the canonical available status in logisticStatusConfig — not
+ * "available", which is not a status the config knows.
+ *
+ * Returns null when there is nothing safely identifiable to restore, so the
+ * caller skips the request rather than posting a payload that could touch rows
+ * belonging to another company.
+ *
+ * @param {{serials: Array<string>, itemGroup?: string, categoryName?: string, companyId: number|string}} args
+ * @returns {object|null}
+ */
+export const buildAssignmentRollbackPayload = ({
+  serials,
+  itemGroup,
+  categoryName,
+  companyId,
+} = {}) => {
+  const data = (Array.isArray(serials) ? serials : [])
+    .map((serial) => `${serial ?? ""}`.trim())
+    .filter(Boolean);
+  if (data.length === 0 || !companyId) return null;
+  return {
+    warehouse: 1,
+    logistic_status: "in-stock",
+    company_id: companyId,
+    item_group: itemGroup,
+    category_name: categoryName,
+    data,
+  };
+};
+
 /** Confirmation that a device came back. Live template. */
 export const RETURN_NOTIFICATION_ENDPOINT =
   "/nodemailer/member-lease-return-device-notification";

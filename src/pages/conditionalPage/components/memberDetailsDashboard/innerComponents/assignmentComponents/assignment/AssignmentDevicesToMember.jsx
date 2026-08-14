@@ -51,9 +51,11 @@ import {
 } from "../../../../../utils/contractEmailPolicy";
 import {
   normalizeConsentStatus,
-  isConsentBlockingAssignment,
+  isAssignmentBlockedByConsent,
+  resolveConsentEnforcement,
   getConsentStatusCopy,
 } from "../../../../../utils/guardianConsentUtils";
+import { buildAssignmentRollbackPayload } from "../../../../../utils/leaseReturnUtils";
 import { fetchSchoolSettings } from "../../../../../../../pages/Profile/school_compliance/utils/schoolComplianceUtils";
 import ReceiptModal from "../../../../../../payment/components/ReceiptModal";
 import { mapAssignmentToReceipt } from "../../../../../../payment/utils/receiptUtils";
@@ -154,7 +156,19 @@ const AssignmentDevicesToMember = () => {
     staleTime: 5 * 60 * 1000,
   });
   const schoolSettings = schoolSettingsQuery.data?.settings || {};
-  // Fetch real consent status from server
+  // The consent floor is a school regime (AUP for minors), so it is scoped to the
+  // Education profile. A non-school company with minor members is left exactly as
+  // it was rather than newly blocked on a rule we have not seen it enforce — and
+  // if the server does refuse those too, the rollback below now covers it.
+  const memberIsMinor = isEducation && Number(memberInfo?.minor) === 1;
+  // Fetch real consent status from server.
+  //
+  // Was gated on `schoolSettings.enforce_member_consent`, a key /school/settings
+  // does not return — so the condition read `undefined` and the query never ran
+  // for any company that had not also switched on enforce_under_13. Without the
+  // status there was nothing to block on, and the first thing to notice the
+  // missing consent was the server, one warehouse write too late. A minor is now
+  // always fetched, because the server's rule applies to minors unconditionally.
   const consentQuery = useQuery({
     queryKey: [
       "studentConsentStatus",
@@ -165,7 +179,7 @@ const AssignmentDevicesToMember = () => {
     enabled:
       !!memberInfo?.member_id &&
       isEducation &&
-      (schoolSettings.enforce_member_consent || schoolSettings.enforce_under_13),
+      (memberIsMinor || resolveConsentEnforcement(schoolSettings)),
     staleTime: 1 * 60 * 1000,
   });
   const consentData = consentQuery.data;
@@ -173,10 +187,15 @@ const AssignmentDevicesToMember = () => {
     consentData,
     schoolSettings.required_consent_policy_version
   );
-  const isConsentBlocking = isConsentBlockingAssignment(
+  // A minor's consent status is needed whether or not the company switched
+  // enforcement on, because the SERVER refuses the lease for a minor regardless —
+  // it answers CONSENT_REQUIRED and the device has already left the warehouse by
+  // then. Mirroring the server's floor is the whole point.
+  const isConsentBlocking = isAssignmentBlockedByConsent({
     consentStatus,
-    schoolSettings
-  );
+    settings: schoolSettings,
+    isMinor: memberIsMinor,
+  });
   const optionsToRenderInSelector = () => {
     const result = [];
     const groupedInventory = dataFound.current?.groupedInventory ?? {};
@@ -295,6 +314,33 @@ const AssignmentDevicesToMember = () => {
     return (verificationInfo._id =
       verificationContractID.data.verificationInfo._id);
   };
+  /**
+   * Puts devices back in stock when the lease could not be created.
+   *
+   * The warehouse write happens first and is not part of the same transaction as
+   * the lease, so a rejected lease used to leave the device at logistic_status
+   * "assigned" with nobody recorded as holding it. Rolling back is best-effort by
+   * nature — if the undo also fails the caller is told exactly which serials are
+   * stranded, because a silent one is how inventory drifts from reality.
+   *
+   * @returns {string[]} serials that could NOT be restored
+   */
+  const rollbackWarehouseAssignment = async (deviceInfo) => {
+    const payload = buildAssignmentRollbackPayload({
+      serials: deviceInfo.map((item) => item.serial_number),
+      itemGroup: deviceInfo[0]?.item_group,
+      categoryName: deviceInfo[0]?.category_name,
+      companyId: user.sqlInfo.company_id,
+    });
+    if (!payload) return [];
+    try {
+      await devitrakApi.post("/db_item/item-out-warehouse", payload);
+      return [];
+    } catch {
+      return payload.data;
+    }
+  };
+
   // First-class lease lifecycle: warehouse-out -> lease rows (+ contract
   // verification) -> contract email -> done. No pseudo-events, no receiver
   // pools — the lease table is the single source of truth.
@@ -306,7 +352,19 @@ const AssignmentDevicesToMember = () => {
         category_name: deviceInfo[0].category_name,
         data: [...deviceInfo.map((item) => item.serial_number)],
       });
-      await createNewLease({ ...props.template, deviceInfo });
+      // Anything that stops the lease from being written has to put the hardware
+      // back. The pre-flight gate below catches the common case (a minor without
+      // consent), but a race, a stale device or a dropped connection all end here
+      // too, and every one of them used to cost a device from the shelf.
+      try {
+        await createNewLease({ ...props.template, deviceInfo });
+      } catch (error) {
+        const stranded = await rollbackWarehouseAssignment(deviceInfo);
+        if (stranded.length > 0) {
+          error.strandedSerials = stranded;
+        }
+        throw error;
+      }
       if (sendContractEmail) {
         await emailContractToMember({
           contractList: contractList,
@@ -433,18 +491,32 @@ const AssignmentDevicesToMember = () => {
               }
             );
 
-            // Pre-assignment consent gate: block before any warehouse mutation
-            const memberMinor = Number(memberInfo.minor) === 1;
+            // Pre-assignment consent gate: block before any warehouse mutation.
+            //
+            // This is the check that let the reported bug through. It read
+            // `enforce_member_consent` (a key the settings endpoint does not
+            // return) and otherwise deferred to the company's opt-in policy —
+            // while the server refuses a minor's lease no matter what the company
+            // set. So the gate passed, the device left the warehouse, and the
+            // lease came back CONSENT_REQUIRED.
             const memberUnder13Check = Boolean(memberInfo.under_13);
-            const enforceConsentCheck = Boolean(schoolSettings.enforce_member_consent);
+            const enforceConsentCheck = resolveConsentEnforcement(schoolSettings);
             const enforceUnder13Check = Boolean(schoolSettings.enforce_under_13);
             const consentAlreadyExistsCheck = hasValidConsent(memberInfo.consent);
 
-            // Use real consent status when available
+            // Real consent status when the endpoint answered. When it did not, a
+            // minor is still blocked unless a valid consent is already on the
+            // member record — the server would refuse anyway, and refusing here
+            // costs a message while refusing there costs a device off the shelf.
             const preCheckConsentBlocking = consentQuery.isSuccess
-              ? isConsentBlockingAssignment(consentStatus, schoolSettings)
-              : isConsentRequired({
-                  isMinor: memberMinor,
+              ? isAssignmentBlockedByConsent({
+                  consentStatus,
+                  settings: schoolSettings,
+                  isMinor: memberIsMinor,
+                })
+              : (memberIsMinor && !consentAlreadyExistsCheck) ||
+                isConsentRequired({
+                  isMinor: memberIsMinor,
                   isUnder13: memberUnder13Check,
                   enforceMemberConsent: enforceConsentCheck,
                   enforceUnder13: enforceUnder13Check,
@@ -455,7 +527,7 @@ const AssignmentDevicesToMember = () => {
               const consentMsg = consentQuery.isSuccess
                 ? getConsentStatusCopy(consentStatus)
                 : getConsentStatusMessage({
-                    isMinor: memberMinor,
+                    isMinor: memberIsMinor,
                     isUnder13: memberUnder13Check,
                     consentRequired: true,
                     consentExists: false,
@@ -477,7 +549,24 @@ const AssignmentDevicesToMember = () => {
       }
     } catch (error) {
       const classification = classifyAssignmentError(error);
-      const errorMessage = getAssignmentErrorMessage(classification);
+      const baseMessage = getAssignmentErrorMessage(classification);
+      // The rollback is best-effort; when it fails too, the serials it could not
+      // restore are named here. Inventory now disagrees with reality and only a
+      // human can fix it, so this must never be folded into a generic message.
+      const errorMessage = error.strandedSerials?.length
+        ? `${baseMessage} WARNING: ${error.strandedSerials.join(
+            ", "
+          )} could not be returned to stock — fix them in inventory before assigning again.`
+        : baseMessage;
+
+      // Takes precedence over every classification below, and deliberately does
+      // not navigate away: this is the one failure a staff member has to act on,
+      // and the consent branches leave the page.
+      if (error.strandedSerials?.length) {
+        notify("error", errorMessage, "");
+        setLoadingStatus(false);
+        return;
+      }
 
       if (classification.type === "CONSENT_REQUIRED") {
         notify("warning", errorMessage, "");

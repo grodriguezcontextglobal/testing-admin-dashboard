@@ -16,6 +16,7 @@ import {
   classifyAssignmentError,
   getAssignmentErrorMessage,
 } from "../../../../conditionalPage/utils/assignmentErrorUtils";
+import { buildAssignmentRollbackPayload } from "../../../../conditionalPage/utils/leaseReturnUtils";
 import useAssignmentConsentGate from "../hooks/useAssignmentConsentGate";
 import { clean, resolveLocation } from "../utils/deviceProfileModel";
 import "../deviceProfile.css";
@@ -199,21 +200,44 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
         data: [item.serial_number],
       });
 
-      const lease = await devitrakApi.post(
-        "/db_member/new-member-assigned-device-lease",
-        {
-          staff_member_id: user.sqlMemberInfo.staff_id,
-          company_id: companyId,
-          location: where,
-          member_id: member.member_id,
-          device_id: item.item_id,
-          verification_id: verificationId,
-          expected_return_date: formatDate(new Date(dueDate)),
-          returned: 0,
-          assigned_date: formatDate(new Date()),
+      // Moving verification first was not enough: the warehouse write above still
+      // lands before the lease, so anything that rejects the lease — a minor
+      // without recorded consent answers CONSENT_REQUIRED — used to leave this
+      // unit out of stock and held by nobody. Put it back before reporting.
+      try {
+        const lease = await devitrakApi.post(
+          "/db_member/new-member-assigned-device-lease",
+          {
+            staff_member_id: user.sqlMemberInfo.staff_id,
+            company_id: companyId,
+            location: where,
+            member_id: member.member_id,
+            device_id: item.item_id,
+            verification_id: verificationId,
+            expected_return_date: formatDate(new Date(dueDate)),
+            returned: 0,
+            assigned_date: formatDate(new Date()),
+          }
+        );
+        if (!lease?.data?.ok) throw new Error("Failed to create the device lease record.");
+      } catch (error) {
+        const rollback = buildAssignmentRollbackPayload({
+          serials: [item.serial_number],
+          itemGroup: item.item_group,
+          categoryName: item.category_name,
+          companyId,
+        });
+        if (rollback) {
+          try {
+            await devitrakApi.post("/db_item/item-out-warehouse", rollback);
+          } catch {
+            // Best-effort undo. When it fails too, inventory disagrees with
+            // reality and only a human can reconcile it, so say which unit.
+            error.strandedSerials = [item.serial_number];
+          }
         }
-      );
-      if (!lease?.data?.ok) throw new Error("Failed to create the device lease record.");
+        throw error;
+      }
 
       ["trackingItemActivity", "infoItemSql", "deviceMemberLeases", "memberAssignedDevices", "listOfItemsInStock"].forEach(
         (key) => queryClient.invalidateQueries({ queryKey: [key] })
@@ -223,7 +247,12 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
       onAssigned?.();
       close();
     } catch (error) {
-      const message = getAssignmentErrorMessage(classifyAssignmentError(error));
+      const base = getAssignmentErrorMessage(classifyAssignmentError(error));
+      const message = error.strandedSerials?.length
+        ? `${base} WARNING: ${error.strandedSerials.join(
+            ", "
+          )} could not be returned to stock — fix it in inventory before assigning again.`
+        : base;
       notify("error", message, "");
     } finally {
       setSaving(false);

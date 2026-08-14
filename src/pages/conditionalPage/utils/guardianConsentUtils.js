@@ -90,9 +90,55 @@ export function isConsentAgreed(consent, requiredPolicyVersion = null) {
  * @returns {boolean}
  */
 export function isConsentBlockingAssignment(consentStatus, settings) {
-  if (!settings?.enforce && !settings?.enforce_under_13) return false;
+  if (!resolveConsentEnforcement(settings)) return false;
   if (consentStatus === "agreed") return false;
   return true;
+}
+
+/**
+ * Whether the company has opted into consent enforcement.
+ *
+ * `/school/settings` returns `enforce` (see buildConsentEnforcementPayload). Two
+ * call sites read `enforce_member_consent`, a key that is not in the response, so
+ * the check evaluated `undefined` and enforcement read as OFF for every company
+ * that had not also switched on `enforce_under_13`. The old name is tolerated
+ * here rather than assumed dead, because a stale cached settings object is
+ * cheaper to accept than to prove absent.
+ *
+ * @param {object|null|undefined} settings
+ * @returns {boolean}
+ */
+export function resolveConsentEnforcement(settings) {
+  const members = settings?.enforce ?? settings?.enforce_member_consent ?? false;
+  return Boolean(members) || Boolean(settings?.enforce_under_13);
+}
+
+/**
+ * The real pre-assignment verdict: may this member receive a device right now?
+ *
+ * Mirrors the server, which is the part that was wrong. The frontend modelled
+ * consent as an OPT-IN company policy, so a school with enforcement off passed
+ * its own check and then got `CONSENT_REQUIRED` from
+ * POST /db_member/new-member-assigned-device-lease — after the device had already
+ * been taken out of the warehouse. The server's rule has a floor the company
+ * cannot lower: a MINOR without agreed consent is never assignable. Company
+ * settings can only widen that (to adults), never narrow it.
+ *
+ * Takes an object so a caller cannot silently drop `isMinor` and quietly get the
+ * old, looser behaviour back — the reason this is a new function rather than a
+ * third parameter on isConsentBlockingAssignment.
+ *
+ * @param {{consentStatus: string, settings: object, isMinor: boolean}} args
+ * @returns {boolean}
+ */
+export function isAssignmentBlockedByConsent({
+  consentStatus,
+  settings,
+  isMinor,
+} = {}) {
+  const agreed = consentStatus === "agreed";
+  if (isMinor) return !agreed;
+  return isConsentBlockingAssignment(consentStatus, settings);
 }
 
 /**

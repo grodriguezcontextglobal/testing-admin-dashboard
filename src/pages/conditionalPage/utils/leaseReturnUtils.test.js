@@ -3,6 +3,7 @@ import {
   isChargeableOutcome,
   buildFeeFields,
   shouldOfferFeeCollection,
+  buildAssignmentRollbackPayload,
   buildLostItemPayload,
   buildReturnNotification,
   RETURN_NOTIFICATION_ENDPOINT,
@@ -268,5 +269,53 @@ describe("buildFeeFields", () => {
   it("tolera args vacíos", () => {
     expect(buildFeeFields()).toEqual({});
     expect(buildFeeFields({})).toEqual({});
+  });
+});
+
+// El equipo salía del almacén ANTES de crear el lease, y nada lo devolvía si el
+// lease fallaba (p. ej. CONSENT_REQUIRED en un menor). Resultado: equipo en uso,
+// no disponible, y ninguna fila que diga quién lo tiene.
+describe("buildAssignmentRollbackPayload — devolver el equipo si el lease falla", () => {
+  it("devuelve el equipo al almacén como disponible", () => {
+    expect(
+      buildAssignmentRollbackPayload({
+        serials: ["SN-1", "SN-2"],
+        itemGroup: "Chromebook",
+        categoryName: "Laptop",
+        companyId: 62,
+      })
+    ).toEqual({
+      warehouse: 1,
+      logistic_status: "in-stock",
+      company_id: 62,
+      item_group: "Chromebook",
+      category_name: "Laptop",
+      data: ["SN-1", "SN-2"],
+    });
+  });
+
+  it("usa in-stock, el estado canónico de disponible, no 'available'", () => {
+    expect(
+      buildAssignmentRollbackPayload({
+        serials: ["SN-1"],
+        companyId: 62,
+      }).logistic_status
+    ).toBe("in-stock");
+  });
+
+  it("descarta seriales vacíos", () => {
+    expect(
+      buildAssignmentRollbackPayload({
+        serials: ["SN-1", "", "  ", null],
+        companyId: 62,
+      }).data
+    ).toEqual(["SN-1"]);
+  });
+
+  // Sin seriales o sin empresa el POST tocaría filas que no le corresponden.
+  it("devuelve null cuando no hay nada que devolver", () => {
+    expect(buildAssignmentRollbackPayload({ serials: [], companyId: 62 })).toBeNull();
+    expect(buildAssignmentRollbackPayload({ serials: ["SN-1"], companyId: null })).toBeNull();
+    expect(buildAssignmentRollbackPayload()).toBeNull();
   });
 });

@@ -10,8 +10,9 @@ import {
 import { fetchStudentConsent } from "../../../../conditionalPage/utils/guardianConsentApi";
 import {
   getConsentStatusCopy,
-  isConsentBlockingAssignment,
+  isAssignmentBlockedByConsent,
   normalizeConsentStatus,
+  resolveConsentEnforcement,
 } from "../../../../conditionalPage/utils/guardianConsentUtils";
 
 /**
@@ -38,14 +39,21 @@ export function useAssignmentConsentGate(member) {
   });
 
   const schoolSettings = settingsQuery.data?.settings || {};
-  const enforcing = Boolean(
-    schoolSettings.enforce_member_consent || schoolSettings.enforce_under_13
-  );
+  const enforcing = resolveConsentEnforcement(schoolSettings);
+  // Scoped to Education for the same reason the member flow scopes it: the AUP
+  // consent regime is a school rule, and a non-school company keeps its old
+  // behaviour rather than being newly blocked.
+  const memberIsMinor = isEducation && Number(member?.minor) === 1;
 
+  // A minor's status is fetched whether or not the company enforces consent:
+  // the server's refusal does not consult the company setting, so neither can
+  // this gate. `enforcing` also read a key the settings endpoint never returns
+  // (`enforce_member_consent`), which meant this query was effectively disabled.
   const consentQuery = useQuery({
     queryKey: ["studentConsentStatus", memberId, companyId],
     queryFn: () => fetchStudentConsent(companyId, memberId),
-    enabled: Boolean(memberId) && isEducation && enforcing,
+    enabled:
+      Boolean(memberId) && isEducation && (memberIsMinor || enforcing),
     staleTime: 60 * 1000,
   });
 
@@ -90,12 +98,21 @@ export function useAssignmentConsentGate(member) {
     schoolSettings.required_consent_policy_version
   );
 
+  // Mirrors the server's floor: a minor without agreed consent is never
+  // assignable, whatever the company set. This branch used to defer entirely to
+  // the company policy, so a school with enforcement off got a green gate here
+  // and a CONSENT_REQUIRED from the lease endpoint one warehouse write later.
   const blocking = consentQuery.isSuccess
-    ? isConsentBlockingAssignment(consentStatus, schoolSettings)
-    : isConsentRequired({
+    ? isAssignmentBlockedByConsent({
+        consentStatus,
+        settings: schoolSettings,
+        isMinor: memberIsMinor,
+      })
+    : (memberIsMinor && !hasValidConsent(member.consent)) ||
+      isConsentRequired({
         isMinor,
         isUnder13: Boolean(member.under_13),
-        enforceMemberConsent: Boolean(schoolSettings.enforce_member_consent),
+        enforceMemberConsent: resolveConsentEnforcement(schoolSettings),
         enforceUnder13: Boolean(schoolSettings.enforce_under_13),
         consentExists: hasValidConsent(member.consent),
       });
