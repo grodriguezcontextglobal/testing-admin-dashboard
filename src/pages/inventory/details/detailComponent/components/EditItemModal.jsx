@@ -283,18 +283,29 @@ const EditItemModal = ({
       ),
     [watch("location")],
   );
-  const renderingOptionsForSubLocations = (item) => {
+  /**
+   * The two sub-location buttons, rendered into one row by EditItemForm.
+   *
+   * They are mutually exclusive: add while the fields are hidden, remove once
+   * they are shown. Conditional rendering rather than the `display: none` juggle
+   * that was here before, which kept both in the layout and made the row's width
+   * depend on the wider of the two.
+   *
+   * Sizing: `flex: 1 1 auto` with `minWidth: 0`, not `width: 100%` with
+   * `alignSelf: stretch`. A percentage width resolves against the flex
+   * container's content box and then adds the button's own padding on top, so it
+   * hung over the edge; `flex` lets the row hand out the space it actually has.
+   */
+  const renderingOptionsForSubLocations = () => {
     const addSublocationButton = () => {
+      if (displaySublocationFields) return null;
       return (
         <BlueButtonComponent
           onClick={() => setDisplaySublocationFields(true)}
           styles={{
-            alignSelf: "stretch",
-            display:
-              item === "Main location" && !displaySublocationFields
-                ? "flex"
-                : "none",
-            width: "100%",
+            flex: "1 1 auto",
+            minWidth: 0,
+            boxSizing: "border-box",
             borderRadius: "8px",
           }}
         >
@@ -304,6 +315,7 @@ const EditItemModal = ({
     };
 
     const removeAllSubLocationsButton = () => {
+      if (!displaySublocationFields) return null;
       return (
         <BlueButtonComponent
           onClick={() => {
@@ -311,12 +323,9 @@ const EditItemModal = ({
             setSubLocationsSubmitted([]);
           }}
           styles={{
-            alignSelf: "stretch",
-            display:
-              item === "Main location" && displaySublocationFields
-                ? "flex"
-                : "none",
-            width: "100%",
+            flex: "1 1 auto",
+            minWidth: 0,
+            boxSizing: "border-box",
             borderRadius: "8px",
           }}
         >

@@ -253,10 +253,19 @@ const EditItemForm = ({
                     render={({ field: { value, onChange } }) => (
                       <Grid
                         container
-                        spacing={1}
                         style={{
+                          // `spacing={1}` was what pushed this row out of the
+                          // modal. MUI implements it as width: calc(100% + 8px)
+                          // plus margin-left: -8px on the container, and the
+                          // inline width here overrode the calc but not the
+                          // negative margin — so the row started 8px left of its
+                          // column and ended 8px past the dialog's right edge.
+                          // A plain gap has no negative margins to leak.
                           width: "100%",
+                          boxSizing: "border-box",
                           display: "flex",
+                          flexWrap: "wrap",
+                          gap: "8px",
                           justifyContent: "space-between",
                           alignItems: "center",
                         }}
@@ -296,36 +305,43 @@ const EditItemForm = ({
                             label: item.label,
                           })}
                         </Grid>
+                        {/* Add / remove sub-location. Only one of the two ever
+                            renders — add while the fields are hidden, remove while
+                            they are shown — so the row is sized for one button and
+                            `gap` covers the case where that ever stops being true. */}
                         <Grid
-                          display={
-                            item.label === "Main location" ||
-                            item.label === "Sub location"
-                              ? "flex"
-                              : "none"
-                          }
+                          display={item.label === "Main location" ? "flex" : "none"}
                           justifyContent={"flex-start"}
                           alignItems={"center"}
+                          style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
                           item
                           xs={12}
                           sm={12}
                           md={12}
                           lg={12}
                         >
-                          {
-                            renderingOptionsForSubLocations(item.label)
-                              .addSubLocation
-                          }
-                          {
-                            renderingOptionsForSubLocations(item.label)
-                              .removeAllSubLocations
-                          }
+                          {/* No argument: the label decided nothing inside — the
+                              row's own `display` above is what scopes these to
+                              Main location. Passing one implied otherwise. */}
+                          {/* {renderingOptionsForSubLocations().addSubLocation} */}
+                          {renderingOptionsForSubLocations().removeAllSubLocations}
                         </Grid>
                         <Grid item xs={12} sm={12} md={12} lg={12}>
                           <Breadcrumb
                             style={{
+                              // `displaySublocationFields.length > 0` was here,
+                              // but that state is a boolean — `.length` is
+                              // undefined and `undefined > 0` is false, so this
+                              // half of the condition never fired and the list of
+                              // sub-locations just added stayed hidden. What it
+                              // was reaching for is whether any were submitted.
                               display:
-                                item.label === "Sub location" ||
-                                displaySublocationFields.length > 0
+                                item.label === "Sub location" && subLocationsSubmitted.length > 0
                                   ? "flex"
                                   : "none",
                               width: "100%",
