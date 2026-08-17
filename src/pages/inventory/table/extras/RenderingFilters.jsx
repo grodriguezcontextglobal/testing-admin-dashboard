@@ -1,5 +1,5 @@
 import { Grid, OutlinedInput } from "@mui/material";
-import { hasPermission } from "../../../../config/roles";
+import { usePermission } from "../../../../hooks/usePermission";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Switch } from "antd";
 import { PropTypes } from "prop-types";
@@ -131,13 +131,17 @@ const RenderingFilters = ({
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
   const dictionary = {
-    Permanent: "Owned",
+    Permanent: "Permanent",
     Rent: "Leased",
     Sale: "For resale",
     Resale: "For resale",
   };
   const { isAdmin } = useStaffRoleAndLocations();
-  const canManageLocation = hasPermission("inventory:manage_location", user.roleType);
+  // usePermission resolves the roleType the supported way. Reading
+  // `user.roleType` here returned undefined for every legacy account (numeric
+  // `role`, no `roleType`), so hasPermission answered false and the rename
+  // pencil on all six section headers — Groups included — rendered disabled.
+  const canManageLocation = usePermission("inventory:manage_location");
   const structuredCompanyInventory = useQuery({
     queryKey: ["structuredCompanyInventory"],
     queryFn: () =>
@@ -241,7 +245,15 @@ const RenderingFilters = ({
 
   const [showOnlyEmpty, setShowOnlyEmpty] = useState(false);
 
-  const handleEditClick = (sectionKey) => {
+  /**
+   * The rename buttons live inside <summary>, so a click on one also reaches
+   * the summary: it ran toggleSection and fired the native <details> toggle,
+   * collapsing the section the user was trying to rename. Stop both here rather
+   * than at six call sites.
+   */
+  const handleEditClick = (sectionKey, event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
     setEditingSection(sectionKey);
     setSectionName(companyStructure[sectionKey]);
   };
@@ -804,7 +816,7 @@ const RenderingFilters = ({
                   width: "fit-content",
                   aspectRatio: "1/1",
                 }}
-                onClick={() => handleEditClick("location_1")}
+                onClick={(e) => handleEditClick("location_1", e)}
                 disabled={!canManageLocation}
               >
                 <EditIcon />
@@ -866,7 +878,7 @@ const RenderingFilters = ({
                   width: "fit-content",
                   aspectRatio: "1/1",
                 }}
-                onClick={() => handleEditClick("category_name")}
+                onClick={(e) => handleEditClick("category_name", e)}
                 disabled={!canManageLocation}
               >
                 <EditIcon />
@@ -910,7 +922,7 @@ const RenderingFilters = ({
                   width: "fit-content",
                   aspectRatio: "1/1",
                 }}
-                onClick={() => handleEditClick("item_group")}
+                onClick={(e) => handleEditClick("item_group", e)}
                 disabled={!canManageLocation}
               >
                 <EditIcon />
@@ -952,7 +964,7 @@ const RenderingFilters = ({
                   width: "fit-content",
                   aspectRatio: "1/1",
                 }}
-                onClick={() => handleEditClick("brand")}
+                onClick={(e) => handleEditClick("brand", e)}
                 disabled={!canManageLocation}
               >
                 <EditIcon />
@@ -996,7 +1008,7 @@ const RenderingFilters = ({
                   width: "fit-content",
                   aspectRatio: "1/1",
                 }}
-                onClick={() => handleEditClick("ownership")}
+                onClick={(e) => handleEditClick("ownership", e)}
                 disabled={!canManageLocation}
               >
                 <EditIcon />
@@ -1044,7 +1056,7 @@ const RenderingFilters = ({
                   width: "fit-content",
                   aspectRatio: "1/1",
                 }}
-                onClick={() => handleEditClick("assignedToStaffMember")}
+                onClick={(e) => handleEditClick("assignedToStaffMember", e)}
                 disabled={!canManageLocation}
               >
                 <EditIcon />
@@ -1240,7 +1252,16 @@ const RenderingFilters = ({
                     alignItems: "center",
                   }}
                 >
-                  {(openSections[item.key]) ? <RightChevronIcon /> : <DownNarrow />}
+                  {/* Down while expanded, right while collapsed. It read the
+                      state backwards: an open section showed the chevron that
+                      means "click to expand". `open` on <details> below is
+                      `openSections[item.key] ?? item.open`, so match it — a
+                      section the user has not touched yet is open. */}
+                  {(openSections[item.key] ?? item.open) ? (
+                    <DownNarrow />
+                  ) : (
+                    <RightChevronIcon />
+                  )}
                   &nbsp;
                   {item.title}&nbsp;{" "}
                   <span

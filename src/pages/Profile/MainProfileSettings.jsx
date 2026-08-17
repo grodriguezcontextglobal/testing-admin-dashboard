@@ -18,7 +18,7 @@ import { onResetHelpers } from "../../store/slices/helperSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
-import { hasPermission } from "../../config/roles";
+import { hasPermission, resolveRoleType } from "../../config/roles";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import MainHeaders from "./ui/MainHeaders";
 
@@ -107,9 +107,12 @@ const MainProfileSettings = () => {
         }}
       >
         {tabOptions.map((option) => {
+          // resolveRoleType, not user.roleType: the raw field is undefined on
+          // legacy accounts, which made every permission-gated tab in this
+          // strip evaluate to false and vanish.
           const isAllowed = option.requiresSuperUser
             ? isSuperUser
-            : hasPermission(option.permission, user.roleType);
+            : hasPermission(option.permission, resolveRoleType(user));
           if (!isAllowed) return null;
           if (option.industry && user?.companyData?.industry !== option.industry) return null;
           return (

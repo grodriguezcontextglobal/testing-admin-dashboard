@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import SectionHeader from "../../../components/documents/new_form_components/SectionHeader";
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
-import { hasPermission } from "../../../config/roles";
+import { usePermission } from "../../../hooks/usePermission";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { isDocumentExpired } from "../Documents/utils/documentExpirationUtils";
 import { useSchoolSettings } from "./utils/useSchoolSettings";
@@ -23,7 +23,9 @@ const SchoolComplianceSettings = () => {
   const queryClient = useQueryClient();
   const { notify, contextHolder } = useStatusNotification();
 
-  const canEdit = hasPermission("member:update", user?.roleType);
+  // usePermission, not `user?.roleType`: the raw field is undefined on legacy
+  // accounts, which left this form permanently read-only for them.
+  const canEdit = usePermission("member:update");
 
   // Form state — initialized from server settings
   const [enforce, setEnforce] = useState(false);

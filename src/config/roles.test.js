@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import {
   ROLE_TYPES,
@@ -1106,5 +1109,81 @@ describe("PERMISSIONS — member:charge_fee", () => {
     ["sale_manager", "inventory_manager"].forEach((role) => {
       expect(hasPermission("member:charge_fee", role)).toBe(false);
     });
+  });
+});
+
+/**
+ * Call-site guard.
+ *
+ * `hasPermission` takes a roleType string, and the only supported way to get
+ * one out of a Redux user is `resolveRoleType(user)` — it is what falls back to
+ * LEGACY_ROLE_MAP for the records that still carry a numeric `role` and no
+ * `roleType`. Passing `user.roleType` straight through looks equivalent and is
+ * not: for those users it is `undefined`, `hasPermission` short-circuits to
+ * false, and whatever the check gated silently disappears.
+ *
+ * That had happened in three places at once — the inventory section rename
+ * buttons, the Profile tab strip and the school-compliance form — each failing
+ * closed for exactly the accounts least likely to report it. A unit test on
+ * roles.js cannot catch a mistake made at the call site, so this scans for it.
+ */
+describe("hasPermission call sites", () => {
+  // Read from disk rather than import.meta.glob("?raw"): the glob makes Vite
+  // transform every source file in the repo and put ~65s on this one file's
+  // run. readFileSync does the same job in milliseconds.
+  const SRC_DIR = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "..",
+  );
+
+  const sourceFiles = (dir) =>
+    fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) return sourceFiles(full);
+      return /\.jsx?$/.test(entry.name) ? [full] : [];
+    });
+
+  // hasPermission(<first arg>, someExpression.roleType) — including the
+  // optional-chained `user?.roleType` spelling.
+  //
+  // Every quantifier is bounded on purpose. An earlier version opened with
+  // `[^;]*?` before a starred member-access group, which backtracks
+  // exponentially on files with few semicolons and blew the 5s test timeout
+  // instead of reporting anything.
+  const RAW_ROLE_TYPE_ARG =
+    /hasPermission\s*\(\s*[^()\n]{0,120},\s*[\w$]+(?:\s*\??\.\s*[\w$]+){0,4}\s*\??\.\s*roleType\s*\)/g;
+
+  it("never reads .roleType off a user directly — always via resolveRoleType", () => {
+    const offenders = [];
+    for (const file of sourceFiles(SRC_DIR)) {
+      if (file.endsWith("roles.test.js")) continue;
+      const matches = fs.readFileSync(file, "utf8").match(RAW_ROLE_TYPE_ARG);
+      if (matches) {
+        offenders.push(
+          `${path.relative(SRC_DIR, file)}: ${matches.join(" | ")}`,
+        );
+      }
+    }
+    expect(offenders).toEqual([]);
+    // Reading every source file over the Docker bind mount is slow on Windows
+    // hosts — well past the 5s default. The work is IO, not computation.
+  }, 60000);
+
+  it("still flags the shape it is meant to catch", () => {
+    // Guards the regex itself: a rewrite that quietly stops matching would
+    // otherwise turn this whole describe into a test that always passes.
+    expect(
+      'hasPermission("inventory:manage_location", user.roleType)'.match(
+        RAW_ROLE_TYPE_ARG,
+      ),
+    ).not.toBeNull();
+    expect(
+      'hasPermission("member:update", user?.roleType)'.match(RAW_ROLE_TYPE_ARG),
+    ).not.toBeNull();
+    expect(
+      "hasPermission(option.permission, resolveRoleType(user))".match(
+        RAW_ROLE_TYPE_ARG,
+      ),
+    ).toBeNull();
   });
 });
