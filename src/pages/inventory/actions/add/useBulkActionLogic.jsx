@@ -22,6 +22,10 @@ import DangerButtonComponent from "../../../../components/UX/buttons/DangerButto
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { formatDate } from "../../utils/dateFormat";
 import { bulkItemUpdateAlphanumeric } from "../utils/EditBulkActionOptions";
+import {
+  findReferenceMatches,
+  hasReferenceCriteria,
+} from "../utils/referenceLookup";
 
 const useBulkActionLogic = () => {
   const {
@@ -62,6 +66,10 @@ const useBulkActionLogic = () => {
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
   const [generalInfoForSelection, setGeneralInfoForSelection] = useState(null)
+  // { serial_number, matchCount } — what the "copy from an existing device"
+  // panel reports back, so the user can see which unit the form was filled
+  // from and undo it.
+  const [copiedFrom, setCopiedFrom] = useState(null)
   const { user } = useSelector((state) => state.admin);
   const locationInApp = useLocation()
   const {
@@ -436,34 +444,55 @@ const useBulkActionLogic = () => {
   };
 
 
-  const handleSearchByReference = () => {
-    const categoryRef = watch("reference_category_name");
-    const itemGroupRef = watch("reference_item_group");
-    const brandRef = watch("reference_brand");
+  /**
+   * Clears everything the copy filled in, including the criteria that produced
+   * it. The panel offers this as "Undo": copying pulls a dozen fields at once,
+   * and without a way back the only recovery was reloading the page and losing
+   * the rest of the form.
+   */
+  const clearReferenceCopy = () => {
+    [
+      "reference_category_name",
+      "reference_item_group",
+      "reference_brand",
+      "item_group",
+      "category_name",
+      "brand",
+      "cost",
+      "descript_item",
+      "ownership",
+      "supplier",
+      "container",
+      "image_url",
+    ].forEach((field) => setValue(field, ""));
+    setValue("containerSpotLimit", "0");
+    setValue("quantity", 0);
+    setDisplayPreviewImage(false);
+    setImageUrlGenerated(null);
+    setConvertImageTo64ForPreview(null);
+    setImageUploadedValue(null);
+    setGeneralInfoForSelection(null);
+    setCopiedFrom(null);
+  };
 
-    if (!categoryRef && !itemGroupRef && !brandRef) {
-      openNotificationWithIcon(
-        "Please provide at least one reference to search.",
+  const handleSearchByReference = () => {
+    const criteria = {
+      category: watch("reference_category_name"),
+      itemGroup: watch("reference_item_group"),
+      brand: watch("reference_brand"),
+    };
+
+    if (!hasReferenceCriteria(criteria)) {
+      notify(
+        "warning",
+        "Pick a category, device name or brand first so we know what to copy.",
       );
       return;
     }
 
     const inventoryItems = itemsInInventoryQuery?.data?.data?.items || [];
-    let filteredItems = [...inventoryItems];
-
-    if (categoryRef) {
-      filteredItems = filteredItems.filter(
-        (item) => item.category_name === categoryRef,
-      );
-    }
-    if (itemGroupRef) {
-      filteredItems = filteredItems.filter(
-        (item) => item.item_group === itemGroupRef,
-      );
-    }
-    if (brandRef) {
-      filteredItems = filteredItems.filter((item) => item.brand === brandRef);
-    }
+    const { matches: filteredItems, source, matchCount, imageUrl, imageConflict } =
+      findReferenceMatches(inventoryItems, criteria);
 
     // Reset image state before processing new search
     setValue("image_url", "");
@@ -473,26 +502,21 @@ const useBulkActionLogic = () => {
     setImageUploadedValue(null);
 
     let infoToSet = null;
-    if (filteredItems.length > 0) {
-      const dataToRetrieve = filteredItems[0];
+    if (source) {
+      const dataToRetrieve = source;
       infoToSet = dataToRetrieve;
 
-      // Handle images
-      const imageUrls = new Set(
-        filteredItems.map((item) => item.image_url).filter(Boolean),
-      );
-      if (imageUrls.size === 1) {
-        const [uniqueImageUrl] = imageUrls;
-        setValue("image_url", uniqueImageUrl);
+      if (imageUrl) {
+        setValue("image_url", imageUrl);
         setDisplayPreviewImage(true);
-        setConvertImageTo64ForPreview(uniqueImageUrl); // This should make it appear in the preview
-        setImageUrlGenerated(uniqueImageUrl); // This marks it as "accepted"
-        openNotificationWithIcon(
-          "A unique image was found and has been set for this group.",
-        );
-      } else if (imageUrls.size > 1) {
-        openNotificationWithIcon(
-          "Multiple images found for this group. Please upload a new image if you wish to standardize it.",
+        setConvertImageTo64ForPreview(imageUrl); // This should make it appear in the preview
+        setImageUrlGenerated(imageUrl); // This marks it as "accepted"
+      } else if (imageConflict) {
+        // Not an error: the group genuinely has more than one picture, and
+        // picking one for the user would quietly restandardize their catalogue.
+        notify(
+          "info",
+          "Those devices use more than one image, so none was copied. Upload one if you want the new units to share it.",
         );
       }
 
@@ -519,11 +543,21 @@ const useBulkActionLogic = () => {
         const sortedData = orderBy(grouping[itemGroup], "serial_number", "asc");
         setAllSerialNumbersOptions(sortedData.map((x) => x.serial_number));
       }
-      openNotificationWithIcon(
-        `Found ${filteredItems.length} items. Displaying info for the first match.`,
-      );
+      // The panel states which unit the details came from and how many matched,
+      // so this stays a quiet confirmation. It used to be routed through
+      // openNotificationWithIcon, which renders every message as an error —
+      // a successful copy announced itself in red.
+      setCopiedFrom({
+        serial_number: dataToRetrieve.serial_number,
+        matchCount,
+      });
+      notify("success", `Details copied from ${filteredItems.length} matching device${filteredItems.length === 1 ? "" : "s"}.`);
     } else {
-      openNotificationWithIcon("No inventory found matching the criteria.");
+      setCopiedFrom(null);
+      notify(
+        "warning",
+        "No device in your inventory matches that. Fill the form in below instead.",
+      );
       setValue("item_group", "");
       setValue("photo", []);
       setValue("category_name", "");
@@ -703,8 +737,10 @@ const useBulkActionLogic = () => {
     addSerialNumberField,
     allSerialNumbersOptions,
     contextHolder,
+    clearReferenceCopy,
     control,
     convertImageTo64ForPreview,
+    copiedFrom,
     dicSuppliers,
     displayContainerSplotLimitField,
     displayPreviewImage,

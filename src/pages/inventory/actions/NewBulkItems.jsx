@@ -75,6 +75,8 @@ const AddNewBulkItems = () => {
     user,
     setMoreInfo,
     handleSearchByReference,
+    clearReferenceCopy,
+    copiedFrom,
   } = useBulkActionLogic();
   return (
     <Grid
@@ -139,6 +141,8 @@ const AddNewBulkItems = () => {
         scannedSerialNumbers={scannedSerialNumbers}
         setScannedSerialNumbers={setScannedSerialNumbers}
         handleSearchByReference={handleSearchByReference}
+        clearReferenceCopy={clearReferenceCopy}
+        copiedFrom={copiedFrom}
       />
       {renderingModals({
         openScanningModal,

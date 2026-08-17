@@ -25,82 +25,18 @@ export const renderFields = ({
     );
   };
 
+  // The four "reference_*" fields that used to open this list live in
+  // CopyFromExistingDevicePanel now. They were optional shortcuts for
+  // pre-filling the form, but sitting here they rendered with the same weight
+  // as the fields that define the item — bold and underlined, no less — so
+  // users read them as four more mandatory inputs and filled them in as if
+  // they were part of the record. The panel gives them a border, a title that
+  // says what they do, and a note that they are optional.
   const fields = [
-    {
-      name: "reference_category_name",
-      placeholder: "Type or select a category reference",
-      label: "Category reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("category_name")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the category of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_item_group",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Group reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("item_group")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the item group of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_brand",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Brand reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("brand")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the brand of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_search_button_",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Search reference",
-      htmlElement: 8,
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("brand")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "Select criteria for search inventory group.",
-      displayField: true,
-    },
     {
       name: "item_group",
       placeholder: "Type the name of the item",
-      label: "Group name",
+      label: "Group",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -112,8 +48,8 @@ export const renderFields = ({
     },
     {
       name: "category_name",
-      placeholder: "Select or type category of device",
-      label: "Category of device",
+      placeholder: "Select or type category",
+      label: "Category",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -125,8 +61,8 @@ export const renderFields = ({
     },
     {
       name: "brand",
-      placeholder: "Select or type brand of device",
-      label: "Brand of device",
+      placeholder: "Select or type brand",
+      label: "Brand",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -138,8 +74,8 @@ export const renderFields = ({
     },
     {
       name: "cost",
-      placeholder: "Select or type replacement cost of device",
-      label: "Replacement cost of device",
+      placeholder: "Select or type replacement cost",
+      label: "Replacement cost",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -244,7 +180,7 @@ export const renderFields = ({
     {
       name: "ownership",
       placeholder: "Select ownership option",
-      label: "Ownership status of device",
+      label: "Ownership status",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -257,7 +193,7 @@ export const renderFields = ({
         {
           name: "",
           placeholder: "",
-          label: "Returning date of device",
+          label: "Returning date",
           htmlElement: "Day",
           style: OutlinedInputStyle,
           required: true,
@@ -270,7 +206,7 @@ export const renderFields = ({
         {
           name: "supplier",
           placeholder: "Select a supplier",
-          label: "Supplier of device",
+          label: "Supplier",
           htmlElement: "",
           style: OutlinedInputStyle,
           required: true,
@@ -285,7 +221,7 @@ export const renderFields = ({
     {
       name: "",
       placeholder: "",
-      label: "Returning date of device",
+      label: "Returning date",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,
@@ -298,7 +234,7 @@ export const renderFields = ({
     {
       name: "supplier",
       placeholder: "Select a supplier",
-      label: "Supplier of device",
+      label: "Supplier",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -325,7 +261,7 @@ export const renderFields = ({
     {
       name: "image_uploader",
       placeholder: "",
-      label: "Image uploader of device",
+      label: "Image uploader",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,
@@ -338,7 +274,7 @@ export const renderFields = ({
     {
       name: "image_uploader_preview",
       placeholder: "",
-      label: "Preview image uploader of device",
+      label: "Preview image uploader",
       htmlElement: "ImagePreview",
       style: OutlinedInputStyle,
       required: true,
@@ -351,7 +287,7 @@ export const renderFields = ({
     {
       name: "image_url",
       placeholder: "",
-      label: "Image uploader of device",
+      label: "Image uploader",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,

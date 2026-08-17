@@ -36,6 +36,8 @@ const EditGroup = () => {
     handleMoreInfoPerDevice,
     handleRemoveSubLocationInput,
     handleSearchByReference,
+    clearReferenceCopy,
+    copiedFrom,
     handleSubLocationInputChange,
     handleSubmit,
     imageUrlGenerated,
@@ -104,6 +106,8 @@ const EditGroup = () => {
         errors={errors}
         generalInfoForSelection={generalInfoForSelection}
         handleSearchByReference={handleSearchByReference}
+        clearReferenceCopy={clearReferenceCopy}
+        copiedFrom={copiedFrom}
         handleDeleteMoreInfo={handleDeleteMoreInfo}
         handleMoreInfoPerDevice={handleMoreInfoPerDevice}
         handleSubmit={handleSubmit}

@@ -21,6 +21,7 @@ import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/ImageUploaderComponent";
 import Chip from "../../../../components/UX/Chip/Chip";
 import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
+import CopyFromExistingDevicePanel from "./uxForm/CopyFromExistingDevicePanel";
 
 const EditBulkForm = ({
   // acceptImage,
@@ -34,6 +35,8 @@ const EditBulkForm = ({
   errors,
   generalInfoForSelection,
   handleSearchByReference,
+  clearReferenceCopy,
+  copiedFrom,
   handleSubmit,
   imageUploadedValue,
   // imageUrlGenerated,
@@ -85,6 +88,13 @@ const EditBulkForm = ({
 
   return (
     <form onSubmit={handleSubmit(savingNewItem)} id="updateBulkItems">
+      <CopyFromExistingDevicePanel
+        control={control}
+        retrieveItemOptions={retrieveItemOptions}
+        onSearch={handleSearchByReference}
+        onClear={clearReferenceCopy}
+        copiedFrom={copiedFrom}
+      />
       <Grid container spacing={1}>
         {renderFields({
           retrieveItemOptions,
@@ -170,28 +180,6 @@ const EditBulkForm = ({
                 <ImagePreviewClickable key={'preview'} imageUrlGenerated={imageUploadedValue}
                   width={150}
                 />);
-            }
-            else if (item.htmlElement === 8) {
-              return (
-                <>
-                  <Grid container spacing={1} alignItems="center">
-                    <Grid item xs={12} md={8}>
-                      <Typography>
-                        Set search criteria for searching inventory group in fields above and then click search reference button.
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <BlueButtonComponent
-                        title="Search by reference"
-                        func={handleSearchByReference}
-                        buttonType="button"
-                        styles={{ width: "100%" }}
-                      />
-                    </Grid>
-                  </Grid>
-                  <Divider sx={{ my: 2 }} />
-                </>
-              )
             }
             return (
               <Grid
