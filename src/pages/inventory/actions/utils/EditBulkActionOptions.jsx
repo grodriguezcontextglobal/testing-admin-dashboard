@@ -4,6 +4,10 @@ import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import { onTrackBackgroundJob } from "../../../../store/slices/backgroundJobsSlice";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import generateIdempotencyKey from "../../../../utils/actions/generateIdempotencyKey";
+import {
+  inventoryCacheKeys,
+  inventoryPageQueryKeys,
+} from "../../utils/inventoryQueryKeys";
 
 export const bulkItemUpdateAlphanumeric = async ({
   data,
@@ -83,15 +87,10 @@ export const bulkItemUpdateAlphanumeric = async ({
         type: "bulk-inventory-update",
         successMessage: "Items were successfully updated in inventory.",
         failureMessage: "The inventory update failed.",
-        invalidateKeys: [
-          ["listOfItemsInStock"],
-          ["ItemsInInventoryCheckingQuery"],
-          ["RefactoredListInventoryCompany"],
-        ],
-        clearCacheKeys: [
-          `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-          `providerCompanies_${user.companyData.id}`,
-        ],
+        invalidateKeys: inventoryPageQueryKeys(user.sqlInfo.company_id),
+        clearCacheKeys: inventoryCacheKeys({
+          companyMongoId: user.companyData.id,
+        }),
       })
     );
 

@@ -17,6 +17,7 @@ import "../../../styles/global/reactInput.css";
 import costValueInputFormat from "../utils/costValueInputFormat";
 import { formatDate } from "../utils/dateFormat";
 import useSuppliers from "../utils/hooks/useSuppliers";
+import { invalidateInventoryQueries } from "../utils/inventoryQueryKeys";
 import "./style.css";
 import { renderTitleSingleItem } from "./utils/BulkComponents";
 import { storeAndGenerateImageUrl } from "./utils/BulkItemActionsOptions";
@@ -111,23 +112,14 @@ const AddNewItem = () => {
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
-  const invalidateQueries = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["listOfItemsInStock"],
-      exact: true,
-      refetchType: "active",
+  // Three keys were listed here by hand, and the landing fetch
+  // (companyHasInventoryQuery, 5-minute staleTime) was not one of them — so
+  // creating an item and going back to /inventory showed the pre-creation
+  // count and, on a first item, the empty-state banner.
+  const invalidateQueries = () =>
+    invalidateInventoryQueries(queryClient, {
+      companyId: user.sqlInfo.company_id,
     });
-    queryClient.invalidateQueries({
-      queryKey: ["ItemsInInventoryCheckingQuery"],
-      exact: true,
-      refetchType: "active",
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["RefactoredListInventoryCompany"],
-      exact: true,
-      refetchType: "active",
-    });
-  };
   const retrieveItemOptions = (props) => {
     const result = new Set();
     if (itemsInInventoryQuery.data) {

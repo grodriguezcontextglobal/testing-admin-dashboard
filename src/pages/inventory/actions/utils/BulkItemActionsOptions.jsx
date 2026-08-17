@@ -6,6 +6,10 @@ import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import generateIdempotencyKey from "../../../../utils/actions/generateIdempotencyKey";
 import { verifyAndCreateLocation } from "./verifyLocationBeforeCreateNewInventory";
 import { buildSubLocationPath } from "./SubLocationRenderer";
+import {
+  inventoryCacheKeys,
+  inventoryPageQueryKeys,
+} from "../../utils/inventoryQueryKeys";
 
 export const bulkItemInsertAlphanumeric = async ({
   data,
@@ -98,15 +102,10 @@ export const bulkItemInsertAlphanumeric = async ({
         type: "bulk-inventory-insert",
         successMessage: "New group of items were successfully created in inventory.",
         failureMessage: "The inventory upload failed.",
-        invalidateKeys: [
-          ["listOfItemsInStock"],
-          ["ItemsInInventoryCheckingQuery"],
-          ["RefactoredListInventoryCompany"],
-        ],
-        clearCacheKeys: [
-          `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-          `providerCompanies_${user.companyData.id}`,
-        ],
+        invalidateKeys: inventoryPageQueryKeys(user.sqlInfo.company_id),
+        clearCacheKeys: inventoryCacheKeys({
+          companyMongoId: user.companyData.id,
+        }),
       })
     );
     return navigate("/inventory");

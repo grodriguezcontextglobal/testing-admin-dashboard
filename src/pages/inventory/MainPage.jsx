@@ -37,6 +37,10 @@ import InventorySearchBar from "./utils/ux/InventorySearchBar";
 import SkeletonInventoryCards from "./utils/SkeletonInventoryCards";
 import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import {
+  inventoryCacheKeys,
+  inventoryPageQueryKeys,
+} from "./utils/inventoryQueryKeys";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
@@ -179,22 +183,17 @@ const MainPage = () => {
   };
   const refetchingQueriesFn = () => {
     setIsLoadingState(true);
-    queryClient.resetQueries({
-      queryKey: ["ItemsInInventoryCheckingQuery"],
-    });
-    queryClient.resetQueries({
-      queryKey: ["listOfItemsInStock"],
-    });
-    queryClient.resetQueries({
-      queryKey: ["RefactoredListInventoryCompany"],
-    });
-    queryClient.resetQueries({
-      queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
-    });
-    clearCacheMemory(
-      `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`
+    // resetQueries, not invalidate: this is the explicit Refresh button, so
+    // drop the cached pages outright rather than revalidating them. The key
+    // list comes from inventoryQueryKeys so Refresh and the write paths cannot
+    // disagree about what "the inventory page" is — it used to cover four of
+    // the nine queries this page mounts.
+    inventoryPageQueryKeys(user.sqlInfo.company_id).forEach((queryKey) =>
+      queryClient.resetQueries({ queryKey, exact: true })
     );
-    clearCacheMemory(`providerCompanies_${user.companyData.id}`);
+    inventoryCacheKeys({ companyMongoId: user.companyData.id }).forEach((key) =>
+      clearCacheMemory(key)
+    );
     setIsLoadingState(false);
     setValue("searchItem", "");
     setParams(null);
