@@ -9,7 +9,7 @@ const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
   const [isExporting, setIsExporting] = useState(false);
 
   const dictionaryOwnership = {
-    Permanent: "Owned",
+    Permanent: "Permanent",
     Rent: "Rented",
     Sale: "For Resale",
     Resale: "For Resale",

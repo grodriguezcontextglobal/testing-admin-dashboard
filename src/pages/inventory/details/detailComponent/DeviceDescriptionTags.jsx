@@ -26,7 +26,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
   }, [dataFound]);
   const dic = {
     Permanent: {
-      label: "Owned",
+      label: "Permanent",
       color: "#6941c6",
     },
     Rent: {

@@ -10,7 +10,7 @@ export const dicSelectedOptions = {
 };
 
 export const dictionary = {
-  Permanent: "Owned",
+  Permanent: "Permanent",
   Rent: "Leased",
   Sale: "For resale",
   Resale: "For resale",

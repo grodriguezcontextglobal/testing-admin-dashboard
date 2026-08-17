@@ -153,7 +153,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [structuredData, totalValue, availabilityInfo, referenceData, location.key]);
 
   const dictionary = {
-    Permanent: "Owned",
+    Permanent: "Permanent",
     Rent: "Leased",
     Sale: "For sale",
   };
@@ -201,6 +201,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           })}
           dataSource={dataToDisplay}
           className="table-ant-customized"
+          onRow={() => ({
+            onClick: () => {
+              // navigate(`/inventory/item?id=${itemId}`);
+            },
+          })}
           // onChange={handleTableChange}
         />
       </Grid>

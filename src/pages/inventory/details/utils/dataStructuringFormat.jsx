@@ -62,7 +62,7 @@ export const dataToDisplay = (dataStructuringFormat, searchItem) => {
 };
 
 export const dictionary = {
-  Permanent: "Owned",
+  Permanent: "Permanent",
   Rent: "Leased",
   Sale: "For sale",
   Resale: "For sale",
