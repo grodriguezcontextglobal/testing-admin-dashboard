@@ -34,17 +34,29 @@ export const buildEmployeeEntry = ({ name, lastName, email, role }) => ({
   active: true,
 });
 
-/** Invitation URL sent through /nodemailer/new_invitation. */
+/**
+ * Invitation URL sent through /nodemailer/new_invitation.
+ *
+ * Carries identity only. The role is not a parameter: it belongs to the
+ * invitation already sitting in Company.employees, and /registration/accept-invitation
+ * reads it from there. While it travelled in the query string the invited person
+ * could edit the URL — the acceptance route carries no authentication — and ask
+ * for roleType=root_admin, which landed verbatim in company_staff. `question`
+ * and `answer` are gone too: no flow ever read them, there is no secret-question
+ * password recovery, and AdminUser no longer has the fields.
+ *
+ * `company` stays as the Mongo ObjectId because the landing page resolves the
+ * company with it; `company_name` rides along so the page can name the company
+ * before that lookup answers.
+ */
 export const buildInvitationLink = ({
   name,
   lastName,
   email,
   company,
   companyId,
-  role,
-  roleType,
 }) =>
-  `https://admin.devitrak.net/invitation?first=${encodeURIComponent(name)}&last=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&question=${encodeURIComponent("company name")}&answer=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}&roleType=${encodeURIComponent(roleType)}&company=${encodeURIComponent(companyId)}`;
+  `https://admin.devitrak.net/invitation?first=${encodeURIComponent(name)}&last=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&company=${encodeURIComponent(companyId)}&company_name=${encodeURIComponent(company)}`;
 
 export const newStaffSchema = yup.object().shape({
   email: yup.string().email("Email format is not valid").required("Email is required"),

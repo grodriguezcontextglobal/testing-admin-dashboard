@@ -27,6 +27,10 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import {
+  buildEmployeeEntry,
+  buildInvitationLink,
+} from "../../../../staff/action/utils/newStaffMemberUtils";
 
 const EditingStaff = ({ editingStaff, setEditingStaff }) => {
   const { register, handleSubmit, watch } = useForm();
@@ -185,37 +189,36 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
             company_name: event.company,
           }
         );
+        const hostCompany = companiesQuery.data.company[0];
         const templateNewUser = {
           name: data.name,
           lastName: data.lastName,
           email: data.email,
-          question: "company name",
-          answer: event.company,
           role: 4,
-          company: event.company,
         };
-        await devitrakApi.patch(
-          `/company/update-company/${companiesQuery.data.company[0].id}`,
-          {
-            employees: [
-              ...companiesQuery.data.company[0].employees,
-              {
-                user: templateNewUser.email,
-                firstName: templateNewUser.name,
-                lastName: templateNewUser.lastName,
-                status: "Pending",
-                super_user: false,
-                role: templateNewUser.role,
-              },
-            ],
-          }
-        );
+        // buildEmployeeEntry rather than a hand-written object: the entry it
+        // produces carries roleType, and the acceptance flow now reads the role
+        // from this entry. Without it the invited person arrives with no role
+        // at all.
+        await devitrakApi.patch(`/company/update-company/${hostCompany.id}`, {
+          employees: [
+            ...hostCompany.employees,
+            buildEmployeeEntry(templateNewUser),
+          ],
+        });
 
         await devitrakApi.post("/nodemailer/new_invitation", {
           consumer: templateNewUser.email,
           subject: "Invitation",
           company: event.company,
-          link: `https://admin.devitrak.net/invitation?first=${templateNewUser.name}&last=${templateNewUser.lastName}&email=${templateNewUser.email}&question=${templateNewUser.question}&answer=${templateNewUser.answer}&role=${templateNewUser.role}&company=${templateNewUser.company}`,
+          // The link used to pass the company NAME as the `company` parameter,
+          // which the landing page then looked up as a Mongo _id — so it never
+          // resolved and the invitation could not be completed from here.
+          link: buildInvitationLink({
+            ...templateNewUser,
+            company: event.company,
+            companyId: hostCompany.id,
+          }),
         });
         queryClient.invalidateQueries({
           queryKey: ["listAdminUsers"],

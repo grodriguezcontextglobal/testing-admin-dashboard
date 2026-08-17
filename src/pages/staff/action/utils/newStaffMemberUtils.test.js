@@ -57,21 +57,32 @@ describe("buildEmployeeEntry", () => {
 // ─── buildInvitationLink ──────────────────────────────────────────────────────
 
 describe("buildInvitationLink", () => {
+  const link = buildInvitationLink({
+    name: "Ada Grace",
+    lastName: "Lovelace",
+    email: "ada@devitrak.com",
+    company: "Dev & Co",
+    companyId: "co-1",
+  });
+
   it("incluye los parámetros codificados", () => {
-    const link = buildInvitationLink({
-      name: "Ada Grace",
-      lastName: "Lovelace",
-      email: "ada@devitrak.com",
-      company: "Dev & Co",
-      companyId: "co-1",
-      role: 3,
-      roleType: "event_manager",
-    });
     expect(link).toContain("first=Ada%20Grace");
+    expect(link).toContain("last=Lovelace");
     expect(link).toContain("email=ada%40devitrak.com");
-    expect(link).toContain("answer=Dev%20%26%20Co");
-    expect(link).toContain("roleType=event_manager");
     expect(link).toContain("company=co-1");
+    expect(link).toContain("company_name=Dev%20%26%20Co");
+  });
+
+  // El rol de la invitación vive en Company.employees y el backend lo lee de ahí.
+  // Mientras viajó en el link, el invitado podía editar la URL y pedir
+  // roleType=root_admin: la ruta de aceptación no lleva autenticación, así que
+  // ese valor terminaba tal cual en company_staff, que es la fuente de verdad
+  // del lado SQL. question/answer nunca los leyó ningún flujo.
+  it("no lleva el rol ni la pregunta secreta", () => {
+    expect(link).not.toContain("role=");
+    expect(link).not.toContain("roleType=");
+    expect(link).not.toContain("question=");
+    expect(link).not.toContain("answer=");
   });
 });
 

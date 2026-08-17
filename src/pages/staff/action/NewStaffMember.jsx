@@ -21,7 +21,6 @@ import {
   buildInvitationLink,
   buildRoleOptions,
   newStaffSchema,
-  roleTypeFromRole,
 } from "./utils/newStaffMemberUtils";
 
 const titleStyle = {
@@ -111,8 +110,6 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
         email,
         company: user.company,
         companyId: user.companyData.id,
-        role,
-        roleType: roleTypeFromRole(role),
       }),
     });
 
