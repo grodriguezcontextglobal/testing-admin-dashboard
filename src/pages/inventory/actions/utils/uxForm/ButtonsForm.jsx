@@ -23,11 +23,19 @@ const ButtonsForm = ({
       <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
       <div
         style={{
-          display: "grid",
-          gridAutoColumns: "minmax(1fr, 1fr 1fr)",
+          display: "flex",
+          // gridAutoColumns: "minmax(1fr, 1fr 1fr)",
           gap: "0.5rem",
         }}
       >
+        {location.pathname === "/create-event-page/device-detail" ? null : <Link to={backLink} style={{ width: "100%" }}>
+          <GrayButtonComponent
+            title={secondaryButtonTitle}
+            func={() => callFunction()}
+            styles={{ width: "100%" }}
+            buttonType="reset"
+          />
+        </Link>}
         {updateAll ?
           <BlueButtonComponent
             title={primaryButtonTitle}
@@ -46,14 +54,7 @@ const ButtonsForm = ({
             form={formId}
           />
         }
-        {location.pathname === "/create-event-page/device-detail" ? null : <Link to={backLink} style={{ width: "100%" }}>
-          <GrayButtonComponent
-            title={secondaryButtonTitle}
-            func={() => callFunction()}
-            styles={{ width: "100%" }}
-            buttonType="reset"
-          />
-        </Link>}
+
       </div>
       {
         updateAll && openConfirmation &&
