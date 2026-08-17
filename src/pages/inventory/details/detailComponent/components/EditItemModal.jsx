@@ -24,6 +24,17 @@ import generateIdempotencyKey from "../../../../../utils/actions/generateIdempot
 import { renderTitle } from "./ux/EditItemComponents";
 import EditItemForm from "./ux/EditItemForm";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import { deviceProfileKeys } from "../../deviceProfile/hooks/useDeviceProfile";
+import { inventoryPageQueryKeys } from "../../../utils/inventoryQueryKeys";
+import {
+  buildEditItemFormValues,
+  buildExtraSerialNumberPayload,
+  parseExtraInfoEntries,
+  parseReturnDate,
+  parseSubLocations,
+  resolveSupplierId,
+  resolveSupplierName,
+} from "../../utils/editItemFormModel";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
 const EditItemModal = ({
@@ -64,6 +75,7 @@ const EditItemModal = ({
     register,
     handleSubmit,
     setValue,
+    getValues,
     watch,
     control,
     formState: { errors },
@@ -123,38 +135,27 @@ const EditItemModal = ({
     return [];
   };
 
-  const existingExtraInfoEntries = () => {
-    try {
-      const raw = dataFound[0]?.extra_serial_number;
-      if (!raw) return [];
-      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-      if (!Array.isArray(parsed)) return [];
-      const wrapped = parsed.find(
-        (entry) => entry && typeof entry === "object" && !("keyObject" in entry),
-      );
-      const entries = wrapped
-        ? wrapped[String(dataFound[0].serial_number)]
-        : parsed;
-      return Array.isArray(entries)
-        ? entries.filter((entry) => entry?.keyObject !== "item_id")
-        : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const mergedExtraInfoEntries = () => {
-    const merged = new Map();
-    existingExtraInfoEntries().forEach(({ keyObject, valueObject }) =>
-      merged.set(keyObject, valueObject),
+  /**
+   * The Supplier field is a free-text AutoComplete seeded with the item's
+   * current supplier name, so three things can come out of it:
+   *   cleared      -> the user dropped the supplier on purpose, write null
+   *   known name   -> its provider id
+   *   unknown name -> a name typed by hand that no provider matches. Keep the
+   *                   id the item already had rather than silently dropping it;
+   *                   a genuinely new supplier is created with "Add supplier".
+   *
+   * Before this the field was never seeded at all, so it was blank on open and
+   * every edit wrote supplier_info: null — and `.find(...)[1]` threw outright
+   * on a hand-typed name.
+   */
+  const resolveSupplierInfo = (typedName) => {
+    const typed = String(typedName ?? "").trim();
+    if (!typed) return null;
+    return (
+      resolveSupplierId(dicSuppliers, typed) ??
+      dataFound[0]?.supplier_info ??
+      null
     );
-    moreInfo.forEach(({ keyObject, valueObject }) =>
-      merged.set(keyObject, valueObject),
-    );
-    return Array.from(merged, ([keyObject, valueObject]) => ({
-      keyObject,
-      valueObject,
-    }));
   };
 
   const savingNewItem = async (data) => {
@@ -185,11 +186,13 @@ const EditItemModal = ({
         location: data.location,
         current_location: data.location,
         sub_location: JSON.stringify(subLocationsSubmitted),
-        extra_serial_number: JSON.stringify(
-          moreInfo.length > 0
-            ? [{ [dataFound[0].serial_number]: mergedExtraInfoEntries() }]
-            : [],
-        ),
+        // moreInfo is seeded with the item's stored identifiers on open, so it
+        // is the complete list — additions and deletions both. It used to be
+        // sent as [] unless the panel had been opened, which erased them.
+        extra_serial_number: buildExtraSerialNumberPayload({
+          serialNumber: dataFound[0].serial_number,
+          entries: moreInfo,
+        }),
         company_id: user.sqlInfo.company_id,
         return_date:
           data.ownership === "Rent" ? formatDate(returningDate) : null,
@@ -199,9 +202,10 @@ const EditItemModal = ({
         display_item: 1,
         enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
         image_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
-        supplier_info: data.supplier
-          ? dicSuppliers.find(([key]) => key === data.supplier)[1]
-          : null,
+        // Falls back to the id already on the item: the field is a free-text
+        // AutoComplete, so a name the provider list does not know is a normal
+        // thing to type — and `.find(...)[1]` used to throw on it.
+        supplier_info: resolveSupplierInfo(data.supplier),
         reference: {},
       };
       const idempotencyKey = generateIdempotencyKey();
@@ -245,12 +249,14 @@ const EditItemModal = ({
           type: "inventory-item-update",
           successMessage: "Item was successfully updated.",
           failureMessage: "The item update failed.",
+          // BackgroundJobsTracker invalidates with `exact: true`, and the
+          // device-profile keys carry the item id — ["trackingItemActivity"]
+          // alone matched nothing, so a finished edit never refreshed the page
+          // it was made from. Build the full keys.
           invalidateKeys: [
-            ["listOfItemsInStock"],
-            ["ItemsInInventoryCheckingQuery"],
-            ["RefactoredListInventoryCompany"],
-            ["trackingItemActivity"],
-            ["infoItemSql"],
+            ...inventoryPageQueryKeys(user.sqlInfo.company_id),
+            deviceProfileKeys.tracking(dataFound[0].item_id),
+            deviceProfileKeys.item(dataFound[0].item_id),
           ],
         })
       );
@@ -377,37 +383,58 @@ const EditItemModal = ({
     }
   };
 
+  /**
+   * Open the form on the item as it actually is.
+   *
+   * This used to walk the record's keys and setValue(key, value) each one,
+   * which only fills fields named after a column. tax_location (column
+   * main_warehouse) and supplier (column supplier_info) are not, so both opened
+   * blank — and a blank tax_location is rejected by savingNewItem, so editing
+   * anything failed on a value that was never missing.
+   *
+   * Keyed on the item, not on dicSuppliers: the provider list arrives
+   * asynchronously, and re-running this whole seed when it lands would throw
+   * away whatever the user had already typed. The supplier name is filled in by
+   * the follow-up effect below.
+   */
   useEffect(() => {
-    const controller = new AbortController();
-    if (dataFound.length > 0) {
-      Object.entries(dataFound[0]).forEach(([key, value]) => {
-        if (key === "enableAssignFeature") {
-          let valueToSet = value > 0 ? "YES" : "NO";
-          return setValue(key, `${valueToSet}`);
-        }
-        if (key === "container") {
-          let valueToSet =
-            value > 0
-              ? "Yes - It is a container"
-              : "No - It is not a container";
-          return setValue(key, `${valueToSet}`);
-        }
-        setValue(key, value);
-        setValue("quantity", 0);
-        if (key === "sub_location") {
-          setValue("sub_location", "");
-          const checkType =
-            typeof value === "string" ? JSON.parse(value) : value;
-          if (checkType.length > 0) {
-            return setSubLocationsSubmitted([...checkType]);
-          }
-        }
-      });
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [dataFound.length]);
+    const item = dataFound[0];
+    if (!item) return;
+
+    const values = buildEditItemFormValues(item, {
+      supplierName: resolveSupplierName(dicSuppliers, item.supplier_info),
+    });
+    Object.entries(values).forEach(([key, value]) => setValue(key, value));
+
+    setSubLocationsSubmitted(parseSubLocations(item.sub_location));
+
+    // Load the extra identifiers the item already has into the editor, and open
+    // the panel when there are any. They were invisible here before, which is
+    // why the save had to guess and ended up sending [] — erasing them.
+    // Seeding them means the delete button on a chip now genuinely deletes.
+    const storedExtraInfo = parseExtraInfoEntries(item);
+    setMoreInfo(storedExtraInfo);
+    if (storedExtraInfo.length > 0) setMoreInfoDisplay(true);
+
+    // Rented units carry a due date. It lives in component state, which the old
+    // key-walking seed could not reach, so it reset to today on every edit and
+    // the save wrote that back.
+    const storedReturnDate = parseReturnDate(item.return_date);
+    if (storedReturnDate) setReturningDate(storedReturnDate);
+  }, [dataFound[0]?.item_id]);
+
+  /**
+   * Supplier name, once the provider list resolves.
+   *
+   * Only fills a field that is still empty, so a list that lands late cannot
+   * overwrite a supplier the user just picked.
+   */
+  useEffect(() => {
+    const item = dataFound[0];
+    if (!item || getValues("supplier")) return;
+    const name = resolveSupplierName(dicSuppliers, item.supplier_info);
+    if (name) setValue("supplier", name);
+  }, [dataFound[0]?.item_id, dicSuppliers]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -421,15 +448,11 @@ const EditItemModal = ({
     };
   }, [watch("container")]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (!moreInfoDisplay) {
-      setMoreInfo([]);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [moreInfoDisplay]);
+  // Collapsing the "Add more information" panel used to empty moreInfo. That
+  // was survivable while the list only ever held newly typed entries; now that
+  // it is seeded with the item's stored identifiers, wiping it on collapse
+  // would delete them. The panel toggle shows and hides — the delete button on
+  // each entry is what removes one.
 
   useEffect(() => {
     const controller = new AbortController();
