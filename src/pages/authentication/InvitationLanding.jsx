@@ -17,8 +17,12 @@ import VisibleIcon from "../../components/icons/VisibleIcon";
 import { onLogin } from "../../store/slices/adminSlice";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
-import { LEGACY_ROLE_MAP } from "../../config/roles";
 import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
+import {
+  buildAcceptInvitationPayload,
+  buildCompanyAssignment,
+  invitationErrorMessage,
+} from "./utils/invitationAcceptance";
 import "./style/authStyle.css";
 
 const InvitationLanding = () => {
@@ -35,13 +39,15 @@ const InvitationLanding = () => {
   const firstName = params.get("first");
   const lastName  = params.get("last");
   const email     = params.get("email");
-  const company   = params.get("company");
-  const role      = params.get("role"); // numérico legado — mantener para compatibilidad
-  // roleType: preferir el string explícito; si no existe, convertir el numérico con LEGACY_ROLE_MAP
-  const roleType  = params.get("roleType") ?? LEGACY_ROLE_MAP[Number(role)] ?? "assistant";
+  const company   = params.get("company"); // Mongo ObjectId de la compañía
+  // El rol ya no viaja en el link: vive en la invitación (Company.employees) y
+  // accept-invitation devuelve el que resolvió. Mientras estuvo en la URL, el
+  // invitado podía editarla y pedir root_admin, porque la ruta de aceptación no
+  // lleva autenticación.
+  const companyNameFromLink = params.get("company_name");
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
-    defaultValues: { firstName, lastName, email, role, password: "", password2: "" },
+    defaultValues: { firstName, lastName, email, password: "", password2: "" },
   });
 
   const watchPassword  = watch("password");
@@ -125,28 +131,30 @@ const InvitationLanding = () => {
   // Endpoint consolidado: maneja MongoDB + SQL (staff_member + company_staff) en un solo call
   const callAcceptInvitation = async (password = undefined) => {
     const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
-    const payload = {
-      user: {
-        name: firstName,
+    const resp = await devitrakApi.post(
+      "/registration/accept-invitation",
+      buildAcceptInvitationPayload({
+        firstName,
         lastName,
         email,
-        ...(password ? { password } : {}),
-      },
-      company: { company_name: hostCompanyInfo.company_name },
-      roleType,
-    };
-    const resp = await devitrakApi.post("/registration/accept-invitation", payload);
+        companyName: hostCompanyInfo?.company_name ?? companyNameFromLink,
+        password,
+      }),
+    );
     return resp.data;
   };
 
   // Para usuario existente: también actualiza companiesAssigned en MongoDB
-  const linkExistingUserToCompany = async () => {
+  const linkExistingUserToCompany = async (roleType) => {
     const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
     await devitrakApi.patch(`/staff/edit-admin/${existingUser.id}`, {
       multipleCompanies: true,
       companiesAssigned: [
         ...(existingUser.companiesAssigned ?? []),
-        { company: hostCompanyInfo.company_name, active: true, super_user: false, role },
+        buildCompanyAssignment({
+          companyName: hostCompanyInfo?.company_name ?? companyNameFromLink,
+          roleType,
+        }),
       ],
     });
   };
@@ -155,15 +163,17 @@ const InvitationLanding = () => {
   const handleAcceptInvitation = async () => {
     try {
       setLoadingStatus(true);
-      await Promise.all([
-        callAcceptInvitation(),        // MongoDB employees + SQL staff_member + company_staff
-        linkExistingUserToCompany(),   // companiesAssigned en AdminUser MongoDB
-      ]);
+      // Secuencial, no Promise.all: el rol que hay que registrar en
+      // companiesAssigned lo devuelve accept-invitation, que lo resuelve desde
+      // la invitación. En paralelo también se escribía la membresía aunque la
+      // aceptación fallara.
+      const result = await callAcceptInvitation();
+      await linkExistingUserToCompany(result?.company?.roleType);
       warning("success", "Invitation accepted. Please sign in to access your account.");
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Invitation accept error:", error);
-      warning("error", error?.response?.data?.msg ?? "Something went wrong. Please try later.");
+      warning("error", invitationErrorMessage(error));
       setLoadingStatus(false);
     }
   };
@@ -186,7 +196,7 @@ const InvitationLanding = () => {
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Registration error:", error);
-      warning("error", error?.response?.data?.msg ?? "Something went wrong. Please try later.");
+      warning("error", invitationErrorMessage(error));
       setLoadingStatus(false);
     }
   };
@@ -209,6 +219,9 @@ const InvitationLanding = () => {
   }
 
   const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
+  // El link trae el nombre para que la página pueda nombrar la compañía aunque
+  // la búsqueda por _id no devuelva nada.
+  const displayCompanyName = hostCompanyInfo?.company_name ?? companyNameFromLink;
 
   // ── Existing user: pantalla de confirmación ──────────────────────────────────
   if (existingUser) {
@@ -266,7 +279,7 @@ const InvitationLanding = () => {
                       Invited to
                     </Typography>
                     <Typography style={{ fontSize: "14px", fontWeight: 600, color: "#101828", fontFamily: "Inter" }}>
-                      {hostCompanyInfo?.company_name}
+                      {displayCompanyName}
                     </Typography>
                   </div>
                 </div>
@@ -346,7 +359,7 @@ const InvitationLanding = () => {
                     Complete your registration
                   </Typography>
                   <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
-                    You have been invited to <strong>{hostCompanyInfo?.company_name}</strong>. Set a password to finish.
+                    You have been invited to <strong>{displayCompanyName}</strong>. Set a password to finish.
                   </Typography>
                 </Grid>
 
@@ -371,7 +384,7 @@ const InvitationLanding = () => {
                 {/* Company — disabled */}
                 <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>Company</FormLabel>
-                  <Input disabled value={hostCompanyInfo?.company_name || ""} type="text" placeholder="Company name" fullWidth />
+                  <Input disabled value={displayCompanyName || ""} type="text" placeholder="Company name" fullWidth />
                 </Grid>
 
                 {/* Password */}
