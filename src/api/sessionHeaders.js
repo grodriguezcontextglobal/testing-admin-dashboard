@@ -23,8 +23,6 @@ export const SESSION_STORAGE_KEYS = [
  * @param {{ companyId?: string|number, companySqlId?: string|number }} values
  */
 export const persistCompanyHeaders = ({ companyId, companySqlId } = {}) => {
-  console.log("companyId", companyId);
-  console.log("companySqlId", companySqlId);
   if (companyId != null && companyId !== "") {
     localStorage.setItem("x-company-id", String(companyId));
   }
