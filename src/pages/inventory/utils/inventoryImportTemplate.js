@@ -31,6 +31,12 @@ export const REQUIRED_IMPORT_FIELDS = [
   "category_name",
   "item_group",
   "serial_number",
+  "cost",
+  "brand",
+  "ownership",
+  "main_warehouse",
+  "location",
+
 ];
 
 /**
@@ -41,11 +47,8 @@ export const REQUIRED_IMPORT_FIELDS = [
  * tier rather than flattening both into "Optional".
  */
 export const RECOMMENDED_IMPORT_FIELDS = [
-  "cost",
-  "brand",
-  "ownership",
-  "main_warehouse",
-  "location",
+  "extra_serial_number",
+  "image_url",
 ];
 
 /**
@@ -148,11 +151,11 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Rent", "Permanent", "Rent"],
   },
   {
-    header: "Main Warehouse",
+    header: "Taxable Location",
     field: "main_warehouse",
     recommended: true,
     width: 160,
-    aliases: ["Main Warehouse", "main warehouse", "main_warehouse"],
+    aliases: ["Main Warehouse", "main warehouse", "main_warehouse", "Taxable Location"],
     notes: ["Where the device is deductible for taxes, e.g. 'Miami, FL'."],
     defaultNote: "Left blank, the device is imported with no main warehouse.",
     samples: ["Miami, FL", "Fort Lauderdale, FL", "Miami, FL"],
