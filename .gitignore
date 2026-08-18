@@ -32,3 +32,10 @@ vite.config.js.timestamp-*.mjs
 *.sw?
 
 .env.local
+
+# Per-developer tool state, not shared
+.atl/
+.claude/
+
+# Graphify knowledge graph — regenerated locally with `graphify update .`
+graphify-out/
