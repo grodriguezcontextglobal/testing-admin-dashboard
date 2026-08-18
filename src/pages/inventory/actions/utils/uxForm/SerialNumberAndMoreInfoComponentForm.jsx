@@ -306,7 +306,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
               <GrayButtonComponent
                 buttonType="button"
                 func={addSingleUnit}
-                title="Add this unit in queu for create item in company inventory"
+                title="Queue this item for creation"
                 styles={{ width: "fit-content" }}
               />
             </div>
