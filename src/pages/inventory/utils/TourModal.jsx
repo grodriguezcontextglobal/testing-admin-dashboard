@@ -34,9 +34,17 @@ const TourModal = ({ open, setOpen }) => {
     return headerRefs.current[field];
   };
 
+  // Three tiers, not two. A recommended column is not optional in the way a
+  // truly optional one is: the row imports either way, but a blank brand or a
+  // cost of 0 has to be corrected device by device afterwards.
+  const tierLabel = (column) =>
+    column.required ? "Mandatory field" : column.recommended ? "Recommended" : "Optional";
+
   const columns = INVENTORY_IMPORT_COLUMNS.map((column) => ({
     title: column.required ? (
       <Text type="danger">{column.header}*</Text>
+    ) : column.recommended ? (
+      <Text type="warning">{column.header}</Text>
     ) : (
       <Text>{column.header}</Text>
     ),
@@ -52,7 +60,7 @@ const TourModal = ({ open, setOpen }) => {
     title: column.header,
     description: (
       <Space direction="vertical">
-        <Text strong>{column.required ? "Mandatory field" : "Optional"}</Text>
+        <Text strong>{tierLabel(column)}</Text>
         {column.notes?.map((note) => (
           <Text key={note}>{note}</Text>
         ))}

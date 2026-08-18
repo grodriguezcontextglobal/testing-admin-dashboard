@@ -22,14 +22,30 @@
  */
 
 /**
- * A row is skipped by the parser when any of these is blank. Everything else
- * has a default, so everything else is optional — the guide used to paint all
- * but one column red.
+ * A row is skipped by the parser when any of these is blank. This list is the
+ * contract, not a wish: it has to match the check in DocumentInventoryXLSXUpload,
+ * or the guide promises a rejection that never happens (or worse, hides one that
+ * does).
  */
 export const REQUIRED_IMPORT_FIELDS = [
   "category_name",
   "item_group",
   "serial_number",
+];
+
+/**
+ * Not required, but worth insisting on: the import succeeds without them and
+ * lands a device with no brand, a cost of 0 or no ownership, which then has to
+ * be corrected one unit at a time. That is a different thing from the optional
+ * columns, where the default is genuinely fine — so the guide gives it its own
+ * tier rather than flattening both into "Optional".
+ */
+export const RECOMMENDED_IMPORT_FIELDS = [
+  "cost",
+  "brand",
+  "ownership",
+  "main_warehouse",
+  "location",
 ];
 
 /**
@@ -62,11 +78,11 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Audio", "Interpretation", "Fitness"],
   },
   {
-    header: "Device Name",
+    header: "Group",
     field: "item_group",
     required: true,
     width: 180,
-    aliases: ["Device Name", "device name", "item_group", "device_name"],
+    aliases: ["Device Name", "device name", "item_group", "device_name", "Group"],
     notes: [
       "The group name every unit of this model shares, e.g. 'PL6 RF Receiver'.",
       "Rows sharing a Category and a Device Name are imported as one group.",
@@ -85,7 +101,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Cost",
     field: "cost",
-    required: false,
+    recommended: true,
     width: 100,
     aliases: ["Cost", "cost"],
     notes: ["Replacement cost, as a number. Both 45.5 and 45,5 are accepted."],
@@ -95,10 +111,11 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Brand",
     field: "brand",
-    required: false,
+    recommended: true,
     width: 120,
     aliases: ["Brand", "brand"],
     notes: ["Manufacturer, e.g. 'Sony', 'Apple'."],
+    defaultNote: "Left blank, the device is imported with no brand.",
     samples: ["Sony", "Congress Audio", "Cellucor"],
   },
   {
@@ -119,44 +136,48 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Ownership",
     field: "ownership",
-    required: false,
+    recommended: true,
     width: 120,
     aliases: ["Ownership", "ownership"],
     notes: [
       "Stored as one of: Permanent, Rent, Sale.",
       "Common synonyms are mapped for you — Owned, Purchased and Donated become Permanent; Rental, Leased and Loaned become Rent; Sold and Consignment become Sale.",
     ],
+    defaultNote:
+      "Left blank, the device is imported with no ownership — it will not appear under Permanent, Rent or Sale.",
     samples: ["Rent", "Permanent", "Rent"],
   },
   {
     header: "Main Warehouse",
     field: "main_warehouse",
-    required: false,
+    recommended: true,
     width: 160,
     aliases: ["Main Warehouse", "main warehouse", "main_warehouse"],
     notes: ["Where the device is deductible for taxes, e.g. 'Miami, FL'."],
+    defaultNote: "Left blank, the device is imported with no main warehouse.",
     samples: ["Miami, FL", "Fort Lauderdale, FL", "Miami, FL"],
   },
-  {
-    header: "Warehouse",
-    field: "warehouse",
-    required: false,
-    width: 120,
-    aliases: ["Warehouse", "warehouse"],
-    notes: ["Is the unit in stock right now? Yes or No."],
-    defaultNote: "Default: No",
-    samples: ["Yes", "No", "Yes"],
-  },
+  // {
+  //   header: "Warehouse",
+  //   field: "warehouse",
+  //   required: false,
+  //   width: 120,
+  //   aliases: ["Warehouse", "warehouse"],
+  //   notes: ["Is the unit in stock right now? Yes or No."],
+  //   defaultNote: "Default: No",
+  //   samples: ["Yes", "No", "Yes"],
+  // },
   {
     header: "Location",
     field: "location",
-    required: false,
+    recommended: true,
     width: 150,
     aliases: ["Location", "location"],
     notes: [
       "Where the unit physically sits, e.g. 'Miami, FL'.",
       "A location that does not exist yet is created during the import.",
     ],
+    defaultNote: "Left blank, the device is imported with no location.",
     samples: ["Miami, FL", "Orlando, FL", "Miami, FL"],
   },
   {
@@ -172,59 +193,59 @@ export const INVENTORY_IMPORT_COLUMNS = [
     defaultNote: "Default: empty",
     samples: ["Section A, Locker A105", "Section B, Locker B203", ""],
   },
-  {
-    header: "Assignable",
-    field: "enableAssignFeature",
-    required: false,
-    width: 130,
-    aliases: [
-      "Assignable",
-      "assignable",
-      "enableAssignFeature",
-      "enable_assign_feature",
-    ],
-    notes: [
-      "May this unit be handed out to staff, events or members? Yes or No.",
-      "Left blank it imports as No, and the unit cannot be assigned to anyone.",
-    ],
-    defaultNote: "Default: No",
-    samples: ["Yes", "Yes", "No"],
-  },
-  {
-    header: "Container",
-    field: "container",
-    required: false,
-    width: 120,
-    aliases: ["Container", "container"],
-    notes: ["Is this unit itself a case, bin or box that holds others? Yes or No."],
-    defaultNote: "Default: No",
-    samples: ["No", "Yes", "No"],
-  },
-  {
-    header: "Container Capacity",
-    field: "containerSpotLimit",
-    required: false,
-    width: 160,
-    aliases: ["Container Capacity", "container capacity", "containerSpotLimit"],
-    notes: ["How many units fit inside. Only meaningful when Container is Yes."],
-    defaultNote: "Default: empty",
-    samples: ["", "24", ""],
-  },
-  {
-    header: "Stored in container?",
-    field: "isItInContainer",
-    required: false,
-    width: 170,
-    aliases: [
-      "Stored in container?",
-      "stored in container?",
-      "isItInContainer",
-      "is_it_in_container",
-    ],
-    notes: ["Does this unit live inside a container? Yes or No."],
-    defaultNote: "Default: No",
-    samples: ["No", "No", "Yes"],
-  },
+  // {
+  //   header: "Assignable",
+  //   field: "enableAssignFeature",
+  //   required: false,
+  //   width: 130,
+  //   aliases: [
+  //     "Assignable",
+  //     "assignable",
+  //     "enableAssignFeature",
+  //     "enable_assign_feature",
+  //   ],
+  //   notes: [
+  //     "May this unit be handed out to staff, events or members? Yes or No.",
+  //     "Left blank it imports as No, and the unit cannot be assigned to anyone.",
+  //   ],
+  //   defaultNote: "Default: No",
+  //   samples: ["Yes", "Yes", "No"],
+  // },
+  // {
+  //   header: "Container",
+  //   field: "container",
+  //   required: false,
+  //   width: 120,
+  //   aliases: ["Container", "container"],
+  //   notes: ["Is this unit itself a case, bin or box that holds others? Yes or No."],
+  //   defaultNote: "Default: No",
+  //   samples: ["No", "Yes", "No"],
+  // },
+  // {
+  //   header: "Container Capacity",
+  //   field: "containerSpotLimit",
+  //   required: false,
+  //   width: 160,
+  //   aliases: ["Container Capacity", "container capacity", "containerSpotLimit"],
+  //   notes: ["How many units fit inside. Only meaningful when Container is Yes."],
+  //   defaultNote: "Default: empty",
+  //   samples: ["", "24", ""],
+  // },
+  // {
+  //   header: "Stored in container?",
+  //   field: "isItInContainer",
+  //   required: false,
+  //   width: 170,
+  //   aliases: [
+  //     "Stored in container?",
+  //     "stored in container?",
+  //     "isItInContainer",
+  //     "is_it_in_container",
+  //   ],
+  //   notes: ["Does this unit live inside a container? Yes or No."],
+  //   defaultNote: "Default: No",
+  //   samples: ["No", "No", "Yes"],
+  // },
   {
     header: "Extra Info",
     field: "extra_serial_number",
@@ -256,29 +277,29 @@ export const INVENTORY_IMPORT_COLUMNS = [
     defaultNote: "Default: empty",
     samples: ["", "", ""],
   },
-  {
-    header: "Return Date",
-    field: "return_date",
-    required: false,
-    width: 170,
-    aliases: ["Return Date", "return date", "return_date"],
-    notes: [
-      "When a rented unit is due back, e.g. '2026-05-01 12:00:00'.",
-      "Only meaningful when Ownership is Rent.",
-    ],
-    defaultNote: "Default: empty",
-    samples: ["2026-05-01 12:00:00", "", "2026-05-15 10:00:00"],
-  },
-  {
-    header: "Supplier Info",
-    field: "supplier_info",
-    required: false,
-    width: 180,
-    aliases: ["Supplier Info", "supplier info", "supplier_info"],
-    notes: ["Who the unit is rented from, when it is rented equipment."],
-    defaultNote: "Default: empty",
-    samples: ["Rental Equipment LLC", "", "Rental Equipment LLC"],
-  },
+  // {
+  //   header: "Return Date",
+  //   field: "return_date",
+  //   required: false,
+  //   width: 170,
+  //   aliases: ["Return Date", "return date", "return_date"],
+  //   notes: [
+  //     "When a rented unit is due back, e.g. '2026-05-01 12:00:00'.",
+  //     "Only meaningful when Ownership is Rent.",
+  //   ],
+  //   defaultNote: "Default: empty",
+  //   samples: ["2026-05-01 12:00:00", "", "2026-05-15 10:00:00"],
+  // },
+  // {
+  //   header: "Supplier Info",
+  //   field: "supplier_info",
+  //   required: false,
+  //   width: 180,
+  //   aliases: ["Supplier Info", "supplier info", "supplier_info"],
+  //   notes: ["Who the unit is rented from, when it is rented equipment."],
+  //   defaultNote: "Default: empty",
+  //   samples: ["Rental Equipment LLC", "", "Rental Equipment LLC"],
+  // },
 ];
 
 const COLUMNS_BY_FIELD = new Map(

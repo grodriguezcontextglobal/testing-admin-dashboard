@@ -73,15 +73,10 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 const location = val("location");
                 const brand = val("brand");
                 const descriptionFromFile = val("descript_item");
-                const warehouseValue = val("warehouse");
                 const costRaw = val("cost");
-                const assignable = val("enableAssignFeature");
-                const storedInContainer = val("isItInContainer");
                 const subLocationRaw = val("sub_location");
                 // eslint-disable-next-line no-useless-escape
                 const subLocationArray = typeof subLocationRaw === "string" ? String(subLocationRaw).replace(/[\\\[\\\]\\\"]/g, '').split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'null') : [];
-                const containerSpotLimitRaw = val("containerSpotLimit");
-                const containerSpotLimit = parseInt(containerSpotLimitRaw, 10);
 
                 return {
                     category_name,
@@ -92,21 +87,23 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                     descript_item: descriptionFromFile || `${category_name} ${item_group} ${brand} ${ownership === "Rent" ? "for rent" : ""} ${location}`,
                     ownership,
                     main_warehouse: val("main_warehouse"),
-                    // Case-insensitive like the Container / Assignable / Stored-in
-                    // columns below. It used to demand the exact string "Yes", so a
-                    // sheet that said "YES" or "yes" imported every unit as out of
-                    // stock — and the template now teaches "Yes"/"No", which makes
-                    // that trap easier to fall into.
-                    warehouse: (String(warehouseValue).trim().toUpperCase() === "YES" || warehouseValue === true) ? 1 : 0,
+                    // Warehouse, Assignable, Container, Container Capacity and
+                    // "Stored in container?" are no longer columns: asking the
+                    // customer to answer five yes/no questions per row confused
+                    // more people than it served, and the answer was the same
+                    // almost every time. They are fixed here at that answer —
+                    // in stock, handout-enabled, not a container — and a unit
+                    // that needs otherwise is changed from the item page.
+                    warehouse: 1,
                     location,
                     current_location: location,
                     extra_serial_number: val("extra_serial_number"),
                     return_date: val("return_date") || null,
-                    container: String(val("container")).trim().toUpperCase() === "YES",
-                    containerSpotLimit: !isNaN(containerSpotLimit) ? containerSpotLimit : null,
+                    container: 0,
+                    containerSpotLimit: null,
                     image_url: val("image_url"),
-                    enableAssignFeature: String(assignable).trim().toUpperCase() === "YES" ? 1 : 0,
-                    isItInContainer: String(storedInContainer).trim().toUpperCase() === "YES" ? 1 : 0,
+                    enableAssignFeature: 1,
+                    isItInContainer: 0,
                     containerId: JSON.stringify([]),
                     display_item: 1,
                     returnedRentedInfo: "",
@@ -322,10 +319,14 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                         }}
                     >
                         <strong>Note:</strong> Only <strong>Category</strong>,{" "}
-                        <strong>Device Name</strong> and <strong>Serial Number</strong> are
-                        mandatory — a row missing any of them is skipped. Every other column
-                        is optional and falls back to a default. See the &ldquo;Inventory
-                        Import Template Guide&ldquo; for aliases, accepted values and
+                        <strong>Group</strong> and <strong>Serial Number</strong> are
+                        mandatory — a row missing any of them is skipped. We strongly
+                        recommend filling in <strong>Brand</strong>, <strong>Cost</strong>,{" "}
+                        <strong>Ownership</strong>, <strong>Main Warehouse</strong> and{" "}
+                        <strong>Location</strong> too: the row is imported without them, but
+                        with a blank or zero you will have to correct device by device. Every
+                        other column is optional and falls back to a default. See the
+                        &ldquo;Inventory Import Template Guide&ldquo; for aliases, accepted values and
                         defaults.
                     </div>
 

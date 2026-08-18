@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   INVENTORY_IMPORT_COLUMNS,
+  RECOMMENDED_IMPORT_FIELDS,
   REQUIRED_IMPORT_FIELDS,
   aliasesFor,
   buildGuideRow,
@@ -25,30 +26,31 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
     expect(headers()).not.toContain("Status");
   });
 
-  it("covers every field the XLSX parser reads", () => {
+  it("documents every field the parser still asks the sheet for", () => {
     expect(fields().sort()).toEqual(
       [
         "brand",
         "category_name",
-        "container",
-        "containerSpotLimit",
         "cost",
         "descript_item",
-        "enableAssignFeature",
         "extra_serial_number",
         "image_url",
-        "isItInContainer",
         "item_group",
         "location",
         "main_warehouse",
         "ownership",
-        "return_date",
         "serial_number",
         "sub_location",
-        "supplier_info",
-        "warehouse",
       ].sort(),
     );
+  });
+
+  // The parser still reads these two, but they are deliberately undocumented:
+  // dropping the read as well would silently discard the values in sheets built
+  // from the older template, which is worse than quietly accepting them.
+  it("no longer offers Return Date or Supplier Info as columns", () => {
+    expect(fields()).not.toContain("return_date");
+    expect(fields()).not.toContain("supplier_info");
   });
 
   it("marks as mandatory exactly the three fields the parser rejects a row without", () => {
@@ -61,6 +63,33 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
       "item_group",
       "serial_number",
     ]);
+  });
+
+  // The tier exists so the guide stops calling these "Optional": the row does
+  // import without them, but it lands with no brand, a cost of 0 or no
+  // ownership, and that has to be fixed one device at a time.
+  it("keeps recommended and mandatory as separate tiers", () => {
+    const recommended = INVENTORY_IMPORT_COLUMNS.filter((c) => c.recommended).map(
+      (c) => c.field,
+    );
+    expect(recommended.sort()).toEqual([...RECOMMENDED_IMPORT_FIELDS].sort());
+    expect(
+      INVENTORY_IMPORT_COLUMNS.some((c) => c.required && c.recommended),
+    ).toBe(false);
+  });
+
+  // A column that is both "you must fill this in" and "here is what we put when
+  // you don't" cannot be read as anything coherent.
+  it("never claims a default for a mandatory column", () => {
+    for (const column of INVENTORY_IMPORT_COLUMNS.filter((c) => c.required)) {
+      expect(column.defaultNote).toBeUndefined();
+    }
+  });
+
+  it("says what happens when a recommended column is left blank", () => {
+    for (const column of INVENTORY_IMPORT_COLUMNS.filter((c) => c.recommended)) {
+      expect(column.defaultNote).toBeTruthy();
+    }
   });
 
   it("uses unique headers and unique fields", () => {
@@ -92,15 +121,22 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
     }
   });
 
-  it("documents the container and assignability columns that used to be missing", () => {
-    expect(headers()).toEqual(
-      expect.arrayContaining([
-        "Assignable",
-        "Container",
-        "Container Capacity",
-        "Stored in container?",
-      ]),
-    );
+  // These four were added once so a spreadsheet could set them at all, and then
+  // removed again: five yes/no questions per row confused more customers than
+  // they served, and the answer was the same nearly every time. The importer now
+  // fixes them (in stock, handout-enabled, not a container) and a unit that needs
+  // otherwise is changed from the item page. Pinned so they are not reintroduced
+  // by accident on one side only.
+  it("no longer asks for the columns the importer now fills in itself", () => {
+    for (const header of [
+      "Warehouse",
+      "Assignable",
+      "Container",
+      "Container Capacity",
+      "Stored in container?",
+    ]) {
+      expect(headers()).not.toContain(header);
+    }
   });
 });
 
