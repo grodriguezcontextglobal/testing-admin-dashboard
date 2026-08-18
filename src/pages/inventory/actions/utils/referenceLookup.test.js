@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   findReferenceMatches,
   hasReferenceCriteria,
+  hasReferenceOptions,
+  referenceSourceLabel,
 } from "./referenceLookup";
 
 const items = [
@@ -157,5 +159,41 @@ describe("findReferenceMatches — image", () => {
     );
     expect(result.imageUrl).toBeNull();
     expect(result.imageConflict).toBe(false);
+  });
+});
+
+// ─── hasReferenceOptions ─────────────────────────────────────────────────────
+
+describe("hasReferenceOptions", () => {
+  it("es true si alguna de las listas tiene algo que elegir", () => {
+    expect(hasReferenceOptions([[], ["PL6 RF Receiver"], []])).toBe(true);
+    expect(hasReferenceOptions([[{ value: "Audio" }]])).toBe(true);
+  });
+
+  // Una compañía que todavía no cargó inventario no tiene de dónde copiar.
+  // Ofrecer el panel ahí es prometer un atajo que no puede funcionar: el usuario
+  // abre, no encuentra opciones y no sabe si falló o si está vacío.
+  it("es false cuando no hay inventario del cual copiar", () => {
+    expect(hasReferenceOptions([[], [], []])).toBe(false);
+    expect(hasReferenceOptions([])).toBe(false);
+    expect(hasReferenceOptions()).toBe(false);
+  });
+
+  it("ignora lo que no sea un arreglo", () => {
+    expect(hasReferenceOptions([null, undefined, "Audio"])).toBe(false);
+  });
+});
+
+// ─── referenceSourceLabel ────────────────────────────────────────────────────
+
+describe("referenceSourceLabel", () => {
+  it("nombra la unidad de la que salieron los datos", () => {
+    expect(referenceSourceLabel({ serial_number: "A1" })).toBe("A1");
+  });
+
+  it("cae a una frase legible cuando la unidad no tiene serial", () => {
+    expect(referenceSourceLabel({ serial_number: "" })).toBe("an existing device");
+    expect(referenceSourceLabel({})).toBe("an existing device");
+    expect(referenceSourceLabel(null)).toBe("an existing device");
   });
 });

@@ -94,6 +94,7 @@ const EditBulkForm = ({
         onSearch={handleSearchByReference}
         onClear={clearReferenceCopy}
         copiedFrom={copiedFrom}
+        mode="edit"
       />
       <Grid container spacing={1}>
         {renderFields({

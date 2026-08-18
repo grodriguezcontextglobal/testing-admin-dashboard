@@ -19,6 +19,26 @@ export const hasReferenceCriteria = ({ category, itemGroup, brand } = {}) =>
   isFilled(category) || isFilled(itemGroup) || isFilled(brand);
 
 /**
+ * Whether the shortcut can work at all, given the option lists that feed it.
+ *
+ * A company that has not loaded any inventory has nothing to copy from. Offering
+ * the panel there promises a shortcut that cannot deliver: the user opens it,
+ * finds three empty dropdowns, and cannot tell a broken feature from an empty
+ * one.
+ *
+ * @param {Array<Array>} optionLists one list per criterion field.
+ */
+export const hasReferenceOptions = (optionLists = []) =>
+  Array.isArray(optionLists) &&
+  optionLists.some((list) => Array.isArray(list) && list.length > 0);
+
+/** How to name the unit the details came from, when it has no serial number. */
+export const referenceSourceLabel = (copiedFrom) =>
+  isFilled(copiedFrom?.serial_number)
+    ? copiedFrom.serial_number
+    : "an existing device";
+
+/**
  * @param {Array} inventoryItems - the company's current units.
  * @param {{category?: string, itemGroup?: string, brand?: string}} criteria -
  *   blank fields are ignored, so any combination narrows rather than excludes.
