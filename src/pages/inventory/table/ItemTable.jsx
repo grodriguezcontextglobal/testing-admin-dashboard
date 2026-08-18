@@ -17,22 +17,21 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
+import BaseTable from "../../../components/UX/tables/BaseTable";
+import { FEATURE_SCOPED_ROLES } from "../../../config/featureFlags";
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
+import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
 import { SearchItemContext } from "../MainPage";
 import "../style/details.css";
-import { dictionary } from "../utils/dicSelectedOptions";
-import ColumnsFormat from "./extras/ux/ColumnsFormat";
-import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
-import BaseTable from "../../../components/UX/tables/BaseTable";
-import TableHeader from "../../../components/UX/TableHeader";
-import { FEATURE_SCOPED_ROLES } from "../../../config/featureFlags";
 import {
   filterInventoryByCategoryScope,
   hasEmptyScope,
   isCategoryScopedRole,
 } from "../utils/accessControlUtils";
+import { dictionary } from "../utils/dicSelectedOptions";
+import ColumnsFormat from "./extras/ux/ColumnsFormat";
 const BannerMsg = lazy(() => import("../../../components/utils/BannerMsg"));
 const DownloadingXlslFile = lazy(() => import("../actions/DownloadXlsx"));
 const RenderingFilters = lazy(() => import("./extras/RenderingFilters"));
@@ -439,101 +438,101 @@ const ItemTable = ({
         )}
         {!emptyScope && (
           <>
-        <Grid
-          display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <RenderingFilters
-            dataToDisplay={dataToDisplayMemo}
-            searchItem={searchValues?.searchItem}
-            user={user}
-            openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
-            setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-            searchedResult={searchValues?.searchedResult}
-            chosen={searchValues?.chosenOption}
-            setFiltering={searchValues?.setChosenOption}
-            setTypePerLocationInfoModal={setTypePerLocationInfoModal}
-            setOpenDetails={setOpenDetails}
-            allowedLocations={allowedLocations}
-            setOpenCreateLocationModal={setOpenCreateLocationModal}
-          />
-        </Grid>
-        <Grid
-          flexDirection={"column"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          margin={"20px 0 0 0"}
-          sx={{
-            display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
-          }}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <div
-            style={{
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-            open={true}
-          >
-            <Divider />
-            <Grid container>
-              <TableHeader
-                leftCta={<RefreshButton propsFn={searchValues?.refreshFn} />}
-                rightCta={<DownloadingXlslFile props={dataToDisplayMemo} />}
+            <Grid
+              display={searchValues?.chosenOption?.at(-1)?.category === 6 && "none"}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <RenderingFilters
+                dataToDisplay={dataToDisplayMemo}
+                searchItem={searchValues?.searchItem}
+                user={user}
+                openAdvanceSearchModal={searchValues?.openAdvanceSearchModal}
+                setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+                searchedResult={searchValues?.searchedResult}
+                chosen={searchValues?.chosenOption}
+                setFiltering={searchValues?.setChosenOption}
+                setTypePerLocationInfoModal={setTypePerLocationInfoModal}
+                setOpenDetails={setOpenDetails}
+                allowedLocations={allowedLocations}
+                setOpenCreateLocationModal={setOpenCreateLocationModal}
               />
-              <BaseTable
-                enablePagination={true}
-                pageSize={10}
-                style={{ width: "100%" }}
-                columns={ColumnsFormat({
-                  dictionary,
-                  navigate,
-                  cellStyle,
-                  userPreferences, // Pass preferences to column formatter for action buttons
-                })}
-                dataSource={dataToDisplayMemo}
-                rowKey={(record) => record.item_id}
-                onRow={(record) => {
-                  return {
-                    onClick: () => {
-                      navigate(`/inventory/item?id=${record.item_id}`)
-                    },
-                  };
-                }}
-
-              />
-              <Divider />
             </Grid>
-          </div>
-        </Grid>
-        {searchValues?.searchedResult?.length === 0 &&
-          (!searchValues?.searchItem || searchValues?.searchItem === "") && (
-            <BannerMsg
-              props={{
-                title: "Add new item",
-                message: `Add new devices to your inventory and assign categories and groups
+            <Grid
+              flexDirection={"column"}
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              margin={"20px 0 0 0"}
+              sx={{
+                display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
+              }}
+              item
+              xs={12}
+              sm={12}
+              md={12}
+              lg={12}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+                open={true}
+              >
+                <Divider />
+                <Grid container>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                    <RefreshButton propsFn={searchValues?.refreshFn} />
+                    <DownloadingXlslFile props={dataToDisplayMemo} />
+                  </div>
+                  <BaseTable
+                    enablePagination={true}
+                    pageSize={10}
+                    style={{ width: "100%" }}
+                    columns={ColumnsFormat({
+                      dictionary,
+                      navigate,
+                      cellStyle,
+                      userPreferences, // Pass preferences to column formatter for action buttons
+                    })}
+                    dataSource={dataToDisplayMemo}
+                    rowKey={(record) => record.item_id}
+                    onRow={(record) => {
+                      return {
+                        onClick: () => {
+                          navigate(`/inventory/item?id=${record.item_id}`)
+                        },
+                      };
+                    }}
+
+                  />
+                  <Divider />
+                </Grid>
+              </div>
+            </Grid>
+            {searchValues?.searchedResult?.length === 0 &&
+              (!searchValues?.searchItem || searchValues?.searchItem === "") && (
+                <BannerMsg
+                  props={{
+                    title: "Add new item",
+                    message: `Add new devices to your inventory and assign categories and groups
             for easier management. Devices in your inventory can be assigned to
             staff or consumers permanently or temporarily. You can also mark
             devices with different statuses for condition and location. Include
             a device value to track deposits and fees.`,
-                link: "/inventory/new-item",
-                button: BlueButton,
-                paragraphStyle: BlueButtonText,
-                paragraphText: "Add new item",
-              }}
-            />
-          )}
+                    link: "/inventory/new-item",
+                    button: BlueButton,
+                    paragraphStyle: BlueButtonText,
+                    paragraphText: "Add new item",
+                  }}
+                />
+              )}
           </>
         )}
       </Grid>
