@@ -16,7 +16,7 @@
 | 3 | `new_admin_user` se llama solo con los 6 campos permitidos | ✅ **no se llama en absoluto** — ver §4 |
 | 4 | Nada lee `company` de la respuesta de login ni de `PATCH /profile/:id` | ✅ verificado, ya era así |
 | 5 | `x-company-id` se envía en todo request posterior a la selección de compañía | ✅ verificado, ya era así |
-| 6 | `GET /api/admin/activity-logs` devuelve datos (no 403) para un usuario no-superuser | ⏳ pendiente de QA manual |
+| 6 | `GET /api/admin/activity-logs` devuelve datos (no 403) para un usuario no-superuser | ❌ ya no da 403, pero **responde otro controller** — ver §8 |
 | 7 | Confirmado de dónde toma el frontend el rol a mostrar | ✅ respondido en §5 |
 | 8 | Enviada la lista de campos que el frontend manda a `PATCH /api/admin/profile/:id` | ✅ respondido en §6 |
 
@@ -165,10 +165,60 @@ Y un tercero, para `companiesAssigned`:
 
 ## 7. Lo que queda del lado del frontend
 
-- **Ítem 6 (QA manual):** falta abrir `GET /api/admin/activity-logs` con un
-  usuario no-`super_user` con membresía y confirmar que ya no da 403.
 - Ninguno de estos cambios toca el envío de `x-company-id`: `buildRouteScopedHeaders`
   (`src/api/sessionHeaders.js`) ya lo agrega a todo `/api/(staff|admin|company|stripe)`,
   y `/api/admin/activity-logs` cae ahí. Sin cambios.
 - De paso se quitaron dos `console.log` en `persistCompanyHeaders` que imprimían
   el `companyId` y el `company_id` SQL en la consola en cada login.
+
+---
+
+## 8. 🔴 `GET /api/admin/activity-logs` responde otro controller
+
+QA manual del 2026-08-18. El 403 se arregló, pero la respuesta es:
+
+```json
+{ "ok": true, "stripeTransactions": [] }
+```
+
+Eso no lo produce `controller/staffActivityLog.js`. `stripeTransactions` es la
+clave de un controller de transacciones de Stripe, así que el request **no está
+llegando al handler de activity-logs**.
+
+### Lo que manda el frontend
+
+`src/pages/Profile/staff_activity/StaffActivityMainPage.jsx:32`
+
+```js
+devitrakApiAdmin.get("/activity-logs", {
+  params: { staff_member_id, action, limit: 50, page: 1 },
+})
+```
+
+`devitrakApiAdmin` tiene el sufijo `/admin`, así que la URL efectiva es
+`GET /api/admin/activity-logs`, con `x-company-id` adjunto — la misma URL que
+usa el write path (`src/api/activityLog.js`), que sí funciona.
+
+### Hipótesis
+
+Route shadowing en `routes/admin.js`: una ruta paramétrica declarada **antes**
+que la literal. Express toma la primera que matchea, así que
+
+```js
+router.get("/:algo", …)          // ← declarada antes
+router.get("/activity-logs", …)  // ← nunca se alcanza
+```
+
+resuelve `/activity-logs` como `:algo = "activity-logs"`. Encaja con que el doc
+original diga que el GET está *"gated by staff:read, same as GET /api/admin/:id"*:
+son justamente las dos rutas que colisionan.
+
+**Fix:** mover `router.get("/activity-logs", …)` por encima de cualquier
+`router.get("/:param", …)` en ese router.
+
+### Impacto
+
+La página de Staff Activity lee `data.logs`. Como la respuesta no trae esa clave,
+renderiza una lista vacía **sin error**: parece que no hay actividad registrada,
+cuando en realidad nunca se consultó. El frontend no puede distinguir un caso del
+otro, y no lo vamos a parchear con una heurística sobre el shape de la respuesta.
