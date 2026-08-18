@@ -48,7 +48,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
   setScannedSerialNumbers,
   setMoreInfo,
 }) => {
-  const [mode, setMode] = useState("paste");
+  const [mode, setMode] = useState("one");
   const [units, setUnits] = useState([]);
   const [identifiers, setIdentifiers] = useState([newRow()]);
   const [primaryRow, setPrimaryRow] = useState(0);
