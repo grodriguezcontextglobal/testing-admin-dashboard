@@ -1,5 +1,5 @@
 import { message, Modal } from "antd";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { read, utils } from "xlsx";
 import { Subtitle } from "../../styles/global/Subtitle";
@@ -129,18 +129,21 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
         }
     };
 
-    const handleFileChange = useCallback(
-        async (e) => {
-            const originalFile = e.target.files?.[0];
-            if (!originalFile) return;
-            setFileName(originalFile.name);
-            setLoadingState(true);
-            const processed = await processFile(originalFile);
-            setProcessedRows(processed);
-            setLoadingState(false);
-        },
-        [user.sqlInfo]
-    );
+    // Not memoized: this goes straight onto an <input onChange>, and a DOM
+    // element gains nothing from a stable handler identity. The useCallback that
+    // used to be here declared [user.sqlInfo] while calling processFile, which
+    // is recreated every render and reads user.sqlInfo itself — so the array was
+    // both pointless and wrong, and a stale company could have been baked into
+    // the handler.
+    const handleFileChange = async (e) => {
+        const originalFile = e.target.files?.[0];
+        if (!originalFile) return;
+        setFileName(originalFile.name);
+        setLoadingState(true);
+        const processed = await processFile(originalFile);
+        setProcessedRows(processed);
+        setLoadingState(false);
+    };
 
     const handleUpload = async () => {
         if (processedRows.length === 0)
