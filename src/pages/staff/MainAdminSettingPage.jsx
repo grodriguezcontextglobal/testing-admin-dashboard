@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Chip from "../../components/UX/Chip/Chip";
-import TableHeader from "../../components/UX/TableHeader";
 import { useRoleLabel } from "../../hooks/useRoleLabel";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import PageSpinner from "../../components/utils/PageSpinner";
@@ -125,9 +124,8 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       })
       .filter((row) => {
         if (!term) return true;
-        const haystack = `${row.name} ${row.email} ${
-          roleLabel(row.role) ?? ""
-        } ${statusChipProps(row.active).label}`.toLowerCase();
+        const haystack = `${row.name} ${row.email} ${roleLabel(row.role) ?? ""
+          } ${statusChipProps(row.active).label}`.toLowerCase();
         return haystack.includes(term);
       });
   }, [employees, adminUsersQuery.data, searchAdmin, company, roleLabel]);
@@ -256,10 +254,9 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
 
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
-      <TableHeader
-        leftCta={<RefreshButton propsFn={() => companiesEmployees.refetch()} />}
-        rightCta={<DownLoadReportButton />}
-      />
+      <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding:"8px 0px" }}>
+        <RefreshButton propsFn={() => companiesEmployees.refetch()} /><DownLoadReportButton />
+      </div>
       <BaseTable
         enablePagination={true}
         style={{ width: "100%", cursor: "pointer" }}
@@ -278,7 +275,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
           };
         }}
       />
-    </Grid>
+    </Grid >
   );
 };
 

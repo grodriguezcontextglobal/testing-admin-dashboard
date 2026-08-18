@@ -2,7 +2,6 @@ import { Grid } from "@mui/material";
 import { Avatar, Typography } from "antd";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
-import TableHeader from "../../../components/UX/TableHeader";
 // import { data } from "../mock/mockData";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -11,9 +10,9 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import BaseTable from "../../../components/UX/tables/BaseTable";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 import { onAddMemberInfo } from "../../../store/slices/memberSlice";
 import { Subtitle } from "../../../styles/global/Subtitle";
-import { getIndustryProfile } from "../../../config/industryProfiles";
 const MainTable = ({ state, search = "" }) => {
   // For cells that stack two lines (grade+homeroom, badge+rep) — must NOT
   // use styleCellColumns, whose position:absolute makes lines overlap.
@@ -322,9 +321,7 @@ const MainTable = ({ state, search = "" }) => {
   ];
   return (
     <Grid margin={"15px 0 0 0"} padding={0} container>
-      <TableHeader
-        leftCta={<RefreshButton propsFn={() => membersDataQuery.refetch()} />}
-      />
+      <RefreshButton propsFn={() => membersDataQuery.refetch()} />
       {membersDataQuery.isLoading ? (
         <DevitrakLoading />
       ) : (

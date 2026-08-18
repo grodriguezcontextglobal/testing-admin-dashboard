@@ -1,10 +1,10 @@
-import { Button } from "antd";
 import { groupBy } from "lodash";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { XLSXIcon } from "../../../components/icons/XLSXIcon";
+import TextLink from "../../../components/UX/buttons/TextLink";
 
 const DownLoadReportButton = () => {
   const { user } = useSelector((state) => state.admin);
@@ -76,28 +76,28 @@ const DownLoadReportButton = () => {
       const staffDetailsPromise =
         staffIds.length > 0
           ? devitrakApi.post(
-              "/db_event/inventory-based-on-submitted-parameters",
-              {
-                query: `SELECT staff_id, first_name, last_name, email FROM staff_member WHERE staff_id IN (${staffIds
-                  .map(() => "?")
-                  .join(",")})`,
-                values: staffIds,
-              }
-            )
+            "/db_event/inventory-based-on-submitted-parameters",
+            {
+              query: `SELECT staff_id, first_name, last_name, email FROM staff_member WHERE staff_id IN (${staffIds
+                .map(() => "?")
+                .join(",")})`,
+              values: staffIds,
+            }
+          )
           : Promise.resolve(null);
 
       const itemsPromise =
         deviceIds.length > 0
           ? devitrakApi.post(
-              "/db_event/inventory-query",
-              {
-                // This entry now filters by company, which the legacy query did
-                // not. Safe here: deviceIds come from this company's own lease
-                // rows, so the scope can only exclude what we never wanted.
-                queryName: "inventory.itemsSummaryByIds",
-                params: { itemIds: deviceIds },
-              }
-            )
+            "/db_event/inventory-query",
+            {
+              // This entry now filters by company, which the legacy query did
+              // not. Safe here: deviceIds come from this company's own lease
+              // rows, so the scope can only exclude what we never wanted.
+              queryName: "inventory.itemsSummaryByIds",
+              params: { itemIds: deviceIds },
+            }
+          )
           : Promise.resolve(null);
 
       const [staffDetailResp, itemResp] = await Promise.all([
@@ -151,38 +151,46 @@ const DownLoadReportButton = () => {
   };
 
   const handleDownloadReport = async () => {
-    const dataset = await buildJoinedDataset();
-    await exportToXLSX(dataset);
+    try {
+      const dataset = await buildJoinedDataset();
+      await exportToXLSX(dataset);
+      return setIsLoadingState(false)
+    } catch (error) {
+      alert("Something went wrong, please try again later!", JSON.stringify(error))
+      return setIsLoadingState(false)
+    }
+
   };
   return (
-    <Button
-      style={{
-        display: "flex",
-        alignItems: "center",
-        borderTop: "transparent",
-        borderLeft: "transparent",
-        borderBottom: "transparent",
-        borderRadius: "8px 8px 0 0",
-      }}
-      onClick={handleDownloadReport}
-      loading={isLoadingState}
-    >
-      <p
-        style={{
-          textTransform: "none",
-          textAlign: "left",
-          fontWeight: 500,
-          fontSize: "12px",
-          fontFamily: "Inter",
-          lineHeight: "28px",
-          color: "var(--blue-dark-700, #004EEB)",
-          padding: "0px",
-        }}
-      >
-        <XLSXIcon />&nbsp;
-        Download Report
-      </p>
-    </Button>
+    <TextLink iconLeading={<XLSXIcon />} onClick={handleDownloadReport}>{isLoadingState ? "Downloading report...": "Download Report"}</TextLink>
+    // <Button
+    //   style={{
+    //     display: "flex",
+    //     alignItems: "center",
+    //     borderTop: "transparent",
+    //     borderLeft: "transparent",
+    //     borderBottom: "transparent",
+    //     borderRadius: "8px 8px 0 0",
+    //   }}
+    //   onClick={handleDownloadReport}
+    //   loading={isLoadingState}
+    // >
+    //   <p
+    //     style={{
+    //       textTransform: "none",
+    //       textAlign: "left",
+    //       fontWeight: 500,
+    //       fontSize: "12px",
+    //       fontFamily: "Inter",
+    //       lineHeight: "28px",
+    //       color: "var(--blue-dark-700, #004EEB)",
+    //       padding: "0px",
+    //     }}
+    //   >
+    //     <XLSXIcon />&nbsp;
+    //     Download Report
+    //   </p>
+    // </Button>
   );
 };
 

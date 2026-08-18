@@ -100,6 +100,7 @@ const CustomerInformationSection = () => {
         gap={1}
         container
       >
+        <RefreshButton propsFn={refreshCustomerDatabase} />
         <Grid>
           <Space>
             {new Array(4).fill(0).map((_, index) => (
@@ -126,27 +127,6 @@ const CustomerInformationSection = () => {
             ))}
           </Space>
         </Grid>
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginBottom={-2}
-          paddingBottom={-2}
-          item
-          xs={12}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginRight: "5px",
-            }}
-          >
-            <RefreshButton propsFn={refreshCustomerDatabase} />
-          </div>
-        </Grid>
         <Grid item xs={12}>
           <CustomerDatabase searchAttendees={watch("searchCustomer")} />
         </Grid>
@@ -156,28 +136,3 @@ const CustomerInformationSection = () => {
 };
 
 export default CustomerInformationSection;
-
-{
-  /* <Button
-style={{
-  display: "flex",
-  alignItems: "center",
-  outline: "none",
-  backgroundColor: "transparent",
-}}
-onClick={() => queryClient.invalidateQueries("listOfAttendees")}
->
-<Typography
-  textTransform={"none"}
-  textAlign={"left"}
-  fontWeight={500}
-  fontSize={"12px"}
-  fontFamily={"Inter"}
-  lineHeight={"28px"}
-  color={"var(--blue-dark-700, #004EEB)"}
-  padding={"0px 8px"}
->
-  <Icon icon="jam:refresh" /> Refresh
-</Typography>
-</Button> */
-}
