@@ -33,7 +33,6 @@ const AddNewBulkItems = () => {
     setReturningDate,
     setImageUploadedValue,
     displayContainerSplotLimitField,
-    displaySublocationFields,
     subLocationsSubmitted,
     setSubLocationsSubmitted,
     subLocationInputs,
@@ -41,17 +40,13 @@ const AddNewBulkItems = () => {
     handleAddSubLocationInput,
     handleRemoveSubLocationInput,
     handleSubLocationInputChange,
-    allSerialNumbersOptions,
-    addSerialNumberField,
     setAddSerialNumberField,
-    rangeFormat,
     scannedSerialNumbers,
     setScannedSerialNumbers,
     openScanningModal,
     setOpenScanningModal,
     openScannedItemView,
     setOpenScannedItemView,
-    labeling,
     isRented,
     displayPreviewImage,
     imageUrlGenerated,
@@ -68,7 +63,6 @@ const AddNewBulkItems = () => {
     handleMoreInfoPerDevice,
     handleDeleteMoreInfo,
     subLocationsOptions,
-    renderingOptionsForSubLocations,
     addingSubLocation,
     manuallyAddingSerialNumbers,
     // acceptAndGenerateImage,
@@ -90,12 +84,9 @@ const AddNewBulkItems = () => {
       <BulkItemForm
         // acceptImage={acceptAndGenerateImage}
         addingSubLocation={addingSubLocation}
-        addSerialNumberField={addSerialNumberField}
-        allSerialNumbersOptions={allSerialNumbersOptions}
         control={control}
         displayContainerSplotLimitField={displayContainerSplotLimitField}
         displayPreviewImage={displayPreviewImage}
-        displaySublocationFields={displaySublocationFields}
         errors={errors}
         handleDeleteMoreInfo={handleDeleteMoreInfo}
         handleMoreInfoPerDevice={handleMoreInfoPerDevice}
@@ -103,16 +94,13 @@ const AddNewBulkItems = () => {
         imageUploadedValue={convertImageTo64ForPreview}
         isRented={isRented}
         keyObject={keyObject}
-        labeling={labeling}
         loadingStatus={loadingStatus}
         manuallyAddingSerialNumbers={manuallyAddingSerialNumbers}
         moreInfo={moreInfo}
         moreInfoDisplay={moreInfoDisplay}
         options={options}
         OutlinedInputStyle={OutlinedInputStyle}
-        rangeFormat={rangeFormat}
         register={register}
-        renderingOptionsForSubLocations={renderingOptionsForSubLocations}
         renderLocationOptions={renderLocationOptions}
         retrieveItemOptions={retrieveItemOptions}
         returningDate={returningDate}

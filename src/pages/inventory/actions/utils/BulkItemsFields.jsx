@@ -45,6 +45,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "category_name",
@@ -58,6 +59,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "brand",
@@ -71,6 +73,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "cost",
@@ -84,6 +87,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "tax_location",
@@ -98,6 +102,7 @@ export const renderFields = ({
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
       displayField: true,
+      section: "location",
     },
     {
       name: "location",
@@ -111,6 +116,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayField: true,
+      section: "location",
     },
     {
       name: "sub_location",
@@ -123,9 +129,10 @@ export const renderFields = ({
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
-      displayField: true //displaySublocationFields,
+      displayField: true, //displaySublocationFields,
+      section: "location",
     },
-        {
+    {
       name: "container",
       placeholder: "Select container option",
       label: "Is this carrying/storage units?",
@@ -146,6 +153,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
       displayField: true,
+      section: "info",
       children: [
         {
           name: "containerSpotLimit",
@@ -164,20 +172,6 @@ export const renderFields = ({
       ],
     },
     {
-      name: "containerSpotLimit",
-      placeholder: "e.g. 120 | 250 | 500",
-      label: "Container Spot Limit",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "How many items can be stored inside the container.",
-      displayedButton: false,
-      displayField: displayContainerSplotLimitField,
-    },
-    {
       name: "ownership",
       placeholder: "Select ownership option",
       label: "Ownership status",
@@ -189,6 +183,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Device ownership. If device is a rental device, return date field will be prompted.",
       displayField: true,
+      section: "ownership",
       children: [
         {
           name: "",
@@ -219,32 +214,6 @@ export const renderFields = ({
       ],
     },
     {
-      name: "",
-      placeholder: "",
-      label: "Returning date",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: isRented,
-    },
-    {
-      name: "supplier",
-      placeholder: "Select a supplier",
-      label: "Supplier",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: suppliersOptions,
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "Supplier where rented equipment will be returned.",
-      displayField: isRented,
-    },
-    {
       name: "enableAssignFeature",
       placeholder: "Select assign option",
       label: "Is device assignable to staff/events?",
@@ -256,8 +225,8 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
       displayField: true,
+      section: "assignable",
     },
-
     {
       name: "image_uploader",
       placeholder: "",
@@ -270,6 +239,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "image_uploader_preview",
@@ -283,6 +253,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: displayPreviewImage,
+      section: "info",
     },
     {
       name: "image_url",
@@ -296,6 +267,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: false,
+      section: "info",
     },
   ];
 
