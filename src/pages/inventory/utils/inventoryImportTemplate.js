@@ -104,7 +104,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Cost",
     field: "cost",
-    recommended: true,
+    required: true,
     width: 100,
     aliases: ["Cost", "cost"],
     notes: ["Replacement cost, as a number. Both 45.5 and 45,5 are accepted."],
@@ -114,7 +114,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Brand",
     field: "brand",
-    recommended: true,
+    required: true,
     width: 120,
     aliases: ["Brand", "brand"],
     notes: ["Manufacturer, e.g. 'Sony', 'Apple'."],
@@ -139,7 +139,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Ownership",
     field: "ownership",
-    recommended: true,
+    required: true,
     width: 120,
     aliases: ["Ownership", "ownership"],
     notes: [
@@ -153,7 +153,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Taxable Location",
     field: "main_warehouse",
-    recommended: true,
+    required: true,
     width: 160,
     aliases: ["Main Warehouse", "main warehouse", "main_warehouse", "Taxable Location"],
     notes: ["Where the device is deductible for taxes, e.g. 'Miami, FL'."],
@@ -173,7 +173,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Location",
     field: "location",
-    recommended: true,
+    required: true,
     width: 150,
     aliases: ["Location", "location"],
     notes: [
@@ -186,7 +186,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Sub Locations",
     field: "sub_location",
-    required: false,
+    recommended: true,
     width: 180,
     aliases: ["Sub Locations", "sub locations", "sub_location"],
     notes: [
@@ -252,7 +252,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Extra Info",
     field: "extra_serial_number",
-    required: false,
+    recommended: true,
     width: 200,
     aliases: [
       "Extra Info",
@@ -273,7 +273,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   {
     header: "Image",
     field: "image_url",
-    required: false,
+    recommended: true,
     width: 150,
     aliases: ["Image", "image", "image_url"],
     notes: ["A public URL to a picture of the device."],
