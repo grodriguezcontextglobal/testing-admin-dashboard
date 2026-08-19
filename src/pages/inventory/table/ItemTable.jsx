@@ -487,7 +487,7 @@ const ItemTable = ({
               >
                 <Divider />
                 <Grid container>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding:"14px 0px" }}>
                     <RefreshButton propsFn={searchValues?.refreshFn} />
                     <DownloadingXlslFile props={dataToDisplayMemo} />
                   </div>
