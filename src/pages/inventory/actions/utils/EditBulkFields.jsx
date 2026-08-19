@@ -40,6 +40,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "identity",
     },
     {
       name: "category_name",
@@ -53,6 +54,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "identity",
     },
     {
       name: "brand",
@@ -66,6 +68,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "identity",
     },
     {
       name: "cost",
@@ -73,12 +76,15 @@ export const renderFields = ({
       label: "Replacement cost",
       htmlElement: "",
       style: OutlinedInputStyle,
-      required: true,
+      // Not required: validatingInputFields() never checks cost, so marking
+      // it required here only printed a misleading asterisk.
+      required: false,
       options: normalizeOptions(retrieveItemOptions("cost")),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "commercial",
     },
     {
       name: "container",
@@ -99,6 +105,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
       displayField: true,
+      section: "handling",
       children: [
         {
           name: "containerSpotLimit",
@@ -129,6 +136,7 @@ export const renderFields = ({
       tooltipMessage:
         "Device ownership. If device is a rental device, return date field will be prompted.",
       displayField: true,
+      section: "commercial",
       children: [
         {
           name: "",
@@ -171,6 +179,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
       displayField: true,
+      section: "handling",
     },
     {
       name: "tax_location",
@@ -185,6 +194,7 @@ export const renderFields = ({
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
       displayField: true,
+      section: "location",
     },
     {
       name: "location",
@@ -198,6 +208,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayField: true,
+      section: "location",
     },
     {
       name: "sub_location",
@@ -211,6 +222,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayField: true, //displaySublocationFields,
+      section: "location",
     },
 
     {
@@ -225,6 +237,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "photo",
     },
     {
       name: "image_uploader_preview",
@@ -238,6 +251,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: displayPreviewImage,
+      section: "photo",
     },
     {
       name: "image_url",

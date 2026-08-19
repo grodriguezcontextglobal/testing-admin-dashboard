@@ -11,6 +11,8 @@ import {
   hasReferenceCriteria,
   hasReferenceOptions,
   referenceSourceLabel,
+  REFERENCE_FIELDS,
+  toOptions,
 } from "../referenceLookup";
 
 /**
@@ -37,27 +39,6 @@ import {
  *    warning notification.
  */
 
-const FIELDS = [
-  {
-    name: "reference_category_name",
-    label: "Category",
-    placeholder: "Any category",
-    optionsKey: "category_name",
-  },
-  {
-    name: "reference_item_group",
-    label: "Group",
-    placeholder: "Any device",
-    optionsKey: "item_group",
-  },
-  {
-    name: "reference_brand",
-    label: "Brand",
-    placeholder: "Any brand",
-    optionsKey: "brand",
-  },
-];
-
 const panelStyle = {
   width: "100%",
   border: "1px solid var(--gray-200, #ddded6)",
@@ -81,11 +62,6 @@ const triggerStyle = {
   font: "inherit",
 };
 
-const toOptions = (options) =>
-  (options ?? []).map((option) =>
-    typeof option === "string" ? { value: option } : { value: option.value },
-  );
-
 const CopyFromExistingDevicePanel = ({
   control,
   retrieveItemOptions,
@@ -104,13 +80,13 @@ const CopyFromExistingDevicePanel = ({
   }, [copiedFrom]);
 
   const optionsByField = useMemo(
-    () => FIELDS.map((field) => toOptions(retrieveItemOptions(field.optionsKey))),
+    () => REFERENCE_FIELDS.map((field) => toOptions(retrieveItemOptions(field.optionsKey))),
     [retrieveItemOptions],
   );
 
   const [category, itemGroup, brand] = useWatch({
     control,
-    name: FIELDS.map((field) => field.name),
+    name: REFERENCE_FIELDS.map((field) => field.name),
   });
   const canCopy = hasReferenceCriteria({ category, itemGroup, brand });
 
@@ -182,7 +158,7 @@ const CopyFromExistingDevicePanel = ({
           </Typography>
 
           <Grid container spacing={1} alignItems="flex-end">
-            {FIELDS.map((field, index) => (
+            {REFERENCE_FIELDS.map((field, index) => (
               <Grid key={field.name} item xs={12} sm={6} md={3}>
                 <Typography
                   variant="caption"

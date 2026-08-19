@@ -216,8 +216,8 @@ export const renderingModals = ({
         <ScanningModal
           openScanningModal={openScanningModal}
           setOpenScanningModal={setOpenScanningModal}
-        // setScannedSerialNumbers={setScannedSerialNumbers}
-        // scannedSerialNumbers={scannedSerialNumbers}
+          setScannedSerialNumbers={setScannedSerialNumbers}
+          scannedSerialNumbers={scannedSerialNumbers}
         />
       )}
       {openScannedItemView && (

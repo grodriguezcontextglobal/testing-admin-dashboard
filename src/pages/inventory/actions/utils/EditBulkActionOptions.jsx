@@ -24,7 +24,6 @@ export const bulkItemUpdateAlphanumeric = async ({
   subLocationsSubmitted,
   scannedSerialNumbers,
   setScannedSerialNumbers,
-  originalTemplate,
   alphaNumericUpdateItemMutation,
   dicSuppliers,
   updateAll,
@@ -58,7 +57,6 @@ export const bulkItemUpdateAlphanumeric = async ({
       display_item: 1,
       enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
-      originalTemplate: originalTemplate,
       supplier_info: data.supplier
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
@@ -111,7 +109,6 @@ export const bulkItemUpdateSequential = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
-  originalTemplate,
   sequencialNumbericUpdateItemMutation,
   dicSuppliers,
 }) => {
@@ -144,7 +141,6 @@ export const bulkItemUpdateSequential = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url || null,
-    originalTemplate: originalTemplate,
     supplier_info: data.supplier
       ? dicSuppliers.find(([key]) => key === data.supplier)[1]
       : null,
@@ -176,7 +172,6 @@ export const updateAllItemsBasedOnParameters = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
-  originalTemplate,
   updateAllItemsMutation,
   dicSuppliers,
 }) => {
@@ -205,7 +200,6 @@ export const updateAllItemsBasedOnParameters = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url || null,
-    originalTemplate: originalTemplate,
     supplier_info: data.supplier
       ? dicSuppliers.find(([key]) => key === data.supplier)[1]
       : null,

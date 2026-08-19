@@ -812,6 +812,7 @@ const useBulkActionLogic = () => {
     setUpdateAll,
     retrieveItemDataSelected,
     handleSearchByReference,
+    itemsInInventoryQuery,
   };
 };
 

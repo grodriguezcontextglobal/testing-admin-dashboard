@@ -32,6 +32,35 @@ export const hasReferenceOptions = (optionLists = []) =>
   Array.isArray(optionLists) &&
   optionLists.some((list) => Array.isArray(list) && list.length > 0);
 
+/** The three criteria fields, shared by the "copy from an existing device"
+ * panel (create flow) and the update wizard's step 1 (edit flow) — both
+ * search the same way, so they carry the same field list and option shape. */
+export const REFERENCE_FIELDS = [
+  {
+    name: "reference_category_name",
+    label: "Category",
+    placeholder: "Any category",
+    optionsKey: "category_name",
+  },
+  {
+    name: "reference_item_group",
+    label: "Group",
+    placeholder: "Any device",
+    optionsKey: "item_group",
+  },
+  {
+    name: "reference_brand",
+    label: "Brand",
+    placeholder: "Any brand",
+    optionsKey: "brand",
+  },
+];
+
+export const toOptions = (options) =>
+  (options ?? []).map((option) =>
+    typeof option === "string" ? { value: option } : { value: option.value },
+  );
+
 /** How to name the unit the details came from, when it has no serial number. */
 export const referenceSourceLabel = (copiedFrom) =>
   isFilled(copiedFrom?.serial_number)
