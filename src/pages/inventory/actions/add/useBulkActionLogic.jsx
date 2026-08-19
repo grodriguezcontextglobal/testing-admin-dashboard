@@ -78,6 +78,7 @@ const useBulkActionLogic = () => {
     setValue,
     watch,
     control,
+    trigger,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -737,6 +738,7 @@ const useBulkActionLogic = () => {
     addSerialNumberField,
     allSerialNumbersOptions,
     contextHolder,
+    openNotificationWithIcon,
     clearReferenceCopy,
     control,
     convertImageTo64ForPreview,
@@ -808,6 +810,7 @@ const useBulkActionLogic = () => {
     user,
     valueObject,
     watch,
+    trigger,
     updateAll,
     setUpdateAll,
     retrieveItemDataSelected,

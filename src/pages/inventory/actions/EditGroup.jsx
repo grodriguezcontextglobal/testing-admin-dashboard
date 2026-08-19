@@ -7,7 +7,7 @@ import "./style.css";
 import NewSupplier from "./utils/suppliers/NewSupplier";
 import { renderingModals } from "./utils/BulkComponents";
 import useUpdateInventoryWizard from "./edit/useUpdateInventoryWizard";
-import WizardStepper from "./edit/ux/wizard/WizardStepper";
+import WizardStepper from "./utils/WizardStepper";
 import TargetSearchStep from "./edit/ux/wizard/TargetSearchStep";
 import ScopeStep from "./edit/ux/wizard/ScopeStep";
 import EditFieldsStep from "./edit/ux/wizard/EditFieldsStep";
@@ -17,6 +17,13 @@ const options = [
   { value: "Permanent" },
   { value: "Rent" },
   { value: "Resale" },
+];
+
+const STEPS = [
+  { key: "target", label: "Find the items" },
+  { key: "scope", label: "Choose scope" },
+  { key: "fields", label: "Edit fields" },
+  { key: "review", label: "Review" },
 ];
 
 const EditGroup = () => {
@@ -44,7 +51,7 @@ const EditGroup = () => {
   } = wizard;
 
   return (
-    <div style={{ width: "100%", maxWidth: "1160px", margin: "0 auto", padding: "32px 16px", textAlign: "left" }}>
+    <div style={{ width: "100%", maxWidth: "1400px", margin: "0 auto", padding: "32px 16px", textAlign: "left" }}>
       {contextHolder}
       <Typography variant="caption" color="text.secondary">Inventory</Typography>
       <Typography variant="h4" sx={{ fontWeight: 600, letterSpacing: "-0.72px", mt: 0.5, mb: 0.5 }}>
@@ -54,7 +61,7 @@ const EditGroup = () => {
         Change details on items you already own. Nothing is saved until the last step.
       </Typography>
 
-      <WizardStepper stepIndex={stepIndex} onSelectStep={goToStep} />
+      <WizardStepper steps={STEPS} stepIndex={stepIndex} onSelectStep={goToStep} />
 
       {currentStep === "target" && (
         <TargetSearchStep

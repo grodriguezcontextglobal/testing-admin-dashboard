@@ -1,12 +1,5 @@
 import { Check } from "lucide-react";
 
-const STEP_LABELS = [
-  { key: "target", label: "Find the items" },
-  { key: "scope", label: "Choose scope" },
-  { key: "fields", label: "Edit fields" },
-  { key: "review", label: "Review" },
-];
-
 const stepStyle = (state) => ({
   display: "flex",
   alignItems: "center",
@@ -44,14 +37,14 @@ const badgeStyle = (state) => ({
 });
 
 /**
- * Step 1 (Find the items) → 2 (Choose scope) → 3 (Edit fields) → 4 (Review).
+ * The numbered step rail shared by every inventory wizard (update, create).
  * A step can only be reopened once it has been reached — the rail is a
  * progress indicator, not a way to skip ahead of unfinished steps.
  */
-const WizardStepper = ({ stepIndex, onSelectStep }) => {
+const WizardStepper = ({ steps, stepIndex, onSelectStep }) => {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "24px 0 20px" }}>
-      {STEP_LABELS.map((step, index) => {
+      {steps.map((step, index) => {
         const state = index === stepIndex ? "now" : index < stepIndex ? "done" : "upcoming";
         return (
           <div key={step.key} style={{ display: "flex", alignItems: "center", gap: "8px" }}>

@@ -1,104 +1,55 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
-import { groupBy } from "lodash";
 import { Controller } from "react-hook-form";
-import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
-import Chip from "../../../../components/UX/Chip/Chip";
-import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
-import { ImagePreviewClickable } from "../../../../components/UX/image/Preview";
+import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
+import Chip from "../../../../../../components/UX/Chip/Chip";
+import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
+import { ImagePreviewClickable } from "../../../../../../components/UX/image/Preview";
 import {
   gripingFields,
   renderingOptionsButtons,
   renderOptional,
   stylingComponents,
-} from "./BulkComponents";
-import { renderFields } from "./BulkItemsFields";
-import ButtonsForm from "./uxForm/ButtonsForm";
-import FieldsSections from "./uxForm/FieldsSections";
-import ImageUploaderComponent from "./uxForm/ImageUploaderComponent";
-import SerialNumberAndMoreInfoComponentForm from "./uxForm/SerialNumberAndMoreInfoComponentForm";
-import CopyFromExistingDevicePanel from "./uxForm/CopyFromExistingDevicePanel";
+} from "../../../utils/BulkComponents";
+import FieldsSections from "../../../utils/uxForm/FieldsSections";
+import ImageUploaderComponent from "../../../utils/uxForm/ImageUploaderComponent";
 
-const SECTIONS = [
-  { key: "info", title: "Info", hint: "What the item is and what it costs" },
-  { key: "location", title: "Location", hint: "Where the units live and where they are taxed" },
-  { key: "assignable", title: "Assignable", hint: "Whether staff or events can check this out" },
-  { key: "ownership", title: "Ownership", hint: "Cost, ownership and, if it's rented, who it is rented from" },
-];
-
-const cardStyle = { background: "#fff", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)", marginBottom: "20px" };
-const cardHeadStyle = { padding: "18px 24px", borderBottom: "1px solid var(--gray-200, #eaecf0)" };
-const cardBodyStyle = { padding: "24px" };
+const renderingErrorMessage = (error) => {
+  if (!error) return null;
+  return (
+    <Typography variant="body2" color="error" style={{ textAlign: "left", marginTop: "1rem" }}>
+      {error.message}
+    </Typography>
+  );
+};
 
 /**
- * Add new inventory, laid out as numbered sections (Info, Location,
- * Assignable, Ownership, then the serial/identifier entry below) instead of
- * one long unlabeled list of fields. Same fields, same react-hook-form
- * Controllers, same savingNewItem submit -- this only groups what was already
- * there, plus the copy-from-existing-device panel, which stays exactly where
- * and how it was: collapsed, optional, above everything else.
+ * Renders one section's worth of fields (from BulkItemsFields.jsx, grouped
+ * by `section`) inside a wizard step. Shared by the Details, Location and
+ * Ownership steps, which are the three that render plain react-hook-form
+ * fields — Units and Review do not.
  */
-const BulkItemForm = ({
+const FieldGrid = ({
+  fields,
   addingSubLocation,
   control,
-  displayContainerSplotLimitField,
-  displayPreviewImage,
   errors,
-  handleSearchByReference,
-  clearReferenceCopy,
-  copiedFrom,
-  handleSubmit,
   imageUploadedValue,
   imageUrlGenerated,
   isRented,
   loadingStatus,
   manuallyAddingSerialNumbers,
-  moreInfo,
-  moreInfoDisplay,
-  options,
-  OutlinedInputStyle,
   register,
-  renderLocationOptions,
-  retrieveItemOptions,
   returningDate,
-  savingNewItem,
-  scannedSerialNumbers,
   setAddSerialNumberField,
   setImageUploadedValue,
-  setMoreInfo,
   setOpenScannedItemView,
   setOpenScanningModal,
   setReturningDate,
-  setScannedSerialNumbers,
   setSubLocationsSubmitted,
-  subLocationsOptions,
   subLocationsSubmitted,
-  suppliersOptions,
   watch,
 }) => {
-  const renderingErrorMessage = (error) => {
-    if (!error) return null;
-    return (
-      <Typography variant="body2" color="error" style={{ textAlign: "left", marginTop: "1rem" }}>
-        {error.message}
-      </Typography>
-    );
-  };
-
-  const allFields = renderFields({
-    retrieveItemOptions,
-    OutlinedInputStyle,
-    renderLocationOptions,
-    options,
-    displayContainerSplotLimitField,
-    subLocationsOptions,
-    suppliersOptions,
-    isRented,
-    displayPreviewImage,
-  }).filter((field) => field.displayField);
-
-  const grouped = groupBy(allFields, "section");
-
   const renderField = (item, index) => {
     if (item.htmlOption === 6 && item.name === "image_uploader") {
       return (
@@ -308,61 +259,10 @@ const BulkItemForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(savingNewItem)} id="bulkItemForm" style={{ width: "100%", maxWidth: "1400px" }}>
-      <CopyFromExistingDevicePanel
-        control={control}
-        retrieveItemOptions={retrieveItemOptions}
-        onSearch={handleSearchByReference}
-        onClear={clearReferenceCopy}
-        copiedFrom={copiedFrom}
-      />
-
-      {SECTIONS.map(({ key, title, hint }) => {
-        const sectionFields = grouped[key];
-        if (!sectionFields || sectionFields.length === 0) return null;
-        return (
-          <div key={key} style={cardStyle}>
-            <div style={cardHeadStyle}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{title}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{hint}</Typography>
-            </div>
-            <div style={cardBodyStyle}>
-              <Grid container spacing={1}>
-                {sectionFields.map((item, index) => renderField(item, index))}
-              </Grid>
-            </div>
-          </div>
-        );
-      })}
-
-      <div style={cardStyle}>
-        <div style={cardHeadStyle}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Serial numbers and identifiers</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-            The units that make up this group — add as many as you like
-          </Typography>
-        </div>
-        <div style={cardBodyStyle}>
-          <SerialNumberAndMoreInfoComponentForm
-            style={{ ...AntSelectorStyle, fontFamily: "Inter", fontSize: "14px", width: "100%" }}
-            moreInfo={moreInfo}
-            scannedSerialNumbers={scannedSerialNumbers}
-            setMoreInfo={setMoreInfo}
-            setScannedSerialNumbers={setScannedSerialNumbers}
-          />
-        </div>
-      </div>
-
-      <ButtonsForm
-        stylingComponents={stylingComponents}
-        loadingStatus={loadingStatus}
-        moreInfoDisplay={moreInfoDisplay}
-        scannedSerialNumbers={scannedSerialNumbers}
-        primaryButtonTitle={scannedSerialNumbers.length > 1 ? `Save and add ${scannedSerialNumbers.length} items` : `Save and add item`}
-        formId="bulkItemForm"
-      />
-    </form>
+    <Grid container spacing={1}>
+      {fields.map((item, index) => renderField(item, index))}
+    </Grid>
   );
 };
 
-export default BulkItemForm;
+export default FieldGrid;

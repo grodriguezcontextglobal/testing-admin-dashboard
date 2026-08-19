@@ -40,7 +40,7 @@ import {
  */
 
 const panelStyle = {
-  width: "100%",
+  width: "calc(100% - 16px)",
   border: "1px solid var(--gray-200, #ddded6)",
   borderRadius: "var(--radius-md, 8px)",
   background: "var(--gray-50, #f7f7f4)",

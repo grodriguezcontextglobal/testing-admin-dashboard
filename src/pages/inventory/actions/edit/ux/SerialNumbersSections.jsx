@@ -280,30 +280,28 @@ const SerialNumberAndMoreInfoComponentForm = ({
                     allowClear
                   />
                 </Grid>
-                <Grid padding={0} margin={0} item xs={12} sm={3} md={1} lg={1}>
+                <Grid display={"flex"} gap={0.5} item xs={12} sm={3} md={1} lg={1}>
 
-                  <DangerButtonComponent
+                  {identifiers.length > 1 && <DangerButtonComponent
                     title={"Remove"}
                     func={() => removeField(identifier.id)}
+                  />}
+                  <BlueButtonComponent
+                    title={"Add identifier"}
+                    func={addIdentifier}
+                    iconLeading={<WhiteCirclePlusIcon />}
                   />
+
                 </Grid>
               </Grid>
             ))}
-            <Grid container spacing={1} justifyContent="flex-end">
-              <Grid item>
-                <BlueButtonComponent
-                  title={<WhiteCirclePlusIcon />}
-                  func={addIdentifier}
-                />
-              </Grid>
-            </Grid>
           </div>
         )}
 
         <div style={{ marginTop: '1rem', width: '100%' }}>
           <GrayButtonComponent
             func={handleAddDevice}
-            title="Add this device"
+            title="Queue this item for being updated"
             disabled={!mainDeviceFound}
           />
         </div>
