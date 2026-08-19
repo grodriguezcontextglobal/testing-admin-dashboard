@@ -47,6 +47,7 @@ export const REQUIRED_IMPORT_FIELDS = [
  * tier rather than flattening both into "Optional".
  */
 export const RECOMMENDED_IMPORT_FIELDS = [
+  "sub_location",
   "extra_serial_number",
   "image_url",
 ];
@@ -108,7 +109,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     width: 100,
     aliases: ["Cost", "cost"],
     notes: ["Replacement cost, as a number. Both 45.5 and 45,5 are accepted."],
-    defaultNote: "Default: 0",
     samples: ["45.5", "99.0", "25.75"],
   },
   {
@@ -118,7 +118,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     width: 120,
     aliases: ["Brand", "brand"],
     notes: ["Manufacturer, e.g. 'Sony', 'Apple'."],
-    defaultNote: "Left blank, the device is imported with no brand.",
     samples: ["Sony", "Congress Audio", "Cellucor"],
   },
   {
@@ -146,8 +145,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
       "Stored as one of: Permanent, Rent, Sale.",
       "Common synonyms are mapped for you — Owned, Purchased and Donated become Permanent; Rental, Leased and Loaned become Rent; Sold and Consignment become Sale.",
     ],
-    defaultNote:
-      "Left blank, the device is imported with no ownership — it will not appear under Permanent, Rent or Sale.",
     samples: ["Rent", "Permanent", "Rent"],
   },
   {
@@ -157,7 +154,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     width: 160,
     aliases: ["Main Warehouse", "main warehouse", "main_warehouse", "Taxable Location"],
     notes: ["Where the device is deductible for taxes, e.g. 'Miami, FL'."],
-    defaultNote: "Left blank, the device is imported with no main warehouse.",
     samples: ["Miami, FL", "Fort Lauderdale, FL", "Miami, FL"],
   },
   // {
@@ -180,7 +176,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
       "Where the unit physically sits, e.g. 'Miami, FL'.",
       "A location that does not exist yet is created during the import.",
     ],
-    defaultNote: "Left blank, the device is imported with no location.",
     samples: ["Miami, FL", "Orlando, FL", "Miami, FL"],
   },
   {
@@ -315,6 +310,28 @@ const COLUMNS_BY_FIELD = new Map(
  * rather than throwing mid-import.
  */
 export const aliasesFor = (field) => COLUMNS_BY_FIELD.get(field)?.aliases ?? [];
+
+/**
+ * The column's display name, for messages that list required/recommended
+ * fields by name — reading it from the one column definition instead of a
+ * separately hand-typed list is what keeps that message from drifting again.
+ * Falls back to the raw field name for one it doesn't recognize.
+ */
+export const headerFor = (field) => COLUMNS_BY_FIELD.get(field)?.header ?? field;
+
+/** A cell the parser reads as "nothing was written here". */
+export const isBlankImportValue = (value) =>
+  value === "" || value === undefined || value === null;
+
+/**
+ * Which of the given values for a row are missing. A row with even one
+ * missing required field is skipped rather than imported with a hole in it.
+ * @param {Record<string, *>} values - this row's value per field name.
+ * @param {string[]} [requiredFields] - defaults to every mandatory field.
+ * @returns {string[]} the required fields this row left blank.
+ */
+export const missingRequiredFields = (values, requiredFields = REQUIRED_IMPORT_FIELDS) =>
+  requiredFields.filter((field) => isBlankImportValue(values?.[field]));
 
 const SAMPLE_COUNT = 3;
 

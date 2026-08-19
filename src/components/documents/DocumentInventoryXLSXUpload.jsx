@@ -15,13 +15,28 @@ import { formatDate } from "../../pages/inventory/utils/dateFormat";
 import { normalizeOwnership } from "../../pages/inventory/actions/utils/ownershipUtils";
 import {
     aliasesFor,
+    headerFor,
+    missingRequiredFields,
     normalizeHeader,
+    RECOMMENDED_IMPORT_FIELDS,
+    REQUIRED_IMPORT_FIELDS,
 } from "../../pages/inventory/utils/inventoryImportTemplate";
 import {
     inventoryCacheKeys,
     inventoryPageQueryKeys,
 } from "../../pages/inventory/utils/inventoryQueryKeys";
 import { encodeExtraIdentifiers } from "../../pages/inventory/utils/extraIdentifiers";
+
+/** "A, B and C" — reads the required/recommended field notes from the same
+ * two arrays the parser enforces, so the message can't drift from them again. */
+const joinWithAnd = (items) => {
+    if (items.length <= 1) return items.join("");
+    if (items.length === 2) return `${items[0]} and ${items[1]}`;
+    return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+};
+
+const requiredHeaders = REQUIRED_IMPORT_FIELDS.map(headerFor);
+const recommendedHeaders = RECOMMENDED_IMPORT_FIELDS.map(headerFor);
 
 const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     const { user } = useSelector((state) => state.admin);
@@ -62,18 +77,19 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                     return "";
                 };
 
-                const category_name = val("category_name");
-                const item_group = val("item_group");
-                const serial_number = val("serial_number");
+                const requiredValues = REQUIRED_IMPORT_FIELDS.reduce((acc, field) => {
+                    acc[field] = val(field);
+                    return acc;
+                }, {});
 
-                if (!category_name || !item_group || !serial_number) {
+                if (missingRequiredFields(requiredValues).length > 0) {
                     return null;
                 }
-                const ownership = normalizeOwnership(val("ownership"));
-                const location = val("location");
-                const brand = val("brand");
+
+                const { category_name, item_group, serial_number, brand, location, main_warehouse } = requiredValues;
+                const ownership = normalizeOwnership(requiredValues.ownership);
+                const costRaw = requiredValues.cost;
                 const descriptionFromFile = val("descript_item");
-                const costRaw = val("cost");
                 const subLocationRaw = val("sub_location");
                 // eslint-disable-next-line no-useless-escape
                 const subLocationArray = typeof subLocationRaw === "string" ? String(subLocationRaw).replace(/[\\\[\\\]\\\"]/g, '').split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'null') : [];
@@ -86,7 +102,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                     brand,
                     descript_item: descriptionFromFile || `${category_name} ${item_group} ${brand} ${ownership === "Rent" ? "for rent" : ""} ${location}`,
                     ownership,
-                    main_warehouse: val("main_warehouse"),
+                    main_warehouse,
                     // Warehouse, Assignable, Container, Container Capacity and
                     // "Stored in container?" are no longer columns: asking the
                     // customer to answer five yes/no questions per row confused
@@ -321,14 +337,12 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                             fontSize: 13,
                         }}
                     >
-                        <strong>Note:</strong> Only <strong>Category</strong>,{" "}
-                        <strong>Group</strong> and <strong>Serial Number</strong> are
-                        mandatory — a row missing any of them is skipped. We strongly
-                        recommend filling in <strong>Brand</strong>, <strong>Cost</strong>,{" "}
-                        <strong>Ownership</strong>, <strong>Main Warehouse</strong> and{" "}
-                        <strong>Location</strong> too: the row is imported without them, but
-                        with a blank or zero you will have to correct device by device. Every
-                        other column is optional and falls back to a default. See the
+                        <strong>Note:</strong> <strong>{joinWithAnd(requiredHeaders)}</strong> are
+                        mandatory — a row missing any of them is skipped, not imported with a
+                        hole in it. We recommend filling in{" "}
+                        <strong>{joinWithAnd(recommendedHeaders)}</strong> too: the row is
+                        imported without them, but you will have to correct device by device.
+                        Every other column is optional and falls back to a default. See the
                         &ldquo;Inventory Import Template Guide&ldquo; for aliases, accepted values and
                         defaults.
                     </div>

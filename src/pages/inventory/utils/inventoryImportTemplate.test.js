@@ -6,6 +6,9 @@ import {
   aliasesFor,
   buildGuideRow,
   buildTemplateRows,
+  headerFor,
+  isBlankImportValue,
+  missingRequiredFields,
   normalizeHeader,
 } from "./inventoryImportTemplate";
 
@@ -53,7 +56,7 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
     expect(fields()).not.toContain("supplier_info");
   });
 
-  it("marks as mandatory exactly the three fields the parser rejects a row without", () => {
+  it("marks as mandatory exactly the fields the parser rejects a row without", () => {
     const required = INVENTORY_IMPORT_COLUMNS.filter((c) => c.required).map(
       (c) => c.field,
     );
@@ -62,6 +65,11 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
       "category_name",
       "item_group",
       "serial_number",
+      "cost",
+      "brand",
+      "ownership",
+      "main_warehouse",
+      "location",
     ]);
   });
 
@@ -191,5 +199,68 @@ describe("buildGuideRow", () => {
       expect(row).toHaveProperty(field);
     }
     expect(row).toHaveProperty("key");
+  });
+});
+
+describe("headerFor", () => {
+  it("reads a field's display name from its column definition", () => {
+    expect(headerFor("main_warehouse")).toBe("Taxable Location");
+    expect(headerFor("category_name")).toBe("Category");
+  });
+
+  it("falls back to the raw field name for one it does not recognize", () => {
+    expect(headerFor("not_a_real_field")).toBe("not_a_real_field");
+  });
+});
+
+describe("isBlankImportValue", () => {
+  it("treats an empty string, undefined and null as blank", () => {
+    expect(isBlankImportValue("")).toBe(true);
+    expect(isBlankImportValue(undefined)).toBe(true);
+    expect(isBlankImportValue(null)).toBe(true);
+  });
+
+  it("does not treat 0 or whitespace-only text as blank — only an empty cell is", () => {
+    expect(isBlankImportValue(0)).toBe(false);
+    expect(isBlankImportValue(" ")).toBe(false);
+  });
+
+  it("treats any filled value as not blank", () => {
+    expect(isBlankImportValue("Miami, FL")).toBe(false);
+    expect(isBlankImportValue(45.5)).toBe(false);
+  });
+});
+
+describe("missingRequiredFields", () => {
+  const filledRow = () => ({
+    category_name: "Electronics",
+    item_group: "Laptop",
+    serial_number: "SN-1",
+    cost: "540",
+    brand: "Dell",
+    ownership: "Rent",
+    main_warehouse: "Miami, FL",
+    location: "Miami, FL",
+  });
+
+  it("returns nothing when every required field is filled", () => {
+    expect(missingRequiredFields(filledRow())).toEqual([]);
+  });
+
+  it("names each required field a row left blank, in REQUIRED_IMPORT_FIELDS order", () => {
+    const row = { ...filledRow(), brand: "", location: "" };
+    expect(missingRequiredFields(row)).toEqual(["brand", "location"]);
+  });
+
+  it("treats a required field missing from the row the same as a blank cell", () => {
+    const { cost, ...row } = filledRow();
+    void cost;
+    expect(missingRequiredFields(row)).toEqual(["cost"]);
+  });
+
+  it("checks only the fields passed in, when given a narrower list", () => {
+    const row = { category_name: "", item_group: "Laptop" };
+    expect(missingRequiredFields(row, ["item_group"])).toEqual([]);
+    expect(missingRequiredFields(row, ["category_name"])).toEqual(["category_name"]);
   });
 });
