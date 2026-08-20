@@ -1,34 +1,40 @@
-import { Grid, InputLabel, Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Select, Space } from "antd";
+import { message, Space } from "antd";
 import { createContext, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import DangerButtonConfirmationComponent from "../../../../../components/UX/buttons/DangerButtonConfirmation";
 import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
-import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
-import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
-import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
-import Main from "./components/EditingInventoryUXOptions/Main";
+import AddStockWizard from "./components/EditingInventoryUXOptions/AddStockWizard";
 import RenderingEventInventorySection from "./components/EditingInventoryUXOptions/RenderingEventInventorySection";
+import { buildStockRows } from "./utils/eventStockFlow";
 
 export const valueContext = createContext(null);
 
+/**
+ * The event-inventory editor: a three-step wizard for adding company stock, and
+ * the list of what the event already holds underneath it.
+ *
+ * Adding used to be one flat modal — a JSON-serialising Select, a two-mode
+ * radio whose meaning lived in a tooltip, and a form that committed without
+ * ever showing which serials it had resolved. The wizard replaces that; the
+ * write path and every payload it sends are unchanged.
+ */
 const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const { register, handleSubmit, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const [valueItemSelected, setValueItemSelected] = useState({});
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [assignAllDevices, setAssignAllDevices] = useState(false);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+
   const itemQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
@@ -36,9 +42,10 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         company_id: user.sqlInfo.company_id,
         warehouse: 1,
         enableAssignFeature: 1,
-        logistic_status: "in-stock"
+        logistic_status: "in-stock",
       }),
   });
+
   const { notify, contextHolder } = useStatusNotification();
   const openNotification = useCallback(
     (msg) => {
@@ -47,76 +54,14 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
     [notify],
   );
   const eventName = event.eventInfoDetail.eventName;
-  const selectOptions = useMemo(() => {
-    const result = [];
-    if (itemQuery.data) {
-      const groupedInventory = itemQuery.data.data.groupedInventory;
-      for (const [categoryName, itemGroups] of Object.entries(
-        groupedInventory,
-      )) {
-        for (const [itemGroup, locations] of Object.entries(itemGroups)) {
-          for (const [location, quantity] of Object.entries(locations)) {
-            // Render Location Row with quantity
-            result.push({
-              key: `${itemGroup}-${location}`,
-              label: (
-                <Typography
-                  textTransform={"capitalize"}
-                  style={{
-                    ...Subtitle,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    width: "100%",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        width: "fit-content",
-                        marginRight: "5px",
-                      }}
-                    >
-                      {categoryName}
-                    </span>
-                    {itemGroup}
-                  </div>
-                  <span style={{ textAlign: "left", width: "50%" }}>
-                    Location:{" "}
-                    <span style={{ fontWeight: 700 }}>{location}</span>
-                  </span>
-                  <span style={{ textAlign: "right", width: "50%" }}>
-                    Available: {quantity}
-                  </span>
-                </Typography>
-              ),
-              value: JSON.stringify({
-                category_name: categoryName,
-                item_group: itemGroup,
-                location,
-                qty: quantity,
-              }),
-            });
-          }
-        }
-      }
-    }
 
-    return result;
-  }, [itemQuery.data]);
-
-  const onChange = (value) => {
-    const optionRendering = JSON.parse(value);
-    setValueItemSelected(optionRendering);
-  };
+  // The same response the old Select read, as rows instead of JSX. Search now
+  // runs against the group, the category and the location rather than over
+  // rendered markup.
+  const stockRows = useMemo(
+    () => buildStockRows(itemQuery.data?.data?.groupedInventory),
+    [itemQuery.data],
+  );
 
   const closeModal = () => {
     return setEditingInventory(false);
@@ -207,8 +152,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
       },
     );
     if (checkingIfInventoryIsAlreadyInUsed.data.listOfReceivers.length < 1) {
+      // Keep every row that is not THIS category+group pair. The previous
+      // `category !== x && group !== y` kept only rows differing in both, so
+      // removing one group also dropped every other group in its category.
       const removing = event.deviceSetup.filter(
-        (element) => element.category !== props.category && element.group !== props.group,
+        (element) =>
+          element.category !== props.category || element.group !== props.group,
       );
       const updatingDeviceInEventProcess = await devitrakApi.patch(
         `/event/edit-event/${event.id}`,
@@ -232,8 +181,8 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
         ]);
       }
     } else {
-      return alert(
-        "Device type is already in use for consumers in event. Delete item will cause conflict in future transactions in the event.",
+      return message.warning(
+        "Some of these devices are already assigned to consumers in this event. Removing the group now would break those transactions.",
       );
     }
   };
@@ -241,83 +190,92 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   const handleRefresh = async () => {
     return itemQuery.refetch();
   };
+
   const bodyModal = () => {
     return (
-      <div style={{ display: "grid", gap: "1rem" }}>
-        <ReusableCardWithHeaderAndFooter title="Select from existing company's inventory" style={{
-          backgroundColor: "#F2F4F7",
-        }}>
-          <Grid container>
-            <Grid padding={"0 25px 0 0"} item xs={10} sm={10} md={12} lg={12}>
-              <Grid
+      <div style={{ display: "grid", gap: "1.5rem" }}>
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: "16px",
+              flexWrap: "wrap",
+              marginBottom: "20px",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <h2
                 style={{
-                  borderRadius: "8px",
-                  // border: "1px solid var(--gray300, #D0D5DD)",
-                  backgroundColor: "#F2F4F7",
-                  padding: "24px",
-                  width: "100%",
+                  margin: 0,
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  lineHeight: "28px",
+                  color: "var(--gray-900, #101828)",
                 }}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
               >
-                <InputLabel
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  <RefreshButton propsFn={handleRefresh} />
-                </InputLabel>
-                <Select
-                  className="custom-autocomplete"
-                  showSearch
-                  placeholder="Search item to add to inventory."
-                  optionFilterProp="children"
-                  style={{ ...AntSelectorStyle, width: "100%" }}
-                  onChange={onChange}
-                  options={selectOptions}
-                />
-                {/* form to add item to event inventory */}
-                <valueContext.Provider
-                  value={{
-                    valueItemSelected: valueItemSelected,
-                    eventInfo: event,
-                  }}
-                >
-                  <Main
-                    assignAllDevices={assignAllDevices}
-                    closeModal={closeModal}
-                    handleSubmit={handleSubmit}
-                    loadingStatus={loadingStatus}
-                    openNotification={openNotification}
-                    OutlinedInputStyle={OutlinedInputStyle}
-                    queryClient={queryClient}
-                    refreshButton={handleRefresh}
-                    register={register}
-                    setAssignAllDevices={setAssignAllDevices}
-                    setLoadingStatus={setLoadingStatus}
-                    Subtitle={Subtitle}
-                    valueItemSelected={valueItemSelected}
-                    watch={watch}
-                    eventName={eventName}
-                  />
-                </valueContext.Provider>
-              </Grid>
-            </Grid>
-          </Grid>
-        </ReusableCardWithHeaderAndFooter>
-        <RenderingEventInventorySection
-          event={event}
-          Space={Space}
-          ReusableCardWithHeaderAndFooter={ReusableCardWithHeaderAndFooter}
-          DangerButtonConfirmationComponent={DangerButtonConfirmationComponent}
-          handleRemoveItemFromInventoryEvent={handleRemoveItemFromInventoryEvent}
-        />
+                Add stock to this event
+              </h2>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "14px",
+                  lineHeight: "20px",
+                  color: "var(--gray-500, #667085)",
+                }}
+              >
+                {eventName}
+              </p>
+            </div>
+            <RefreshButton propsFn={handleRefresh} />
+          </div>
+
+          <valueContext.Provider
+            value={{
+              valueItemSelected: valueItemSelected,
+              eventInfo: event,
+            }}
+          >
+            <AddStockWizard
+              closeModal={closeModal}
+              handleSubmit={handleSubmit}
+              loadingStatus={loadingStatus}
+              openNotification={openNotification}
+              queryClient={queryClient}
+              register={register}
+              setLoadingStatus={setLoadingStatus}
+              setValueItemSelected={setValueItemSelected}
+              stockRows={stockRows}
+              valueItemSelected={valueItemSelected}
+              watch={watch}
+            />
+          </valueContext.Provider>
+        </div>
+
+        <div>
+          <h3
+            style={{
+              margin: "0 0 12px",
+              fontFamily: "Inter, sans-serif",
+              fontSize: "14px",
+              fontWeight: 600,
+              lineHeight: "20px",
+              color: "var(--gray-700, #344054)",
+            }}
+          >
+            Already in this event
+          </h3>
+          <RenderingEventInventorySection
+            event={event}
+            Space={Space}
+            ReusableCardWithHeaderAndFooter={ReusableCardWithHeaderAndFooter}
+            DangerButtonConfirmationComponent={DangerButtonConfirmationComponent}
+            handleRemoveItemFromInventoryEvent={handleRemoveItemFromInventoryEvent}
+          />
+        </div>
       </div>
     );
   };
