@@ -1,353 +1,390 @@
-import { Grid } from "@mui/material";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message, Select } from "antd";
-import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { message } from "antd";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
+import "./containerContents.css";
+import {
+  buildFilterOptions,
+  describeContentChanges,
+  filterWarehouseItems,
+  summarizeCapacity,
+} from "../utils/containerContentUtils";
 
+const FILTERS = [
+  { key: "category_name", anyLabel: "Any category" },
+  { key: "item_group", anyLabel: "Any group" },
+  { key: "brand", anyLabel: "Any brand" },
+  { key: "ownership", anyLabel: "Any ownership" },
+];
+
+const EMPTY_FILTERS = {
+  category_name: "",
+  item_group: "",
+  brand: "",
+  ownership: "",
+};
+
+const describeRow = (row) =>
+  [row?.item_group, row?.brand, row?.ownership].filter(Boolean).join(" · ");
+
+/**
+ * Packing a container.
+ *
+ * Two panes answer the question the old single multi-select conflated: what is
+ * available, and what will be inside the case when this saves. Search matches
+ * the serial number against an already-populated list — the previous flow made
+ * you pick from four dropdowns and press "Search items" before a single row
+ * appeared, so the filters here refine rather than gate. They are also built
+ * from the stock actually on hand, so a filter can never offer a value that
+ * returns nothing.
+ *
+ * Nothing is written until Save, and the write is a single call: PUT to replace
+ * the contents of a case that already has some, POST to fill an empty one.
+ * There is deliberately no DELETE-then-POST — a failed POST there left the case
+ * emptied with nothing to put back.
+ */
 const ContainerContent = ({
   openModal,
-  setOpenModal,
-  containerInfo,
-  containerItemsContent,
-  refetch,
+  closeModal,
+  containerId,
+  spotLimit,
+  currentItems,
+  onSaved,
 }) => {
   const { user } = useSelector((state) => state.admin);
-  const [itemToContent, setItemToContent] = useState(
-    containerItemsContent ?? []
+  const persistedItems = useMemo(() => currentItems ?? [], [currentItems]);
+  const persistedIds = useMemo(
+    () => persistedItems.map((row) => row?.item_id),
+    [persistedItems],
   );
-  const [searchResults, setSearchResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    category_name: "",
-    item_group: "",
-    brand: "",
-    ownership: "",
-  });
-  const queryClient = useQueryClient();
-  const itemsInInventoryQuery = useQuery({
-    queryKey: ["structuredCompanyInventory", filters],
-    queryFn: () =>
-      devitrakApi.post(`/db_company/company-inventory-structure`, {
-        company_id: user.sqlInfo.company_id,
-        filters: filters,
-      }),
-    enabled: !!user.sqlInfo.company_id,
-    refetchOnMount: false,
+
+  const [stagedIds, setStagedIds] = useState(persistedIds);
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+
+  const companyId = user?.sqlInfo?.company_id;
+
+  const stockQuery = useQuery({
+    queryKey: ["assignableWarehouseStock", companyId],
+    queryFn: async () => {
+      const response = await devitrakApi.post("/db_item/warehouse-items", {
+        company_id: companyId,
+        warehouse: 1,
+        enableAssignFeature: 1,
+      });
+      const items = response.data?.items;
+      return Array.isArray(items) ? items : [];
+    },
+    enabled: Boolean(companyId),
     refetchOnWindowFocus: false,
   });
 
-  const FILTER_CONFIG = [
-    {
-      dataKey: "category_name",
-      placeholder: "Select Category",
-      stateKey: "category_name",
-    },
-    {
-      dataKey: "item_group",
-      placeholder: "Select Item Group",
-      stateKey: "item_group",
-    },
-    { dataKey: "brand", placeholder: "Select Brand", stateKey: "brand" },
-    {
-      dataKey: "ownership",
-      placeholder: "Select Ownership",
-      stateKey: "ownership",
-    },
-  ];
+  const stock = stockQuery.data ?? [];
 
-  const renderFilterOptions = () => {
-    const data = itemsInInventoryQuery?.data?.data?.groupedData;
-    if (!data) return null;
-
-    return (
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        {FILTER_CONFIG.map(({ dataKey, placeholder, stateKey }) => {
-          const options = data[dataKey] || {};
-          // console.log(filters[stateKey]);
-          return (
-            <Grid item xs={3} key={stateKey}>
-              <Select
-                virtual={true}
-                loading={loading}
-                style={{ width: "100%" }}
-                placeholder={placeholder}
-                value={filters[stateKey] !== "" ? filters[stateKey] : null}
-                onChange={(value) =>
-                  setFilters((prev) => ({ ...prev, [stateKey]: value }))
-                }
-                onClear={() => {
-                  setFilters((prev) => ({ ...prev, [stateKey]: undefined }));
-                }}
-                allowClear
-              >
-                {Object.entries(options).map(([name]) => (
-                  <Select.Option key={name} value={name}>
-                    {`${name}`}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Grid>
-          );
-        })}
-      </Grid>
-    );
-  };
-
-  const closeModal = () => {
-    return setOpenModal(false);
-  };
-
-  const buildQueryParams = () => {
-    const baseParams = {
-      company_id: user.sqlInfo.company_id,
-      warehouse: 1,
-      enableAssignFeature: 1,
-    };
-
-    // Add non-empty filters to query params
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== "") {
-        baseParams[key] = value;
-      }
+  // Items already in the case are no longer warehouse stock, so the right pane
+  // has to resolve them from both sources.
+  const byId = useMemo(() => {
+    const lookup = new Map();
+    persistedItems.concat(stock).forEach((row) => {
+      if (row?.item_id === undefined || row?.item_id === null) return;
+      const key = String(row.item_id);
+      if (!lookup.has(key)) lookup.set(key, row);
     });
+    return lookup;
+  }, [persistedItems, stock]);
 
-    return baseParams;
-  };
-
-  const handleSearchItems = async () => {
-    try {
-      setLoading(true);
-      const queryParams = buildQueryParams();
-      const response = await devitrakApi.post(
-        "/db_item/warehouse-items",
-        queryParams
-      );
-      return setSearchResults(response.data.items || []);
-    } catch (error) {
-      message.error("Failed to fetch items");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderSearchResults = () => {
-    return (
-      <Select
-        mode="multiple"
-        style={{ width: "100%" }}
-        placeholder="Select items"
-        loading={loading}
-        value={itemToContent.map((item) => item.serial_number)}
-        onChange={handleItemSelection}
-        optionFilterProp="label"
-        optionLabelProp="label"
-        virtual={true}
-        maxTagCount={containerItemsContent.length}
-        maxTagPlaceholder={(omitted) => `+ ${omitted.length} more selected`}
-        showSearch
-        allowClear
-        options={searchResults.map((item) => ({
-          value: item.serial_number,
-          label: `${item.serial_number} - ${item.item_group}`,
-          item: item,
-        }))}
-      />
-    );
-  };
-
-  const handleItemSelection = (selectedSerialNumbers) => {
-    // Handle item removal
-    if (selectedSerialNumbers.length < itemToContent.length) {
-      const newItemToContent = itemToContent.filter(item => 
-        selectedSerialNumbers.includes(item.serial_number)
-      );
-      return setItemToContent(newItemToContent);
-    }
-
-    // Handle item addition
-    const newItems = selectedSerialNumbers
-      .filter(serialNumber => !itemToContent.some(item => item.serial_number === serialNumber))
-      .map(serialNumber => {
-        const selectedItem = searchResults.find(
-          item => item.serial_number === serialNumber
-        );
-        return selectedItem ? {
-          serial_number: selectedItem.serial_number,
-          ...selectedItem
-        } : null;
-      })
-      .filter(Boolean);
-
-    const updatedItemToContent = [...itemToContent, ...newItems];
-
-    // Check container limit
-    if (updatedItemToContent.length > containerInfo.containerSpotLimit) {
-      message.warning(
-        `This container has a limit of ${containerInfo.containerSpotLimit} items. Please remove some items before adding more.`
-      );
-      return;
-    }
-
-    setItemToContent(updatedItemToContent);
-  };
-
-  const savingItemsInContainer = async () => {
-    try {
-      if (containerItemsContent.length > 0) {
-        await devitrakApi.delete(
-          `/db_inventory/container/${containerInfo.item_id}`
-        );
-      }
-      const response = await devitrakApi.post(`/db_inventory/container-items`, {
-        container_item_id: containerInfo.item_id,
-        child_ids: itemToContent.map((item) => item.item_id),
-      });
-      if (response.data) message.success("Case was successfully saved");
-      queryClient.invalidateQueries({
-        queryKey: ["infoItemSql"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["trackingItemActivity"],
-      });
-      refetch();
-      return setOpenModal(false);
-    } catch (error) {
-      return message.error("Something went wrong: " + error.message);
-    }
-  };
-
-  const updateExistingContent = async () => {
-    try {
-      setLoading(true);
-      const response = await devitrakApi.put(
-        `/db_inventory/container/${containerInfo.item_id}`,
-        {
-          child_ids: itemToContent.map((item) => item.item_id),
-        }
-      );
-      if (response.data) {
-        message.success("Container content updated successfully");
-        queryClient.invalidateQueries({
-          queryKey: ["infoItemSql"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["trackingItemActivity"],
-        });
-        refetch();
-        setOpenModal(false);
-      }
-    } catch (error) {
-      message.error("Failed to update container content: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const modalBody = () => {
-    return <p>OLA</p>
-  }
-  return (
-    <ModalUX body={modalBody()} openDialog={openModal} closeModal={closeModal} />
-    // <Modal
-    //   open={openModal}
-    //   onCancel={closeModal}
-    //   footer={[]}
-    //   centered
-    //   maskClosable={false}
-    //   title="Add/Update content."
-    //   width={1000}
-    // >
-    //   <Grid
-    //     display={"flex"}
-    //     justifyContent={"flex-start"}
-    //     alignItems={"center"}
-    //     gap={1}
-    //     container
-    //   >
-    //     {renderFilterOptions()}
-    //     <Grid
-    //       display={"flex"}
-    //       justifyContent={"space-between"}
-    //       alignItems={"center"}
-    //       item
-    //       xs={12}
-    //       sm={12}
-    //       md={12}
-    //       lg={12}
-    //     >
-    //       <div style={{ display: "flex", gap: "10px" }}>
-    //         <Button
-    //           onClick={handleSearchItems}
-    //           style={BlueButton}
-    //           loading={loading}
-    //         >
-    //           <p style={{ ...BlueButtonText, ...CenteringGrid }}>
-    //             Search items
-    //           </p>
-    //         </Button>
-    //         {searchResults.length > 0 && (
-    //           <h2
-    //             style={{
-    //               ...Subtitle,
-    //               color: "var(--danger-action)",
-    //               margin: "0 0 0 10px",
-    //               textDecoration: "underline",
-    //             }}
-    //           >
-    //             {searchResults.length} results
-    //           </h2>
-    //         )}
-    //       </div>
-    //       {itemToContent.length > 0 && (
-    //         <Button
-    //           style={BlueButton}
-    //           onClick={() => {
-    //             // console.log(itemToContent);
-    //             null
-    //           }}
-    //         >
-    //           <p style={BlueButtonText}>
-    //             Done {itemToContent.length} items selected
-    //           </p>
-    //         </Button>
-    //       )}
-    //     </Grid>
-    //     <Grid item xs={12}>
-    //       {renderSearchResults()}
-    //     </Grid>
-    //     <Divider />
-    //     <Grid
-    //       style={{ display: itemToContent?.length > 0 ? "flex" : "none" }}
-    //       justifyContent={"flex-start"}
-    //       alignItems={"center"}
-    //       gap={1}
-    //       item
-    //       xs={12}
-    //       sm={12}
-    //       md={12}
-    //     >
-    //       <Button style={GrayButton} onClick={() => setItemToContent([])}>
-    //         <p style={{ ...GrayButtonText, ...CenteringGrid }}>Cancel</p>
-    //       </Button>
-    //       <Button
-    //         loading={loading}
-    //         style={BlueButton}
-    //         onClick={
-    //           containerItemsContent.length > 0
-    //             ? updateExistingContent
-    //             : savingItemsInContainer
-    //         }
-    //       >
-    //         <p style={{ ...BlueButtonText, ...CenteringGrid }}>
-    //           {containerItemsContent.length > 0 ? "Update" : "Save"}
-    //         </p>
-    //       </Button>{" "}
-    //     </Grid>
-    //   </Grid>
-    // </Modal>
+  const available = useMemo(
+    () => filterWarehouseItems(stock, { query, filters, excludeIds: stagedIds }),
+    [stock, query, filters, stagedIds],
   );
+
+  const staged = useMemo(
+    () =>
+      stagedIds
+        .map((id) => byId.get(String(id)))
+        .filter(Boolean)
+        .map((row) => ({
+          ...row,
+          isNew: !persistedIds.some((id) => String(id) === String(row.item_id)),
+        })),
+    [stagedIds, byId, persistedIds],
+  );
+
+  const capacity = summarizeCapacity(stagedIds.length, spotLimit);
+  const changes = describeContentChanges(persistedIds, stagedIds);
+  const hasAnyRefinement =
+    query.trim() !== "" || FILTERS.some(({ key }) => filters[key] !== "");
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      if (persistedIds.length > 0) {
+        return devitrakApi.put(`/db_inventory/container/${containerId}`, {
+          child_ids: stagedIds,
+        });
+      }
+      return devitrakApi.post("/db_inventory/container-items", {
+        container_item_id: Number(containerId),
+        child_ids: stagedIds,
+      });
+    },
+    onSuccess: () => {
+      message.success("Case contents saved");
+      if (onSaved) onSaved();
+      closeModal();
+    },
+    onError: (error) =>
+      message.error(`The case could not be saved: ${error.message}`),
+  });
+
+  const addItem = (itemId) => setStagedIds(stagedIds.concat([itemId]));
+  const removeItem = (itemId) =>
+    setStagedIds(stagedIds.filter((id) => String(id) !== String(itemId)));
+
+  const clearRefinement = () => {
+    setQuery("");
+    setFilters(EMPTY_FILTERS);
+  };
+
+  const body = (
+    <div className={`case-tone--${capacity.tone}`}>
+      <div className="case-pack__head">
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <h2 className="case-pack__title">Pack this case</h2>
+          <p className="case-pack__subtitle">
+            {capacity.hasLimit
+              ? `Holds up to ${capacity.limit} items`
+              : "No spot limit recorded for this case"}
+          </p>
+        </div>
+        <span className="case-pill">
+          <span className="case-pill__dot" />
+          {capacity.statusLabel}
+        </span>
+      </div>
+
+      <div className="case-pack__panes">
+        {/* ── available stock ── */}
+        <div className="case-pane case-pane--stock">
+          <div className="case-pane__head">
+            <div className="case-pane__title-row">
+              <span className="case-pane__title">Available in warehouse</span>
+              <span className="case-pane__note">
+                {stockQuery.isLoading
+                  ? "loading…"
+                  : `${available.length} assignable`}
+              </span>
+            </div>
+
+            <div className="case-search">
+              <span className="case-search__icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </span>
+              <input
+                className="case-field"
+                placeholder="Scan or type a serial number"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+
+            <div className="case-filters">
+              {FILTERS.map(({ key, anyLabel }) => (
+                <select
+                  key={key}
+                  className="case-field"
+                  value={filters[key]}
+                  onChange={(event) =>
+                    setFilters({ ...filters, [key]: event.target.value })
+                  }
+                >
+                  {buildFilterOptions(stock, key, anyLabel).map((option) => (
+                    <option key={option.value || "any"} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ))}
+            </div>
+          </div>
+
+          <div className="case-list">
+            {stockQuery.isError ? (
+              <div className="case-list__blank">
+                <p className="case-empty__title">Stock could not be loaded</p>
+                <p className="case-empty__body">
+                  The warehouse list is unavailable right now.
+                </p>
+              </div>
+            ) : available.length > 0 ? (
+              available.map((row) => (
+                <div className="case-row" key={row.item_id}>
+                  <button
+                    type="button"
+                    className="case-row__move"
+                    onClick={() => addItem(row.item_id)}
+                    aria-label={`Add ${row.serial_number} to this case`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                  <span className="case-row__text">
+                    <span className="case-row__serial">{row.serial_number}</span>
+                    <span className="case-row__meta">{describeRow(row)}</span>
+                  </span>
+                </div>
+              ))
+            ) : (
+              !stockQuery.isLoading && (
+                <div className="case-list__blank">
+                  <span className="case-list__blank-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                  </span>
+                  <p className="case-empty__title">
+                    {hasAnyRefinement
+                      ? "No stock matches that"
+                      : "Everything available is already packed"}
+                  </p>
+                  <p className="case-empty__body">
+                    Only stock in the warehouse and flagged assignable can be
+                    packed.
+                  </p>
+                  {hasAnyRefinement && (
+                    <GrayButtonComponent
+                      title="Clear search and filters"
+                      func={clearRefinement}
+                      size="sm"
+                      styles={{ margin: "4px 0 0", width: "fit-content" }}
+                    />
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* ── what will be in the case ── */}
+        <div className="case-pane case-pane--case">
+          <div className="case-pane__head">
+            <div className="case-pane__title-row">
+              <span className="case-pane__title">In this case on save</span>
+              <GrayButtonComponent
+                title="Clear all"
+                func={() => setStagedIds([])}
+                isDisabled={stagedIds.length === 0}
+                size="sm"
+                styles={{ margin: 0, width: "fit-content" }}
+              />
+            </div>
+
+            <div className="case-meter">
+              <div className="case-meter__count">
+                <span className="case-meter__used">{capacity.used}</span>
+                {capacity.hasLimit && (
+                  <span className="case-meter__of">of {capacity.limit} spots</span>
+                )}
+              </div>
+              {capacity.hasLimit && (
+                <div className="case-meter__track">
+                  <div
+                    className="case-meter__fill"
+                    style={{ width: `${capacity.fillPct}%` }}
+                  />
+                </div>
+              )}
+              <span
+                className="case-pack__delta"
+                style={{
+                  color: changes.hasChanges
+                    ? "var(--blue-700, #175CD3)"
+                    : "var(--gray-500, #667085)",
+                }}
+              >
+                {changes.deltaLabel}
+              </span>
+            </div>
+          </div>
+
+          <div className="case-list">
+            {staged.length > 0 ? (
+              staged.map((row) => (
+                <div className="case-row" key={row.item_id}>
+                  <button
+                    type="button"
+                    className="case-row__move case-row__move--out"
+                    onClick={() => removeItem(row.item_id)}
+                    aria-label={`Take ${row.serial_number} out of this case`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14" />
+                    </svg>
+                  </button>
+                  <span className="case-row__text">
+                    <span className="case-row__serial">{row.serial_number}</span>
+                    <span className="case-row__meta">{describeRow(row)}</span>
+                  </span>
+                  {row.isNew && <span className="case-row__new">New</span>}
+                </div>
+              ))
+            ) : (
+              <div className="case-list__blank">
+                <p className="case-empty__title">Nothing in the case</p>
+                <p className="case-empty__body">
+                  Add stock from the left. Saving an empty case empties it.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="case-pack__foot">
+        {capacity.isOver ? (
+          <span className="case-pack__blocked">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4M12 16h.01" />
+            </svg>
+            Take out {capacity.excess} {capacity.excess === 1 ? "item" : "items"} to save
+          </span>
+        ) : (
+          <span className="case-pack__hint">
+            {changes.hasChanges
+              ? "Nothing is written until you save"
+              : "Pick stock on the left to start packing"}
+          </span>
+        )}
+
+        <div className="case-pack__actions">
+          <GrayButtonComponent
+            title="Cancel"
+            func={closeModal}
+            isDisabled={saveMutation.isPending}
+            styles={{ margin: 0 }}
+          />
+          <BlueButtonComponent
+            title={changes.saveLabel}
+            func={() => saveMutation.mutate()}
+            isDisabled={capacity.isOver || !changes.hasChanges}
+            isLoading={saveMutation.isPending}
+            styles={{ margin: 0 }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return <ModalUX body={body} openDialog={openModal} closeModal={closeModal} />;
 };
 
 export default ContainerContent;
