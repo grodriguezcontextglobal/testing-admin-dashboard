@@ -47,9 +47,12 @@ const EditingInventory = ({ editingInventory, setEditingInventory }) => {
   });
 
   const { notify, contextHolder } = useStatusNotification();
+  // The action hooks call this for exactly one thing: the "items added" message
+  // on the happy path. It was wired to notify("error", ...), so the only
+  // success message in the flow rendered red.
   const openNotification = useCallback(
     (msg) => {
-      notify("error", msg);
+      notify("success", msg);
     },
     [notify],
   );

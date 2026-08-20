@@ -15,6 +15,12 @@ import {
   describeWizardFooter,
   filterStockRows,
 } from "../../utils/eventStockFlow";
+import {
+  describeWriteOutcome,
+  describeWriteSteps,
+  initialWriteState,
+  markWriteStep,
+} from "../../utils/eventWriteProgress";
 
 /* ── icons ─────────────────────────────────────────────────────────────── */
 
@@ -100,6 +106,7 @@ const AddStockWizard = ({
   const [scanned, setScanned] = useState([]);
   const [scanDraft, setScanDraft] = useState("");
   const [addedCount, setAddedCount] = useState(0);
+  const [writeState, setWriteState] = useState(initialWriteState);
 
   const startSerial = watch("starting");
   const quantity = watch("quantity");
@@ -196,10 +203,11 @@ const AddStockWizard = ({
   /* ── what the write will carry ────────────────────────────────────────── */
   const serials = mode === "range" ? preview.serials : scanList.goodSerials;
   const reviewRows = buildReviewRows({ picked, serials, deposit });
-  const steps = describeStepper(step);
+  // Reaching the write means all three wizard steps are behind us.
+  const steps = describeStepper(step === "writing" ? "done" : step);
   const footer = describeWizardFooter({
     step,
-    count: step === "done" ? addedCount : serials.length,
+    count: serials.length,
     hasPicked: Boolean(picked),
     submitting: loadingStatus,
   });
@@ -209,16 +217,31 @@ const AddStockWizard = ({
     [stockRows, query],
   );
 
-  /* ── submits: the existing hooks, unchanged ──────────────────────────── */
+  /* ── the write, and what it actually did ─────────────────────────────── */
+
+  // The hooks report each step of the chain here. Nothing else can tell the
+  // difference between "all four committed" and "two committed, then the third
+  // was rejected" — and those used to look identical to the person.
+  const onStep = (index, status) =>
+    setWriteState((previous) => markWriteStep(previous, index, status));
+
+  const writeRows = describeWriteSteps(writeState);
+  const outcome = describeWriteOutcome(writeState, addedCount);
+
+  // closeModal is left inert on purpose: the hooks call it at the end of their
+  // happy path, but whether the write really landed is decided by the four step
+  // statuses, not by reaching the end of a function.
   const rangeSubmit = useAddingByStartingSerialNumber({
-    closeModal: () => setStep("done"),
+    closeModal: () => {},
+    onStep,
     openNotification,
     queryClient,
     setLoadingStatus,
   });
 
   const scanSubmit = useAddingItemsToEventInventoryOneByOne({
-    closeModal: () => setStep("done"),
+    closeModal: () => {},
+    onStep,
     openNotification,
     queryClient,
     setLoadingStatus,
@@ -227,8 +250,15 @@ const AddStockWizard = ({
 
   const onConfirm = handleSubmit(async (data) => {
     setAddedCount(serials.length);
-    if (mode === "range") return rangeSubmit(data);
-    return scanSubmit(data);
+    setWriteState(initialWriteState());
+    setStep("writing");
+    try {
+      if (mode === "range") await rangeSubmit(data);
+      else await scanSubmit(data);
+    } catch {
+      // Swallowed here and only here: the failure is already on screen as the
+      // step that was rejected, which says far more than a toast could.
+    }
   });
 
   const pickRow = (row) => {
@@ -255,6 +285,7 @@ const AddStockWizard = ({
     setScanDraft("");
     setQuery("");
     setAddedCount(0);
+    setWriteState(initialWriteState());
     setStep("1");
   };
 
@@ -609,35 +640,76 @@ const AddStockWizard = ({
         </div>
       )}
 
-      {/* ══ DONE ══ */}
-      {step === "done" && (
-        <div className="asw-done">
-          <span className="asw-done__icon">
-            <IconDone />
-          </span>
-          <p className="asw-done__title">
-            {addedCount} {addedCount === 1 ? "device" : "devices"} added
-          </p>
-          <p className="asw-done__body">
-            {picked
-              ? `${picked.category} · ${picked.group} from ${picked.location} is now held by this event. Add another group, or close this out.`
-              : "Add another group, or close this out."}
-          </p>
+      {/* ══ THE WRITE — four transactions across two databases, no rollback ══ */}
+      {step === "writing" && (
+        <div>
+          <div style={{ marginBottom: "16px" }}>
+            <h3 className="asw-write__title">{outcome.title}</h3>
+            <p className="asw-write__subtitle">{outcome.subtitle}</p>
+          </div>
+
+          <div className="asw-write">
+            {writeRows.map((row) => (
+              <div className="asw-write__row" key={row.label}>
+                <span className={`asw-write__dot asw-write__dot--${row.status}`}>
+                  {row.isDone && <IconCheck />}
+                  {row.isRunning && (
+                    <span className="asw-write__spin">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                        <path d="M21 12a9 9 0 1 1-6.2-8.5" />
+                      </svg>
+                    </span>
+                  )}
+                  {row.isFailed && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  )}
+                  {row.isPending && <span className="asw-write__pip" />}
+                </span>
+                <span className="asw-write__text">
+                  <span className={`asw-write__label asw-write__label--${row.status}`}>
+                    {row.label}
+                  </span>
+                  {row.note && (
+                    <span className={`asw-write__note asw-write__note--${row.status}`}>
+                      {row.note}
+                    </span>
+                  )}
+                </span>
+                <span className="asw-write__scope">{row.scope}</span>
+              </div>
+            ))}
+          </div>
+
+          {outcome.hasVerdict && (
+            <div className={`asw-verdict asw-verdict--${outcome.verdictTone}`}>
+              <span className="asw-verdict__icon">
+                {outcome.verdictTone === "good" ? <IconDone /> : <IconWarn size={20} />}
+              </span>
+              <span className="asw-verdict__text">
+                <span className="asw-verdict__title">{outcome.verdictTitle}</span>
+                <span className="asw-verdict__detail">{outcome.verdictDetail}</span>
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* ── footer ── */}
       <div className="asw-foot">
-        <span className="asw-hint">{footer.hint}</span>
+        <span className="asw-hint">
+          {step === "writing" ? outcome.footerHint : footer.hint}
+        </span>
         <div className="asw-foot__actions">
-          {footer.showBack && (
+          {step !== "writing" && footer.showBack && (
             <GrayButtonComponent
               title="Back"
               func={() => setStep(step === "3" ? "2" : "1")}
               styles={{ margin: 0, width: "fit-content" }}
             />
           )}
-          {footer.showAddAnother && (
+          {step === "writing" && outcome.phase === "ok" && (
             <GrayButtonComponent
               title="Add another group"
               func={startAnother}
@@ -645,11 +717,19 @@ const AddStockWizard = ({
             />
           )}
           <BlueButtonComponent
-            title={footer.nextLabel}
+            title={step === "writing" ? outcome.primaryLabel : footer.nextLabel}
             buttonType="button"
-            func={step === "3" ? onConfirm : step === "done" ? closeModal : goNext}
-            isDisabled={footer.nextDisabled}
-            isLoading={loadingStatus}
+            func={
+              step === "writing"
+                ? closeModal
+                : step === "3"
+                  ? onConfirm
+                  : goNext
+            }
+            isDisabled={
+              step === "writing" ? outcome.primaryDisabled : footer.nextDisabled
+            }
+            isLoading={step === "writing" && outcome.phase === "running"}
             styles={{ margin: 0, width: "fit-content" }}
           />
         </div>
