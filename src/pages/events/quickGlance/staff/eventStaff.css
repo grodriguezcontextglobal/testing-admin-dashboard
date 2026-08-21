@@ -1,0 +1,258 @@
+/**
+ * Managing an event's staff.
+ *
+ * Local to this folder rather than reaching into the consumer workflow's
+ * stylesheet — the two screens share tokens, not classes. Everything here reads
+ * from styles/untitled-ui/tokens.css; no palette is introduced, and semantic
+ * colour (success / warning / error) stays separate from the action blue.
+ */
+
+.staff-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.staff-editor__intro {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+  text-align: left;
+}
+
+/* ------------------------------------------------------------------ Section */
+
+.staff-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.staff-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gray-200, #ddded6);
+}
+
+.staff-section__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+  text-align: left;
+}
+
+.staff-section__count {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------- Form */
+
+.staff-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.staff-field__label {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-700, #454944);
+  text-align: left;
+}
+
+.staff-field__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.staff-field__row > .staff-field {
+  flex: 1 1 220px;
+}
+
+/* The lookup hint. Informational states are not errors: the old form rendered
+   "this person will be added to the company" in danger red, with
+   `cursor: pointer` on a paragraph that was not clickable. */
+.staff-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+}
+
+.staff-hint--neutral {
+  color: var(--gray-500, #777b73);
+}
+
+.staff-hint--success {
+  color: var(--success-700, #067647);
+}
+
+.staff-hint--warning {
+  color: var(--warning-700, #b54708);
+}
+
+/* ---------------------------------------------------------------- Role cards */
+
+/* Two comparable choices, so two comparable cards that say what each role can
+   actually do. It was a <Select> whose option labels carried the explanation in
+   parentheses, one of them describing behaviour that did not exist. */
+.staff-roles {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
+}
+
+.staff-role {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-300, #c6c7bb);
+  border-radius: var(--radius-lg, 10px);
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.staff-role:hover:not(:disabled) {
+  border-color: var(--action-300, #84adff);
+}
+
+.staff-role:focus-visible {
+  outline: 2px solid var(--action-600, #155eef);
+  outline-offset: 1px;
+}
+
+.staff-role.is-selected {
+  border-color: var(--action-600, #155eef);
+  box-shadow: 0 0 0 1px var(--action-600, #155eef);
+}
+
+.staff-role__name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+}
+
+.staff-role__description {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+/* ----------------------------------------------------------------- Problems */
+
+.staff-problems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 14px;
+  list-style: none;
+  background: var(--error-50, #fbeae5);
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-md, 8px);
+}
+
+.staff-problems li {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+  text-align: left;
+}
+
+/* ------------------------------------------------------------------- Footer */
+
+/* Actions right-aligned, matching every other modal in the app. They used to be
+   left-aligned, with Cancel rendered as a destructive red button. */
+.staff-editor__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* --------------------------------------------------------------- Member cell */
+
+.staff-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.staff-member__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.staff-member__name {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+  text-align: left;
+}
+
+.staff-member__email {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+/* Only the lookup spinner turns; the hint text itself must stay readable. */
+.staff-hint__spin {
+  animation: staff-hint-spin 0.9s linear infinite;
+}
+
+@keyframes staff-hint-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staff-role {
+    transition: none;
+  }
+
+  .staff-hint__spin {
+    animation: none;
+  }
+}
