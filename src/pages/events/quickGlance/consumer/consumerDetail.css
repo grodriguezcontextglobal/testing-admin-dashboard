@@ -1,0 +1,708 @@
+/**
+ * Consumer-at-an-event workflow.
+ *
+ * Everything structural comes from components/UX/profile/profileShell.css — this
+ * file only adds what the transaction workflow needs and the generic profile
+ * shell has no opinion about: the expanded transaction panel, the assignment
+ * progress meter, and the action groups inside it.
+ *
+ * No palette is introduced. Semantic colour (critical / warning / success) stays
+ * separate from the action blue, so red always means "needs attention" and never
+ * "selected".
+ */
+
+/* ------------------------------------------------------------ Action rail */
+
+/* The identity card's rail is a fixed column; a divider between the money
+   actions and the communication actions says they are different kinds of
+   thing without needing a label for each group. */
+.consumer-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.consumer-rail__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.consumer-rail__group + .consumer-rail__group {
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-200, #ddded6);
+}
+
+.consumer-rail__note {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--gray-500, #777b73);
+  text-align: left;
+}
+
+/* ----------------------------------------------------- Section toolbar */
+
+/* Search belongs in the section head next to the count it filters, not floating
+   full-width above the panel where it reads as a page-level search. */
+.consumer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.consumer-toolbar__search {
+  flex: 1 1 260px;
+  min-width: 200px;
+}
+
+/* ------------------------------------------------- Transaction panel */
+
+.transaction-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.transaction-panel__block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transaction-panel__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.transaction-panel__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 18px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+  text-align: left;
+}
+
+.transaction-panel__hint {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+  text-align: left;
+}
+
+/* One primary action, the rest secondary. The old bar was four identical blue
+   buttons, which made "return everything" look exactly as safe as "email a
+   report". */
+.transaction-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.transaction-panel__actions--secondary {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ------------------------------------------------ Assignment progress */
+
+.assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.assignment__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.assignment__count {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+  font-variant-numeric: tabular-nums;
+}
+
+.assignment__count em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--gray-500, #777b73);
+}
+
+.assignment__meter {
+  height: 6px;
+  overflow: hidden;
+  background: var(--gray-200, #ddded6);
+  border-radius: var(--radius-full, 9999px);
+}
+
+.assignment__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--action-600, #155eef);
+  transition: width 0.2s ease;
+}
+
+.assignment__meter--complete span {
+  background: var(--success-600, #079455);
+}
+
+.assignment__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assignment__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.assignment__type {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-800, #2d302c);
+  text-transform: capitalize;
+}
+
+.assignment__tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------- Serial number capture */
+
+.serial-capture {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.serial-capture__field {
+  flex: 1 1 260px;
+  min-width: 200px;
+}
+
+.serial-capture__label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-700, #454944);
+  text-align: left;
+}
+
+.serial-capture__error {
+  margin: 6px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+  text-align: left;
+}
+
+/* --------------------------------------------------------- Lost fee */
+
+.lost-fee {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.lost-fee__device {
+  display: grid;
+  gap: 14px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  padding: 16px 18px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.lost-fee__fact dt {
+  margin: 0 0 4px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.lost-fee__fact dd {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+.lost-fee__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.lost-fee__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--gray-200, #ddded6);
+}
+
+/* Payment method as two comparable cards rather than three buttons crammed into
+   a modal footer at 60% width each, which overflowed on every screen. */
+.method-choice {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+}
+
+.method-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+  text-align: left;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-300, #c6c7bb);
+  border-radius: var(--radius-lg, 10px);
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.method-card:hover:not(:disabled) {
+  border-color: var(--action-600, #155eef);
+  box-shadow: var(--shadow-xs);
+}
+
+.method-card:focus-visible {
+  outline: 2px solid var(--action-600, #155eef);
+  outline-offset: 1px;
+}
+
+.method-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.method-card__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--action-50, #eff4ff);
+  color: var(--action-600, #155eef);
+}
+
+.method-card__name {
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+}
+
+.method-card__hint {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assignment__meter span,
+  .method-card {
+    transition: none;
+  }
+}
+
+/* ============================================================ New transaction */
+
+/**
+ * One modal for every way of starting a transaction (no charge / cash / card
+ * deposit). It replaced four wrapper modals that were 95% identical, each with
+ * a fake tab bar built from a Blue and a LightBlue button carrying
+ * `textDecoration: underline`, and a line of text underneath repeating whichever
+ * one was selected.
+ */
+
+.txn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.txn__intro {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+  text-align: left;
+}
+
+.txn__step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The step number carries the ordering, so the heading itself can stay quiet. */
+.txn__step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.txn__step-index {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--gray-100, #eeefe9);
+  color: var(--gray-600, #5d615a);
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.txn__step--done .txn__step-index,
+.txn__step-index.is-done {
+  background: var(--success-50, #ecfdf3);
+  color: var(--success-700, #067647);
+}
+
+.txn__step--blocked {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.txn__step-title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+  text-align: left;
+}
+
+.txn__step-note {
+  margin: 0 0 0 auto;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+  font-variant-numeric: tabular-nums;
+}
+
+.txn__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.txn__col {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.txn__col--narrow {
+  flex: 0 1 148px;
+}
+
+.txn__label {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-700, #454944);
+  text-align: left;
+}
+
+/* Availability is stated as a count and a real range, never as "0 - 0". */
+.txn__availability {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-md, 8px);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+}
+
+.txn__availability strong {
+  color: var(--gray-900, #171d1a);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.txn__availability code {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--gray-800, #2d302c);
+}
+
+.txn__availability--empty {
+  background: var(--warning-50, #fffaeb);
+  border-color: var(--warning-200, #fedf89);
+  color: var(--warning-700, #b54708);
+}
+
+/* --------------------------------------------------------------- Scanner */
+
+.scan__picked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 4px;
+}
+
+/* Feedback sits directly under the input so it is read where it is caused,
+   rather than as a toast in the corner of the screen. */
+.scan__feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+}
+
+.scan__feedback--error {
+  color: var(--error-700, #9a3922);
+}
+
+.scan__feedback--ok {
+  color: var(--success-700, #067647);
+}
+
+.scan__meter {
+  height: 4px;
+  overflow: hidden;
+  background: var(--gray-200, #ddded6);
+  border-radius: var(--radius-full, 9999px);
+}
+
+.scan__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--action-600, #155eef);
+  transition: width 0.15s ease;
+}
+
+.scan__meter--complete span {
+  background: var(--success-600, #079455);
+}
+
+/* --------------------------------------------------------------- Summary */
+
+.txn__summary {
+  display: grid;
+  gap: 12px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  padding: 14px 16px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.txn__summary dt {
+  margin: 0 0 3px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.txn__summary dd {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+/* Blocking problems, listed together. A form that reveals one problem per
+   submit is a form you submit four times. */
+.txn__problems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 14px;
+  list-style: none;
+  background: var(--error-50, #fbeae5);
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-md, 8px);
+}
+
+.txn__problems li {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+  text-align: left;
+}
+
+.txn__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-200, #ddded6);
+}
+
+/* ================================================================= Deposit */
+
+.deposit {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.deposit__facts {
+  display: grid;
+  gap: 12px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  padding: 14px 16px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.deposit__facts dt {
+  margin: 0 0 3px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.deposit__facts dd {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+.deposit__amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.deposit__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 240px;
+}
+
+/* The consequence of the action, stated before the button that causes it. */
+.deposit__consequence {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--warning-50, #fffaeb);
+  border: 1px solid var(--warning-200, #fedf89);
+  border-radius: var(--radius-md, 8px);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--warning-700, #b54708);
+  text-align: left;
+}
+
+.deposit__blocked {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-md, 8px);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--gray-600, #5d615a);
+  text-align: left;
+}

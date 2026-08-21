@@ -1,120 +1,80 @@
-import { Grid, InputAdornment, OutlinedInput } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { Search, Trash2 } from "lucide-react";
+import { InputAdornment, OutlinedInput } from "@mui/material";
+import { Search, X } from "lucide-react";
+import { useState } from "react";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import { ProfileSection } from "../../../../../../components/UX/profile";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
+import "../../consumerDetail.css";
 import StripeTransactionTable from "../StripeTransactionTable";
-import TextLink from "../../../../../../components/UX/buttons/TextLink";
+
+/**
+ * The Transactions tab.
+ *
+ * Search moved into the section head, beside the count it filters. It used to be
+ * a full-width input in its own container above the panel, which read as a
+ * page-level search — and the "Transactions" heading below it was a bare
+ * bordered div glued to the table with `marginBottom: -2` and
+ * `paddingBottom: -2` (not a valid CSS length, so it did nothing anyway).
+ *
+ * The refresh control is a real button rather than a text link: it performs an
+ * action, and a link that does not navigate is a lie about what will happen.
+ */
 const TransactionsDetails = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [trigger, setTrigger] = useState(false);
-  const { customer } = useSelector((state) => state.stripe);
-  useEffect(() => {
-    const controller = new AbortController();
-    const refreshing = async () => {
-      await setSearchValue(".");
-      await setSearchValue("");
-    };
-    refreshing();
-    return () => {
-      controller.abort();
-    };
-  }, [customer.uid]);
+  const [refreshToken, setRefreshToken] = useState(0);
 
-  const refetchingTrigger = () => {
-    return setTrigger(!trigger);
-  };
   return (
-    <>
-      <Grid
-        marginY={3}
-        display={"flex"}
-        justifyContent={"flex-end"}
-        alignItems={"center"}
-        gap={1}
-        container
-      >
-        <Grid
-          display={"flex"}
-          justifyContent={"flex-end"}
-          alignItems={"center"}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          <OutlinedInput
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            style={OutlinedInputStyle}
-            fullWidth
-            placeholder="Search a transaction here"
-            startAdornment={
-              <InputAdornment position="start">
-                <Search size={16} />
-              </InputAdornment>
-            }
-            endAdornment={
-              <InputAdornment position="end">
-                <Trash2
-                  size={20}
-                  color="var(--blue-dark-600, #155eef)"
-                  style={{
-                    cursor: "pointer",
-                    opacity: String(searchValue).length > 0 ? 1 : 0,
-                  }}
-                  onClick={() => {
-                    setSearchValue("");
-                  }}
-                />
-              </InputAdornment>
-            }
+    <ProfileSection
+      title="Transactions"
+      description="Expand a transaction to assign, return, or write off its devices."
+      testId="consumer-transactions-section"
+      actions={
+        <div className="consumer-toolbar">
+          <div className="consumer-toolbar__search">
+            <OutlinedInput
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              style={OutlinedInputStyle}
+              fullWidth
+              size="small"
+              placeholder="Search transactions"
+              aria-label="Search this consumer's transactions"
+              startAdornment={
+                <InputAdornment position="start">
+                  <Search size={16} />
+                </InputAdornment>
+              }
+              endAdornment={
+                searchValue ? (
+                  <InputAdornment position="end">
+                    <X
+                      size={16}
+                      role="button"
+                      aria-label="Clear search"
+                      color="var(--gray-500, #777b73)"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setSearchValue("")}
+                    />
+                  </InputAdornment>
+                ) : null
+              }
+            />
+          </div>
+          <GrayButtonComponent
+            title="Refresh"
+            size="sm"
+            func={() => setRefreshToken((token) => token + 1)}
           />
-        </Grid>
-      </Grid>
-      <Grid
-        marginY={3}
-        display={"flex"}
-        justifyContent={"flex-start"}
-        alignItems={"center"}
-        gap={1}
-        container
-      >
-        <Grid
-          border={"1px solid var(--gray-200, #EAECF0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginBottom={-2}
-          paddingBottom={-2}
-          item
-          xs={12}
-        >
-          <p
-            style={{
-              ...TextFontsize18LineHeight28,
-              textTransform: "none",
-              padding: "24px",
-            }}
-          >
-            Transactions
-          </p>
-          <TextLink color="brand" onClick={() => refetchingTrigger()}>
-            Refresh
-          </TextLink>
-        </Grid>
-        <Grid item xs={12}>
-          <StripeTransactionTable
-            searchValue={searchValue}
-            refetchingTrigger={refetchingTrigger}
-            triggering={trigger}
-          />
-        </Grid>
-      </Grid>
-    </>
+        </div>
+      }
+    >
+      <div style={{ padding: "0 16px 12px" }}>
+        <StripeTransactionTable
+          searchValue={searchValue}
+          triggering={refreshToken}
+        />
+      </div>
+    </ProfileSection>
   );
 };
 

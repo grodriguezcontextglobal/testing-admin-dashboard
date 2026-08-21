@@ -1,350 +1,243 @@
-import {
-  FormControl,
-  Grid,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
+import { InputAdornment, OutlinedInput } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import { Alert, message } from "antd";
 import { groupBy } from "lodash";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import DevitrakLoading from "../../../../../../components/animation/DevitrakLoading";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
-import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import "../../consumerDetail.css";
+import {
+  buildLostFeeReport,
+  normalizeAssignedReceiver,
+  resolveLostDeviceFee,
+} from "../../utils/lostFee";
+import LostFeeScreen from "../components/LostFeeScreen";
+
+/**
+ * Collect a lost-device fee in cash.
+ *
+ * Behaviour preserved: write the device off in the assigned list, release it
+ * from the pool with a "Device lost" note, file a returned-issue record, post a
+ * cash report, email the consumer, clear the event caches, go back to the
+ * transactions tab.
+ *
+ * What changed:
+ *   - It no longer crashes on arrival. The fee was read as
+ *     `returnDeviceValue().value` while building the form's defaultValues, and
+ *     that helper returned undefined for any device type not priced in the
+ *     event — so the screen threw before rendering. Now the price is resolved
+ *     safely and a missing one is reported.
+ *   - A hard reload of this URL has no receiver in the store; that used to
+ *     dereference `receiverToReplaceObject.deviceType` and blank the page.
+ *   - Failures are reported. The submit handler's only error branch was
+ *     `console.error`, so a failed write left the operator on a form that
+ *     looked like it had never been submitted while the device stayed live.
+ *   - The pool lookup no longer filters on `user.company` while the event
+ *     stores `event.company`; it asks the endpoint for this event's pool and
+ *     matches the serial.
+ */
 const Cash = () => {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { event } = useSelector((state) => state.event);
-  const { receiverToReplaceObject } = useSelector((state) => state.helper);
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
-  const dispatch = useDispatch();
-  const { paymentIntentReceiversAssigned } = useSelector(
-    (state) => state.stripe
-  );
+  const { receiverToReplaceObject } = useSelector((state) => state.helper);
+  const { paymentIntentReceiversAssigned } = useSelector((state) => state.stripe);
+  const { notify, contextHolder } = useStatusNotification();
 
-  const [messageApi, contextHolder] = message.useMessage();
-  const loading = () => {
-    messageApi.open({
-      type: "loading",
-      content: "Action in progress..",
-      duration: 0,
-    });
-  };
-  const returnDeviceValue = () => {
-    const resultFound = new Set();
-    const { deviceSetup } = event;
-    for (let data of deviceSetup) {
-      if (data.consumerUses) {
-        resultFound.add(data);
-      }
-    }
-    const arrayOfFound = Array.from(resultFound);
-    for (let data of arrayOfFound) {
-      if (data.group === receiverToReplaceObject.deviceType) {
-        return data;
-      }
-    }
-  };
+  const device = receiverToReplaceObject;
+  const fee = resolveLostDeviceFee(event, device?.deviceType);
+  const receiver = normalizeAssignedReceiver(paymentIntentReceiversAssigned);
+
   const {
     handleSubmit,
     register,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      total: `${returnDeviceValue().value}`,
-    },
-  });
-  const listOfDeviceInPool = useQuery({
-    queryKey: ["deviceListOfPool"],
+    formState: { errors, isSubmitting },
+  } = useForm({ defaultValues: { total: fee.amount ? String(fee.amount) : "" } });
+
+  const poolQuery = useQuery({
+    queryKey: ["lostFeePool", event?.eventInfoDetail?.eventName, device?.serialNumber],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
+        device: device.serialNumber,
+        type: device.deviceType,
       }),
+    enabled: Boolean(event?.eventInfoDetail?.eventName && device?.serialNumber),
   });
-  const checkTypeOfPaymentIntentReceiversAssigned = () => {
-    if (Array.isArray(paymentIntentReceiversAssigned))
-      return paymentIntentReceiversAssigned[0];
-    return paymentIntentReceiversAssigned;
+
+  const goBack = () => {
+    dispatch(onAddPaymentIntentSelected(""));
+    navigate(`/events/event-attendees/${customer?.uid}/transactions-details`);
   };
 
-  const groupingByCompany = groupBy(
-    listOfDeviceInPool.data?.data?.receiversInventory,
-    "provider"
-  );
-  const findRightDataInEvent = () => {
-    const eventCompanyData = groupingByCompany[user.company];
-    if (eventCompanyData) {
-      const eventGroup = groupBy(eventCompanyData, "eventSelected");
-      const eventData = eventGroup[event.eventInfoDetail.eventName];
-      if (eventData) {
-        return eventData;
-      }
-    }
-  };
+  const writeDeviceOff = async () => {
+    // 1 — the consumer's assigned record becomes a write-off
+    await devitrakApi.patch(`/receiver/receiver-update/${receiver.id}`, {
+      id: receiver.id,
+      device: { ...receiver.device, status: "Lost" },
+      active: false,
+    });
 
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-  const isMediumDevice = useMediaQuery(
-    "only screen and (min-width : 769px) and (max-width : 992px)"
-  );
-  if (listOfDeviceInPool.isLoading)
-    return (
-      <div style={CenteringGrid}>
-        <DevitrakLoading />
-      </div>
-    );
-  if (listOfDeviceInPool.data) {
-    const changeStatusInPool = async () => {
-      let findTheOneInUsed;
-      let findDeviceInPool = groupBy(findRightDataInEvent(), "device");
-      if (findDeviceInPool[receiverToReplaceObject.serialNumber]) {
-        findTheOneInUsed = findDeviceInPool[
-          receiverToReplaceObject.serialNumber
-        ].find((element) => element.activity === true);
-      }
-      await devitrakApi.patch(
-        `/receiver/receivers-pool-update/${findTheOneInUsed.id}`,
-        {
-          id: findTheOneInUsed.id,
-          activity: false,
-          comment: "Device lost",
-          status: "Lost",
-        }
-      );
-      const objectReturnIssueProfile = {
-        ...findTheOneInUsed,
+    // 2 — the unit leaves circulation
+    const inPool = groupBy(
+      poolQuery.data?.data?.receiversInventory ?? [],
+      "device"
+    )[device.serialNumber]?.find((entry) => entry.activity === true);
+
+    if (inPool) {
+      await devitrakApi.patch(`/receiver/receivers-pool-update/${inPool.id}`, {
+        id: inPool.id,
+        activity: false,
+        comment: "Device lost",
+        status: "Lost",
+      });
+      await devitrakApi.post("/receiver/receiver-returned-issue", {
+        ...inPool,
         activity: false,
         comment: "Device lost",
         status: "Lost",
         user: customer?.email,
         admin: user?.email,
         timeStamp: Date.now(),
-      };
+      });
+    }
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      await writeDeviceOff();
+
       await devitrakApi.post(
-        "/receiver/receiver-returned-issue",
-        objectReturnIssueProfile
-      );
-    };
-    const changeStatusInDeviceAssignedData = async () => {
-      const assignedDeviceProfile = {
-        id: checkTypeOfPaymentIntentReceiversAssigned().id,
-        device: {
-          ...checkTypeOfPaymentIntentReceiversAssigned().device,
-          status: "Lost",
-        },
-        active:false
-      };
-      const updateAssignedDeviceList = await devitrakApi.patch(
-        `/receiver/receiver-update/${assignedDeviceProfile.id}`,
-        assignedDeviceProfile
-      );
-      if (updateAssignedDeviceList.data.ok) {
-        changeStatusInPool();
-      }
-    };
-    const handleSubmitForm = async (data) => {
-      try {
-        let cashReportProfile = {
-          attendee: customer?.email,
-          admin: user.email,
-          deviceLost: [
-            {
-              label: receiverToReplaceObject.serialNumber,
-              deviceType: receiverToReplaceObject.deviceType,
-            },
-          ],
+        "/cash-report/create-cash-report",
+        buildLostFeeReport({
           amount: data.total,
-          event: event.id,
-          company: user.companyData.id,
-          typeCollection: "Cash",
-          paymentIntent_charge_transaction: checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
-        };
-        loading();
-        await changeStatusInDeviceAssignedData();
-        const respo = await devitrakApi.post(
-          "/cash-report/create-cash-report",
-          cashReportProfile
-        );
-        if (respo) {
-          const stringDate = new Date().toString();
-          const dateSplitting = stringDate.split(" ");
-          await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
-            consumer: {
-              name: `${customer.name} ${customer.lastName}`,
-              email: customer.email,
-            },
-            device: `${receiverToReplaceObject.deviceType} - ${receiverToReplaceObject.serialNumber}`,
-            amount: data.total,
-            event: event.eventInfoDetail.eventName,
-            company: event.company,
-            date: dateSplitting.slice(0, 4),
-            time: dateSplitting[4],
-            transaction:
-              checkTypeOfPaymentIntentReceiversAssigned().paymentIntent,
-            link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-          });
-          messageApi.destroy;
-          // All three cache keys are independent (different literal keys, none
-          // depends on another's result), so clear them concurrently.
-          await Promise.all([
-            clearCacheMemory(
-              `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-            ),
-            clearCacheMemory(
-              `eventSelected=${event.id}&company=${user.companyData.id}`
-            ),
-            clearCacheMemory(
-              `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
-            ),
-          ]);
-          dispatch(onAddPaymentIntentSelected(""));
-          message.success("Cash transaction successfully!");
-          navigator(
-            `/events/event-attendees/${customer.uid}/transactions-details`
-          );
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    const handleBackAction = () => {
-      dispatch(onAddPaymentIntentSelected(""));
-      navigator(`/events/event-attendees/${customer.uid}/transactions-details`);
-    };
+          method: "Cash",
+          device,
+          paymentIntent: receiver?.paymentIntent,
+          consumer: customer,
+          admin: user,
+          event,
+          companyId: user.companyData.id,
+        })
+      );
+
+      const stamp = new Date().toString().split(" ");
+      await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
+        consumer: {
+          name: `${customer.name} ${customer.lastName}`,
+          email: customer.email,
+        },
+        device: `${device.deviceType} - ${device.serialNumber}`,
+        amount: data.total,
+        event: event.eventInfoDetail.eventName,
+        company: event.company,
+        date: stamp.slice(0, 4),
+        time: stamp[4],
+        transaction: receiver?.paymentIntent,
+        link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+      });
+
+      // All three keys are independent, so they clear concurrently.
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.id}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+        ),
+      ]);
+
+      notify("success", `Cash fee recorded for ${device.serialNumber}.`);
+      goBack();
+    } catch (error) {
+      // Was `console.error(error)` only: the operator saw an unchanged form and
+      // no indication that the device is still marked as in use.
+      notify(
+        "error",
+        "The fee was not recorded. The device is still marked as in use."
+      );
+    }
+  };
+
+  if (!device?.serialNumber || !receiver?.id) {
     return (
-      <>
-        {contextHolder}
-        <form
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-          }}
-          onSubmit={handleSubmit(handleSubmitForm)}
-        >
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            container
-          >
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-start"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={3}
-            >
-              <Typography
-                textTransform={"none"}
-                style={TextFontsize18LineHeight28}
-              >
-                Cash transaction for lost device
-              </Typography>
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
-              <OutlinedInput
-                disabled
-                value={receiverToReplaceObject.serialNumber}
-                style={OutlinedInputStyle}
-                fullWidth
-              />
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"center"}
-              margin={`${(isSmallDevice || isMediumDevice) && "0 0 2dvh 0"}`}
-              item
-              xs={12}
-              sm={12}
-              md={4}
-              lg={3}
-            >
-              <FormControl fullWidth>
-                <InputLabel htmlFor="outlined-adornment-amount">
-                  <Typography
-                    textTransform={"none"}
-                    style={{
-                      color: "#000",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      fontFamily: "Inter",
-                      lineHeight: "20px",
-                    }}
-                  >
-                    Amount
-                  </Typography>
-                </InputLabel>
-                <OutlinedInput
-                  id="outlined-adornment-amount"
-                  style={OutlinedInputStyle}
-                  startAdornment={
-                    <InputAdornment position="start">$</InputAdornment>
-                  }
-                  {...register("total", { required: true })}
-                  aria-invalid={errors.total ? "true" : "false"}
-                  label="Amount"
-                  name="total"
-                />
-              </FormControl>
-              {errors?.total && (
-                <Alert message="Amount is required" type="error" />
-              )}
-            </Grid>
-            <Grid
-              display={"flex"}
-              alignItems={"center"}
-              justifyContent={"flex-end"}
-              gap={1}
-              item
-              xs={12}
-              sm={12}
-              md={3}
-              lg={2}
-            >
-              <DangerButtonComponent
-                title="Cancel"
-                buttonType="button"
-                func={() => handleBackAction()}
-                styles={{ width: "fit-content" }}
-              />
-              <BlueButtonComponent
-                title="Submit"
-                buttonType="submit"
-                styles={{ width: "fit-content" }}
-              />
-            </Grid>
-          </Grid>
-        </form>
-      </>
+      <LostFeeScreen
+        title="Collect lost device fee · cash"
+        onCancel={goBack}
+        error={{
+          title: "No device selected",
+          description:
+            "Report a device as lost from its transaction to collect the fee.",
+        }}
+      />
     );
   }
+
+  return (
+    <>
+      {contextHolder}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <LostFeeScreen
+          title="Collect lost device fee · cash"
+          description="Recorded as cash taken at the counter. The consumer is emailed a receipt."
+          device={device}
+          amount={fee.amount}
+          consumerName={`${customer?.name ?? ""} ${customer?.lastName ?? ""}`.trim()}
+          eventName={event?.eventInfoDetail?.eventName}
+          onCancel={goBack}
+          footer={
+            <>
+              <GrayButtonComponent
+                title="Cancel"
+                buttonType="button"
+                func={goBack}
+              />
+              <BlueButtonComponent
+                title="Record cash payment"
+                buttonType="submit"
+                loadingState={isSubmitting}
+              />
+            </>
+          }
+        >
+          <div className="lost-fee__field">
+            <label className="serial-capture__label" htmlFor="lost-fee-amount">
+              Amount collected
+            </label>
+            <OutlinedInput
+              id="lost-fee-amount"
+              style={OutlinedInputStyle}
+              startAdornment={<InputAdornment position="start">$</InputAdornment>}
+              aria-invalid={errors.total ? "true" : "false"}
+              {...register("total", { required: true })}
+            />
+            {errors?.total && (
+              <p className="serial-capture__error">An amount is required.</p>
+            )}
+            {/* Says why the field is empty instead of prefilling a silent zero. */}
+            {!fee.found && (
+              <p className="transaction-panel__hint">
+                This device type has no replacement value set on the event, so
+                enter the amount manually.
+              </p>
+            )}
+          </div>
+        </LostFeeScreen>
+      </form>
+    </>
+  );
 };
 
 export default Cash;

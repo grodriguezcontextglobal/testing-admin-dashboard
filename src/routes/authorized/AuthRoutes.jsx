@@ -1,5 +1,5 @@
 import { lazy, Suspense, useRef } from "react";
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
 import IndustryTabGuard from "./IndustryTabGuard";
@@ -48,6 +48,11 @@ const FormDocumentDetail = lazy(() =>
 const TransactionsDetails = lazy(() =>
   import(
     "../../pages/events/quickGlance/consumer/ConsumerDetail/details/TransactionsDetails"
+  )
+);
+const ConsumerDocumentsDetails = lazy(() =>
+  import(
+    "../../pages/events/quickGlance/consumer/ConsumerDetail/details/DocumentsDetails"
   )
 );
 const Cash = lazy(() =>
@@ -295,10 +300,18 @@ const AuthRoutes = () => {
                 path="/events/event-attendees/:id"
                 element={<CustomerDetailInEvent />}
               >
+                {/* The tab strip is the page's navigation, so the bare consumer
+                    URL has to land on a tab instead of rendering an empty
+                    <Outlet/> under the stat tiles. */}
+                <Route
+                  index
+                  element={<Navigate to="transactions-details" replace />}
+                />
                 <Route
                   path="transactions-details"
                   element={<TransactionsDetails />}
                 />
+                <Route path="documents" element={<ConsumerDocumentsDetails />} />
                 <Route path="payment-confirmed" element={<Confirmation />} />
                 <Route
                   path="payment-service-confirmation"

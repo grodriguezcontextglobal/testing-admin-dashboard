@@ -1,10 +1,4 @@
-import {
-  FormHelperText,
-  Grid,
-  InputLabel,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
+import { OutlinedInput } from "@mui/material";
 import { message } from "antd";
 import { groupBy } from "lodash";
 import { useMemo, useRef, useState } from "react";
@@ -20,8 +14,8 @@ import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueBut
 import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import { onAddDevicesAssignedInPaymentIntent } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import TextFontsize18LineHeight28 from "../../../../../../styles/global/TextFontSize18LineHeight28";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import "../../consumerDetail.css";
 import { useDeviceStatus } from "./hooks/useDeviceStatus";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
@@ -450,6 +444,10 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     }
   };
 
+  // Layout only — the validation, pool lookup and per-type limits above are
+  // untouched. The field used to sit in a 9/2-column MUI Grid whose label was a
+  // 18px/28px heading, so the input read as a section rather than as one field,
+  // and the "Add" button landed a whole column away from it.
   return (
     <>
       {contextHolder}
@@ -457,38 +455,34 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
       <form
         onSubmit={handleSubmit(handleDevicesAssignedToPaymentIntentInEvent)}
       >
-        <Grid
-          display={"flex"}
-          justifyContent={"space-around"}
-          alignItems={"center"}
-          marginY={1}
-          container
-        >
-          <Grid item xs={9}>
-            <InputLabel>
-              <Typography style={TextFontsize18LineHeight28}>
-                Serial number
-              </Typography>
-            </InputLabel>
+        <div className="serial-capture">
+          <div className="serial-capture__field">
+            <label className="serial-capture__label" htmlFor="assign-serial-number">
+              Scan or type a serial number
+            </label>
             <OutlinedInput
-              // disabled={submittedAction}
+              id="assign-serial-number"
               autoFocus={true}
-              {...register("serialNumber", { required: true })}
               fullWidth
+              size="small"
+              placeholder="e.g. SN-4471"
+              aria-invalid={errors?.serialNumber ? "true" : "false"}
+              {...register("serialNumber", { required: true })}
               style={OutlinedInputStyle}
             />
-            <FormHelperText id="outlined-weight-helper-text">
-              {errors?.serialNumber && <p>Serial number is required</p>}
-            </FormHelperText>
-          </Grid>
-          <Grid height={"auto"} alignSelf={"flex-end"} item xs={2}>
-            <BlueButtonComponent
-              disabled={submittedAction}
-              buttonType="submit"
-              title={"Add"}
-            />
-          </Grid>
-        </Grid>
+            {errors?.serialNumber && (
+              <p className="serial-capture__error">
+                A serial number is required.
+              </p>
+            )}
+          </div>
+          <BlueButtonComponent
+            disabled={submittedAction}
+            loadingState={submittedAction}
+            buttonType="submit"
+            title={"Assign device"}
+          />
+        </div>
       </form>
     </>
   );
