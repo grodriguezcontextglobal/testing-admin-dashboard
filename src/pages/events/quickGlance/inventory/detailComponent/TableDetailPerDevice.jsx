@@ -1,228 +1,122 @@
-import BaseTable from "../../../../../components/UX/tables/BaseTable";
-import { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import PropTypes from "prop-types";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import TextLink from "../../../../../components/UX/buttons/TextLink";
+import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
+import { StatusChip } from "../../../../../components/UX/profile";
+import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
-import TextLink from "../../../../../components/UX/buttons/TextLink";
-const TableDetailPerDevice = ({ searching }) => {
-  const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
-  const { event } = useSelector((state) => state.event);
-  const { user } = useSelector((state) => state.admin);
+
+/**
+ * Who has held this device at this event.
+ *
+ * Assignments only. The previous version concatenated the reported-fault records
+ * into the same table, and those are *pool* records where `device` is the serial
+ * string rather than a device object — so the status column's
+ * `record.device.status` was `undefined`, which its ternary rendered as
+ * "Returned". A device written off as lost appeared in this table as returned.
+ * Faults have their own table now, with their own columns.
+ *
+ * The fetching moved up to the page: this component had two `useCallback`s with
+ * empty dependency arrays that appended to the state they closed over, driven by
+ * an effect keyed on `[assignedDeviceList.length, defectedDevicesList.length]` —
+ * so it fetched, set state, re-ran the effect off the new length, and fetched
+ * everything a second time on every mount.
+ */
+const TableDetailPerDevice = ({ rows, isLoading }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [assignedDeviceList, setAssignedDeviceList] = useState([]);
-  const assignedDeviceTracking = useCallback(async () => {
-    const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
-      "device.serialNumber": deviceInfoSelected.serialNumber,
-      eventSelected: event.eventInfoDetail.eventName,
-      company: user.companyData.id,
-    });
-    if (respo.data.ok) {
-      const result = [...assignedDeviceList, ...respo.data.listOfReceivers];
-      setAssignedDeviceList(result);
-    }
-  }, []);
+  const openConsumer = async (email) => {
+    const response = await devitrakApi.post("/auth/users", { email });
+    const consumer = response.data?.users?.at(-1);
+    if (!consumer) return;
 
-  const [defectedDevicesList, setDefectedDevicesList] = useState([]);
-  
-  const defectedDeviceTracking = useCallback(async () => {
-    const respo = await devitrakApi.post(
-      "/receiver/list-receiver-returned-issue",
-      {
-        "device": deviceInfoSelected.serialNumber,
-        eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-      }
-    );
-    if (respo.data.ok) {
-      const result = [...defectedDevicesList, ...respo.data.record];
-      setDefectedDevicesList(result);
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    assignedDeviceTracking();
-    defectedDeviceTracking();
-    return () => {
-      controller.abort();
+    const profile = {
+      uid: consumer.id ?? consumer.uid,
+      name: consumer.name,
+      lastName: consumer.lastName,
+      email: consumer.email,
+      phoneNumber: consumer.phoneNumber,
     };
-  }, [assignedDeviceList.length, defectedDevicesList.length]);
-
-  const sortingAssignedDeviceTrack = useCallback(() => {
-    const addingKey = new Set();
-    for (let data of assignedDeviceList) {
-      addingKey.add({ key: data.id, ...data });
-    }
-    return Array.from(addingKey).reverse();
-  }, [assignedDeviceList.length]);
-  const finalResult = () => {
-    if (!searching || String(searching).length < 1) {
-      return [...sortingAssignedDeviceTrack(), ...defectedDevicesList];
-    } else {
-      const data = [...sortingAssignedDeviceTrack(), ...defectedDevicesList];
-      return data.filter(
-        (element) =>
-          String(element.user)
-            .toLowerCase()
-            .includes(String(searching).toLowerCase()) ||
-          String(element.eventSelected[0])
-            .toLowerCase()
-            .includes(String(searching).toLowerCase())
-      );
-    }
-  };
-
-  const handleConsumerNavigation = async (record) => {
-    const consumerData = await devitrakApi.post("/auth/users", {
-      email: record.user,
-    });
-    if (consumerData.data) {
-      const consumer = consumerData.data.users.at(-1);
-      let userFormatData = {
-        uid: consumer.id ?? consumer.uid,
-        name: consumer.name,
-        lastName: consumer.lastName,
-        email: consumer.email,
-        phoneNumber: consumer.phoneNumber,
-      };
-      dispatch(onAddCustomerInfo(userFormatData));
-      dispatch(onAddCustomer(userFormatData));
-      navigate(
-        `/events/event-attendees/${userFormatData.uid}/transactions-details`
-      );
-    }
-  };
-  const renderRowStyle = {
-    textTransform: "none",
-    fontSize: "14px",
-    fontFamily: "Inter",
-    fontStyle: "normal",
-    fontWeight: 400,
-    lineHeight: "20px",
-  };
-
-  const displayTernary = (arg1, bg1, bg2, bg3) => {
-    if (typeof arg1 === "string") {
-      return bg1;
-    } else {
-      if (arg1) {
-        return bg2;
-      }
-      return bg3;
-    }
+    dispatch(onAddCustomerInfo(profile));
+    dispatch(onAddCustomer(profile));
+    navigate(`/events/event-attendees/${profile.uid}/transactions-details`);
   };
 
   const columns = [
     {
-      title: "Event",
-      dataIndex: "eventSelected",
-      align: "left",
-      sorter: {
-        compare: (a, b) =>
-          ("" + a.eventSelected).localeCompare(b.eventSelected),
-      },
-      render: (eventSelected) => (
-        <TextLink
-          onClick={() => navigate("/events/event-quickglance")}
-          style={{ margin: "auto" }}
-        >
-          {eventSelected}
-        </TextLink>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "device.status",
-      align: "left",
-      responsive: ["md", "lg"],
-      sorter: {
-        compare: (a, b) => ("" + a.status).localeCompare(b.status),
-      },
-      render: (_, record) => (
-        <span
-          style={{
-            margin: "auto",
-          }}
-        >
-          <p
-            style={{
-              ...renderRowStyle,
-              backgroundColor: displayTernary(
-                record.device.status,
-                "var(--orange-dark-50, #FFF4ED)",
-                "var(--orange-dark-50, #FFF4ED)",
-                "var(--success-50, #ECFDF3)"
-              ),
-              width: "fit-content",
-              padding: "5px 8px",
-              borderRadius: "8px",
-              color: displayTernary(
-                record.device.status,
-                "var(--orange-700, #B93815)",
-                "var(--orange-700, #B93815)",
-                "var(--success-700, #027A48)"
-              ),
-            }}
-          >
-            {displayTernary(
-              record.device.status,
-              record.device.status,
-              "In-use",
-              "Returned"
-            )}
-          </p>
-        </span>
-      ),
-    },
-    {
-      title: "Condition",
-      dataIndex: "status",
-      align: "left",
-      responsive: ["md", "lg"],
-      sorter: {
-        compare: (a, b) => ("" + a.status).localeCompare(b.status),
-      },
-      render: (status) => (
-        <span style={{ margin: "auto" }}>
-          <p style={renderRowStyle}>
-            {typeof status === "string" ? status : "Operational"}
-          </p>
-        </span>
-      ),
-    },
-    {
       title: "Consumer",
       dataIndex: "user",
-      width: "33%",
-      align: "left",
-      sorter: {
-        compare: (a, b) => ("" + a.user).localeCompare(b.user),
-      },
-      render: (_, record) => (
-        <TextLink onClick={() => handleConsumerNavigation(record)}>
-          {record.user}
-        </TextLink>
+      key: "user",
+      sorter: (a, b) => String(a.user).localeCompare(b.user),
+      render: (user) =>
+        user ? (
+          <TextLink onClick={() => openConsumer(user)}>{user}</TextLink>
+        ) : (
+          <span style={{ color: "var(--gray-500, #777b73)" }}>Unassigned</span>
+        ),
+    },
+    {
+      title: "State",
+      dataIndex: "state",
+      key: "state",
+      width: "18%",
+      sorter: (a, b) => a.state.label.localeCompare(b.state.label),
+      render: (state) => <StatusChip tone={state.tone} pip label={state.label} />,
+    },
+    {
+      title: "Transaction",
+      dataIndex: "paymentIntent",
+      key: "paymentIntent",
+      width: "28%",
+      responsive: ["lg"],
+      render: (paymentIntent) => (
+        <span className="profile-serial">{paymentIntent || "—"}</span>
       ),
     },
   ];
 
+  if (!isLoading && rows.length === 0) {
+    return (
+      <EmptyState
+        compact
+        icon="tabler:user-off"
+        title="Never handed out at this event"
+        description="Once this device is assigned to a consumer, the handover shows up here."
+      />
+    );
+  }
+
   return (
     <BaseTable
-      sticky
-      size="large"
+      className="profile-table"
       columns={columns}
-      dataSource={finalResult()}
-      pagination={{
-        position: ["bottomCenter"],
-      }}
-      className="table-ant-customized"
+      dataSource={rows}
+      loading={isLoading}
+      enablePagination={rows.length > 10}
+      pageSize={10}
     />
   );
+};
+
+TableDetailPerDevice.propTypes = {
+  rows: PropTypes.arrayOf(
+    PropTypes.shape({
+      key: PropTypes.string,
+      user: PropTypes.string,
+      paymentIntent: PropTypes.string,
+      state: PropTypes.shape({ tone: PropTypes.string, label: PropTypes.string }),
+    })
+  ).isRequired,
+  isLoading: PropTypes.bool,
+};
+
+TableDetailPerDevice.defaultProps = {
+  isLoading: false,
 };
 
 export default TableDetailPerDevice;

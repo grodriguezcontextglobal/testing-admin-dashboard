@@ -1,0 +1,40 @@
+/**
+ * One device, at one event.
+ *
+ * Structure comes from components/UX/profile/profileShell.css — this file only
+ * adds the action rail and the toolbar that shell has no opinion about. No new
+ * palette; semantic colour stays separate from the action blue.
+ */
+
+/* The identity card's rail is a fixed column, so the buttons never slide
+   sideways as the fact groups change between devices. */
+.device-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Says why the rail is otherwise empty, rather than showing a bare column. */
+.device-rail__note {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--gray-500, #777b73);
+  text-align: left;
+}
+
+/* Search belongs in the section head next to the count it filters, not under a
+   28px "Search:" heading that reads as a page title. */
+.device-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-toolbar__search {
+  flex: 1 1 240px;
+  min-width: 190px;
+}
