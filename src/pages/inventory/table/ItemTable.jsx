@@ -151,7 +151,14 @@ const ItemTable = ({
     keepPreviousData: true,
   });
   const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = groupBy(imageSource, "item_group");
+  // Memoize so this object keeps a stable identity across renders. It feeds
+  // `refactoredDataset`'s dependency array; recreating it every render made
+  // `refactoredDataset` -> `baseDataset` unstable, which re-fired the effects
+  // below on every render (setState each time) -> "Maximum update depth exceeded".
+  const groupingByDeviceType = useMemo(
+    () => groupBy(imageSource, "item_group"),
+    [imageSource],
+  );
   const renderedListItems = listItemsQuery?.data?.data?.result;
   const getDataStructuringFormat = useCallback(
     (props) => {

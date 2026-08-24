@@ -255,7 +255,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             <BlueButtonComponent
                 title="Import Inventory (.xlsx)"
                 func={() => setOpenModal(true)}
-                style={{ width: "fit-content" }}
+                styles={{ width: "fit-content" }}
             />
 
             <Modal
@@ -289,7 +289,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                     const fileInput = document.getElementById("xlsx-importer");
                                     if (fileInput) fileInput.value = "";
                                 }}
-                                style={{ width: "fit-content" }}
+                                styles={{ width: "fit-content" }}
                             />
                         )}
                     </div>

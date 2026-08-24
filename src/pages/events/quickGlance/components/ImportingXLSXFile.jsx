@@ -308,7 +308,7 @@ const ImportingXLSXFile = ({
             <GrayButtonComponent
               title="View Template Guide"
               func={() => setOpenTour(true)}
-              style={{ width: "fit-content" }}
+              styles={{ width: "fit-content" }}
             />
             <GrayButtonComponent
               func={() => {
@@ -316,7 +316,7 @@ const ImportingXLSXFile = ({
                 setRows([]);
                 setFileName("");
               }}
-              style={{ width: "fit-content" }}
+              styles={{ width: "fit-content" }}
               title="Clear"
             />
           </div>
@@ -340,7 +340,7 @@ const ImportingXLSXFile = ({
                 setRows([]);
                 setFileName("");
               }}
-              style={{ marginLeft: "auto", width: "fit-content" }}
+              styles={{ marginLeft: "auto", width: "fit-content" }}
               title="Clear"
             />
             {errors.map((e, i) => (
@@ -365,7 +365,7 @@ const ImportingXLSXFile = ({
               <BlueButtonComponent
                 title={"Add to Event Inventory"}
                 func={addXLSXDataIntoEventInventory}
-                style={{ width: "fit-content" }}
+                styles={{ width: "fit-content" }}
                 loadingState={loadingState}
               />
             </div>
@@ -429,7 +429,7 @@ const ImportingXLSXFile = ({
         >
           <GrayButtonComponent
             func={() => closeModal()}
-            style={{ marginLeft: "auto", width: "fit-content" }}
+            styles={{ marginLeft: "auto", width: "fit-content" }}
             title="Done"
             loadingState={loadingState}
           />
@@ -492,7 +492,7 @@ const ImportingXLSXFile = ({
           <GrayButtonComponent
             title={"Close"}
             func={() => setOpenViewModal(false)}
-            style={{ width: "fit-content" }}
+            styles={{ width: "fit-content" }}
           />
         </div>
       </div>

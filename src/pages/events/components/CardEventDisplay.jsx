@@ -2,9 +2,11 @@ import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Tooltip } from "antd";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 import ReusableCardWithFooter from "../../../components/UX/cards/ReusableCardWithFooter";
 import {
   onAddEventData,
@@ -34,6 +36,38 @@ import renderingStatusUIComponent from "./renderingStatusUIComponent";
 const CardEventDisplay = ({ props }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.admin);
+  // Attendees per event (Students for schools, Consumers elsewhere) — shares
+  // the home-KPI query key, so all cards reuse ONE cached request.
+  const industryProfile = getIndustryProfile(user?.companyData?.industry);
+  const audienceLabel = industryProfile.audience ?? "Consumers";
+  const audienceSingular = audienceLabel.replace(/s$/i, "");
+  const consumersStatsQuery = useQuery({
+    queryKey: ["allConsumersBasedOnEventsPerCompany"],
+    queryFn: () =>
+      devitrakApi.get(
+        `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
+      ),
+    enabled: !!user?.companyData?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+  const attendeesByEvent = (() => {
+    try {
+      const raw = consumersStatsQuery.data?.data?.result?.usersList;
+      const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!Array.isArray(list)) return {};
+      const map = {};
+      for (const u of list) {
+        const evs = Array.isArray(u?.eventSelected)
+          ? u.eventSelected
+          : [u?.eventSelected].filter(Boolean);
+        for (const ev of evs) map[ev] = (map[ev] || 0) + 1;
+      }
+      return map;
+    } catch {
+      return {};
+    }
+  })();
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)",
@@ -242,7 +276,9 @@ const CardEventDisplay = ({ props }) => {
           </Grid>
         </Grid>
         {(() => {
-          const { totalDevices, deviceGroups, staff } = getEventMetrics(props);
+          const { totalDevices, staff } = getEventMetrics(props);
+          const eventName = props?.eventInfoDetail?.eventName;
+          const attendeeCount = (attendeesByEvent && attendeesByEvent[eventName]) || 0;
           const logistics = getLogisticsStatus(props);
           const dicInventoryLogistic = {
             "no_received_yet": "Not Received Yet",
@@ -255,7 +291,10 @@ const CardEventDisplay = ({ props }) => {
           // const inventoryBadge = getInventoryBadgeProps(props);
           const stats = [
             { value: totalDevices.toLocaleString(), label: "Devices" },
-            { value: deviceGroups, label: deviceGroups === 1 ? "Group" : "Groups" },
+            {
+              value: attendeeCount.toLocaleString(),
+              label: attendeeCount === 1 ? audienceSingular : audienceLabel,
+            },
             { value: staff, label: staff === 1 ? "Staff member" : "Staff" },
             { value: inventoryLogisticStatus, label: "Inventory logistic status" },
           ];

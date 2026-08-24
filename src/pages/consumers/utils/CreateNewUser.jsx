@@ -117,6 +117,8 @@ export const CreateNewConsumer = ({
   const [eventAssignedTo, setEventAssignedTo] = useState("");
   const [loading, setLoading] = useState(false);
   const { event } = useSelector((state) => state.event);
+  const { user: adminUser } = useSelector((state) => state.admin);
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -200,6 +202,20 @@ export const CreateNewConsumer = ({
           email: data.email,
           phone_number: `${newUserProfile.phoneNumber}`,
         });
+        // optional welcome email — admin's choice at creation time
+        if (sendWelcomeEmail && data.email) {
+          try {
+            await devitrakApi.post("/nodemailer/single-email-notification", {
+              consumer: [data.email],
+              subject: `Welcome to ${adminUser.companyData.company_name}`,
+              message: `Hi ${data.firstName},\n\nA profile has been created for you in ${adminUser.companyData.company_name}'s device management system.\n\n${adminUser.companyData.company_name}`,
+              eventSelected: "",
+              company: adminUser.companyData.company_name,
+            });
+          } catch {
+            // email failure shouldn't block the created record
+          }
+        }
         openNotificationWithIcon("Success", "New consumer added");
         setLoading(false);
         return redirectingStaffBasedOnConsumerEventPage(newUser.data);
@@ -464,6 +480,28 @@ export const CreateNewConsumer = ({
           />
         </div>
       </div>
+
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          marginTop: "1rem",
+          fontFamily: "Inter, sans-serif",
+          fontSize: "14px",
+          color: "var(--gray-700, #454944)",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={sendWelcomeEmail}
+          onChange={(e) => setSendWelcomeEmail(e.target.checked)}
+          style={{ width: 16, height: 16 }}
+        />
+        Send a welcome email to this person
+      </label>
 
       <BlueButtonComponent
         disabled={false}

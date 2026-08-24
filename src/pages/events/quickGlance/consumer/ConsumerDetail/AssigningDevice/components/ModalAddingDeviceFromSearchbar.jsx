@@ -271,7 +271,7 @@ const ModalAddingDeviceFromSearchbar = () => {
             <BlueButtonComponent
               title={"Assigned and Save"}
               func={() => closeModal()}
-              style={{
+              styles={{
                 display:
                   foundTransactionAndDevicesAssigned()?.length ===
                   paymentIntentDetailSelected?.device

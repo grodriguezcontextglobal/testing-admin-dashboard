@@ -295,7 +295,7 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
             <GrayButtonComponent
               title="View Template Guide"
               func={() => setOpenTour(true)}
-              style={{ width: "fit-content" }}
+              styles={{ width: "fit-content" }}
             />
           </div>
         )}

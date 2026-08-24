@@ -10,6 +10,10 @@ import {
   storeAndGenerateImageUrl,
 } from "../utils/BulkItemActionsOptions";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../utils/SubLocationRenderer";
+import {
+  cleanScanValue,
+  containsScanValue,
+} from "../../../../utils/scan/scanInput";
 import validatingInputFields from "../utils/validatingInputFields";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -425,14 +429,14 @@ const useBulkActionLogic = () => {
   };
 
   const manuallyAddingSerialNumbers = () => {
-    if (String(watch("serial_number_list")).length < 1) return;
-    if (scannedSerialNumbers.includes(watch("serial_number_list")))
-      return message.warning(
-        "Serial number is already scanned or invalid for this transaction.",
-      );
-    const result = [...scannedSerialNumbers, watch("serial_number_list")];
+    const value = cleanScanValue(watch("serial_number_list"));
+    // Clear before deciding: with a hardware reader the next read is already on
+    // its way, and anything left in the field gets prepended to it.
     setValue("serial_number_list", "");
-    return setScannedSerialNumbers(result);
+    if (!value) return;
+    if (containsScanValue(scannedSerialNumbers, value))
+      return message.warning(`${value} was already scanned.`);
+    return setScannedSerialNumbers([...scannedSerialNumbers, value]);
   };
 
 

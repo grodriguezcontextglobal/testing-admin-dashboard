@@ -4,10 +4,11 @@ import {
   Typography
 } from "@mui/material";
 import { Space } from "antd";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Chip from "../../../../../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import Input from "../../../../../../../components/UX/inputs/Input"; // Reusable Input
+import { useScanInput } from "../../../../../../../hooks/useScanInput";
 import useAddingItemsToEventInventoryOneByOne from "../EditingEventInventoryActions/addingOneByOne";
 import DangerButtonConfirmationComponent from "../../../../../../../components/UX/buttons/DangerButtonConfirmation";
 
@@ -26,25 +27,21 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
 }) => {
   const [serialNumbers, setSerialNumbers] = useState([]);
   const [currentSerial, setCurrentSerial] = useState("");
-  const inputRef = useRef(null);
+  // Normalization, de-duplication and focus retention now come from the shared
+  // hook, so this screen behaves identically to every other scan-in field.
+  const {
+    inputRef,
+    add,
+    remove: handleRemoveSerial,
+    clear,
+  } = useScanInput({ values: serialNumbers, setValues: setSerialNumbers });
 
   const handleAddSerial = (e) => {
     e.preventDefault();
-    const trimmedSerial = currentSerial.trim();
-    if (trimmedSerial && !serialNumbers.includes(trimmedSerial)) {
-      setSerialNumbers((prev) => [...prev, trimmedSerial]);
-      setCurrentSerial("");
-      // Keep focus on input for continuous scanning/typing
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }
-  };
-
-  const handleRemoveSerial = (serialToRemove) => {
-    setSerialNumbers((prev) =>
-      prev.filter((serial) => serial !== serialToRemove),
-    );
+    add(currentSerial);
+    // Clear even when the read was refused, so a rejected value is not
+    // prepended to the reader's next read.
+    setCurrentSerial("");
   };
 
   return (
@@ -108,7 +105,7 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, flex: 1 }}>
           Added Serial Numbers ({serialNumbers.length}){serialNumbers.length > 0 && <DangerButtonConfirmationComponent
             title="Remove All"
-            func={() => setSerialNumbers([])}
+            func={clear}
           />}
         </Typography>
         {serialNumbers.length === 0 ? (
@@ -132,13 +129,13 @@ export const UpdateEventInventoryByAddingSerialNumberOneByOne = ({
         ) : (
           <Space size={[8,16]} wrap>
 
-            {serialNumbers.map((serial, index) => (
+            {serialNumbers.map((serial) => (
               <Chip
                 color="info"
                 variant="filled"
                 filled={true}
                 outlined={true}
-                key={index}
+                key={serial}
                 label={serial}
                 onDelete={() => handleRemoveSerial(serial)}
               />

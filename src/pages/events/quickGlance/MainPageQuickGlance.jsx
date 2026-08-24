@@ -29,6 +29,7 @@ import Report from "./components/lostFee/Report";
 import ModalsComponentsEventQuickGlance from "./components/modals/ModalsComponentsEventQuickGlance";
 import HighlightedPill from "./components/ux/HighlightedPill";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
+import { getIndustryProfile } from "../../../config/industryProfiles";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import StaffMainPage from "./staff/StaffMainPage";
 
@@ -48,6 +49,9 @@ const MainPageQuickGlance = () => {
   const today = new Date().getTime();
   const { choice, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  const eventAudience =
+    getIndustryProfile(user?.companyData?.industry).audience ?? "Consumers";
+  const eventAudienceSingular = eventAudience.replace(/s$/i, "").toLowerCase();
   const [createUserButton, setCreateUserButton] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showInventoryTypes, setShowInventoryTypes] = useState(true);
@@ -444,14 +448,14 @@ const MainPageQuickGlance = () => {
           }}
         >
           <p style={sectionHeaderStyle}>
-            Consumers at the event
+            {eventAudience} at the event
             <HighlightedPill
               props={`${foundAttendeesPerEvent()?.length} total`}
             />
           </p>
           <BlueButtonComponent
             func={() => setCreateUserButton(true)}
-            title="Add new consumer"
+            title={`Add new ${eventAudienceSingular}`}
           />
         </Grid>
         <Grid item xs={12}>

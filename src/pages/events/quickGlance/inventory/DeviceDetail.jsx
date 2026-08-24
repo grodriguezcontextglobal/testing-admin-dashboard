@@ -51,7 +51,7 @@ const DeviceDetail = () => {
               Devices
             </Typography>
             <BlueButtonComponent
-              style={{
+              styles={{
                 display: isAssistant(user.roleType) && "none",
                 width:"fit-content"
               }}

@@ -65,7 +65,7 @@ const ConsumerConfirmationPayment = () => {
                   }}
                 >
                   <BlueButtonComponent
-                    text="Return to consumer page"
+                    title="Return to consumer page"
                     func={() => handleBackAction()}
                     key="return_consumer"
                   />

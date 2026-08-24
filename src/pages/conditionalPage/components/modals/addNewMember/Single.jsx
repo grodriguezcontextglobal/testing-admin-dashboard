@@ -1,6 +1,8 @@
+import { FormControlLabel } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
@@ -122,6 +124,8 @@ const Single = ({ closingModal }) => {
     setGuardianError(null);
   };
 
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
+
   const handleSubmit = async () => {
     const errs = validateSingleMemberForm(form, {
       representativeLabel: representative.label,
@@ -185,6 +189,25 @@ const Single = ({ closingModal }) => {
           );
         }
         setGuardianResolving(false);
+      }
+
+      // optional welcome email — admin's choice; spreadsheet imports never send
+      if (sendWelcomeEmail && form.email) {
+        try {
+          const recipients = [form.email];
+          if (ageFlags.minor && form.parent_guardian_email) {
+            recipients.push(form.parent_guardian_email);
+          }
+          await devitrakApi.post("/nodemailer/single-email-notification", {
+            consumer: recipients,
+            subject: `Welcome to ${user.companyData.company_name}`,
+            message: `Hi ${form.first_name},\n\nA profile has been created for you in ${user.companyData.company_name}'s device management system. You'll receive equipment details, agreements, and return reminders at this address.\n\n${user.companyData.company_name}`,
+            eventSelected: "",
+            company: user.companyData.company_name,
+          });
+        } catch {
+          // email failure shouldn't block the created record
+        }
       }
 
       // Success - clear form and close modal
@@ -267,6 +290,17 @@ const Single = ({ closingModal }) => {
           </div>
         )}
       </div>
+
+      <FormControlLabel
+        control={
+          <CheckboxReusableComponent
+            name="sendWelcomeEmail"
+            checked={sendWelcomeEmail}
+            onChange={(e) => setSendWelcomeEmail(e.target.checked)}
+          />
+        }
+        label="Send a welcome email to this person"
+      />
 
       {fields.minor && (
         <>

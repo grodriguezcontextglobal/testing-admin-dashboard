@@ -67,7 +67,7 @@ const DeviceHealthBar = ({ counts, onOpenIssuesList }) => {
           margin: "4px 0 16px",
         }}
       >
-        {counts.checkedOut} of {total} checked out
+        {counts.checkedOut} of {total} assigned to event
       </p>
 
       {/* Segmented bar */}

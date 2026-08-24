@@ -120,7 +120,7 @@ const LiveEventSnapshot = () => {
             color: "var(--gray-500, #777b73)",
           }}
         >
-          devices checked out
+          devices assigned to event
         </span>
       </p>
       <div

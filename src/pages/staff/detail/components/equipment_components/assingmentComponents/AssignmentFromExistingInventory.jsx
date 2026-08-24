@@ -17,6 +17,11 @@ import DevitrakLoading from "../../../../../../components/animation/DevitrakLoad
 import { BorderedCloseIcon } from "../../../../../../components/icons/BorderedCloseIcon";
 import { CheckIcon } from "../../../../../../components/icons/CheckIcon";
 import { checkArray } from "../../../../../../components/utils/checkArray";
+import {
+  cleanScanValue,
+  findByScanValue,
+  scanValuesMatch,
+} from "../../../../../../utils/scan/scanInput";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
@@ -430,8 +435,8 @@ const AssignmentFromExistingInventory = () => {
       if (data.startingNumber?.length > 0) {
         const data_serial_numbers = JSON.parse(valueItemSelected.data);
         if (data_serial_numbers.length > 0) {
-          const index = data_serial_numbers.findIndex(
-            (item) => item.serial_number === data.startingNumber
+          const index = data_serial_numbers.findIndex((item) =>
+            scanValuesMatch(item.serial_number, data.startingNumber)
           );
           if (index > -1) {
             const selectedData = data_serial_numbers.slice(
@@ -508,17 +513,24 @@ const AssignmentFromExistingInventory = () => {
     );
   };
   useEffect(() => {
-    const checkingSerialNumberInputted = async () => {
-      if (valueItemSelected?.data) {
-        const data = JSON.parse(valueItemSelected.data);
-        if (watch("startingNumber").length === data[0].serial_number.length) {
-          setCheckingSerialNumberInputted(
-            data.some((item) => item.serial_number === watch("startingNumber"))
-          );
-        }
-      }
-    };
-    checkingSerialNumberInputted();
+    // Validate every read, with no length gate. The old check only ran when the
+    // entered value happened to be exactly as long as the first row's serial, so
+    // a scanned 24-character EPC never validated at all — and on a near miss it
+    // left the previous verdict standing instead of clearing it.
+    if (!valueItemSelected?.data || !cleanScanValue(watch("startingNumber"))) {
+      return setCheckingSerialNumberInputted(false);
+    }
+    const data = JSON.parse(valueItemSelected.data);
+    if (!Array.isArray(data) || !data.length) {
+      return setCheckingSerialNumberInputted(false);
+    }
+    return setCheckingSerialNumberInputted(
+      Boolean(
+        findByScanValue(data, watch("startingNumber"), {
+          getValue: (item) => item.serial_number,
+        })
+      )
+    );
   }, [watch("startingNumber"), valueItemSelected]);
 
   return (

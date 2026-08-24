@@ -112,8 +112,40 @@ const EventsDevicesChart = () => {
     ],
   };
 
+  const legendDot = (color) => ({
+    display: "inline-block",
+    width: 10,
+    height: 10,
+    borderRadius: "3px",
+    background: color,
+    marginRight: 6,
+  });
+  const legendLabel = {
+    fontFamily: "Inter, sans-serif",
+    fontSize: "12px",
+    color: "var(--gray-600, #5d615a)",
+    display: "inline-flex",
+    alignItems: "center",
+  };
+
   return (
     <div ref={boxRef} style={{ width: "100%" }}>
+      {/* color legend — which shade means what */}
+      <div
+        style={{
+          display: "flex",
+          gap: "16px",
+          justifyContent: "flex-end",
+          padding: "0 8px 4px 0",
+        }}
+      >
+        <span style={legendLabel}>
+          <span style={legendDot("#155eef")} /> Live now
+        </span>
+        <span style={legendLabel}>
+          <span style={legendDot("#021833")} /> Upcoming &amp; past
+        </span>
+      </div>
       <ReactECharts
         ref={chartRef}
         option={option}

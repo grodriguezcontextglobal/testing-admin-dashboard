@@ -28,6 +28,21 @@ const DEFAULT_PROFILE = {
 const PROFILES = {
   Education: {
     icon: "tabler:school",
+    // staff titles that make sense in a district (indexes = legacy role levels)
+    roleLabels: {
+      root_admin: "District Administrator",
+      admin: "School Administrator",
+      sale_manager: "Operations Manager",
+      event_manager: "Activities Coordinator",
+      inventory_manager: "Media & IT Specialist",
+      assistant: "Teacher / Staff",
+      0: "District Administrator",
+      1: "School Administrator",
+      2: "Operations Manager",
+      3: "Activities Coordinator",
+      4: "Media & IT Specialist",
+      5: "Teacher / Staff",
+    },
     // students ARE the consumers in a school — the generic consumer/rental
     // track (deposits, event check-ins) doesn't apply and would bypass
     // guardian enforcement if used by mistake
@@ -68,7 +83,7 @@ const PROFILES = {
 export const getIndustryProfile = (industry) => {
   const audience = industriesList?.[industry]?.[0] ?? null;
   const profile = PROFILES[industry] ?? DEFAULT_PROFILE;
-  return { audience, hiddenNavTabs: [], ...profile };
+  return { audience, hiddenNavTabs: [], roleLabels: {}, ...profile };
 };
 
 export default getIndustryProfile;

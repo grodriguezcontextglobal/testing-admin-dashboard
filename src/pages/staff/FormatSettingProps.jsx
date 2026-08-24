@@ -130,8 +130,8 @@ const FormatSettingProps = ({ props, sendObjectIdUser }) => {
         <Grid gap={2} item xs={12}>
           {permissionStatus === true && (
             <>
-            <DangerButtonComponent title="Cancel" func={handleEditAdminPermission} style={{ width: "fit-content" }}/>
-            <BlueButtonComponent title="Save" func={updatePermission} style={{ width: "fit-content" }}/>
+            <DangerButtonComponent title="Cancel" func={handleEditAdminPermission} styles={{ width: "fit-content" }}/>
+            <BlueButtonComponent title="Save" func={updatePermission} styles={{ width: "fit-content" }}/>
               {/* <Button
                 variant="outlined"
                 color="error"

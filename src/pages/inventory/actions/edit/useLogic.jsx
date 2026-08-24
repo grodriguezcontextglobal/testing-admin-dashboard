@@ -18,6 +18,10 @@ import {
   updateAllItemsBasedOnParameters,
 } from "../utils/EditBulkActionOptions";
 import { retrieveExistingSubLocationsForCompanyInventory } from "../utils/SubLocationRenderer";
+import {
+  cleanScanValue,
+  containsScanValue,
+} from "../../../../utils/scan/scanInput";
 import costValueInputFormat from "../../utils/costValueInputFormat";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import { formatDate } from "../../utils/dateFormat";
@@ -393,13 +397,16 @@ const useLogic = () => {
   };
 
   const manuallyAddingSerialNumbers = () => {
-    if (String(watch("serial_number_list")).length < 1) return;
-    if (scannedSerialNumbers.includes(watch("serial_number_list")))
-      return message.warning(
-        "Serial number is already scanned or invalid for this transaction.",
-      );
-    const result = [...scannedSerialNumbers, watch("serial_number_list")];
-    return setScannedSerialNumbers(result);
+    const value = cleanScanValue(watch("serial_number_list"));
+    // Clear before deciding: with a hardware reader the next read is already on
+    // its way, and anything left in the field gets prepended to it. The add
+    // flow always cleared here; this one did not, so a scanner appended each
+    // read onto the previous one.
+    setValue("serial_number_list", "");
+    if (!value) return;
+    if (containsScanValue(scannedSerialNumbers, value))
+      return message.warning(`${value} was already scanned.`);
+    return setScannedSerialNumbers([...scannedSerialNumbers, value]);
   };
 
   const acceptAndGenerateImage = async () => {

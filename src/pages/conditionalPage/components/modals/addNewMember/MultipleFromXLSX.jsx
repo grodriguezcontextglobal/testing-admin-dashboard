@@ -149,6 +149,18 @@ const MultipleFromXLSX = ({ companyId = null }) => {
         <p style={sectionText}>Detected columns: {columnsDetected.join(", ")}</p>
       )}
 
+            <p
+        style={{
+          margin: "4px 0 0",
+          fontFamily: "Inter, sans-serif",
+          fontSize: "12px",
+          color: "var(--gray-500, #777b73)",
+          textAlign: "left",
+        }}
+      >
+        Spreadsheet imports never send emails — welcome or otherwise. You can
+        notify people later from their profile.
+      </p>
       {errors.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           {errors.map((e, i) => (
