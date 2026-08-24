@@ -33,9 +33,9 @@ describe("devicesForTransaction", () => {
   });
 
   it("also exposes the receiver id as `id` for the bulk modals", () => {
-    // ReturningInBulkMethod and ExpressCheckInDevices key their chips off
-    // `item.id`. The rows they were handed spread `receiver.device`, which has
-    // no id, so every chip shared the key `undefined`.
+    // The bulk-return modal keys its list off `item.id`. The rows it used to be
+    // handed spread `receiver.device`, which has no id, so every chip in the
+    // list shared the key `undefined`.
     const rows = devicesForTransaction([assigned("A", "tablet", true, "rec-1")], "pi_1");
     expect(rows[0].id).toBe("rec-1");
   });

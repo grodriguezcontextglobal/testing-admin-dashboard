@@ -6,6 +6,7 @@ import { devitrakApi } from "../../../../../../api/devitrakApi";
 import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
+import ReturnDevicesModal from "../../../../../../components/UX/deviceReturn/ReturnDevicesModal";
 import { ProfileSkeleton } from "../../../../../../components/UX/profile";
 import {
   onReceiverObjectToReplace,
@@ -25,9 +26,7 @@ import { describeTransactionKind } from "../../utils/transactionTable";
 import Choice from "../../lostFee/Choice";
 import AddingDevicesToPaymentIntent from "../AssigningDevice/AddingDevicesToPaymentIntent";
 import SignaturesProof from "../SignaturesProof";
-import ExpressCheckInDevices from "../actions/ExpressCheckInDevices";
 import { ReplaceDevice } from "../actions/ReplaceDevice";
-import ReturningInBulkMethod from "../actions/ReturningInBulkMethod";
 import AssignmentProgress from "./AssignmentProgress";
 import TransactionDeviceTable from "./TransactionDeviceTable";
 import useTransactionDeviceActions from "./useTransactionDeviceActions";
@@ -70,8 +69,9 @@ const TransactionPanel = ({
   const dispatch = useDispatch();
 
   const [selectedRows, setSelectedRows] = useState([]);
-  const [openBulkReturn, setOpenBulkReturn] = useState(false);
-  const [openExpressCheckIn, setOpenExpressCheckIn] = useState(false);
+  // One modal takes devices back. `null` while it is closed, otherwise how it
+  // was opened: "review" from the table selection, "scan" from express check-in.
+  const [returnMode, setReturnMode] = useState(null);
   const [openLostFeeChoice, setOpenLostFeeChoice] = useState(false);
 
   const consumer = customer ?? stripeCustomer;
@@ -252,7 +252,7 @@ const TransactionPanel = ({
             <LightBlueButtonComponent
               title={`Return ${selectedRows.length} selected`}
               disabled={!isEventActive}
-              func={() => setOpenBulkReturn(true)}
+              func={() => setReturnMode("review")}
             />
           ) : (
             <BlueButtonConfirmationComponent
@@ -271,7 +271,7 @@ const TransactionPanel = ({
             <GrayButtonComponent
               title="Express check-in"
               disabled={!isEventActive}
-              func={() => setOpenExpressCheckIn(true)}
+              func={() => setReturnMode("scan")}
             />
             <GrayButtonComponent
               title="Email device report"
@@ -298,26 +298,21 @@ const TransactionPanel = ({
         <Choice openModal={openLostFeeChoice} setOpenModal={setOpenLostFeeChoice} />
       )}
       {triggerModal && <ReplaceDevice refetching={refetch} />}
-      {openBulkReturn && (
-        <ReturningInBulkMethod
-          openReturnDeviceBulkModal={openBulkReturn}
-          setOpenReturnDeviceInBulkModal={setOpenBulkReturn}
-          record={record}
-          refetching={refetch}
-          selectedItems={selectedRows}
-          setSelectedItems={setSelectedRows}
-          emailNotification={actions.settleTransactionIfEmpty}
-        />
-      )}
-      {openExpressCheckIn && (
-        <ExpressCheckInDevices
-          openReturnDeviceBulkModal={openExpressCheckIn}
-          setOpenReturnDeviceInBulkModal={setOpenExpressCheckIn}
-          record={record}
-          refetching={refetch}
-          selectedItems={rows}
-          setSelectedItems={setSelectedRows}
-          emailNotification={actions.settleTransactionIfEmpty}
+      {returnMode && (
+        <ReturnDevicesModal
+          open={Boolean(returnMode)}
+          mode={returnMode}
+          onClose={() => setReturnMode(null)}
+          // Every device on the transaction, so a scan can tell "already back"
+          // apart from "not on this transaction". The modal decides for itself
+          // which of them may still be returned.
+          devices={rows}
+          initialSelection={returnMode === "review" ? selectedRows : []}
+          eventSelected={record.eventSelected}
+          transactionLabel={record.paymentIntent}
+          onRefetch={refetch}
+          onReturned={actions.settleTransactionIfEmpty}
+          onClearSelection={() => setSelectedRows([])}
         />
       )}
     </div>
