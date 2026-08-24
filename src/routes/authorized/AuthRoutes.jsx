@@ -230,15 +230,15 @@ const UpdateMemberInformation = lazy(() =>
   )
 );
 
-const Remainders = lazy(() =>
+const Reminders = lazy(() =>
   import(
-    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Remainders"
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Reminders"
   )
 );
 
 const AssignmentDeviceMembers = lazy(() =>
   import(
-    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/assignment/AssignmentDevicesToMember"
   )
 );
 const AuthRoutes = () => {
@@ -544,7 +544,7 @@ const AuthRoutes = () => {
                   <Route
                     key={"/member/:id/reminders"}
                     path="reminders"
-                    element={<Remainders />}
+                    element={<Reminders />}
                   />
                   <Route
                     key={"/member/:id/assignment"}
