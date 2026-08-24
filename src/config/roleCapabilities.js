@@ -70,8 +70,8 @@ export const ROLE_CAPABILITIES = Object.freeze({
       updateContactInfo: true,            // StaffDetail.jsx:143 [0,1,2,3,4]
       sendPasswordReset: true,            // StaffDetail.jsx:185 [0,1,2,3,4]
       viewDetail: true,                   // StaffTable.jsx:220 (role < 4)
-      viewSignedContracts: true,          // ListEquipment.jsx:79,202 [0,1]
-      viewActiveStatus: true,             // HeaderStaffDetal.jsx:113 [0,1]
+      viewSignedContracts: true,          // AssignedDevicesTable.jsx (staff:assign_devices)
+      viewActiveStatus: true,             // StaffDetail.jsx (staff:create)
     },
     inventory: {
       mode: "all",

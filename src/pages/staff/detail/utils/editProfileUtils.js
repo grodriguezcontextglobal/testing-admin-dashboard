@@ -53,14 +53,32 @@ export const buildAdminUserPayload = (data, base64) => {
   return payload;
 };
 
-/** Updated staffDetail profile object for onAddStaffProfile. */
+/**
+ * Updated staffDetail profile object for onAddStaffProfile.
+ *
+ * The profile is read under three different spellings across the page: the
+ * identity card and the tables read `adminUserInfo.{name,lastName,phone,
+ * imageProfile}`, the breadcrumb and the event lookup read `firstName` /
+ * `email`, and this builder only ever wrote `name`. Saving an edit therefore
+ * left the page showing the old values until the next full reload. All three
+ * are written now.
+ */
 export const buildStaffProfileUpdate = (profile, data, base64) => ({
   ...profile,
   name: data.firstName,
+  firstName: data.firstName,
   lastName: data.lastName,
   email: data.email,
   phone: data.phone,
   ...(base64 ? { imageProfile: base64 } : {}),
+  adminUserInfo: {
+    ...(profile?.adminUserInfo ?? {}),
+    name: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    phone: data.phone,
+    ...(base64 ? { imageProfile: base64 } : {}),
+  },
 });
 
 /**

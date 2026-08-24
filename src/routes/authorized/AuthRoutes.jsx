@@ -110,9 +110,6 @@ const UpdateContactInfo = lazy(() =>
     "../../pages/staff/detail/components/equipment_components/UpdateContactInfo"
   )
 );
-const TableStaffDetail = lazy(() =>
-  import("../../pages/staff/detail/components/TableStaffDetail")
-);
 const StaffDetail = lazy(() => import("../../pages/staff/detail/StaffDetail"));
 const ForgetPasswordLinkFromStaffPage = lazy(() =>
   import(
@@ -126,11 +123,6 @@ const UpdateRoleInCompany = lazy(() =>
 );
 const AssignStaffMemberToEvent = lazy(() =>
   import("../../pages/staff/detail/components/AssignStaffMemberToEvent")
-);
-const AssignLocation = lazy(() =>
-  import(
-    "../../pages/staff/detail/components/equipment_components/assingmentComponents/AssignLocation"
-  )
 );
 const AssignLocationManager = lazy(() =>
   import(
@@ -419,11 +411,10 @@ const AuthRoutes = () => {
               <Route element={<PermissionGuard action="nav:staff" />}>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
-                <Route
-                  key={"/staff/:id/main"}
-                  path="main"
-                  element={<TableStaffDetail />}
-                />
+                {/* The profile's own content (devices, events) is part of
+                    StaffDetail now, so /main renders nothing extra — it stays
+                    registered because every action route navigates back to it. */}
+                <Route key={"/staff/:id/main"} path="main" element={null} />
                 <Route
                   key={"/staff/:id/update-contact-info"}
                   path="update-contact-info"
@@ -444,11 +435,6 @@ const AuthRoutes = () => {
                     key={"/staff/:id/assign-staff-events"}
                     path="assign-staff-events"
                     element={<AssignStaffMemberToEvent />}
-                  />
-                  <Route
-                    key={"/staff/:id/assign-location"}
-                    path="assign-location"
-                    element={<AssignLocation />}
                   />
                   <Route
                     key={"/staff/:id/assign-location-manager"}

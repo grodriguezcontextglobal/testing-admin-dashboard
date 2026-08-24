@@ -1,65 +1,38 @@
-import { Grid } from "@mui/material";
-import { PropTypes } from "prop-types";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import "../../../../../styles/global/ant-select.css";
-// import AssignemntNewDeviceInInventory from "./assingmentComponents/AssignemntNewDeviceInInventory";
+import renderingTitle from "../../../../../components/general/renderingTitle";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
+import "../../../../../styles/global/ant-select.css";
 import AssignmentFromExistingInventory from "./assingmentComponents/AssignmentFromExistingInventory";
-// import AssignmentNewDeviceToStaffInInventory from "./assingmentComponents/AssignmentNewDeviceToStaffInInventory";
-// import CustomizedSwitch from "./assingmentComponents/components/CustomizedSwitch";
+
+/**
+ * Handing a device from the warehouse to this staff member.
+ *
+ * A route that renders a modal: it opens over the profile now that the profile's
+ * own content lives in the shell rather than in a sibling route, so closing it
+ * returns you to what you were looking at instead of to a blank page.
+ *
+ * The MUI Grid wrapper, the commented-out switch between "existing inventory"
+ * and "new device", and the two imports it needed are gone — both alternatives
+ * had been commented out long enough that one of the two components was the only
+ * remaining caller of a 636-line hook nothing else used.
+ */
 const Assignment = () => {
   const { profile } = useSelector((state) => state.staffDetail);
-  // const [existingOption, setExistingOption] = useState(true);
   const navigate = useNavigate();
-  const closeModal = () => {
-    return navigate(`/staff/${profile.adminUserInfo.id}/main`);
-  };
 
-  const modalBody = () => {
-    return (
-      <Grid
-        container
-        display={"flex"}
-        justifyContent={"center"}
-        alignItems={"center"}
-        marginY={2}
-        key={"settingUp-deviceList-event"}
-      >
-        {/* <Divider>
-          <CustomizedSwitch
-            state={existingOption}
-            handler={setExistingOption}
-          />
-        </Divider> */}
-        {/* {existingOption ? ( */}
-          <AssignmentFromExistingInventory />
-         {/* ) : (
-            <AssignemntNewDeviceInInventory />
-           <AssignmentNewDeviceToStaffInInventory />
-         )} */}
-      </Grid>
-    );
-  };
+  const closeModal = () => navigate(`/staff/${profile?.adminUserInfo?.id}/main`);
+
   return (
     <ModalUX
-      body={modalBody()}
-      openDialog={true}
+      title={renderingTitle("Assign a device from the warehouse")}
+      body={<AssignmentFromExistingInventory />}
+      openDialog
       closeModal={closeModal}
+      footer={null}
       width={1000}
     />
   );
-};
-
-Assignment.propTypes = {
-  item_group: PropTypes.string,
-  startingNumber: PropTypes.string,
-  endingNumber: PropTypes.string,
-  deviceInfo: PropTypes.string,
-  street: PropTypes.string,
-  city: PropTypes.string,
-  state: PropTypes.string,
-  zip: PropTypes.string,
 };
 
 export default Assignment;
