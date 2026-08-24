@@ -2,25 +2,28 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { MenuItem, Select } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { ROLE_LEVELS, resolveRoleType } from "../../../config/roles";
+import { notifyStatus } from "../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import Input from "../../../components/UX/inputs/Input";
 import Label from "../../../components/UX/inputs/Label";
 import ModalUX from "../../../components/UX/modal/ModalUX";
+import { ROLE_LEVELS, resolveRoleType } from "../../../config/roles";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
-import "../detail/components/equipment_components/assingmentComponents/style.css";
+import "./newStaffMember.css";
 import {
   buildEmployeeEntry,
   buildInvitationLink,
   buildRoleOptions,
+  existingEmployeeMessage,
+  findCompanyEmployee,
   newStaffSchema,
+  roleHintFor,
 } from "./utils/newStaffMemberUtils";
 
 const titleStyle = {
@@ -32,35 +35,55 @@ const titleStyle = {
   margin: 0,
 };
 
-const errorCaption = {
-  fontSize: "12px",
-  fontFamily: "Inter",
-  color: "var(--error, #B42318)",
-  marginTop: "4px",
-  display: "block",
-};
-
-const fieldWrapper = { display: "flex", flexDirection: "column", gap: "6px", width: "100%" };
-
+/**
+ * Inviting someone onto the company's staff, in two named steps.
+ *
+ * The form was one column with a button labelled "Verify email" that, when the
+ * email belonged to an existing account, appended the employee to
+ * Company.employees and sent them an invitation on the spot — no review, no
+ * confirmation, and a label describing none of it. Pressing Enter in the email
+ * field did the same, because submitting the form fell through to the same
+ * function. The name it looked up was written into fields that were not
+ * rendered, so the person doing the inviting never saw who they had invited
+ * until the success toast named them afterwards.
+ *
+ * Now:
+ *
+ *   Step 1 — find the person. Reads only: the company's own employee list
+ *            first (inviting someone already on it used to append a duplicate
+ *            entry), then /staff/admin-users.
+ *   Step 2 — choose a role and send. The person is shown by name, each role
+ *            says what it grants, and the only button that writes anything is
+ *            called "Send invitation".
+ *
+ * Same four requests, same bodies.
+ */
 export const NewStaffMember = ({ modalState, setModalState }) => {
-  const [loadingStatus, setLoadingStatus] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [needCreate, setNeedCreate] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const queryClient = useQueryClient();
-  const [messageApi, contextHolder] = message.useMessage();
+
+  const [step, setStep] = useState(1);
+  const [lookup, setLookup] = useState(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [notice, setNotice] = useState(null);
 
   const userLevel = ROLE_LEVELS[resolveRoleType(user)] ?? 99;
   const roleOptions = buildRoleOptions(userLevel);
+  const needCreate = Boolean(lookup) && !lookup.exists;
 
   const {
+    control,
     register,
     setValue,
-    handleSubmit,
+    setError,
+    trigger,
     watch,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(newStaffSchema, { context: { needCreate } }),
+    defaultValues: { email: "", name: "", lastName: "", phoneNumber: "", role: "" },
   });
 
   const companiesQuery = useQuery({
@@ -77,12 +100,32 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.company]);
 
-  const notify = (type, content) => {
-    messageApi.open({ type, content, onClose: () => setValue("email", "") });
+  const closeModal = () => {
+    if (isSending) return;
+    setModalState(false);
+  };
+
+  /**
+   * The company record, fetched if the query has not answered yet.
+   *
+   * Both callers need the employees array — one to check it, one to append to
+   * it — and reading it straight off `companiesQuery.data` meant that whichever
+   * ran before the query resolved simply saw nothing: the duplicate check
+   * passed silently, and the append threw.
+   */
+  const loadCompany = async ({ fresh = false } = {}) => {
+    const response =
+      !fresh && companiesQuery.data
+        ? companiesQuery.data
+        : (await companiesQuery.refetch()).data;
+    return response?.data?.company?.[0] ?? null;
   };
 
   const addEmployeeAndInvite = async ({ name, lastName, email, role }) => {
-    const companyInfo = companiesQuery?.data?.data?.company?.[0];
+    // Read the list again right before writing it back: this PATCH replaces the
+    // whole employees array, so appending onto a copy fetched when the modal
+    // opened drops anyone another administrator added in between.
+    const companyInfo = await loadCompany({ fresh: true });
     if (!companyInfo) {
       throw new Error("Company info not loaded. Please try again.");
     }
@@ -115,7 +158,11 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
 
     queryClient.invalidateQueries({ queryKey: ["listAdminUsers"], exact: true });
     queryClient.invalidateQueries({ queryKey: ["staff"], exact: true });
-    queryClient.invalidateQueries({ queryKey: ["employeesPerCompanyList"], exact: true });
+    queryClient.invalidateQueries({
+      queryKey: ["employeesPerCompanyList"],
+      exact: true,
+    });
+    queryClient.invalidateQueries({ queryKey: ["companyListQuery"], exact: true });
     // Both cache keys are independent, so clear them concurrently instead of
     // one after the other.
     await Promise.all([
@@ -124,49 +171,59 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
     ]);
   };
 
-  const verifyEmailExists = async () => {
-    const email = watch("email");
-    const role = watch("role");
-    if (!email || String(role) === "") {
-      return notify("warning", "Please enter email and select a role before verifying.");
-    }
+  /**
+   * Step 1. Reads only — this used to be the button that sent the invitation.
+   */
+  const findPerson = async () => {
+    setNotice(null);
+    if (!(await trigger("email"))) return;
 
-    setVerifying(true);
+    const email = String(watch("email") ?? "").trim();
+
+    setIsLookingUp(true);
     try {
-      const resp = await devitrakApi.post("/staff/admin-users", { email });
-      const adminUsers = resp?.data?.adminUsers;
-      if (adminUsers && adminUsers.length > 0) {
-        const existing = adminUsers.at(-1);
-        setValue("name", existing?.name ?? "");
-        setValue("lastName", existing?.lastName ?? "");
-        setNeedCreate(false);
-
-        await addEmployeeAndInvite({
-          name: existing?.name ?? "Staff",
-          lastName: existing?.lastName ?? "Member",
-          email,
-          role,
-        });
-
-        notify("success", `An invitation to ${existing?.name ?? ""} ${existing?.lastName ?? ""} is queued and will be sent shortly.`);
-        setModalState(false);
-      } else {
-        setNeedCreate(true);
-        messageApi.open({
-          type: "info",
-          content: "Email does not exist in the system. Please provide name, last name, and phone number.",
+      // The company's own list first: the employees array was already loaded
+      // here to append to, and never checked, so re-inviting an existing member
+      // added a second entry for the same person.
+      const alreadyStaff = findCompanyEmployee(
+        (await loadCompany())?.employees,
+        email
+      );
+      if (alreadyStaff) {
+        return setError("email", {
+          type: "manual",
+          message: existingEmployeeMessage(alreadyStaff),
         });
       }
+
+      const resp = await devitrakApi.post("/staff/admin-users", { email });
+      const existing = resp?.data?.adminUsers?.at(-1);
+
+      if (existing) {
+        setValue("name", existing.name ?? "");
+        setValue("lastName", existing.lastName ?? "");
+        setLookup({
+          exists: true,
+          email,
+          name: existing.name ?? "",
+          lastName: existing.lastName ?? "",
+        });
+      } else {
+        setLookup({ exists: false, email, name: "", lastName: "" });
+      }
+      setStep(2);
     } catch {
-      notify("error", "Failed to verify email. Please try later.");
+      setNotice("We could not check that email. Try again in a moment.");
     } finally {
-      setVerifying(false);
+      setIsLookingUp(false);
     }
   };
 
-  const onSubmitRegister = async (data) => {
+  /** Step 2. The only path that writes anything. */
+  const sendInvitation = async (data) => {
+    setNotice(null);
+    setIsSending(true);
     try {
-      setLoadingStatus(true);
       if (needCreate) {
         await devitrakApi.post("/db_staff/new_member", {
           first_name: data.name,
@@ -174,117 +231,213 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
           email: data.email,
           phone_number: data.phoneNumber,
         });
-
-        await addEmployeeAndInvite({
-          name: data.name,
-          lastName: data.lastName,
-          email: data.email,
-          role: data.role,
-        });
-
-        notify("success", `An invitation to ${data.name} ${data.lastName} is queued and will be sent shortly.`);
-        setTimeout(() => setModalState(false), 1500);
-      } else {
-        await verifyEmailExists();
       }
+
+      await addEmployeeAndInvite({
+        name: data.name || "Staff",
+        lastName: data.lastName || "Member",
+        email: data.email,
+        role: data.role,
+      });
+
+      // Static notification: the modal closes on the next line, and a hook-bound
+      // notification would unmount with it before it could be read.
+      notifyStatus(
+        "success",
+        `Invitation queued for ${data.name} ${data.lastName}.`.trim()
+      );
+      setModalState(false);
     } catch {
-      notify("error", "Please try later. If error persists, please contact administrator.");
+      setNotice(
+        "The invitation was not sent. Nothing was added to your staff list."
+      );
     } finally {
-      setLoadingStatus(false);
+      setIsSending(false);
     }
   };
 
-  const bodyModal = () => (
-    <form onSubmit={handleSubmit(onSubmitRegister)} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px", marginTop: "8px" }}>
-      <div style={fieldWrapper}>
-        <Label>Email</Label>
-        <Input
-          {...register("email", { required: true })}
-          placeholder="Enter staff email"
-          error={!!errors.email}
-          helperText={errors.email?.message}
-        />
+  // Step 1 must not submit the form: `handleSubmit` would validate the role,
+  // which has not been chosen yet, and Enter in the email field used to fall
+  // through to the invitation itself.
+  const onFormSubmit = (event) => {
+    event.preventDefault();
+    if (step === 1) return findPerson();
+    return handleSubmit(sendInvitation)(event);
+  };
+
+  const goBack = () => {
+    setNotice(null);
+    setStep(1);
+    setLookup(null);
+  };
+
+  const selectedRole = watch("role");
+  const personName = [watch("name"), watch("lastName")].filter(Boolean).join(" ");
+
+  const stepOne = (
+    <>
+      <div>
+        <p className="new-staff__step">Step 1 of 2 · Find the person</p>
+        <p className="new-staff__lead">
+          We check whether they already have a Devitrak account before inviting
+          them. Nothing is sent yet.
+        </p>
       </div>
 
-      {needCreate && (
-        <>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <div style={fieldWrapper}>
-              <Label>Name</Label>
-              <Input
-                {...register("name")}
-                placeholder="Enter name"
-                error={!!errors.name}
-                helperText={errors.name?.message}
-              />
-            </div>
-            <div style={fieldWrapper}>
-              <Label>Last name</Label>
-              <Input
-                {...register("lastName")}
-                placeholder="Enter last name"
-                error={!!errors.lastName}
-                helperText={errors.lastName?.message}
-              />
-            </div>
-          </div>
+      <div className="new-staff__fields">
+        <div className="new-staff__field">
+          <Label>Email</Label>
+          <Input
+            {...register("email")}
+            autoFocus
+            placeholder="name@company.com"
+            error={!!errors.email}
+            helperText={errors.email?.message}
+          />
+        </div>
+      </div>
+    </>
+  );
 
-          <div style={fieldWrapper}>
-            <Label>Phone number</Label>
-            <Input
-              {...register("phoneNumber")}
-              placeholder="Enter phone number"
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber?.message}
-            />
-          </div>
-        </>
-      )}
-
-      <div style={fieldWrapper}>
-        <Label>Role</Label>
-        <Select {...register("role")} displayEmpty fullWidth style={AntSelectorStyle}>
-          {roleOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </Select>
-        {errors?.role?.message && <span style={errorCaption}>{errors.role.message}</span>}
+  const stepTwo = (
+    <>
+      <div>
+        <p className="new-staff__step">Step 2 of 2 · Choose a role</p>
+        <p className="new-staff__lead">
+          {lookup?.exists
+            ? "This person already has an account. Pick what they can do in your company."
+            : "This email is new to Devitrak, so their account is created with the invitation."}
+        </p>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "12px",
-          paddingTop: "16px",
-          borderTop: "1px solid var(--gray-200, #EAECF0)",
-        }}
-      >
+      <div className="new-staff__person">
+        <p className="new-staff__person-name">
+          {personName || "New staff member"}
+        </p>
+        <p className="new-staff__person-email">{lookup?.email}</p>
+        <span
+          className={`new-staff__badge new-staff__badge--${
+            lookup?.exists ? "known" : "new"
+          }`}
+        >
+          {lookup?.exists ? "Existing account" : "New account"}
+        </span>
+      </div>
+
+      <div className="new-staff__fields">
+        {needCreate && (
+          <>
+            <div className="new-staff__row">
+              <div className="new-staff__field">
+                <Label>Name</Label>
+                <Input
+                  {...register("name")}
+                  autoFocus
+                  placeholder="Enter name"
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
+                />
+              </div>
+              <div className="new-staff__field">
+                <Label>Last name</Label>
+                <Input
+                  {...register("lastName")}
+                  placeholder="Enter last name"
+                  error={!!errors.lastName}
+                  helperText={errors.lastName?.message}
+                />
+              </div>
+            </div>
+
+            <div className="new-staff__field">
+              <Label>Phone number</Label>
+              <Input
+                {...register("phoneNumber")}
+                placeholder="Enter phone number"
+                error={!!errors.phoneNumber}
+                helperText={errors.phoneNumber?.message}
+              />
+            </div>
+          </>
+        )}
+
+        <div className="new-staff__field">
+          <Label>Role</Label>
+          {roleOptions.length === 0 ? (
+            <p className="new-staff__notice">
+              Your role cannot grant any of the available roles. Ask an
+              administrator to send this invitation.
+            </p>
+          ) : (
+            <>
+              {/* Controller, not register: MUI Select needs a value and an
+                  onChange, and register alone left it uncontrolled. */}
+              <Controller
+                control={control}
+                name="role"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    value={field.value ?? ""}
+                    displayEmpty
+                    fullWidth
+                    style={AntSelectorStyle}
+                  >
+                    <MenuItem value="" disabled>
+                      Select a role
+                    </MenuItem>
+                    {roleOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              {errors?.role?.message && (
+                <p className="new-staff__error">{errors.role.message}</p>
+              )}
+              {selectedRole !== "" && selectedRole !== undefined && (
+                <p className="new-staff__hint">{roleHintFor(selectedRole)}</p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      <p className="new-staff__consequence">
+        Sending adds them to your company as <strong>Pending</strong> and emails
+        them a link to accept.
+      </p>
+    </>
+  );
+
+  const bodyModal = (
+    <form className="new-staff" onSubmit={onFormSubmit}>
+      {step === 1 ? stepOne : stepTwo}
+
+      {notice && <p className="new-staff__notice">{notice}</p>}
+
+      <div className="new-staff__footer">
         <GrayButtonComponent
-          title="Cancel"
-          func={() => setModalState(false)}
-          buttonType="reset"
-          styles={{ width: "100%" }}
-          disabled={loadingStatus || verifying}
+          title={step === 1 ? "Cancel" : "Back"}
+          buttonType="button"
+          func={step === 1 ? closeModal : goBack}
+          disabled={isLookingUp || isSending}
         />
-        {needCreate ? (
+        {step === 1 ? (
           <BlueButtonComponent
-            title="Save"
+            title="Continue"
             buttonType="submit"
-            styles={{ width: "100%" }}
-            isDisabled={loadingStatus || verifying}
-            isLoading={loadingStatus}
+            isLoading={isLookingUp}
+            isDisabled={isLookingUp}
           />
         ) : (
-          <GrayButtonComponent
-            title={verifying ? "Verifying..." : "Verify email"}
-            func={verifyEmailExists}
-            buttonType="button"
-            styles={{ width: "100%" }}
-            disabled={verifying || loadingStatus}
+          <BlueButtonComponent
+            title="Send invitation"
+            buttonType="submit"
+            isLoading={isSending}
+            isDisabled={isSending || roleOptions.length === 0}
           />
         )}
       </div>
@@ -292,16 +445,14 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
   );
 
   return (
-    <>
-      {contextHolder}
-      <ModalUX
-        title={<p style={titleStyle}>New staff</p>}
-        openDialog={modalState}
-        closeModal={() => setModalState(false)}
-        width={480}
-        footer={null}
-        body={bodyModal()}
-      />
-    </>
+    <ModalUX
+      title={<p style={titleStyle}>Add a staff member</p>}
+      openDialog={modalState}
+      closeModal={closeModal}
+      closable={!isSending}
+      width={520}
+      footer={null}
+      body={bodyModal}
+    />
   );
 };
