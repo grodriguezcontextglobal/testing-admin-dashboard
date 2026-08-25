@@ -68,14 +68,14 @@ const BodyForm = ({
             <GrayButtonComponent
               title={"Cancel"}
               onClick={() => triggerRoutes()}
-              style={{
+              styles={{
                 width: "fit-content",
               }}
             />
             <BlueButtonComponent
               buttonType="submit"
               title={"Save and log out"}
-              style={{
+              styles={{
                 width: "fit-content",
               }}
             />
@@ -198,14 +198,14 @@ const BodyForm = ({
           <GrayButtonComponent
             title={"Cancel"}
             func={() => triggerRoutes()}
-            style={{
+            styles={{
               width: "fit-content",
             }}
           />
           <BlueButtonComponent
             buttonType="submit"
             title={"Save and log out"}
-            style={{
+            styles={{
               width: "fit-content",
             }}
           />

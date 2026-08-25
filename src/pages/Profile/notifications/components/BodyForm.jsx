@@ -446,14 +446,14 @@ const BodyForm = ({
         <GrayButtonComponent
           title={"Cancel"}
           func={() => navigate("/")}
-          style={{
+          styles={{
             width: isMobile ? "100%" : "fit-content",
           }}
         />
         <BlueButtonComponent
           buttonType="submit"
           title={"Save"}
-          style={{
+          styles={{
             width: isMobile ? "100%" : "fit-content",
           }}
         />

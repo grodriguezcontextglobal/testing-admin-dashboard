@@ -157,7 +157,7 @@ const BulkRentedItems = ({
                         <BlueButtonComponent
                           disabled={imageUrlGenerated}
                           func={() => acceptImage()}
-                          style={{
+                          styles={{
                             background: imageUrlGenerated
                               ? "transparent"
                               : BlueButton.background,
