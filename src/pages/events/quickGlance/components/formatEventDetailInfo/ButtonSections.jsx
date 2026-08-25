@@ -130,7 +130,7 @@ const ButtonSections = () => {
               />
             ),
             text: "Push Notifications to Attendees",
-            disableStatus: !event.active,
+            disableStatus: true, //!event.active,
             fn: () => setSendPushNotificationModal(true),
           },
         ]
