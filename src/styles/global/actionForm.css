@@ -343,3 +343,69 @@
   line-height: 28px;
   color: var(--gray-900, #171d1a);
 }
+
+/* --------------------------------------------------------------- Progress */
+
+/* A long-running action states its steps up front and marks where it is, so a
+   two-minute batch job is not a single spinner. */
+.action-form__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.action-form__steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-500, #777b73);
+}
+
+.action-form__steps li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  background: var(--gray-300, #c8cac3);
+  border-radius: var(--radius-full, 9999px);
+}
+
+.action-form__steps li.is-active {
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}
+
+.action-form__steps li.is-active::before {
+  background: var(--action-600, #155eef);
+}
+
+.action-form__steps li.is-done::before {
+  background: var(--success-600, #079455);
+}
+
+.action-form__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.action-form__count {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+}
+
+.action-form__count strong {
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}

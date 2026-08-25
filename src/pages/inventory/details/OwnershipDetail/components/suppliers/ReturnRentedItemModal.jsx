@@ -1,156 +1,106 @@
-import { Box, Paper, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Checkbox,
-  Input,
-  Pagination,
-  Progress,
-  Space,
-  Table,
-  Tabs,
-  message,
-} from "antd";
+import { Progress } from "antd";
+import PropTypes from "prop-types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import renderingTitle from "../../../../../../components/general/renderingTitle";
 import EmailReturnRentalItems from "../../../../../../components/notification/email/EmailReturnRentalItems";
-import { checkRequestSize } from "../../../../../../components/utils/checkRequestSize";
-import BlueButtonConfirmationComponent from "../../../../../../components/UX/buttons/BlueButtonConfirmation";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
+import DangerButtonConfirmationComponent from "../../../../../../components/UX/buttons/DangerButtonConfirmation";
+import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
+import EmptyState from "../../../../../../components/UX/emptyState/EmptyState";
+import Input from "../../../../../../components/UX/inputs/Input";
+import Label from "../../../../../../components/UX/inputs/Label";
 import ModalUX from "../../../../../../components/UX/modal/ModalUX";
+import BaseTable from "../../../../../../components/UX/tables/BaseTable";
+import { checkRequestSize } from "../../../../../../components/utils/checkRequestSize";
+import "../../../../../../styles/global/actionForm.css";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import {
+  RETURN_STEPS,
+  canShrinkBatch,
+  chunkForBatching,
+  describeReturnAction,
+  filterRentedRows,
+  nextBatchSize,
+  progressPercent,
+} from "./utils/returnRentedPlan";
 
-const { Search } = Input;
+const INITIAL_BATCH_SIZE = 200;
+const BATCH_PAUSE_MS = 150;
+const PAGE_SIZE = 50;
 
-const ReturnRentedItemModal = ({
-  handleClose,
-  open,
-  supplier_id,
-  data = null,
-}) => {
-  const [activeTab, setActiveTab] = useState("1");
-  const [renterItemList, setRenterItemList] = useState([]);
-  const [selectedItems, setSelectedItems] = useState(new Set());
-  const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [totalItems, setTotalItems] = useState(0);
-  const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
-  const [isUsingProvidedData, setIsUsingProvidedData] = useState(false);
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Sending rented items back to the supplier.
+ *
+ * The screen was two tabs — "Return All Items" and "Return Selected Items" —
+ * over the same table, one with a checkbox column and one without. They were
+ * two modes for one decision, and switching between them reset the search, the
+ * page and the selection, so glancing at the other tab to check a count threw
+ * the work away. There is one table now, with row selection, and one button
+ * that says which of the two it is about to do.
+ *
+ * The defect underneath was worse: `handleReturnSelectedItems` called
+ * `returnItemsToRenter(itemIds)` twice — the same batched write to
+ * `/db_inventory/update-large-data`, copy-pasted along with its "now deleting
+ * records..." message — so every selected return ran the whole first stage
+ * twice. The progress bar was equally confused: the step was set to "Sending
+ * email notification" *after* the delete had finished, and its percentage was
+ * `current / total` with no guard, so the first frame of a run rendered `NaN%`.
+ *
+ * The batching loop mutated its own index to retry a shrunken batch. It is a
+ * queue now, and the shrink rule is `nextBatchSize`, which cannot grow.
+ *
+ * Every request is unchanged: the same three catalog entries, the same
+ * `update-large-data`, `delete-bulk-items`, email helper and cache key.
+ */
+const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) => {
   const { user } = useSelector((state) => state.admin);
-
   const queryClient = useQueryClient();
-  const invalidatingQueriesForRefresh = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["currentStateDevicePerGroupName"],
-    });
-    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
-    queryClient.invalidateQueries({
-      queryKey: ["currentStateDevicePerCategory"],
-    });
-    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
-    queryClient.invalidateQueries({
-      queryKey: ["currentStateDevicePerCategory"],
-    });
-    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerBrand"] });
-    queryClient.invalidateQueries({ queryKey: ["currentStateDevicePerBrand"] });
-    queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
-    queryClient.invalidateQueries({
-      queryKey: ["listOfItemsInStock"],
-      exact: true,
-      refetchType: "active",
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["ItemsInInventoryCheckingQuery"],
-      exact: true,
-      refetchType: "active",
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["RefactoredListInventoryCompany"],
-      exact: true,
-      refetchType: "active",
-    });
-    return null;
-  };
-  // Request size validation helper
-  // const checkRequestSize = (data) => {
-  //   const jsonString = JSON.stringify(data);
-  //   const sizeInBytes = new Blob([jsonString]).size;
-  //   const sizeInMB = sizeInBytes / (1024 * 1024);
-  //   // Warn if approaching 10MB limit (most servers have 10-50MB limits)
-  //   if (sizeInMB > 8) {
-  //     console.warn(`Large request detected: ${sizeInMB.toFixed(2)} MB`);
-  //     return { isLarge: true, size: sizeInMB };
-  //   }
+  const { notify, contextHolder } = useStatusNotification();
 
-  //   return { isLarge: false, size: sizeInMB };
-  // };
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [activeStep, setActiveStep] = useState(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [notice, setNotice] = useState(null);
 
-  // Filtered data when using provided data prop
-  const filteredProvidedData = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+  // The caller either hands over the rows it already has, or leaves it to us.
+  // Derived, not held in state: it used to be a `useState` set inside an
+  // initializer that other callbacks then depended on, which is how the fetch
+  // and the prop could disagree about which source was in play.
+  const usingProvidedData = Array.isArray(data) && data.length > 0;
 
-    if (!searchText) return data;
+  const providedRows = useMemo(
+    () => (usingProvidedData ? filterRentedRows(data, search) : []),
+    [usingProvidedData, data, search]
+  );
 
-    const searchLower = searchText.toLowerCase();
-    return data.filter(
-      (item) =>
-        String(item.item_id).toLowerCase().includes(searchLower) ||
-        (item.serial_number &&
-          item.serial_number.toLowerCase().includes(searchLower)) ||
-        (item.item_group && item.item_group.toLowerCase().includes(searchLower))
-    );
-  }, [data, searchText]);
-
-  // Paginated data for provided data
-  const paginatedProvidedData = useMemo(() => {
-    if (!isUsingProvidedData) return [];
-
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredProvidedData.slice(startIndex, endIndex);
-  }, [filteredProvidedData, currentPage, pageSize, isUsingProvidedData]);
-
-  // Initialize data based on prop availability
-  const initializeData = useCallback(() => {
-    if (data && Array.isArray(data) && data.length > 0) {
-      // Use provided data
-      setIsUsingProvidedData(true);
-      setRenterItemList(data);
-      setTotalItems(data.length);
-      setLoading(false);
-    } else {
-      // Fetch data as before
-      setIsUsingProvidedData(false);
-      fetchItemsForRenter(1, "");
-    }
-  }, [data]);
-
-  // Fetch items with pagination and search (existing function)
-  const fetchItemsForRenter = useCallback(
-    async (page = 1, search = "") => {
-      if (isUsingProvidedData) return; // Don't fetch if using provided data
-
-      setLoading(true);
+  const fetchPage = useCallback(
+    async (nextPage, term) => {
+      setIsLoading(true);
+      setNotice(null);
       try {
-        const offset = (page - 1) * pageSize;
-
-        // One catalog entry each, sharing a single filter object: the list and
-        // the total can no longer disagree, which the four hand-built
-        // query/countQuery variants this replaces could drift into. Passing
-        // undefined rather than "" when not filtering, so the server omits the
-        // clause instead of matching on LIKE '%%'. `ownership = 'Rent'` and the
-        // company scope are both baked into the entry.
+        // One catalog entry each, sharing a single filter object, so the list
+        // and the total cannot disagree. `undefined` rather than "" when not
+        // filtering, so the server omits the clause instead of LIKE '%%'.
         const filters = {
           supplierId: supplier_id || undefined,
-          search: search || undefined,
+          search: term || undefined,
         };
 
-        // Fetch both data and count in parallel
-        const [dataResult, countResult] = await Promise.all([
+        const [list, count] = await Promise.all([
           devitrakApi.post("/db_company/inventory-query", {
             queryName: "inventory.rentedPage",
-            params: { ...filters, pageSize, offset },
+            params: { ...filters, pageSize: PAGE_SIZE, offset: (nextPage - 1) * PAGE_SIZE },
           }),
           devitrakApi.post("/db_company/inventory-query", {
             queryName: "inventory.rentedCount",
@@ -158,143 +108,97 @@ const ReturnRentedItemModal = ({
           }),
         ]);
 
-        if (dataResult.data && countResult.data) {
-          setRenterItemList(dataResult.data.result || []);
-          setTotalItems(countResult.data.result[0]?.total || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error);
-        message.error("Failed to fetch items");
+        setRows(list.data?.result ?? []);
+        setTotal(count.data?.result?.[0]?.total ?? 0);
+      } catch {
+        setRows([]);
+        setNotice("The rented items could not be loaded. Try again.");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     },
-    // company_id is no longer read here — the server takes it from the
-    // s-company-lq header — so it is no longer a dependency.
-    [supplier_id, pageSize, isUsingProvidedData]
+    [supplier_id]
   );
 
+  // Opening resets the screen. Closing leaves it alone: the modal is unmounted
+  // by its caller, so there is nothing to tidy.
   useEffect(() => {
-    if (open) {
-      setCurrentPage(1);
-      setSelectedItems(new Set());
-      setSearchText("");
-      initializeData();
-    }
-  }, [open, initializeData]);
+    if (!open) return;
+    setSearch("");
+    setPage(1);
+    setSelectedIds([]);
+    setNotice(null);
+    if (!usingProvidedData) fetchPage(1, "");
+  }, [open, usingProvidedData, fetchPage]);
 
-  // Handle search for provided data
+  // Server-side search is debounced; the provided-data path filters in memory.
   useEffect(() => {
-    if (isUsingProvidedData) {
-      // For provided data, just update pagination
-      setCurrentPage(1);
-      setTotalItems(filteredProvidedData.length);
-    } else {
-      // For fetched data, use debounced search
-      const timeoutId = setTimeout(() => {
-        setCurrentPage(1);
-        fetchItemsForRenter(1, searchText);
-      }, 300);
+    if (!open || usingProvidedData) return;
+    const id = setTimeout(() => {
+      setPage(1);
+      fetchPage(1, search);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [open, usingProvidedData, search, fetchPage]);
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [
-    searchText,
-    isUsingProvidedData,
-    filteredProvidedData.length,
-    fetchItemsForRenter,
-  ]);
+  const visibleRows = usingProvidedData
+    ? providedRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    : rows;
+  const visibleTotal = usingProvidedData ? providedRows.length : total;
 
-  // Update displayed data when using provided data
-  useEffect(() => {
-    if (isUsingProvidedData) {
-      setRenterItemList(paginatedProvidedData);
-    }
-  }, [paginatedProvidedData, isUsingProvidedData]);
+  const action = describeReturnAction({
+    totalItems: visibleTotal,
+    selectedCount: selectedIds.length,
+  });
 
-  // Handle page change
-  const handlePageChange = useCallback(
-    (page, size) => {
-      setCurrentPage(page);
-      if (size !== pageSize) {
-        setPageSize(size);
-      }
+  // ─── The write path. Same requests, same order, same bodies. ──────────────
 
-      if (!isUsingProvidedData) {
-        fetchItemsForRenter(page, searchText);
-      }
-    },
-    [fetchItemsForRenter, searchText, pageSize, isUsingProvidedData]
-  );
+  /**
+   * Sends `ids` in batches, shrinking when a body is too big for the server.
+   *
+   * A queue rather than an index the body mutates: the old loop did `i -=
+   * currentBatchSize; continue;` and relied on the `for` step putting it back,
+   * which only worked because the two happened to cancel out.
+   */
+  const runBatched = async ({ ids, send }) => {
+    let size = INITIAL_BATCH_SIZE;
+    let queue = chunkForBatching(ids, size);
+    let index = 0;
+    let done = 0;
 
-  // Improved batch processing with dynamic sizing and progress tracking
-  const processBatchedItems = async (
-    itemIds,
-    batchProcessor,
-    initialBatchSize = 200, // Reduced from 500
-    stepName = "Processing items"
-  ) => {
-    const results = [];
-    let currentBatchSize = initialBatchSize;
+    setProgress({ current: 0, total: ids.length });
 
-    setProgress({ current: 0, total: itemIds.length, step: stepName });
+    const reshapeRemaining = () => {
+      const remaining = queue.slice(index).flat();
+      queue = [...queue.slice(0, index), ...chunkForBatching(remaining, size)];
+    };
 
-    for (let i = 0; i < itemIds.length; i += currentBatchSize) {
-      const batch = itemIds.slice(i, i + currentBatchSize);
-
+    while (index < queue.length) {
+      const batch = queue[index];
       try {
-        // Check batch size before processing
-        const sizeCheck = checkRequestSize({ batch });
-
-        // If batch is too large, reduce size and retry
-        if (sizeCheck.isLarge && currentBatchSize > 50) {
-          currentBatchSize = Math.max(50, Math.floor(currentBatchSize * 0.7));
-          // console.log(
-          //   `Reducing batch size to ${currentBatchSize} due to large payload`
-          // );
-          i -= currentBatchSize; // Retry with smaller batch
+        if (checkRequestSize({ batch }).isLarge && canShrinkBatch(size)) {
+          size = nextBatchSize(size, "payload-large");
+          reshapeRemaining();
           continue;
         }
 
-        const result = await batchProcessor(batch);
-        results.push(result);
-
-        // Update progress
-        setProgress({
-          current: Math.min(i + currentBatchSize, itemIds.length),
-          total: itemIds.length,
-          step: stepName,
-        });
-
-        // Add delay between batches
-        if (i + currentBatchSize < itemIds.length) {
-          await new Promise((resolve) => setTimeout(resolve, 150));
-        }
+        await send(batch);
+        done += batch.length;
+        setProgress({ current: done, total: ids.length });
+        index += 1;
+        if (index < queue.length) await wait(BATCH_PAUSE_MS);
       } catch (error) {
-        console.error(
-          `Error processing batch ${Math.floor(i / currentBatchSize) + 1}:`,
-          error
-        );
-
-        // If error is due to payload size, reduce batch size and retry
-        if (error.response?.status === 413 && currentBatchSize > 50) {
-          currentBatchSize = Math.max(50, Math.floor(currentBatchSize * 0.5));
-          // console.log(
-          //   `HTTP 413 error: Reducing batch size to ${currentBatchSize}`
-          // );
-          i -= currentBatchSize; // Retry with smaller batch
+        if (error?.response?.status === 413 && canShrinkBatch(size)) {
+          size = nextBatchSize(size, "payload-too-large");
+          reshapeRemaining();
           continue;
         }
-
         throw error;
       }
     }
-
-    return results;
   };
 
-  // Step 1: Return items to renter with improved error handling
-  const returnItemsToRenter = async (itemIds) => {
+  const markReturned = (ids) => {
     const returnDate = new Date().toISOString();
     const moreInfo = {
       supplier_id: supplier_id || null,
@@ -303,438 +207,288 @@ const ReturnRentedItemModal = ({
       return_timestamp: returnDate,
     };
 
-    const batchProcessor = async (batch) => {
-      const payload = {
-        item_ids: batch,
-        company_id: user.sqlInfo.company_id,
-        updates: {
-          warehouse: 1,
-          enableAssignFeature: 0,
-          returnedRentedInfo: JSON.stringify(moreInfo),
-          return_date: returnDate,
-        }
-      };
+    return runBatched({
+      ids,
+      send: (batch) =>
+        devitrakApi.post("/db_inventory/update-large-data", {
+          item_ids: batch,
+          company_id: user.sqlInfo.company_id,
+          updates: {
+            warehouse: 1,
+            enableAssignFeature: 0,
+            returnedRentedInfo: JSON.stringify(moreInfo),
+            return_date: returnDate,
+          },
+        }),
+    });
+  };
 
-      // Validate payload size
-      const sizeCheck = checkRequestSize(payload);
-      if (sizeCheck.isLarge) {
-        console.warn(
-          `Large payload for returnItemsToRenter: ${sizeCheck.size.toFixed(
-            2
-          )} MB`
-        );
-      }
+  const removeFromInventory = (ids) =>
+    runBatched({
+      ids,
+      send: (batch) =>
+        devitrakApi.post("/db_company/delete-bulk-items", {
+          item_ids: batch,
+          company_id: user.sqlInfo.company_id,
+        }),
+    });
 
-      return await devitrakApi.post("/db_inventory/update-large-data", payload);
-    };
+  const refreshInventoryViews = () => {
+    [
+      "currentStateDevicePerGroupName",
+      "deviceInInventoryPerGroup",
+      "currentStateDevicePerCategory",
+      "deviceInInventoryPerBrand",
+      "currentStateDevicePerBrand",
+    ].forEach((queryKey) => queryClient.invalidateQueries({ queryKey: [queryKey] }));
 
-    return await processBatchedItems(
-      itemIds,
-      batchProcessor,
-      200,
-      "Returning items to renter"
+    [
+      "listOfItemsInStock",
+      "ItemsInInventoryCheckingQuery",
+      "RefactoredListInventoryCompany",
+    ].forEach((queryKey) =>
+      queryClient.invalidateQueries({ queryKey: [queryKey], exact: true, refetchType: "active" })
     );
   };
 
-  // Step 2: Delete items from records with improved batching
-  const deleteItemsFromRecords = async (itemIds) => {
-    const batchProcessor = async (batch) => {
-      const payload = {
-        item_ids: batch,
-        company_id: user.sqlInfo.company_id,
-      };
-      // Validate payload size
-      const sizeCheck = checkRequestSize(payload);
-      if (sizeCheck.isLarge) {
-        console.warn(
-          `Large payload for deleteItemsFromRecords: ${sizeCheck.size.toFixed(
-            2
-          )} MB`
-        );
-      }
-      return await devitrakApi.post("/db_company/delete-bulk-items", payload);
-    };
+  /** Every id the current filter matches, not just the page on screen. */
+  const idsForWholeFilter = async () => {
+    if (usingProvidedData) return providedRows.map((row) => row.item_id);
 
-    return await processBatchedItems(
-      itemIds,
-      batchProcessor,
-      300,
-      "Deleting item records"
-    );
+    const response = await devitrakApi.post("/db_company/inventory-query", {
+      queryName: "inventory.rentedAll",
+      params: { supplierId: supplier_id || undefined },
+    });
+    return (response.data?.result ?? []).map((row) => row.item_id);
   };
 
-  const handleReturnAllItems = async () => {
-    setLoading(true);
+  const handleReturn = async () => {
+    setNotice(null);
+    setIsRunning(true);
     try {
-      let allItemIds;
-
-      if (isUsingProvidedData) {
-        // Use all items from provided data
-        allItemIds = data.map((item) => item.item_id);
-      } else {
-        // Get all item IDs for the current filter — same entry as the paged
-        // list, minus the paging params, so "return all" can't act on a
-        // different set than the screen showed.
-        const allItemsResult = await devitrakApi.post(
-          "/db_company/inventory-query",
-          {
-            queryName: "inventory.rentedAll",
-            params: { supplierId: supplier_id || undefined },
-          }
-        );
-
-        if (!allItemsResult.data?.result?.length) {
-          message.warning("No items found to return");
-          return;
-        }
-
-        allItemIds = allItemsResult.data.result.map((item) => item.item_id);
-      }
-
-      if (!allItemIds || allItemIds.length === 0) {
-        message.warning("No items found to return");
+      const ids = action.isAll ? await idsForWholeFilter() : [...selectedIds];
+      if (ids.length === 0) {
+        setNotice("There is nothing to return.");
         return;
       }
 
-      message.loading({
-        content: `Processing ${allItemIds.length} items...`,
-        key: "processing",
-      });
+      setActiveStep("return");
+      await markReturned(ids);
 
-      // Step 1: Return items to renter
-      await returnItemsToRenter(allItemIds);
+      setActiveStep("email");
+      setProgress({ current: 0, total: 1 });
+      await EmailReturnRentalItems({ items: ids, supplier_id, user, setProgress });
 
-      message.loading({
-        content: "Items returned to renter, now deleting records...",
-        key: "processing",
-      });
+      setActiveStep("delete");
+      await removeFromInventory(ids);
 
-      // Step 2: Email notification to staff
-      await EmailReturnRentalItems({
-        items: allItemIds,
-        supplier_id,
-        user,
-        setProgress,
-      });
-
-      // Step 3: Email notification to staff
-      await deleteItemsFromRecords(allItemIds);
-      setProgress({ current: 0, total: 1, step: "Sending email notification" });
-
-      // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
-      message.success({
-        content: `Successfully returned ${allItemIds.length} items to the Rental Company`,
-        key: "processing",
-      });
-      invalidatingQueriesForRefresh();
-      setRenterItemList([]);
-      setTotalItems(0);
-      setSelectedItems(new Set());
-      setProgress({ current: 0, total: 0, step: "" });
-      handleClose();
-    } catch (error) {
-      message.error({ content: "Failed to process items", key: "processing" });
-      console.error("Error processing items:", error);
-      setProgress({ current: 0, total: 0, step: "" });
+      refreshInventoryViews();
+
+      notify(
+        "success",
+        `${ids.length} item${ids.length === 1 ? "" : "s"} returned.`,
+        "They are out of this company's inventory."
+      );
+      return handleClose();
+    } catch {
+      // The batches that already went through are not rolled back, so the
+      // message must not claim nothing happened.
+      setNotice(
+        "The return stopped partway. Some items may already be marked as returned — reopen this list to see what is left."
+      );
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReturnSelectedItems = async () => {
-    if (selectedItems.size === 0) {
-      message.warning("Please select items to return");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const itemIds = Array.from(selectedItems);
-
-      message.loading({
-        content: `Processing ${itemIds.length} selected items...`,
-        key: "processing",
-      });
-
-      // Step 1: Return items to renter
-      await returnItemsToRenter(itemIds);
-
-      message.loading({
-        content: "Items returned to renter, now deleting records...",
-        key: "processing",
-      });
-      // Step 1: Return items to renter
-      await returnItemsToRenter(itemIds);
-
-      message.loading({
-        content: "Items returned to renter, now deleting records...",
-        key: "processing",
-      });
-
-      // Step 2: Email notification to staff
-      await EmailReturnRentalItems({
-        items: selectedItems,
-        supplier_id,
-        user,
-        setProgress,
-      });
-
-      // Step 3: Delete items from records
-      await deleteItemsFromRecords(itemIds);
-
-      // Step 4: Clear cache memory
-      await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
-
-      message.success({
-        content: `Successfully processed ${itemIds.length} selected items`,
-        key: "processing",
-      });
-      invalidatingQueriesForRefresh();
-      // Refresh current page
-      setSelectedItems(new Set());
-      setProgress({ current: 0, total: 0, step: "" });
-      fetchItemsForRenter(currentPage, searchText);
-    } catch (error) {
-      message.error({
-        content: "Failed to process selected items",
-        key: "processing",
-      });
-      console.error("Error processing selected items:", error);
-      setProgress({ current: 0, total: 0, step: "" });
-    } finally {
-      setLoading(false);
+      setIsRunning(false);
+      setActiveStep(null);
+      setProgress({ current: 0, total: 0 });
     }
   };
 
   const columns = [
     {
-      title: "Select",
-      dataIndex: "select",
-      width: 60,
-      render: (_, record) => (
-        <Checkbox
-          checked={selectedItems.has(record.item_id)}
-          onChange={(e) => {
-            const newSelectedItems = new Set(selectedItems);
-            if (e.target.checked) {
-              newSelectedItems.add(record.item_id);
-            } else {
-              newSelectedItems.delete(record.item_id);
-            }
-            setSelectedItems(newSelectedItems);
-          }}
-        />
-      ),
-    },
-    {
+      key: "item_id",
       title: "Item ID",
       dataIndex: "item_id",
-      key: "item_id",
-      sorter: (a, b) => a.item_id - b.item_id,
+      sorter: (a, b) => Number(a.item_id) - Number(b.item_id),
     },
     {
-      title: "Serial Number",
-      dataIndex: "serial_number",
       key: "serial_number",
-      sorter: (a, b) => a.serial_number.localeCompare(b.serial_number),
+      title: "Serial",
+      dataIndex: "serial_number",
+      render: (value) =>
+        value ? <span className="action-form__serial">{value}</span> : "—",
     },
     {
+      key: "item_group",
       title: "Group",
       dataIndex: "item_group",
-      key: "item_group",
-      sorter: (a, b) => a.item_group.localeCompare(b.item_group),
+      render: (value) => value || "—",
     },
   ];
 
-  const handleSelectAll = useCallback(
-    (checked) => {
-      if (checked) {
-        const newSelectedItems = new Set(selectedItems);
-        renterItemList.forEach((item) => newSelectedItems.add(item.item_id));
-        setSelectedItems(newSelectedItems);
-      } else {
-        const newSelectedItems = new Set(selectedItems);
-        renterItemList.forEach((item) => newSelectedItems.delete(item.item_id));
-        setSelectedItems(newSelectedItems);
-      }
-    },
-    [selectedItems, renterItemList]
-  );
+  const body = (
+    <div className="action-form">
+      {contextHolder}
 
-  const isAllCurrentPageSelected = useMemo(() => {
-    return (
-      renterItemList.length > 0 &&
-      renterItemList.every((item) => selectedItems.has(item.item_id))
-    );
-  }, [renterItemList, selectedItems]);
+      <div className="action-form__header">
+        <p className="action-form__lead">
+          These items go back to the supplier and are then removed from this
+          company&apos;s inventory. Nothing happens until you confirm.
+        </p>
+      </div>
 
-  const isSomeCurrentPageSelected = useMemo(() => {
-    return renterItemList.some((item) => selectedItems.has(item.item_id));
-  }, [renterItemList, selectedItems]);
-
-  const bodyModal = () => {
-    return (
-      <>
-        {progress.total > 0 && (
-          <Box
-            sx={{ mb: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}
-          >
-            <Typography variant="body2" gutterBottom>
-              {progress.step}
-            </Typography>
-            <Progress
-              percent={Math.round((progress.current / progress.total) * 100)}
-              status="active"
-              showInfo
-              format={(percent) =>
-                `${progress.current}/${progress.total} (${percent}%)`
-              }
-            />
-          </Box>
-        )}
-        <Tabs
-          size="large"
-          tabBarStyle={{ fontSize: "0.5rem", fontWeight: "500" }}
-          activeKey={activeTab}
-          type="card"
-          onChange={(key) => {
-            setActiveTab(key);
-            setCurrentPage(1);
-            setSelectedItems(new Set());
-            setSearchText("");
-            if (!isUsingProvidedData) {
-              fetchItemsForRenter(1, "");
-            }
+      <div className="action-form__field">
+        <Label>Search</Label>
+        <Input
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
           }}
-        >
-          <Tabs.TabPanel tab="Return All Items" key="1">
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Return All Rented Items ({totalItems} items)
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                This will return all rented items to the renter and delete them
-                from records.
-              </Typography>
+          disabled={isRunning}
+          placeholder="Item ID, serial number or group"
+        />
+      </div>
 
-              <Search
-                placeholder="Search by Item ID or Serial Number"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ marginBottom: 16, width: 300 }}
-                allowClear
-              />
+      <div className="action-form__toolbar">
+        <p className="action-form__count">
+          <strong>{visibleTotal}</strong> rented item
+          {visibleTotal === 1 ? "" : "s"}
+          {selectedIds.length > 0 && (
+            <>
+              {" · "}
+              <strong>{selectedIds.length}</strong> selected
+            </>
+          )}
+        </p>
+        {selectedIds.length > 0 && (
+          <GrayButtonComponent
+            size="sm"
+            title="Clear selection"
+            buttonType="button"
+            disabled={isRunning}
+            func={() => setSelectedIds([])}
+          />
+        )}
+      </div>
 
-              <Table
-                dataSource={renterItemList}
-                columns={columns.slice(1)} // Exclude select column
-                rowKey="item_id"
-                pagination={false}
-                size="small"
-                scroll={{ y: 400 }}
-                loading={loading}
-              />
+      {visibleTotal === 0 && !isLoading ? (
+        <EmptyState
+          compact
+          icon="tabler:package-off"
+          title="No rented items"
+          description={
+            search
+              ? "Nothing matches that search."
+              : "This supplier has no rented items in your inventory."
+          }
+        />
+      ) : (
+        <div className="action-form__scroll">
+          <BaseTable
+            className="profile-table"
+            columns={columns}
+            dataSource={visibleRows}
+            rowKey="item_id"
+            loading={isLoading}
+            size="small"
+            scroll={{ y: 360 }}
+            // Selection survives paging and searching: it used to live in a
+            // hand-built checkbox column that a tab change threw away.
+            rowSelection={{
+              selectedRowKeys: selectedIds,
+              onChange: (keys) => setSelectedIds(keys),
+              getCheckboxProps: () => ({ disabled: isRunning }),
+              preserveSelectedRowKeys: true,
+            }}
+            enablePagination
+            pageSize={PAGE_SIZE}
+            pagination={{
+              current: page,
+              pageSize: PAGE_SIZE,
+              total: visibleTotal,
+              showSizeChanger: false,
+              position: ["bottomCenter"],
+              onChange: (nextPage) => {
+                setPage(nextPage);
+                if (!usingProvidedData) fetchPage(nextPage, search);
+              },
+              showTotal: (count, range) => `${range[0]}-${range[1]} of ${count}`,
+            }}
+          />
+        </div>
+      )}
 
-              <Pagination
-                current={currentPage}
-                total={totalItems}
-                pageSize={pageSize}
-                showSizeChanger
-                showQuickJumper
-                showTotal={(total, range) =>
-                  `${range[0]}-${range[1]} of ${total} items`
-                }
-                onChange={handlePageChange}
-                pageSizeOptions={["20", "50", "100", "200"]}
-              />
-              <BlueButtonConfirmationComponent
-                title={`Return All Items (${totalItems})`}
-                func={handleReturnAllItems}
-                loadingState={loading}
-                disabled={totalItems === 0}
-                confirmationTitle="Are you sure you want to return all items? This action cannot be reversed."
-                styles={{ width: "fit-content", margin: "15px 0 0" }}
-              />
-            </Paper>
-          </Tabs.TabPanel>
-          <Tabs.TabPane tab="Return Selected Items" key="2">
-            <Paper sx={{ p: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Select Items to Return
-              </Typography>
+      {isRunning && (
+        <div className="action-form__step">
+          <ul className="action-form__steps">
+            {RETURN_STEPS.map((step) => {
+              const activeIndex = RETURN_STEPS.findIndex((s) => s.key === activeStep);
+              const stepIndex = RETURN_STEPS.findIndex((s) => s.key === step.key);
+              const state =
+                stepIndex < activeIndex ? "is-done" : step.key === activeStep ? "is-active" : "";
+              return (
+                <li className={state} key={step.key}>
+                  {step.label}
+                </li>
+              );
+            })}
+          </ul>
+          <Progress
+            percent={progressPercent(progress)}
+            status="active"
+            format={() =>
+              progress.total > 1 ? `${progress.current}/${progress.total}` : ""
+            }
+          />
+        </div>
+      )}
 
-              <Search
-                placeholder="Search by Item ID or Serial Number"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ marginBottom: 16, width: 300 }}
-                allowClear
-              />
+      {notice && <p className="action-form__notice">{notice}</p>}
 
-              <Space style={{ marginBottom: 16 }}>
-                <Checkbox
-                  checked={isAllCurrentPageSelected}
-                  indeterminate={
-                    isSomeCurrentPageSelected && !isAllCurrentPageSelected
-                  }
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                >
-                  Select All on Page ({renterItemList.length} items)
-                </Checkbox>
-              </Space>
-
-              <Table
-                dataSource={renterItemList}
-                columns={columns}
-                rowKey="item_id"
-                pagination={false}
-                size="small"
-                scroll={{ y: 400 }}
-                loading={loading}
-              />
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                <Pagination
-                  current={currentPage}
-                  total={totalItems}
-                  pageSize={pageSize}
-                  showSizeChanger
-                  showQuickJumper
-                  showTotal={(total, range) =>
-                    `${range[0]}-${range[1]} of ${total} items`
-                  }
-                  onChange={handlePageChange}
-                  pageSizeOptions={["20", "50", "100", "200"]}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {selectedItems.size} item(s) selected across all pages
-                </Typography>
-              </Box>
-              <BlueButtonConfirmationComponent
-                title={`Return Selected Items (${selectedItems.size})`}
-                loadingState={loading}
-                disabled={selectedItems.size === 0}
-                confirmationTitle="Are you sure you want to return the selected items? This action cannot be reversed."
-                func={handleReturnSelectedItems}
-                styles={{ width: "fit-content", margin: "15px 0 0" }}
-              />
-            </Paper>
-          </Tabs.TabPane>
-        </Tabs>
-      </>
-    );
-  };
+      <div className="action-form__footer">
+        <p className="action-form__consequence">
+          Returned items leave this company&apos;s inventory permanently.
+        </p>
+        <GrayButtonComponent
+          title="Cancel"
+          buttonType="button"
+          disabled={isRunning}
+          func={handleClose}
+        />
+        <DangerButtonConfirmationComponent
+          title={action.label}
+          buttonType="button"
+          disabled={!action.canSubmit}
+          loadingState={isRunning}
+          confirmationTitle={action.confirmTitle}
+          confirmationDescription={action.confirmDescription}
+          okText="Return"
+          func={handleReturn}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <ModalUX
       openDialog={open}
-      closeModal={handleClose}
-      title="Return Rented Items"
-      body={bodyModal()}
-      width={1200}
+      closeModal={isRunning ? () => {} : handleClose}
+      closable={!isRunning}
+      title={renderingTitle("Return rented items to the supplier")}
+      footer={null}
+      width={880}
+      body={body}
     />
   );
+};
+
+ReturnRentedItemModal.propTypes = {
+  open: PropTypes.bool,
+  handleClose: PropTypes.func.isRequired,
+  supplier_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  /** Rows the caller already holds; when absent they are fetched here. */
+  data: PropTypes.array,
 };
 
 export default ReturnRentedItemModal;
