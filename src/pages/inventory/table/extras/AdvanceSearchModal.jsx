@@ -253,7 +253,7 @@ const AdvanceSearchModal = ({
             loadingState={isLoadingState}
             titleStyles={{
               textTransform: "none",
-              with: "100%",
+              width: "100%",
               gap: "2px",
             }}
           />
