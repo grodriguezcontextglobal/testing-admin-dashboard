@@ -3,6 +3,7 @@ import { notifyStatus } from "../components/notification/alerts/useStatusNotific
 import { ConfigEnvExport } from "../config/ConfigEnvExport";
 import { getActiveServerSynchronously, switchServer, initializeActiveServer } from "./serverManager";
 import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
+import { guardRequest } from "./devPayloadGuard";
 import { isOfflineQueueableRequest } from "../config/offlineQueue";
 
 // Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads (not
@@ -102,7 +103,10 @@ const createDevitrakApiInstance = (suffix = "") => {
                 companySqlId: localStorage.getItem("s-company-lq"),
             }),
         );
-        return config;
+        // Development only: warn when the payload is missing a field the
+        // handler rejects the request without. Never blocks, never throws, and
+        // the contract it reads is not in the production bundle.
+        return guardRequest(config);
     });
 
     return instance;

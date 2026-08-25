@@ -1,0 +1,17 @@
+{
+  "//": "Editor support only. `checkJs` is off on purpose: this codebase has never been type-checked, and turning it on would bury real findings under thousands of pre-existing ones. What this file buys is resolution — so `src/docs/api-payloads.d.ts` is picked up and a call site can opt in per file with `// @ts-check` and a JSDoc @type annotation:\n\n  /** @type {import(\"../docs/api-payloads\").ApiEndpoints[\"POST /api/db_item/delete-item\"][\"body\"]} */\n  const body = { item_id, company_id };\n\nThe enforcement that does not need opting in lives in src/api/apiContractAudit.test.js and src/api/devPayloadGuard.js.",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "cypress"]
+}
