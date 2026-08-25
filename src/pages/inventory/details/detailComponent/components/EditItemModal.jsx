@@ -90,6 +90,13 @@ const EditItemModal = ({
     },
     [notify],
   );
+  // Success in the success register - this message means the update landed.
+  const openSuccessNotification = useCallback(
+    (msg) => {
+      notify("success", msg);
+    },
+    [notify],
+  );
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -240,7 +247,7 @@ const EditItemModal = ({
         setValue(key, "");
       });
 
-      openNotificationWithIcon(
+      openSuccessNotification(
         "Your update was registered and is processing in the background. We'll notify you when it's ready."
       );
       dispatch(
