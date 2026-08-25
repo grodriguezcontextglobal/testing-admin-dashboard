@@ -1,623 +1,667 @@
-import { Grid, InputLabel, Typography } from '@mui/material';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Divider, message, Tag } from 'antd';
-import { saveAs } from 'file-saver';
-import { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { devitrakApi } from '../../../api/devitrakApi';
-import { default as BlueButton, default as BlueButtonComponent } from '../../../components/UX/buttons/BlueButton';
-import DangerButtonComponent from '../../../components/UX/buttons/DangerButton';
-import { default as GrayButton, default as GrayButtonComponent } from '../../../components/UX/buttons/GrayButton';
-import SelectComponent from '../../../components/UX/dropdown/SelectComponent';
-import Input from '../../../components/UX/inputs/Input';
-import ModalUX from '../../../components/UX/modal/ModalUX';
-import BaseTable from '../../../components/UX/tables/BaseTable';
-import { onTrackBackgroundJob } from '../../../store/slices/backgroundJobsSlice';
-import generateIdempotencyKey from '../../../utils/actions/generateIdempotencyKey';
-import ExchangeModal from './components/ExchangeModal';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { saveAs } from "file-saver";
+import PropTypes from "prop-types";
+import { useCallback, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
+import { devitrakApi } from "../../../api/devitrakApi";
+import renderingTitle from "../../../components/general/renderingTitle";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
+import BlueButtonConfirmationComponent from "../../../components/UX/buttons/BlueButtonConfirmation";
+import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
+import Input from "../../../components/UX/inputs/Input";
+import Label from "../../../components/UX/inputs/Label";
+import ModalUX from "../../../components/UX/modal/ModalUX";
+import { ProfileSkeleton, StatusChip } from "../../../components/UX/profile";
+import BaseTable from "../../../components/UX/tables/BaseTable";
+import { onTrackBackgroundJob } from "../../../store/slices/backgroundJobsSlice";
+import "../../../styles/global/actionForm.css";
+import generateIdempotencyKey from "../../../utils/actions/generateIdempotencyKey";
+import ExchangeModal from "./components/ExchangeModal";
+import {
+  buildShipmentPayload,
+  describeShippingStatus,
+  eventsFromItems,
+  formatShipmentDateTime,
+  missingShipmentFields,
+} from "./utils/shipping";
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-const formatDateTime = (iso) => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleString('en-US', {
-        day: 'numeric', hour: '2-digit', minute: '2-digit',
-        month: 'short', year: 'numeric',
-    });
+const EMPTY_FORM = {
+  destination: "",
+  shipOutDate: "",
+  courier: "",
+  trackingNumber: "",
+  authorizer: "",
+  receiver: "",
 };
 
-const statusColor = { delivered: 'purple', 'in-reserved': 'blue', shipped: 'green' };
-const statusRef = { delivered: 'Delivered', 'in-reserved': 'In Reserved', shipped: 'Shipped' };
-
-// ─── component ───────────────────────────────────────────────────────────────
-
+/**
+ * Sending an event's reserved inventory out of the warehouse.
+ *
+ * The screen was one flat MUI grid: an event selector, then six fields all
+ * disabled until an event was picked with nothing saying why, then the packing
+ * list, then three buttons of equal weight — Cancel, Download Report and Ship
+ * Out. It is three numbered steps now, in the order the work happens: which
+ * event, what is in the box, where it is going. The report moved next to the
+ * list it describes, and shipping out is a confirmation that names the count.
+ *
+ * Validation used to be a single toast — "Please complete all required fields"
+ * — for six fields. Each field says whether it is the one missing.
+ *
+ * Every request is unchanged.
+ */
 const ShippingInventoryModal = ({ visible, onClose, user }) => {
-    const queryClient = useQueryClient();
-    const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+  const { notify, contextHolder } = useStatusNotification();
 
-    const [openModalNotification, setOpenModalNotification] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [destination, setDestination] = useState('');
-    const [shipOutDate, setShipOutDate] = useState('');
-    const [authorizer, setAuthorizer] = useState('');
-    const [receiver, setReceiver] = useState('');
-    const [isExporting, setIsExporting] = useState(false);
-    const [isExchangeModalVisible, setIsExchangeModalVisible] = useState(false);
-    const [itemToExchange, setItemToExchange] = useState(null);
-    const [newSerialNumber, setNewSerialNumber] = useState('');
-    const [courier, setCourier] = useState('');
-    const [trackingNumber, setTrackingNumber] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [itemToExchange, setItemToExchange] = useState(null);
+  const [isExchangeOpen, setIsExchangeOpen] = useState(false);
+  const [newSerialNumber, setNewSerialNumber] = useState("");
+  const [notice, setNotice] = useState(null);
 
-    const companyId = user?.sqlInfo?.company_id ?? "";
-    // console.log(user)
-    // console.log(companyId)
-    // ── 1. active events with reserved inventory ──────────────────────────────
-    const eventsQuery = useQuery({
-        queryKey: ['shippingEvents'],
-        queryFn: async () => {
-            const res = await devitrakApi.post('/db_item/event-items/search', {
-                active: 1,
-                company_id: companyId,
-                shipping_status: 'locked_in_warehouse', //locked_in_warehouse
-            });
-            if (!res.data?.ok || !res.data?.items) return [];
+  const companyId = user?.sqlInfo?.company_id ?? "";
+  const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
-            const map = new Map();
-            res.data.items.forEach((item) => {
-                if (!map.has(item.event_id)) {
-                    map.set(item.event_id, {
-                        id: item.event_id,
-                        address: item.event_address ?? '',
-                        eventDate: item.event_date ?? null,
-                        label: item.event_name,
-                        rawData: item,
-                    });
-                }
-            });
-            return Array.from(map.values());
-        },
-        // enabled: !!user?.infoSql?.company_id,
-        // staleTime: 30_000,
-    });
-    // ── 2. packaging list for selected event ──────────────────────────────────
-    const itemsQuery = useQuery({
-        queryKey: ['shippingItems', selectedEvent?.id],
-        queryFn: async () => {
-            const res = await devitrakApi.post('/db_item/event-items/search', {
-                company_id: companyId,
-                event_id: selectedEvent.id,
-                shipping_status: 'locked_in_warehouse', //locked_in_warehouse
-            });
-            return res.data?.items ?? [];
-        },
-        enabled: !!selectedEvent,
-        staleTime: 30_000,
-    });
+  // ── 1. active events with inventory locked in the warehouse ───────────────
+  const eventsQuery = useQuery({
+    queryKey: ["shippingEvents"],
+    queryFn: async () => {
+      const response = await devitrakApi.post("/db_item/event-items/search", {
+        active: 1,
+        company_id: companyId,
+        shipping_status: "locked_in_warehouse",
+      });
+      if (!response.data?.ok || !response.data?.items) return [];
+      return eventsFromItems(response.data.items);
+    },
+  });
 
-    // ── 3. ship-out mutation ──────────────────────────────────────────────────
-    const createShipmentRecordMutation = useMutation({
-        mutationFn: async (shipmentData) => {
-            const { data } = await devitrakApi.post('/db_shipment/', shipmentData);
-            return data;
-        },
-        onError: (error) => {
-            console.error("Error creating shipment record:", error);
-            message.error('Could not create shipment record. Please try again.');
-        },
-        onSuccess: () => {
-            const items = itemsQuery.data ?? [];
-            if (items.length > 0) {
-                const item_ids = items.map((item) => item.item_id);
-                bulkUpdateItemStatusMutation.mutate({
-                    company_id: companyId,
-                    event_id: selectedEvent.id,
-                    item_ids,
-                    idempotencyKey: generateIdempotencyKey(),
-                });
-            } else {
-                // If there are no items, we can just close the modal and show success.
-                message.success('Shipment record created successfully.');
-                queryClient.invalidateQueries({ queryKey: ['shippingEvents'] });
-                handleClose();
-            }
-        },
-    });
+  // ── 2. the packing list for the selected event ────────────────────────────
+  const itemsQuery = useQuery({
+    queryKey: ["shippingItems", selectedEvent?.id],
+    queryFn: async () => {
+      const response = await devitrakApi.post("/db_item/event-items/search", {
+        company_id: companyId,
+        event_id: selectedEvent.id,
+        shipping_status: "locked_in_warehouse",
+      });
+      return response.data?.items ?? [];
+    },
+    enabled: !!selectedEvent,
+    staleTime: 30_000,
+  });
 
-    // The item-status update itself now runs in the backend's job queue
-    // (PUT /db_item/event-items/bulk-update returns 202 + jobId instead of a
-    // synchronous 200); /db_inventory/update-large-data is unaffected and
-    // still resolves synchronously. Global polling via onTrackBackgroundJob
-    // mirrors the pattern already used for bulk inventory insert/update
-    // (see BulkItemActionsOptions.jsx / EditBulkActionOptions.jsx).
-    const bulkUpdateItemStatusMutation = useMutation({
-        mutationFn: async ({ company_id, event_id, item_ids, idempotencyKey }) => {
-            const [{ data: bulkUpdateResponse }] = await Promise.all([
-                devitrakApi.put(
-                    '/db_item/event-items/bulk-update',
-                    {
-                        company_id,
-                        event_id,
-                        updates: { shipping_status: 'in-transit' }, // The new status
-                        filters: { shipping_status: 'in-reserved' }, // The old status - locked_in_warehouse
-                    },
-                    { headers: { 'Idempotency-Key': idempotencyKey } },
-                ),
-                devitrakApi.post('/db_inventory/update-large-data', { //
-                    item_ids,
-                    company_id,
-                    warehouse: 0, // Mark items as out of warehouse
-                    updates: { logistic_status: 'in-transit', warehouse: 0 }
-                }),
-            ]);
-            return bulkUpdateResponse;
-        },
-        onError: () => message.error('Could not bulk update item statuses.'),
-        onSuccess: (response) => {
-            message.info(
-                "Shipment was registered and inventory is being shipped out in the background. We'll notify you when it's ready."
-            );
-            dispatch(
-                onTrackBackgroundJob({
-                    jobId: response.jobId,
-                    type: 'shipment-item-status-bulk-update',
-                    successMessage: 'Shipment record created and inventory shipped out successfully.',
-                    failureMessage: 'Could not bulk update item statuses.',
-                    invalidateKeys: [['shippingEvents']],
-                })
-            );
-            handleClose();
-        },
-    });
+  const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
+  const missing = missingShipmentFields(form);
+  const canShip = Boolean(selectedEvent) && items.length > 0 && missing.length === 0;
 
-    // ── handlers ──────────────────────────────────────────────────────────────
+  // ── 3. ship out ───────────────────────────────────────────────────────────
 
-    const handleEventSelection = (event) => {
-        setSelectedEvent(event ?? null);
-        setDestination(event?.address ?? '');
-        setShipOutDate('');
-        setAuthorizer('');
-        setReceiver('');
-        setCourier('');
-        setTrackingNumber('');
-    };
-
-    const handleClose = () => {
-        setSelectedEvent(null);
-        setDestination('');
-        setShipOutDate('');
-        setAuthorizer('');
-        setReceiver('');
-        setCourier('');
-        setTrackingNumber('');
-        onClose();
-    };
-
-    const isFormValid =
-        selectedEvent &&
-        destination.trim() &&
-        shipOutDate &&
-        authorizer.trim() &&
-        receiver.trim() &&
-        courier.trim() &&
-        trackingNumber.trim();
-
-    const handleShipOut = () => {
-        if (!isFormValid) {
-            message.warning('Please complete all required fields.');
-            return;
-        }
-
-        const items = itemsQuery.data ?? [];
-        if (items.length === 0) {
-            message.warning('No items to ship.');
-            return;
-        }
-        const package_list = items.map((item) => item.item_id);
-
-        const shipmentData = {
-            authorizer_name: authorizer,
-            company_id: companyId,
-            courier: courier,
-            destination: destination,
-            event_id: selectedEvent.id,
-            package_list,
-            recipient_name: receiver,
-            status: 'pending',
-            tracking_number: trackingNumber,
-        };
-        createShipmentRecordMutation.mutate(shipmentData);
-    };
-
-    // ── report (XLSX) ─────────────────────────────────────────────────────────
-
-    const handleDownloadReport = useCallback(async () => {
-        const items = itemsQuery.data ?? [];
-        if (!selectedEvent || items.length === 0) {
-            message.warning('Select an event with inventory to generate the report.');
-            return;
-        }
-
-        setIsExporting(true);
-        try {
-            const ExcelJS = (await import('exceljs')).default;
-            const wb = new ExcelJS.Workbook();
-            wb.creator = 'Devitrak';
-            wb.created = new Date();
-
-            // ── Sheet 1: Shipment summary ─────────────────────────────────────
-            const wsSummary = wb.addWorksheet('Shipment Summary');
-            wsSummary.columns = [
-                { header: 'Field', key: 'field', width: 28 },
-                { header: 'Value', key: 'value', width: 46 },
-            ];
-            wsSummary.getRow(1).font = { bold: true };
-
-            const summaryRows = [
-                { field: 'Event Name', value: selectedEvent.label },
-                { field: 'Destination / Location', value: destination || selectedEvent.address },
-                { field: 'Ship-Out Date', value: shipOutDate ? formatDateTime(shipOutDate) : '—' },
-                { field: 'Courier', value: courier || '—' },
-                { field: 'Tracking Number', value: trackingNumber || '—' },
-                { field: 'Authorized By', value: authorizer || '—' },
-                { field: 'Who will receive inventory at destination', value: receiver || '—' },
-                { field: 'Total Items', value: items.length },
-                { field: 'Report Generated', value: new Date().toLocaleString() },
-            ];
-            summaryRows.forEach((r) => wsSummary.addRow(r));
-
-            // ── Sheet 2: Packaging list ───────────────────────────────────────
-            const wsItems = wb.addWorksheet('Packaging List');
-            wsItems.columns = [
-                { header: '#', key: 'idx', width: 6 },
-                { header: 'Serial Number', key: 'serial_number', width: 22 },
-                { header: 'Item / Group', key: 'item_group', width: 28 },
-                { header: 'Category', key: 'category_name', width: 20 },
-                { header: 'Condition', key: 'status', width: 14 },
-                { header: 'Shipping Status', key: 'shipping_status', width: 20 },
-                { header: 'Location (Origin)', key: 'location', width: 24 },
-            ];
-            wsItems.getRow(1).font = { bold: true };
-            wsItems.views = [{ state: 'frozen', ySplit: 1 }];
-
-            items.forEach((item, i) => {
-                wsItems.addRow({
-                    category_name: item.category_name ?? '',
-                    idx: i + 1,
-                    item_group: item.item_group ?? item.item_name ?? '',
-                    location: item.location ?? item.main_warehouse ?? '',
-                    serial_number: item.serial_number ?? '',
-                    shipping_status: item.shipping_status ?? '',
-                    status: item.status ?? item.condition ?? '',
-                });
-            });
-
-            const buffer = await wb.xlsx.writeBuffer();
-            const blob = new Blob([buffer], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-            saveAs(blob, `shipping_report_${selectedEvent.label.replace(/\s+/g, '_')}_${Date.now()}.xlsx`);
-            message.success('Report downloaded.');
-        } catch (err) {
-            console.error(err);
-            message.error('Failed to generate report.');
-        } finally {
-            setIsExporting(false);
-        }
-    }, [selectedEvent, itemsQuery.data, destination, shipOutDate, authorizer, receiver]);
-
-    // ── packaging list columns ────────────────────────────────────────────────
-
-    const columns = [
-        {
-            key: 'idx',
-            render: (_, __, i) => i + 1,
-            title: '#',
-            width: 50,
-        },
-        {
-            dataIndex: 'serial_number',
-            key: 'serial_number',
-            render: (v) => <Typography variant="body2" fontFamily="monospace">{v ?? '—'}</Typography>,
-            title: 'Serial Number',
-        },
-        {
-            dataIndex: 'item_group',
-            key: 'item_group',
-            render: (v, row) => v ?? row.item_name ?? '—',
-            title: 'Item / Group',
-        },
-        {
-            dataIndex: 'category_name',
-            key: 'category_name',
-            title: 'Category',
-        },
-        {
-            dataIndex: 'status',
-            key: 'status',
-            render: (v, row) => v ?? row.condition ?? '—',
-            title: 'Condition',
-        },
-        {
-            dataIndex: 'location',
-            key: 'location',
-            render: (v, row) => v ?? row.main_warehouse ?? '—',
-            title: 'Origin Location',
-        },
-        {
-            dataIndex: 'shipping_status',
-            key: 'shipping_status',
-            render: (v) => <Typography variant="body2" color={statusColor[v] || 'text.secondary'}>{statusRef[v] || '—'}</Typography>,
-            title: 'Shipping Status',
-        },
-        {
-            dataIndex: '',
-            render: (v, row) => {
-                return (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                        <BlueButtonComponent title={"Exchange"} func={() => { setItemToExchange(row); setIsExchangeModalVisible(true) }} />
-                        <DangerButtonComponent title={"Remove"} func={() => { setItemToExchange(row); setOpenModalNotification(true) }} />
-                    </div>
-                )
-            },
-            title: '',
-        },
-    ];
-
-    // ── render ────────────────────────────────────────────────────────────────
-    // console.log(itemsQuery)
-    const body = (
-        <Grid container spacing={2}>
-
-            {/* ── Event selector ── */}
-            <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                    Active Event
-                </Typography>
-                <SelectComponent
-                    // label="Select event with reserved inventory"
-                    placeholder="Search event..."
-                    items={eventsQuery.data ?? []}
-                    onSelect={handleEventSelection}
-                    value={selectedEvent}
-                    isRequired
-                />
-                {/* {eventsQuery.isLoading && (
-                    <Spin size="small" style={{ marginTop: 8 }} />
-                )} */}
-                {eventsQuery.isSuccess && (eventsQuery.data ?? []).length === 0 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                        No active events with inventory locked in warehouse.
-                    </Typography>
-                )}
-            </Grid>
-
-            {/* ── Shipping details ── */}
-            <Grid item xs={12}>
-                <Divider orientation="left" plain style={{ margin: '4px 0 8px' }}>
-                    Shipping Details
-                </Divider>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Destination / Location
-                    </Typography>
-                    <Input
-                        // label="Destination / Location"
-                        placeholder="e.g. Convention Center, Miami FL"
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Ship-Out Date & Time
-                    </Typography>
-                    <Input
-                        // label="Ship-Out Date & Time"
-                        type="datetime-local"
-                        value={shipOutDate}
-                        onChange={(e) => setShipOutDate(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Courier
-                    </Typography>
-                    <Input
-                        // label="Courier"
-                        placeholder="e.g. FedEx, UPS, DHL"
-                        value={courier}
-                        onChange={(e) => setCourier(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Tracking Number
-                    </Typography>
-                    <Input
-                        // label="Tracking Number"
-                        placeholder="e.g. 1234567890"
-                        value={trackingNumber}
-                        onChange={(e) => setTrackingNumber(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Authorized By
-                    </Typography>
-                    <Input
-                        // label="Authorized By"
-                        placeholder="Name of person authorizing shipment"
-                        value={authorizer}
-                        onChange={(e) => setAuthorizer(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-                <InputLabel>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Who will receive inventory at destination
-                    </Typography>
-                    <Input
-                        // label="Received By"
-                        placeholder="Name of person receiving at destination"
-                        value={receiver}
-                        onChange={(e) => setReceiver(e.target.value)}
-                        disabled={!selectedEvent}
-                        required
-                    />
-                </InputLabel>
-            </Grid>
-
-            {/* ── Packaging list ── */}
-            <Grid item xs={12}>
-                <Divider orientation="left" plain style={{ margin: '4px 0 8px' }}>
-                    Packaging List
-                    {itemsQuery.isSuccess && (
-                        <Tag color="blue" style={{ marginLeft: 8 }}>
-                            {(itemsQuery.data ?? []).length} items
-                        </Tag>
-                    )}
-                </Divider>
-
-                {!selectedEvent ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                        Select an event to see the inventory reserved for shipment.
-                    </Typography>
-                ) : (
-                    <BaseTable
-                        dataSource={itemsQuery.data ?? []}
-                        columns={columns}
-                        rowKey={(r) => r.item_id ?? r.serial_number ?? Math.random()}
-                        loading={itemsQuery.isLoading}
-                        enablePagination
-                        pageSize={8}
-                        size="small"
-                    />
-                )}
-            </Grid>
-
-            {/* ── Actions ── */}
-            <Grid item xs={12}>
-                <Divider style={{ margin: '4px 0 12px' }} />
-                <Grid container justifyContent="flex-end" spacing={1}>
-                    <Grid item>
-                        <GrayButton
-                            title="Cancel"
-                            func={handleClose}
-                            disabled={createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending}
-                        />
-                    </Grid>
-                    <Grid item>
-                        <GrayButton
-                            title={isExporting ? 'Generating…' : 'Download Report (.xlsx)'}
-                            func={handleDownloadReport}
-                            disabled={!selectedEvent || isExporting || (itemsQuery.data ?? []).length === 0}
-                            isLoading={isExporting}
-                        />
-                    </Grid>
-                    <Grid item>
-                        <BlueButton
-                            title="Ship Out Inventory"
-                            func={handleShipOut}
-                            disabled={!isFormValid || createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending}
-                            isLoading={createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending}
-                        />
-                    </Grid>
-                </Grid>
-            </Grid>
-
-        </Grid>
-    );
-
-    const handleRemoveItem = async(itemId) => {
-        await devitrakApi.post('/db_item/edit-item', {
-            item_id: itemId,
-            logistic_status: 'in-stock',
+  const bulkUpdateItemStatusMutation = useMutation({
+    mutationFn: async ({ company_id, event_id, item_ids, idempotencyKey }) => {
+      const [{ data: bulkUpdateResponse }] = await Promise.all([
+        devitrakApi.put(
+          "/db_item/event-items/bulk-update",
+          {
+            company_id,
+            event_id,
+            updates: { shipping_status: "in-transit" },
+            // NOTE: both queries above search for `locked_in_warehouse`, so the
+            // rows on screen do not carry `in-reserved` and this filter matches
+            // none of them — the job reports success having updated nothing,
+            // while /db_inventory/update-large-data below does move the items
+            // by id. Left exactly as it was: changing it starts writing rows
+            // that are not being written today, which is a server-side effect
+            // and needs the backend's confirmation first.
+            filters: { shipping_status: "in-reserved" },
+          },
+          { headers: { "Idempotency-Key": idempotencyKey } }
+        ),
+        devitrakApi.post("/db_inventory/update-large-data", {
+          item_ids,
+          company_id,
+          warehouse: 0,
+          updates: { logistic_status: "in-transit", warehouse: 0 },
+        }),
+      ]);
+      return bulkUpdateResponse;
+    },
+    onError: () => setNotice("The items were not marked as shipped. Try again."),
+    onSuccess: (response) => {
+      // The item-status update runs in the backend's job queue: the PUT answers
+      // 202 with a jobId rather than a synchronous 200.
+      dispatch(
+        onTrackBackgroundJob({
+          jobId: response.jobId,
+          type: "shipment-item-status-bulk-update",
+          successMessage: "Shipment recorded and inventory shipped out.",
+          failureMessage: "Could not update the item statuses.",
+          invalidateKeys: [["shippingEvents"]],
         })
-        await devitrakApi.post(`/db_event/remove-reserved-items-for-event`, {
-                event_id: selectedEvent?.id,
-                item_id: [itemId],
-                company_id: companyId
-        })
-        queryClient.invalidateQueries({ queryKey: ['shipping-events'] })
-        eventsQuery.refetch()
-        return alert(`Item ${itemId} has been removed.`)
+      );
+      notify(
+        "info",
+        "Shipment recorded.",
+        "The inventory is being shipped out in the background — we'll let you know when it lands."
+      );
+      handleClose();
+    },
+  });
+
+  const createShipmentRecordMutation = useMutation({
+    mutationFn: async (shipmentData) => {
+      const { data } = await devitrakApi.post("/db_shipment/", shipmentData);
+      return data;
+    },
+    onError: () =>
+      setNotice("The shipment record was not created. Nothing was shipped."),
+    onSuccess: () => {
+      if (items.length === 0) {
+        notify("success", "Shipment recorded.");
+        queryClient.invalidateQueries({ queryKey: ["shippingEvents"] });
+        return handleClose();
+      }
+      bulkUpdateItemStatusMutation.mutate({
+        company_id: companyId,
+        event_id: selectedEvent.id,
+        item_ids: items.map((item) => item.item_id),
+        idempotencyKey: generateIdempotencyKey(),
+      });
+    },
+  });
+
+  const isShipping =
+    createShipmentRecordMutation.isPending || bulkUpdateItemStatusMutation.isPending;
+
+  function handleClose() {
+    setSelectedEvent(null);
+    setForm(EMPTY_FORM);
+    setSubmitAttempted(false);
+    setNotice(null);
+    onClose();
+  }
+
+  const handleEventSelection = (event) => {
+    setSelectedEvent(event ?? null);
+    setSubmitAttempted(false);
+    setNotice(null);
+    // The event's own address is the obvious first guess at the destination.
+    setForm({ ...EMPTY_FORM, destination: event?.address ?? "" });
+  };
+
+  const handleShipOut = () => {
+    setSubmitAttempted(true);
+    setNotice(null);
+
+    if (missing.length > 0) {
+      return setNotice("Fill in the fields marked below before shipping out.");
     }
-    return (
-        <>
-            <ModalUX
-                openDialog={visible}
-                closeModal={handleClose}
-                title="Ship Out Inventory"
-                width={1100}
-                body={body}
-            />
-            {
-                isExchangeModalVisible && (
-                    <ExchangeModal
-                        visible={isExchangeModalVisible}
-                        onClose={() => setIsExchangeModalVisible(false)}
-                        itemToExchange={itemToExchange}
-                        newSerialNumber={newSerialNumber}
-                        setNewSerialNumber={setNewSerialNumber}
-                        refetchShippingEvents={itemsQuery.refetch}
-                        eventId={selectedEvent?.id}
-                        companyId={companyId}
-                    />
-                )
-            }
-            {
-                openModalNotification && (
-                    <ModalUX
-                        openDialog={openModalNotification}
-                        closeModal={() => setOpenModalNotification(false)}
-                        title="Remove"
-                        body={
-                            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                                Are you sure you want to exchange this item: {itemToExchange.item_name} serial number: {itemToExchange.serial_number}?
-                            </Typography>
-                        }
-                        footer={
-                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                <GrayButtonComponent
-                                    title="Cancel"
-                                    func={() => setOpenModalNotification(false)}
-                                />
-                                <BlueButtonComponent
-                                    title="Remove"
-                                    func={() => { handleRemoveItem(itemToExchange.item_id); setOpenModalNotification(false); }}
-                                />
-                            </div>
-                        }
-                    />
-                )
-            }
-        </>
+    if (items.length === 0) {
+      return setNotice("This event has nothing locked in the warehouse to ship.");
+    }
+
+    createShipmentRecordMutation.mutate(
+      buildShipmentPayload({
+        authorizer: form.authorizer,
+        companyId,
+        courier: form.courier,
+        destination: form.destination,
+        eventId: selectedEvent.id,
+        packageList: items.map((item) => item.item_id),
+        receiver: form.receiver,
+        trackingNumber: form.trackingNumber,
+      })
     );
+  };
+
+  const handleRemoveItem = async (item) => {
+    setNotice(null);
+    try {
+      await devitrakApi.post("/db_item/edit-item", {
+        item_id: item.item_id,
+        logistic_status: "in-stock",
+      });
+      await devitrakApi.post("/db_event/remove-reserved-items-for-event", {
+        event_id: selectedEvent?.id,
+        item_id: [item.item_id],
+        company_id: companyId,
+      });
+
+      // The packing list is what shows this row, so it is the one that has to
+      // be refetched. The old handler refreshed the event list instead — and
+      // invalidated a key that does not exist — so the removed item stayed on
+      // screen, and reported success through a browser alert().
+      await itemsQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ["shippingEvents"] });
+      notify(
+        "success",
+        `${item.serial_number ?? item.item_id} removed from the shipment.`,
+        "It is back in stock."
+      );
+    } catch {
+      setNotice(
+        `${item.serial_number ?? item.item_id} was not removed. Nothing changed.`
+      );
+    }
+  };
+
+  // ── the packing report ────────────────────────────────────────────────────
+
+  const handleDownloadReport = useCallback(async () => {
+    if (!selectedEvent || items.length === 0) {
+      return setNotice("Pick an event with inventory before generating the report.");
+    }
+
+    setIsExporting(true);
+    try {
+      const ExcelJS = (await import("exceljs")).default;
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Devitrak";
+      workbook.created = new Date();
+
+      const summary = workbook.addWorksheet("Shipment Summary");
+      summary.columns = [
+        { header: "Field", key: "field", width: 28 },
+        { header: "Value", key: "value", width: 46 },
+      ];
+      summary.getRow(1).font = { bold: true };
+      [
+        { field: "Event Name", value: selectedEvent.label },
+        { field: "Destination / Location", value: form.destination || selectedEvent.address },
+        { field: "Ship-Out Date", value: formatShipmentDateTime(form.shipOutDate) },
+        { field: "Courier", value: form.courier || "—" },
+        { field: "Tracking Number", value: form.trackingNumber || "—" },
+        { field: "Authorized By", value: form.authorizer || "—" },
+        { field: "Who will receive inventory at destination", value: form.receiver || "—" },
+        { field: "Total Items", value: items.length },
+        { field: "Report Generated", value: new Date().toLocaleString() },
+      ].forEach((row) => summary.addRow(row));
+
+      const list = workbook.addWorksheet("Packaging List");
+      list.columns = [
+        { header: "#", key: "idx", width: 6 },
+        { header: "Serial Number", key: "serial_number", width: 22 },
+        { header: "Item / Group", key: "item_group", width: 28 },
+        { header: "Category", key: "category_name", width: 20 },
+        { header: "Condition", key: "status", width: 14 },
+        { header: "Shipping Status", key: "shipping_status", width: 20 },
+        { header: "Location (Origin)", key: "location", width: 24 },
+      ];
+      list.getRow(1).font = { bold: true };
+      list.views = [{ state: "frozen", ySplit: 1 }];
+
+      items.forEach((item, index) => {
+        list.addRow({
+          category_name: item.category_name ?? "",
+          idx: index + 1,
+          item_group: item.item_group ?? item.item_name ?? "",
+          location: item.location ?? item.main_warehouse ?? "",
+          serial_number: item.serial_number ?? "",
+          shipping_status: describeShippingStatus(item.shipping_status).label,
+          status: item.status ?? item.condition ?? "",
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(
+        new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        }),
+        `shipping_report_${selectedEvent.label.replace(/\s+/g, "_")}_${Date.now()}.xlsx`
+      );
+      notify("success", "Packing report downloaded.");
+    } catch {
+      setNotice("The report could not be generated.");
+    } finally {
+      setIsExporting(false);
+    }
+    // `form` in full: the old dependency list omitted courier and trackingNumber
+    // while the report printed them, so a stale pair could reach the file.
+  }, [selectedEvent, items, form, notify]);
+
+  // ── the packing list table ────────────────────────────────────────────────
+
+  const columns = [
+    { key: "idx", title: "#", width: 50, render: (_, __, index) => index + 1 },
+    {
+      key: "serial_number",
+      title: "Serial",
+      dataIndex: "serial_number",
+      render: (value) =>
+        value ? <span className="action-form__serial">{value}</span> : "—",
+    },
+    {
+      key: "item_group",
+      title: "Item",
+      dataIndex: "item_group",
+      render: (value, row) => value ?? row.item_name ?? "—",
+    },
+    { key: "category_name", title: "Category", dataIndex: "category_name" },
+    {
+      key: "status",
+      title: "Condition",
+      dataIndex: "status",
+      render: (value, row) => value ?? row.condition ?? "—",
+    },
+    {
+      key: "location",
+      title: "Origin",
+      dataIndex: "location",
+      render: (value, row) => value ?? row.main_warehouse ?? "—",
+    },
+    {
+      key: "shipping_status",
+      title: "Status",
+      dataIndex: "shipping_status",
+      render: (value) => {
+        const status = describeShippingStatus(value);
+        return <StatusChip label={status.label} tone={status.tone} pip />;
+      },
+    },
+    {
+      key: "actions",
+      title: "",
+      align: "right",
+      render: (_, row) => (
+        <div className="profile-row-actions">
+          <GrayButtonComponent
+            size="sm"
+            title="Exchange"
+            buttonType="button"
+            disabled={isShipping}
+            func={() => {
+              setItemToExchange(row);
+              setIsExchangeOpen(true);
+            }}
+          />
+          <DangerButtonConfirmationComponent
+            size="sm"
+            title="Remove"
+            buttonType="button"
+            disabled={isShipping}
+            // The old dialog was titled "Remove" and asked "are you sure you
+            // want to exchange this item?", behind a blue button.
+            confirmationTitle={`Remove ${row.serial_number ?? row.item_id} from this shipment?`}
+            confirmationDescription="It goes back into stock and off the packing list."
+            okText="Remove"
+            func={() => handleRemoveItem(row)}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  const stepClass = (done) =>
+    `action-form__step${done ? " action-form__step--done" : ""}`;
+
+  const fieldError = (key) =>
+    submitAttempted && missing.includes(key) ? "Required" : undefined;
+
+  const body = (
+    <div className="action-form">
+      {contextHolder}
+
+      <p className="action-form__lead">
+        Inventory locked in the warehouse for an event, handed to a courier.
+        Nothing moves until you confirm.
+      </p>
+
+      {/* 1 — which event */}
+      <section className={stepClass(Boolean(selectedEvent))}>
+        <div className="action-form__step-head">
+          <h3 className="action-form__step-title">
+            <span className="action-form__step-index">1</span>
+            Which event
+          </h3>
+        </div>
+
+        {eventsQuery.isLoading ? (
+          <ProfileSkeleton lines={1} />
+        ) : (eventsQuery.data ?? []).length === 0 ? (
+          <p className="action-form__empty">
+            No active event has inventory locked in the warehouse right now.
+          </p>
+        ) : (
+          <>
+            <SelectComponent
+              placeholder="Search an event…"
+              items={eventsQuery.data ?? []}
+              onSelect={handleEventSelection}
+              value={selectedEvent}
+              isRequired
+            />
+            {selectedEvent && (
+              <p className="action-form__step-note">
+                {selectedEvent.address || "No address on the event"} ·{" "}
+                {selectedEvent.itemCount} item
+                {selectedEvent.itemCount === 1 ? "" : "s"} ready
+              </p>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* 2 — what is in the box */}
+      {selectedEvent && (
+        <section className={stepClass(items.length > 0)}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">2</span>
+              What is in the shipment ({items.length})
+            </h3>
+            <GrayButtonComponent
+              size="sm"
+              title={isExporting ? "Generating…" : "Download packing list"}
+              buttonType="button"
+              disabled={items.length === 0 || isExporting}
+              loadingState={isExporting}
+              func={handleDownloadReport}
+            />
+          </div>
+
+          {itemsQuery.isLoading ? (
+            <ProfileSkeleton lines={3} />
+          ) : items.length === 0 ? (
+            <EmptyState
+              compact
+              icon="tabler:package-off"
+              title="Nothing locked for this event"
+              description="Reserve inventory for the event before shipping it out."
+            />
+          ) : (
+            <div className="action-form__scroll">
+              <BaseTable
+                className="profile-table"
+                columns={columns}
+                dataSource={items}
+                // Never `Math.random()`: a fresh key on every render remounts
+                // every row, which is what the old fallback did.
+                rowKey={(row, index) => row.item_id ?? row.serial_number ?? index}
+                enablePagination={items.length > 8}
+                pageSize={8}
+                size="small"
+              />
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* 3 — where it goes */}
+      {selectedEvent && (
+        <section className={stepClass(missing.length === 0)}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">3</span>
+              Where it is going, and who signs for it
+            </h3>
+          </div>
+
+          <div className="action-form__grid">
+            <div className="action-form__field action-form__field--wide">
+              <Label>Destination</Label>
+              <Input
+                value={form.destination}
+                onChange={(event) => setField("destination", event.target.value)}
+                disabled={isShipping}
+                placeholder="e.g. Convention Center, Miami FL"
+                error={Boolean(fieldError("destination"))}
+                helperText={fieldError("destination")}
+              />
+            </div>
+            <div className="action-form__field">
+              <Label>Courier</Label>
+              <Input
+                value={form.courier}
+                onChange={(event) => setField("courier", event.target.value)}
+                disabled={isShipping}
+                placeholder="FedEx, UPS, USPS, DHL"
+                error={Boolean(fieldError("courier"))}
+                helperText={fieldError("courier")}
+              />
+            </div>
+            <div className="action-form__field">
+              <Label>Tracking number</Label>
+              <Input
+                value={form.trackingNumber}
+                onChange={(event) => setField("trackingNumber", event.target.value)}
+                disabled={isShipping}
+                placeholder="e.g. 1234567890"
+                error={Boolean(fieldError("trackingNumber"))}
+                helperText={fieldError("trackingNumber")}
+              />
+            </div>
+            <div className="action-form__field">
+              <Label>Authorised by</Label>
+              <Input
+                value={form.authorizer}
+                onChange={(event) => setField("authorizer", event.target.value)}
+                disabled={isShipping}
+                placeholder="Who approved the shipment"
+                error={Boolean(fieldError("authorizer"))}
+                helperText={fieldError("authorizer")}
+              />
+            </div>
+            <div className="action-form__field">
+              <Label>Received by</Label>
+              <Input
+                value={form.receiver}
+                onChange={(event) => setField("receiver", event.target.value)}
+                disabled={isShipping}
+                placeholder="Who takes delivery at the destination"
+                error={Boolean(fieldError("receiver"))}
+                helperText={fieldError("receiver")}
+              />
+            </div>
+            <div className="action-form__field">
+              <Label>Ship-out date</Label>
+              <Input
+                type="datetime-local"
+                value={form.shipOutDate}
+                onChange={(event) => setField("shipOutDate", event.target.value)}
+                disabled={isShipping}
+              />
+              {/* The shipment endpoint has no field for this date, so it is not
+                  stored — it only reaches the packing report. It used to be
+                  required to submit, which implied otherwise. */}
+              <p className="action-form__step-note">
+                Printed on the packing list. Not stored with the shipment record.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {canShip && (
+        <dl className="action-form__summary">
+          <div>
+            <dt>Items</dt>
+            <dd>{items.length}</dd>
+          </div>
+          <div>
+            <dt>Destination</dt>
+            <dd>{form.destination}</dd>
+          </div>
+          <div>
+            <dt>Courier</dt>
+            <dd>{form.courier}</dd>
+          </div>
+          <div>
+            <dt>Tracking</dt>
+            <dd>{form.trackingNumber}</dd>
+          </div>
+        </dl>
+      )}
+
+      {notice && <p className="action-form__notice">{notice}</p>}
+
+      <div className="action-form__footer">
+        <p className="action-form__consequence">
+          Every item is marked in transit and leaves the warehouse.
+        </p>
+        <GrayButtonComponent
+          title="Cancel"
+          buttonType="button"
+          disabled={isShipping}
+          func={handleClose}
+        />
+        <BlueButtonConfirmationComponent
+          title={
+            items.length > 0
+              ? `Ship out ${items.length} item${items.length === 1 ? "" : "s"}`
+              : "Ship out inventory"
+          }
+          buttonType="button"
+          disabled={!canShip}
+          loadingState={isShipping}
+          confirmationTitle={`Ship ${items.length} item${
+            items.length === 1 ? "" : "s"
+          } to ${form.destination || "the destination"}?`}
+          confirmationDescription="They are marked in transit and taken out of the warehouse."
+          okText="Ship out"
+          func={handleShipOut}
+        />
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <ModalUX
+        openDialog={visible}
+        closeModal={isShipping ? () => {} : handleClose}
+        closable={!isShipping}
+        title={renderingTitle("Ship inventory out")}
+        footer={null}
+        width={960}
+        body={body}
+      />
+      {isExchangeOpen && (
+        <ExchangeModal
+          visible={isExchangeOpen}
+          onClose={() => setIsExchangeOpen(false)}
+          itemToExchange={itemToExchange}
+          newSerialNumber={newSerialNumber}
+          setNewSerialNumber={setNewSerialNumber}
+          refetchShippingEvents={itemsQuery.refetch}
+          eventId={selectedEvent?.id}
+          companyId={companyId}
+        />
+      )}
+    </>
+  );
+};
+
+ShippingInventoryModal.propTypes = {
+  visible: PropTypes.bool,
+  onClose: PropTypes.func.isRequired,
+  user: PropTypes.object,
 };
 
 export default ShippingInventoryModal;
