@@ -2,14 +2,24 @@ import "./text_link.css";
 
 /**
  * Untitled UI text link.
- * - Renders an <a> when `href` is provided, otherwise a bare <button> (so it is
- *   keyboard-accessible and doesn't inherit native button chrome).
- * - color: "brand" (default) | "gray"  -> Untitled UI "Link color" / "Link gray".
+ *
+ * Always renders a bare <button> (keyboard-accessible, no native button chrome).
+ * It used to branch to an <a> when `href` was passed, but no call site in the app
+ * ever did — the anchor path was dead code, and the two branches had already
+ * drifted apart: only the <a> rendered `iconLeading`, so the download icons in
+ * QRCode.jsx and DownloadXlsx.jsx were silently invisible.
+ *
+ * If a link is ever genuinely needed, add it back deliberately rather than
+ * reviving the branch: an anchor and a button are different elements with
+ * different semantics, and one component quietly being either is what let the
+ * icon bug hide.
+ *
+ * - color: "brand" (default) | "gray" | "error"  -> Untitled UI "Link color" /
+ *   "Link gray" / destructive.
+ * - Every other prop (onClick, disabled, aria-*, style…) is forwarded to the
+ *   <button>.
  */
 const TextLink = ({
-  href = null,
-  target,
-  rel,
   color = "brand",
   iconLeading = null,
   className = "",
@@ -20,27 +30,13 @@ const TextLink = ({
     color === "gray"
       ? " customized__textLink--gray"
       : color === "error"
-      ? " customized__textLink--error"
-      : "";
+        ? " customized__textLink--error"
+        : "";
   const cls = `customized__textLink${colorClass} ${className}`.trim();
-
-  if (href) {
-    return (
-      <a
-        href={href}
-        target={target}
-        rel={rel ?? (target === "_blank" ? "noopener noreferrer" : undefined)}
-        className={cls}
-        {...rest}
-      >
-        {iconLeading}
-        {children}
-      </a>
-    );
-  }
 
   return (
     <button type="button" className={cls} {...rest}>
+      {iconLeading}
       {children}
     </button>
   );

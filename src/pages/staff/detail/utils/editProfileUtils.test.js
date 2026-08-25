@@ -98,6 +98,31 @@ describe("buildStaffProfileUpdate", () => {
     const result = buildStaffProfileUpdate(profile, validForm, null);
     expect(result.imageProfile).toBe("old");
   });
+
+  it("actualiza tambien firstName y adminUserInfo, que es lo que lee la página", () => {
+    // La tarjeta de identidad y las tablas leen adminUserInfo.*; el breadcrumb
+    // lee firstName. Escribir solo `name` dejaba la pantalla con los datos
+    // viejos después de guardar.
+    const profile = {
+      id: "p1",
+      firstName: "Old",
+      adminUserInfo: { id: "au1", name: "Old", lastName: "Name", imageProfile: "old" },
+    };
+    const result = buildStaffProfileUpdate(profile, validForm, "new64");
+    expect(result.firstName).toBe("Ada");
+    expect(result.adminUserInfo).toMatchObject({
+      id: "au1",
+      name: "Ada",
+      lastName: "Lovelace",
+      email: "ada@devitrak.com",
+      imageProfile: "new64",
+    });
+  });
+
+  it("no inventa un adminUserInfo cuando el profile no lo trae", () => {
+    const result = buildStaffProfileUpdate({ id: "p1" }, validForm, null);
+    expect(result.adminUserInfo).toMatchObject({ name: "Ada" });
+  });
 });
 
 // ─── buildLoginUpdate (bug #2: usar firstName, no data.name) ───────────────────

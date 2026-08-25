@@ -108,9 +108,11 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
           recipient,
           confirmationLink,
         });
-        // Payload envelope mirrors DeleteItemModal.jsx's use of the same
-        // generic nodemailer endpoint.
-        return devitrakApi.post("/nodemailer/internal-single-email-notification", {
+        // customize-message-notification (not the generic send-notification)
+        // because its controller renders a custom HTML template rather than
+        // wrapping the body in the default one. `staff` is the recipient field
+        // that endpoint expects — the name is historical, not a role.
+        return devitrakApi.post("/nodemailer/customize-message-notification", {
           staff: email.to,
           subject: email.subject,
           message: email.message,

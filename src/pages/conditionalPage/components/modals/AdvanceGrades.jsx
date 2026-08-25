@@ -5,6 +5,7 @@ import { Typography } from "antd";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../api/activityLog";
 import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
@@ -56,8 +57,9 @@ const StatusBadge = ({ status }) => {
 /**
  * "Fast forward" — bulk end-of-year grade advancement for every student in
  * the company. Grade is free text (no backend catalog), so the plan
- * (gradeAdvancementUtils) walks a fixed K→1→...→12→Graduated sequence;
- * unrecognized grade values are shown for manual review and never touched.
+ * (gradeAdvancementUtils) canonicalises each value and walks a fixed
+ * PK3→PK4→K→1→...→12→Graduated sequence; unrecognized grade values are
+ * shown for manual review and never touched.
  * Applies one PATCH /db_member/update-member-info per student that actually
  * changes (advanced/graduated) — there's no bulk-grade endpoint yet.
  */
@@ -98,6 +100,12 @@ const AdvanceGrades = ({ openModal, setOpenModal }) => {
             member_id: item.member_id,
             company_id: user?.sqlInfo?.company_id,
             grade: item.nextGrade,
+          });
+          registerStaffActivity({
+            action: "UPDATE",
+            target_model: "Member",
+            target_id: item.member_id,
+            details: { grade: item.nextGrade, reason: "grade_advancement" },
           });
           succeeded += 1;
         } catch {

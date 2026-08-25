@@ -109,7 +109,7 @@ export const renderFields = ({
       name: "tax_location",
       placeholder: isLoadingLocations
         ? "Loading locations..."
-        : "e.g. 12000.54 | 95.44 | 4585",
+        : "e.g. Washington, DC | New York, NY | Los Angeles, CA",
       label: "Taxable location",
       htmlElement: "",
       style: OutlinedInputStyle,

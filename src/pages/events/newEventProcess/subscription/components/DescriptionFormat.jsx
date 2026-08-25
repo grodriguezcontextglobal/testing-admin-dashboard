@@ -170,7 +170,7 @@ const DescriptionFormat = () => {
       item
       xs={9}
     >
-      {subscriptionsList.subscriptionsList.map((option, index) => {
+      {subscriptionsList.subscriptionsList.map((option) => {
         return (
           <Grid
             key={`grid-subscription-${option.id}`}

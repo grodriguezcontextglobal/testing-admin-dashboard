@@ -1,5 +1,5 @@
 import { message, Modal } from "antd";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { read, utils } from "xlsx";
 import { Subtitle } from "../../styles/global/Subtitle";
@@ -13,6 +13,30 @@ import { onTrackBackgroundJob } from "../../store/slices/backgroundJobsSlice";
 import generateIdempotencyKey from "../../utils/actions/generateIdempotencyKey";
 import { formatDate } from "../../pages/inventory/utils/dateFormat";
 import { normalizeOwnership } from "../../pages/inventory/actions/utils/ownershipUtils";
+import {
+    aliasesFor,
+    headerFor,
+    missingRequiredFields,
+    normalizeHeader,
+    RECOMMENDED_IMPORT_FIELDS,
+    REQUIRED_IMPORT_FIELDS,
+} from "../../pages/inventory/utils/inventoryImportTemplate";
+import {
+    inventoryCacheKeys,
+    inventoryPageQueryKeys,
+} from "../../pages/inventory/utils/inventoryQueryKeys";
+import { encodeExtraIdentifiers } from "../../pages/inventory/utils/extraIdentifiers";
+
+/** "A, B and C" — reads the required/recommended field notes from the same
+ * two arrays the parser enforces, so the message can't drift from them again. */
+const joinWithAnd = (items) => {
+    if (items.length <= 1) return items.join("");
+    if (items.length === 2) return `${items[0]} and ${items[1]}`;
+    return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+};
+
+const requiredHeaders = REQUIRED_IMPORT_FIELDS.map(headerFor);
+const recommendedHeaders = RECOMMENDED_IMPORT_FIELDS.map(headerFor);
 
 const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     const { user } = useSelector((state) => state.admin);
@@ -38,40 +62,37 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             const jsonData = utils.sheet_to_json(worksheet, { defval: "" });
 
             const processedData = jsonData.map(row => {
-                const val = (keys) => {
-                    if (!Array.isArray(keys)) keys = [keys];
-                    for (const key of keys) {
-                        if (row[key] !== undefined) return row[key];
+                // Header spellings live in inventoryImportTemplate.js, next to the
+                // guide and the downloadable template. They were inlined here, which
+                // is how the guide came to document columns this parser never read
+                // and to omit four it did.
+                const val = (field) => {
+                    for (const alias of aliasesFor(field)) {
+                        if (row[alias] !== undefined) return row[alias];
                         const foundKey = Object.keys(row).find(
-                            (k) =>
-                                k.trim().replace("*", "").toLowerCase() ===
-                                key.trim().toLowerCase()
+                            (k) => normalizeHeader(k) === normalizeHeader(alias)
                         );
                         if (foundKey) return row[foundKey];
                     }
                     return "";
                 };
 
-                const category_name = val(["Category", "category_name", "category"]);
-                const item_group = val(["device name", "item_group", "device_name", "Device Name"]);
-                const serial_number = val(["serial number", "serial_number", "Serial Number"]);
+                const requiredValues = REQUIRED_IMPORT_FIELDS.reduce((acc, field) => {
+                    acc[field] = val(field);
+                    return acc;
+                }, {});
 
-                if (!category_name || !item_group || !serial_number) {
+                if (missingRequiredFields(requiredValues).length > 0) {
                     return null;
                 }
-                const ownership = normalizeOwnership(val(["ownership", "Ownership"]));
-                const location = val(["location", "Location"]);
-                const brand = val(["brand", "Brand"]);
-                const descriptionFromFile = val(["description", "descript_item", "Description"]);
-                const warehouseValue = val(["warehouse", "Warehouse"]);
-                const costRaw = val(["cost", "Cost"]);
-                const assignable = val(["assignable", "enableAssignFeature", "enable_assign_feature"]);
-                const storedInContainer = val(["stored in container?", "isItInContainer", "is_it_in_container"]);
-                const subLocationRaw = val(["sub locations", "sub_location", "Sub Locations"]);
+
+                const { category_name, item_group, serial_number, brand, location, main_warehouse } = requiredValues;
+                const ownership = normalizeOwnership(requiredValues.ownership);
+                const costRaw = requiredValues.cost;
+                const descriptionFromFile = val("descript_item");
+                const subLocationRaw = val("sub_location");
                 // eslint-disable-next-line no-useless-escape
                 const subLocationArray = typeof subLocationRaw === "string" ? String(subLocationRaw).replace(/[\\\[\\\]\\\"]/g, '').split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'null') : [];
-                const containerSpotLimitRaw = val(["container capacity", "containerSpotLimit", "Container Capacity"]);
-                const containerSpotLimit = parseInt(containerSpotLimitRaw, 10);
 
                 return {
                     category_name,
@@ -81,22 +102,29 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                     brand,
                     descript_item: descriptionFromFile || `${category_name} ${item_group} ${brand} ${ownership === "Rent" ? "for rent" : ""} ${location}`,
                     ownership,
-                    main_warehouse: val(["main warehouse", "main_warehouse", "Main Warehouse"]),
-                    warehouse: (warehouseValue === "Yes" || warehouseValue === true) ? 1 : 0,
+                    main_warehouse,
+                    // Warehouse, Assignable, Container, Container Capacity and
+                    // "Stored in container?" are no longer columns: asking the
+                    // customer to answer five yes/no questions per row confused
+                    // more people than it served, and the answer was the same
+                    // almost every time. They are fixed here at that answer —
+                    // in stock, handout-enabled, not a container — and a unit
+                    // that needs otherwise is changed from the item page.
+                    warehouse: 1,
                     location,
                     current_location: location,
-                    extra_serial_number: val(["exra info", "extra_serial_number", "Extra Info"]),
-                    return_date: val(["return date", "return_date", "Return Date"]) || null,
-                    container: String(val(["container", "Container"])).trim().toUpperCase() === "YES",
-                    containerSpotLimit: !isNaN(containerSpotLimit) ? containerSpotLimit : null,
-                    image_url: val(["image", "image_url", "Image"]),
-                    enableAssignFeature: String(assignable).trim().toUpperCase() === "YES" ? 1 : 0,
-                    isItInContainer: String(storedInContainer).trim().toUpperCase() === "YES" ? 1 : 0,
+                    extra_serial_number: val("extra_serial_number"),
+                    return_date: val("return_date") || null,
+                    container: 0,
+                    containerSpotLimit: null,
+                    image_url: val("image_url"),
+                    enableAssignFeature: 1,
+                    isItInContainer: 0,
                     containerId: JSON.stringify([]),
                     display_item: 1,
                     returnedRentedInfo: "",
                     sub_location: subLocationArray,
-                    supplier_info: val(["supplier info", "supplier_info", "Supplier Info"]),
+                    supplier_info: val("supplier_info"),
                     company: user.sqlInfo.company_name,
                     company_id: user.sqlInfo.company_id,
                 };
@@ -117,18 +145,21 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
         }
     };
 
-    const handleFileChange = useCallback(
-        async (e) => {
-            const originalFile = e.target.files?.[0];
-            if (!originalFile) return;
-            setFileName(originalFile.name);
-            setLoadingState(true);
-            const processed = await processFile(originalFile);
-            setProcessedRows(processed);
-            setLoadingState(false);
-        },
-        [user.sqlInfo]
-    );
+    // Not memoized: this goes straight onto an <input onChange>, and a DOM
+    // element gains nothing from a stable handler identity. The useCallback that
+    // used to be here declared [user.sqlInfo] while calling processFile, which
+    // is recreated every render and reads user.sqlInfo itself — so the array was
+    // both pointless and wrong, and a stale company could have been baked into
+    // the handler.
+    const handleFileChange = async (e) => {
+        const originalFile = e.target.files?.[0];
+        if (!originalFile) return;
+        setFileName(originalFile.name);
+        setLoadingState(true);
+        const processed = await processFile(originalFile);
+        setProcessedRows(processed);
+        setLoadingState(false);
+    };
 
     const handleUpload = async () => {
         if (processedRows.length === 0)
@@ -148,7 +179,12 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
 
                     const serialNumbers = itemList.map(item => `${item.serial_number}`);
 
-                    const moreInfo = {};
+                    // Keyed by serial, then encoded through the shared codec.
+                    // This used to JSON.stringify the object as-is, which is a
+                    // shape no other writer produces and the item edit modal
+                    // could not read — imported identifiers were invisible
+                    // there, and then overwritten on the next edit.
+                    const moreInfo = new Map();
                     itemList.forEach(item => {
                         if (item.extra_serial_number) {
                             const extraInfoArray = String(item.extra_serial_number).split(';').map(pair => {
@@ -156,7 +192,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                 return { keyObject: (key || "").trim(), valueObject: (value || "").trim() };
                             }).filter(p => p.keyObject && p.keyObject !== '[]');
                             if (extraInfoArray.length > 0) {
-                                moreInfo[item.serial_number] = extraInfoArray;
+                                moreInfo.set(item.serial_number, extraInfoArray);
                             }
                         }
                     });
@@ -181,7 +217,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                         location: firstItem.location,
                         current_location: firstItem.current_location,
                         sub_location: JSON.stringify(firstItem.sub_location),
-                        extra_serial_number: JSON.stringify(moreInfo),
+                        extra_serial_number: encodeExtraIdentifiers(moreInfo),
                         company_id: firstItem.company_id,
                         return_date: firstItem.return_date,
                         returnedRentedInfo: firstItem.returnedRentedInfo,
@@ -207,15 +243,12 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                             type: "bulk-inventory-insert",
                             successMessage: `"${itemGroupName}" was successfully created in inventory.`,
                             failureMessage: `The import of "${itemGroupName}" failed.`,
-                            invalidateKeys: [
-                                ["listOfItemsInStock"],
-                                ["ItemsInInventoryCheckingQuery"],
-                                ["RefactoredListInventoryCompany"],
-                            ],
-                            clearCacheKeys: [
-                                `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-                                `providerCompanies_${user.companyData.id}`,
-                            ],
+                            invalidateKeys: inventoryPageQueryKeys(
+                                user.sqlInfo.company_id
+                            ),
+                            clearCacheKeys: inventoryCacheKeys({
+                                companyMongoId: user.companyData.id,
+                            }),
                         })
                     );
                     templatesForApi.push(template);
@@ -304,9 +337,14 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                             fontSize: 13,
                         }}
                     >
-                        <strong>Note:</strong> All columns described in the &ldquo;Inventory
-                        Import Template Guide&ldquo; are mandatory. Please refer to the
-                        guide for details on aliases and expected values.
+                        <strong>Note:</strong> <strong>{joinWithAnd(requiredHeaders)}</strong> are
+                        mandatory — a row missing any of them is skipped, not imported with a
+                        hole in it. We recommend filling in{" "}
+                        <strong>{joinWithAnd(recommendedHeaders)}</strong> too: the row is
+                        imported without them, but you will have to correct device by device.
+                        Every other column is optional and falls back to a default. See the
+                        &ldquo;Inventory Import Template Guide&ldquo; for aliases, accepted values and
+                        defaults.
                     </div>
 
                     <div

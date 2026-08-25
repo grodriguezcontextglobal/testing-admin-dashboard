@@ -8,7 +8,6 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Title } from "../../../../styles/global/Title";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import DeviceDatabase from "./table/DeviceDatabase";
-import TableHeader from "../../../../components/UX/TableHeader";
 
 const DevicesInformationSection = (dataToRenderInComponent) => {
   const { register, watch } = useForm();
@@ -86,7 +85,7 @@ const DevicesInformationSection = (dataToRenderInComponent) => {
         gap={1}
         container
       >
-        <TableHeader leftCta={<RefreshButton propsFn={handleRefreshingData} />} />
+        <RefreshButton propsFn={handleRefreshingData} />
         <Grid item xs={12}>
           <DeviceDatabase
             searchDevice={watch("searchDevice")}

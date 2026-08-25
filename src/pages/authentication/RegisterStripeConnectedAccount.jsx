@@ -50,7 +50,7 @@ const RegisterStripeConnectedAccount = () => {
 
         // 6. Update the company data with the newly assigned environment key
         await devitrakApi.patch(
-          `/company/update-company/${user.companyData.id}`,
+          `/company/update-company/register-process/${user.companyData.id}`,
           {
             stripe_connected_account: stripeSessionAccount,
           }

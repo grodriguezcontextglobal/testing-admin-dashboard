@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import CheckboxReusableComponent from "../../../../../components/UX/checkbox/CheckboxReusableComponent";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
@@ -148,6 +149,12 @@ const Single = ({ closingModal }) => {
       if (!createdMemberId) {
         throw new Error("Student created but member ID not returned from server.");
       }
+      registerStaffActivity({
+        action: "CREATE",
+        target_model: "Member",
+        target_id: createdMemberId,
+        details: { first_name: form.first_name, last_name: form.last_name, grade: form.grade },
+      });
 
       // Step 2: If minor, resolve guardian
       if (ageFlags.minor) {

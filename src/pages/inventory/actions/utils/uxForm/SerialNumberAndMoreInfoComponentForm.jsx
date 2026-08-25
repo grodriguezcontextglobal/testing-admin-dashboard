@@ -1,271 +1,321 @@
 import { Grid, Typography } from "@mui/material";
-import { AutoComplete, Checkbox, Divider } from "antd";
+import { AutoComplete, Checkbox, Divider, message, Radio } from "antd";
+import { uniqueId } from "lodash";
 import { useState } from "react";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
-import RenderingItemsAddedForStore from "./RenderingItemsAddedForStore";
-import { uniqueId } from "lodash";
+import AddedUnitsTable from "./AddedUnitsTable";
+import PasteUnitsPanel from "./PasteUnitsPanel";
+import ScanUnitsPanel from "./ScanUnitsPanel";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
 
+const newRow = () => ({
+  id: uniqueId("identifier-"),
+  type: "Serial number",
+  value: "",
+});
+
+/**
+ * The units that make up a new group, and the identifiers each one carries.
+ *
+ * Three ways in, because the jobs are different:
+ *
+ *   Paste a table  — the volume case with data. Already in a spreadsheet, so it
+ *                    is pasted rather than transcribed. See PasteUnitsPanel.
+ *   Scan labels    — the volume case without data. One field that never loses
+ *                    focus; a scanner fills it and moves on. See ScanUnitsPanel.
+ *   One at a time  — a handful of units, or one that needs identifiers the
+ *                    others do not have.
+ *
+ * All three produce the same thing: `scannedSerialNumbers` (which becomes the
+ * insert payload's `list`) and `moreInfo` (which becomes `extra_serial_number`).
+ * Units with no identifiers contribute nothing to `moreInfo`, so a group built
+ * entirely by scanning sends `extra_serial_number: "[]"` — the existing
+ * contract, unchanged, with no server work needed to support the mode.
+ *
+ * The serial itself is no longer repeated inside a unit's identifiers. It used
+ * to be stored both as the unit's serial_number and as an extra identifier
+ * named "Serial number", which showed up as a redundant row when editing the
+ * item; pasted units never had it, so the two modes disagreed.
+ */
 const SerialNumberAndMoreInfoComponentForm = ({
   style,
   scannedSerialNumbers,
   setScannedSerialNumbers,
-  moreInfo,
   setMoreInfo,
 }) => {
-  // State for the dynamic input fields for a single device
-  const uuid = uniqueId()
-  const [, setNextId] = useState(uuid);
-  const [identifiers, setIdentifiers] = useState([
-    { id: uuid, type: "Serial number", value: "" },
-  ]);
-  // State for the list of devices added
-  const [devices, setDevices] = useState([]);
+  const [mode, setMode] = useState("one");
+  const [units, setUnits] = useState([]);
+  const [identifiers, setIdentifiers] = useState([newRow()]);
+  const [primaryRow, setPrimaryRow] = useState(0);
 
-  const handleIdentifierChange = (id, field, newValue) => {
-    setIdentifiers(
-      identifiers.map((identifier) =>
-        identifier.id === id
-          ? { ...identifier, [field]: newValue }
-          : identifier
-      )
+  /**
+   * The parent owns both lists, so every change to `units` republishes them.
+   * moreInfo is written in the canonical extra_serial_number shape —
+   * [{ serial: entries }] — so the insert can stringify it as-is.
+   */
+  const commit = (next) => {
+    setUnits(next);
+    setScannedSerialNumbers(next.map((unit) => unit.serial));
+    setMoreInfo(
+      next
+        .filter((unit) => unit.identifiers.length > 0)
+        .map((unit) => ({ [unit.serial]: unit.identifiers })),
     );
   };
 
-  const addIdentifier = () => {
-    setIdentifiers([
-      ...identifiers,
-      { id: Math.random().toString(36).substring(2), type: "Serial number", value: "" },
-    ])
-    setNextId(Math.random().toString(36).substring(2))
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addIdentifier();
-    }
-  };
-
-  const handleAddDevice = (e) => {
-    e.preventDefault();
-
-    // Input Validation
-    const isInvalid = identifiers.some(
-      (identifier) => !identifier.type?.trim() || !identifier.value?.trim()
+  const isDuplicate = (serial) =>
+    units.some(
+      (unit) => unit.serial.toLowerCase() === String(serial).trim().toLowerCase(),
     );
 
-    if (isInvalid) {
-      alert("Please ensure all identifier types and values are filled out.");
-      return;
-    }
+  const addPastedUnits = (parsedItems) => {
+    // The parser already dropped duplicates against `existingSerials`, so
+    // everything arriving here is new.
+    const added = parsedItems.map((item) => ({
+      id: uniqueId("unit-"),
+      serial: item.serial,
+      identifiers: item.identifiers,
+    }));
+    commit([...units, ...added]);
+    message.success(
+      `${added.length} unit${added.length === 1 ? "" : "s"} added.`,
+    );
+  };
 
-    const markedIndex = checkedIndex.length > 0 ? checkedIndex[0] : 0;
-    // The value of the first identifier will be the key. It must exist.
-    const primaryKey = identifiers[markedIndex].value;
-    if (!primaryKey?.trim()) {
-      alert(
-        "The value of the first identifier is required and will be used as the main device identifier."
+  /**
+   * One scan, one unit, no identifiers — so it contributes nothing to moreInfo
+   * and the payload's extra_serial_number stays "[]". The panel has already
+   * rejected duplicates against `scannedSerialNumbers`.
+   */
+  const addScannedUnit = (serial) =>
+    commit([...units, { id: uniqueId("unit-"), serial, identifiers: [] }]);
+
+  const handleIdentifierChange = (id, field, value) =>
+    setIdentifiers((rows) =>
+      rows.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+    );
+
+  const addIdentifierRow = () => setIdentifiers((rows) => [...rows, newRow()]);
+
+  const removeIdentifierRow = (id) =>
+    setIdentifiers((rows) =>
+      rows.length === 1 ? rows : rows.filter((row) => row.id !== id),
+    );
+
+  const addSingleUnit = () => {
+    // A row left completely blank is someone who clicked "+" and changed their
+    // mind, not an error worth blocking on.
+    const filled = identifiers.filter(
+      (row) => row.type?.trim() || row.value?.trim(),
+    );
+    const halfFilled = filled.find(
+      (row) => !row.type?.trim() || !row.value?.trim(),
+    );
+    if (halfFilled) {
+      return message.warning(
+        "Every identifier needs both a name and a value.",
       );
-      return;
     }
 
-    // Data Structure Transformation
-    const innerObject = identifiers.reduce((acc, { type, value }) => {
-      // Ensure type is a valid string to be used as a key
-      if (type?.trim()) {
-        acc.push({ keyObject: type.trim(), valueObject: value });
-      }
-      return acc;
-    }, []);
-
-    const serialNumber = {
-      [primaryKey]: innerObject,
-    };
-    const newMoreInfo = [...(moreInfo ?? []), { [primaryKey]: innerObject }];
-    // Integration
-    setDevices([...devices, { id: Date.now(), data: serialNumber }]);
-    setMoreInfo(newMoreInfo);
-    const newScannedSerialNumbers = [...(scannedSerialNumbers ?? []), primaryKey];
-    setScannedSerialNumbers(newScannedSerialNumbers);
-    // Reset the form for the next entry
-    setNextId(uuid);
-    setIdentifiers(identifiers.map((item) => ({ ...item, value: "" })));
-    setCheckedIndex([]);
-  };
-
-  const removeField = (id) => {
-    if (identifiers.length === 1) return;
-    setIdentifiers(identifiers.filter((item) => item.id !== id));
-  };
-
-  const handleRemoveDevice = (deviceId) => {
-    // Find the device to get its primary key before removing it
-    const deviceToRemove = devices.find((d) => d.id === deviceId);
-    if (!deviceToRemove) return;
-
-    const primaryKey = Object.keys(deviceToRemove.data)[0];
-
-    // Filter the devices list
-    const newDevices = devices.filter((d) => d.id !== deviceId);
-    setDevices(newDevices);
-
-    // Filter the moreInfo list to remove the corresponding entry
-    // eslint-disable-next-line no-prototype-builtins
-    const newMoreInfo = (moreInfo ?? []).filter(
-      // eslint-disable-next-line no-prototype-builtins
-      (info) => !info.hasOwnProperty(primaryKey)
-    );
-    setMoreInfo(newMoreInfo);
-    setScannedSerialNumbers(
-      (scannedSerialNumbers ?? []).filter((serial) => serial !== primaryKey)
-    );
-  };
-
-  const [checkedIndex, setCheckedIndex] = useState([]);
-  const checkedPriorityKey = (index) => {
-    if (checkedIndex.includes(index)) {
-      return setCheckedIndex(checkedIndex.filter((_, i) => i !== index));
-    } else {
-      return setCheckedIndex([index]);
+    const primary = filled[primaryRow] ?? filled[0];
+    const serial = primary?.value?.trim();
+    if (!serial) {
+      return message.warning("Enter the serial number for this unit.");
     }
+    if (isDuplicate(serial)) {
+      return message.warning(`${serial} is already in the list.`);
+    }
+
+    commit([
+      ...units,
+      {
+        id: uniqueId("unit-"),
+        serial,
+        identifiers: filled
+          .filter((row) => row !== primary)
+          .map((row) => ({
+            keyObject: row.type.trim(),
+            valueObject: row.value.trim(),
+          })),
+      },
+    ]);
+
+    setIdentifiers([newRow()]);
+    setPrimaryRow(0);
   };
+
+  /**
+   * Enter adds the unit. It used to add another identifier row, which made the
+   * mode unusable with a barcode scanner: a scanner types the code and then
+   * sends Enter, so every scan produced an empty row instead of a unit.
+   * Adding a row is what the + button is for.
+   */
+  const handleKeyDown = (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    addSingleUnit();
+  };
+
+  const removeUnit = (id) => commit(units.filter((unit) => unit.id !== id));
+
   return (
     <Grid container spacing={1}>
-      <div
-        // onSubmit={(e)=>handleAddDevice(e)}
-        style={{ margin: "1rem 0", gap: 0 }}
-        className="form"
-      >
+      <Grid item xs={12}>
         <Typography
           variant="h5"
           sx={{ width: "100%", textAlign: "left", mb: 0.5, fontWeight: "bold" }}
         >
           Serial numbers and identifiers
         </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ width: "100%", textAlign: "left", mb: 3 }}
-        >
-          Users can select an identifier to designate it as the primary key for
-          the submitted devices. If no identifier is explicitly selected, the
-          system will automatically use the first available identifier as the
-          primary key by default.
-        </Typography>
 
-        <Grid container>
-          <Grid margin={0} item xs={12} sm={3} md={1} lg={1}>
+        <Radio.Group
+          value={mode}
+          onChange={(event) => setMode(event.target.value)}
+          style={{ margin: "0.5rem 0 1rem" }}
+        >
+          <Radio value="one">One at a time</Radio>
+          <Radio value="scan">Scan Serial Numbers</Radio>
+          <Radio value="paste">Paste a list</Radio>
+        </Radio.Group>
+
+        {mode === "paste" && (
+          <PasteUnitsPanel
+            existingSerials={scannedSerialNumbers ?? []}
+            onAdd={addPastedUnits}
+          />
+        )}
+
+        {mode === "scan" && (
+          <ScanUnitsPanel
+            existingSerials={scannedSerialNumbers ?? []}
+            onScan={addScannedUnit}
+          />
+        )}
+
+        {mode === "one" && (
+          <div style={{ width: "100%" }}>
             <Typography
-              variant="caption"
-              display="block"
+              variant="body2"
               color="text.secondary"
-              sx={{ fontWeight: "600" }}
+              sx={{ width: "100%", textAlign: "left", mb: 2 }}
             >
-              Primary key *
+              For a handful of units, or one that carries identifiers the others
+              do not. Tick the identifier that holds the serial number; the first
+              one is used if you tick none. For serial numbers alone, in volume,
+              use <strong>Scan labels</strong>. A scanner works here too — it
+              types the
+              code and presses Enter, which adds the unit.
             </Typography>
-          </Grid>
-          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
-            <Typography
-              variant="caption"
-              display="block"
-              color="text.secondary"
-              sx={{ fontWeight: "600" }}
-            >
-              Identifier *
-            </Typography>
-          </Grid>
-          <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
-            <Typography
-              variant="caption"
-              display="block"
-              color="text.secondary"
-              sx={{ fontWeight: "600" }}
-            >
-              Number *
-            </Typography>
-          </Grid>
-        </Grid>
-        <div style={{ width: "100%" }}>
-          {identifiers.map((identifier, index) => (
-            <Grid
-              container
-              spacing={1}
-              key={identifier.id}
-              sx={{ margin: 0, alignItems: "center", spacing: 0.5 }}
-            >
-              <Grid padding={0} margin={0} item xs={12} sm={3} md={1} lg={1}>
-                <Checkbox
-                  checked={checkedIndex.includes(index)}
-                  onChange={() => checkedPriorityKey(index)}
-                />
+
+            <Grid container>
+              <Grid item xs={12} sm={3} md={1} lg={1}>
+                <Typography
+                  variant="caption"
+                  display="block"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Serial *
+                </Typography>
               </Grid>
-              <Grid margin={0} item xs={12} sm={4} md={4} lg={4}>
-                <AutoComplete
-                  style={{ ...style, margin: "0 0 0 -8px", width: "95%" }}
-                  options={options.map((item) => ({
-                    label: item.label,
-                    value: item.label,
-                  }))}
-                  value={identifier.type}
-                  onChange={(newValue) => {
-                    handleIdentifierChange(identifier.id, "type", newValue);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Select type"
-                />
+              <Grid item xs={12} sm={4} md={4} lg={4}>
+                <Typography
+                  variant="caption"
+                  display="block"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Identifier *
+                </Typography>
               </Grid>
-              <Grid item xs={12} sm md lg display={"flex"} gap={0.5}>
-                <Input
-                  placeholder="e.g. 3241684981556474651"
-                  value={identifier.value}
-                  onChange={(e) =>
-                    handleIdentifierChange(identifier.id, "value", e.target.value)
-                  }
-                  style={{ width: "100%", margin: "0 0 0 -8px" }}
-                  onKeyDown={handleKeyDown}
-                  allowClear
-                />
-                <BlueButtonComponent
-                  title={<WhiteCirclePlusIcon />}
-                  buttonType="button"
-                  func={addIdentifier}
-                />
-                {identifiers.length > 1 && (
-                  <DangerButtonComponent
-                    title="Remove"
-                    func={() => removeField(identifier.id)}
-                    disabled={identifier.length === 1}
-                  />
-                )}
+              <Grid item xs={12} sm={4} md={4} lg={4}>
+                <Typography
+                  variant="caption"
+                  display="block"
+                  color="text.secondary"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Value *
+                </Typography>
               </Grid>
             </Grid>
-          ))}
-        </div>
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mt: 3, mb: 2 }}
-        >
-          You can use a scanner to input the number. You can also add more
-          identifiers.
-        </Typography>
-        <GrayButtonComponent
-          func={(e) => handleAddDevice(e)}
-          title="Add this device"
-        />
-      </div>
+            {identifiers.map((identifier, index) => (
+              <Grid
+                container
+                spacing={1}
+                key={identifier.id}
+                sx={{ margin: 0, alignItems: "center" }}
+              >
+                <Grid item xs={12} sm={3} md={1} lg={1}>
+                  <Checkbox
+                    checked={primaryRow === index}
+                    onChange={() => setPrimaryRow(index)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4} md={4} lg={4}>
+                  <AutoComplete
+                    style={{ ...style, margin: "0 0 0 -8px", width: "95%" }}
+                    options={options}
+                    value={identifier.type}
+                    onChange={(value) =>
+                      handleIdentifierChange(identifier.id, "type", value)
+                    }
+                    onKeyDown={handleKeyDown}
+                    placeholder="Select or type a name"
+                  />
+                </Grid>
+                <Grid item xs={12} sm md lg display="flex" gap={0.5}>
+                  <Input
+                    placeholder="e.g. 3241684981556474651"
+                    value={identifier.value}
+                    onChange={(event) =>
+                      handleIdentifierChange(
+                        identifier.id,
+                        "value",
+                        event.target.value,
+                      )
+                    }
+                    onKeyDown={handleKeyDown}
+                    style={{ width: "100%", margin: "0 0 0 -8px" }}
+                    allowClear
+                  />
+                  <BlueButtonComponent
+                    title={`Add new identifier`}
+                    buttonType="button"
+                    func={addIdentifierRow}
+                    icon={<WhiteCirclePlusIcon />}
+                  />
+                  {identifiers.length > 1 && (
+                    <DangerButtonComponent
+                      title="Remove"
+                      buttonType="button"
+                      func={() => removeIdentifierRow(identifier.id)}
+                    />
+                  )}
+                </Grid>
+              </Grid>
+            ))}
+
+            <div style={{ marginTop: "1rem" }}>
+              <GrayButtonComponent
+                buttonType="button"
+                func={addSingleUnit}
+                title="Queue this item for creation"
+                styles={{ width: "fit-content" }}
+              />
+            </div>
+          </div>
+        )}
+      </Grid>
+
       <Divider />
-      <RenderingItemsAddedForStore
-        devices={devices}
-        handleRemoveDevice={handleRemoveDevice}
-      />
+      <AddedUnitsTable units={units} onRemove={removeUnit} />
     </Grid>
   );
 };

@@ -87,15 +87,22 @@ export const columns = ({
                 setUpdateInfo({ record, expected_return_date: x, refetch })
               }
               dateFormat="Pp"
+              // Rendered into a portal on <body>. Inside the cell the calendar
+              // was clipped away by the table's own scroll container — it opened
+              // and could not be seen, which reads as a dead button. A z-index on
+              // the input (what was here before) cannot fix clipping; only
+              // leaving the overflow context can. react-datepicker creates this
+              // node if it does not exist.
+              portalId="member-due-date-calendar"
+              popperPlacement="bottom-start"
+              // No minWidth: a 240px floor on this cell pushed the whole table
+              // past its container the moment a row entered edit mode.
               style={{
                 ...OutlinedInputStyle,
                 justifyContent: "flex-start !important",
                 margin: 0,
-                width: "auto",
-                minWidth: 240,
-                zIndex: 300,
+                width: "100%",
               }}
-              popperPlacement="bottom-start"
             />
           );
         }
@@ -112,7 +119,9 @@ export const columns = ({
     {
       title: "",
       key: "actions",
-      width: 180,
+      // Fits both buttons at the tightened cell padding; at 180 the row forced
+      // the table wider than its container.
+      width: 190,
       render: (_, record) => {
         const isEditing =
           editing.length > 0 &&
@@ -143,30 +152,29 @@ export const columns = ({
           );
         }
 
-        // Both actions stay quiet until the row is hovered or keyboard-focused.
-        // "Return" used to be a solid blue button on every single row, which
-        // meant the page had ten primaries and therefore none.
+        // Both actions are always visible. They used to fade in on row hover so
+        // the table would not read as ten primary buttons; in practice that hid
+        // the only two things staff come to this table to do, and made them
+        // undiscoverable on touch and on a trackpad that never dwells on a row.
+        // They are secondary (gray) buttons, which is what keeps the emphasis
+        // down — being invisible was never what did it.
         return (
           <div className="profile-row-actions">
-            <span className="profile-row-actions__reveal">
-              <GrayButtonComponent
-                title={"Edit due date"}
-                size="sm"
-                ariaLabel={`Edit due date for ${record.device_serial_number}`}
-                func={() => setEditing([record.device_id])}
-              />
-            </span>
-            <span className="profile-row-actions__reveal">
-              <GrayButtonComponent
-                title={"Return"}
-                size="sm"
-                ariaLabel={`Return ${record.device_serial_number}`}
-                func={() => {
-                  setChecked(true);
-                  setStoredRecord(record);
-                }}
-              />
-            </span>
+            <GrayButtonComponent
+              title={"Due date"}
+              size="sm"
+              ariaLabel={`Edit due date for ${record.device_serial_number}`}
+              func={() => setEditing([record.device_id])}
+            />
+            <GrayButtonComponent
+              title={"Return"}
+              size="sm"
+              ariaLabel={`Return ${record.device_serial_number}`}
+              func={() => {
+                setChecked(true);
+                setStoredRecord(record);
+              }}
+            />
           </div>
         );
       },

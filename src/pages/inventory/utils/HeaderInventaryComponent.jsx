@@ -2,6 +2,7 @@ import { Grid } from "@mui/material";
 import { isCoordinatorLevel } from "../../../config/roles";
 import { Dropdown } from "antd";
 import PropTypes from "prop-types";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -13,6 +14,8 @@ import PlusCircleWhiteIcon from "../../../components/icons/PlusCircleWhiteIcon";
 import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
 import TrashIcon from "../../../components/icons/TrashIcon";
 import Vertical3Dots from "../../../components/icons/Vertical3Dots";
+import Chip from "../../../components/UX/Chip/Chip";
+import { findWarehouseManager } from "./warehouseManagerUtils";
 
 /**
  * HeaderInventaryComponent
@@ -44,6 +47,20 @@ const HeaderInventaryComponent = ({
 }) => {
   const navigate = useNavigate();
   const { roleType, locations } = useSelector((state) => state.permission);
+  // Who is in charge of the warehouse, so anyone on this page can see it
+  // without opening the staff section. Read straight off the company roster in
+  // Redux — no extra request.
+  //
+  // The roster is selected raw and reduced in useMemo, NOT computed inside the
+  // selector: findWarehouseManager builds a fresh object every call, and a
+  // selector returning a new reference re-renders on every store change.
+  const employees = useSelector(
+    (state) => state.admin.user?.companyData?.employees
+  );
+  const warehouseManager = useMemo(
+    () => findWarehouseManager(employees),
+    [employees]
+  );
   const fullAccess = isCoordinatorLevel(roleType);
   const canCreate = fullAccess || locations.some((loc) => loc.can_create);
   const canUpdate = fullAccess || locations.some((loc) => loc.can_update);
@@ -116,6 +133,16 @@ const HeaderInventaryComponent = ({
         <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
           Inventory
         </p>
+        {/* Rendered only when there is a real, active person to name — an
+            "Unassigned" pill would just be noise on every company that hasn't
+            filled the role. */}
+        {warehouseManager && (
+          <Chip
+            size="small"
+            color="info"
+            label={`Warehouse manager: ${warehouseManager.name}`}
+          />
+        )}
       </Grid>
       <Grid
         textAlign={"right"}

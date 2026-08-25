@@ -8,6 +8,7 @@ const CheckboxReusableComponent = ({
   checked,
   onChange,
   name,
+  disabled = false,
   ...props
 }) => {
   const sizeClass = `checkbox-reusable-${size}`;
@@ -24,6 +25,9 @@ const CheckboxReusableComponent = ({
         name={name}
         checked={checked}
         onChange={onChange}
+        // `disabled` used to fall into `...props` and land on the <label>,
+        // where it does nothing: a "disabled" checkbox stayed clickable.
+        disabled={disabled}
         className="checkbox-reusable-input"
       />
       <span className="checkbox-reusable-checkmark"></span>
@@ -36,12 +40,14 @@ const CheckboxReusableComponent = ({
 };
 
 CheckboxReusableComponent.propTypes = {
-  label: PropTypes.string,
-  hint: PropTypes.string,
+  // Callers pass elements here, not only strings.
+  label: PropTypes.node,
+  hint: PropTypes.node,
   size: PropTypes.oneOf(["sm", "md", "lg"]),
   checked: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   name: PropTypes.string.isRequired,
+  disabled: PropTypes.bool,
 };
 
 export default CheckboxReusableComponent;

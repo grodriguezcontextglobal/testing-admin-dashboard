@@ -13,8 +13,8 @@ import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 // import WithdrawIcon from "../../../components/icons/WithdrawIcon";
 import itemReportForClient from "../../../components/notification/email/ItemReportForClient";
 import { checkArray } from "../../../components/utils/checkArray";
-import ExpressCheckoutItems from "../../../components/utils/ExpressCheckoutItems";
 import returningItemsInBulkMethod from "../../../components/utils/ReturnItemsInBulk";
+import ReturnDevicesModal from "../../../components/UX/deviceReturn/ReturnDevicesModal";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import GrayButtonConfirmationComponent from "../../../components/UX/buttons/GrayButtonConfirmation";
 import BaseTable from "../../../components/UX/tables/BaseTable";
@@ -508,16 +508,25 @@ const FooterExpandedRow = ({
       />
       {isLoadingState && <DevitrakLoading fullscreen />}
       {expressCheckoutModal && (
-        <ExpressCheckoutItems
-          openReturnDeviceBulkModal={expressCheckoutModal}
-          setOpenReturnDeviceInBulkModal={setExpressCheckoutModal}
+        <ReturnDevicesModal
+          open={expressCheckoutModal}
+          mode="scan"
+          onClose={() => setExpressCheckoutModal(false)}
+          devices={transactionDeviceData}
           event={reportTemplate.event}
           user={user}
-          refetching={null}
-          selectedItems={transactionDeviceData}
-          setSelectedItems={setSelectedItems}
-          emailNotification={sendEmailDeviceReport}
-          refetchingDevicePerTransaction={refetchingDevicePerTransaction}
+          eventSelected={reportTemplate.event?.eventInfoDetail?.eventName}
+          transactionLabel={dataRendering?.paymentIntent}
+          // The local list is what this table renders, so it has to be rebuilt
+          // too — the old modal refreshed only the parent, leaving the returned
+          // rows on screen still marked as out.
+          onRefetch={() =>
+            Promise.all([
+              refetchingDevicePerTransaction(),
+              formatItemsInfoAsProps(),
+            ])
+          }
+          onClearSelection={() => setSelectedItems([])}
         />
       )}
       {openChargeAllLostDevicesModal && (

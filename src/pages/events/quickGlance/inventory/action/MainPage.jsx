@@ -1,10 +1,13 @@
-import { Grid } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, Popconfirm, message } from "antd";
+import { Card, message } from "antd";
+import PropTypes from "prop-types";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import DangerButtonConfirmationComponent from "../../../../../components/UX/buttons/DangerButtonConfirmation";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import {
@@ -17,286 +20,282 @@ import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
-import Choice from "../lostFee/Choice";
-import UpdateStatus from "./components/UpdateStatus";
-import { Replace } from "./Replace";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
-import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
-import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
-import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
-const ActionsMainPage = () => {
-  const [openLostModal, setOpenLostModal] = useState(false);
+import "../eventDeviceDetail.css";
+import { readDeviceSelection } from "../utils/eventDeviceDetail";
+import Choice from "../lostFee/Choice";
+import { Replace } from "./Replace";
+import UpdateStatus from "./components/UpdateStatus";
+
+/**
+ * What can be done to this device, as the identity card's action rail.
+ *
+ * It was a transparent antd Card floating at the right edge of a three-column
+ * grid whose middle column was empty, holding buttons whose colour said nothing
+ * about what they do: "Lost" and "Exchange" were both destructive red, "Return"
+ * was light blue behind a bare "Are you sure?", and when the device was *not* in
+ * use the single remaining action — "Edit Status" — was also red, though editing
+ * a status destroys nothing.
+ *
+ * Now: the reversible action leads, the irreversible ones sit below it behind
+ * confirmations that state their consequence, and the rail says why it is empty
+ * when the device is already written off.
+ */
+const ActionsMainPage = ({ onChanged }) => {
   const { deviceInfoSelected } = useSelector((state) => state.devicesHandle);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const { triggerModal } = useSelector((state) => state.helper);
-  const [modalUpdateStatus, setModalUpdateStatus] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { notify, contextHolder } = useStatusNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    notify(type.toLowerCase(), msg);
-  };
   const queryClient = useQueryClient();
-  const returnConfirmationEmailNotification = async (props) => {
+  const { notify, contextHolder } = useStatusNotification();
+
+  const [openLostModal, setOpenLostModal] = useState(false);
+  const [openUpdateStatus, setOpenUpdateStatus] = useState(false);
+  const [busy, setBusy] = useState(null);
+
+  const device = readDeviceSelection(deviceInfoSelected);
+
+  const notifyReturned = async ({ paymentIntent, devices, email }) => {
     try {
-      const customer = await devitrakApi.post("/auth/user-query", {
-        email: props.email,
+      const consumer = await devitrakApi.post("/auth/user-query", { email });
+      const found = consumer.data?.users?.at(-1);
+      if (!found) return;
+      await devitrakApi.post("/nodemailer/confirm-returned-device-notification", {
+        consumer: {
+          email: found.email,
+          firstName: found.name,
+          lastName: found.lastName,
+        },
+        devices,
+        event: event.eventInfoDetail.eventName,
+        transaction: paymentIntent,
+        company: user.companyData.id,
+        link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
+        admin: user.email,
       });
-      if (customer.data.ok) {
-        await devitrakApi.post(
-          "/nodemailer/confirm-returned-device-notification",
-          {
-            consumer: {
-              email: customer.data.users.at(-1).email,
-              firstName: customer.data.users.at(-1).name,
-              lastName: customer.data.users.at(-1).lastName,
-            },
-            devices: props.device,
-            event: event.eventInfoDetail.eventName,
-            transaction: props.paymentIntent,
-            company: user.companyData.id,
-            link: `https://app.devitrak.net/?event=${event.id}&company=${user.companyData.id}`,
-            admin: user.email,
-          }
-        );
-        return null;
-      }
     } catch (error) {
-      message.error(`There was an error. ${error}`);
+      notify("warning", "Device returned, but the receipt email did not send.");
     }
   };
 
-  const handleReturnDevice = async () => {
-    const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
-      "device.serialNumber": deviceInfoSelected.entireData.device,
-      "device.status": true,
-      "device.deviceType": deviceInfoSelected.entireData.type,
-      eventSelected: event.eventInfoDetail.eventName,
-      company: user.companyData.id,
-    });
-    if (respo.data.ok) {
-      const assignedDevice = respo.data.listOfReceivers.at(-1);
-      await devitrakApi.patch(
-        `/receiver/receiver-update/${assignedDevice.id}`,
-        {
-          id: assignedDevice.id,
-          device: { ...assignedDevice.device, status: false },
-          timeStamp: new Date().getTime(),
-        }
-      );
+  const handleReturn = async () => {
+    setBusy("return");
+    try {
+      const assigned = await devitrakApi.post("/receiver/receiver-assigned-list", {
+        "device.serialNumber": device.serialNumber,
+        "device.status": true,
+        "device.deviceType": device.type,
+        eventSelected: event.eventInfoDetail.eventName,
+        company: user.companyData.id,
+      });
 
-      const respoPool = await devitrakApi.post("/receiver/receiver-pool-list", {
-        device: deviceInfoSelected.entireData.device,
-        type: deviceInfoSelected.entireData.type,
+      const record = assigned.data?.listOfReceivers?.at(-1);
+      if (!record) {
+        // The old handler simply fell through every `if (ok)` and did nothing,
+        // leaving the button spinning with no explanation.
+        notify("info", "This device is not currently assigned to anyone.");
+        return;
+      }
+
+      await devitrakApi.patch(`/receiver/receiver-update/${record.id}`, {
+        id: record.id,
+        device: { ...record.device, status: false },
+        timeStamp: new Date().getTime(),
+      });
+
+      const pool = await devitrakApi.post("/receiver/receiver-pool-list", {
+        device: device.serialNumber,
+        type: device.type,
         activity: true,
         eventSelected: event.eventInfoDetail.eventName,
         provider: event.company,
       });
-      if (respoPool.data.ok) {
-        const poolDevice = respoPool.data.receiversInventory.at(-1);
+      const poolDevice = pool.data?.receiversInventory?.at(-1);
+      if (poolDevice) {
         await devitrakApi.patch(
           `/receiver/receivers-pool-update/${poolDevice.id}`,
-          {
-            id: poolDevice.id,
-            activity: false,
-          }
+          { id: poolDevice.id, activity: false }
         );
-        openNotificationWithIcon("Success", "Device returned.");
-        // All three cache keys are independent (different literal keys, none
-        // depends on another's result), so clear them concurrently.
-        await Promise.all([
-          clearCacheMemory(
-            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-          ),
-          clearCacheMemory(
-            `eventSelected=${event.id}&company=${user.companyData.id}`
-          ),
-          clearCacheMemory(
-            `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
-          ),
-        ]);
-        queryClient.invalidateQueries({
-          queryKey: ["assignedDeviceListQuery"],
-          exact: true,
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["deviceInPoolList"],
-          exact: true,
-        });
-        dispatch(
-          onAddDeviceToDisplayInQuickGlance({
-            ...deviceInfoSelected,
-            activity: false,
-            entireData: {
-              ...deviceInfoSelected.entireData,
-              activity: true,
-            },
-          })
-        );
-        await returnConfirmationEmailNotification({
-          paymentIntent: respo.data.listOfReceivers.at(-1).paymentIntent,
-          device: [
-            ...respo.data.listOfReceivers.map((item) => {
-              return {
-                device: { ...item.device },
-                paymentIntent: item.paymentIntent,
-              };
-            }),
-          ],
-          email: respo.data.listOfReceivers.at(-1).user,
-        });
-        return setTimeout(() => navigate(`/events/event-quickglance`), 1000);
       }
-    }
-  };
-  const handleLostSingleDevice = async () => {
-    try {
-      const respo = await devitrakApi.post("/receiver/receiver-assigned-list", {
-        "device.serialNumber": deviceInfoSelected.serialNumber,
-        eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
-      });
-      if (respo.data.ok) {
-        const emailUser = respo.data.listOfReceivers.at(-1).user;
-        const customerHTTP = await devitrakApi.post("/auth/users", {
-          email: emailUser,
-        });
-        if (customerHTTP.data.ok) {
-          const userFound = customerHTTP.data.users.at(-1);
-          const templateConsumer = {
-            ...userFound,
-            uid: userFound.id,
-          };
-          dispatch(
-            onAddDevicesAssignedInPaymentIntent([
-              respo.data.listOfReceivers.at(-1),
-            ])
-          );
-          dispatch(
-            onAddPaymentIntentSelected(
-              respo.data.listOfReceivers.at(-1).paymentIntent
-            )
-          );
-          dispatch(
-            onAddPaymentIntentDetailSelected(respo.data.listOfReceivers.at(-1))
-          );
-          dispatch(onAddCustomer(templateConsumer));
-          dispatch(onAddCustomerInfo(templateConsumer));
-          dispatch(
-            onReceiverObjectToReplace({
-              deviceType: deviceInfoSelected.entireData.type,
-              serialNumber: deviceInfoSelected.entireData.device,
-            })
-          );
-          dispatch(
-            onAddDevicesAssignedInPaymentIntent(
-              respo.data.listOfReceivers.at(-1)
-            )
-          );
-          setOpenLostModal(true);
-        }
-      }
-    } catch (error) {
-      openNotificationWithIcon(
-        "error",
-        `Something went wrong, please try later! ${error.message}`
+
+      await Promise.all([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`),
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+        ),
+      ]);
+      queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["deviceInPoolList"] });
+
+      // Keep the page on the device, showing it as available. The old handler
+      // navigated away to the event after a 1s timeout, so you never saw the
+      // result of your own action.
+      dispatch(
+        onAddDeviceToDisplayInQuickGlance({
+          ...deviceInfoSelected,
+          activity: false,
+          entireData: { ...deviceInfoSelected.entireData, activity: false },
+        })
       );
+      onChanged?.();
+      notify("success", `${device.serialNumber} returned.`);
+
+      await notifyReturned({
+        paymentIntent: record.paymentIntent,
+        devices: assigned.data.listOfReceivers.map((item) => ({
+          device: { ...item.device },
+          paymentIntent: item.paymentIntent,
+        })),
+        email: record.user,
+      });
+    } catch (error) {
+      notify("error", "The device was not returned. Nothing changed.");
+    } finally {
+      setBusy(null);
     }
   };
 
-  const exchangeDefectedDevice = () => {
+  const handleReportLost = async () => {
+    setBusy("lost");
+    try {
+      const assigned = await devitrakApi.post("/receiver/receiver-assigned-list", {
+        "device.serialNumber": device.serialNumber,
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      });
+      const record = assigned.data?.listOfReceivers?.at(-1);
+      if (!record) {
+        notify("info", "This device has no assignment to charge a fee against.");
+        return;
+      }
+
+      const consumerQuery = await devitrakApi.post("/auth/users", {
+        email: record.user,
+      });
+      const consumer = consumerQuery.data?.users?.at(-1);
+      if (!consumer) {
+        notify("error", "The consumer holding this device could not be found.");
+        return;
+      }
+
+      const profile = { ...consumer, uid: consumer.id };
+      dispatch(onAddPaymentIntentSelected(record.paymentIntent));
+      dispatch(onAddPaymentIntentDetailSelected(record));
+      dispatch(onAddDevicesAssignedInPaymentIntent([record]));
+      dispatch(onAddCustomer(profile));
+      dispatch(onAddCustomerInfo(profile));
+      dispatch(
+        onReceiverObjectToReplace({
+          deviceType: device.type,
+          serialNumber: device.serialNumber,
+        })
+      );
+      setOpenLostModal(true);
+    } catch (error) {
+      notify("error", `Something went wrong. ${error.message}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleExchange = () => {
     dispatch(onTriggerModalToReplaceReceiver(true));
     dispatch(
       onReceiverObjectToReplace({
-        deviceType: deviceInfoSelected.entireData.type,
-        serialNumber: deviceInfoSelected.entireData.device,
+        deviceType: device.type,
+        serialNumber: device.serialNumber,
         status: true,
       })
+    );
+  };
+
+  const actions = () => {
+    if (device.isLost) {
+      return (
+        <p className="device-rail__note">
+          This device is written off as lost. Nothing further can be done to it
+          from this event.
+        </p>
+      );
+    }
+
+    if (device.isAssigned) {
+      return (
+        <>
+          {/* The reversible one leads. */}
+          <LightBlueButtonComponent
+            title="Return to inventory"
+            size="lg"
+            styles={{ width: "100%" }}
+            loadingState={busy === "return"}
+            func={handleReturn}
+          />
+          <GrayButtonComponent
+            title="Exchange for another unit"
+            size="lg"
+            styles={{ width: "100%" }}
+            func={handleExchange}
+          />
+          <DangerButtonConfirmationComponent
+            title="Report lost"
+            size="lg"
+            styles={{ width: "100%" }}
+            loadingState={busy === "lost"}
+            confirmationTitle={`Report ${device.serialNumber} as lost?`}
+            confirmationDescription="The unit is written off, released from the pool, and the fee flow opens next. This cannot be undone."
+            okText="Report lost"
+            func={handleReportLost}
+          />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <GrayButtonComponent
+          title="Update condition"
+          size="lg"
+          styles={{ width: "100%" }}
+          func={() => setOpenUpdateStatus(true)}
+        />
+        <p className="device-rail__note">
+          This unit is in the event&apos;s pool and can be handed to a consumer.
+        </p>
+      </>
     );
   };
 
   return (
     <>
       {contextHolder}
-      <Grid
-        padding={"0px"}
-        display={"flex"}
-        justifyContent={"flex-end"}
-        textAlign={"right"}
-        alignItems={"flex-start"}
-        alignSelf={"stretch"}
-        item
-        xs={12}
-        sm={12}
-        md={12}
-        lg={12}
-      >
-        <Card
-          style={{
-            borderRadius: "12px",
-            border: "none",
-            background: "transparent",
-            boxShadow: "none",
-            textAlign: "right",
-            padding: 0,
-          }}
-        >
-          {typeof deviceInfoSelected.activity === "boolean" &&
-          deviceInfoSelected.activity ? (
-            <Grid
-              container
-              display={"flex"}
-              justifyContent={"flex-end"}
-              alignItems={"center"}
-            >
-              <Grid
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                gap={1}
-                margin={"0 5px 0 0"}
-                item
-                xs={12}
-                sm={12}
-                md={12}
-                lg={12}
-              >
-                <DangerButtonComponent onClick={() => handleLostSingleDevice()}>
-                  Lost
-                </DangerButtonComponent>
-                <DangerButtonComponent onClick={() => exchangeDefectedDevice()}>
-                  Exchange
-                </DangerButtonComponent>
-                <Popconfirm
-                  title="Are you sure?"
-                  onConfirm={() => handleReturnDevice()}
-                >
-                  <LightBlueButtonComponent>Return</LightBlueButtonComponent>
-                </Popconfirm>
-              </Grid>
-            </Grid>
-          ) : (
-            <Grid item xs={12} sm={12} md={4} lg={3}>
-              <DangerButtonComponent onClick={() => setModalUpdateStatus(true)}>
-                Edit Status
-              </DangerButtonComponent>
-            </Grid>
-          )}
-        </Card>
-      </Grid>
+      <div className="device-rail" data-testid="device-actions">
+        {actions()}
+      </div>
+
       {openLostModal && (
         <Choice openModal={openLostModal} setOpenModal={setOpenLostModal} />
       )}
       {triggerModal && <Replace />}
-      {modalUpdateStatus && (
+      {openUpdateStatus && (
         <UpdateStatus
-          openUpdateStatusModal={modalUpdateStatus}
-          setOpenUpdateStatusModal={setModalUpdateStatus}
+          openUpdateStatusModal={openUpdateStatus}
+          setOpenUpdateStatusModal={setOpenUpdateStatus}
         />
       )}
     </>
   );
+};
+
+ActionsMainPage.propTypes = {
+  onChanged: PropTypes.func,
+};
+
+ActionsMainPage.defaultProps = {
+  onChanged: undefined,
 };
 
 export default ActionsMainPage;

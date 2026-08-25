@@ -1,0 +1,74 @@
+import { canViewStaffActivity, resolveRoleType } from "../../../../config/roles";
+
+// Per FRONTEND_staff_activity_log.md §1/§2: the free-text `action` values the
+// register endpoint documents, plus FORCE_LOGOUT (the one auto-logged action
+// mentioned there that isn't in the register list).
+export const ACTIVITY_LOG_ACTIONS = [
+  "LOGIN",
+  "LOGOUT",
+  "FORCE_LOGOUT",
+  "CREATE",
+  "UPDATE",
+  "DELETE",
+  "ASSIGN",
+  "UNASSIGN",
+  "IMPORT",
+  "EXPORT",
+];
+
+const staffFullName = (staff) =>
+  [staff?.name, staff?.lastName].filter(Boolean).join(" ").trim() || "Unknown staff";
+
+/**
+ * Adapts one raw `GET /api/admin/activity-logs` row into what Body.jsx renders.
+ */
+export const mapLogToListItem = (log) => ({
+  id: log?.id,
+  actionTaken: [staffFullName(log?.staff_member_id), log?.action, log?.target_model]
+    .filter(Boolean)
+    .join(" "),
+  time: log?.timestamp,
+});
+
+const staffId = (staff) => staff?._id ?? staff?.id;
+
+/**
+ * B2 read hierarchy: keeps a log row if the viewer authored it (self is always
+ * visible) or if canViewStaffActivity allows the viewer's role to see the
+ * authoring staff's role. See roles.js for the rank rule.
+ *
+ * resolveRoleType normalizes the authoring staff's role: backend's populated
+ * staff_member_id may carry either the legacy numeric `role` (0-5, same as
+ * the /company/search-company employees list) or a `roleType` string.
+ */
+export const filterLogsByHierarchy = (logs, viewerRoleType, viewerId) => {
+  if (!Array.isArray(logs)) return [];
+  return logs.filter((log) => {
+    const authorId = staffId(log?.staff_member_id);
+    if (viewerId && authorId && String(authorId) === String(viewerId)) return true;
+    return canViewStaffActivity(viewerRoleType, resolveRoleType(log?.staff_member_id));
+  });
+};
+
+export const buildActionFilterOptions = () =>
+  ACTIVITY_LOG_ACTIONS.map((action) => ({ label: action, value: action }));
+
+/**
+ * Same B2 hierarchy applied to the "Users" filter dropdown, so it never offers
+ * a staff member whose activity the viewer isn't allowed to see. staffList
+ * comes from the same /company/search-company employees array the rest of
+ * the Staff pages use, where `role` is the legacy numeric value.
+ */
+export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => {
+  if (!Array.isArray(staffList)) return [];
+  return staffList
+    .filter((staff) => {
+      const id = staffId(staff);
+      if (viewerId && id && String(id) === String(viewerId)) return true;
+      return canViewStaffActivity(viewerRoleType, resolveRoleType(staff));
+    })
+    .map((staff) => ({
+      label: staffFullName(staff),
+      value: staffId(staff),
+    }));
+};

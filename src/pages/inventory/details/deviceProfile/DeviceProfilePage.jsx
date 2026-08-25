@@ -183,7 +183,7 @@ const DeviceProfilePage = () => {
     ),
     canEdit && (
       <Suspense key="edit" fallback={null}>
-        <EditItem dataFound={legacyDataFound} refetchingFn={profile.refetchAll} />
+        <EditItem dataFound={legacyDataFound} />
       </Suspense>
     ),
     canDelete && clean(item.ownership) !== "Rent" && (

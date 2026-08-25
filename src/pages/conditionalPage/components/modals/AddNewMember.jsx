@@ -8,6 +8,11 @@ import ModalUX from "../../../../components/UX/modal/ModalUX";
 import TourModals from "../../../../components/UX/tours/TourModals";
 import MultipleFromXLSX from "./addNewMember/MultipleFromXLSX";
 import Single from "./addNewMember/Single";
+import {
+  MEMBER_IMPORT_COLUMNS,
+  buildTemplateRow,
+  columnRequirementLabel,
+} from "../../utils/xlsxImportUtils";
 
 const { Text } = Typography;
 
@@ -15,220 +20,42 @@ const AddNewMember = ({ openModal, setOpenModal }) => {
   const [choose, setChoose] = useState(0);
   const [openTour, setOpenTour] = useState(false);
 
-  // Refs for Tour targets
-  const firstNameRef = useRef(null);
-  const lastNameRef = useRef(null);
-  const emailRef = useRef(null);
-  const phoneRef = useRef(null);
-  const idRef = useRef(null);
-  const streetRef = useRef(null);
-  const cityRef = useRef(null);
-  const stateRef = useRef(null);
-  const zipRef = useRef(null);
-  const dobRef = useRef(null);
-  const guardianFirstNameRef = useRef(null);
-  const guardianLastNameRef = useRef(null);
-  const guardianEmailRef = useRef(null);
-  const guardianPhoneRef = useRef(null);
+  // One ref per template column, for the Tour to point at the right header.
+  // Previously fourteen useRef declarations, three parallel lists (columns,
+  // steps, example row) and a template built from one of them — four places to
+  // edit to add one column, which is why `grade` and `homeroom` were importable
+  // for months while the downloadable template never offered them. All of it now
+  // derives from MEMBER_IMPORT_COLUMNS, which the importer's own tests check
+  // against the accepted-header map in both directions.
+  const headerRefs = useRef({});
 
-  // Tour Configuration
-  const tourColumns = [
-    {
-      title: "First Name",
-      onHeaderCell: () => ({ ref: firstNameRef }),
-      dataIndex: "first_name",
-      key: "first_name",
-      width: 120,
-    },
-    {
-      title: "Last Name",
-      onHeaderCell: () => ({ ref: lastNameRef }),
-      dataIndex: "last_name",
-      key: "last_name",
-      width: 120,
-    },
-    {
-      title: "Email",
-      onHeaderCell: () => ({ ref: emailRef }),
-      dataIndex: "email",
-      key: "email",
-      width: 200,
-    },
-    {
-      title: "Phone",
-      onHeaderCell: () => ({ ref: phoneRef }),
-      dataIndex: "phone",
-      key: "phone",
-      width: 150,
-    },
-    {
-      title: "ID",
-      onHeaderCell: () => ({ ref: idRef }),
-      dataIndex: "id",
-      key: "id",
-      width: 150,
-    },
-    {
-      title: "Street",
-      onHeaderCell: () => ({ ref: streetRef }),
-      dataIndex: "street",
-      key: "street",
-      width: 200,
-    },
-    {
-      title: "City",
-      onHeaderCell: () => ({ ref: cityRef }),
-      dataIndex: "city",
-      key: "city",
-      width: 150,
-    },
-    {
-      title: "State",
-      onHeaderCell: () => ({ ref: stateRef }),
-      dataIndex: "state",
-      key: "state",
-      width: 100,
-    },
-    {
-      title: "Zip Code",
-      onHeaderCell: () => ({ ref: zipRef }),
-      dataIndex: "zip",
-      key: "zip",
-      width: 100,
-    },
-    {
-      title: "Date of Birth",
-      onHeaderCell: () => ({ ref: dobRef }),
-      dataIndex: "date_of_birth",
-      key: "date_of_birth",
-      width: 120,
-    },
-    {
-      title: "Guardian First Name",
-      onHeaderCell: () => ({ ref: guardianFirstNameRef }),
-      dataIndex: "parent_guardian_first_name",
-      key: "parent_guardian_first_name",
-      width: 150,
-    },
-    {
-      title: "Guardian Last Name",
-      onHeaderCell: () => ({ ref: guardianLastNameRef }),
-      dataIndex: "parent_guardian_last_name",
-      key: "parent_guardian_last_name",
-      width: 150,
-    },
-    {
-      title: "Guardian Email",
-      onHeaderCell: () => ({ ref: guardianEmailRef }),
-      dataIndex: "parent_guardian_email",
-      key: "parent_guardian_email",
-      width: 200,
-    },
-    {
-      title: "Guardian Phone",
-      onHeaderCell: () => ({ ref: guardianPhoneRef }),
-      dataIndex: "parent_guardian_phone_number",
-      key: "parent_guardian_phone_number",
-      width: 150,
-    },
-  ];
+  const tourColumns = MEMBER_IMPORT_COLUMNS.map((column) => ({
+    title: column.title,
+    dataIndex: column.header,
+    key: column.header,
+    width: column.width,
+    onHeaderCell: () => ({
+      ref: (node) => {
+        headerRefs.current[column.header] = node;
+      },
+    }),
+  }));
 
-  const tourSteps = [
-    {
-      title: "First name (mandatory)",
-      description: "Enter the member's first and last name.",
-      target: () => firstNameRef.current,
-    },
-    {
-      title: "Last name (mandatory)",
-      description: "Enter the member's last name.",
-      target: () => lastNameRef.current,
-    },
-    {
-      title: "Email (mandatory)",
-      description: "Enter the member's email address.",
-      target: () => emailRef.current,
-    },
-    {
-      title: "Phone Number (mandatory)",
-      description: "Enter the member's phone number.",
-      target: () => phoneRef.current,
-    },
-    {
-      title: "External ID (optional)",
-      description: "Enter the member's ID number if exists.",
-      target: () => idRef.current,
-    },
-    {
-      title: "Street (optional)",
-      description: "Enter the member's street address.",
-      target: () => streetRef.current,
-    },
-    {
-      title: "City (optional)",
-      description: "Enter the member's city.",
-      target: () => cityRef.current,
-    },
-    {
-      title: "State (optional)",
-      description: "Enter the member's state.",
-      target: () => stateRef.current,
-    },
-    {
-      title: "Zip Code (optional)",
-      description: "Enter the member's zip code.",
-      target: () => zipRef.current,
-    },
-    {
-      title: "Date of Birth (mandatory for Education)",
-      description: "Enter the member's date of birth (YYYY-MM-DD). Minor status is calculated automatically.",
-      target: () => dobRef.current,
-    },
-    {
-      title: "Guardian First Name (mandatory if minor)",
-      description: "Enter the guardian's first name if the member is a minor.",
-      target: () => guardianFirstNameRef.current,
-    },
-    {
-      title: "Guardian Last Name (mandatory if minor)",
-      description: "Enter the guardian's last name if the member is a minor.",
-      target: () => guardianLastNameRef.current,
-    },
-    {
-      title: "Guardian Email (mandatory if minor)",
-      description: "Enter the guardian's email if the member is a minor.",
-      target: () => guardianEmailRef.current,
-    },
-    {
-      title: "Guardian Phone (mandatory if minor)",
-      description: "Enter the guardian's phone number if the member is a minor.",
-      target: () => guardianPhoneRef.current,
-    },
-  ];
+  const tourSteps = MEMBER_IMPORT_COLUMNS.map((column) => ({
+    title: `${column.title} (${columnRequirementLabel(column)})`,
+    description: column.description,
+    target: () => headerRefs.current[column.header],
+  }));
 
-  const tourData = [
-    {
-      first_name: "John",
-      last_name: "Doe",
-      email: "john.doe@example.com",
-      phone: "555-0123",
-      id: "123456 or ED_123456",
-      street: "123 Main St",
-      city: "New York",
-      state: "NY",
-      zip: "10001",
-      date_of_birth: "2010-06-15",
-      parent_guardian_first_name: "Jane",
-      parent_guardian_last_name: "Doe",
-      parent_guardian_email: "jane.doe@example.com",
-      parent_guardian_phone_number: "555-0124",
-    },
-  ];
+  const tourData = [buildTemplateRow()];
 
   const handleDownloadTemplate = () => {
-    // eslint-disable-next-line no-unused-vars
-    const dataToExport = tourData.map(({ key, ...rest }) => rest);
-    const ws = utils.json_to_sheet(dataToExport);
+    // Column order pinned to the spec rather than left to object key order, and
+    // `header` listed explicitly so a column whose example is blank (image_url)
+    // still gets a header cell instead of vanishing from the sheet.
+    const ws = utils.json_to_sheet(tourData, {
+      header: MEMBER_IMPORT_COLUMNS.map((column) => column.header),
+    });
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Template");
     writeFile(wb, "Member_Import_Template.xlsx");

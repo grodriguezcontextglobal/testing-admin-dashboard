@@ -105,7 +105,7 @@ export async function updateGlobalEventInventoryFromPool({
         description: firstItem.descript_item || "",
         company: event?.company ?? "",
         quantity: qty,
-        ownership: firstItem.ownership || "Owned",
+        ownership: firstItem.ownership || "Permanent",
         createdBy: new Date().toISOString(),
         key: `${typeName}-${Date.now()}`,
         dateCreated: new Date().toISOString(),

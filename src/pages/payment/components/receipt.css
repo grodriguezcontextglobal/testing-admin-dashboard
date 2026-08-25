@@ -1,0 +1,189 @@
+/* Transaction receipt — screen and print.
+ *
+ * The void treatment is deliberately not colour-only: a diagonal VOID watermark
+ * plus a labelled band, so it survives a black-and-white printer and a
+ * colour-blind reader. A voided receipt that looks valid on paper is the
+ * failure this styling exists to prevent.
+ */
+
+.receipt {
+  position: relative;
+  background: #ffffff;
+  color: #101828;
+  padding: 24px;
+  max-width: 480px;
+  margin: 0 auto;
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: 8px;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.receipt__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.receipt__company {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.receipt__title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gray-500, #667085);
+  margin: 2px 0 0;
+}
+
+.receipt__band {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.receipt__band--paid {
+  background: var(--success-50, #ecfdf3);
+  color: var(--success-700, #067647);
+  border: 1px solid var(--success-200, #abefc6);
+}
+
+.receipt__band--void {
+  background: var(--error-50, #fef3f2);
+  color: var(--error-700, #b42318);
+  border: 1px solid var(--error-200, #fecdca);
+}
+
+.receipt__band--unknown {
+  background: var(--warning-50, #fffaeb);
+  color: var(--warning-700, #b54708);
+  border: 1px solid var(--warning-200, #fedf89);
+}
+
+/* Assignment still open — informational, not a warning: nothing is wrong, the
+   device is simply still out. */
+.receipt__band--open {
+  background: var(--blue-50, #eff8ff);
+  color: var(--blue-700, #175cd3);
+  border: 1px solid var(--blue-200, #b2ddff);
+}
+
+.receipt__meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.receipt__meta dt {
+  color: var(--gray-500, #667085);
+  float: left;
+  clear: left;
+  width: 44%;
+}
+
+.receipt__meta dd {
+  margin: 0 0 0 44%;
+  word-break: break-all;
+}
+
+.receipt__lines {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.receipt__lines th,
+.receipt__lines td {
+  text-align: left;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-100, #f2f4f7);
+}
+
+.receipt__lines th:last-child,
+.receipt__lines td:last-child {
+  text-align: right;
+}
+
+.receipt__total td {
+  font-weight: 600;
+  border-bottom: none;
+  border-top: 2px solid var(--gray-300, #d0d5dd);
+  padding-top: 8px;
+}
+
+.receipt__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--gray-300, #d0d5dd);
+}
+
+.receipt__qr-hint {
+  font-size: 11px;
+  color: var(--gray-500, #667085);
+  text-align: center;
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* Diagonal watermark. aria-hidden in the markup — the band above carries the
+   status for assistive tech, this is the at-a-glance signal. */
+.receipt__watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: rgba(180, 35, 24, 0.16);
+  transform: rotate(-24deg);
+  text-transform: uppercase;
+}
+
+@media print {
+  /* Only the receipt reaches the paper. */
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt,
+  .receipt * {
+    visibility: visible;
+  }
+
+  .receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Browsers strip backgrounds by default, which would erase the void band and
+     the watermark — the two things that must survive printing. */
+  .receipt__band,
+  .receipt__watermark {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .receipt__no-print {
+    display: none !important;
+  }
+}

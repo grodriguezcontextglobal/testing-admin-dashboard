@@ -1,14 +1,14 @@
 import { Grid, Typography } from "@mui/material";
-import { AutoComplete, Checkbox, Divider, Switch } from "antd";
+import { AutoComplete, Checkbox, Divider } from "antd";
 import { uniqueId } from "lodash";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
-import useBulkActionLogic from "../../add/useBulkActionLogic";
 import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
@@ -21,9 +21,8 @@ const SerialNumberAndMoreInfoComponentForm = ({
   setMoreInfo,
   generalInfoForSelection,
   updateAll,
-  setUpdateAll,
 }) => {
-  const { user } = useBulkActionLogic();
+  const { user } = useSelector((state) => state.admin);
   const [mainDeviceFound, setMainDeviceFound] = useState(null);
   const [searchDevice, setSearchDevice] = useState("");
   const [identifiers, setIdentifiers] = useState([]);
@@ -172,10 +171,6 @@ const SerialNumberAndMoreInfoComponentForm = ({
     }
   };
 
-  const handleSwitching = (e) => {
-    setUpdateAll(!e);
-  }
-
   return (
     <Grid container spacing={1}>
       <div style={{ margin: "1rem 0", gap: 0 }} className="form">
@@ -183,11 +178,14 @@ const SerialNumberAndMoreInfoComponentForm = ({
           variant="h5"
           sx={{ width: "100%", textAlign: "left", mb: 0.5, fontWeight: "bold" }}
         >
-          Make changes to specific items in group&nbsp;
-          <Switch
-            checked={!updateAll}
-            onChange={(e) => handleSwitching(e)}
-          />
+          Extra identifiers for these items
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ width: "100%", textAlign: "left", mb: 1 }}
+        >
+          IMEI, asset tag, anything else you track next to the serial. Optional — the serial number is the identifier unless you add one here.
         </Typography>
 
         <Grid container spacing={1} alignItems="center">
@@ -282,30 +280,28 @@ const SerialNumberAndMoreInfoComponentForm = ({
                     allowClear
                   />
                 </Grid>
-                <Grid padding={0} margin={0} item xs={12} sm={3} md={1} lg={1}>
+                <Grid display={"flex"} gap={0.5} item xs={12} sm={3} md={1} lg={1}>
 
-                  <DangerButtonComponent
+                  {identifiers.length > 1 && <DangerButtonComponent
                     title={"Remove"}
                     func={() => removeField(identifier.id)}
+                  />}
+                  <BlueButtonComponent
+                    title={"Add identifier"}
+                    func={addIdentifier}
+                    iconLeading={<WhiteCirclePlusIcon />}
                   />
+
                 </Grid>
               </Grid>
             ))}
-            <Grid container spacing={1} justifyContent="flex-end">
-              <Grid item>
-                <BlueButtonComponent
-                  title={<WhiteCirclePlusIcon />}
-                  func={addIdentifier}
-                />
-              </Grid>
-            </Grid>
           </div>
         )}
 
         <div style={{ marginTop: '1rem', width: '100%' }}>
           <GrayButtonComponent
             func={handleAddDevice}
-            title="Add this device"
+            title="Queue this item for being updated"
             disabled={!mainDeviceFound}
           />
         </div>

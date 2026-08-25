@@ -1,119 +1,138 @@
-/* eslint-disable no-unused-vars */
-import {
-  Grid,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
-  Typography,
-} from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Divider, Select } from "antd";
+import { Select } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { NavLink, useNavigate } from "react-router-dom";
-import { getIndustryProfile } from "../../../../../../../config/industryProfiles";
+import { useNavigate } from "react-router-dom";
+import { registerStaffActivity } from "../../../../../../../api/activityLog";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
-import DevitrakLoading from "../../../../../../../components/animation/DevitrakLoading";
-import { BorderedCloseIcon } from "../../../../../../../components/icons/BorderedCloseIcon";
-import { CheckIcon } from "../../../../../../../components/icons/CheckIcon";
-import { formatDate } from "../../../../../../../components/utils/dateFormat";
+import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../../components/UX/buttons/GrayButton";
-import { AntSelectorStyle } from "../../../../../../../styles/global/AntSelectorStyle";
-import CenteringGrid from "../../../../../../../styles/global/CenteringGrid";
-import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
-import { Subtitle } from "../../../../../../../styles/global/Subtitle";
-import { TextFontSize20LineHeight30 } from "../../../../../../../styles/global/TextFontSize20HeightLine30";
-import { TextFontSize30LineHeight38 } from "../../../../../../../styles/global/TextFontSize30LineHeight38";
-import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
-import LegalDocumentModal from "../documents/DocumentsLoadedAsContracts";
-import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
-import {
-  cleanScanValue,
-  findByScanValue,
-  scanValuesMatch,
-} from "../../../../../../../utils/scan/scanInput";
+import Chip from "../../../../../../../components/UX/Chip/Chip";
 import Input from "../../../../../../../components/UX/inputs/Input";
+import Label from "../../../../../../../components/UX/inputs/Label";
+import { ProfileSkeleton } from "../../../../../../../components/UX/profile";
+import { formatDate } from "../../../../../../../components/utils/dateFormat";
+import { getIndustryProfile } from "../../../../../../../config/industryProfiles";
+import { AntSelectorStyle } from "../../../../../../../styles/global/AntSelectorStyle";
+import "../../../../../../../styles/global/actionForm.css";
+import {
+  buildInventoryOptions,
+  isAddressComplete,
+  remainingUnits,
+  resolveSerialScan,
+  summarizePick,
+} from "../../../../../../../utils/assignmentSelection";
+import { useStaffRoleAndLocations } from "../../../../../../../utils/checkStaffRoleAndLocations";
+import ReceiptModal from "../../../../../../payment/components/ReceiptModal";
+import { mapAssignmentToReceipt } from "../../../../../../payment/utils/receiptUtils";
+import { fetchSchoolSettings } from "../../../../../../Profile/school_compliance/utils/schoolComplianceUtils";
 import {
   classifyAssignmentError,
   getAssignmentErrorMessage,
 } from "../../../../../utils/assignmentErrorUtils";
 import {
-  isConsentRequired,
-  hasValidConsent,
   getConsentStatusMessage,
+  hasValidConsent,
 } from "../../../../../utils/consentCheckUtils";
+import {
+  isContractEmailRequired,
+  shouldSendContractEmail,
+} from "../../../../../utils/contractEmailPolicy";
 import { fetchStudentConsent } from "../../../../../utils/guardianConsentApi";
 import {
-  normalizeConsentStatus,
-  isConsentBlockingAssignment,
   getConsentStatusCopy,
+  isAssignmentBlockedByConsent,
+  isConsentRequiredForMember,
+  normalizeConsentStatus,
 } from "../../../../../utils/guardianConsentUtils";
-import { fetchSchoolSettings } from "../../../../../../../pages/Profile/school_compliance/utils/schoolComplianceUtils";
+import {
+  parseDateInputValue,
+  todayDateInputValue,
+} from "../../../../../utils/leaseDateUtils";
+import { buildAssignmentRollbackPayload } from "../../../../../utils/leaseReturnUtils";
+import ContractDocumentsPicker from "../documents/ContractDocumentsPicker";
+import MemberResponsibilityBanner from "./MemberResponsibilityBanner";
 
+/**
+ * Handing devices to a member.
+ *
+ * The lease lifecycle, the consent gates, the warehouse rollback and the
+ * contract-email policy are unchanged — they are the careful part of this
+ * screen and every request it makes is the same. What changed is how it is
+ * driven and how it is read.
+ *
+ * It used to ask for a *starting serial number* and a *quantity* and then
+ * `slice(index, index + quantity)` out of the location's list: a blind slice
+ * hands over fewer units than asked for whenever the range runs out, and it did
+ * so without a word. The submit path was four nested `if`s with no `else`
+ * anywhere — a serial that matched nothing produced no request, no message and
+ * no error, just a spinner that stopped. The ✓/✗ beside the field came from an
+ * effect that only re-evaluated when the typed length happened to equal the
+ * first serial's length, and the submit button stayed disabled until it turned
+ * ✓, so a valid serial of a different length could not be submitted at all.
+ *
+ * Units are picked now — scanned, tapped, or all at once — from the list that
+ * was actually fetched, and the form reads in the order the work happens:
+ * who is accountable, which device, which units, where and until when, what has
+ * to be signed.
+ */
 const AssignmentDevicesToMember = () => {
-  const { register, watch, setValue, handleSubmit } = useForm({
-    defaultValues: {
-      quantity: 1,
-    },
-  });
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector((state) => state.member);
-  const [valueItemSelected, setValueItemSelected] = useState({});
-  const [checkingSerialNumberInputted, setCheckingSerialNumberInputted] =
-    useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
+  const serialRef = useRef(null);
+
+  const { register, watch, setValue, handleSubmit } = useForm({
+    defaultValues: { street: "", city: "", state: "", zip: "" },
+  });
+
+  const [selection, setSelection] = useState(null);
+  const [available, setAvailable] = useState([]);
+  const [picked, setPicked] = useState([]);
+  const [serial, setSerial] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
-  const [loadingStatus, setLoadingStatus] = useState(false);
-  const verificationInfo = {};
+  const [assignmentReceipt, setAssignmentReceipt] = useState(null);
+
+  const verificationInfo = useRef({});
   const dateToUse = useMemo(() => formatDate(new Date()), []);
-  let dataFound = useRef([]);
   const stampTime = useMemo(() => new Date().toISOString(), []);
-  const navigate = useNavigate();
-  // Initialize expected return date with today's date in the form
+  const defaultDueDate = useMemo(() => todayDateInputValue(), []);
+
   useEffect(() => {
-    // Set default expected return date to today
-    setValue("expectedReturnDate", dateToUse);
-  }, [dateToUse, setValue]);
+    // YYYY-MM-DD, not the full "YYYY-MM-DD HH:mm:ss" stamp: `<input type="date">`
+    // rejects a value carrying a time outright, so the default was invisible —
+    // the field rendered empty while the form state claimed a default.
+    setValue("expectedReturnDate", defaultDueDate);
+  }, [defaultDueDate, setValue]);
 
+  const { locationsAssignPermission } = useStaffRoleAndLocations();
 
-  const { role, locationsAssignPermission } = useStaffRoleAndLocations();
-  // const bodyFetchRequest = () => {
-  //   if (role === "0" || role === 0) {
-  //     return {
-  //       company_id: user.sqlInfo.company_id,
-  //       warehouse: 1,
-  //       enableAssignFeature: 1,
-  //     };
-  //   }
-  //   return {
-  //     company_id: user.sqlInfo.company_id,
-  //     warehouse: 1,
-  //     enableAssignFeature: 1,
-  //     location: locationsAssignPermission,
-  //   };
-  // };
   const itemsInInventoryQuery = useQuery({
     queryKey: ["itemGroupExistingLocationList", user.sqlInfo.company_id],
     queryFn: () =>
-      devitrakApi.post(
-        "/db_event/retrieve-item-group-location-quantity",
-        {
-          company_id: user.sqlInfo.company_id,
-          warehouse: 1,
-          enableAssignFeature: 1,
-          location: locationsAssignPermission,
-          logistic_status:"in-stock"
-        }
-      ),
+      devitrakApi.post("/db_event/retrieve-item-group-location-quantity", {
+        company_id: user.sqlInfo.company_id,
+        warehouse: 1,
+        enableAssignFeature: 1,
+        location: locationsAssignPermission,
+        logistic_status: "in-stock",
+      }),
     enabled: !!user.sqlInfo.company_id,
-    staleTime: 1 * 60 * 100, // 1 minutes
+    staleTime: 60 * 1000,
   });
-  const queryClient = useQueryClient();
-  dataFound.current = itemsInInventoryQuery?.data?.data;
 
-  // Fetch school compliance settings for Education companies
+  // ─── Compliance: who may receive a device at all ───────────────────────────
+
   const isEducation = user?.companyData?.industry === "Education";
   const schoolSettingsQuery = useQuery({
     queryKey: ["schoolSettings", user.sqlInfo.company_id],
@@ -122,131 +141,201 @@ const AssignmentDevicesToMember = () => {
     staleTime: 5 * 60 * 1000,
   });
   const schoolSettings = schoolSettingsQuery.data?.settings || {};
-  // Fetch real consent status from server
+
+  const isMinor = isEducation && Number(memberInfo?.minor) === 1;
+  const isUnder13 = isEducation && Boolean(memberInfo?.under_13);
+
+  // Whether consent even applies to this member: each toggle is an age scope, so
+  // with both off no age is checked and the assignment proceeds. An earlier
+  // version blocked every minor regardless of the settings, which asked a school
+  // for consent it had explicitly not turned on.
+  const consentApplies = isConsentRequiredForMember({
+    isMinor,
+    isUnder13,
+    settings: schoolSettings,
+  });
+
+  // Fetched exactly when it could change the answer. This was gated on
+  // `enforce_member_consent`, a key /school/settings does not return — so the
+  // condition read `undefined`, the query never ran, and the first thing to
+  // notice the missing consent was the server, one warehouse write too late.
   const consentQuery = useQuery({
     queryKey: [
       "studentConsentStatus",
       memberInfo?.member_id,
       user.sqlInfo.company_id,
     ],
-    queryFn: () => fetchStudentConsent(user.sqlInfo.company_id, memberInfo.member_id),
-    enabled:
-      !!memberInfo?.member_id &&
-      isEducation &&
-      (schoolSettings.enforce_member_consent || schoolSettings.enforce_under_13),
-    staleTime: 1 * 60 * 1000,
+    queryFn: () =>
+      fetchStudentConsent(user.sqlInfo.company_id, memberInfo.member_id),
+    enabled: !!memberInfo?.member_id && consentApplies,
+    staleTime: 60 * 1000,
   });
-  const consentData = consentQuery.data;
+
   const consentStatus = normalizeConsentStatus(
-    consentData,
+    consentQuery.data,
     schoolSettings.required_consent_policy_version
   );
-  const isConsentBlocking = isConsentBlockingAssignment(
-    consentStatus,
-    schoolSettings
-  );
-  const optionsToRenderInSelector = () => {
-    const result = [];
-    const groupedInventory = dataFound.current?.groupedInventory ?? {};
 
-    // Iterate through categories (Category1, Category2, etc.)
-    for (const [categoryName, categoryData] of Object.entries(
-      groupedInventory
-    )) {
-      // Iterate through items within each category (Item1, Item2, etc.)
-      for (const [itemGroup, itemData] of Object.entries(categoryData)) {
-        // Iterate through locations within each item
-        for (const [location, quantity] of Object.entries(itemData)) {
-          result.push({
-            category_name: categoryName,
-            item_group: itemGroup,
-            location: location,
-            total: quantity,
-            data: JSON.stringify({
-              category_name: categoryName,
-              item_group: itemGroup,
-              location: location,
-              quantity: quantity,
-            }),
-          });
-        }
-      }
-    }
+  /**
+   * One consent verdict, used by the banner, the disabled button and the
+   * pre-flight guard alike.
+   *
+   * There used to be two: the render read `isAssignmentBlockedByConsent` with an
+   * `isConsentRequired` fallback, and the submit path recomputed the same idea
+   * with a different fallback. Two spellings of one rule is how a screen ends up
+   * with an enabled button that redirects the moment it is pressed.
+   */
+  const consentBlocking = consentQuery.isSuccess
+    ? isAssignmentBlockedByConsent({
+        consentStatus,
+        settings: schoolSettings,
+        isMinor,
+        isUnder13,
+      })
+    : consentApplies && !hasValidConsent(memberInfo?.consent);
 
-    return result;
-  };
-  const onChange = async (value) => {
-    const optionRendering = JSON.parse(value);
-    const fetchSelectedItem = await devitrakApi.post(
-      "/db_event/inventory-based-on-submitted-parameters",
-      {
-        query: `SELECT 
-        serial_number
-        FROM item_inv 
-        WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? And warehouse = ?
-        ORDER BY serial_number ASC`,
-        values: [
-          optionRendering.item_group,
-          optionRendering.category_name,
-          user.sqlInfo.company_id,
-          optionRendering.location,
-          1,
-        ],
-      }
-    );
-    if (fetchSelectedItem.data) {
-      if (fetchSelectedItem.data.result.length === 1) {
-        setValue(
-          "startingNumber",
-          fetchSelectedItem.data.result[0].serial_number
-        );
-        return setValueItemSelected({
-          ...optionRendering,
-          min_serial_number: fetchSelectedItem.data.result[0].serial_number,
-          max_serial_number: fetchSelectedItem.data.result?.at(-1)?.serial_number,
-          data: JSON.stringify(fetchSelectedItem.data.result),
-          quantity: 0,
-        });
-      }
-      setValue(
-        "startingNumber",
-        fetchSelectedItem.data.result[0].serial_number
-      );
-      return setValueItemSelected({
-        ...optionRendering,
-        min_serial_number: fetchSelectedItem.data.result[0].serial_number,
-        max_serial_number: fetchSelectedItem.data.result?.at(-1)?.serial_number,
-        data: JSON.stringify(fetchSelectedItem.data.result),
-        quantity: 0,
+  const consentCopy = consentQuery.isSuccess
+    ? getConsentStatusCopy(consentStatus)
+    : getConsentStatusMessage({
+        isMinor,
+        isUnder13,
+        consentRequired: true,
+        consentExists: false,
       });
+
+  // COPPA: under 13 always notifies the guardian, so the staff member cannot opt
+  // out of the email. Derived rather than forced into `addContracts` by an
+  // effect, so the two can never drift and unchecking cannot silently win.
+  const contractEmailRequired = isContractEmailRequired(memberInfo);
+  const sendContractEmail = shouldSendContractEmail(memberInfo, addContracts);
+
+  const representative = getIndustryProfile(
+    user?.companyData?.industry
+  ).representative.label.toLowerCase();
+
+  const guardianComplete = Boolean(
+    memberInfo?.parent_guardian_first_name?.trim?.() &&
+      memberInfo?.parent_guardian_email?.trim?.()
+  );
+  const guardianIncomplete = Number(memberInfo?.minor) === 1 && !guardianComplete;
+
+  const isBlocked = guardianIncomplete || consentBlocking;
+
+  // ─── Picking the units ────────────────────────────────────────────────────
+
+  const options = useMemo(
+    () => buildInventoryOptions(itemsInInventoryQuery.data?.data?.groupedInventory),
+    [itemsInInventoryQuery.data]
+  );
+  const pending = useMemo(() => remainingUnits(available, picked), [available, picked]);
+  const summary = summarizePick({ picked, available });
+
+  const goBack = () => navigate(`/member/${memberInfo?.member_id}/main`);
+  const memberUpdateLink = `/member/${memberInfo?.member_id}/update-member-information`;
+
+  const handleSelectGroup = async (value) => {
+    const option = JSON.parse(value);
+    setSelection(option);
+    setPicked([]);
+    setSerial("");
+    setFeedback(null);
+    setNotice(null);
+    setIsLoadingUnits(true);
+
+    try {
+      const response = await devitrakApi.post("/db_event/inventory-query", {
+        queryName: "inventory.serialsByGroupCategoryLocation",
+        params: {
+          itemGroup: option.item_group,
+          categoryName: option.category_name,
+          location: option.location,
+        },
+      });
+      const units = response.data?.result ?? [];
+      setAvailable(units);
+      if (units.length === 0) {
+        setNotice(
+          "This location reports stock but returned no serial numbers. Refresh and try again."
+        );
+      }
+    } catch {
+      setAvailable([]);
+      setNotice("Could not read this location's serial numbers. Try again.");
+    } finally {
+      setIsLoadingUnits(false);
     }
   };
-  const { notify, contextHolder } = useStatusNotification();
-  const updateDeviceInWarehouse = async (props) => {
-    await devitrakApi.post("/db_item/item-out-warehouse", {
+
+  const handleAddSerial = (event) => {
+    event?.preventDefault?.();
+    const result = resolveSerialScan({ serial, available, picked });
+    setFeedback({ tone: result.ok ? "ok" : "error", message: result.message });
+    if (result.ok) {
+      setPicked((current) => [...current, result.unit]);
+      setSerial("");
+    }
+    serialRef.current?.focus();
+  };
+
+  const handleAddAll = () => {
+    if (pending.length === 0) return;
+    setPicked(available);
+    setFeedback({
+      tone: "ok",
+      message: `${pending.length} unit${pending.length === 1 ? "" : "s"} added.`,
+    });
+  };
+
+  const handleRemove = (unit) =>
+    setPicked((current) =>
+      current.filter((item) => item.serial_number !== unit.serial_number)
+    );
+
+  // ─── The write path. Same requests, same order, same bodies. ──────────────
+
+  const updateDeviceInWarehouse = (deviceInfo) =>
+    devitrakApi.post("/db_item/item-out-warehouse", {
       warehouse: 0,
       logistic_status: "assigned",
       company_id: user.sqlInfo.company_id,
-      item_group: props.item_group,
-      category_name: props.category_name,
-      data: props.data,
+      item_group: deviceInfo[0].item_group,
+      category_name: deviceInfo[0].category_name,
+      data: deviceInfo.map((item) => item.serial_number),
     });
-  };
-  const createNewLease = async (props) => {
-    const verificationContractID = await verificationContractMember();
-    for (let data of props.deviceInfo) {
+
+  const verificationContractMember = () =>
+    devitrakApi.post("/document/verification/member/signed_document", {
+      contract_list: contractList,
+      date: stampTime,
+      company_id: user.sqlInfo.company_id,
+      member_id: memberInfo.member_id,
+      assigner_staff_member_id: user.sqlMemberInfo.staff_id,
+    });
+
+  const createNewLease = async ({ deviceInfo, address, expectedReturnDate }) => {
+    const verification = await verificationContractMember();
+    const verificationId = verification.data.verificationInfo._id;
+    verificationInfo.current._id = verificationId;
+
+    // parseDateInputValue, not new Date(): the field hands over "2026-08-20",
+    // which new Date reads as midnight UTC, and formatDate then writes local
+    // components — so a device due on the 20th was stored as due the 19th at
+    // 20:00 anywhere west of Greenwich. Resolved once for the whole batch so
+    // every device in one handover carries the same due date.
+    const dueDate = parseDateInputValue(expectedReturnDate);
+    const dueDateStamp = dueDate ? formatDate(dueDate) : dateToUse;
+
+    for (const device of deviceInfo) {
       const newLease = await devitrakApi.post(
         "/db_member/new-member-assigned-device-lease",
         {
           staff_member_id: user.sqlMemberInfo.staff_id,
           company_id: user.sqlInfo.company_id,
-          location: `${props.street} ${props.city} ${props.state} ${props.zip}`,
+          location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
           member_id: memberInfo.member_id,
-          device_id: data.item_id,
-          verification_id: verificationContractID.data.verificationInfo._id,
-          expected_return_date: props.expectedReturnDate
-            ? formatDate(new Date(props.expectedReturnDate))
-            : dateToUse,
+          device_id: device.item_id,
+          verification_id: verificationId,
+          expected_return_date: dueDateStamp,
           returned: 0,
           assigned_date: formatDate(new Date()),
         }
@@ -254,69 +343,49 @@ const AssignmentDevicesToMember = () => {
       if (!newLease?.data?.ok) {
         throw new Error("Failed to create the device lease record.");
       }
+      registerStaffActivity({
+        action: "ASSIGN",
+        target_model: "Lease",
+        target_id: memberInfo.member_id,
+        details: { device_id: device.item_id },
+      });
     }
-    return (verificationInfo._id =
-      verificationContractID.data.verificationInfo._id);
+
+    return verificationId;
   };
-  // First-class lease lifecycle: warehouse-out -> lease rows (+ contract
-  // verification) -> contract email -> done. No pseudo-events, no receiver
-  // pools — the lease table is the single source of truth.
-  const option1 = async (props) => {
-    const deviceInfo = props.selectedData; //*array of existing devices in sql db
-    if (deviceInfo.length > 0) {
-      await updateDeviceInWarehouse({
-        item_group: deviceInfo[0].item_group,
-        category_name: deviceInfo[0].category_name,
-        data: [...deviceInfo.map((item) => item.serial_number)],
-      });
-      await createNewLease({ ...props.template, deviceInfo });
-      if (addContracts) {
-        await emailContractToMember({
-          contractList: contractList,
-          items: deviceInfo.map((d) => ({
-            serial_number: d.serial_number,
-            type: d.item_group,
-            id: d.item_id,
-          })),
-          verification_id: verificationInfo._id,
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: ["staffMemberInfo"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], exact: true });
-      queryClient.invalidateQueries({ queryKey: ["ItemsInventoryCheckingQuery"], exact: true });
-      queryClient.invalidateQueries({
-        queryKey: ["memberAssignedDevices"],
-        exact: true,
-        refetchType: "active",
-        refetchActive: true,
-      });
-      notify(
-        "success",
-        "Equipment assigned to member.",
-        ""
-      );
-      setLoadingStatus(false);
-      return navigate(`/member/${memberInfo?.member_id}/main`);
+
+  /**
+   * Puts devices back in stock when the lease could not be created.
+   *
+   * The warehouse write happens first and is not part of the same transaction as
+   * the lease, so a rejected lease used to leave the device at logistic_status
+   * "assigned" with nobody recorded as holding it. Rolling back is best-effort by
+   * nature — if the undo also fails the caller is told exactly which serials are
+   * stranded, because a silent one is how inventory drifts from reality.
+   *
+   * @returns {string[]} serials that could NOT be restored
+   */
+  const rollbackWarehouseAssignment = async (deviceInfo) => {
+    const payload = buildAssignmentRollbackPayload({
+      serials: deviceInfo.map((item) => item.serial_number),
+      itemGroup: deviceInfo[0]?.item_group,
+      categoryName: deviceInfo[0]?.category_name,
+      companyId: user.sqlInfo.company_id,
+    });
+    if (!payload) return [];
+    try {
+      await devitrakApi.post("/db_item/item-out-warehouse", payload);
+      return [];
+    } catch {
+      return payload.data;
     }
   };
-  const verificationContractMember = async () => {
-    const verification = await devitrakApi.post(
-      "/document/verification/member/signed_document",
-      {
-        contract_list: contractList,
-        date: stampTime,
-        company_id: user.sqlInfo.company_id,
-        member_id: memberInfo.member_id,
-        assigner_staff_member_id: user.sqlMemberInfo.staff_id,
-      }
-    );
-    return verification;
-  };
-  const emailContractToMember = async (props) => {
+
+  const emailContractToMember = async ({ items, verificationId }) => {
     // Responsible party: for minors the parent/guardian (representative)
     // receives and signs the liability contract; adults sign for themselves.
-    const isMinor = Number(memberInfo.minor) === 1;
-    const responsibleParty = isMinor
+    const minor = Number(memberInfo.minor) === 1;
+    const responsibleParty = minor
       ? {
           name: `${memberInfo.parent_guardian_first_name ?? ""} ${
             memberInfo.parent_guardian_last_name ?? ""
@@ -331,753 +400,473 @@ const AssignmentDevicesToMember = () => {
           email: memberInfo.email,
           member_id: memberInfo.member_id,
         };
+
     await devitrakApi.post(
       "/nodemailer/liability-contract-member-email-notification",
       {
         company_name: user.companyData.company_name,
         email_admin: user.email,
         member: responsibleParty,
-        contract_list: props.contractList,
+        contract_list: contractList,
         subject: "Device Liability Contract",
-        items: props.items,
+        items,
         company_id: user.companyData.id,
         date_reference: stampTime,
-        verification_id: props.verification_id ?? verificationInfo._id,
+        verification_id: verificationId,
       }
     );
-    return null;
   };
-  const assignDeviceToMember = async (data) => {
+
+  /**
+   * First-class lease lifecycle: warehouse-out → lease rows (+ contract
+   * verification) → contract email → done. No pseudo-events, no receiver pools —
+   * the lease table is the single source of truth.
+   */
+  const handOverDevices = async ({ deviceInfo, address, expectedReturnDate }) => {
+    await updateDeviceInWarehouse(deviceInfo);
+
+    // Anything that stops the lease from being written has to put the hardware
+    // back. The pre-flight gate catches the common case (a minor without
+    // consent), but a race, a stale device or a dropped connection all end here
+    // too, and every one of them used to cost a device from the shelf.
+    let verificationId;
     try {
-      const template = {
-        street: data.street,
-        city: data.city,
-        state: data.state,
-        zip: data.zip,
-        expectedReturnDate: data.expectedReturnDate,
-      };
-      setLoadingStatus(true);
-      if (data.startingNumber?.length > 0) {
-        const data_serial_numbers = JSON.parse(valueItemSelected.data);
-        if (data_serial_numbers.length > 0) {
-          const index = data_serial_numbers.findIndex((item) =>
-            scanValuesMatch(item.serial_number, data.startingNumber)
-          );
-          if (index > -1) {
-            const selectedData = data_serial_numbers.slice(
-              index,
-              index + Number(data.quantity)
-            );
-            const gettingAllInfo = await devitrakApi.post(
-              "/db_event/inventory-based-on-submitted-parameters",
-              {
-                query: `SELECT * FROM item_inv 
-              WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? AND warehouse = ? And serial_number in (${selectedData
-                    .map((item) => `'${item.serial_number}'`)
-                    .join(",")})
-              `,
-                values: [
-                  valueItemSelected.item_group,
-                  valueItemSelected.category_name,
-                  user.sqlInfo.company_id,
-                  valueItemSelected.location,
-                  1,
-                ],
-              }
-            );
+      verificationId = await createNewLease({
+        deviceInfo,
+        address,
+        expectedReturnDate,
+      });
+    } catch (error) {
+      const stranded = await rollbackWarehouseAssignment(deviceInfo);
+      if (stranded.length > 0) error.strandedSerials = stranded;
+      throw error;
+    }
 
-            // Pre-assignment consent gate: block before any warehouse mutation
-            const memberMinor = Number(memberInfo.minor) === 1;
-            const memberUnder13Check = Boolean(memberInfo.under_13);
-            const enforceConsentCheck = Boolean(schoolSettings.enforce_member_consent);
-            const enforceUnder13Check = Boolean(schoolSettings.enforce_under_13);
-            const consentAlreadyExistsCheck = hasValidConsent(memberInfo.consent);
+    if (sendContractEmail) {
+      await emailContractToMember({
+        items: deviceInfo.map((device) => ({
+          serial_number: device.serial_number,
+          type: device.item_group,
+          id: device.item_id,
+        })),
+        verificationId,
+      });
+    }
 
-            // Use real consent status when available
-            const preCheckConsentBlocking = consentQuery.isSuccess
-              ? isConsentBlockingAssignment(consentStatus, schoolSettings)
-              : isConsentRequired({
-                  isMinor: memberMinor,
-                  isUnder13: memberUnder13Check,
-                  enforceMemberConsent: enforceConsentCheck,
-                  enforceUnder13: enforceUnder13Check,
-                  consentExists: consentAlreadyExistsCheck,
-                });
+    ["staffMemberInfo", "imagePerItemList", "ItemsInventoryCheckingQuery"].forEach(
+      (key) => queryClient.invalidateQueries({ queryKey: [key], exact: true })
+    );
+    queryClient.invalidateQueries({
+      queryKey: ["memberAssignedDevices"],
+      exact: true,
+      refetchType: "active",
+    });
 
-            if (preCheckConsentBlocking) {
-              const consentMsg = consentQuery.isSuccess
-                ? getConsentStatusCopy(consentStatus)
-                : getConsentStatusMessage({
-                    isMinor: memberMinor,
-                    isUnder13: memberUnder13Check,
-                    consentRequired: true,
-                    consentExists: false,
-                  });
-              notify("warning", consentMsg, "");
-              setLoadingStatus(false);
-              navigate(`/member/${memberInfo.member_id}/update-member-information`);
-              return;
-            }
+    notify(
+      "success",
+      `${deviceInfo.length} device${deviceInfo.length === 1 ? "" : "s"} handed over.`,
+      `${memberInfo.first_name ?? "The member"} is now holding them.`
+    );
 
-            await option1({
-              groupingType: valueItemSelected.item_group,
-              template: template,
-              quantity: data.quantity,
-              selectedData: gettingAllInfo.data.result,
-            });
-          }
-        }
+    // Offer the receipt before leaving: navigating first unmounts the prompt.
+    // Whichever button is used, closing it navigates to the member page, so a
+    // staff member who does not want a printout ends up where the flow used to
+    // take them anyway.
+    setAssignmentReceipt(
+      mapAssignmentToReceipt({
+        member: memberInfo,
+        devices: deviceInfo,
+        company: user?.company,
+        date: stampTime,
+        staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
+        reference: expectedReturnDate ? `Due ${expectedReturnDate}` : "",
+      })
+    );
+  };
+
+  const onSubmit = async (data) => {
+    setNotice(null);
+
+    if (!summary.canSubmit) {
+      return setFeedback({
+        tone: "error",
+        message: "Pick at least one unit to hand over.",
+      });
+    }
+    if (!isAddressComplete(data)) {
+      return setNotice("Fill in the full address where the device will be kept.");
+    }
+    if (isBlocked) {
+      // Belt and braces: the button is already disabled for both cases.
+      return setNotice(
+        guardianIncomplete
+          ? `A complete ${representative} is required before anything can be handed over.`
+          : consentCopy
+      );
+    }
+
+    setLoadingStatus(true);
+    try {
+      // Re-read the picked serials as full item rows: the lease and the receipt
+      // read fields the serial list does not carry.
+      const full = await devitrakApi.post("/db_event/inventory-query", {
+        queryName: "inventory.itemsByGroupCategoryLocationSerials",
+        params: {
+          itemGroup: selection.item_group,
+          categoryName: selection.category_name,
+          location: selection.location,
+          serialNumbers: picked.map((unit) => unit.serial_number),
+        },
+      });
+
+      const deviceInfo = full.data?.result ?? [];
+      if (deviceInfo.length === 0) {
+        throw new Error("Those units are no longer available in this location.");
       }
+
+      await handOverDevices({
+        deviceInfo,
+        address: data,
+        expectedReturnDate: data.expectedReturnDate,
+      });
     } catch (error) {
       const classification = classifyAssignmentError(error);
-      const errorMessage = getAssignmentErrorMessage(classification);
+      const baseMessage = getAssignmentErrorMessage(classification);
 
-      if (classification.type === "CONSENT_REQUIRED") {
-        notify("warning", errorMessage, "");
-        setLoadingStatus(false);
-        navigate(`/member/${memberInfo.member_id}/update-member-information`);
-        return;
+      // The rollback is best-effort; when it fails too, the serials it could not
+      // restore are named here. Inventory now disagrees with reality and only a
+      // human can fix it, so this must never be folded into a generic message —
+      // and, unlike the consent branches, it does not navigate away.
+      if (error.strandedSerials?.length) {
+        return setNotice(
+          `${baseMessage} WARNING: ${error.strandedSerials.join(
+            ", "
+          )} could not be returned to stock — fix them in inventory before assigning again.`
+        );
       }
 
-      if (classification.type === "UNDER_13_CONSENT_REQUIRED") {
-        notify("warning", errorMessage, "");
-        setLoadingStatus(false);
-        navigate(`/member/${memberInfo.member_id}/update-member-information`);
-        return;
+      if (
+        ["CONSENT_REQUIRED", "UNDER_13_CONSENT_REQUIRED", "GUARDIAN_REQUIRED"].includes(
+          classification.type
+        )
+      ) {
+        notify("warning", baseMessage, "");
+        return navigate(memberUpdateLink);
       }
 
-      if (classification.type === "GUARDIAN_REQUIRED") {
-        notify("warning", errorMessage, "");
-        setLoadingStatus(false);
-        navigate(`/member/${memberInfo.member_id}/update-member-information`);
-        return;
-      }
-
-      notify("error", errorMessage, "");
-      setLoadingStatus(false);
+      setNotice(baseMessage);
     } finally {
       setLoadingStatus(false);
     }
   };
-  const renderTitle = () => {
-    return (
-      <>
-        <InputLabel
-          id="eventName"
-          style={{ marginBottom: "6px", width: "100%" }}
-        >
-          <p
-            style={{
-              ...TextFontSize30LineHeight38,
-              textAlign: "left",
-              color: "var(--gray600, #475467)",
-            }}
-          >
-            Assign a device to member: {`${memberInfo.first_name ?? ""} ${memberInfo.last_name ?? ""
-              }`} from existing inventory.
-          </p>
-        </InputLabel>
-        <InputLabel
-          id="eventName"
-          style={{ marginBottom: "6px", width: "100%" }}
-        >
-          <p
-            style={{
-              ...TextFontSize20LineHeight30,
-              color: "var(--gray600, #475467)",
-              textAlign: "left",
-              textTransform: "none",
-            }}
-          >
-            You can enter all the details manually or use a scanner to enter the
-            serial number.
-          </p>
-        </InputLabel>
-      </>
-    );
-  };
-  useEffect(() => {
-    // No device group selected yet, or nothing entered — nothing to validate.
-    // Beyond that: validate every read, with no length gate. The old check only
-    // ran when the entered value happened to be exactly as long as the first
-    // row's serial, so a scanned 24-character EPC never validated at all — and
-    // on a near miss it left the previous verdict standing instead of clearing.
-    if (!valueItemSelected?.data || !cleanScanValue(watch("startingNumber"))) {
-      return setCheckingSerialNumberInputted(false);
-    }
-    const data = JSON.parse(valueItemSelected.data);
-    if (!Array.isArray(data) || !data.length) {
-      return setCheckingSerialNumberInputted(false);
-    }
-    return setCheckingSerialNumberInputted(
-      Boolean(
-        findByScanValue(data, watch("startingNumber"), {
-          getValue: (item) => item.serial_number,
-        })
-      )
-    );
-  }, [watch("startingNumber"), valueItemSelected]);
 
-  // Deep links hydrate memberInfo asynchronously (dashboard fetch -> Redux);
-  // render the loading state until the member is available.
-  if (!memberInfo?.member_id) {
-    return (
-      <div style={CenteringGrid}>
-        <DevitrakLoading />
-      </div>
-    );
-  }
+  // Deep links hydrate memberInfo asynchronously (dashboard fetch → Redux).
+  if (!memberInfo?.member_id) return <ProfileSkeleton lines={5} />;
 
-  // Representative accountability: minors need a complete parent/guardian on
-  // file — the guardian is the responsible party who signs the contract.
-  const isMinor = Number(memberInfo.minor) === 1;
-  const repLabel = getIndustryProfile(
-    user?.companyData?.industry
-  ).representative.label.toLowerCase();
-  const guardianComplete = Boolean(
-    memberInfo.parent_guardian_first_name?.trim?.() &&
-      memberInfo.parent_guardian_email?.trim?.()
-  );
-  const guardianIncomplete = isMinor && !guardianComplete;
+  const memberName = `${memberInfo.first_name ?? ""} ${
+    memberInfo.last_name ?? ""
+  }`.trim();
 
-  // Consent gate: use real consent status from API when available,
-  // fall back to isConsentRequired for companies without consent endpoint
-  const memberUnder13 = Boolean(memberInfo.under_13);
-  const enforceConsent = Boolean(schoolSettings.enforce_member_consent);
-  const enforceUnder13Flag = Boolean(schoolSettings.enforce_under_13);
-  const consentAlreadyExists = hasValidConsent(memberInfo.consent);
-  const consentNeededLegacy = isConsentRequired({
-    isMinor,
-    isUnder13: memberUnder13,
-    enforceMemberConsent: enforceConsent,
-    enforceUnder13: enforceUnder13Flag,
-    consentExists: consentAlreadyExists,
-  });
+  const bannerState = guardianIncomplete
+    ? "blocked"
+    : consentBlocking
+    ? "consent"
+    : Number(memberInfo.minor) === 1
+    ? "minor"
+    : "adult";
 
-  // Use real API status when query succeeded, otherwise fall back to legacy check
-  const consentNeeded = consentQuery.isSuccess
-    ? isConsentBlocking
-    : consentNeededLegacy;
+  const stepClass = (done) =>
+    `action-form__step${done ? " action-form__step--done" : ""}`;
 
-  const responsibleBanner = () => {
-    const base = {
-      width: "100%",
-      textAlign: "left",
-      borderRadius: "var(--radius-md, 8px)",
-      padding: "12px 16px",
-      margin: "0 0 16px",
-      fontFamily: "Inter, sans-serif",
-      fontSize: "14px",
-      lineHeight: "20px",
-    };
-    if (guardianIncomplete) {
-      return (
-        <div
-          role="alert"
-          style={{
-            ...base,
-            background: "var(--error-25, #fdf7f5)",
-            border: "1px solid var(--error-300, #e28f75)",
-            color: "var(--error-700, #9a3922)",
-          }}
-        >
-          <strong>Representative required.</strong> {memberInfo.first_name} is a
-          minor and has no complete {repLabel} on file. Devices cannot be
-          assigned until a representative (name + email) is added in{" "}
-          <NavLink
-            to={`/member/${memberInfo.member_id}/update-member-information`}
-            style={{ color: "var(--error-700, #9a3922)", fontWeight: 700 }}
-          >
-            Update member info
-          </NavLink>
-          .
-        </div>
-      );
-    }
-
-    // Consent required banner (Education companies with consent enforcement)
-    if (consentNeeded) {
-      const statusCopy = consentQuery.isSuccess
-        ? getConsentStatusCopy(consentStatus)
-        : getConsentStatusMessage({
-            isMinor,
-            isUnder13: memberUnder13,
-            consentRequired: true,
-            consentExists: false,
-          });
-
-      const bannerColor =
-        consentStatus === "agreed"
-          ? {
-              bg: "var(--success-25, #f0fdf4)",
-              border: "var(--success-300, #86efac)",
-              text: "var(--success-700, #15803d)",
-            }
-          : consentStatus === "refused"
-            ? {
-                bg: "var(--error-25, #fdf7f5)",
-                border: "var(--error-300, #e28f75)",
-                text: "var(--error-700, #9a3922)",
-              }
-            : consentStatus === "pending"
-              ? {
-                  bg: "var(--blue-50, #eff8ff)",
-                  border: "var(--blue-200, #b2ddff)",
-                  text: "var(--blue-800, #1849a9)",
-                }
-              : {
-                  bg: "var(--warning-bg, #FEF3C7)",
-                  border: "var(--warning-border, #F59E0B)",
-                  text: "var(--warning-text, #92400E)",
-                };
-
-      return (
-        <div
-          role="alert"
-          style={{
-            ...base,
-            background: bannerColor.bg,
-            border: `1px solid ${bannerColor.border}`,
-            color: bannerColor.text,
-          }}
-        >
-          <strong>Consent status: {consentStatus}.</strong> {statusCopy}{" "}
-          <NavLink
-            to={`/member/${memberInfo.member_id}/update-member-information`}
-            style={{ color: bannerColor.text, fontWeight: 700 }}
-          >
-            {consentStatus === "pending"
-              ? "View consent panel"
-              : consentStatus === "agreed"
-                ? "View consent details"
-                : "Update consent"}
-          </NavLink>
-          .
-        </div>
-      );
-    }
-
-    if (isMinor) {
-      return (
-        <div
-          style={{
-            ...base,
-            background: "var(--blue-50, #eff8ff)",
-            border: "1px solid var(--blue-200, #b2ddff)",
-            color: "var(--blue-800, #1849a9)",
-          }}
-        >
-          <strong>Minor — represented by {memberInfo.parent_guardian_first_name}{" "}
-          {memberInfo.parent_guardian_last_name}</strong> (
-          {memberInfo.parent_guardian_email}). The liability contract will be
-          sent to the representative for signature; responsibility for the
-          device falls on them.
-        </div>
-      );
-    }
-    return (
-      <div
-        style={{
-          ...base,
-          background: "var(--gray-50, #f7f7f4)",
-          border: "1px solid var(--gray-200, #ddded6)",
-          color: "var(--gray-600, #5d615a)",
-        }}
-      >
-        <strong>Adult.</strong> {memberInfo.first_name} signs their own
-        liability contract and is directly responsible for the device.
-      </div>
-    );
-  };
+  if (itemsInInventoryQuery.isLoading) return <ProfileSkeleton lines={5} />;
 
   return (
     <>
-      {itemsInInventoryQuery.isLoading ? (
-        <div style={CenteringGrid}>
-          <DevitrakLoading />
+      {contextHolder}
+      <form className="action-form" onSubmit={handleSubmit(onSubmit)}>
+        <div className="action-form__header">
+          <h2 className="action-form__title">Hand over a device</h2>
+          <p className="action-form__lead">
+            Units leave the warehouse and are leased to{" "}
+            <strong>{memberName}</strong>. Nothing is written until you confirm.
+          </p>
         </div>
-      ) : (
-        <Grid
-          container
-          display={"flex"}
-          justifyContent={"center"}
-          alignItems={"center"}
-          marginY={2}
-          key={"settingUp-deviceList-event"}
-        >
-          {contextHolder}
-          {renderTitle()}
-          {responsibleBanner()}
-          <form
-            style={{ width: "100%" }}
-            onSubmit={handleSubmit(assignDeviceToMember)}
-          >
-            <Grid
-              style={{
-                borderRadius: "8px",
-                border: "1px solid var(--gray-300, #D0D5DD)",
-                background: "var(--gray-100, #F2F4F7)",
-                padding: "24px",
-                width: "100%",
-              }}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <InputLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-                <p style={Subtitle}>
-                  Location where device is going to be used/located physically.
-                </p>
-              </InputLabel>
-              <div
-                style={{
-                  ...CenteringGrid,
-                  justifyContent: "space-between",
-                  margin: "0 0 20px 0",
-                  gap: "1rem",
-                }}
-              >
-                <div style={{ width: "50%" }}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>Street</p>
-                  </InputLabel>
-                  <Input
-                    {...register("street")}
-                    disabled={loadingStatus}
-                    style={{
-                      
-                      width: "100%",
-                    }}
-                    fullWidth
-                    required
-                  />
-                </div>
-                <div style={{ width: "50%" }}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>City</p>
-                  </InputLabel>
-                  <Input
-                    disabled={loadingStatus}
-                    {...register("city")}
-                    style={{
-                      
-                      width: "100%",
-                    }}
-                    required
-                    fullWidth
-                  />
-                </div>
-              </div>
-              <div
-                style={{
-                  ...CenteringGrid,
-                  justifyContent: "space-between",
-                  margin: "0 0 20px 0",
-                  gap: "1rem",
-                }}
-              >
-                <div style={{ width: "50%" }}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>State</p>
-                  </InputLabel>
-                  <Input
-                    {...register("state")}
-                    disabled={loadingStatus}
-                    style={{
-                      
-                      width: "100%",
-                    }}
-                    required
-                    fullWidth
-                  />
-                </div>
-                <div style={{ width: "50%" }}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>Zip</p>
-                  </InputLabel>
-                  <Input
-                    disabled={loadingStatus}
-                    {...register("zip")}
-                    style={{
-                      
-                      width: "100%",
-                    }}
-                    required
-                    fullWidth
-                  />
-                </div>
-              </div>
-              {/* Expected Return Date */}
-              <div
-                style={{
-                  ...CenteringGrid,
-                  justifyContent: "space-between",
-                  margin: "0 0 20px 0",
-                  gap: "1rem",
-                }}
-              >
-                <div style={{ width: "50%" }}>
-                  <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
-                    <p style={Subtitle}>Expected return date</p>
-                  </InputLabel>
-                  <Input
-                    type="date"
-                    disabled={loadingStatus}
-                    {...register("expectedReturnDate")}
-                    style={{
-                      
-                      width: "100%",
-                    }}
-                    fullWidth
-                  />
-                </div>
-              </div>
-              <LegalDocumentModal
-                addContracts={addContracts}
-                setAddContracts={setAddContracts}
-                setValue={setValue}
-                register={register}
-                loadingStatus={loadingStatus}
-                profile={memberInfo}
-                selectedDocuments={contractList}
-                setSelectedDocuments={setContractList}
-                titleRef={`${memberInfo.first_name} ${memberInfo.last_name}`}
-              />
-              <Divider />
-              <InputLabel
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    ...TextFontSize20LineHeight30,
-                    fontWeight: 600,
-                    textTransform: "none",
-                  }}
-                >
-                  Device
-                </p>
-              </InputLabel>
-              <div
-                style={{
-                  width: "100%",
-                }}
-              >
-                <Grid
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  alignItems={"center"}
-                  marginY={2}
-                  gap={2}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={12}
-                  lg={12}
-                >
-                  <Grid
-                    style={{ alignSelf: "baseline" }}
-                    item
-                    xs={6}
-                    sm={6}
-                    md={11}
-                    lg={11}
-                  >
-                    <InputLabel
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                      }}
-                    >
-                      <p
-                        style={{
-                          ...TextFontSize20LineHeight30,
-                          fontWeight: 600,
-                          fontSize: "14px",
-                          color: "#000",
-                          textTransform: "none",
-                        }}
-                      >
-                        Select from existing category
-                      </p>
-                    </InputLabel>
-                    <Select
-                      className="custom-autocomplete"
-                      showSearch
-                      placeholder="Search item to add to inventory."
-                      optionFilterProp="children"
-                      style={{ ...AntSelectorStyle, width: "100%" }}
-                      onChange={onChange}
-                      options={optionsToRenderInSelector().map((item) => {
-                        return {
-                          label: (
-                            <Typography
-                              textTransform={"capitalize"}
-                              style={{
-                                ...Subtitle,
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                width: "100%",
-                              }}
-                            >
-                              <span style={{ width: "50%" }}>
-                                <span style={{ fontWeight: 700 }}>
-                                  {item.category_name}
-                                </span>{" "}
-                                {item.item_group}
-                              </span>
-                              <span style={{ textAlign: "left", width: "30%" }}>
-                                Location:{" "}
-                                <span style={{ fontWeight: 700 }}>
-                                  {item.location}
-                                </span>
-                              </span>
-                              <span
-                                style={{ textAlign: "right", width: "20%" }}
-                              >
-                                Total available: {item.total}
-                              </span>
-                            </Typography>
-                          ),
-                          value: item.data,
-                        };
-                      })}
-                    />
-                  </Grid>
-                  <Grid
-                    item
-                    xs={6}
-                    sm={6}
-                    md={1}
-                    lg={1}
-                    style={{ alignSelf: "baseline" }}
-                  >
-                    <InputLabel
-                      style={{ marginBottom: "0.2rem", width: "100%" }}
-                    >
-                      <p style={Subtitle}>Quantity</p>
-                    </InputLabel>
+
+        <MemberResponsibilityBanner
+          state={bannerState}
+          memberName={memberInfo.first_name}
+          representativeName={`${memberInfo.parent_guardian_first_name ?? ""} ${
+            memberInfo.parent_guardian_last_name ?? ""
+          }`.trim()}
+          representativeEmail={memberInfo.parent_guardian_email}
+          representativeLabel={representative}
+          consentStatus={consentStatus}
+          consentCopy={consentCopy}
+          memberUpdateLink={memberUpdateLink}
+        />
+
+        {/* 1 — which device */}
+        <section className={stepClass(Boolean(selection))}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">1</span>
+              Device and location
+            </h3>
+            {selection && (
+              <p className="action-form__step-note">
+                {available.length} unit{available.length === 1 ? "" : "s"} free here
+              </p>
+            )}
+          </div>
+          <div className="action-form__field">
+            <Label>Pick from the warehouse</Label>
+            <Select
+              className="custom-autocomplete"
+              showSearch
+              disabled={loadingStatus || isBlocked}
+              placeholder="Search a device, category or location"
+              optionFilterProp="label"
+              style={{ ...AntSelectorStyle, width: "100%" }}
+              onChange={handleSelectGroup}
+              options={options.map((option) => ({
+                // A plain label, so the built-in search can match on it. Each
+                // option used to be a three-column Typography block, which the
+                // filter could not read.
+                label: `${option.category_name} · ${option.item_group} · ${option.location} — ${option.total} available`,
+                value: option.value,
+              }))}
+            />
+          </div>
+        </section>
+
+        {/* 2 — which units */}
+        {selection && (
+          <section className={stepClass(summary.canSubmit)}>
+            <div className="action-form__step-head">
+              <h3 className="action-form__step-title">
+                <span className="action-form__step-index">2</span>
+                Units to hand over ({summary.picked})
+              </h3>
+              {pending.length > 0 && (
+                <GrayButtonComponent
+                  title={`Add all ${pending.length}`}
+                  size="sm"
+                  buttonType="button"
+                  disabled={loadingStatus}
+                  func={handleAddAll}
+                />
+              )}
+            </div>
+
+            {isLoadingUnits ? (
+              <ProfileSkeleton lines={2} />
+            ) : (
+              <>
+                <div className="action-form__row">
+                  <div className="action-form__field">
+                    <Label>Scan or type a serial number</Label>
                     <Input
+                      ref={serialRef}
+                      name="serialNumber"
+                      autoComplete="off"
+                      placeholder="e.g. SN-4471"
+                      value={serial}
                       disabled={loadingStatus}
-                      required
-                      {...register("quantity")}
-                      style={{
-                        
-                        width: "100%",
+                      onChange={(event) => setSerial(event.target.value)}
+                      onKeyDown={(event) => {
+                        // Enter adds a unit; it must not submit the handover.
+                        if (event.key === "Enter") handleAddSerial(event);
                       }}
-                      placeholder="e.g. 0"
-                      fullWidth
                     />
-                  </Grid>
-                </Grid>
-                <Grid
-                  display={"flex"}
-                  justifyContent={"space-between"}
-                  alignItems={"center"}
-                  marginY={2}
-                  gap={2}
-                  item
-                  xs={12}
-                  sm={12}
-                  md={12}
-                  lg={12}
-                >
-                  <Grid
-                    item
-                    xs={12}
-                    sm={12}
-                    md={12}
-                    lg={12}
-                    style={{ alignSelf: "baseline" }}
+                  </div>
+                  <BlueButtonComponent
+                    title="Add"
+                    buttonType="button"
+                    disabled={loadingStatus}
+                    func={handleAddSerial}
+                  />
+                </div>
+
+                {feedback && (
+                  <p
+                    className={`action-form__feedback action-form__feedback--${feedback.tone}`}
+                    role="status"
                   >
-                    <InputLabel
-                      style={{ marginBottom: "0.2rem", width: "100%" }}
-                    >
-                      <p style={Subtitle}>
-                        Starting serial number | Current range{" "}
-                        <strong>
-                          (starting: {valueItemSelected.min_serial_number ?? 0}{" "}
-                          ending: {valueItemSelected.max_serial_number ?? 0})
-                        </strong>
-                      </p>
-                    </InputLabel>
-                    <Input
-                      disabled={
-                        loadingStatus ||
-                        valueItemSelected.max_serial_number ===
-                        valueItemSelected.min_serial_number
-                      }
-                      required
-                      {...register("startingNumber", {
-                        required: true,
-                        message: "Starting serial number is required",
-                      })}
-                      style={{
-                        
-                        width: "100%",
-                      }}
-                      placeholder={`Selected category serial numbers start: ${valueItemSelected.min_serial_number} end: ${valueItemSelected.max_serial_number}`}
-                      fullWidth
-                      endAdornment={
-                        <InputAdornment position="end">
-                          {checkingSerialNumberInputted ? (
-                            <CheckIcon />
-                          ) : (
-                            <BorderedCloseIcon />
-                          )}
-                        </InputAdornment>
-                      }
-                    />
-                  </Grid>
-                </Grid>
-              </div>
-            </Grid>
-            <Grid
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-              marginY={"0.5rem"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              <GrayButtonComponent
-                title={"Go back"}
-                func={() => navigate(`/member/${memberInfo?.member_id}/main`)}
+                    {feedback.message}
+                  </p>
+                )}
+
+                {picked.length === 0 ? (
+                  <p className="action-form__empty">
+                    Nothing picked yet. Scan a serial number, or choose from the
+                    list below.
+                  </p>
+                ) : (
+                  <ul className="action-form__picked">
+                    {picked.map((unit) => (
+                      <li key={unit.serial_number}>
+                        <span className="action-form__serial">
+                          {unit.serial_number}
+                        </span>
+                        <button
+                          className="action-form__remove"
+                          type="button"
+                          disabled={loadingStatus}
+                          onClick={() => handleRemove(unit)}
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {pending.length > 0 && (
+                  <>
+                    <p className="action-form__step-note">
+                      Free in this location — tap to add
+                    </p>
+                    <div className="action-form__chips">
+                      {pending.map((unit) => (
+                        <Chip
+                          key={unit.serial_number}
+                          label={unit.serial_number}
+                          variant="outlined"
+                          onClick={
+                            loadingStatus
+                              ? undefined
+                              : () => {
+                                  setPicked((current) => [...current, unit]);
+                                  setFeedback({
+                                    tone: "ok",
+                                    message: `${unit.serial_number} added.`,
+                                  });
+                                }
+                          }
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        {/* 3 — where and until when */}
+        <section className={stepClass(isAddressComplete(watch()))}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">3</span>
+              Where it will be kept, and until when
+            </h3>
+          </div>
+          <div className="action-form__grid">
+            <div className="action-form__field action-form__field--wide">
+              <Label>Street</Label>
+              <Input {...register("street")} disabled={loadingStatus} />
+            </div>
+            <div className="action-form__field">
+              <Label>City</Label>
+              <Input {...register("city")} disabled={loadingStatus} />
+            </div>
+            <div className="action-form__field">
+              <Label>State</Label>
+              <Input {...register("state")} disabled={loadingStatus} />
+            </div>
+            <div className="action-form__field">
+              <Label>ZIP</Label>
+              <Input {...register("zip")} disabled={loadingStatus} />
+            </div>
+            <div className="action-form__field">
+              <Label>Expected return date</Label>
+              <Input
+                type="date"
+                {...register("expectedReturnDate")}
+                disabled={loadingStatus}
               />
-              <BlueButtonComponent
-                disabled={
-                  watch("startingNumber")?.length === 0 ||
-                  !watch("startingNumber") ||
-                  loadingStatus ||
-                  !checkingSerialNumberInputted ||
-                  guardianIncomplete ||
-                  consentNeeded
-                }
-                buttonType="submit"
-                loadingState={loadingStatus}
-                title={`Assign equipment to member ${memberInfo?.first_name} ${memberInfo?.last_name}`}
-                func={() => null}
-                styles={{ ...CenteringGrid, width: "100%" }}
-              />
-            </Grid>
-          </form>
-        </Grid>
+            </div>
+          </div>
+        </section>
+
+        {/* 4 — documents */}
+        <ContractDocumentsPicker
+          addContracts={addContracts}
+          setAddContracts={setAddContracts}
+          loadingStatus={loadingStatus}
+          selectedDocuments={contractList}
+          setSelectedDocuments={setContractList}
+          recipientEmail={
+            Number(memberInfo.minor) === 1
+              ? memberInfo.parent_guardian_email
+              : memberInfo.email
+          }
+          recipientLabel={representative}
+          emailRequired={contractEmailRequired}
+        />
+
+        {selection && summary.canSubmit && (
+          <dl className="action-form__summary">
+            <div>
+              <dt>Device</dt>
+              <dd>{selection.item_group}</dd>
+            </div>
+            <div>
+              <dt>From</dt>
+              <dd>{selection.location}</dd>
+            </div>
+            <div>
+              <dt>Units</dt>
+              <dd>{summary.picked}</dd>
+            </div>
+            <div>
+              <dt>Due back</dt>
+              <dd>{watch("expectedReturnDate") || "—"}</dd>
+            </div>
+          </dl>
+        )}
+
+        {notice && <p className="action-form__notice">{notice}</p>}
+
+        <div className="action-form__footer">
+          <p className="action-form__consequence">
+            The units are marked as assigned and a lease is opened against{" "}
+            {memberName || "this member"}.
+          </p>
+          <GrayButtonComponent
+            title="Back"
+            buttonType="button"
+            disabled={loadingStatus}
+            func={goBack}
+          />
+          <BlueButtonComponent
+            title={
+              summary.canSubmit
+                ? `Hand over ${summary.picked} device${
+                    summary.picked === 1 ? "" : "s"
+                  }`
+                : "Hand over devices"
+            }
+            buttonType="submit"
+            isDisabled={!summary.canSubmit || loadingStatus || isBlocked}
+            isLoading={loadingStatus}
+          />
+        </div>
+      </form>
+
+      {/* No QR on a handover slip. The lookup behind it needs member_id +
+          company_id, both small sequential integers, so a scannable URL would be
+          trivially enumerable against records that carry a student's name and a
+          guardian's email. The device's current status is already on the
+          member's profile, where it is behind the session. */}
+      {assignmentReceipt && (
+        <ReceiptModal
+          openModal={Boolean(assignmentReceipt)}
+          setOpenModal={() => setAssignmentReceipt(null)}
+          receipt={assignmentReceipt}
+          title={"Print a receipt for this handover?"}
+          onClose={goBack}
+        />
       )}
     </>
   );

@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useRoleLabel } from "../../../hooks/useRoleLabel";
+import { buildRoleDistribution } from "../utils/roleDistributionUtils";
 
 /**
  * KPI strip for the staff page: total staff, active members, pending
@@ -105,20 +106,7 @@ const StaffKpiSection = () => {
         String(member.active).toLowerCase() === "true")
   ).length;
 
-  const roleCount = employees.reduce((acc, member) => {
-    const roleKey = Number(member.role);
-    acc[roleKey] = (acc[roleKey] ?? 0) + 1;
-    return acc;
-  }, {});
-  const donutData = Object.entries(roleCount)
-    .sort(([a], [b]) => Number(a) - Number(b))
-    .map(([roleKey, count]) => ({
-      name: roleLabel(roleKey) || `Role ${roleKey}`,
-      value: count,
-      itemStyle: {
-        color: ROLE_COLORS[Number(roleKey) % ROLE_COLORS.length],
-      },
-    }));
+  const donutData = buildRoleDistribution(employees, roleLabel, ROLE_COLORS);
 
   // Fixed-size centered donut; the legend is plain HTML beside it (echarts'
   // own legend collided with the pie inside a small card).

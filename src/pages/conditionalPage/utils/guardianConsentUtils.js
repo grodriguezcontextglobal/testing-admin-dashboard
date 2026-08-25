@@ -5,9 +5,26 @@ const CONSENT_STATUSES = new Set([
   "expired",
 ]);
 
-function resolveConsentRecord(response) {
+/**
+ * Resolve the single consent record to inspect, from any of the response
+ * shapes the school-consent endpoints return. The real `POST /school/consent`
+ * response (confirmed 2026-08-04) is `{ consents: [...] }` — plural, an
+ * array, since a member can accumulate more than one request over time (e.g.
+ * a stale one left behind after a policy version bump) — so pick the most
+ * recently requested record when there's more than one.
+ *
+ * @param {object|null|undefined} response
+ * @returns {object|null}
+ */
+export function resolveConsentRecord(response) {
   if (!response || typeof response !== "object" || Array.isArray(response)) {
     return null;
+  }
+
+  if (Array.isArray(response.consents) && response.consents.length > 0) {
+    return [...response.consents].sort(
+      (a, b) => new Date(b.requested_at || 0) - new Date(a.requested_at || 0)
+    )[0];
   }
 
   return response.consent || response.record || response.data?.consent || response;
@@ -73,9 +90,82 @@ export function isConsentAgreed(consent, requiredPolicyVersion = null) {
  * @returns {boolean}
  */
 export function isConsentBlockingAssignment(consentStatus, settings) {
-  if (!settings?.enforce && !settings?.enforce_under_13) return false;
+  if (!resolveConsentEnforcement(settings)) return false;
   if (consentStatus === "agreed") return false;
   return true;
+}
+
+/**
+ * Whether the company has opted into consent enforcement.
+ *
+ * `/school/settings` returns `enforce` (see buildConsentEnforcementPayload). Two
+ * call sites read `enforce_member_consent`, a key that is not in the response, so
+ * the check evaluated `undefined` and enforcement read as OFF for every company
+ * that had not also switched on `enforce_under_13`. The old name is tolerated
+ * here rather than assumed dead, because a stale cached settings object is
+ * cheaper to accept than to prove absent.
+ *
+ * @param {object|null|undefined} settings
+ * @returns {boolean}
+ */
+export function resolveConsentEnforcement(settings) {
+  return enforcesMinorConsent(settings) || enforcesUnder13Consent(settings);
+}
+
+/** Company requires consent for every minor (under 18). */
+const enforcesMinorConsent = (settings) =>
+  Boolean(settings?.enforce ?? settings?.enforce_member_consent ?? false);
+
+/** Company requires consent for under-13s specifically (COPPA). */
+const enforcesUnder13Consent = (settings) => Boolean(settings?.enforce_under_13);
+
+/**
+ * Does THIS member need a recorded consent before receiving a device?
+ *
+ * Each toggle is an AGE SCOPE, not a general switch. Both used to flip the same
+ * age-blind enforcement, which had two consequences worth naming:
+ * "Require COPPA consent for under-13" also blocked adults, and with both off an
+ * earlier version of this module blocked every minor regardless — consent was
+ * being asked for on a company that had explicitly not asked for it.
+ *
+ *   both off        -> no age is checked at all; assignment proceeds
+ *   enforce         -> every minor (under 18), under-13s included
+ *   enforce_under_13-> under-13s only; a 15-year-old is not covered
+ *   both on         -> identical to `enforce` alone. under-18 already contains
+ *                      under-13, so the second toggle adds no requirement while
+ *                      COPPA consent is not a separate policy_type record.
+ *
+ * @param {{isMinor: boolean, isUnder13: boolean, settings: object}} args
+ * @returns {boolean}
+ */
+export function isConsentRequiredForMember({
+  isMinor = false,
+  isUnder13 = false,
+  settings,
+} = {}) {
+  if (isUnder13 && enforcesUnder13Consent(settings)) return true;
+  if (isMinor && enforcesMinorConsent(settings)) return true;
+  return false;
+}
+
+/**
+ * The pre-assignment verdict: may this member receive a device right now?
+ *
+ * Blocks only when the company's settings cover this member's age AND consent is
+ * not agreed. Takes an object rather than positional args so adding an age scope
+ * later cannot silently change what existing callers mean.
+ *
+ * @param {{consentStatus: string, settings: object, isMinor: boolean, isUnder13: boolean}} args
+ * @returns {boolean}
+ */
+export function isAssignmentBlockedByConsent({
+  consentStatus,
+  settings,
+  isMinor = false,
+  isUnder13 = false,
+} = {}) {
+  if (!isConsentRequiredForMember({ isMinor, isUnder13, settings })) return false;
+  return consentStatus !== "agreed";
 }
 
 /**

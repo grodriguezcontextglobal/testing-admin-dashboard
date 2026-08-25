@@ -25,82 +25,13 @@ export const renderFields = ({
     );
   };
 
+  // The four "reference_*" fields that used to open this list live in
+  // CopyFromExistingDevicePanel now — see BulkItemsFields.jsx for why.
   const fields = [
-    {
-      name: "reference_category_name",
-      placeholder: "Type or select a category reference",
-      label: "Category reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("category_name")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the category of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_item_group",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Group reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("item_group")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the item group of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_brand",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Brand reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("brand")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the brand of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_search_button_",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Search reference",
-      htmlElement: 8,
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("brand")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "Select criteria for search inventory group.",
-      displayField: true,
-    },
     {
       name: "item_group",
       placeholder: "Type the name of the item",
-      label: "Group name",
+      label: "Group",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -109,11 +40,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "identity",
     },
     {
       name: "category_name",
-      placeholder: "Select or type category of device",
-      label: "Category of device",
+      placeholder: "Select or type category",
+      label: "Category",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -122,11 +54,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "identity",
     },
     {
       name: "brand",
-      placeholder: "Select or type brand of device",
-      label: "Brand of device",
+      placeholder: "Select or type brand",
+      label: "Brand",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -135,19 +68,23 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "identity",
     },
     {
       name: "cost",
-      placeholder: "Select or type replacement cost of device",
-      label: "Replacement cost of device",
+      placeholder: "Select or type replacement cost",
+      label: "Replacement cost",
       htmlElement: "",
       style: OutlinedInputStyle,
-      required: true,
+      // Not required: validatingInputFields() never checks cost, so marking
+      // it required here only printed a misleading asterisk.
+      required: false,
       options: normalizeOptions(retrieveItemOptions("cost")),
       htmlOption: 0,
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "commercial",
     },
     {
       name: "container",
@@ -168,6 +105,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
       displayField: true,
+      section: "handling",
       children: [
         {
           name: "containerSpotLimit",
@@ -188,7 +126,7 @@ export const renderFields = ({
     {
       name: "ownership",
       placeholder: "Select ownership option",
-      label: "Ownership status of device",
+      label: "Ownership status",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -198,11 +136,12 @@ export const renderFields = ({
       tooltipMessage:
         "Device ownership. If device is a rental device, return date field will be prompted.",
       displayField: true,
+      section: "commercial",
       children: [
         {
           name: "",
           placeholder: "",
-          label: "Returning date of device",
+          label: "Returning date",
           htmlElement: "Day",
           style: OutlinedInputStyle,
           required: true,
@@ -215,7 +154,7 @@ export const renderFields = ({
         {
           name: "supplier",
           placeholder: "Select a supplier",
-          label: "Supplier of device",
+          label: "Supplier",
           htmlElement: "",
           style: OutlinedInputStyle,
           required: true,
@@ -240,10 +179,11 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
       displayField: true,
+      section: "handling",
     },
     {
       name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: "e.g. Washington, DC | New York, NY | Los Angeles, CA",
       label: "Taxable location",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -254,6 +194,7 @@ export const renderFields = ({
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
       displayField: true,
+      section: "location",
     },
     {
       name: "location",
@@ -267,6 +208,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayField: true,
+      section: "location",
     },
     {
       name: "sub_location",
@@ -280,12 +222,13 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayField: true, //displaySublocationFields,
+      section: "location",
     },
 
     {
       name: "image_uploader",
       placeholder: "",
-      label: "Image uploader of device",
+      label: "Image uploader",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,
@@ -294,11 +237,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "photo",
     },
     {
       name: "image_uploader_preview",
       placeholder: "",
-      label: "Preview image uploader of device",
+      label: "Preview image uploader",
       htmlElement: "ImagePreview",
       style: OutlinedInputStyle,
       required: true,
@@ -307,11 +251,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: displayPreviewImage,
+      section: "photo",
     },
     {
       name: "image_url",
       placeholder: "",
-      label: "Image uploader of device",
+      label: "Image uploader",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,
@@ -324,7 +269,7 @@ export const renderFields = ({
     {
       name: "descript_item",
       placeholder: "",
-      label: "Description of device",
+      label: "Description",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,

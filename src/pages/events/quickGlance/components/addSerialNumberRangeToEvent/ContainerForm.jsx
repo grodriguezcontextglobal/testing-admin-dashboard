@@ -8,12 +8,18 @@ import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import ScannedSerialsList from "./addingItemsMethod/ScannedSerialsList";
 import SerialNumberInput from "./addingItemsMethod/SerialNumberInput";
 import useBatchProcessor from "./addingItemsMethod/hooks/useBatchProcessor";
+import {
+  CONTAINER_BATCH_SIZE,
+  buildContainerAllocationPayload,
+  summarizeContainerAllocation,
+} from "./utils/containerAllocation";
 const ContainerForm = ({
   deviceTitle,
   Subtitle,
 }) => {
   const [scannedSerials, setScannedSerials] = useState([]);
   const [inputError, setInputError] = useState(null);
+  const [allocationSummaries, setAllocationSummaries] = useState([]);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch()
@@ -28,33 +34,25 @@ const ContainerForm = ({
 
   const processBatch = useCallback(
     async (batch) => {
-      const sqlTemplate = {
-        category_name: event.deviceSetup.find(
-          (item) => item.group === deviceTitle
-        ).category,
-        company_id: user.sqlInfo.company_id,
-        company_id_nosql:event.company_id,
-        data: batch,
-        event_id: event.sql.event_id,
-        eventName: event.eventInfoDetail.eventName,
-        item_group: deviceTitle,
-        logistic_status:"in-event",
-        warehouse: 0
-      };
+      const sqlTemplate = buildContainerAllocationPayload({
+        event,
+        deviceTitle,
+        user,
+        batch,
+      });
 
-      const noSqlTemplate = {
-        type: deviceTitle,
-        activity:false,
-        comment:"No comment",
-        company: event.company_id,
-        deviceList: batch,
-        eventSelected:event.eventInfoDetail.eventName,
-        provider:event.company,
-        status:"Operational"
-      };
-      // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
-      await devitrakApi.post('/db_event/allocate-device-container-event', sqlTemplate)
-      await devitrakApi.post('/receiver/receivers-pool-bulk', noSqlTemplate)
+      // This endpoint writes the Mongo receivers pool itself, inside its own
+      // transaction. The `/receiver/receivers-pool-bulk` call that used to
+      // follow it inserted every unit into the pool a second time — that
+      // helper is insertMany with no dedup. Confirmed with backend 2026-08-19.
+      const { data } = await devitrakApi.post(
+        "/db_event/allocate-device-container-event",
+        sqlTemplate
+      );
+      setAllocationSummaries((previous) => [
+        ...previous,
+        summarizeContainerAllocation(data),
+      ]);
       await devitrakApi.post("/event/update-event-inventory-freshest-data", {event_id:event.id})
     },
     [event, deviceTitle, user]
@@ -62,7 +60,8 @@ const ContainerForm = ({
 
   const { progress, status, error, startProcessing, reset } = useBatchProcessor(
     scannedSerials,
-    processBatch
+    processBatch,
+    CONTAINER_BATCH_SIZE
   );
 
   const handleAddSerial = (serial) => {
@@ -83,6 +82,7 @@ const ContainerForm = ({
   const handleClear = () => {
     setScannedSerials([]);
     setInputError(null);
+    setAllocationSummaries([]);
     reset();
   };
 
@@ -91,7 +91,36 @@ const ContainerForm = ({
       setInputError("Please scan serial numbers first.");
       return;
     }
+    setAllocationSummaries([]);
     startProcessing();
+  };
+
+  /**
+   * What the endpoint actually reported, rather than a blanket success.
+   * It answers 200 having processed only the scanned serials that resolved to
+   * a container, without naming the ones it skipped — so claiming "all serial
+   * numbers processed" is a promise the response does not make. It does carry
+   * the item count, and the "containers are empty" message.
+   */
+  const allocationOutcome = () => {
+    const processed = allocationSummaries
+      .map((summary) => summary.processedItemCount)
+      .filter((count) => typeof count === "number");
+    const total = processed.reduce((sum, count) => sum + count, 0);
+    const messages = [
+      ...new Set(allocationSummaries.map((summary) => summary.message).filter(Boolean)),
+    ];
+
+    if (processed.length === 0) {
+      return {
+        headline: `Scanned containers sent for ${scannedSerials.length} serial number${scannedSerials.length === 1 ? "" : "s"}.`,
+        detail: messages.join(" ") || null,
+      };
+    }
+    return {
+      headline: `${total} item${total === 1 ? "" : "s"} moved into this event, from ${scannedSerials.length} scanned serial number${scannedSerials.length === 1 ? "" : "s"} — containers plus what was inside them.`,
+      detail: messages.join(" ") || null,
+    };
   };
 
   useEffect(() => {
@@ -141,7 +170,8 @@ const ContainerForm = ({
           {status === "running" && <p>Processing...</p>}
           {status === "success" && (
             <Alert
-              message="All serial numbers processed successfully!"
+              message={allocationOutcome().headline}
+              description={allocationOutcome().detail}
               type="success"
               showIcon
             />

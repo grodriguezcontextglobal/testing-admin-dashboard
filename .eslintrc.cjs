@@ -19,4 +19,12 @@ module.exports = {
     ],
     "react/prop-types": 'off',
   },
+  overrides: [
+    {
+      // Build/test config files run under Node, not the browser — they need
+      // `process`/`module`/`__dirname` etc. in scope.
+      files: ['*.config.js', '*.config.cjs'],
+      env: { node: true },
+    },
+  ],
 }

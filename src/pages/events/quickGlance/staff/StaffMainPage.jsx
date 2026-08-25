@@ -7,7 +7,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import { Title } from "../../../../styles/global/Title";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import StaffTable from "./table/StaffTable";
-import TextLink from "../../../../components/UX/buttons/TextLink";
+import RefreshButton from "../../../../components/utils/UX/RefreshButton";
 
 const StaffMainPage = () => {
   const { event } = useSelector((state) => state.event);
@@ -70,30 +70,7 @@ const StaffMainPage = () => {
         gap={1}
         container
       >
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          marginBottom={-2}
-          paddingBottom={-2}
-          item
-          xs={12}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginRight: "5px",
-            }}
-          >
-            <TextLink color="brand" onClick={() => refreshing()}>
-              Refresh
-            </TextLink>
-          </div>
-        </Grid>
-
+        <RefreshButton propsFn={() => refreshing()} />
         <Grid item xs={12}>
           <StaffTable searching={watch("searchStaff")} />
         </Grid>

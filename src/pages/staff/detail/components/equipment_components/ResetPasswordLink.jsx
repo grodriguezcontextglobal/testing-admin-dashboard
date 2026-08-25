@@ -1,224 +1,160 @@
-import { yupResolver } from "@hookform/resolvers/yup";
-import { FormControl, FormLabel, Typography } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { groupBy } from "lodash";
-import { PropTypes } from "prop-types";
-import { useCallback, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import * as yup from "yup";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
-import Input from "../../../../../components/UX/inputs/Input";
-import ModalUX from "../../../../../components/UX/modal/ModalUX";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
+import renderingTitle from "../../../../../components/general/renderingTitle";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import ModalUX from "../../../../../components/UX/modal/ModalUX";
+import { ProfileSkeleton } from "../../../../../components/UX/profile";
+import "../../../../../styles/global/actionForm.css";
 
-const schema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Email format is not valid")
-    .required("Email is required"),
-});
-
+/**
+ * Sending this person a password-reset link.
+ *
+ * The screen was written for the self-service flow and never re-worded: a modal
+ * titled "Reset your password" containing a card titled "Reset Password"
+ * containing "Enter your email to get a link to reset your password" — three
+ * headings, all second person, on a page where an administrator is resetting
+ * somebody else's password.
+ *
+ * The email was an editable field defaulted to the profile's address, and the
+ * submit handler was wrapped in `if (adminUserInfoRef.current)` with no `else`.
+ * Typing an address that did not match a known account did nothing whatsoever:
+ * no request, no message, no closed modal.
+ *
+ * The target is fixed to the person whose profile this is, shown rather than
+ * typed, and the one case that can fail — no account for that address — is
+ * stated before the button can be pressed.
+ */
 const ForgetPasswordLinkFromStaffPage = () => {
   const { profile } = useSelector((state) => state.staffDetail);
   const { user } = useSelector((state) => state.admin);
-  const adminUserInfoRef = useRef(null);
-  const { register, watch, setValue, handleSubmit } = useForm({
-    resolver: yupResolver(schema),
-  });
-  const listAdminUsers = useQuery({
-    queryKey: ["listOfAdminUsers"],
+  const navigate = useNavigate();
+  const { notify, contextHolder } = useStatusNotification();
+  const [notice, setNotice] = useState(null);
+
+  const adminUsersQuery = useQuery({
+    queryKey: ["listOfAdminUsers", user.companyData.companyName],
     queryFn: () =>
       devitrakApi.post("/staff/admin-users", {
         company: user.companyData.companyName,
       }),
-    enabled: !!user.companyData.companyName,
+    enabled: Boolean(user.companyData.companyName),
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    listAdminUsers.refetch();
-    setValue("email", `${profile.email}`);
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  const { notify, contextHolder } = useStatusNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    notify(type.toLowerCase(), msg);
-  };
-
-  const navigate = useNavigate();
-  const findStaff = useCallback(() => {
-    const groupByEmail = groupBy(
-      listAdminUsers?.data?.data?.adminUsers,
-      "email",
+  // The lookup exists to read the account's id and name for the email body, so
+  // it is keyed off the profile rather than off a free-text field.
+  const account = useMemo(() => {
+    const list = adminUsersQuery.data?.data?.adminUsers ?? [];
+    const wanted = String(profile.email ?? "").trim().toLowerCase();
+    return (
+      list.filter(
+        (item) => String(item?.email ?? "").trim().toLowerCase() === wanted
+      ).at(-1) ?? null
     );
+  }, [adminUsersQuery.data, profile.email]);
 
-    return groupByEmail[watch("email")];
-  }, [listAdminUsers?.data?.data?.adminUsers, watch("email")]); //eslint-disable-line react-hooks/exhaustive-deps
+  const closeModal = () => navigate(`/staff/${profile.adminUserInfo.id}/main`);
 
-  adminUserInfoRef.current = findStaff();
-
-  const sendingResetPasswordLink = useMutation({
-    mutationFn: (data) =>
-      devitrakApi.post("/nodemailer/reset-admin-password", data),
-    onSuccess: (resp) => {
-      if (resp.data.ok) {
-        openNotificationWithIcon("Success", "Email queued and will be sent to the email address shortly.");
-        handleClose();
-      }
-    },
-    onError: (error) => {
-      console.error(error);
-      openNotificationWithIcon("error", error.message);
-    },
-  });
-  const handleSubmitEmailLink = async (data) => {
-    if (adminUserInfoRef.current) {
-      const stampTime = `${new Date()}`;
-      sendingResetPasswordLink.mutateAsync({
-        adminUser: {
-          firstName: adminUserInfoRef.current.at(-1).name,
-          lastName: adminUserInfoRef.current.at(-1).lastName,
-        },
+  const sendLink = useMutation({
+    mutationFn: () =>
+      devitrakApi.post("/nodemailer/reset-admin-password", {
+        adminUser: { firstName: account.name, lastName: account.lastName },
         linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
-          adminUserInfoRef.current.at(-1).id
-        }&stamp-time=${encodeURI(stampTime)}`,
-        contactInfo: {
-          email: data.email,
-          company: adminUserInfoRef.current.at(-1).company,
-        },
+          account.id
+        }&stamp-time=${encodeURI(`${new Date()}`)}`,
+        contactInfo: { email: profile.email, company: account.company },
         company_logo: user.companyData.company_logo,
-      });
-    }
-  };
-  const handleClose = () => {
-    setValue("email", "");
-    return navigate(`/staff/${profile.adminUserInfo.id}/main`);
-  };
-  
-  const renderTitle = () => {
-    return (
-      <Typography
-        style={{
-          color: "var(--gray-900, #171d1a)",
-          textAlign: "center",
-          fontFamily: "Inter",
-          fontSize: "18px",
-          fontWeight: "600",
-          lineHeight: "28px",
-        }}
-        id="transition-modal-title"
-        variant="h6"
-        component="h2"
-      >
-        Reset your password
-      </Typography>
-    );
-  };
+      }),
+    onSuccess: (response) => {
+      if (!response.data?.ok) {
+        return setNotice("The email was not queued. Try again in a moment.");
+      }
+      notify(
+        "success",
+        "Reset link queued.",
+        `${profile.email} will receive it shortly.`
+      );
+      closeModal();
+    },
+    onError: () => setNotice("The email was not queued. Try again in a moment."),
+  });
 
-  const modalBody = () => {
-    return (
-      <ReusableCardWithHeaderAndFooter
-        title="Reset Password"
-        actions={[
-          <div
-            key="reset-password"
-            style={{ width: "100%", padding: "0 24px" }}
-          >
-            <BlueButtonComponent
-              title="Reset password"
-              buttonType="submit"
-              form="form-reset-password-link"
-            />
-          </div>,
-        ]}
-      >
-        {" "}
-        <form
-          style={{
-            width: "100%",
-          }}
-          onSubmit={handleSubmit(handleSubmitEmailLink)}
-          id="form-reset-password-link"
-        >
-          <FormControl fullWidth>
-            <FormLabel>
-              <p style={{ margin: "5px 0", padding: "5px 0", ...Subtitle }}>
-                Enter your email to get a link to reset your password.
-              </p>
-              <Typography
-                style={{
-                  ...Subtitle,
-                  textAlign: "left",
-                  margin: "1rem 0 0",
-                  paddingBottom: "5px",
-                }}
-              >
-                Email
-              </Typography>
-            </FormLabel>
-            <Input
-              {...register("email")}
-              required
-              type="email"
-              placeholder="Enter your email"
-            />
-          </FormControl>
-        </form>
-      </ReusableCardWithHeaderAndFooter>
-    );
-  };
-  return (
-    <>
+  const body = (
+    <div className="action-form">
       {contextHolder}
-      <ModalUX
-        title={renderTitle()}
-        body={modalBody()}
-        openDialog={true}
-        closeModal={() => handleClose()}
-      />
-      {/* <Modal
-        title={renderTitle()}
-        width={1000}
-        open={true}
-        onOk={() => handleClose()}
-        onCancel={() => handleClose()}
-        footer={[]}
-        centered
-        maskClosable={false}
-        style={{ zIndex: 30 }}
-      >
-        <Grid container>
-          <Grid
-            display={"flex"}
-            justifyContent={"center"}
-            alignItems={"center"}
-            alignSelf={"stretch"}
-            margin={"0 auto"}
-            item
-            xs={10}
-          >
-            <Typography id="transition-modal-description" sx={{ mt: 2, mb: 2 }}>
-              Enter your email to get a link to reset your password.
-            </Typography>
-          </Grid>
-          <Grid container></Grid>
-        </Grid>
-      </Modal> */}
-    </>
+
+      {adminUsersQuery.isLoading ? (
+        <ProfileSkeleton lines={2} />
+      ) : (
+        <>
+          <p className="action-form__lead">
+            We email a one-time link that lets this person choose a new password.
+            Their current password keeps working until they use it.
+          </p>
+
+          <dl className="action-form__summary">
+            <div>
+              <dt>Sending to</dt>
+              <dd>{profile.email}</dd>
+            </div>
+            <div>
+              <dt>Account</dt>
+              <dd>
+                {account
+                  ? `${account.name ?? ""} ${account.lastName ?? ""}`.trim() ||
+                    profile.email
+                  : "Not found"}
+              </dd>
+            </div>
+          </dl>
+
+          {!account && (
+            <p className="action-form__notice">
+              No account is registered under {profile.email}, so there is nothing
+              to reset. This happens when an invitation was never accepted.
+            </p>
+          )}
+
+          {notice && <p className="action-form__notice">{notice}</p>}
+
+          <div className="action-form__footer">
+            <GrayButtonComponent
+              title="Cancel"
+              buttonType="button"
+              disabled={sendLink.isPending}
+              func={closeModal}
+            />
+            <BlueButtonComponent
+              title="Send reset link"
+              buttonType="button"
+              isDisabled={!account || sendLink.isPending}
+              isLoading={sendLink.isPending}
+              func={() => {
+                setNotice(null);
+                sendLink.mutate();
+              }}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <ModalUX
+      title={renderingTitle("Send a password reset link")}
+      openDialog
+      closeModal={closeModal}
+      closable={!sendLink.isPending}
+      footer={null}
+      width={480}
+      body={body}
+    />
   );
 };
 
 export default ForgetPasswordLinkFromStaffPage;
-
-ForgetPasswordLinkFromStaffPage.propTypes = {
-  open: PropTypes.bool,
-  close: PropTypes.bool,
-};

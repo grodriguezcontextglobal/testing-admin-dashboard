@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
-import Loading from "../../../components/animation/Loading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 const TableCategories = lazy(

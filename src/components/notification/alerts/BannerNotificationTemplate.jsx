@@ -8,9 +8,7 @@ import { Title } from "../../../styles/global/Title";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 
-import { CloseIcon } from "../../icons/CloseIcon";
 import { InformationIcon } from "../../icons/InformationIcon";
-import { BorderedCloseIcon } from "../../icons/BorderedCloseIcon";
 
 /**
  * UntitledUI-like Alert (floating)
@@ -24,7 +22,6 @@ import { BorderedCloseIcon } from "../../icons/BorderedCloseIcon";
  * - title: string | ReactNode
  * - body: string | ReactNode
  * - variant: "default" | "brand" | "gray" | "error" | "warning" | "success"
- * - showDismissAction: boolean
  *
  * Backward-compatible:
  * - setNotificationStatus(false) is supported if provided
@@ -38,7 +35,6 @@ const BannerNotificationTemplate = ({
   body,
   category = 0,
   variant,
-  showDismissAction = true,
 }) => {
   const resolvedVariant = useMemo(() => {
     if (variant) return variant;

@@ -53,9 +53,9 @@ const TableItemGroup = ({
   const listItemsQuery = useQuery({
     queryKey: queryKeys.items,
     queryFn: () =>
-      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: "select * from item_inv where item_group = ? and company_id = ?",
-        values: [groupItem, user.sqlInfo.company_id],
+      devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.byAttribute",
+        params: { attribute: "item_group", value: groupItem },
       }),
     enabled: !!user.sqlInfo?.company_id && !!groupItem,
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -4,6 +4,10 @@ import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import { onTrackBackgroundJob } from "../../../../store/slices/backgroundJobsSlice";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import generateIdempotencyKey from "../../../../utils/actions/generateIdempotencyKey";
+import {
+  inventoryCacheKeys,
+  inventoryPageQueryKeys,
+} from "../../utils/inventoryQueryKeys";
 
 export const bulkItemUpdateAlphanumeric = async ({
   data,
@@ -20,7 +24,6 @@ export const bulkItemUpdateAlphanumeric = async ({
   subLocationsSubmitted,
   scannedSerialNumbers,
   setScannedSerialNumbers,
-  originalTemplate,
   alphaNumericUpdateItemMutation,
   dicSuppliers,
   updateAll,
@@ -54,7 +57,6 @@ export const bulkItemUpdateAlphanumeric = async ({
       display_item: 1,
       enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
       image_url: img_url,
-      originalTemplate: originalTemplate,
       supplier_info: data.supplier
         ? dicSuppliers.find(([key]) => key === data.supplier)[1]
         : null,
@@ -83,15 +85,10 @@ export const bulkItemUpdateAlphanumeric = async ({
         type: "bulk-inventory-update",
         successMessage: "Items were successfully updated in inventory.",
         failureMessage: "The inventory update failed.",
-        invalidateKeys: [
-          ["listOfItemsInStock"],
-          ["ItemsInInventoryCheckingQuery"],
-          ["RefactoredListInventoryCompany"],
-        ],
-        clearCacheKeys: [
-          `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`,
-          `providerCompanies_${user.companyData.id}`,
-        ],
+        invalidateKeys: inventoryPageQueryKeys(user.sqlInfo.company_id),
+        clearCacheKeys: inventoryCacheKeys({
+          companyMongoId: user.companyData.id,
+        }),
       })
     );
 
@@ -112,7 +109,6 @@ export const bulkItemUpdateSequential = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
-  originalTemplate,
   sequencialNumbericUpdateItemMutation,
   dicSuppliers,
 }) => {
@@ -145,7 +141,6 @@ export const bulkItemUpdateSequential = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url || null,
-    originalTemplate: originalTemplate,
     supplier_info: data.supplier
       ? dicSuppliers.find(([key]) => key === data.supplier)[1]
       : null,
@@ -177,7 +172,6 @@ export const updateAllItemsBasedOnParameters = async ({
   formatDate,
   returningDate,
   subLocationsSubmitted,
-  originalTemplate,
   updateAllItemsMutation,
   dicSuppliers,
 }) => {
@@ -206,7 +200,6 @@ export const updateAllItemsBasedOnParameters = async ({
     display_item: 1,
     enableAssignFeature: data.enableAssignFeature === "YES" ? 1 : 0,
     image_url: img_url || null,
-    originalTemplate: originalTemplate,
     supplier_info: data.supplier
       ? dicSuppliers.find(([key]) => key === data.supplier)[1]
       : null,

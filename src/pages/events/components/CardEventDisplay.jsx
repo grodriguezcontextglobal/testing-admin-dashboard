@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { getIndustryProfile } from "../../../config/industryProfiles";
+import { notifyStatus } from "../../../components/notification/alerts/useStatusNotification";
 import ReusableCardWithFooter from "../../../components/UX/cards/ReusableCardWithFooter";
 import {
   onAddEventData,
@@ -88,35 +89,39 @@ const CardEventDisplay = ({ props }) => {
     return date;
   };
   const quickGlance = async (props) => {
-    const sqpFetchInfo = await devitrakApi.post(
-      "/db_event/events_information",
-      {
-        zip_address: props.eventInfoDetail.address.split(" ").at(-1),
-        event_name: props.eventInfoDetail.eventName,
-      },
-    );
-    if (sqpFetchInfo.data.ok) {
-      dispatch(onSelectEvent(props.eventInfoDetail.eventName));
-      dispatch(onSelectCompany(props.company));
-      dispatch(
-        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) }),
+    // This lookup is enrichment (it merges a `sql` field onto the event data),
+    // not a precondition for opening quick glance. It used to be unguarded: any
+    // non-2xx response from /db_event/events_information — a zip that doesn't
+    // resolve to a company match, a 404, a 500 — rejects the promise, and
+    // nothing here caught it. Both navigate() calls sit AFTER this await, so the
+    // rejection stopped execution before either could run. The button did
+    // nothing: no error, no navigation, nothing in the console. Wrapping it
+    // means a failed lookup degrades to opening quick glance without the `sql`
+    // merge, instead of not opening at all.
+    let sqlEventInfo = null;
+    try {
+      const sqpFetchInfo = await devitrakApi.post(
+        "/db_event/events_information",
+        {
+          zip_address: props.eventInfoDetail.address.split(" ").at(-1),
+          event_name: props.eventInfoDetail.eventName,
+        },
       );
-      dispatch(onAddSubscription(props.subscription));
-      dispatch(
-        onAddQRCodeLink(
-          props.qrCodeLink ??
-          `https://app.devitrak.net/?event=${encodeURI(
-            props.eventInfoDetail.eventName,
-          )}&company=${encodeURI(props.company)}`,
-        ),
+      if (sqpFetchInfo.data.ok) {
+        sqlEventInfo = sqpFetchInfo.data.events.at(-1);
+      }
+    } catch {
+      notifyStatus(
+        "warning",
+        "Could not load additional event details",
+        "Opening quick glance with what's already available.",
       );
-      dispatch(onAddExtraServiceListSetup(props.extraServiceListSetup));
-      dispatch(onAddExtraServiceNeeded(props.extraServiceNeeded));
-      return navigate("/events/event-quickglance");
     }
     dispatch(onSelectEvent(props.eventInfoDetail.eventName));
     dispatch(onSelectCompany(props.company));
-    dispatch(onAddEventData(props));
+    dispatch(
+      onAddEventData(sqlEventInfo ? { ...props, sql: sqlEventInfo } : props),
+    );
     dispatch(onAddSubscription(props.subscription));
     dispatch(
       onAddQRCodeLink(
@@ -126,7 +131,12 @@ const CardEventDisplay = ({ props }) => {
         )}&company=${encodeURI(props.company)}`,
       ),
     );
-    navigate("/events/event-quickglance");
+    // Previously dispatched only on the ok:true branch, so a failed lookup also
+    // meant quick glance opened with extra-services state missing from Redux —
+    // this isn't enrichment, it's already sitting on `props`.
+    dispatch(onAddExtraServiceListSetup(props.extraServiceListSetup));
+    dispatch(onAddExtraServiceNeeded(props.extraServiceNeeded));
+    return navigate("/events/event-quickglance");
   };
   const [weekdayCount, setWeekdayCount] = useState(null);
 

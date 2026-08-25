@@ -5,14 +5,17 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Divider } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import {
+  notifyStatus,
+  useStatusNotification,
+} from "../../../../../components/notification/alerts/useStatusNotification";
 import { QuestionIcon } from "../../../../../components/icons/QuestionIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -22,6 +25,12 @@ import { OutlinedInputStyle } from "../../../../../styles/global/OutlinedInputSt
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
+import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import { deviceProfileKeys } from "../../deviceProfile/hooks/useDeviceProfile";
+import {
+  inventoryCacheKeys,
+  invalidateInventoryQueries,
+} from "../../../utils/inventoryQueryKeys";
 
 const DeleteItemModal = ({
   dataFound,
@@ -53,6 +62,7 @@ const DeleteItemModal = ({
     refetchOnMount: false,
   });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { notify, contextHolder } = useStatusNotification();
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { user } = useSelector((state) => state.admin);
@@ -121,39 +131,111 @@ const DeleteItemModal = ({
     };
   }, [itemsInInventoryQuery.data]);
 
-  const handleDeleteItem = async () => {
-    setLoadingStatus(true);
+  /**
+   * Everything that still holds the deleted item.
+   *
+   * This step did not exist: the modal deleted the item and navigated straight
+   * to /inventory, which renders from cache. `companyHasInventoryQuery` caches
+   * for five minutes and decides both the tab and the total, so the item stayed
+   * on the page — with the old count beside it — until the cache expired. The
+   * backend response cache is cleared first: invalidating the client queries
+   * while the server still answers from its own cache only re-reads the item
+   * that was just deleted.
+   */
+  const refreshInventoryAfterDelete = async (itemId) => {
     try {
-      const device_id = itemsInInventoryQuery?.data?.data?.items[0]?.item_id;
-      const respAfterDelete = await devitrakApi.post(`/db_item/delete-item`, {
-        item_id: device_id,
+      await Promise.all(
+        inventoryCacheKeys({ companyMongoId: user.companyData.id }).map((key) =>
+          clearCacheMemory(key),
+        ),
+      );
+      await invalidateInventoryQueries(queryClient, {
+        companyId: user.sqlInfo.company_id,
       });
-      if (respAfterDelete.data) {
-        const employees = user.companyData.employees;
-        for (let data of employees) {
-          if (Number(data.role) < 2) {
-            const emailNotificationProfile = {
+      // The item is gone, so its profile queries are dropped rather than marked
+      // stale — there is nothing left to refetch.
+      queryClient.removeQueries({
+        queryKey: deviceProfileKeys.tracking(itemId),
+        exact: true,
+      });
+      queryClient.removeQueries({
+        queryKey: deviceProfileKeys.item(itemId),
+        exact: true,
+      });
+      queryClient.removeQueries({
+        queryKey: ["ItemsInfoInStockCheckingQuery"],
+        exact: true,
+      });
+    } catch (error) {
+      // The item is already deleted. A failed cache refresh must not be
+      // reported as a failed delete.
+    }
+  };
+
+  const notifyStaffOfDeletion = async (item) => {
+    try {
+      // Legacy numeric role, kept as-is: changing who gets the email is not a
+      // cache fix. Worth migrating to resolveRoleType separately.
+      const employees = user.companyData.employees ?? [];
+      await Promise.all(
+        employees
+          .filter((data) => Number(data.role) < 2)
+          .map((data) =>
+            devitrakApi.post("/nodemailer/internal-single-email-notification", {
               staff: data.user,
               subject: "Device deleted in company records.",
               message: `The device with serial number ${
-                itemsInInventoryQuery?.data?.data?.items[0]?.serial_number
+                item?.serial_number
               } was deleted for staff member ${user.name} ${
                 user.lastName
               } at Date ${new Date().toString()}`,
               company: user.company,
-            };
-            await devitrakApi.post(
-              "/nodemailer/internal-single-email-notification",
-              emailNotificationProfile,
-            );
-          }
-        }
-        notify("success", "Device was deleted.");
-        navigate("/inventory");
-      }
+            }),
+          ),
+      );
     } catch (error) {
+      // Same reasoning: the record is gone whether or not the notice sent. This
+      // used to throw into the delete handler's catch, so a bounced internal
+      // email reported the deletion as failed.
+    }
+  };
+
+  const handleDeleteItem = async () => {
+    const item = itemsInInventoryQuery?.data?.data?.items?.[0];
+    const device_id = item?.item_id ?? dataFound[0].item_id;
+
+    if (!device_id) {
+      return notify("error", "This item record is incomplete. Refresh and try again.");
+    }
+
+    setLoadingStatus(true);
+    try {
+      const respAfterDelete = await devitrakApi.post(`/db_item/delete-item`, {
+        item_id: device_id,
+        company_id: user.sqlInfo.company_id,
+      });
+
+      // Was `if (respAfterDelete.data)`, which is true for any 200 body — a
+      // rejected delete still said "Device was deleted." and navigated away,
+      // which is indistinguishable from a stale cache.
+      if (respAfterDelete.data?.ok === false) {
+        return notify(
+          "error",
+          respAfterDelete.data?.msg ?? "The item was not deleted.",
+        );
+      }
+
+      await refreshInventoryAfterDelete(device_id);
+      await notifyStaffOfDeletion(item ?? dataFound[0]);
+
+      // Static notification: `notify` renders through this modal's
+      // contextHolder, and navigating away unmounts it before it can be read.
+      notifyStatus("success", "Device was deleted.");
+      return navigate("/inventory");
+    } catch (error) {
+      notify("error", "The item was not deleted. Please try again later.");
+    } finally {
       setLoadingStatus(false);
-      notify("error", "Please try again later.");
     }
   };
 

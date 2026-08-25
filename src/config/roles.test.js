@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import {
   ROLE_TYPES,
@@ -15,6 +18,7 @@ import {
   getRoleLabelGroupKey,
   getRoleScopeDimension,
   isCoordinatorLevel,
+  canViewStaffActivity,
 } from "./roles";
 
 // ─── ROLE_TYPES ──────────────────────────────────────────────────────────────
@@ -556,6 +560,73 @@ describe("F-02 — PERMISSIONS: dominio member (CRU) visible para root_admin/adm
   });
 });
 
+// ─── School pilot S-01.2 — matriz completa rol × permiso del dominio member ──
+// EVENT_CRU/EVENT_D (que respaldan member:*) solo listan strings legacy
+// (root_admin, admin, event_manager, assistant). Este bloque prueba
+// explícitamente los 12 roles de ALL_ROLES (incluidos los 6 canónicos F-01) y
+// los 4 roles con scope, para dejar registrado — no asumido — qué pasa si un
+// staff tiene un roleType canónico o con scope.
+
+describe("School pilot S-01.2 — dominio member: roles canónicos F-01", () => {
+  const CANONICAL_ROLES = [
+    "root_administrator",
+    "sales_associate",
+    "manager_event",
+    "manager_inventory",
+    "associate_inventory",
+    "event_assistant",
+  ];
+  const MEMBER_AND_NAV_ACTIONS = [
+    "member:create",
+    "member:read",
+    "member:update",
+    "member:delete",
+    "member:assign_devices",
+    "member:notify",
+    "nav:members",
+  ];
+
+  MEMBER_AND_NAV_ACTIONS.forEach((action) => {
+    CANONICAL_ROLES.forEach((role) => {
+      it(`"${role}" NO tiene "${action}" (hallazgo: EVENT_CRU/EVENT_D son solo legacy)`, () => {
+        expect(hasPermission(action, role)).toBe(false);
+      });
+    });
+  });
+
+  it("ALL_ROLES incluye los 6 roles canónicos probados arriba (evita que el test quede desactualizado)", () => {
+    CANONICAL_ROLES.forEach((role) => {
+      expect(ALL_ROLES).toContain(role);
+    });
+  });
+});
+
+describe("School pilot S-01.2 — dominio member: roles con scope (location/category)", () => {
+  const SCOPED_ROLES = [
+    "inventory_location_manager",
+    "inventory_location_assistant",
+    "category_manager",
+    "category_assistant",
+  ];
+  const MEMBER_AND_NAV_ACTIONS = [
+    "member:create",
+    "member:read",
+    "member:update",
+    "member:delete",
+    "member:assign_devices",
+    "member:notify",
+    "nav:members",
+  ];
+
+  MEMBER_AND_NAV_ACTIONS.forEach((action) => {
+    SCOPED_ROLES.forEach((role) => {
+      it(`"${role}" NO tiene "${action}" (los roles con scope son solo de inventario, no de alumnos)`, () => {
+        expect(hasPermission(action, role)).toBe(false);
+      });
+    });
+  });
+});
+
 // ─── PERMISSIONS — event:notify_push (enviar notificación push del evento) ───
 // Mismo grupo de roles que ya puede editar el evento (EVENT_CRU): sale_manager
 // e inventory_manager quedan fuera, igual que para el resto de acciones de
@@ -921,5 +992,198 @@ describe("Scoped roles — PERMISSIONS: category_assistant (inventory R/U only)"
   it("NO puede inventory:create / inventory:delete", () => {
     expect(hasPermission("inventory:create", role)).toBe(false);
     expect(hasPermission("inventory:delete", role)).toBe(false);
+  });
+});
+
+// ─── canViewStaffActivity — jerarquía de lectura de la bitácora (B2) ─────────
+// root_admin lee todo; cada rol con nivel definido en ROLE_LEVELS lee su
+// propio nivel y los inferiores (número mayor = menor privilegio). Los roles
+// sin nivel (scoped, R1 sin resolver) caen al rango más bajo como TARGET (todo
+// el mundo con nivel puede ver su actividad) pero nunca ven a nadie por rango
+// cuando son el VIEWER — su acceso a "mi propia actividad" se resuelve en
+// staffActivityLogUtils.js por id, no aquí.
+
+describe("canViewStaffActivity(viewerRoleType, targetRoleType)", () => {
+  it("root_admin lee actividad de todos los roles, incluidos los con scope", () => {
+    [
+      "admin",
+      "sale_manager",
+      "event_manager",
+      "inventory_manager",
+      "assistant",
+      "category_manager",
+    ].forEach((target) => {
+      expect(canViewStaffActivity("root_admin", target)).toBe(true);
+    });
+  });
+
+  it("admin lee admin y los roles inferiores, pero NO root_admin", () => {
+    expect(canViewStaffActivity("admin", "root_admin")).toBe(false);
+    ["admin", "sale_manager", "event_manager", "inventory_manager", "assistant"].forEach(
+      (target) => {
+        expect(canViewStaffActivity("admin", target)).toBe(true);
+      }
+    );
+  });
+
+  it("event_manager lee su propio nivel y los inferiores, NO admin ni sale_manager", () => {
+    expect(canViewStaffActivity("event_manager", "admin")).toBe(false);
+    expect(canViewStaffActivity("event_manager", "sale_manager")).toBe(false);
+    ["event_manager", "inventory_manager", "assistant"].forEach((target) => {
+      expect(canViewStaffActivity("event_manager", target)).toBe(true);
+    });
+  });
+
+  it("inventory_manager lee su propio nivel y los inferiores, NO los roles por encima", () => {
+    ["root_admin", "admin", "sale_manager", "event_manager"].forEach((target) => {
+      expect(canViewStaffActivity("inventory_manager", target)).toBe(false);
+    });
+    ["inventory_manager", "assistant"].forEach((target) => {
+      expect(canViewStaffActivity("inventory_manager", target)).toBe(true);
+    });
+  });
+
+  it("funciona igual con los strings canónicos F-01 (mismo nivel numérico que su par legacy)", () => {
+    expect(canViewStaffActivity("manager_event", "root_administrator")).toBe(false);
+    expect(canViewStaffActivity("manager_event", "associate_inventory")).toBe(true);
+  });
+
+  it("cualquier rol con nivel definido puede ver la actividad de un rol con scope (sin nivel -> rango más bajo)", () => {
+    ["root_admin", "admin", "sale_manager", "event_manager", "inventory_manager", "assistant"].forEach(
+      (viewer) => {
+        [
+          "inventory_location_manager",
+          "inventory_location_assistant",
+          "category_manager",
+          "category_assistant",
+        ].forEach((target) => {
+          expect(canViewStaffActivity(viewer, target)).toBe(true);
+        });
+      }
+    );
+  });
+
+  it("un rol con scope (sin nivel) nunca ve actividad de terceros por rango", () => {
+    ["category_manager", "inventory_location_manager"].forEach((viewer) => {
+      ["root_admin", "admin", "assistant", "category_manager"].forEach((target) => {
+        expect(canViewStaffActivity(viewer, target)).toBe(false);
+      });
+    });
+  });
+
+  it("retorna false cuando el viewer es undefined o un roleType desconocido", () => {
+    expect(canViewStaffActivity(undefined, "assistant")).toBe(false);
+    expect(canViewStaffActivity("super_hero", "assistant")).toBe(false);
+  });
+});
+
+// ─── PERMISSIONS — member:charge_fee (cobrar una multa a una familia) ────────
+// Bug de prueba manual: el modal de cobro se gateaba con
+// "transaction:stripe_create", que es una clave placeholder de F-01 con array
+// VACÍO (los roles se asignan en F-04). Resultado: NINGÚN rol podía abrir el
+// formulario de tarjeta, ni root_admin. El gate necesita una clave propia del
+// dominio member con roles reales.
+//
+// Forma EVENT_D (igual que member:delete): assistant queda fuera a propósito —
+// quien ve la lista de alumnos no debe poder cobrarle a una familia.
+
+describe("PERMISSIONS — member:charge_fee", () => {
+  it("existe y NO está vacía (el gate del cobro no puede depender de un placeholder)", () => {
+    expect(PERMISSIONS["member:charge_fee"]).toBeDefined();
+    expect(Array.isArray(PERMISSIONS["member:charge_fee"])).toBe(true);
+    expect(PERMISSIONS["member:charge_fee"].length).toBeGreaterThan(0);
+  });
+
+  it("root_admin, admin y event_manager pueden cobrar", () => {
+    ["root_admin", "admin", "event_manager"].forEach((role) => {
+      expect(hasPermission("member:charge_fee", role)).toBe(true);
+    });
+  });
+
+  it("assistant NO puede cobrar aunque tenga el resto del dominio member", () => {
+    expect(hasPermission("member:read", "assistant")).toBe(true);
+    expect(hasPermission("member:charge_fee", "assistant")).toBe(false);
+  });
+
+  it("sale_manager e inventory_manager no tienen nada que ver con alumnos", () => {
+    ["sale_manager", "inventory_manager"].forEach((role) => {
+      expect(hasPermission("member:charge_fee", role)).toBe(false);
+    });
+  });
+});
+
+/**
+ * Call-site guard.
+ *
+ * `hasPermission` takes a roleType string, and the only supported way to get
+ * one out of a Redux user is `resolveRoleType(user)` — it is what falls back to
+ * LEGACY_ROLE_MAP for the records that still carry a numeric `role` and no
+ * `roleType`. Passing `user.roleType` straight through looks equivalent and is
+ * not: for those users it is `undefined`, `hasPermission` short-circuits to
+ * false, and whatever the check gated silently disappears.
+ *
+ * That had happened in three places at once — the inventory section rename
+ * buttons, the Profile tab strip and the school-compliance form — each failing
+ * closed for exactly the accounts least likely to report it. A unit test on
+ * roles.js cannot catch a mistake made at the call site, so this scans for it.
+ */
+describe("hasPermission call sites", () => {
+  // Read from disk rather than import.meta.glob("?raw"): the glob makes Vite
+  // transform every source file in the repo and put ~65s on this one file's
+  // run. readFileSync does the same job in milliseconds.
+  const SRC_DIR = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "..",
+  );
+
+  const sourceFiles = (dir) =>
+    fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) return sourceFiles(full);
+      return /\.jsx?$/.test(entry.name) ? [full] : [];
+    });
+
+  // hasPermission(<first arg>, someExpression.roleType) — including the
+  // optional-chained `user?.roleType` spelling.
+  //
+  // Every quantifier is bounded on purpose. An earlier version opened with
+  // `[^;]*?` before a starred member-access group, which backtracks
+  // exponentially on files with few semicolons and blew the 5s test timeout
+  // instead of reporting anything.
+  const RAW_ROLE_TYPE_ARG =
+    /hasPermission\s*\(\s*[^()\n]{0,120},\s*[\w$]+(?:\s*\??\.\s*[\w$]+){0,4}\s*\??\.\s*roleType\s*\)/g;
+
+  it("never reads .roleType off a user directly — always via resolveRoleType", () => {
+    const offenders = [];
+    for (const file of sourceFiles(SRC_DIR)) {
+      if (file.endsWith("roles.test.js")) continue;
+      const matches = fs.readFileSync(file, "utf8").match(RAW_ROLE_TYPE_ARG);
+      if (matches) {
+        offenders.push(
+          `${path.relative(SRC_DIR, file)}: ${matches.join(" | ")}`,
+        );
+      }
+    }
+    expect(offenders).toEqual([]);
+    // Reading every source file over the Docker bind mount is slow on Windows
+    // hosts — well past the 5s default. The work is IO, not computation.
+  }, 60000);
+
+  it("still flags the shape it is meant to catch", () => {
+    // Guards the regex itself: a rewrite that quietly stops matching would
+    // otherwise turn this whole describe into a test that always passes.
+    expect(
+      'hasPermission("inventory:manage_location", user.roleType)'.match(
+        RAW_ROLE_TYPE_ARG,
+      ),
+    ).not.toBeNull();
+    expect(
+      'hasPermission("member:update", user?.roleType)'.match(RAW_ROLE_TYPE_ARG),
+    ).not.toBeNull();
+    expect(
+      "hasPermission(option.permission, resolveRoleType(user))".match(
+        RAW_ROLE_TYPE_ARG,
+      ),
+    ).toBeNull();
   });
 });

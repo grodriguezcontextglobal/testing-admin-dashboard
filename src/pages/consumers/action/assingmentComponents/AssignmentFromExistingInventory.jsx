@@ -113,20 +113,14 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const onChange = async (value) => {
     const optionRendering = JSON.parse(value);
     const fetchSelectedItem = await devitrakApi.post(
-      "/db_event/inventory-based-on-submitted-parameters",
+      "/db_event/inventory-query",
       {
-        query: `SELECT 
-        serial_number
-        FROM item_inv 
-        WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? And warehouse = ?
-        ORDER BY serial_number ASC`,
-        values: [
-          optionRendering.item_group,
-          optionRendering.category_name,
-          user.sqlInfo.company_id,
-          optionRendering.location,
-          1,
-        ],
+        queryName: "inventory.serialsByGroupCategoryLocation",
+        params: {
+          itemGroup: optionRendering.item_group,
+          categoryName: optionRendering.category_name,
+          location: optionRendering.location,
+        },
       }
     );
     if (fetchSelectedItem.data) {
@@ -257,20 +251,15 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
               index + Number(data.quantity)
             );
             const gettingAllInfo = await devitrakApi.post(
-              "/db_event/inventory-based-on-submitted-parameters",
+              "/db_event/inventory-query",
               {
-                query: `SELECT * FROM item_inv 
-              WHERE item_group = ? AND category_name = ? AND company_id = ? And location = ? AND warehouse = ? And serial_number in (${selectedData
-                .map((item) => `'${item.serial_number}'`)
-                .join(",")})
-              `,
-                values: [
-                  valueItemSelected.item_group,
-                  valueItemSelected.category_name,
-                  user.sqlInfo.company_id,
-                  valueItemSelected.location,
-                  1,
-                ],
+                queryName: "inventory.itemsByGroupCategoryLocationSerials",
+                params: {
+                  itemGroup: valueItemSelected.item_group,
+                  categoryName: valueItemSelected.category_name,
+                  location: valueItemSelected.location,
+                  serialNumbers: selectedData.map((item) => item.serial_number),
+                },
               }
             );
             await option1({

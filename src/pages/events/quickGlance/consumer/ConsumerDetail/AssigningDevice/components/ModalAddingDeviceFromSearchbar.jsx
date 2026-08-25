@@ -1,329 +1,332 @@
-import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, Modal } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../../../../components/UX/buttons/DangerButton";
+import DangerButtonConfirmationComponent from "../../../../../../../components/UX/buttons/DangerButtonConfirmation";
+import GrayButtonComponent from "../../../../../../../components/UX/buttons/GrayButton";
+import EmptyState from "../../../../../../../components/UX/emptyState/EmptyState";
+import ModalUX from "../../../../../../../components/UX/modal/ModalUX";
+import {
+  ProfileErrorState,
+  ProfileSkeleton,
+  StatusChip,
+} from "../../../../../../../components/UX/profile";
 import BaseTable from "../../../../../../../components/UX/tables/BaseTable";
 import { onOpenDeviceAssignmentModalFromSearchPage } from "../../../../../../../store/slices/devicesHandleSlice";
-import { Subtitle } from "../../../../../../../styles/global/Subtitle";
-import AddingDeviceToPaymentIntentFromSearchBar from "../AddingDeviceToPaymentIntentFromSearchBar";
+import "../../../consumerDetail.css";
+import { describeDeviceState } from "../../../utils/consumerActivity";
+import { formatTransactionId } from "../../../utils/transactionTable";
+import {
+  summarizeAssignment,
+  toDeviceRows,
+} from "../../../utils/transactionAssignment";
+import { consumerTransactionsKey } from "../../hooks/useConsumerEventActivity";
+import AssignmentProgress from "../../transaction/AssignmentProgress";
+// Was AddingDeviceToPaymentIntentFromSearchBar, a 494-line verbatim copy of
+// AddingDevicesToPaymentIntent (491 lines). They differed only in their layout
+// markup; every handler, validation and endpoint was identical, so a fix to one
+// silently did not apply to the other.
+import AddingDevicesToPaymentIntent from "../AddingDevicesToPaymentIntent";
 import { useDeviceStatus } from "../hooks/useDeviceStatus";
-import DisplayDeviceRequestedLegendPerTransaction from "./DisplayDeviceRequestedLegendPerTransaction";
 
+/**
+ * Assign devices to a transaction, reached from the global search bar.
+ *
+ * Rebuilt because the layout said nothing about the order of the work: the
+ * progress meter and the scan field came first, then two buttons, then the table
+ * those buttons referred to. Reading it top to bottom you were asked to finish
+ * before you could see what you had done.
+ *
+ * The two buttons were the visible half of a real bug. "Assigned and Save" and
+ * "Continue later" both call `closeModal()` — the same action, twice — and the
+ * first was meant to be hidden until the transaction was complete via
+ * `style={{ display: ... }}`. But BlueButtonComponent takes `styles`, not
+ * `style`: `style` lands in `...rest`, and the component then applies its own
+ * `style={{ ...styles }}` *after* spreading rest, so the caller's value is
+ * overwritten. Both buttons were always visible, always doing the same thing.
+ *
+ * The condition behind it could not have worked either:
+ * `assigned.length === paymentIntentDetailSelected?.device` compares a number to
+ * the transaction's `device` **array**, which is never equal. So "complete" was
+ * never detected — not for the buttons, and not for hiding the scan field.
+ *
+ * Also fixed here:
+ *  - The component returned `undefined` until the assigned-device query
+ *    resolved, so opening the modal showed an empty frame with no title.
+ *  - `["assignedDeviceInPaymentIntent"]` was keyed without the payment intent,
+ *    so opening the modal on a second transaction served the first one's
+ *    devices out of cache.
+ *  - The effect that resolves which transaction this is watched the *assigned
+ *    devices* query while reading the *transactions* query. When transactions
+ *    resolved second — the common case, it has no `refetchOnMount: false` — the
+ *    transaction stayed `null` and both the progress meter and the scan field
+ *    silently never appeared.
+ *  - `AddingDevicesToPaymentIntent` was rendered even with a null record, so
+ *    submitting a scan threw on `record.paymentIntent`.
+ *  - Removing a device was a red button labelled "X" with no confirmation.
+ */
 const ModalAddingDeviceFromSearchbar = () => {
-  const { paymentIntentSelected, paymentIntentDetailSelected, customer } =
-    useSelector((state) => state.stripe);
+  const { paymentIntentSelected, customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
+  const { openModalToAssignDevice } = useSelector((state) => state.devicesHandle);
+  const dispatch = useDispatch();
+
   const { unassignDevice, isUnassigning, contextHolder } = useDeviceStatus(
     event,
-    user,
+    user
   );
 
-  const dispatch = useDispatch();
-  const findingAssignedInPaymentIntentQuery = useQuery({
-    queryKey: ["assignedDeviceInPaymentIntent"],
+  const companyId = user?.companyData?.id;
+  const consumerId = customer?.id ?? customer?.uid;
+
+  const assignedQuery = useQuery({
+    queryKey: ["assignedDeviceInPaymentIntent", paymentIntentSelected],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned", {
         paymentIntent: paymentIntentSelected,
       }),
-    enabled: paymentIntentSelected !== "",
+    enabled: Boolean(paymentIntentSelected),
   });
+
+  // Shares the canonical key with the consumer's page, so the two never hold
+  // two different answers for the same question.
   const transactionsQuery = useQuery({
-    queryKey: ["transactionPerConsumerListQuery", customer.uid],
+    queryKey: consumerTransactionsKey(event?.id, companyId, consumerId),
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?event_id=${event.id}&company=${
-          user.companyData.id
-        }&consumerInfo.id=${customer.id ?? customer.uid}`,
+        `/transaction/transaction?event_id=${event.id}&company=${companyId}&consumerInfo.id=${consumerId}`
       ),
-    refetchOnMount: false,
+    enabled: Boolean(event?.id && companyId && consumerId),
   });
 
-  const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
-  const [transactionInformation, setTransactionInformation] = useState(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    // findingAssignedInPaymentIntentQuery.refetch();
-    const grouping = groupBy(stripeTransactionsSavedQuery, "paymentIntent");
-    if (grouping[paymentIntentSelected]) {
-      setTransactionInformation(grouping[paymentIntentSelected]?.[0]);
-    } else {
-      setTransactionInformation(null);
+  // Derived, not stored in state behind an effect keyed on the wrong query.
+  const record =
+    groupBy(transactionsQuery.data?.data?.list, "paymentIntent")[
+      paymentIntentSelected
+    ]?.[0] ?? null;
+
+  const rows = toDeviceRows(assignedQuery.data?.data?.receiver);
+  const assignment = summarizeAssignment(record, rows);
+  const isComplete = Boolean(record) && assignment.isComplete;
+
+  const close = () => dispatch(onOpenDeviceAssignmentModalFromSearchPage(false));
+
+  const removeDevice = async (row) => {
+    try {
+      await unassignDevice({
+        assignmentId: row.receiverId,
+        serialNumber: row.serialNumber,
+        deviceType: row.deviceType,
+      });
+      assignedQuery.refetch();
+    } catch (error) {
+      // The hook raises its own notification.
     }
-    return () => {
-      controller.abort();
-    };
-  }, [findingAssignedInPaymentIntentQuery.data]);
-
-  const { openModalToAssignDevice } = useSelector(
-    (state) => state.devicesHandle,
-  );
-  const refetchingFn = () => {
-    return findingAssignedInPaymentIntentQuery.refetch();
-  };
-  const closeModal = () => {
-    dispatch(onOpenDeviceAssignmentModalFromSearchPage(false));
   };
 
-  if (findingAssignedInPaymentIntentQuery.data) {
-    const deviceAssignedListQuery =
-      findingAssignedInPaymentIntentQuery?.data?.data?.receiver; //*need to get the final result form finding assigned device query
-
-    const foundTransactionAndDevicesAssigned = () => {
-      if (deviceAssignedListQuery?.length) return deviceAssignedListQuery;
-      return [];
-    };
-    const checkDevicesInTransaction = () => {
-      const result = new Set();
-      for (let data of foundTransactionAndDevicesAssigned()) {
-        result.add({ key: data.id, ...data.device });
-      }
-      return Array.from(result).reverse();
-    };
-
-    const removeDeviceFromTransaction = async (props) => {
-      try {
-        await unassignDevice({
-          assignmentId: props.key,
-          serialNumber: props.serialNumber,
-          deviceType: props.deviceType,
-        });
-        return message.success("Device removed from transaction");
-      } catch (error) {
-        // Error handling is managed by the hook (notification)
-      }
-    };
-
-    const renderTernaryOption = (props) => {
-      if (typeof props === "string") {
-        return props;
-      } else {
-        if (props) return "In-use";
-        return "Returned";
-      }
-    };
-
-    const columns = [
-      {
-        title: "Device serial number",
-        dataIndex: "serialNumber",
-        key: "serialNumber",
-        sorter: {
-          compare: (a, b) =>
-            ("" + a.serialNumber).localeCompare(b.serialNumber),
-        },
-        sortDirections: ["descend", "ascend"],
-        width: "30%",
-        render: (serialNumber) => (
-          <p
-            style={{
-              ...Subtitle,
-              textTransform: "none",
-              fontSize: "16px",
-              lineHeight: "24px",
-            }}
-          >
-            {serialNumber}
-          </p>
-        ),
+  const columns = [
+    {
+      title: "Serial number",
+      dataIndex: "serialNumber",
+      key: "serialNumber",
+      width: "34%",
+      sorter: (a, b) => String(a.serialNumber).localeCompare(b.serialNumber),
+      render: (serialNumber) => (
+        <span className="profile-serial">{serialNumber || "—"}</span>
+      ),
+    },
+    {
+      title: "Type",
+      dataIndex: "deviceType",
+      key: "deviceType",
+      responsive: ["md"],
+      sorter: (a, b) => String(a.deviceType).localeCompare(b.deviceType),
+      render: (deviceType) => (
+        <span style={{ textTransform: "capitalize" }}>{deviceType || "—"}</span>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: "18%",
+      render: (status) => {
+        const state = describeDeviceState(status);
+        return <StatusChip tone={state.tone} pip label={state.label} />;
       },
-      {
-        title: "Type",
-        dataIndex: "deviceType",
-        key: "deviceType",
-        sorter: {
-          compare: (a, b) => ("" + a.deviceType).localeCompare(b.deviceType),
-        },
-        sortDirections: ["descend", "ascend"],
-        render: (deviceType) => (
-          <p
-            style={{
-              ...Subtitle,
-              textTransform: "none",
-              fontSize: "16px",
-              lineHeight: "24px",
-            }}
-          >
-            {deviceType}
-          </p>
-        ),
-      },
-      {
-        title: "Status",
-        dataIndex: "status",
-        key: "status",
-        width: "20%",
-        sorter: {
-          compare: (a, b) => ("" + a.status).localeCompare(b.status),
-        },
-        sortDirections: ["descend", "ascend"],
-        render: (status) => (
-          <p
-            style={{
-              ...Subtitle,
-              textTransform: "none",
-              fontSize: "16px",
-              lineHeight: "24px",
-            }}
-          >
-            {renderTernaryOption(status)}
-          </p>
-        ),
-      },
-      {
-        title: "Remove",
-        key: "key",
-        width: "10%",
-        render: (record) => (
-          <DangerButtonComponent
-            isLoading={isUnassigning}
-            title={isUnassigning ? null : "X"}
-            func={() => removeDeviceFromTransaction(record)}
+    },
+    {
+      title: "",
+      key: "actions",
+      align: "right",
+      width: "16%",
+      render: (_, row) => (
+        <span className="profile-row-actions">
+          <DangerButtonConfirmationComponent
+            title="Remove"
             size="sm"
+            loadingState={isUnassigning}
+            confirmationTitle={`Remove ${row.serialNumber || "this device"}?`}
+            confirmationDescription="It comes off this transaction and goes back into the event's pool."
+            okText="Remove"
+            func={() => removeDevice(row)}
           />
-        ),
-      },
-    ];
-    const renderTitle = () => {
+        </span>
+      ),
+    },
+  ];
+
+  const body = () => {
+    if (!paymentIntentSelected) {
       return (
-        <p
-          style={{
-            textWrap: "balance",
-            fontFamily: "Inter",
-            fontWeight: 400,
-            fontSize: "24px",
-            lineHeight: "30px",
-            textAlign: "left",
-            textTransform: "none",
-            padding: "12px",
-          }}
-        >
-          Assigning device to{" "}
-          <span
-            style={{
-              textTransform: "capitalize",
-            }}
-          >
-            {customer.name}, {customer.lastName}
-          </span>
-        </p>
+        <ProfileErrorState
+          title="No transaction selected"
+          description="Open this from a transaction so the devices can be assigned to it."
+        />
       );
-    };
+    }
+
+    if (assignedQuery.isLoading || transactionsQuery.isLoading) {
+      return <ProfileSkeleton lines={4} />;
+    }
+
+    if (assignedQuery.isError || transactionsQuery.isError) {
+      return (
+        <ProfileErrorState
+          title="Couldn't load this transaction"
+          description="The service didn't respond, so what is already assigned is unknown. Nothing was changed."
+          action={
+            <GrayButtonComponent
+              title="Try again"
+              func={() => {
+                assignedQuery.refetch();
+                transactionsQuery.refetch();
+              }}
+            />
+          }
+        />
+      );
+    }
+
+    if (!record) {
+      return (
+        <ProfileErrorState
+          title="Transaction not found on this event"
+          description={`Nothing on this event matches ${formatTransactionId(
+            paymentIntentSelected
+          )}. It may belong to another event, or have been voided.`}
+          action={<GrayButtonComponent title="Close" func={close} />}
+        />
+      );
+    }
 
     return (
-      <Modal
-        title={renderTitle()}
-        centered
-        open={openModalToAssignDevice}
-        onOk={() => closeModal()}
-        onCancel={() => closeModal()}
-        width={1000}
-        footer={[]}
-        maskClosable={false}
-        style={{ zIndex: 30 }}
-      >
-        {contextHolder}
-        <Grid container>
-          {foundTransactionAndDevicesAssigned()?.length ===
-          paymentIntentDetailSelected?.device ? null : (
-            <Grid
-              display={"flex"}
-              flexDirection={"column"}
-              alignItems={"center"}
-              justifyContent={"center"}
-              item
-              xs={12}
-              sm={12}
-              md={12}
-              lg={12}
-            >
-              {transactionInformation && (
-                <DisplayDeviceRequestedLegendPerTransaction
-                  record={transactionInformation}
-                  checked={checkDevicesInTransaction()}
-                />
-              )}
+      <div className="txn">
+        {/* Which transaction this is, before anything is done to it. The old
+            modal named only the consumer, in a paragraph. */}
+        <dl className="txn__summary">
+          <div>
+            <dt>Consumer</dt>
+            <dd style={{ textTransform: "capitalize" }}>
+              {customer?.name} {customer?.lastName}
+            </dd>
+          </div>
+          <div>
+            <dt>Transaction</dt>
+            <dd className="profile-serial">
+              {formatTransactionId(paymentIntentSelected)}
+            </dd>
+          </div>
+          <div>
+            <dt>Requested</dt>
+            <dd>
+              {assignment.totals.requested}{" "}
+              {assignment.totals.requested === 1 ? "device" : "devices"}
+            </dd>
+          </div>
+        </dl>
 
-              <AddingDeviceToPaymentIntentFromSearchBar
-                refetchingFn={refetchingFn}
-                key={"adding-single-device"}
-                record={transactionInformation}
-              />
-            </Grid>
+        {/* 1 — how much is left, and the scanner, only while there is work */}
+        {!isComplete && (
+          <section className="txn__step">
+            <div className="txn__step-head">
+              <span className="txn__step-index">1</span>
+              <h3 className="txn__step-title">Scan what you are handing over</h3>
+              <p className="txn__step-note">
+                {assignment.totals.remaining} to go
+              </p>
+            </div>
+            <AssignmentProgress summary={assignment} />
+            <AddingDevicesToPaymentIntent
+              key={paymentIntentSelected}
+              record={record}
+              refetchingFn={() => assignedQuery.refetch()}
+            />
+          </section>
+        )}
+
+        {/* 2 — what is on the transaction, below the field that adds to it */}
+        <section className="txn__step">
+          <div className="txn__step-head">
+            <span
+              className={`txn__step-index${isComplete ? " is-done" : ""}`}
+            >
+              {isComplete ? "✓" : 2}
+            </span>
+            <h3 className="txn__step-title">
+              {isComplete ? "All devices assigned" : "Assigned so far"}
+            </h3>
+            <p className="txn__step-note">
+              {rows.length} of {assignment.totals.requested}
+            </p>
+          </div>
+          {rows.length === 0 ? (
+            <EmptyState
+              compact
+              icon="tabler:device-tablet-off"
+              title="Nothing assigned yet"
+              description="Scan a serial number above to hand over the first device."
+            />
+          ) : (
+            <BaseTable
+              className="profile-table"
+              columns={columns}
+              dataSource={rows}
+              enablePagination={rows.length > 10}
+              pageSize={10}
+            />
           )}
-          <Grid
-            display={"flex"}
-            alignItems={"center"}
-            justifyContent={"flex-start"}
-            marginY={1}
-            gap={2}
-            item
-            xs={12}
-            sm={12}
-            md={12}
-            lg={12}
-          >
-            <BlueButtonComponent
-              title={"Assigned and Save"}
-              func={() => closeModal()}
-              styles={{
-                display:
-                  foundTransactionAndDevicesAssigned()?.length ===
-                  paymentIntentDetailSelected?.device
-                    ? "flex"
-                    : "none",
-              }}
-            />
-            <BlueButtonComponent
-              title={"Continue later"}
-              func={() => closeModal()}
-            />
-            {/* <Button
-              onClick={() => closeModal()}
-              style={{
-                ...BlueButton,
-                display:
-                  foundTransactionAndDevicesAssigned()?.length ===
-                  paymentIntentDetailSelected?.device
-                    ? "flex"
-                    : "none",
-              }}
-            >
-              <p style={BlueButtonText}>Done</p>
-            </Button> */}
-            {/* <Button
-              onClick={() => closeModal()}
-              style={{
-                ...BlueButton,
-                display:
-                  foundTransactionAndDevicesAssigned()?.length ===
-                  paymentIntentDetailSelected?.device
-                    ? "none"
-                    : "flex",
-              }}
-            >
-              <p style={BlueButtonText}>Continue later</p>
-            </Button> */}
-          </Grid>
-          <Grid item xs={12}>
-            {checkDevicesInTransaction().length > 0 && (
-              <BaseTable
-                columns={columns}
-                dataSource={checkDevicesInTransaction()}
-                enablePagination={true}
-                pageSize={10}
-              />
-            )}
-          </Grid>
-        </Grid>
-      </Modal>
+        </section>
+
+        {/* One action, labelled for the state it is in — not two buttons doing
+            the same thing with one of them meant to be hidden. */}
+        <div className="txn__footer">
+          {isComplete ? (
+            <BlueButtonComponent title="Done" func={close} />
+          ) : (
+            <GrayButtonComponent title="Finish later" func={close} />
+          )}
+        </div>
+      </div>
     );
-  }
+  };
+
+  return (
+    <>
+      {contextHolder}
+      <ModalUX
+        title="Assign devices to transaction"
+        openDialog={openModalToAssignDevice}
+        closeModal={close}
+        width={760}
+        footer={[]}
+        modalStyles={{ top: "5dvh", zIndex: 30 }}
+        body={body()}
+      />
+    </>
+  );
 };
 
 export default ModalAddingDeviceFromSearchbar;

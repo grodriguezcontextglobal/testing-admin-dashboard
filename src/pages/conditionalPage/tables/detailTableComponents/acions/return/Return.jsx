@@ -13,19 +13,47 @@ import { useState } from "react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Divider, message } from "antd";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { registerStaffActivity } from "../../../../../../api/activityLog";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
+import { mapReturnToReceipt } from "../../../../../payment/utils/receiptUtils";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FEATURE_MEMBER_FEES } from "../../../../../../config/featureFlags";
-import { buildFeeFields } from "../../../../utils/leaseReturnUtils";
+import { hasPermission, resolveRoleType } from "../../../../../../config/roles";
+import {
+  buildFeeFields,
+  buildLostItemPayload,
+  buildReturnNotification,
+  shouldOfferFeeCollection,
+} from "../../../../utils/leaseReturnUtils";
 const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
-const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
+/**
+ * @param {Function} [onFeePending] called instead of a plain close when a fee
+ *   was recorded, so the caller can offer to collect it right away. Lifted to
+ *   the caller rather than opening a charge modal from inside this one, because
+ *   this component lives inside a modal that is closing at that moment.
+ * @param {Function} [onDeclarationRecorded] receives the constancia for what was
+ *   just recorded, so the caller can offer to print it. Same lifting reason.
+ */
+const Return = ({
+  storedRecord,
+  modalHandler,
+  setStoredRecord,
+  onFeePending,
+  onDeclarationRecorded,
+}) => {
   const { register, handleSubmit, watch } = useForm();
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector((state) => state.member);
   const queryClient = useQueryClient();
+  // Same gate as the collection modal in DetailMemberInfo. Recording a fee that
+  // this staff member is not allowed to collect writes an amount nobody in the
+  // room can settle, so the two must agree on who may put money on a lease.
+  const canRecordFee =
+    FEATURE_MEMBER_FEES &&
+    hasPermission("member:charge_fee", resolveRoleType(user));
   const returnItemToInventoryCompany = useMutation({
     mutationKey: ["returnItemToInventoryCompany"],
     mutationFn: async (data) =>
@@ -38,6 +66,23 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         item_group: storedRecord.device_item_group,
         company_id: user.sqlInfo.company_id,
       }),
+    onError: (error) => {
+      setLoading(false);
+      throw new Error(error);
+    },
+  });
+  // A lost device is taken off the member WITHOUT being restocked. Skipping the
+  // restock was already correct; what was missing is any write at all, which
+  // left the item sitting at logistic_status "assigned" after its lease closed.
+  const markItemAsLost = useMutation({
+    mutationFn: async () => {
+      const payload = buildLostItemPayload({
+        record: storedRecord,
+        companyId: user.sqlInfo.company_id,
+      });
+      if (!payload) return null;
+      return await devitrakApi.post("/db_item/item-out-warehouse", payload);
+    },
     onError: (error) => {
       setLoading(false);
       throw new Error(error);
@@ -71,41 +116,98 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
         return response.data;
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["memberAssignedDevices"],
         exact: true,
         refetchType: "active",
         refetchActive: true,
       });
-      await sentReturnEmailNotification();
+      registerStaffActivity({
+        action: "UNASSIGN",
+        target_model: "Lease",
+        target_id: storedRecord.member_id,
+        details: { device_id: storedRecord.device_id, outcome: variables?.outcome },
+      });
+      await sentReturnEmailNotification({
+        outcome: variables?.outcome,
+        note: variables?.note,
+        fee: variables?.fee,
+      });
+      // Hand the recorded fee up before tearing down, so the amount just
+      // entered can be collected without retyping it. The lease row is already
+      // closed at this point — declining the charge loses the collection, not
+      // the record.
+      const pendingFee = variables?.fee;
+      // Constancia of what was just recorded. Built before the record is
+      // cleared, and handed up because this component lives inside the modal
+      // that is about to close.
+      const receipt = mapReturnToReceipt({
+        member: memberInfo,
+        record: storedRecord,
+        outcome: variables?.outcome,
+        note: variables?.note,
+        company: user?.company,
+        date: new Date().toISOString(),
+        staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
+      });
       setStoredRecord({});
       modalHandler(false);
       setLoading(false);
+      onDeclarationRecorded?.(receipt);
+      if (onFeePending && shouldOfferFeeCollection(pendingFee)) {
+        onFeePending({
+          serial_number: storedRecord.device_serial_number,
+          device_id: storedRecord.device_id,
+          amount: pendingFee.fee_amount,
+          reason: pendingFee.fee_reason,
+        });
+      }
     },
   });
-  const sentReturnEmailNotification = async () => {
-    const response = await devitrakApi.post(
-      "/nodemailer/member-lease-return-device-notification",
-      {
-        member: {
-          firstName: memberInfo?.first_name,
-          lastName: memberInfo?.last_name,
-          email: memberInfo?.email,
-        },
-        devices: [
-          {
-            device: {
-              serialNumber: storedRecord.device_serial_number,
-              deviceType: storedRecord.device_category_name,
-            },
-          },
-        ],
+  const sentReturnEmailNotification = async ({ outcome, note, fee }) => {
+    // Routed through the shared recipient resolver: a minor's notices go to the
+    // guardian on file, never to the student. This used to post
+    // memberInfo.email unconditionally, which mailed a 15-year-old about their
+    // own lost laptop.
+    //
+    // The endpoint is chosen by outcome. All three used to hit the
+    // return-confirmation template, so the guardian of a lost laptop was told it
+    // came back successfully.
+    const { endpoint, payload, recipient } = buildReturnNotification({
+      member: memberInfo,
+      record: storedRecord,
+      outcome,
+      note,
+      fee,
+    });
+    if (!payload) {
+      // Say so instead of silently sending nothing — or worse, sending it to
+      // the student. The device record itself is already saved at this point.
+      return message.warning(
+        `Device saved, but no notification was sent: ${recipient.error}`
+      );
+    }
+    const noun = outcome === "lost" ? "loss notice" : "notification";
+    // A mail failure must not cost the receipt or the fee collection: this runs
+    // inside onSuccess, before both, so an unhandled rejection here used to take
+    // the rest of the flow down with it. The record is already saved either way,
+    // so the honest outcome is a warning naming who was NOT reached.
+    try {
+      const response = await devitrakApi.post(endpoint, payload);
+      if (response.data && response.data.ok) {
+        return message.success(
+          recipient.isGuardian
+            ? `Device saved. A ${noun} was queued to the guardian (${recipient.email}).`
+            : `Device saved. A ${noun} was queued to ${recipient.email}.`
+        );
       }
-    );
-    if (response.data && response.data.ok) {
-      return message.success(
-        `Return device success. An email notification to ${memberInfo?.email} has been queued.`
+      return message.warning(
+        `Device saved, but the ${noun} to ${recipient.email} was not accepted. Contact them directly.`
+      );
+    } catch {
+      return message.warning(
+        `Device saved, but the ${noun} could not be sent to ${recipient.email}. Contact them directly.`
       );
     }
   };
@@ -113,11 +215,14 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
     const outcome = data.outcome || "returned";
     try {
       setLoading(true);
-      // Lost devices never come back — skip the warehouse restock.
-      if (outcome !== "lost") {
+      // Lost devices never come back — no restock. They still need an inventory
+      // write, or the item stays "assigned" after the lease is closed.
+      if (outcome === "lost") {
+        await markItemAsLost.mutateAsync();
+      } else {
         await returnItemToInventoryCompany.mutateAsync(data);
       }
-      const fee = FEATURE_MEMBER_FEES
+      const fee = canRecordFee
         ? buildFeeFields({
             outcome,
             feeAmount: data.fee_amount,
@@ -185,13 +290,13 @@ const Return = ({ storedRecord, modalHandler, setStoredRecord }) => {
             placeholder={
               watch("outcome") === "lost"
                 ? "e.g. Reported lost by student on 6/2"
-                : "e.g. Cracked screen — charged to account"
+                : "e.g. Cracked screen — marked as returned"
             }
             style={{ ...OutlinedInputStyle, width: "100%" }}
             multiline
           />
         </Grid>
-        {FEATURE_MEMBER_FEES &&
+        {canRecordFee &&
           (watch("outcome") === "damaged" || watch("outcome") === "lost") && (
             <Grid margin={"1rem auto 0"} item xs={12} sm={12} md={12} lg={12}>
               <Typography>Fee to charge (optional)</Typography>

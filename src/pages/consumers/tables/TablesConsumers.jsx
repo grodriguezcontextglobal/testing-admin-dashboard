@@ -11,7 +11,6 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import Chip from "../../../components/UX/Chip/Chip";
 import BaseTable from "../../../components/UX/tables/BaseTable";
-import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
 import { onAddCustomer } from "../../../store/slices/stripeSlice";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";

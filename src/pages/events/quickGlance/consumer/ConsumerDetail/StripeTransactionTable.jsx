@@ -1,448 +1,380 @@
-import DevitrakLoading from "../../../../../components/animation/DevitrakLoading";
-import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { message, Popconfirm } from "antd";
-import pkg from "prop-types";
-import { useEffect, useState } from "react";
+import { Popconfirm } from "antd";
+import { groupBy } from "lodash";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import PropTypes from "prop-types";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { ChevronRight, ChevronDown } from "lucide-react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
+import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
+import { ProfileErrorState, ProfileSkeleton, StatusChip } from "../../../../../components/UX/profile";
 import ExpandableTable from "../../../../../components/UX/tables/ExpandableTable";
 import {
   onAddPaymentIntentDetailSelected,
   onAddPaymentIntentSelected,
 } from "../../../../../store/slices/stripeSlice";
-import CenteringGrid from "../../../../../styles/global/CenteringGrid";
-import { Subtitle } from "../../../../../styles/global/Subtitle";
-
+import ReceiptModal from "../../../../payment/components/ReceiptModal";
+import {
+  buildReceiptUrl,
+  mapTransactionToReceipt,
+} from "../../../../payment/utils/receiptUtils";
+import "../consumerDetail.css";
+import {
+  describeTransactionKind,
+  describeTransactionState,
+  filterTransactions,
+  formatTransactionId,
+  toTransactionRows,
+} from "../utils/transactionTable";
 import ModalAddingDeviceFromSearchbar from "./AssigningDevice/components/ModalAddingDeviceFromSearchbar";
-import ExpandedRowInTable from "./ExpandedRowInTable";
-// import ReturningInBulkMethod from "./actions/ReturningInBulkMethod";
-import { groupBy } from "lodash";
-import Loading from "../../../../../components/animation/Loading";
 import Capturing from "./actions/deposit/Capturing";
 import Releasing from "./actions/deposit/Releasing";
-import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
-import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
-const { PropTypes } = pkg;
+import {
+  consumerTransactionsKey,
+  useSelectedConsumer,
+} from "./hooks/useConsumerEventActivity";
+import TransactionPanel from "./transaction/TransactionPanel";
 
+/**
+ * A consumer's transactions at one event, one expandable row each.
+ *
+ * The columns answer, left to right: when, which transaction, how big, what
+ * state is it in. The money actions used to be laid out in an MUI Grid with
+ * hard-coded `md={6}` / `md={4}` / `md={12}` breakpoints per button, so the set
+ * re-wrapped into a different shape depending on which buttons a given row
+ * happened to qualify for. They are one right-aligned group now.
+ *
+ * Two behavioural fixes ride along, both covered in utils/transactionTable.js:
+ *
+ *  - Searching works. The old filter returned [] as soon as the box had any
+ *    content, so typing one character emptied the table with no way to tell
+ *    that apart from "no results".
+ *  - Cash transactions are no longer offered Stripe deposit actions. The old
+ *    test was `paymentIntent.length > 16`, and a cash id is long, so "Capture
+ *    fund" and "Release deposit" appeared for money that never touched Stripe.
+ */
 const StripeTransactionTable = ({ searchValue, triggering }) => {
-  const [openCapturingDepositModal, setOpenCapturingDepositModal] =
-    useState(false);
-  const [openCancelingDepositModal, setOpenCancelingDepositModal] =
-    useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { event } = useSelector((state) => state.event);
-  const { customer } = useSelector((state) => state.stripe);
   const { user } = useSelector((state) => state.admin);
-  const { openModalToAssignDevice } = useSelector(
-    (state) => state.devicesHandle,
-  );
+  const { openModalToAssignDevice } = useSelector((state) => state.devicesHandle);
+  const consumer = useSelectedConsumer();
   const dispatch = useDispatch();
-  // const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
+
+  const [expandedKey, setExpandedKey] = useState(null);
+  const [openCapture, setOpenCapture] = useState(false);
+  const [openRelease, setOpenRelease] = useState(false);
+  const [refundingKey, setRefundingKey] = useState(null);
+  const [receiptTransaction, setReceiptTransaction] = useState(null);
+
+  const companyId = user?.companyData?.id;
+  const consumerId = consumer?.id ?? consumer?.uid;
+
   const transactionsQuery = useQuery({
-    queryKey: ["transactionPerConsumerListQuery", customer.uid],
+    queryKey: [
+      ...consumerTransactionsKey(event?.id, companyId, consumerId),
+      triggering,
+    ],
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?event_id=${event.id}&company=${user.companyData.id
-        }&consumerInfo.id=${customer.id ?? customer.uid}`,
+        `/transaction/transaction?event_id=${event.id}&company=${companyId}&consumerInfo.id=${consumerId}`
       ),
-    enabled: !!customer.id || !!customer.uid,
+    enabled: Boolean(event?.id && companyId && consumerId),
   });
 
-  const stripeTransactionsSavedQuery = transactionsQuery?.data?.data?.list;
-
-  const deviceAssignedListQuery = useQuery({
-    queryKey: ["assginedDeviceList"],
-    queryFn: () =>
-      devitrakApi.post("/receiver/receiver-assigned-list", {
-        user: customer.email,
-        company: user.companyData.id,
-        eventSelected: event.eventInfoDetail.eventName,
-      }),
-    // enabled: false,
-    enabled:
-      !!customer.email &&
-      !!event.eventInfoDetail.eventName &&
-      !!user.companyData.id,
-  });
-
-  const signaturesProofUrl = useQuery({
-    queryKey: [
-      "signaturesProofUrl",
-      event.id,
-      user.companyData.id,
-      customer.id,
-    ],
+  const signaturesQuery = useQuery({
+    queryKey: ["consumerSignatures", event?.id, companyId, consumer?.id],
     queryFn: () =>
       devitrakApi.post("/company/consumer-signatures", {
         event_id: event.id,
-        company_id: user.companyData.id,
-        consumer_id: customer.id,
+        company_id: companyId,
+        consumer_id: consumer.id,
       }),
     staleTime: 1000 * 60 * 5,
-    enabled: !!event.id && !!user.companyData.id && !!customer.id,
+    enabled: Boolean(event?.id && companyId && consumer?.id),
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    transactionsQuery.refetch();
-    deviceAssignedListQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [triggering]);
+  const signatureProof = signaturesQuery.data
+    ? groupBy(signaturesQuery.data.data.signatures, "transaction_id")
+    : {};
 
-  const refetchingFn = () => {
-    return deviceAssignedListQuery.refetch();
-  };
+  const rows = toTransactionRows(
+    filterTransactions(transactionsQuery.data?.data?.list, searchValue)
+  );
 
-  const refetchingTransactionFn = () => {
-    return transactionsQuery.refetch();
-  };
-
-  const filterDataBasedOnUserAndEvent = () => {
-    if (stripeTransactionsSavedQuery) {
-      if (searchValue?.length < 1) {
-        return stripeTransactionsSavedQuery.filter((element) =>
-          JSON.stringify(element).includes(searchValue),
-        );
-      } else {
-        return [];
-      }
-    }
-    return [];
-  };
-
-  const searchingTransaction = (props) => {
-    if (Array.isArray(props)) {
-      const transactionFound = props.filter((element) =>
-        JSON.stringify(element)
-          .toLowerCase()
-          .includes(String(searchValue).toLowerCase()),
-      );
-      return transactionFound;
-    }
-  };
-
-  const sourceData = () => {
-    const result = new Set();
-    if (filterDataBasedOnUserAndEvent()?.length > 0) {
-      for (let data of filterDataBasedOnUserAndEvent()) {
-        result.add({
-          key: data.paymentIntent,
-          ...data,
-        });
-      }
-      const transactions = Array.from(result);
-      if (String(searchValue)?.length > 0) {
-        return searchingTransaction(transactions);
-      }
-      return transactions;
-    }
-    return [];
-  };
-  const handleRecord = (record) => {
+  const selectTransaction = (record) => {
     dispatch(onAddPaymentIntentSelected(record.paymentIntent));
     dispatch(onAddPaymentIntentDetailSelected({ ...record }));
   };
 
-  const cellStyle = {
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-  };
-
   const handleRefund = async (record) => {
+    setRefundingKey(record.key);
     try {
-      setIsLoading(true);
-      await devitrakApi.post(`/stripe/refund`, {
+      await devitrakApi.post("/stripe/refund", {
         paymentIntent: record.paymentIntent,
       });
       await devitrakApi.patch(`/transaction/update-transaction/${record.id}`, {
         id: record.id,
         active: false,
       });
-      const emailTemplate = {
-        email: customer.email,
-        amount: String(record.device[0].deviceValue),
+      await devitrakApi.post("/nodemailer/refund-notification", {
+        email: consumer.email,
+        amount: String(record.device?.[0]?.deviceValue ?? ""),
         date: new Date().toString().slice(4, 15),
         paymentIntent: record.paymentIntent,
-        customer: `${customer.name} ${customer.lastName}`,
-      };
-      await devitrakApi.post("/nodemailer/refund-notification", emailTemplate);
-      setIsLoading(false);
+        customer: `${consumer.name} ${consumer.lastName}`,
+      });
+      transactionsQuery.refetch();
+      notify("success", "Refund issued and the consumer was emailed.");
     } catch (error) {
-      setIsLoading(false);
-      message.error(`There was an error. ${error}`);
+      notify("error", "The refund failed. Nothing was charged back.");
+    } finally {
+      setRefundingKey(null);
     }
   };
 
   const columns = [
     {
-      title: `Date and time`,
-      dataIndex: "paymentIntent",
-      key: "paymentIntent",
-      responsive: ["md", "lg"],
-      render: (_, record) => (
-        <span style={Subtitle}>{new Date(`${record.date}`).toUTCString()}</span>
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      width: "20%",
+      responsive: ["md"],
+      render: (date) => (
+        <span className="profile-date__exact">
+          {date ? new Date(date).toUTCString() : "—"}
+        </span>
       ),
     },
     {
-      title: "Transaction ID",
+      title: "Transaction",
       dataIndex: "paymentIntent",
       key: "paymentIntent",
-      render: (paymentIntent) => {
-        const checkPaymentIntent = String(paymentIntent).split("_");
+      render: (paymentIntent, record) => {
+        const kind = describeTransactionKind(record);
         return (
-          <span style={{ ...Subtitle, textOverflow: "ellipsis" }}>
-            {checkPaymentIntent[1] === "cash"
-              ? `${checkPaymentIntent[1]}_${checkPaymentIntent[2]}_${String(
-                checkPaymentIntent[4].split("**")[1],
-              )}`
-              : paymentIntent}
+          <span
+            style={{ display: "flex", flexDirection: "column", gap: "3px" }}
+          >
+            <span className="profile-serial">
+              {formatTransactionId(paymentIntent)}
+            </span>
+            <span
+              style={{
+                fontSize: "12px",
+                color: "var(--gray-500, #777b73)",
+              }}
+            >
+              {kind.label}
+            </span>
           </span>
         );
       },
     },
     {
-      title: "Quantity",
+      title: "Devices",
       dataIndex: "device",
       key: "device",
+      width: "12%",
       responsive: ["lg"],
-      render: (_, record) => (
-        <span style={Subtitle}>
-          {" "}
-          <Typography style={Subtitle}>
-            {record.device[0].deviceNeeded}{" "}
-            {record.device[0].deviceNeeded > 1 ? "devices" : "device"}
-          </Typography>
-        </span>
-      ),
+      render: (_, record) => {
+        const needed = Number(record.device?.[0]?.deviceNeeded) || 0;
+        return (
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>
+            {needed} {needed === 1 ? "device" : "devices"}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Status",
+      key: "status",
+      width: "12%",
+      render: (_, record) => {
+        const state = describeTransactionState(record);
+        return <StatusChip tone={state.tone} pip label={state.label} />;
+      },
     },
     {
       title: "",
-      dataIndex: "action",
-      key: "action",
-      width: "fit-content",
+      key: "actions",
       align: "right",
-      fixed: "right",
-      render: (_, record) => (
-        <Grid container spacing={1}>
-          <Grid
-            item
-            xs={12}
-            sm={12}
-            md={record.device[0].deviceNeeded < 1 ? 12 : 6}
-            display={"flex"}
-            justifyContent={"flex-end"}
-            alignItems={"center"}
-          >
-            {record.paymentIntent?.length > 16 &&
-              record.device[0].deviceNeeded < 1 && (
-                <span
-                  style={{
-                    ...cellStyle,
-                    borderRadius: "16px",
-                    // justifyContent: "center",
-                    display: "flex",
-                    padding: "2px 8px",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    background: "var(--success-50, #ECFDF3)",
-                    width: "100%",
-                  }}
-                >
-                  <p
-                    style={{
-                      ...Subtitle,
-                      color: "var(--success-700, #067647)",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {String(record.device[0].deviceType)
-                      .split(" ")
-                      .toLocaleString()
-                      .replaceAll(",", " ")}
-                  </p>
-                  <div style={{ padding: "2px 8px" }}>
-                    <DangerButtonComponent
-                      isLoading={isLoading}
-                      disabled={!record.active}
-                      onClick={() => handleRefund(record)}
-                    >
-                      {record.active ? "Refund" : "Refunded"}
-                    </DangerButtonComponent>
-                  </div>
-                </span>
-              )}
-            {record.paymentIntent?.length > 16 &&
-              record.device[0].deviceNeeded > 0 && (
-                <Popconfirm
-                  title="Releasing deposit? This action can not be reversed."
-                  onConfirm={() => {
-                    setOpenCancelingDepositModal(true);
-                    handleRecord(record);
-                  }}
-                  style={{
-                    width: "100%",
-                    ...CenteringGrid,
-                  }}
-                >
-                  <DangerButtonComponent
-                    disabled={!record.active}
-                    styles={{ width: "100%" }}
-                  >
-                    Release deposit
-                  </DangerButtonComponent>
-                </Popconfirm>
-              )}
-          </Grid>
-          {record.paymentIntent?.length > 16 &&
-            record.device[0].deviceNeeded > 0 && (
-              <Grid
-                item
-                xs={12}
-                sm={12}
-                md={4}
-                display={"flex"}
-                alignItems={"center"}
-              >
-                <Popconfirm
-                  title="Capturing deposit? This action can not be reversed."
-                  onConfirm={() => {
-                    setOpenCapturingDepositModal(true);
-                    handleRecord(record);
-                  }}
-                >
-                  <BlueButtonComponent
-                    disabled={!record.active}
-                    styles={{ width: "100%" }}
-                  >
-                    Capture fund
-                  </BlueButtonComponent>
-                </Popconfirm>
-              </Grid>
+      render: (_, record) => {
+        const kind = describeTransactionKind(record);
+        const isOpen = record.active !== false;
+
+        return (
+          <span className="profile-row-actions">
+            {kind.canRefund && (
+              <DangerButtonComponent
+                title={isOpen ? "Refund" : "Refunded"}
+                size="sm"
+                disabled={!isOpen}
+                loadingState={refundingKey === record.key}
+                func={() => handleRefund(record)}
+              />
             )}
-        </Grid>
-      ),
+            {kind.canCaptureDeposit && (
+              <Popconfirm
+                title="Capture this deposit?"
+                description="The consumer is charged and this cannot be reversed."
+                okText="Capture"
+                disabled={!isOpen}
+                onConfirm={() => {
+                  selectTransaction(record);
+                  setOpenCapture(true);
+                }}
+              >
+                <LightBlueButtonComponent
+                  title="Capture"
+                  size="sm"
+                  disabled={!isOpen}
+                />
+              </Popconfirm>
+            )}
+            {kind.canReleaseDeposit && (
+              <Popconfirm
+                title="Release this deposit?"
+                description="The hold on the consumer's card is dropped and this cannot be reversed."
+                okText="Release"
+                disabled={!isOpen}
+                onConfirm={() => {
+                  selectTransaction(record);
+                  setOpenRelease(true);
+                }}
+              >
+                <GrayButtonComponent
+                  title="Release"
+                  size="sm"
+                  disabled={!isOpen}
+                />
+              </Popconfirm>
+            )}
+            {/* Offered for closed transactions too — a receipt showing the
+                refund or release is exactly what someone comes looking for. */}
+            <GrayButtonComponent
+              title="Receipt"
+              size="sm"
+              func={() => setReceiptTransaction(record)}
+            />
+          </span>
+        );
+      },
     },
   ];
-  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
-  const [RowKeyInfo, setRowKeyInfo] = useState(null);
 
-  const customExpandIcon = (props) => {
-    if (props.expanded) {
-      return (
-        <GrayButtonComponent func={(e) => {
-          props.onExpand(props.record, e);
-        }} title={
-          <ChevronDown size={16} />
-        } />
-      );
-    } else {
-      return (
-        <GrayButtonComponent func={(e) => {
-          props.onExpand(props.record, e);
-        }} title={
-          <ChevronRight size={16} />
-        } />
-      );
-    }
-  };
+  if (transactionsQuery.isLoading) return <ProfileSkeleton lines={4} />;
 
-  useEffect(() => {
-    if (expandedRowKeys.length !== 0) {
-      const checking = async () => {
-        const response = await devitrakApi.post(
-          "/receiver/receiver-assigned-list",
-          {
-            paymentIntent: expandedRowKeys[0],
-            "device.status": true,
-          },
-        );
-        if (
-          expandedRowKeys[0]?.length > 15 &&
-          response?.data?.listOfReceivers?.length > 0
-        ) {
-          return setOpenCancelingDepositModal(false);
+  if (transactionsQuery.isError) {
+    return (
+      <ProfileErrorState
+        title="Couldn't load transactions"
+        description="The transaction service didn't respond. Nothing was changed."
+        action={
+          <GrayButtonComponent
+            title="Try again"
+            func={() => transactionsQuery.refetch()}
+          />
         }
-        if (
-          expandedRowKeys[0]?.length > 15 &&
-          response?.data?.listOfReceivers?.length > 0 &&
-          RowKeyInfo?.active
-        ) {
-          return setOpenCancelingDepositModal(true);
-        }
-      };
-      if (
-        expandedRowKeys[0]?.length > 15 &&
-        sourceData().filter(
-          (item) => item.paymentIntent === expandedRowKeys[0],
-        )[0].active
-      ) {
-        checking();
-      }
-    }
-  }, [expandedRowKeys]);
+      />
+    );
+  }
+
+  if (rows.length === 0) {
+    // Two different nothings, two different messages. The old table fell
+    // through to antd's bare "No data" for both.
+    return searchValue ? (
+      <EmptyState
+        icon="tabler:search-off"
+        title="No transaction matches that search"
+        description={`Nothing in this consumer's transactions matches "${searchValue}".`}
+      />
+    ) : (
+      <EmptyState
+        icon="tabler:receipt-off"
+        title="No transactions yet"
+        description="Start one from the actions beside the consumer's name."
+      />
+    );
+  }
 
   return (
     <>
+      {contextHolder}
       <ExpandableTable
         columns={columns}
-        dataSource={sourceData()}
+        dataSource={rows}
+        enablePagination={rows.length > 10}
+        pageSize={10}
         expandable={{
-          expandedRowKeys,
-          onExpand: (expanded, record) => {
-            setExpandedRowKeys(expanded ? [record.key] : []);
-            setRowKeyInfo(expanded ? record : null);
-          },
-          expandIcon: (props) => customExpandIcon(props),
+          expandedRowKeys: expandedKey ? [expandedKey] : [],
+          onExpand: (expanded, record) =>
+            setExpandedKey(expanded ? record.key : null),
           expandRowByClick: false,
-          expandedRowRender: (record) =>
-            expandedRowKeys[0] === record.key ? (
-              <ExpandedRowInTable
-                key={record.paymentIntent}
-                rowRecord={record}
-                refetching={refetchingFn}
-                setOpenCancelingDepositModal={setOpenCancelingDepositModal}
-                handleRecord={handleRecord}
-                signatureProof={
-                  signaturesProofUrl.data
-                    ? groupBy(
-                      signaturesProofUrl.data.data.signatures,
-                      "transaction_id",
-                    )
-                    : []
-                }
-                enablePagination={true}
-                pageSize={10}
-              />
-            ) : (
-              <DevitrakLoading />
-            ),
+          expandIcon: ({ expanded, onExpand, record }) => (
+            <GrayButtonComponent
+              size="sm"
+              ariaLabel={expanded ? "Collapse transaction" : "Expand transaction"}
+              func={(e) => onExpand(record, e)}
+              title={
+                expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+              }
+            />
+          ),
+          expandedRowRender: (record) => (
+            <TransactionPanel
+              key={record.paymentIntent}
+              record={record}
+              signatureProof={signatureProof}
+              refetchTransactions={() => transactionsQuery.refetch()}
+              onReleaseDeposit={() => setOpenRelease(true)}
+            />
+          ),
         }}
       />
-      {openCapturingDepositModal && (
+
+      {openCapture && (
         <Capturing
-          openCapturingDepositModal={openCapturingDepositModal}
-          setOpenCapturingDepositModal={setOpenCapturingDepositModal}
-          refetchingTransactionFn={refetchingTransactionFn}
+          openCapturingDepositModal={openCapture}
+          setOpenCapturingDepositModal={setOpenCapture}
+          refetchingTransactionFn={() => transactionsQuery.refetch()}
         />
       )}
-      {openCancelingDepositModal && (
+      {openRelease && (
         <Releasing
-          openCancelingDepositModal={openCancelingDepositModal}
-          setOpenCancelingDepositModal={setOpenCancelingDepositModal}
-          refetchingTransactionFn={refetchingTransactionFn}
+          openCancelingDepositModal={openRelease}
+          setOpenCancelingDepositModal={setOpenRelease}
+          refetchingTransactionFn={() => transactionsQuery.refetch()}
         />
       )}
       {openModalToAssignDevice && <ModalAddingDeviceFromSearchbar />}
+      {receiptTransaction && (
+        <ReceiptModal
+          openModal={Boolean(receiptTransaction)}
+          setOpenModal={() => setReceiptTransaction(null)}
+          receipt={mapTransactionToReceipt(receiptTransaction)}
+          qrValue={buildReceiptUrl(
+            window.location.origin,
+            receiptTransaction?.paymentIntent
+          )}
+        />
+      )}
     </>
   );
 };
-export default StripeTransactionTable;
+
 StripeTransactionTable.propTypes = {
   searchValue: PropTypes.string,
+  triggering: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
 };
+
+StripeTransactionTable.defaultProps = {
+  searchValue: "",
+  triggering: 0,
+};
+
+export default StripeTransactionTable;

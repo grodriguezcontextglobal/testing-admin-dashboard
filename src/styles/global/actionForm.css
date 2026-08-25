@@ -1,0 +1,345 @@
+/* One layout for every action form in the app: assign a device, assign to an
+   event, locations & permissions, contact info, reset password, edit details,
+   and the member handover.
+
+   Every one of them used to be its own layout: MUI Grid with xs/sm/md/lg on
+   each child, `InputLabel` wrapping a `<p>` for a heading, a
+   `ReusableCardWithHeaderAndFooter` nested inside a modal that already had a
+   title, and action buttons rendered twice (once above the form, once below).
+   They share one column, one label style and one footer now. */
+
+.action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  text-align: left;
+}
+
+.action-form__lead {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+}
+
+/* ------------------------------------------------------------------ Steps */
+
+.action-form__step {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.action-form__step-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.action-form__step-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+}
+
+.action-form__step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--base-white, #fff);
+  background: var(--gray-500, #777b73);
+  border-radius: var(--radius-full, 9999px);
+}
+
+.action-form__step--done .action-form__step-index {
+  background: var(--success-600, #079455);
+}
+
+.action-form__step-note {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+/* ----------------------------------------------------------------- Fields */
+
+.action-form__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.action-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.action-form__field--wide {
+  grid-column: 1 / -1;
+}
+
+.action-form__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.action-form__row > .action-form__field {
+  flex: 1 1 auto;
+}
+
+/* Feedback under the field that caused it, not as a toast in the corner. */
+.action-form__feedback {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.action-form__feedback--ok {
+  color: var(--success-700, #067647);
+}
+
+.action-form__feedback--error {
+  color: var(--error-700, #9a3922);
+}
+
+.action-form__notice {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+  background: var(--error-50, #fbeae5);
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-md, 8px);
+}
+
+.action-form__empty {
+  margin: 0;
+  padding: 12px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+  background: var(--base-white, #fff);
+  border: 1px dashed var(--gray-300, #c8cac3);
+  border-radius: var(--radius-md, 8px);
+}
+
+/* --------------------------------------------------------------- Picklist */
+
+.action-form__picked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.action-form__picked li {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 8px 12px;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-md, 8px);
+}
+
+.action-form__serial {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+.action-form__remove {
+  padding: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600, #5c5f5a);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.action-form__remove:hover:not(:disabled) {
+  color: var(--error-700, #9a3922);
+  text-decoration: underline;
+}
+
+.action-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+/* ---------------------------------------------------------------- Summary */
+
+.action-form__summary {
+  display: grid;
+  gap: 10px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.action-form__summary dt {
+  margin: 0 0 2px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.action-form__summary dd {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+/* ----------------------------------------------------------------- Footer */
+
+.action-form__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200, #eaecf0);
+}
+
+.action-form__consequence {
+  flex: 1 1 220px;
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+@media (max-width: 600px) {
+  .action-form__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-form__footer {
+    justify-content: stretch;
+  }
+}
+
+/* ---------------------------------------------------------------- Banners */
+
+/* A statement about who is accountable, or what is blocking the action. The
+   member handover used to build these inline with a hand-written colour map
+   per branch. */
+.action-form__banner {
+  margin: 0;
+  padding: 12px 16px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 8px);
+}
+
+.action-form__banner strong {
+  font-weight: 600;
+}
+
+.action-form__banner a {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+}
+
+.action-form__banner--neutral {
+  color: var(--gray-600, #5d615a);
+  background: var(--gray-50, #f7f7f4);
+  border-color: var(--gray-200, #ddded6);
+}
+
+.action-form__banner--info {
+  color: var(--blue-800, #1849a9);
+  background: var(--blue-50, #eff8ff);
+  border-color: var(--blue-200, #b2ddff);
+}
+
+.action-form__banner--success {
+  color: var(--success-700, #067647);
+  background: var(--success-50, #ecfdf3);
+  border-color: var(--success-200, #abefc6);
+}
+
+.action-form__banner--warning {
+  color: var(--warning-700, #b54708);
+  background: var(--warning-50, #fffaeb);
+  border-color: var(--warning-200, #fedf89);
+}
+
+.action-form__banner--critical {
+  color: var(--error-700, #9a3922);
+  background: var(--error-50, #fbeae5);
+  border-color: var(--error-200, #eeb4a3);
+}
+
+/* The page-level header of a full-page action form (the member handover is a
+   route, not a modal, so it carries its own title). */
+.action-form__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-form__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  color: var(--gray-900, #171d1a);
+}

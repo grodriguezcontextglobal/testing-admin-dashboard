@@ -1,0 +1,166 @@
+/* Add a staff member.
+
+   The form used to be one flat column — email, then three fields that appeared
+   only after a lookup, then the role — with a button that said "Verify email"
+   and actually sent the invitation. It is now two named steps, and only the
+   last button writes anything. */
+
+.new-staff {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  text-align: left;
+}
+
+.new-staff__step {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 18px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.new-staff__lead {
+  margin: 2px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+}
+
+.new-staff__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.new-staff__row {
+  display: flex;
+  gap: 12px;
+}
+
+.new-staff__field {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Who the invitation is for, stated before it is sent. The old form looked the
+   person up, wrote their name into fields it kept hidden, and named them only
+   in the toast that appeared after the invitation had already gone out. */
+.new-staff__person {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-md, 8px);
+}
+
+.new-staff__person-name {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+.new-staff__person-email {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+  overflow-wrap: anywhere;
+}
+
+.new-staff__badge {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 2px 8px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 16px;
+  text-transform: uppercase;
+  border-radius: var(--radius-full, 9999px);
+}
+
+.new-staff__badge--known {
+  color: var(--success-700, #067647);
+  background: var(--success-50, #ecfdf3);
+  border: 1px solid var(--success-200, #abefc6);
+}
+
+.new-staff__badge--new {
+  color: var(--warning-700, #b54708);
+  background: var(--warning-50, #fffaeb);
+  border: 1px solid var(--warning-200, #fedf89);
+}
+
+/* The role hint sits under the picker, so what the role grants is read at the
+   moment it is chosen rather than looked up somewhere else. */
+.new-staff__hint {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+}
+
+.new-staff__error {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+}
+
+.new-staff__notice {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+  background: var(--error-50, #fbeae5);
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-md, 8px);
+}
+
+/* What pressing the primary button will do, said before it is pressed. */
+.new-staff__consequence {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+.new-staff__footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200, #eaecf0);
+}
+
+.new-staff__footer > * {
+  flex: 1 1 0;
+}
+
+@media (max-width: 520px) {
+  .new-staff__row {
+    flex-direction: column;
+  }
+}

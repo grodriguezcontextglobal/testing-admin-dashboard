@@ -32,9 +32,12 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const listItemsQuery = useQuery({
     queryKey: ["currentStateDevicePerLocation"],
     queryFn: () =>
-      devitrakApi.post("/db_company/inventory-based-on-submitted-parameters", {
-        query: "select * from item_inv where location = ? and company_id = ?",
-        values: [decodeURI(locationName[0].slice(1)), user.sqlInfo.company_id],
+      devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.byAttribute",
+        params: {
+          attribute: "location",
+          value: decodeURI(locationName[0].slice(1)),
+        },
       }),
     refetchOnMount: false,
     enabled: !!user.sqlInfo.company_id,
@@ -150,7 +153,7 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   }, [structuredData, totalValue, availabilityInfo, referenceData, location.key]);
 
   const dictionary = {
-    Permanent: "Owned",
+    Permanent: "Permanent",
     Rent: "Leased",
     Sale: "For sale",
   };
@@ -198,6 +201,11 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           })}
           dataSource={dataToDisplay}
           className="table-ant-customized"
+          onRow={() => ({
+            onClick: () => {
+              // navigate(`/inventory/item?id=${itemId}`);
+            },
+          })}
           // onChange={handleTableChange}
         />
       </Grid>

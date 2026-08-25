@@ -83,6 +83,7 @@ export const ACTION_LABELS = {
   "member:delete": "Delete members",
   "member:assign_devices": "Assign devices to members",
   "member:notify": "Send member reminders",
+  "member:charge_fee": "Charge device fees to members",
   // Navigation
   "nav:home": "Access Home",
   "nav:inventory": "Access Inventory",

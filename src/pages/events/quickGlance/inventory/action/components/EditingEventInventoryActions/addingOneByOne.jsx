@@ -10,6 +10,7 @@ import { checkAndUpdateGlobalEventStatus } from "./checkAndUpdateGlobalEventStat
 
 const useAddingItemsToEventInventoryOneByOne = ({
   closeModal,
+  onStep = () => {},
   openNotification,
   queryClient,
   setLoadingStatus,
@@ -19,6 +20,29 @@ const useAddingItemsToEventInventoryOneByOne = ({
   const { valueItemSelected, eventInfo } = contextValue;
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
+
+  /**
+   * Runs one step of the write chain and reports where it got to.
+   *
+   * Every helper below used to end its catch with `return message.error(...)`.
+   * `return`, not `throw` — and since message.error() returns a value, the
+   * promise FULFILLED, so the awaiting caller read the failure as a success and
+   * went on to announce "Items added to event inventory.", patch the event,
+   * clear the caches and close the modal. Failures propagate now, and the step
+   * index says how far the chain got: none of these inserts carries a dedup
+   * key, so what already committed must not be written twice.
+   */
+  const runStep = async (index, action) => {
+    onStep(index, "running");
+    try {
+      const result = await action();
+      onStep(index, "done");
+      return result;
+    } catch (error) {
+      onStep(index, "failed");
+      throw error;
+    }
+  };
   const eventInventoryRef = useCallback(
     async ({ device = null, database = null, checking = null }) => {
       const eventInventoryRef = await devitrakApi.post("/event/event-list", {
@@ -125,7 +149,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
         });
         await devitrakApi.post("/db_item/item-out-warehouse", {
           warehouse: 0,
-          logistic_status: "allocated",
+          logistic_status: "in-event",
           company_id: user.sqlInfo.company_id,
           item_group: database[0].item_group,
           startingNumber: database[0].serial_number,
@@ -194,9 +218,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
         checking: props.checking,
       });
     } catch (error) {
-      return message.error(
-        "Failed to update device setup ineventInfo. Please try again."
-      );
+      throw error;
     }
   };
 
@@ -215,7 +237,9 @@ const useAddingItemsToEventInventoryOneByOne = ({
         });
       }
     } catch (error) {
-      return message.error("Failed to add device. Please try again.");
+      // Re-thrown: this is step 4 of the chain, and swallowing it here is what
+      // let the event report devices it never listed.
+      throw error;
     }
   };
 
@@ -234,21 +258,23 @@ const useAddingItemsToEventInventoryOneByOne = ({
         company: user.companyData.id,
         event_id: eventInfo.id,
       };
-      await devitrakApi.post("/receiver/receivers-pool-bulk", template);
-      await checkInsertedDataAndUpdateInventoryEvent(data);
+      await runStep(2, () =>
+        devitrakApi.post("/receiver/receivers-pool-bulk", template),
+      );
+      await runStep(3, () => checkInsertedDataAndUpdateInventoryEvent(data));
+      // Expanding containers stays best-effort: most items are not containers,
+      // so a miss here is normal and must not fail an otherwise complete add.
       await checkIfContainer(data);
     } catch (error) {
-      return message.error(
-        "Failed to add device to NoSQL database. Please try again."
-      );
+      throw error;
     }
   };
 
   const createDeviceInEvent = async (props) => {
-    try {
-      let database = [...props.deviceInfo];
-      const event_id = eventInfo.sql.event_id;
-      await devitrakApi.post("/db_event/event_device", {
+    let database = [...props.deviceInfo];
+    const event_id = eventInfo.sql.event_id;
+    await runStep(0, () =>
+      devitrakApi.post("/db_event/event_device", {
         event_id: event_id,
         item_group: database[0].item_group,
         startingNumber: props.startingSerial,
@@ -256,8 +282,10 @@ const useAddingItemsToEventInventoryOneByOne = ({
         company_id: user.sqlInfo.company_id,
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
-      });
-      await devitrakApi.post("/db_item/item-out-warehouse", {
+      }),
+    );
+    await runStep(1, () =>
+      devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: 0,
         company_id: user.sqlInfo.company_id,
         item_group: database[0].item_group,
@@ -265,11 +293,10 @@ const useAddingItemsToEventInventoryOneByOne = ({
         quantity: Number(props.quantity),
         category_name: database[0].category_name,
         data: props.deviceInfo.map((item) => item.serial_number),
-      });
-      await createDeviceRecordInNoSQLDatabase(props);
-    } catch (error) {
-      return message.error("Failed to add device to event. Please try again.");
-    }
+        logistic_status: "in-event",
+      }),
+    );
+    await createDeviceRecordInNoSQLDatabase(props);
   };
 
   const handleUpdateEventInventory = async (data) => {
@@ -287,30 +314,20 @@ const useAddingItemsToEventInventoryOneByOne = ({
     try {
       setLoadingStatus(true);
 
-      // Fetch available items matching submitted serials (parameterized IN)
-      const deviceInfoQuery = `
-        Select item_id, serial_number, location, container, category_name, item_group
-        from item_inv
-        where company_id = ?
-          and warehouse = 1
-          and enableAssignFeature = 1
-          and location = ?
-          and item_group = ?
-          and category_name = ?
-          and serial_number in (${serials.map(() => "?").join(",")})
-      `;
-      const deviceInfoValues = [
-        user.sqlInfo.company_id,
-        valueItemSelected.location,
-        valueItemSelected.item_group,
-        valueItemSelected.category_name,
-        ...serials,
-      ];
+      // Fetch available items matching submitted serials. This call site was
+      // already interpolating placeholders (`?`) rather than values, so unlike
+      // the assignment screens there was no injection here — the win is just
+      // that the SQL no longer leaves the client.
       const deviceInfoResponse = await devitrakApi.post(
-        "/db_event/inventory-based-on-submitted-parameters",
+        "/db_event/inventory-query",
         {
-          query: deviceInfoQuery,
-          values: deviceInfoValues,
+          queryName: "inventory.assignableBySerials",
+          params: {
+            location: valueItemSelected.location,
+            itemGroup: valueItemSelected.item_group,
+            categoryName: valueItemSelected.category_name,
+            serialNumbers: serials,
+          },
         }
       );
       const deviceInfo = Array.isArray(deviceInfoResponse.data?.result)

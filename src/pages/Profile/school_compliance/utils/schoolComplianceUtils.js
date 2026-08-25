@@ -44,8 +44,8 @@ export async function updateConsentEnforcement(companyId, payload) {
  * Form uses camelCase (enforceUnder13, policyVersion); API uses snake_case.
  *
  * @param {number} companyId
- * @param {{ enforce: boolean, enforceUnder13: boolean, policyVersion: string }} formValues
- * @returns {{ company_id: number, enforce: boolean, enforce_under_13: boolean, required_consent_policy_version: string|null }}
+ * @param {{ enforce: boolean, enforceUnder13: boolean, policyVersion: string, consentDocumentId?: string }} formValues
+ * @returns {{ company_id: number, enforce: boolean, enforce_under_13: boolean, required_consent_policy_version: string|null, consent_document_id: string|null }}
  */
 export function buildConsentEnforcementPayload(companyId, formValues) {
   return {
@@ -53,14 +53,15 @@ export function buildConsentEnforcementPayload(companyId, formValues) {
     enforce: formValues.enforce,
     enforce_under_13: formValues.enforceUnder13,
     required_consent_policy_version: formValues.policyVersion || null,
+    consent_document_id: formValues.consentDocumentId || null,
   };
 }
 
 /**
  * Check whether the form has unsaved changes compared to the server state.
  *
- * @param {{ enforce: boolean, enforceUnder13: boolean, policyVersion: string }} current - current form values
- * @param {{ enforce: boolean, enforceUnder13: boolean, policyVersion: string }} original - last saved values from server
+ * @param {{ enforce: boolean, enforceUnder13: boolean, policyVersion: string, consentDocumentId?: string }} current - current form values
+ * @param {{ enforce: boolean, enforceUnder13: boolean, policyVersion: string, consentDocumentId?: string }} original - last saved values from server
  * @returns {boolean}
  */
 export function hasSettingsChanges(current, original) {
@@ -68,6 +69,21 @@ export function hasSettingsChanges(current, original) {
   return (
     current.enforce !== original.enforce ||
     current.enforceUnder13 !== original.enforceUnder13 ||
-    current.policyVersion !== original.policyVersion
+    current.policyVersion !== original.policyVersion ||
+    current.consentDocumentId !== original.consentDocumentId
   );
+}
+
+/**
+ * Fetch the company's documents tagged for the school consent flow
+ * (`trigger_action: "school_consent"`), for use in the consent-document
+ * assignment picker.
+ *
+ * @param {number} companyId
+ * @returns {Promise<Array<object>>}
+ */
+export async function fetchSchoolConsentDocuments(companyId) {
+  const response = await devitrakApi.get(`/document/?company_id=${companyId}`);
+  const documents = response?.data?.documents ?? [];
+  return documents.filter((doc) => doc.trigger_action === "school_consent");
 }

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useRef } from "react";
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
 import IndustryTabGuard from "./IndustryTabGuard";
@@ -48,6 +48,11 @@ const FormDocumentDetail = lazy(() =>
 const TransactionsDetails = lazy(() =>
   import(
     "../../pages/events/quickGlance/consumer/ConsumerDetail/details/TransactionsDetails"
+  )
+);
+const ConsumerDocumentsDetails = lazy(() =>
+  import(
+    "../../pages/events/quickGlance/consumer/ConsumerDetail/details/DocumentsDetails"
   )
 );
 const Cash = lazy(() =>
@@ -105,9 +110,6 @@ const UpdateContactInfo = lazy(() =>
     "../../pages/staff/detail/components/equipment_components/UpdateContactInfo"
   )
 );
-const TableStaffDetail = lazy(() =>
-  import("../../pages/staff/detail/components/TableStaffDetail")
-);
 const StaffDetail = lazy(() => import("../../pages/staff/detail/StaffDetail"));
 const ForgetPasswordLinkFromStaffPage = lazy(() =>
   import(
@@ -121,11 +123,6 @@ const UpdateRoleInCompany = lazy(() =>
 );
 const AssignStaffMemberToEvent = lazy(() =>
   import("../../pages/staff/detail/components/AssignStaffMemberToEvent")
-);
-const AssignLocation = lazy(() =>
-  import(
-    "../../pages/staff/detail/components/equipment_components/assingmentComponents/AssignLocation"
-  )
 );
 const AssignLocationManager = lazy(() =>
   import(
@@ -141,6 +138,9 @@ const RedirectionPage = lazy(() =>
 const ConsumerDeviceLostFeeCreditCard = lazy(() =>
   import("../../pages/consumers/components/markedLostOption/CreditCard")
 );
+// Target of the receipt QR. Also registered in NoAuthRoutes — whoever scans may
+// or may not have a session, and this tree's catch-all is the error page.
+const ReceiptPage = lazy(() => import("../../pages/payment/ReceiptPage"));
 const CompanyInfo = lazy(() =>
   import("../../pages/Profile/company_info/MainPage")
 );
@@ -149,9 +149,6 @@ const SchoolComplianceSettings = lazy(() =>
 );
 const RolesManagementMainPage = lazy(() =>
   import("../../pages/Profile/roles_management/RolesManagementMainPage")
-);
-const SubscriptionMainPage = lazy(() =>
-  import("../../pages/subscription/MainPage")
 );
 const ConfirmSubscription = lazy(() =>
   import("../../components/stripe/payment/ConfirmSubscription")
@@ -233,15 +230,15 @@ const UpdateMemberInformation = lazy(() =>
   )
 );
 
-const Remainders = lazy(() =>
+const Reminders = lazy(() =>
   import(
-    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Remainders"
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Reminders"
   )
 );
 
 const AssignmentDeviceMembers = lazy(() =>
   import(
-    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/MainPageAssignmentComponent"
+    "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/assignment/AssignmentDevicesToMember"
   )
 );
 const AuthRoutes = () => {
@@ -295,10 +292,18 @@ const AuthRoutes = () => {
                 path="/events/event-attendees/:id"
                 element={<CustomerDetailInEvent />}
               >
+                {/* The tab strip is the page's navigation, so the bare consumer
+                    URL has to land on a tab instead of rendering an empty
+                    <Outlet/> under the stat tiles. */}
+                <Route
+                  index
+                  element={<Navigate to="transactions-details" replace />}
+                />
                 <Route
                   path="transactions-details"
                   element={<TransactionsDetails />}
                 />
+                <Route path="documents" element={<ConsumerDocumentsDetails />} />
                 <Route path="payment-confirmed" element={<Confirmation />} />
                 <Route
                   path="payment-service-confirmation"
@@ -406,11 +411,10 @@ const AuthRoutes = () => {
               <Route element={<PermissionGuard action="nav:staff" />}>
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/:id" element={<StaffDetail />}>
-                <Route
-                  key={"/staff/:id/main"}
-                  path="main"
-                  element={<TableStaffDetail />}
-                />
+                {/* The profile's own content (devices, events) is part of
+                    StaffDetail now, so /main renders nothing extra — it stays
+                    registered because every action route navigates back to it. */}
+                <Route key={"/staff/:id/main"} path="main" element={null} />
                 <Route
                   key={"/staff/:id/update-contact-info"}
                   path="update-contact-info"
@@ -431,11 +435,6 @@ const AuthRoutes = () => {
                     key={"/staff/:id/assign-staff-events"}
                     path="assign-staff-events"
                     element={<AssignStaffMemberToEvent />}
-                  />
-                  <Route
-                    key={"/staff/:id/assign-location"}
-                    path="assign-location"
-                    element={<AssignLocation />}
                   />
                   <Route
                     key={"/staff/:id/assign-location-manager"}
@@ -466,10 +465,12 @@ const AuthRoutes = () => {
                   element={<NotificationsMainPage />}
                 />
                 <Route path="billing" element={<BillingMainPage />} />
-                <Route
-                  path="staff-activity"
-                  element={<StaffActivityMainPage />}
-                />
+                <Route element={<PermissionGuard action="staff:read" />}>
+                  <Route
+                    path="staff-activity"
+                    element={<StaffActivityMainPage />}
+                  />
+                </Route>
                 <Route path="company-info" element={<CompanyInfo />} />
                 <Route element={<PermissionGuard action="member:update" />}>
                   <Route path="school-compliance" element={<SchoolComplianceSettings />} />
@@ -511,10 +512,10 @@ const AuthRoutes = () => {
                   </ErrorBoundary>
                 }
               />
-              <Route
-                path="subscription-company"
-                element={<SubscriptionMainPage />}
-              />
+              {/* subscription-company (PricingTable) route intentionally
+                  removed — the pricing UI is a non-functional shell
+                  (placeholder copy, dead buttons); no in-app link points to
+                  it. Restore once a real subscription flow ships. */}
               <Route
                 path="confirm-subscription"
                 element={<ConfirmSubscription />}
@@ -543,7 +544,7 @@ const AuthRoutes = () => {
                   <Route
                     key={"/member/:id/reminders"}
                     path="reminders"
-                    element={<Remainders />}
+                    element={<Reminders />}
                   />
                   <Route
                     key={"/member/:id/assignment"}
@@ -578,6 +579,10 @@ const AuthRoutes = () => {
                 path="/display-contracts"
                 element={<LandingPageForDownloadableDocuments />}
               />
+              {/* Not permission-guarded: this is the same receipt the payer was
+                  already handed, reached by scanning it. Guarding it would break
+                  the scan for the staff who print receipts. */}
+              <Route path="/receipt" element={<ReceiptPage />} />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
           </Routes>

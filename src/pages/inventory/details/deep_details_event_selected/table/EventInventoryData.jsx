@@ -160,7 +160,7 @@ const EventInventoryTable = ({ dataFound }) => {
                             }`}
                     />
                     {ownership === 'Permanent'
-                        ? "Owned"
+                        ? "Permanent"
                         : "Rented"}
                 </Typography>
             </span>

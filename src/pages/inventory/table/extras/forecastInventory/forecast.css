@@ -1,0 +1,258 @@
+/* Inventory forecast result screen.
+
+   The old layout was a MUI Grid container holding cards inside cards inside a
+   box with its top border removed (the header it belonged to was commented
+   out), plus antd Dividers dropped in as direct children of a spacing grid.
+   This is a single column of sections: header, numbers, then one section per
+   question the screen answers. */
+
+.forecast {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding-bottom: 24px;
+  text-align: left;
+}
+
+/* --------------------------------------------------------------- Filters */
+
+.forecast__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.forecast__filters-label {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 18px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.forecast__filter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-800, #2d302c);
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-300, #c8cac3);
+  border-radius: var(--radius-full, 9999px);
+}
+
+.forecast__filter span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+/* ------------------------------------------------------------------ KPIs */
+
+.forecast__kpis {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.forecast__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.06);
+}
+
+.forecast__kpi--danger {
+  background: var(--error-50, #fbeae5);
+  border-color: var(--error-200, #eeb4a3);
+}
+
+.forecast__kpi-label {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 18px;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+}
+
+.forecast__kpi-value {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 36px;
+  color: var(--gray-900, #171d1a);
+}
+
+.forecast__kpi--danger .forecast__kpi-value {
+  color: var(--error-700, #9a3922);
+}
+
+.forecast__kpi-hint {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--gray-500, #777b73);
+}
+
+/* ----------------------------------------------------------------- Alert */
+
+.forecast__alert {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  background: var(--error-50, #fbeae5);
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-md, 8px);
+}
+
+.forecast__alert p {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--error-700, #9a3922);
+}
+
+.forecast__alert p:first-child {
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- Sections */
+
+.forecast__section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.06);
+}
+
+.forecast__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.forecast__section-title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--gray-900, #171d1a);
+}
+
+.forecast__section-hint {
+  margin: 2px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+}
+
+.forecast__section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Wide tables scroll inside their section instead of pushing the page sideways. */
+.forecast__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.forecast__chart {
+  width: 100%;
+  min-height: 300px;
+}
+
+/* ----------------------------------------------------------------- Pills */
+
+.forecast__pill {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full, 9999px);
+}
+
+.forecast__pill--neutral {
+  color: var(--gray-700, #464a45);
+  background: var(--gray-100, #f2f3ef);
+  border-color: var(--gray-200, #eaecf0);
+}
+
+.forecast__pill--success {
+  color: var(--success-700, #067647);
+  background: var(--success-50, #ecfdf3);
+  border-color: var(--success-200, #abefc6);
+}
+
+.forecast__pill--warning {
+  color: var(--warning-700, #b54708);
+  background: var(--warning-50, #fffaeb);
+  border-color: var(--warning-200, #fedf89);
+}
+
+.forecast__pill--danger {
+  color: var(--error-700, #9a3922);
+  background: var(--error-50, #fbeae5);
+  border-color: var(--error-200, #eeb4a3);
+}
+
+/* A restock flag rides next to the item name, where the item is read. */
+.forecast__flag {
+  margin-left: 6px;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--warning-700, #b54708);
+}
+
+.forecast__cell-muted {
+  color: var(--gray-500, #777b73);
+}
+
+@media (max-width: 768px) {
+  .forecast__section {
+    padding: 16px;
+  }
+
+  .forecast__kpi-value {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}

@@ -71,7 +71,7 @@ export const RentedInventoryTable = ({
           onClick={handleToggleExpanded}
         >
           <Typography variant="subtitle2" fontWeight="medium">
-            {type === 1 ? "Owned" : "Rented"} Inventory Details ({rows.length}{" "}
+            {type === 1 ? "Permanent" : "Rented"} Inventory Details ({rows.length}{" "}
             items)
           </Typography>
           <IconButton size="small">

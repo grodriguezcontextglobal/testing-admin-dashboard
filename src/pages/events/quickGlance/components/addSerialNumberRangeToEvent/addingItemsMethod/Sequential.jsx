@@ -8,10 +8,17 @@ import useBatchProcessor from "./hooks/useBatchProcessor";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { onAddEventData } from "../../../../../../store/slices/eventSlice";
+import {
+  buildItemAllocationPayload,
+  describeItemAllocation,
+  explainAllocationFailure,
+  summarizeItemAllocation,
+} from "../utils/itemAllocation";
 
 const Sequential = ({ deviceTitle, Subtitle }) => {
   const [scannedSerials, setScannedSerials] = useState([]);
   const [inputError, setInputError] = useState(null);
+  const [allocationSummaries, setAllocationSummaries] = useState([]);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch()
@@ -26,31 +33,48 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
 
   const processBatch = useCallback(
     async (batch) => {
-      const sqlTemplate = {
-        category_name: event.deviceSetup.find(
-          (item) => item.group === deviceTitle
-        ).category,
-        company_id: user.sqlInfo.company_id,
-        data: batch,
-        event_id: event.sql.event_id,
-        item_group: deviceTitle,
-        logistic_status: "in-event",
-        warehouse: 0,
-      };
+      const sqlTemplate = buildItemAllocationPayload({
+        event,
+        deviceTitle,
+        user,
+        batch,
+      });
 
-      const noSqlTemplate = {
-        type: deviceTitle,
-        activity:false,
-        comment:"No comment",
-        company: event.company_id,
-        deviceList: batch,
-        eventSelected:event.eventInfoDetail.eventName,
-        provider:event.company,
-        status:"Operational"
-      };
-      // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
-      await devitrakApi.post('/db_event/allocate-device-event', sqlTemplate)
-      await devitrakApi.post('/receiver/receivers-pool-bulk', noSqlTemplate)
+      let responseData;
+      try {
+        const { data } = await devitrakApi.post(
+          "/db_event/allocate-device-event",
+          sqlTemplate
+        );
+        responseData = data;
+      } catch (error) {
+        // A 422 means the serials did not match this group/category — a wrong
+        // payload, not an outage. Carrying the reason up keeps it out of the
+        // bare "Request failed with status code 422" the hook would show.
+        throw new Error(explainAllocationFailure(error, deviceTitle));
+      }
+
+      const summary = summarizeItemAllocation(responseData, batch);
+      setAllocationSummaries((previous) => [...previous, summary]);
+
+      // Only the serials that actually resolved in SQL go into the Mongo pool.
+      // poolReceiversBulk is insertMany with no dedup, so handing it the whole
+      // scanned batch left unmatched devices held by an event they were never
+      // assigned to. Confirmed with backend 2026-08-20.
+      if (summary.allocatedSerials.length > 0) {
+        const noSqlTemplate = {
+          type: deviceTitle,
+          activity: false,
+          comment: "No comment",
+          company: event.company_id,
+          deviceList: summary.allocatedSerials,
+          eventSelected: event.eventInfoDetail.eventName,
+          provider: event.company,
+          status: "Operational",
+        };
+        // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
+        await devitrakApi.post("/receiver/receivers-pool-bulk", noSqlTemplate);
+      }
       await finalizeProcessAndUpdateEventInventory()
     },
     [event, deviceTitle, user]
@@ -79,6 +103,7 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
   const handleClear = () => {
     setScannedSerials([]);
     setInputError(null);
+    setAllocationSummaries([]);
     reset();
   };
 
@@ -87,8 +112,14 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
       setInputError("Please scan serial numbers first.");
       return;
     }
+    setAllocationSummaries([]);
     startProcessing();
   };
+
+  const allocationOutcome = describeItemAllocation(
+    allocationSummaries,
+    deviceTitle
+  );
 
   useEffect(() => {
     finalizeProcessAndUpdateEventInventory()
@@ -136,8 +167,9 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
           {status === "running" && <p>Processing...</p>}
           {status === "success" && (
             <Alert
-              message="All serial numbers processed successfully!"
-              type="success"
+              message={allocationOutcome.headline}
+              description={allocationOutcome.detail}
+              type={allocationOutcome.complete ? "success" : "warning"}
               showIcon
             />
           )}

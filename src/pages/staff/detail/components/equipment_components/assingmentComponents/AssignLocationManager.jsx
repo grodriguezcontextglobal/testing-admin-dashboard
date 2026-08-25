@@ -1,76 +1,86 @@
-import {
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { MenuItem, Select } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import renderingTitle from "../../../../../../components/general/renderingTitle";
+import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../../../../components/UX/buttons/DangerButton";
+import DangerButtonConfirmationComponent from "../../../../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
-import ReusableCardWithHeaderAndFooter from "../../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
-import Chip from "../../../../../../components/UX/Chip/Chip";
 import CheckboxReusableComponent from "../../../../../../components/UX/checkbox/CheckboxReusableComponent";
+import Label from "../../../../../../components/UX/inputs/Label";
+import ModalUX from "../../../../../../components/UX/modal/ModalUX";
+import { ProfileSkeleton, StatusChip } from "../../../../../../components/UX/profile";
 import BaseTable from "../../../../../../components/UX/tables/BaseTable";
-import {
-  hasPermission,
-  resolveRoleType,
-  ROLE_LEVELS,
-} from "../../../../../../config/roles";
+import { ROLE_LEVELS, resolveRoleType } from "../../../../../../config/roles";
 import { onAddStaffProfile } from "../../../../../../store/slices/staffDetailSlide";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
-import { Subtitle } from "../../../../../../styles/global/Subtitle";
+import "../../../../../../styles/global/actionForm.css";
 
-const LOCATION_PERMISSION_FIELDS = [
-  { perm: "create",   color: "success", hint: "Allows creating new items in this location." },
-  { perm: "update",   color: "info",    hint: "Allows editing existing items in this location." },
-  { perm: "transfer", color: "warning", hint: "Allows transferring items to/from this location." },
-  { perm: "delete",   color: "error",   hint: "Allows deleting items from this location." },
-  { perm: "view",     color: "default", hint: "Allows viewing items and details in this location." },
-  { perm: "assign",   color: "warning", hint: "Allows assigning items to users/events from this location." },
+/** What each permission lets this person do inside one location. */
+const PERMISSION_FIELDS = [
+  { perm: "view", tone: "neutral", hint: "See the items held here." },
+  { perm: "create", tone: "success", hint: "Add new items to this location." },
+  { perm: "update", tone: "neutral", hint: "Edit items that are here." },
+  { perm: "assign", tone: "warning", hint: "Hand items out from here." },
+  { perm: "transfer", tone: "warning", hint: "Move items in and out." },
+  { perm: "delete", tone: "critical", hint: "Delete items from this location." },
 ];
 
-const DEFAULT_FORM_VALUES = {
-  location: "",
+const EMPTY_PERMISSIONS = {
+  view: true,
   create: false,
   update: false,
+  assign: false,
   transfer: false,
   delete: false,
-  view: true,
-  assign: false,
 };
 
+const titleCase = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+
+/**
+ * Which locations this person can work in, and what they may do in each.
+ *
+ * The screen was two stacked cards on a bare route, with no way back to the
+ * profile. It is a modal over the profile now, and the three things it got
+ * wrong are fixed:
+ *
+ *   - Removing a location assignment was a plain danger button with no
+ *     confirmation, and — unlike saving — it never updated the Redux profile,
+ *     so the removed location stayed on screen until a reload.
+ *   - The permission checkboxes were spread with `{...register(perm)}` *and*
+ *     given `checked` / `onChange`; the same for the location `Select`. A field
+ *     cannot be registered and controlled at once, and the registered ref won
+ *     on first render. The form is plain state now — there is nothing here that
+ *     react-hook-form was doing for it.
+ *   - Outcomes were antd `message` toasts rather than the shared notification.
+ */
 const AssignLocationManager = () => {
   const { user } = useSelector((state) => state.admin);
   const { profile } = useSelector((state) => state.staffDetail);
-  const queryClient = useQueryClient();
-  const [loadingUpdate, setLoadingUpdate] = useState(false);
-  const [editingLocation, setEditingLocation] = useState(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
+
+  const [location, setLocation] = useState("");
+  const [permissions, setPermissions] = useState(EMPTY_PERMISSIONS);
+  const [editing, setEditing] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const roleType = resolveRoleType(user);
-  const canAssignLocation = hasPermission("staff:assign_location", roleType);
 
-  const { register, handleSubmit, setValue, reset, watch } = useForm({
-    defaultValues: DEFAULT_FORM_VALUES,
-  });
-
-  const { data: companyDataQuery } = useQuery({
+  const companyQuery = useQuery({
     queryKey: ["companyData", user.companyData.id, { type: "done" }],
     queryFn: () =>
-      devitrakApi.post("/company/search-company", {
-        _id: user.companyData.id,
-      }),
+      devitrakApi.post("/company/search-company", { _id: user.companyData.id }),
     enabled: !!user.companyData.id,
   });
 
-  const { data: listOfLocations } = useQuery({
+  const locationsQuery = useQuery({
     queryKey: ["companyLocationsListQuery", user.sqlInfo.company_id],
     queryFn: () =>
       devitrakApi.post(
@@ -81,340 +91,320 @@ const AssignLocationManager = () => {
           preference:
             user.companyData.employees.find((emp) => emp.user === user.email)
               ?.preference || [],
-        },
+        }
       ),
     enabled: !!user.sqlInfo.company_id && !!user.email,
   });
 
-  const locationOptions = listOfLocations?.data?.data
-    ? Object.keys(listOfLocations.data.data).map((loc) => ({
-        label: loc,
-        value: loc,
-      }))
-    : [];
-
-  const companyInfo = companyDataQuery?.data?.company?.[0];
-  const currentEmployeeIndex = companyInfo?.employees?.findIndex(
-    (e) => e.user === profile.email,
+  const locationOptions = useMemo(
+    () => Object.keys(locationsQuery.data?.data?.data ?? {}),
+    [locationsQuery.data]
   );
-  const currentEmployee =
-    currentEmployeeIndex > -1
-      ? companyInfo.employees[currentEmployeeIndex]
-      : null;
 
-  const managerLocations = currentEmployee?.preference?.managerLocation || [];
-
-  // "Manager" is a derived "select all" — not a stored field
-  const isManagerChecked = LOCATION_PERMISSION_FIELDS.every(({ perm }) =>
-    watch(perm),
+  const companyInfo = companyQuery.data?.data?.company?.[0];
+  const employeeIndex = companyInfo?.employees?.findIndex(
+    (item) => item.user === profile.email
   );
-  const handleManagerChange = (e) => {
-    LOCATION_PERMISSION_FIELDS.forEach(({ perm }) =>
-      setValue(perm, e.target.checked),
+  const employee =
+    employeeIndex > -1 ? companyInfo.employees[employeeIndex] : null;
+  const assigned = employee?.preference?.managerLocation ?? [];
+
+  const closeModal = () => {
+    if (isSaving) return;
+    navigate(`/staff/${profile.adminUserInfo.id}/main`);
+  };
+
+  const resetForm = () => {
+    setEditing(null);
+    setLocation("");
+    setPermissions(EMPTY_PERMISSIONS);
+  };
+
+  // "Manager" is a derived select-all, not a stored field.
+  const isManager = PERMISSION_FIELDS.every(({ perm }) => permissions[perm]);
+  const setAllPermissions = (checked) =>
+    setPermissions(
+      PERMISSION_FIELDS.reduce((acc, { perm }) => ({ ...acc, [perm]: checked }), {})
+    );
+
+  const startEditing = (row) => {
+    setNotice(null);
+    setEditing(row.location);
+    setLocation(row.location);
+    setPermissions(
+      PERMISSION_FIELDS.reduce(
+        (acc, { perm }) => ({ ...acc, [perm]: Boolean(row.actions?.[perm]) }),
+        {}
+      )
     );
   };
 
-  const handleEdit = (item) => {
-    const locationName = item?.location || "";
-    const actions = item?.actions || {};
-    setEditingLocation(locationName);
-    setValue("location", locationName);
-    LOCATION_PERMISSION_FIELDS.forEach(({ perm }) =>
-      setValue(perm, Boolean(actions[perm])),
-    );
-  };
-
-  const buildUpdatedEmployees = (updatedManagerLocations) => {
-    const updatedLocationStrings = updatedManagerLocations.map((m) => m.location);
-    const updatedEmployees = [...companyInfo.employees];
-    updatedEmployees[currentEmployeeIndex] = {
-      ...currentEmployee,
+  const persist = async (nextAssignments) => {
+    const employees = [...companyInfo.employees];
+    employees[employeeIndex] = {
+      ...employee,
       preference: {
-        ...currentEmployee.preference,
-        inventory_location: updatedLocationStrings,
-        managerLocation: updatedManagerLocations,
+        ...employee.preference,
+        inventory_location: nextAssignments.map((item) => item.location),
+        managerLocation: nextAssignments,
       },
     };
-    return updatedEmployees;
+
+    const response = await devitrakApi.patch(
+      `/company/update-company/${companyInfo.id}`,
+      { employees }
+    );
+
+    // Both paths refresh the profile now; the delete path used to leave the
+    // removed location in Redux.
+    dispatch(
+      onAddStaffProfile({
+        ...profile,
+        preference:
+          response.data?.company?.employees?.[employeeIndex]?.preference ??
+          employees[employeeIndex].preference,
+        companyData: response.data?.company ?? profile.companyData,
+      })
+    );
+    queryClient.invalidateQueries({
+      queryKey: ["companyData", user.companyData.id, { type: "done" }],
+      exact: true,
+    });
   };
 
-  const onSubmit = async (data) => {
-    if (!companyInfo || !currentEmployee) return;
-    setLoadingUpdate(true);
+  const handleSave = async () => {
+    setNotice(null);
+
+    if (!companyInfo || !employee) {
+      return setNotice(
+        "This person is not on the company record, so nothing can be assigned."
+      );
+    }
+    if (!location) return setNotice("Choose a location first.");
+
+    setIsSaving(true);
     try {
-      const newAssignment = {
-        location: data.location,
-        actions: {
-          create: data.create || false,
-          update: data.update || false,
-          transfer: data.transfer || false,
-          delete: data.delete || false,
-          view: data.view || false,
-          assign: data.assign || false,
-        },
-      };
+      const next = [...assigned];
+      const index = next.findIndex((item) => item.location === location);
+      const entry = { location, actions: { ...permissions } };
+      if (index > -1) next[index] = entry;
+      else next.push(entry);
 
-      const updatedManagerLocations = [...managerLocations];
-      const existingIndex = updatedManagerLocations.findIndex(
-        (m) => m.location === data.location,
+      await persist(next);
+      notify(
+        "success",
+        editing ? `${location} updated.` : `${location} assigned.`,
+        "Their inventory access changed immediately."
       );
-      if (existingIndex > -1) {
-        updatedManagerLocations[existingIndex] = newAssignment;
-      } else {
-        updatedManagerLocations.push(newAssignment);
-      }
-
-      const updatingCompanyEmployeePreference = await devitrakApi.patch(
-        `/company/update-company/${companyInfo.id}`,
-        { employees: buildUpdatedEmployees(updatedManagerLocations) },
-      );
-
-      message.success("Location assignment updated successfully.");
-      reset();
-      setEditingLocation(null);
-      queryClient.invalidateQueries({
-        queryKey: ["companyData", user.companyData.id, { type: "done" }],
-        exact: true,
-        refetchType: "active",
-      });
-      dispatch(
-        onAddStaffProfile({
-          ...profile,
-          preference: {
-            ...updatingCompanyEmployeePreference.data.company.employees[
-              currentEmployeeIndex
-            ].preference,
-          },
-          companyData:
-            updatingCompanyEmployeePreference.data.company ?? profile.companyData,
-        }),
-      );
+      resetForm();
     } catch {
-      message.error("Failed to assign location.");
+      setNotice("The assignment was not saved. Nothing changed.");
     } finally {
-      setLoadingUpdate(false);
+      setIsSaving(false);
     }
   };
 
-  const handleDelete = async (locationToDelete) => {
-    if (!companyInfo || !currentEmployee) return;
-    setLoadingUpdate(true);
+  const handleRemove = async (target) => {
+    setNotice(null);
+    if (!companyInfo || !employee) return;
+
+    setIsSaving(true);
     try {
-      const updatedManagerLocations = managerLocations.filter(
-        (m) => m.location !== locationToDelete,
-      );
-
-      await devitrakApi.patch(`/company/update-company/${companyInfo.id}`, {
-        employees: buildUpdatedEmployees(updatedManagerLocations),
-      });
-
-      message.success("Location assignment removed.");
-      queryClient.invalidateQueries({
-        queryKey: ["companyData", user.companyData.id],
-      });
+      await persist(assigned.filter((item) => item.location !== target));
+      notify("success", `${target} removed.`, "They can no longer work there.");
+      if (editing === target) resetForm();
     } catch {
-      message.error("Failed to remove assignment.");
+      setNotice("The assignment was not removed. Nothing changed.");
     } finally {
-      setLoadingUpdate(false);
+      setIsSaving(false);
     }
   };
 
   const columns = [
+    { key: "location", title: "Location", dataIndex: "location" },
     {
-      title: "Location",
-      dataIndex: "location",
-      key: "location",
-      render: (text) => (
-        <span
-          style={{
-            color: "var(--gray-900, #101828)",
-            fontFamily: "Inter",
-            fontSize: "14px",
-            fontWeight: 500,
-            lineHeight: "20px",
-          }}
-        >
-          {text}
-        </span>
-      ),
-    },
-    {
-      title: "Permissions",
       key: "permissions",
-      render: (_, record) => (
-        <Grid container gap={1}>
-          {LOCATION_PERMISSION_FIELDS.filter(
-            ({ perm }) => record.actions?.[perm],
-          ).map(({ perm, color }) => (
-            <Chip
-              key={perm}
-              label={perm.charAt(0).toUpperCase() + perm.slice(1)}
-              color={color}
-              size="small"
-              variant="ghost"
-            />
-          ))}
-          {!Object.values(record.actions || {}).some(Boolean) && (
-            <Chip label="Read Only" color="default" size="small" variant="ghost" />
-          )}
-        </Grid>
+      title: "Can",
+      render: (_, row) => {
+        const granted = PERMISSION_FIELDS.filter(({ perm }) => row.actions?.[perm]);
+        if (granted.length === 0) {
+          return <StatusChip label="Nothing" tone="neutral" />;
+        }
+        return (
+          <div className="action-form__chips">
+            {granted.map(({ perm, tone }) => (
+              <StatusChip key={perm} label={titleCase(perm)} tone={tone} />
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      key: "actions",
+      title: "",
+      align: "right",
+      render: (_, row) => (
+        <div className="profile-row-actions">
+          <GrayButtonComponent
+            size="sm"
+            title="Edit"
+            buttonType="button"
+            disabled={isSaving}
+            func={() => startEditing(row)}
+          />
+          <DangerButtonConfirmationComponent
+            size="sm"
+            title="Remove"
+            buttonType="button"
+            disabled={isSaving}
+            confirmationTitle={`Remove ${row.location}?`}
+            confirmationDescription="They lose access to everything held in that location."
+            okText="Remove"
+            func={() => handleRemove(row.location)}
+          />
+        </div>
       ),
     },
-    ...(canAssignLocation
-      ? [
-          {
-            title: "Actions",
-            key: "actions",
-            render: (_, record) => (
-              <Grid container gap={1}>
-                <GrayButtonComponent
-                  title="Edit"
-                  func={() => handleEdit(record)}
-                  buttonType="button"
-                  styles={{ width: "fit-content" }}
-                />
-                <DangerButtonComponent
-                  title="Remove"
-                  func={() => handleDelete(record.location)}
-                  buttonType="button"
-                  styles={{ width: "fit-content" }}
-                />
-              </Grid>
-            ),
-          },
-        ]
-      : []),
   ];
 
-  return (
-    <>
-      {canAssignLocation && (
-        <ReusableCardWithHeaderAndFooter
-          title="Assign Location / Permissions"
-          style={{ width: "100%" }}
-          actions={[
-            <Grid
-              key="footer-actions-buttons"
-              container
-              style={{
-                justifyContent: "flex-start",
-                gap: "24px",
-                padding: "0 24px",
-                margin: "3dvh 0",
-              }}
-            >
-              <BlueButtonComponent
-                form="assignLocationForm"
-                buttonType="submit"
-                title={editingLocation ? "Update Assignment" : "Assign Location"}
-                loadingState={loadingUpdate}
-                styles={{ width: "fit-content" }}
-              />
-              {editingLocation && (
+  const body = (
+    <div className="action-form">
+      {contextHolder}
+
+      {companyQuery.isLoading || locationsQuery.isLoading ? (
+        <ProfileSkeleton lines={4} />
+      ) : (
+        <>
+          <p className="action-form__lead">
+            A person with no location assignment sees the whole warehouse. Adding
+            one narrows them to the locations listed here.
+          </p>
+
+          <section className="action-form__step">
+            <div className="action-form__step-head">
+              <h3 className="action-form__step-title">
+                {editing ? `Editing ${editing}` : "Add a location"}
+              </h3>
+              {editing && (
                 <GrayButtonComponent
-                  title="Cancel"
-                  func={() => {
-                    setEditingLocation(null);
-                    reset();
-                  }}
-                  styles={{ width: "fit-content" }}
+                  size="sm"
+                  title="New assignment"
+                  buttonType="button"
+                  func={resetForm}
                 />
               )}
-            </Grid>,
-          ]}
-        >
-          <p style={{ ...Subtitle, marginBottom: "16px" }}>
-            Assign this staff member to a specific location and define their
-            permissions.
-          </p>
-          <form id="assignLocationForm" onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} marginTop={3}>
-                <InputLabel
-                  style={{ width: "100%", textAlign: "left" }}
-                  htmlFor="location"
-                >
-                  Location
-                </InputLabel>
-                <FormControl fullWidth>
-                  <Select
-                    {...register("location", { required: true })}
-                    value={watch("location")}
-                    onChange={(e) => setValue("location", e.target.value)}
-                    disabled={!!editingLocation}
-                    displayEmpty
-                    style={AntSelectorStyle}
-                    renderValue={(selected) =>
-                      selected || (
-                        <span style={{ color: "#aaa" }}>Select a location</span>
-                      )
+            </div>
+
+            <div className="action-form__field">
+              <Label>Location</Label>
+              <Select
+                className="custom-autocomplete"
+                value={location}
+                displayEmpty
+                disabled={Boolean(editing) || isSaving}
+                onChange={(event) => setLocation(event.target.value)}
+                style={{ ...AntSelectorStyle, background: "#fff" }}
+              >
+                <MenuItem value="" disabled>
+                  Select a location
+                </MenuItem>
+                {locationOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </div>
+
+            <div className="action-form__field">
+              <Label>What they can do there</Label>
+              <div className="action-form__grid">
+                <CheckboxReusableComponent
+                  name="manager"
+                  checked={isManager}
+                  disabled={isSaving}
+                  onChange={(event) => setAllPermissions(event.target.checked)}
+                  label={<p style={{ textAlign: "left" }}>Manager</p>}
+                  hint="Everything below."
+                />
+                {PERMISSION_FIELDS.map(({ perm, hint }) => (
+                  <CheckboxReusableComponent
+                    key={perm}
+                    name={perm}
+                    checked={permissions[perm]}
+                    disabled={isSaving}
+                    onChange={(event) =>
+                      setPermissions((current) => ({
+                        ...current,
+                        [perm]: event.target.checked,
+                      }))
                     }
-                  >
-                    <MenuItem disabled value="">
-                      <em>Select a location</em>
-                    </MenuItem>
-                    {locationOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+                    label={<p style={{ textAlign: "left" }}>{titleCase(perm)}</p>}
+                    hint={hint}
+                  />
+                ))}
+              </div>
+            </div>
 
-              <Grid item xs={12}>
-                <InputLabel sx={{ marginBottom: "25px" }}>
-                  Permissions
-                </InputLabel>
-                <Grid container spacing={1}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <CheckboxReusableComponent
-                      checked={isManagerChecked}
-                      onChange={handleManagerChange}
-                      name="manager"
-                      label={
-                        <p style={{ width: "100%", textAlign: "left" }}>
-                          Manager
-                        </p>
-                      }
-                      hint="Grants all permissions for this location."
-                    />
-                  </Grid>
-                  {LOCATION_PERMISSION_FIELDS.map(({ perm, hint }) => (
-                    <Grid item xs={12} sm={6} md={4} key={perm}>
-                      <CheckboxReusableComponent
-                        {...register(perm)}
-                        checked={watch(perm)}
-                        onChange={(e) => setValue(perm, e.target.checked)}
-                        name={perm}
-                        label={
-                          <p style={{ width: "100%", textAlign: "left" }}>
-                            {perm.charAt(0).toUpperCase() + perm.slice(1)}
-                          </p>
-                        }
-                        hint={hint}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </Grid>
-            </Grid>
-          </form>
-        </ReusableCardWithHeaderAndFooter>
+            <div className="action-form__footer">
+              <BlueButtonComponent
+                title={editing ? "Update location" : "Assign location"}
+                buttonType="button"
+                isDisabled={!location || isSaving}
+                isLoading={isSaving}
+                func={handleSave}
+              />
+            </div>
+          </section>
+
+          <section className="action-form__step">
+            <div className="action-form__step-head">
+              <h3 className="action-form__step-title">
+                Assigned locations ({assigned.length})
+              </h3>
+            </div>
+            {assigned.length === 0 ? (
+              <p className="action-form__empty">
+                No location assigned — this person can see the whole warehouse.
+              </p>
+            ) : (
+              <BaseTable
+                className="profile-table"
+                columns={columns}
+                dataSource={assigned}
+                rowKey={(row) => row.location}
+                enablePagination={assigned.length > 5}
+                pageSize={5}
+                size="small"
+              />
+            )}
+          </section>
+
+          {notice && <p className="action-form__notice">{notice}</p>}
+
+          <div className="action-form__footer">
+            <GrayButtonComponent
+              title="Done"
+              buttonType="button"
+              disabled={isSaving}
+              func={closeModal}
+            />
+          </div>
+        </>
       )}
+    </div>
+  );
 
-      <ReusableCardWithHeaderAndFooter
-        style={{ width: "100%", margin: canAssignLocation ? "3dvh 0 0" : "0" }}
-        title="Assigned Locations"
-      >
-        <BaseTable
-          columns={columns}
-          dataSource={managerLocations}
-          enablePagination={true}
-          pageSize={5}
-        />
-      </ReusableCardWithHeaderAndFooter>
-    </>
+  return (
+    <ModalUX
+      title={renderingTitle("Locations & permissions")}
+      openDialog
+      closeModal={closeModal}
+      closable={!isSaving}
+      footer={null}
+      width={720}
+      body={body}
+    />
   );
 };
 

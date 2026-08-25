@@ -25,82 +25,18 @@ export const renderFields = ({
     );
   };
 
+  // The four "reference_*" fields that used to open this list live in
+  // CopyFromExistingDevicePanel now. They were optional shortcuts for
+  // pre-filling the form, but sitting here they rendered with the same weight
+  // as the fields that define the item — bold and underlined, no less — so
+  // users read them as four more mandatory inputs and filled them in as if
+  // they were part of the record. The panel gives them a border, a title that
+  // says what they do, and a note that they are optional.
   const fields = [
-    {
-      name: "reference_category_name",
-      placeholder: "Type or select a category reference",
-      label: "Category reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("category_name")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the category of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_item_group",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Group reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("item_group")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the item group of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_brand",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Brand reference",
-      htmlElement: "",
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("brand")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "This is the brand of the reference item.",
-      displayField: true,
-    },
-    {
-      name: "reference_search_button_",
-      placeholder:
-        "Select item for retrieving the reference item.",
-      label: "Search reference",
-      htmlElement: 8,
-      style: {
-        ...OutlinedInputStyle,
-        textDecoration: "underline",
-        fontWeight: 700,
-      },
-      required: false,
-      options: normalizeOptions(retrieveItemOptions("brand")),
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "Select criteria for search inventory group.",
-      displayField: true,
-    },
     {
       name: "item_group",
       placeholder: "Type the name of the item",
-      label: "Group name",
+      label: "Group",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -109,11 +45,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "category_name",
-      placeholder: "Select or type category of device",
-      label: "Category of device",
+      placeholder: "Select or type category",
+      label: "Category",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -122,11 +59,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "brand",
-      placeholder: "Select or type brand of device",
-      label: "Brand of device",
+      placeholder: "Select or type brand",
+      label: "Brand",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -135,11 +73,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "cost",
-      placeholder: "Select or type replacement cost of device",
-      label: "Replacement cost of device",
+      placeholder: "Select or type replacement cost",
+      label: "Replacement cost",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -148,10 +87,11 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "tax_location",
-      placeholder: "e.g. 12000.54 | 95.44 | 4585",
+      placeholder: "e.g. Washington, DC | New York, NY | Los Angeles, CA",
       label: "Taxable location",
       htmlElement: "",
       style: OutlinedInputStyle,
@@ -162,6 +102,7 @@ export const renderFields = ({
       tooltipMessage:
         "Address where tax deduction for equipment will be applied.",
       displayField: true,
+      section: "location",
     },
     {
       name: "location",
@@ -175,6 +116,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
       displayField: true,
+      section: "location",
     },
     {
       name: "sub_location",
@@ -187,9 +129,10 @@ export const renderFields = ({
       htmlOption: 2,
       tooltip: true,
       tooltipMessage: "Where the item is location physically.",
-      displayField: true //displaySublocationFields,
+      displayField: true, //displaySublocationFields,
+      section: "location",
     },
-        {
+    {
       name: "container",
       placeholder: "Select container option",
       label: "Is this carrying/storage units?",
@@ -210,6 +153,7 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "This item will contain other items inside.",
       displayField: true,
+      section: "info",
       children: [
         {
           name: "containerSpotLimit",
@@ -228,23 +172,9 @@ export const renderFields = ({
       ],
     },
     {
-      name: "containerSpotLimit",
-      placeholder: "e.g. 120 | 250 | 500",
-      label: "Container Spot Limit",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: [],
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "How many items can be stored inside the container.",
-      displayedButton: false,
-      displayField: displayContainerSplotLimitField,
-    },
-    {
       name: "ownership",
       placeholder: "Select ownership option",
-      label: "Ownership status of device",
+      label: "Ownership status",
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
@@ -253,11 +183,12 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Device ownership. If device is a rental device, return date field will be prompted.",
       displayField: true,
+      section: "ownership",
       children: [
         {
           name: "",
           placeholder: "",
-          label: "Returning date of device",
+          label: "Returning date",
           htmlElement: "Day",
           style: OutlinedInputStyle,
           required: true,
@@ -270,7 +201,7 @@ export const renderFields = ({
         {
           name: "supplier",
           placeholder: "Select a supplier",
-          label: "Supplier of device",
+          label: "Supplier",
           htmlElement: "",
           style: OutlinedInputStyle,
           required: true,
@@ -281,32 +212,6 @@ export const renderFields = ({
           displayField: isRented,
         },
       ],
-    },
-    {
-      name: "",
-      placeholder: "",
-      label: "Returning date of device",
-      htmlElement: "Day",
-      style: OutlinedInputStyle,
-      required: true,
-      options: options,
-      htmlOption: 2,
-      tooltip: true,
-      tooltipMessage: "Date when the leased equipment will be returned.",
-      displayField: isRented,
-    },
-    {
-      name: "supplier",
-      placeholder: "Select a supplier",
-      label: "Supplier of device",
-      htmlElement: "",
-      style: OutlinedInputStyle,
-      required: true,
-      options: suppliersOptions,
-      htmlOption: 0,
-      tooltip: true,
-      tooltipMessage: "Supplier where rented equipment will be returned.",
-      displayField: isRented,
     },
     {
       name: "enableAssignFeature",
@@ -320,12 +225,12 @@ export const renderFields = ({
       tooltip: true,
       tooltipMessage: "Select if the device is assignable to staff or events.",
       displayField: true,
+      section: "assignable",
     },
-
     {
       name: "image_uploader",
       placeholder: "",
-      label: "Image uploader of device",
+      label: "Image uploader",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,
@@ -334,11 +239,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: true,
+      section: "info",
     },
     {
       name: "image_uploader_preview",
       placeholder: "",
-      label: "Preview image uploader of device",
+      label: "Preview image uploader",
       htmlElement: "ImagePreview",
       style: OutlinedInputStyle,
       required: true,
@@ -347,11 +253,12 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: displayPreviewImage,
+      section: "info",
     },
     {
       name: "image_url",
       placeholder: "",
-      label: "Image uploader of device",
+      label: "Image uploader",
       htmlElement: "Day",
       style: OutlinedInputStyle,
       required: true,
@@ -360,6 +267,7 @@ export const renderFields = ({
       tooltip: false,
       tooltipMessage: null,
       displayField: false,
+      section: "info",
     },
   ];
 

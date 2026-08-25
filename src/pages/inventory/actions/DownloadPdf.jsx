@@ -115,7 +115,7 @@ const FileGenerator = ({ data }) => (
                 {item.data.ownership === "Rent"
                   ? "Rented"
                   : item.data.ownership === "Permanent"
-                  ? "Owned"
+                  ? "Permanent"
                   : "For Sale"}
               </Text>
             </View>

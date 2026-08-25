@@ -312,10 +312,57 @@ Possible job states (`status`): `pending` → `processing` → `done` | `failed`
 - [x] **`error_log`:** (optional) handle the new `400`. — DONE (audit 2026-07-20):
       `ErrorBoundaryComponent.jsx:97-108` wraps the call in try/catch and checks `data.ok`, so a 400 is
       swallowed gracefully.
-- [ ] **`inserting-items-in-event-from-container`:** accept `202`. — N/A (audit 2026-07-20): NO
-      frontend callsite for this exact path. Closest is `POST /db_event/allocate-device-container-event`
-      (`ContainerForm.jsx:56`, fire-and-forget → already 202-safe). CONFIRM with backend whether this is
-      a rename or genuinely unintegrated.
+- [x] **`inserting-items-in-event-from-container`:** accept `202`. — **N/A, CLOSED** (backend
+      answered 2026-08-19). Not a rename: it is a separate route that coexists with
+      `POST /db_event/allocate-device-container-event`, and neither calls the other. We deliberately
+      stay on the latter, which is **synchronous** (own MySQL transaction, `200` = committed) and does
+      the whole job: resolves each scanned serial to a container, expands it into its children, updates
+      `item_inv`, inserts the event rows, and writes the Mongo receivers pool itself.
+
+      The queued route is not usable end-to-end today, so there is nothing to integrate:
+      it takes `{event_id, refDatabase:[{item_id}]}` — item_ids the client would have to resolve
+      itself — ignores every other body field (including `company_id`, so no company scoping), never
+      reads `container_items`, never touches `item_inv` or the pool, accepts no `Idempotency-Key`
+      (and its Go-worker `INSERT` is plain, not `INSERT IGNORE`, so a retry duplicates rows), returns
+      no counts, and has no `validateJWT` — which makes the `jobId` it hands back **impossible to
+      poll**: the job is stored with `context.uid: null` and `GET /api/jobs/owned/:jobId` requires it,
+      so that call 404s forever.
+
+      What we changed on our side as a result (see `ContainerForm.jsx` +
+      `utils/containerAllocation.js`):
+      - **Removed the `/receiver/receivers-pool-bulk` call that followed the allocation.** The
+        allocation endpoint already writes the pool internally, and `poolReceiversBulk` is
+        `insertMany` with no dedup — every container run was inserting its units into the pool twice.
+      - **Batch size 500 → 150.** The endpoint's `UPDATE` and `INSERT` are one un-chunked statement
+        each with a placeholder per *expanded* item, so 500 containers of ~20 children is ~10k
+        placeholders in a single `INSERT`. Backend asked for 100–200 per request until they chunk it
+        server-side.
+      - **Stopped claiming "All serial numbers processed successfully!"** It answers `200` having
+        processed only the serials that resolved to a container, without naming the ones it skipped,
+        so we now report the item count it returns and surface its `message` (which is what carries
+        "The specified containers are empty.").
+
+      Ordering is fine as-is and was never a bug: with the synchronous route, `200` means the SQL is
+      committed and the pool is written, so `update-event-inventory-freshest-data` /
+      `update-global-state` can be called immediately.
+
+      **One question back to backend, deliberately not acted on:** does
+      `POST /db_event/allocate-device-event` — the non-container sibling used by `Sequential.jsx:52`
+      — *also* write the receivers pool internally? The confirmation covered only the container
+      route. `Sequential.jsx:53` still calls `/receiver/receivers-pool-bulk` right after it, so if
+      that route writes the pool too, the individual-device path has the exact same double-insert we
+      just removed from the container path. Left untouched rather than changed on an assumption:
+      removing the call when the endpoint does *not* write the pool would silently stop populating
+      it.
+
+      **Two auth gaps for backend to close** (their finding, not ours): neither
+      `inserting-items-in-event-from-container` nor `allocate-device-container-event` has
+      `validateJWT` — the latter is an anonymous route doing `UPDATE item_inv` + insert-into-event,
+      while its sibling `allocate-device-event` correctly carries
+      `validateJWT + checkTokenVersion + authorizePermission("event","update")`. Also still open on
+      their side: "exists but is not a container" is indistinguishable from "serial does not exist"
+      (both fall out of the same `container_items` JOIN), and "item already assigned to another
+      event" is not validated on either route.
 - [x] **`upload/xlsx`:** remove the special `502` handling. — DONE (audit 2026-07-20): no `502`
       branch exists anywhere; the xlsx import (`DocumentInventoryXLSXUpload.jsx`) already uses the
       job-queue pattern (`onTrackBackgroundJob` + `jobId`).

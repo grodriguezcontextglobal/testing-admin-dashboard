@@ -18,7 +18,7 @@ import { onResetHelpers } from "../../store/slices/helperSlice";
 import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
 import { onResetStripesInfo } from "../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
-import { hasPermission } from "../../config/roles";
+import { hasPermission, resolveRoleType } from "../../config/roles";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import MainHeaders from "./ui/MainHeaders";
 
@@ -55,9 +55,10 @@ const MainProfileSettings = () => {
     { label: "My details",      route: "my_details",               permission: "nav:profile"            },
     { label: "Password",        route: "password",                 permission: "nav:profile"            },
     { label: "MFA Setup",       route: "mfa-setup",                permission: "nav:profile"            },
-    { label: "Notifications",   route: "notifications",            permission: "profile:staff_settings" },
+    // { label: "Notifications",   route: "notifications",            permission: "profile:staff_settings" },
     { label: "Company info",    route: "company-info",             permission: "profile:company_settings"},
     { label: "Roles",           route: "roles",                    permission: "staff:assign_role"      },
+    { label: "Staff activity",  route: "staff-activity",           permission: "staff:read"             },
     { label: "Stripe account",  route: "stripe_connected_account", permission: "profile:billing"        },
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
@@ -106,9 +107,12 @@ const MainProfileSettings = () => {
         }}
       >
         {tabOptions.map((option) => {
+          // resolveRoleType, not user.roleType: the raw field is undefined on
+          // legacy accounts, which made every permission-gated tab in this
+          // strip evaluate to false and vanish.
           const isAllowed = option.requiresSuperUser
             ? isSuperUser
-            : hasPermission(option.permission, user.roleType);
+            : hasPermission(option.permission, resolveRoleType(user));
           if (!isAllowed) return null;
           if (option.industry && user?.companyData?.industry !== option.industry) return null;
           return (

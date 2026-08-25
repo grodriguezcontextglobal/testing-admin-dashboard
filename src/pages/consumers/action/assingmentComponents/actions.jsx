@@ -13,7 +13,7 @@ export const updateDeviceInWarehouse = ({
     const updateItemsInWarehouse = async () => {
       await devitrakApi.post("/db_item/item-out-warehouse", {
         warehouse: 0,
-        logistic_status: "allocated",
+        logistic_status: "assigned",
         company_id: user.sqlInfo.company_id,
         item_group: item_group,
         category_name: category_name,

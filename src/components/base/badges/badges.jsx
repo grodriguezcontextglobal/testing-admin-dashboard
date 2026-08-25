@@ -15,13 +15,12 @@ const COLOR_MAP = {
 /**
  * Untitled UI – BadgeWithDot
  *
- * @param {"pill-color"} [type="pill-color"]
  * @param {"brand"|"gray"|"error"|"warning"|"success"|"blue"|"blue-light"|"indigo"|"purple"|"pink"|"orange"} [color="gray"]
  * @param {"sm"|"md"} [size="sm"]
  * @param {React.ReactNode} children
  * @param {React.CSSProperties} [style]
  */
-export const BadgeWithDot = ({ type = "pill-color", color = "gray", size = "sm", children, style = {} }) => {
+export const BadgeWithDot = ({ color = "gray", size = "sm", children, style = {} }) => {
   const c = COLOR_MAP[color] ?? COLOR_MAP.gray;
 
   return (

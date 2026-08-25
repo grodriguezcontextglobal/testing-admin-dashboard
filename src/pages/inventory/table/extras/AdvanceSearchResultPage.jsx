@@ -1,4 +1,3 @@
-import { Box } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -236,37 +235,6 @@ const AdvanceSearchResultPage = () => {
     return uniqueGroups.size;
   }, [allItems, ownedInventory?.raw_results, rentedInventory?.raw_results]);
 
-  // Updated event columns to match new data structure
-  const eventDeviceColumns = [
-    { key: "category", title: "Category", dataIndex: "category" },
-    { key: "group", title: "Item", dataIndex: "group" },
-    { key: "count", title: "Device Count", dataIndex: "count", width: "10%" },
-    {
-      key: "events_count",
-      title: "Events",
-      render: (row) => (
-        <Chip size="small" color="primary" label={row.events?.length || 0} />
-      ),
-    },
-    {
-      key: "event_names",
-      title: "Event Names",
-      render: (row) => (
-        <Box>
-          {row.events?.map((event, idx) => (
-            <Chip
-              key={idx}
-              size="small"
-              variant="outlined"
-              label={event.event_name}
-              sx={{ mr: 0.5, mb: 0.5 }}
-            />
-          )) || "No events"}
-        </Box>
-      ),
-    },
-  ];
-
   const eventDetailsColumns = [
     { key: "event_name", title: "Event Name", dataIndex: "event_name" },
     // { key: "event_id", title: "Event ID", dataIndex: "event_id" },
@@ -391,7 +359,6 @@ const AdvanceSearchResultPage = () => {
         allItems={allItems}
         dailyAnalysis={dailyAnalysis}
         eventDetailsColumns={eventDetailsColumns}
-        eventDeviceColumns={eventDeviceColumns}
         eventDeviceRows={eventDeviceRows}
         eventInventory={eventInventory}
         handleReturnNavigation={handleReturnNavigation}

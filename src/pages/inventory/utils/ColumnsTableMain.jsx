@@ -148,7 +148,7 @@ const columnsTableMain = ({
           value: "Rent",
         },
         {
-          text: "Owned",
+          text: "Permanent",
           value: "Permanent",
         },
         {

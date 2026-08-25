@@ -1,47 +1,70 @@
-import { Box, Stack, Typography } from "@mui/material";
-import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/ReusableCardWithHeaderAndFooter";
-import Chip from "../../../../../components/UX/Chip/Chip";
+import PropTypes from "prop-types";
+import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
+import ForecastSection from "./ForecastSection";
+import { formatPeriodLabel } from "./utils/forecastSummary";
 
+/**
+ * The events committing inventory inside the searched period.
+ *
+ * The counts used to be three chips reading "Total Events: 4",
+ * "Device Categories: 2" and "Period: 2026-06-01 to 2026-06-30" above a table
+ * headed by a `Typography variant="subtitle1"` that said "Event Details" — a
+ * second heading inside a card that already had one. The counts now sit in the
+ * section's own supporting line, where the rest of the screen keeps them, and
+ * the period is formatted the same way as the one in the page header instead of
+ * being printed raw.
+ */
 const EventInSearchWindow = ({
   eventInventory,
   eventDeviceRows,
   uniqueEvents,
   eventDetailsColumns,
 }) => {
-  return (
-    <ReusableCardWithHeaderAndFooter title="On Going Events in Current Search">
-      {/* Event Summary */}
-      <Stack direction="row" spacing={2} mb={2} useFlexGap flexWrap="wrap">
-        <Chip
-          color="primary"
-          label={`Total Events: ${eventInventory?.total_events ?? 0}`}
-        />
-        <Chip
-          color="info"
-          label={`Device Categories: ${eventDeviceRows.length}`}
-        />
-        {eventInventory?.period && (
-          <Chip
-            color="default"
-            label={`Period: ${eventInventory.period.date_start} to ${eventInventory.period.date_end}`}
-          />
-        )}
-      </Stack>
+  const events = Array.isArray(uniqueEvents) ? uniqueEvents : [];
+  const categories = Array.isArray(eventDeviceRows) ? eventDeviceRows.length : 0;
+  const total = eventInventory?.total_events ?? events.length;
+  const period = formatPeriodLabel(eventInventory?.period);
 
-      {/* Event Details Table */}
-      <Box mb={2}>
-        <Typography variant="subtitle1" gutterBottom>
-          Event Details
-        </Typography>
-        <BaseTable
-          columns={eventDetailsColumns}
-          dataSource={uniqueEvents}
-          locale={{ emptyText: "No events found" }}
+  const hint = [
+    `${total} event${total === 1 ? "" : "s"}`,
+    categories > 0
+      ? `${categories} device categor${categories === 1 ? "y" : "ies"}`
+      : null,
+    period || null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  return (
+    <ForecastSection title="Events in this period" hint={hint}>
+      {events.length === 0 ? (
+        <EmptyState
+          compact
+          icon="tabler:calendar-off"
+          title="No events in this period"
+          description="No event commits any of the searched items while the window is open."
         />
-      </Box>
-    </ReusableCardWithHeaderAndFooter>
+      ) : (
+        <div className="forecast__scroll">
+          <BaseTable
+            columns={eventDetailsColumns}
+            dataSource={events}
+            enablePagination={events.length > 10}
+            pageSize={10}
+            size="small"
+          />
+        </div>
+      )}
+    </ForecastSection>
   );
+};
+
+EventInSearchWindow.propTypes = {
+  eventInventory: PropTypes.object,
+  eventDeviceRows: PropTypes.array,
+  uniqueEvents: PropTypes.array,
+  eventDetailsColumns: PropTypes.array.isRequired,
 };
 
 export default EventInSearchWindow;

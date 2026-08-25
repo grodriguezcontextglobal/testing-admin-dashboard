@@ -5,12 +5,12 @@ import { fetchSchoolSettings } from "../../../../Profile/school_compliance/utils
 import {
   getConsentStatusMessage,
   hasValidConsent,
-  isConsentRequired,
 } from "../../../../conditionalPage/utils/consentCheckUtils";
 import { fetchStudentConsent } from "../../../../conditionalPage/utils/guardianConsentApi";
 import {
   getConsentStatusCopy,
-  isConsentBlockingAssignment,
+  isAssignmentBlockedByConsent,
+  isConsentRequiredForMember,
   normalizeConsentStatus,
 } from "../../../../conditionalPage/utils/guardianConsentUtils";
 
@@ -38,14 +38,24 @@ export function useAssignmentConsentGate(member) {
   });
 
   const schoolSettings = settingsQuery.data?.settings || {};
-  const enforcing = Boolean(
-    schoolSettings.enforce_member_consent || schoolSettings.enforce_under_13
-  );
+  // Scoped to Education for the same reason the member flow scopes it: the
+  // consent regime is a school rule.
+  const memberIsMinor = isEducation && Number(member?.minor) === 1;
+  const memberIsUnder13 = isEducation && Boolean(member?.under_13);
+  // Each toggle is an age scope: with both off, no age is checked and there is
+  // nothing to fetch. This condition used to read `enforce_member_consent`, a key
+  // /school/settings does not return, so the query never ran and the gate had no
+  // status to judge — the server was the first thing to notice.
+  const consentApplies = isConsentRequiredForMember({
+    isMinor: memberIsMinor,
+    isUnder13: memberIsUnder13,
+    settings: schoolSettings,
+  });
 
   const consentQuery = useQuery({
     queryKey: ["studentConsentStatus", memberId, companyId],
     queryFn: () => fetchStudentConsent(companyId, memberId),
-    enabled: Boolean(memberId) && isEducation && enforcing,
+    enabled: Boolean(memberId) && consentApplies,
     staleTime: 60 * 1000,
   });
 
@@ -91,14 +101,13 @@ export function useAssignmentConsentGate(member) {
   );
 
   const blocking = consentQuery.isSuccess
-    ? isConsentBlockingAssignment(consentStatus, schoolSettings)
-    : isConsentRequired({
-        isMinor,
-        isUnder13: Boolean(member.under_13),
-        enforceMemberConsent: Boolean(schoolSettings.enforce_member_consent),
-        enforceUnder13: Boolean(schoolSettings.enforce_under_13),
-        consentExists: hasValidConsent(member.consent),
-      });
+    ? isAssignmentBlockedByConsent({
+        consentStatus,
+        settings: schoolSettings,
+        isMinor: memberIsMinor,
+        isUnder13: memberIsUnder13,
+      })
+    : consentApplies && !hasValidConsent(member.consent);
 
   if (blocking) {
     return {

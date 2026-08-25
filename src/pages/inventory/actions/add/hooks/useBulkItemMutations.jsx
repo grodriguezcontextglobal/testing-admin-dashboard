@@ -6,6 +6,7 @@ import {
   bulkItemInsertSequential,
 } from "../../utils/BulkItemActionsOptions";
 import { formatDate } from "../../../utils/dateFormat";
+import { invalidateInventoryQueries } from "../../../utils/inventoryQueryKeys";
 const useBulkItemMutations = ({ 
     user, 
     navigate, 
@@ -21,23 +22,23 @@ const useBulkItemMutations = ({
 }) => {
   const queryClient = useQueryClient();
 
+  // Both bulk endpoints listed the same three keys by hand and both missed the
+  // /inventory landing fetch, so a bulk group could be created and still not
+  // show up on the page the flow navigates back to.
+  const refreshInventoryPage = () =>
+    invalidateInventoryQueries(queryClient, {
+      companyId: user?.sqlInfo?.company_id,
+    });
+
   const alphaNumericInsertItemMutation = useMutation({
     mutationFn: (template) =>
       devitrakApi.post("/db_item/bulk-item-alphanumeric", template),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
-      queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"] });
-    },
+    onSuccess: refreshInventoryPage,
   });
 
   const sequencialNumbericInsertItemMutation = useMutation({
     mutationFn: (template) => devitrakApi.post("/db_item/bulk-item", template),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"] });
-      queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"] });
-      queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"] });
-    },
+    onSuccess: refreshInventoryPage,
   });
 
   const savingNewItem = async (data, imageUrlGenerated) => {

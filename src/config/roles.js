@@ -302,6 +302,12 @@ export const PERMISSIONS = {
   "member:assign_devices": EVENT_CRU,
   "member:notify": EVENT_CRU,
   "nav:members": EVENT_CRU,
+  // Taking money off a family is EVENT_D-shaped like member:delete, not CRU:
+  // whoever can see the roster must not be able to bill it. This is deliberately
+  // NOT "transaction:stripe_create" — that key is an F-01 placeholder with an
+  // empty array until F-04, so gating on it hid the charge form from every role
+  // including root_admin.
+  "member:charge_fee": EVENT_D,
 
   // ── F-01: new permission keys — no roles assigned yet ───────────────────────
 
@@ -381,3 +387,19 @@ export const isAssistant = (roleType) => roleType === "assistant";
 
 /** True for every role except assistant. Safe-default true for unknown/undefined. */
 export const isNotAssistant = (roleType) => roleType !== "assistant";
+
+/**
+ * B2 — staff activity log read hierarchy: a viewer sees activity from staff
+ * at their own ROLE_LEVELS rank or below (higher number = lower privilege).
+ * Roles with no ROLE_LEVELS entry (the 4 scoped roles, R1 unresolved) fall
+ * back to the lowest possible rank as a TARGET — any leveled viewer can see
+ * their activity — but as a VIEWER they get false for everyone, since they
+ * have no rank to compare from. Self-visibility for those roles is resolved
+ * by id elsewhere (staffActivityLogUtils.js), not here.
+ */
+export const canViewStaffActivity = (viewerRoleType, targetRoleType) => {
+  const viewerLevel = ROLE_LEVELS[viewerRoleType];
+  if (viewerLevel === undefined) return false;
+  const targetLevel = ROLE_LEVELS[targetRoleType] ?? Infinity;
+  return targetLevel >= viewerLevel;
+};
