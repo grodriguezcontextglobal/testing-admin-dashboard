@@ -350,7 +350,7 @@ const ImportingXlsx = ({
           <GrayButtonComponent
             title="View Template Guide"
             func={() => setOpenTour(true)}
-            style={{ width: "fit-content" }}
+            styles={{ width: "fit-content" }}
           />
           <GrayButtonComponent
             func={() => {
@@ -358,7 +358,7 @@ const ImportingXlsx = ({
               setRows([]);
               setFileName("");
             }}
-            style={{ width: "fit-content" }}
+            styles={{ width: "fit-content" }}
             title="Clear"
           />
         </div>
@@ -382,7 +382,7 @@ const ImportingXlsx = ({
               setRows([]);
               setFileName("");
             }}
-            style={{ marginLeft: "auto", width: "fit-content" }}
+            styles={{ marginLeft: "auto", width: "fit-content" }}
             title="Clear"
           />
           {errors.map((e, i) => (
@@ -432,7 +432,7 @@ const ImportingXlsx = ({
       >
         <GrayButtonComponent
           func={() => closeModal()}
-          style={{ marginLeft: "auto", width: "fit-content" }}
+          styles={{ marginLeft: "auto", width: "fit-content" }}
           title="Done"
           disabled={blockingButton}
           loading={loadingState}

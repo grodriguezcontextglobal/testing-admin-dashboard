@@ -166,12 +166,12 @@ const HeaderInventaryComponent = ({
           >
             <BlueButtonComponent
               title={"Add inventory"}
-              styles={{ with: "100%" }}
+              styles={{ width: "100%" }}
               iconLeading={<PlusCircleWhiteIcon />}
               buttonType="button"
               titleStyles={{
                 textTransform: "none",
-                with: "100%",
+                width: "100%",
                 gap: "2px",
               }}
               func={() => null}
@@ -181,11 +181,11 @@ const HeaderInventaryComponent = ({
         {canCreate && (
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
-            styles={{ with: "100%" }}
+            styles={{ width: "100%" }}
             buttonType="button"
             titleStyles={{
               textTransform: "none",
-              with: "100%",
+              width: "100%",
               gap: "2px",
             }}
             iconLeading={<PlusSquareDarkIcon />}
