@@ -42,27 +42,43 @@ export const EMPTY_SINGLE_MEMBER_FORM = {
  * @param {{ representativeLabel?: string, requireDob?: boolean }} [options]
  * @returns {string[]} validation errors
  */
-export const validateSingleMemberForm = (
+export const validateSingleMemberForm = (form = {}, options = {}) =>
+  Object.values(singleMemberFieldErrors(form, options));
+
+/**
+ * The same validation keyed by the field it belongs to, so the form can mark
+ * the input instead of printing a list of sentences at the bottom of a
+ * two-column grid and leaving you to find the field it means.
+ *
+ * `validateSingleMemberForm` is this object's values, in insertion order — one
+ * source of truth for both shapes.
+ *
+ * @param {object} form single-member form values
+ * @param {{ representativeLabel?: string, requireDob?: boolean }} [options]
+ * @returns {Record<string, string>} field name -> error message
+ */
+export const singleMemberFieldErrors = (
   form = {},
   { representativeLabel = "Guardian", requireDob = false } = {}
 ) => {
-  const errs = [];
-  if (!form.first_name) errs.push("First name is required.");
-  if (!form.last_name) errs.push("Last name is required.");
-  if (!form.email) errs.push("Email is required.");
-  if (!form.phone) errs.push("Phone is required.");
-  if (requireDob && !form.date_of_birth) errs.push("Date of birth is required.");
+  const errs = {};
+  if (!form.first_name) errs.first_name = "First name is required.";
+  if (!form.last_name) errs.last_name = "Last name is required.";
+  if (!form.email) errs.email = "Email is required.";
+  if (!form.phone) errs.phone = "Phone is required.";
+  if (requireDob && !form.date_of_birth)
+    errs.date_of_birth = "Date of birth is required.";
 
   const { minor } = calculateStudentAgeFlags(form.date_of_birth);
   if (minor) {
     if (!form.parent_guardian_first_name)
-      errs.push(`${representativeLabel} first name is required for minors.`);
+      errs.parent_guardian_first_name = `${representativeLabel} first name is required for minors.`;
     if (!form.parent_guardian_last_name)
-      errs.push(`${representativeLabel} last name is required for minors.`);
+      errs.parent_guardian_last_name = `${representativeLabel} last name is required for minors.`;
     if (!form.parent_guardian_email)
-      errs.push(`${representativeLabel} email is required for minors.`);
+      errs.parent_guardian_email = `${representativeLabel} email is required for minors.`;
     if (!form.parent_guardian_phone_number)
-      errs.push(`${representativeLabel} phone number is required for minors.`);
+      errs.parent_guardian_phone_number = `${representativeLabel} phone number is required for minors.`;
   }
   return errs;
 };

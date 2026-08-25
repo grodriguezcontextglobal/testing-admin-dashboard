@@ -421,3 +421,27 @@
   overflow: auto;
   overscroll-behavior: contain;
 }
+
+/*
+ * Reference material folded away until it is asked for -- a column spec, a
+ * format note. Native <details> so it needs no state and stays keyboard
+ * operable.
+ */
+.action-form__details {
+  border: 1px solid var(--gray-200, #e4e7ec);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.action-form__details > summary {
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-700, #414651);
+}
+
+.action-form__details[open] > summary {
+  margin-bottom: 12px;
+}

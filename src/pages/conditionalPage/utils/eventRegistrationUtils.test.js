@@ -6,6 +6,9 @@ import {
   buildConsumerEventPayloads,
   buildAttendanceEmail,
   ATTENDANCE_CONFIRMATION_PATH,
+  filterInviteRows,
+  inviteSelectionCounts,
+  selectableInviteKeys,
 } from "./eventRegistrationUtils";
 
 const adultMember = {
@@ -296,5 +299,83 @@ describe("buildAttendanceEmail", () => {
     expect(email.message).not.toContain("<script>");
     expect(email.message).toContain("Ada &lt;script&gt;");
     expect(email.message).toContain("L &amp; co");
+  });
+});
+
+describe("the invite table's selection", () => {
+  const rows = [
+    {
+      key: 1,
+      first_name: "Ada",
+      last_name: "Lovelace",
+      email: "ada@x.com",
+      _recipient: { email: "ada@x.com", isGuardian: false, error: null },
+    },
+    {
+      key: 2,
+      first_name: "Grace",
+      last_name: "Hopper",
+      email: "grace@x.com",
+      parent_guardian_email: "mum@x.com",
+      _recipient: { email: "mum@x.com", isGuardian: true, error: null },
+    },
+    {
+      key: 3,
+      first_name: "Alan",
+      last_name: "Turing",
+      email: "alan@x.com",
+      _recipient: { email: null, isGuardian: true, error: "Missing guardian email." },
+    },
+  ];
+
+  describe("filterInviteRows", () => {
+    it("matches a name, an email or a guardian email", () => {
+      expect(filterInviteRows(rows, "lovelace")).toHaveLength(1);
+      expect(filterInviteRows(rows, "mum@x.com")).toHaveLength(1);
+      expect(filterInviteRows(rows, "x.com")).toHaveLength(3);
+    });
+
+    it("matches across the first and last name together", () => {
+      expect(filterInviteRows(rows, "ada love")).toHaveLength(1);
+    });
+
+    it("returns everything for an empty search", () => {
+      expect(filterInviteRows(rows, "  ")).toHaveLength(3);
+      expect(filterInviteRows(rows, undefined)).toHaveLength(3);
+    });
+
+    it("survives a missing list", () => {
+      expect(filterInviteRows(undefined, "ada")).toEqual([]);
+    });
+  });
+
+  describe("selectableInviteKeys", () => {
+    it("leaves out the member who has nobody to email", () => {
+      expect(selectableInviteKeys(rows)).toEqual([1, 2]);
+    });
+  });
+
+  describe("inviteSelectionCounts", () => {
+    it("says how many are blocked, which the table never did", () => {
+      expect(inviteSelectionCounts(rows, [1])).toEqual({
+        total: 3,
+        blocked: 1,
+        selectable: 2,
+        selected: 1,
+      });
+    });
+
+    it("counts only selected keys that are still on screen", () => {
+      expect(inviteSelectionCounts(rows, [1, 99]).selected).toBe(1);
+    });
+
+    it("survives nothing", () => {
+      expect(inviteSelectionCounts(undefined, undefined)).toEqual({
+        total: 0,
+        blocked: 0,
+        selectable: 0,
+        selected: 0,
+      });
+    });
   });
 });

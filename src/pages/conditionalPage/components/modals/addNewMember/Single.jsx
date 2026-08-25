@@ -1,424 +1,460 @@
-import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import PropTypes from "prop-types";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { devitrakApi } from "../../../../../api/devitrakApi";
 import { registerStaffActivity } from "../../../../../api/activityLog";
+import { devitrakApi } from "../../../../../api/devitrakApi";
+import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
+import SelectComponent from "../../../../../components/UX/dropdown/SelectComponent";
 import Input from "../../../../../components/UX/inputs/Input";
 import Label from "../../../../../components/UX/inputs/Label";
+import { getIndustryProfile } from "../../../../../config/industryProfiles";
+import "../../../../../styles/global/actionForm.css";
+import { calculateStudentAgeFlags } from "../../../utils/ageCalculationUtils";
+import { saveGuardian, searchGuardians } from "../../../utils/guardianConsentApi";
+import {
+  buildExistingGuardianLinkPayload,
+  buildGuardianSearchPayload,
+  buildNewGuardianLinkPayload,
+  extractCreatedMemberId,
+  normalizeGuardianEmail,
+  selectGuardianByEmail,
+} from "../../../utils/guardianConsentUtils";
 import {
   EMPTY_SINGLE_MEMBER_FORM,
   buildSingleMemberPayload,
-  validateSingleMemberForm,
+  singleMemberFieldErrors,
 } from "../../../utils/singleMemberUtils";
-import { calculateStudentAgeFlags } from "../../../utils/ageCalculationUtils";
-import { getIndustryProfile } from "../../../../../config/industryProfiles";
-import {
-  searchGuardians,
-  saveGuardian,
-} from "../../../utils/guardianConsentApi";
-import {
-  normalizeGuardianEmail,
-  buildGuardianSearchPayload,
-  selectGuardianByEmail,
-  buildExistingGuardianLinkPayload,
-  buildNewGuardianLinkPayload,
-  extractCreatedMemberId,
-} from "../../../utils/guardianConsentUtils";
 
-const fieldWrapper = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "6px",
-  width: "100%",
-};
+const RELATIONSHIPS = [
+  { id: "guardian", label: "Guardian" },
+  { id: "mother", label: "Mother" },
+  { id: "father", label: "Father" },
+  { id: "other", label: "Other" },
+];
 
-const gridTwoCol = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "16px",
-};
+const stepClass = (done) =>
+  `action-form__step${done ? " action-form__step--done" : ""}`;
 
-const optionalHint = {
-  fontFamily: "Inter",
-  fontSize: "12px",
-  fontWeight: 400,
-  color: "var(--gray-500, #667085)",
-};
-
-const errorCaption = {
-  fontSize: "12px",
-  fontFamily: "Inter",
-  color: "var(--error, #B42318)",
-  display: "block",
-};
-
-const Single = ({ closingModal }) => {
+/**
+ * Creating one member.
+ *
+ * The form was a flat two-column grid of eleven inputs with the validation
+ * printed as a list of sentences underneath it — "Phone is required." with no
+ * indication of which of the eleven boxes that was. It is grouped now, and each
+ * message sits on its own field.
+ *
+ * The important fix is not cosmetic. Creating a minor is two writes: the member,
+ * then the guardian link. When the second failed, the first had already
+ * happened — but the form kept its contents and the error said nothing about
+ * it, so the natural next move was to press "Create member" again and end up
+ * with two of them. The created id is now held, the button changes to finish
+ * the link, and the member is never created twice.
+ */
+const Single = ({ onClose }) => {
   const { user } = useSelector((state) => state.admin);
+  const { notify, contextHolder } = useStatusNotification();
+  const queryClient = useQueryClient();
+
   // Industry-adaptive vocabulary/fields: schools show grade/homeroom and call
   // the responsible adult "Parent / Guardian"; other industries hide the school
   // fields and use their own representative label (industryProfiles.js).
-  const { fields, representative } = getIndustryProfile(
-    user?.companyData?.industry
-  );
+  const { fields, representative } = getIndustryProfile(user?.companyData?.industry);
+  const isEducation = user?.companyData?.industry === "Education";
+
   const [form, setForm] = useState({
     ...EMPTY_SINGLE_MEMBER_FORM,
     company_id: user.sqlInfo.company_id,
   });
-  const [errors, setErrors] = useState([]);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [guardianResolving, setGuardianResolving] = useState(false);
-  const [guardianError, setGuardianError] = useState(null);
+  const [failure, setFailure] = useState(null);
+  const [guardianNote, setGuardianNote] = useState(null);
 
-  // Derive minor/under_13 from DOB — no manual checkbox needed
+  // Set once the member exists. Everything after this point is the guardian
+  // link, and re-running step one would create a duplicate.
+  const createdMemberId = useRef(null);
+
   const ageFlags = useMemo(
     () => calculateStudentAgeFlags(form.date_of_birth),
     [form.date_of_birth]
   );
-  const isEducation = user?.companyData?.industry === "Education";
+
+  const fieldErrors = useMemo(
+    () =>
+      singleMemberFieldErrors(form, {
+        representativeLabel: representative.label,
+        requireDob: isEducation,
+      }),
+    [form, representative.label, isEducation]
+  );
 
   useEffect(() => {
-    setForm((prev) => ({ ...prev, company_id: user.sqlInfo.company_id }));
+    setForm((previous) => ({ ...previous, company_id: user.sqlInfo.company_id }));
   }, [user.sqlInfo.company_id]);
 
-  const update = (key) => (e) => {
+  const update = (key) => (event) => {
     const value =
-      e.target.type === "checkbox" ? e.target.checked : e.target.value ?? "";
-    setForm((prev) => ({ ...prev, [key]: value }));
+      event.target.type === "checkbox" ? event.target.checked : event.target.value ?? "";
+    setForm((previous) => ({ ...previous, [key]: value }));
+    if (key === "parent_guardian_email") setGuardianNote(null);
   };
 
-  // Auto-search guardian when email field loses focus
-  const handleGuardianEmailBlur = async () => {
-    if (!ageFlags.minor || !form.parent_guardian_email) return;
-
-    const companyId = user.sqlInfo.company_id;
-    const guardianEmail = normalizeGuardianEmail(form.parent_guardian_email);
-
-    try {
-      const searchResponse = await searchGuardians(
-        buildGuardianSearchPayload({ companyId, email: guardianEmail })
-      );
-      const existingGuardian = selectGuardianByEmail(searchResponse?.guardians, guardianEmail);
-
-      if (existingGuardian) {
-        setForm((prev) => ({
-          ...prev,
-          parent_guardian_first_name: existingGuardian.first_name || prev.parent_guardian_first_name,
-          parent_guardian_last_name: existingGuardian.last_name || prev.parent_guardian_last_name,
-          parent_guardian_phone_number: existingGuardian.phone_number || prev.parent_guardian_phone_number,
-        }));
-        setGuardianError(
-          `Existing guardian found. Their information will be linked to this student.`
-        );
-      }
-    } catch (err) {
-      // Silently fail - user can still enter manually
-      console.warn("Guardian search failed:", err);
-    }
-  };
+  const errorFor = (key) => (submitAttempted ? fieldErrors[key] : undefined);
 
   const clear = () => {
     setForm({ ...EMPTY_SINGLE_MEMBER_FORM, company_id: user.sqlInfo.company_id });
-    setErrors([]);
-    setGuardianError(null);
+    setSubmitAttempted(false);
+    setFailure(null);
+    setGuardianNote(null);
+    createdMemberId.current = null;
   };
 
-  const handleSubmit = async () => {
-    const errs = validateSingleMemberForm(form, {
-      representativeLabel: representative.label,
-      requireDob: isEducation,
-    });
-    if (errs.length) return setErrors(errs);
+  /* ────────────────────────────────────────────────────── guardian lookup ── */
 
-    setErrors([]);
-    setGuardianError(null);
+  const handleGuardianEmailBlur = async () => {
+    if (!ageFlags.minor || !form.parent_guardian_email) return;
+
+    try {
+      const guardianEmail = normalizeGuardianEmail(form.parent_guardian_email);
+      const response = await searchGuardians(
+        buildGuardianSearchPayload({
+          companyId: user.sqlInfo.company_id,
+          email: guardianEmail,
+        })
+      );
+      const existing = selectGuardianByEmail(response?.guardians, guardianEmail);
+      if (!existing) return;
+
+      setForm((previous) => ({
+        ...previous,
+        parent_guardian_first_name:
+          existing.first_name || previous.parent_guardian_first_name,
+        parent_guardian_last_name:
+          existing.last_name || previous.parent_guardian_last_name,
+        parent_guardian_phone_number:
+          existing.phone_number || previous.parent_guardian_phone_number,
+      }));
+      setGuardianNote(
+        `${representative.label} already on file — their details have been filled in and will be linked.`
+      );
+    } catch (error) {
+      // The lookup is a convenience; the fields can still be typed by hand.
+      console.warn("Guardian search failed:", error);
+    }
+  };
+
+  const linkGuardian = async (memberId) => {
+    const companyId = user.sqlInfo.company_id;
+    const guardianEmail = normalizeGuardianEmail(form.parent_guardian_email);
+    const relationship = form.relationship || "guardian";
+
+    const response = await searchGuardians(
+      buildGuardianSearchPayload({ companyId, email: guardianEmail })
+    );
+    const existing = selectGuardianByEmail(response?.guardians, guardianEmail);
+
+    await saveGuardian(
+      existing
+        ? buildExistingGuardianLinkPayload({
+            companyId,
+            memberId,
+            guardianId: existing.id,
+            relationship,
+          })
+        : buildNewGuardianLinkPayload({
+            companyId,
+            memberId,
+            firstName: form.parent_guardian_first_name,
+            lastName: form.parent_guardian_last_name,
+            email: guardianEmail,
+            phoneNumber: form.parent_guardian_phone_number,
+            relationship,
+          })
+    );
+  };
+
+  /* ───────────────────────────────────────────────────────────── submitting ── */
+
+  const handleSubmit = async () => {
+    setSubmitAttempted(true);
+    if (Object.keys(fieldErrors).length > 0) return;
+
+    setFailure(null);
     setSaving(true);
 
     try {
-      // Step 1: Create the student
-      const createResponse = await devitrakApi.post(
-        "/db_member/new-member",
-        buildSingleMemberPayload(form)
-      );
-
-      const createdMemberId = extractCreatedMemberId(createResponse);
-      if (!createdMemberId) {
-        throw new Error("Student created but member ID not returned from server.");
-      }
-      registerStaffActivity({
-        action: "CREATE",
-        target_model: "Member",
-        target_id: createdMemberId,
-        details: { first_name: form.first_name, last_name: form.last_name, grade: form.grade },
-      });
-
-      // Step 2: If minor, resolve guardian
-      if (ageFlags.minor) {
-        setGuardianResolving(true);
-        const companyId = user.sqlInfo.company_id;
-        const guardianEmail = normalizeGuardianEmail(form.parent_guardian_email);
-
-        // Search for existing guardian by email
-        const searchResponse = await searchGuardians(
-          buildGuardianSearchPayload({ companyId, email: guardianEmail })
+      if (!createdMemberId.current) {
+        const response = await devitrakApi.post(
+          "/db_member/new-member",
+          buildSingleMemberPayload(form)
         );
-
-        const existingGuardian = selectGuardianByEmail(searchResponse?.guardians, guardianEmail);
-
-        const relationship = form.relationship || "guardian";
-
-        if (existingGuardian) {
-          // Link existing guardian to new student
-          await saveGuardian(
-            buildExistingGuardianLinkPayload({
-              companyId,
-              memberId: createdMemberId,
-              guardianId: existingGuardian.id,
-              relationship,
-            })
-          );
-        } else {
-          // Create and link new guardian
-          await saveGuardian(
-            buildNewGuardianLinkPayload({
-              companyId,
-              memberId: createdMemberId,
-              firstName: form.parent_guardian_first_name,
-              lastName: form.parent_guardian_last_name,
-              email: guardianEmail,
-              phoneNumber: form.parent_guardian_phone_number,
-              relationship,
-            })
+        const memberId = extractCreatedMemberId(response);
+        if (!memberId) {
+          throw new Error(
+            "The member was saved but the server did not return an id, so the guardian could not be linked."
           );
         }
-        setGuardianResolving(false);
+        createdMemberId.current = memberId;
+
+        registerStaffActivity({
+          action: "CREATE",
+          target_model: "Member",
+          target_id: memberId,
+          details: {
+            first_name: form.first_name,
+            last_name: form.last_name,
+            grade: form.grade,
+          },
+        });
       }
 
-      // Success - clear form and close modal
+      if (ageFlags.minor) await linkGuardian(createdMemberId.current);
+
+      // DeleteMember and AdvanceGrades already do this; creating one did not,
+      // so a member you had just added was missing from the table behind the
+      // modal until something else happened to refetch it.
+      await queryClient.invalidateQueries({ queryKey: ["membersInfoQuery"] });
+
+      notify("success", `${form.first_name} ${form.last_name} was added.`.trim());
       clear();
-      closingModal(false);
+      onClose();
     } catch (error) {
-      setGuardianResolving(false);
-      const msg = error.message || "An unexpected error occurred.";
-
-      // If student was created but guardian failed, show specific message
-      if (error.message?.includes("member ID")) {
-        setErrors([msg]);
-      } else if (error.response?.status === 400 || error.response?.status === 404) {
-        setErrors([`Guardian association failed: ${error.response?.data?.msg || msg}`]);
-      } else {
-        setErrors([msg]);
-      }
+      console.error(error);
+      const detail =
+        error?.response?.data?.msg || error?.message || "An unexpected error occurred.";
+      setFailure({
+        // Once the member exists, only the link is outstanding — saying so is
+        // what stops the retry from creating a second member.
+        memberCreated: Boolean(createdMemberId.current),
+        detail,
+      });
     } finally {
       setSaving(false);
     }
   };
 
+  const awaitingGuardianOnly = Boolean(failure?.memberCreated);
+
+  /* ────────────────────────────────────────────────────────────────── body ── */
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <div style={gridTwoCol}>
-        <div style={fieldWrapper}>
-          <Label>First name *</Label>
-          <Input value={form.first_name} onChange={update("first_name")} required />
+    <div className="action-form">
+      {contextHolder}
+
+      <section className={stepClass(Boolean(form.first_name && form.last_name))}>
+        <div className="action-form__step-head">
+          <h3 className="action-form__step-title">
+            <span className="action-form__step-index">1</span>
+            Who they are
+          </h3>
         </div>
-        <div style={fieldWrapper}>
-          <Label>Last name *</Label>
-          <Input value={form.last_name} onChange={update("last_name")} required />
+
+        <div className="action-form__grid">
+          {[
+            { key: "first_name", label: "First name" },
+            { key: "last_name", label: "Last name" },
+            { key: "email", label: "Email", type: "email" },
+            { key: "phone", label: "Phone" },
+          ].map((field) => (
+            <div className="action-form__field" key={field.key}>
+              <Label htmlFor={field.key}>{field.label} *</Label>
+              <Input
+                id={field.key}
+                type={field.type ?? "text"}
+                value={form[field.key]}
+                onChange={update(field.key)}
+                disabled={saving || awaitingGuardianOnly}
+              />
+              {errorFor(field.key) && (
+                <p className="action-form__feedback action-form__feedback--error">
+                  {errorFor(field.key)}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
-        <div style={fieldWrapper}>
-          <Label>Email *</Label>
-          <Input type="email" value={form.email} onChange={update("email")} required />
+      </section>
+
+      <section className="action-form__step">
+        <div className="action-form__step-head">
+          <h3 className="action-form__step-title">
+            <span className="action-form__step-index">2</span>
+            Address and school details
+          </h3>
+          <span className="action-form__step-note">All optional</span>
         </div>
-        <div style={fieldWrapper}>
-          <Label>Phone *</Label>
-          <Input value={form.phone} onChange={update("phone")} required />
+
+        <div className="action-form__grid">
+          {[
+            { key: "address_street", label: "Street" },
+            { key: "address_city", label: "City" },
+            { key: "address_state", label: "State" },
+            { key: "address_zip", label: "Zip" },
+            fields.grade && { key: "grade", label: "Grade", placeholder: "e.g. 7" },
+            fields.homeroom && {
+              key: "homeroom",
+              label: "Homeroom",
+              placeholder: "e.g. Rivera 7B",
+            },
+          ]
+            .filter(Boolean)
+            .map((field) => (
+              <div className="action-form__field" key={field.key}>
+                <Label htmlFor={field.key}>{field.label}</Label>
+                <Input
+                  id={field.key}
+                  value={form[field.key]}
+                  onChange={update(field.key)}
+                  placeholder={field.placeholder}
+                  disabled={saving || awaitingGuardianOnly}
+                />
+              </div>
+            ))}
         </div>
-        <div style={fieldWrapper}>
-          <Label>
-            Street <span style={optionalHint}>(Optional)</span>
-          </Label>
-          <Input value={form.address_street} onChange={update("address_street")} />
-        </div>
-        <div style={fieldWrapper}>
-          <Label>
-            City <span style={optionalHint}>(Optional)</span>
-          </Label>
-          <Input value={form.address_city} onChange={update("address_city")} />
-        </div>
-        <div style={fieldWrapper}>
-          <Label>
-            State <span style={optionalHint}>(Optional)</span>
-          </Label>
-          <Input value={form.address_state} onChange={update("address_state")} />
-        </div>
-        <div style={fieldWrapper}>
-          <Label>
-            Zip <span style={optionalHint}>(Optional)</span>
-          </Label>
-          <Input value={form.address_zip} onChange={update("address_zip")} />
-        </div>
-        {fields.grade && (
-          <div style={fieldWrapper}>
-            <Label>
-              Grade <span style={optionalHint}>(Optional)</span>
-            </Label>
-            <Input value={form.grade} onChange={update("grade")} placeholder="e.g. 7" />
-          </div>
-        )}
-        {fields.homeroom && (
-          <div style={fieldWrapper}>
-            <Label>
-              Homeroom <span style={optionalHint}>(Optional)</span>
-            </Label>
-            <Input value={form.homeroom} onChange={update("homeroom")} placeholder="e.g. Rivera 7B" />
-          </div>
-        )}
-      </div>
+      </section>
 
       {fields.minor && (
-        <>
-          <div style={fieldWrapper}>
-            <Label>
-              Date of birth {isEducation ? "*" : "(Optional)"}
+        <section className={stepClass(Boolean(form.date_of_birth))}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">3</span>
+              Age and {representative.label.toLowerCase()}
+            </h3>
+          </div>
+
+          <div className="action-form__field">
+            <Label htmlFor="date_of_birth">
+              Date of birth {isEducation ? "*" : "(optional)"}
             </Label>
             <Input
+              id="date_of_birth"
               type="date"
               value={form.date_of_birth}
               onChange={update("date_of_birth")}
               max={new Date().toISOString().split("T")[0]}
-              required={isEducation}
+              disabled={saving || awaitingGuardianOnly}
             />
+            <p className="action-form__step-note">
+              This decides who receives notices about the member. Without it they
+              are recorded as an adult.
+            </p>
+            {errorFor("date_of_birth") && (
+              <p className="action-form__feedback action-form__feedback--error">
+                {errorFor("date_of_birth")}
+              </p>
+            )}
           </div>
 
           {ageFlags.dob_valid && ageFlags.under_13 && (
-            <div
-              style={{
-                padding: "12px 16px",
-                borderRadius: "8px",
-                background: "var(--warning-bg, #FEF3C7)",
-                border: "1px solid var(--warning-border, #F59E0B)",
-                fontSize: "13px",
-                fontFamily: "Inter",
-                color: "var(--warning-text, #92400E)",
-              }}
-            >
-              This student is under 13. COPPA regulations may require additional
-              consent depending on your school settings.
-            </div>
+            <p className="action-form__banner action-form__banner--warning">
+              This member is under 13. COPPA may require additional consent
+              depending on your settings.
+            </p>
           )}
 
           {ageFlags.minor && (
-            <div
-              style={{
-                ...gridTwoCol,
-                border: "1px solid var(--gray-200, #EAECF0)",
-                borderRadius: "12px",
-                padding: "16px",
-                background: "var(--gray-50, #F9FAFB)",
-              }}
-            >
-              <div style={fieldWrapper}>
-                <Label>{representative.label} first name *</Label>
-                <Input
-                  value={form.parent_guardian_first_name}
-                  onChange={update("parent_guardian_first_name")}
-                  required
-                />
+            <>
+              <p className="action-form__step-note">
+                A minor, so their {representative.label.toLowerCase()} is required
+                and will receive every notice.
+              </p>
+              <div className="action-form__grid">
+                {[
+                  { key: "parent_guardian_first_name", label: "first name" },
+                  { key: "parent_guardian_last_name", label: "last name" },
+                  {
+                    key: "parent_guardian_email",
+                    label: "email",
+                    type: "email",
+                    onBlur: handleGuardianEmailBlur,
+                  },
+                  { key: "parent_guardian_phone_number", label: "phone" },
+                ].map((field) => (
+                  <div className="action-form__field" key={field.key}>
+                    <Label htmlFor={field.key}>
+                      {`${representative.label} ${field.label} *`}
+                    </Label>
+                    <Input
+                      id={field.key}
+                      type={field.type ?? "text"}
+                      value={form[field.key]}
+                      onChange={update(field.key)}
+                      onBlur={field.onBlur}
+                      disabled={saving}
+                    />
+                    {errorFor(field.key) && (
+                      <p className="action-form__feedback action-form__feedback--error">
+                        {errorFor(field.key)}
+                      </p>
+                    )}
+                    {field.key === "parent_guardian_email" && guardianNote && (
+                      <p className="action-form__feedback action-form__feedback--ok">
+                        {guardianNote}
+                      </p>
+                    )}
+                  </div>
+                ))}
+
+                <div className="action-form__field">
+                  <Label>Relationship</Label>
+                  <SelectComponent
+                    items={RELATIONSHIPS}
+                    value={RELATIONSHIPS.find((item) => item.id === form.relationship)}
+                    onSelect={(option) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        relationship: option?.id ?? "guardian",
+                      }))
+                    }
+                    placeholder="Guardian"
+                  />
+                </div>
               </div>
-              <div style={fieldWrapper}>
-                <Label>{representative.label} last name *</Label>
-                <Input
-                  value={form.parent_guardian_last_name}
-                  onChange={update("parent_guardian_last_name")}
-                  required
-                />
-              </div>
-              <div style={fieldWrapper}>
-                <Label>{representative.label} email *</Label>
-                <Input
-                  type="email"
-                  value={form.parent_guardian_email}
-                  onChange={update("parent_guardian_email")}
-                  onBlur={handleGuardianEmailBlur}
-                  required
-                />
-                {guardianError && (
-                  <span style={{ fontSize: "12px", color: "var(--blue-600, #2563EB)" }}>
-                    {guardianError}
-                  </span>
-                )}
-              </div>
-              <div style={fieldWrapper}>
-                <Label>{representative.label} phone *</Label>
-                <Input
-                  value={form.parent_guardian_phone_number}
-                  onChange={update("parent_guardian_phone_number")}
-                  required
-                />
-              </div>
-              <div style={fieldWrapper}>
-                <Label>Relationship</Label>
-                <select
-                  value={form.relationship}
-                  onChange={update("relationship")}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--gray-300, #D0D5DD)",
-                    fontSize: "14px",
-                    fontFamily: "Inter, sans-serif",
-                    backgroundColor: "white",
-                  }}
-                >
-                  <option value="guardian">Guardian</option>
-                  <option value="mother">Mother</option>
-                  <option value="father">Father</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
+            </>
           )}
-        </>
+        </section>
       )}
 
-      {errors.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          {errors.map((e, i) => (
-            <span key={i} style={errorCaption}>
-              {e}
-            </span>
-          ))}
-        </div>
+      {failure && (
+        <p className="action-form__notice">
+          {failure.memberCreated
+            ? `${form.first_name} ${form.last_name} was created, but linking the ${representative.label.toLowerCase()} failed: ${failure.detail} Fix the details above and finish the link — pressing again will not create a second member.`
+            : failure.detail}
+        </p>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "12px",
-          paddingTop: "16px",
-          borderTop: "1px solid var(--gray-200, #EAECF0)",
-        }}
-      >
+      {submitAttempted && Object.keys(fieldErrors).length > 0 && (
+        <p className="action-form__notice">
+          {Object.keys(fieldErrors).length} field
+          {Object.keys(fieldErrors).length === 1 ? " needs" : "s need"} filling in
+          above.
+        </p>
+      )}
+
+      <div className="action-form__footer">
         <GrayButtonComponent
           title="Clear"
+          buttonType="button"
+          disabled={saving}
           func={clear}
-          buttonType="reset"
-          styles={{ width: "100%" }}
-          disabled={saving || guardianResolving}
         />
         <BlueButtonComponent
-          title="Create member"
+          title={awaitingGuardianOnly ? "Finish linking" : "Create member"}
+          buttonType="button"
           func={handleSubmit}
-          styles={{ width: "100%" }}
-          isDisabled={saving || guardianResolving}
-          isLoading={saving || guardianResolving}
+          isDisabled={saving}
+          isLoading={saving}
         />
       </div>
     </div>
   );
+};
+
+Single.propTypes = {
+  onClose: PropTypes.func.isRequired,
 };
 
 export default Single;

@@ -267,3 +267,54 @@ export const buildAttendanceEmail = ({ member, event, recipient, confirmationLin
     message,
   };
 };
+
+/* ─────────────────────────────────────────────── picking who gets invited ── */
+
+const searchText = (value) => String(value ?? "").toLowerCase();
+
+/**
+ * Members matching a free-text search over the columns the invite table shows.
+ *
+ * The table had no search at all, which is fine for a demo company and not
+ * fine for a school with eight hundred students on one page of checkboxes.
+ */
+export const filterInviteRows = (rows, search) => {
+  const term = searchText(search).trim();
+  const list = Array.isArray(rows) ? rows : [];
+  if (!term) return list;
+
+  return list.filter((row) =>
+    [
+      `${row?.first_name ?? ""} ${row?.last_name ?? ""}`,
+      row?.email,
+      row?.parent_guardian_email,
+      row?.external_id,
+    ].some((value) => searchText(value).includes(term))
+  );
+};
+
+/** The keys of the rows that can actually be invited. */
+export const selectableInviteKeys = (rows) =>
+  (Array.isArray(rows) ? rows : [])
+    .filter((row) => !row?._recipient?.error)
+    .map((row) => row?.key);
+
+/**
+ * How many are selectable, how many are blocked, how many are picked.
+ *
+ * Blocked rows were rendered disabled with a tooltip and no count, so a run
+ * that quietly left out thirty minors with no guardian email looked the same
+ * as one that left out none.
+ */
+export const inviteSelectionCounts = (rows, selectedKeys) => {
+  const list = Array.isArray(rows) ? rows : [];
+  const selected = new Set(Array.isArray(selectedKeys) ? selectedKeys : []);
+  const blocked = list.filter((row) => Boolean(row?._recipient?.error));
+
+  return {
+    total: list.length,
+    blocked: blocked.length,
+    selectable: list.length - blocked.length,
+    selected: list.filter((row) => selected.has(row?.key)).length,
+  };
+};
