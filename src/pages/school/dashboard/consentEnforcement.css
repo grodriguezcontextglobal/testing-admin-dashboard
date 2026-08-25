@@ -1,0 +1,94 @@
+/*
+ * The consent-enforcement callout on the school readiness dashboard.
+ *
+ * Enforcement being off used to be a grey pill reading "Consent enforcement
+ * off" and nothing else — no statement of what enforcement does, no hint that
+ * it is a setting, and no way to reach it. The dashboard below it sat inert and
+ * the reason was a two-word label.
+ */
+
+.consent-enforcement {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  border-radius: var(--radius-xl, 12px);
+  border: 1px solid var(--gray-200, #ddded6);
+  background: var(--base-white, #fff);
+}
+
+/* Off is the state that needs reading, so it is the one that is coloured. */
+.consent-enforcement--off {
+  border-color: var(--warning-200, #fedf89);
+  background: var(--warning-25, #fffcf5);
+}
+
+.consent-enforcement__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--gray-500, #777b73);
+}
+
+.consent-enforcement--off .consent-enforcement__icon {
+  color: var(--warning-600, #dc6803);
+}
+
+.consent-enforcement__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+.consent-enforcement__title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--gray-900, #171d1a);
+  width: 100%;
+  text-align: left;
+}
+
+.consent-enforcement__text {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-600, #5d615a);
+  /* max-width: 72ch; */
+  width: 100%;
+  text-align: left;
+}
+
+.consent-enforcement__action {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-700, #175cd3);
+  text-decoration: none;
+  width: 100%;
+  text-align: right;
+}
+
+.consent-enforcement__action:hover {
+  text-decoration: underline;
+}
+
+.consent-enforcement__action:focus-visible {
+  outline: 2px solid var(--blue-600, #155eef);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.consent-enforcement__where {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}

@@ -40,6 +40,30 @@ export async function fetchConsentStatusSummary(
 }
 
 /**
+ * Every consent record for the company, in any state, one page at a time.
+ *
+ * Added 2026-08-25. This is the only endpoint that answers the register
+ * question: `/school/consent` needs a member_id, and `/school/consent/status`
+ * only reports signed or not signed.
+ *
+ * A student can hold several rows — one per policy version and per resend — so
+ * this is a list of consents, not a list of students. The one-time code is
+ * never returned, in any form.
+ *
+ * Auth is the same as the rest of the namespace (x-token + checkTokenVersion +
+ * Education industry + member:read), and the read is written to the PII audit,
+ * so do not poll it.
+ *
+ * @param {object} payload - build it with buildConsentListPayload
+ * @returns {Promise<{ok: boolean, page: number, page_size: number, total: number,
+ *   total_pages: number, count: number, consents: object[]}>}
+ */
+export async function fetchCompanyConsents(payload) {
+  const response = await devitrakApi.post("/school/consent/list", payload);
+  return response.data;
+}
+
+/**
  * Store a guardian record.
  *
  * @param {object} guardianPayload

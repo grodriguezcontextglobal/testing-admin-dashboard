@@ -1,15 +1,30 @@
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Icon } from "@iconify/react";
-import { Link } from "react-router-dom";
 import { Button, Modal, message } from "antd";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { fetchSchoolSettings } from "../../Profile/school_compliance/utils/schoolComplianceUtils";
-import { fetchConsentStatusSummary } from "../../conditionalPage/utils/guardianConsentApi";
+import {
+  fetchCompanyConsents,
+  fetchConsentStatusSummary,
+} from "../../conditionalPage/utils/guardianConsentApi";
 import { getConsentStatusCopy } from "../../conditionalPage/utils/guardianConsentUtils";
 import { calculateStudentAgeFlags } from "../../conditionalPage/utils/ageCalculationUtils";
 import { loadDemoData } from "../compliance/loadDemoData";
+import ConsentAttentionList from "./ConsentAttentionList";
+import ConsentEnforcementCallout from "./ConsentEnforcementCallout";
+import "./consentAttention.css";
+import {
+  buildConsentListPayload,
+  describeConsentRecord,
+  latestRecordByMember,
+  orphanConsentRows,
+  resolveMemberConsentStatus,
+  sortAttentionRows,
+  summarizeConsentTotals,
+  summarizeCoverage,
+} from "./consentRecords";
 
 /**
  * School compliance-readiness dashboard.
@@ -75,15 +90,7 @@ const WARN_CHIP = chip("var(--warning-50, #fffaeb)", "var(--warning-700, #b54708
 const OK_CHIP = chip("var(--success-50, #ecfdf3)", "var(--success-700, #067647)");
 const NEUTRAL_CHIP = chip("var(--gray-100, #f2f4f7)", "var(--gray-600, #475467)");
 
-/** Consent status → chip label + style. Mirrors guardianConsentUtils statuses. */
-const STATUS_CHIP = {
-  missing: { text: "Consent not requested", style: ERROR_CHIP },
-  refused: { text: "Guardian refused", style: ERROR_CHIP },
-  expired: { text: "Consent link expired", style: WARN_CHIP },
-  stale: { text: "New policy — reconsent", style: WARN_CHIP },
-  pending: { text: "Awaiting guardian", style: WARN_CHIP },
-  agreed: { text: "Consent agreed", style: OK_CHIP },
-};
+// The status pills moved into ConsentAttentionList, which owns the list now.
 
 const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
   const { user } = useSelector((state) => state.admin);
@@ -124,7 +131,8 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
   const devicesOut = outstandingQuery?.data?.data?.rows?.length ?? 0;
   const overdue = overdueQuery?.data?.data?.count ?? 0;
   const settings = settingsQuery.data?.settings || {};
-  const enforcementOn = Boolean(settings.enforce || settings.enforce_under_13);
+  const enforcementOn = Boolean(settings.enforce_member_consent || settings.enforce_under_13_consent
+);
   const requiredPolicyVersion = settings.required_consent_policy_version ?? null;
 
   // Students whose age (from DOB) means guardian consent is in scope.
@@ -161,51 +169,142 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
   const consentLoading = enforcementOn && consentSummaryQuery.isLoading;
   const consentStatuses = consentSummaryQuery.data?.statuses;
 
+  // The consent register (/school/consent/list, 2026-08-25). It answers a
+  // different question from the summary above: the summary says whether a
+  // *student* is covered, this says what consent *records* exist and in what
+  // state. Both are needed here -- the register cannot report a student who was
+  // never asked (no row exists) or one whose signed policy version has been
+  // superseded, and the summary cannot say when a request went out or who it
+  // went to.
+  //
+  // One request per state rather than one unfiltered page: the server's filters
+  // are mutually exclusive (`pending` excludes the expired), so each response's
+  // `total` is that state's true company-wide count and they add up. Four cheap
+  // requests, cached -- the read is written to the PII audit, so it must not be
+  // polled.
+  const REGISTER_STATES = ["agreed", "pending", "expired", "refused"];
+  const REGISTER_DETAIL_PAGE = 200;
+  const registerQueries = useQueries({
+    queries: REGISTER_STATES.map((status) => ({
+      queryKey: ["consentRegister", companyId, status],
+      queryFn: () =>
+        fetchCompanyConsents(
+          buildConsentListPayload({
+            companyId,
+            status,
+            page: 1,
+            pageSize: REGISTER_DETAIL_PAGE,
+          })
+        ),
+      enabled: !!companyId && isEducation,
+      staleTime: 60 * 1000,
+    })),
+  });
+
+  const registerByStatus = Object.fromEntries(
+    REGISTER_STATES.map((status, index) => [status, registerQueries[index]?.data])
+  );
+  const registerCounts = summarizeConsentTotals(
+    Object.fromEntries(
+      REGISTER_STATES.map((status) => [status, registerByStatus[status]?.total])
+    )
+  );
+  const registerLoading = registerQueries.some((query) => query.isLoading);
+  const registerFailed = registerQueries.some((query) => query.isError);
+
+  // Past REGISTER_DETAIL_PAGE rows in any state we no longer hold the whole
+  // register, and "this student has no row" stops meaning "nobody asked them".
+  const registerTruncated = REGISTER_STATES.some(
+    (status) => (registerByStatus[status]?.total ?? 0) > REGISTER_DETAIL_PAGE
+  );
+  const registerLoaded = registerQueries.every((query) => query.isSuccess);
+  // Only a register we hold in full can prove a student was never asked.
+  const registerComplete = registerLoaded && !registerTruncated;
+
+  const registerRows = useMemo(
+    () => [
+      // Worst state first so that, where a student holds rows in more than one,
+      // the row kept is the one that needs acting on.
+      ...(registerByStatus.refused?.consents ?? []),
+      ...(registerByStatus.expired?.consents ?? []),
+      ...(registerByStatus.pending?.consents ?? []),
+      ...(registerByStatus.agreed?.consents ?? []),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      registerByStatus.refused,
+      registerByStatus.expired,
+      registerByStatus.pending,
+      registerByStatus.agreed,
+    ]
+  );
+  const recordsByMember = useMemo(
+    () => latestRecordByMember(registerRows),
+    [registerRows]
+  );
+
   const { kpis, attention } = useMemo(() => {
-    const rows = consentTargets.map((r) => ({
-      ...r,
-      // The server derives status (including expiry and policy staleness), so
-      // there is nothing left to normalize client-side. Before the summary
-      // lands, treat it as unknown rather than "missing" — the latter would
-      // paint every student red while the request is in flight.
-      status: consentStatuses?.[r.memberId] ?? null,
-    }));
+    const rows = consentTargets.map((r) => {
+      const record = recordsByMember.get(r.memberId) ?? null;
+      return {
+        ...r,
+        name: `${r.member.first_name ?? ""} ${r.member.last_name ?? ""}`.trim(),
+        grade: r.member.grade ?? null,
+        record,
+        // The register first, the summary only where the register cannot
+        // answer, and null when neither can — see resolveMemberConsentStatus.
+        status: resolveMemberConsentStatus({
+          record,
+          summaryStatus: consentStatuses?.[r.memberId],
+          requiredPolicyVersion,
+          registerComplete,
+        }),
+      };
+    });
 
     const under13 = roster.filter((r) => r.flags.under_13);
-    // A student the summary didn't cover is unknown, not outstanding — counting
-    // nulls as outstanding would report a compliance gap that isn't there.
-    const known = rows.filter((r) => r.status !== null);
-    const agreed = known.filter((r) => r.status === "agreed");
-    const outstanding = known.filter((r) => r.status !== "agreed");
-    const coverage = known.length
-      ? Math.round((agreed.length / known.length) * 100)
-      : 100;
+    const coverage = summarizeCoverage(rows);
 
-    // under-13 first (COPPA), then by name
-    const attentionRows = [...outstanding].sort((a, b) => {
-      if (a.flags.under_13 !== b.flags.under_13) return a.flags.under_13 ? -1 : 1;
-      return `${a.member.first_name} ${a.member.last_name}`.localeCompare(
-        `${b.member.first_name} ${b.member.last_name}`
-      );
-    });
+    // Anything still outstanding, plus the register rows that need acting on
+    // but belong to nobody on the roster — a student who left, turned 18 or
+    // was deleted. Those used to be counted in the header and shown nowhere.
+    const outstanding = rows.filter(
+      (r) => r.status !== null && r.status !== "agreed"
+    );
+    const orphans = orphanConsentRows(
+      registerRows,
+      consentTargets.map((r) => r.memberId)
+    );
+
+    // under-13 first (COPPA), then by how stuck the consent is, then by name
+    const attentionRows = sortAttentionRows([...outstanding, ...orphans]);
 
     return {
       kpis: {
         total: roster.length,
         under13: under13.length,
-        requiring: rows.length,
-        agreed: agreed.length,
-        coverage,
+        // requiring / known / unknown / agreed / coverage
+        ...coverage,
       },
       attention: attentionRows,
     };
     // consentStatuses is a stable object reference from react-query's cache, so
     // it can be a plain dependency. The previous fan-out had to stringify every
     // consent payload on every render to get a comparable key.
-  }, [roster, consentTargets, consentStatuses]);
+  }, [
+    roster,
+    consentTargets,
+    consentStatuses,
+    recordsByMember,
+    registerRows,
+    registerComplete,
+    requiredPolicyVersion,
+  ]);
 
   const coverageColor =
-    kpis.coverage >= 100
+    kpis.coverage === null
+      ? "var(--gray-500, #777b73)"
+      : kpis.coverage >= 100
       ? "var(--success-600, #079455)"
       : kpis.coverage >= 60
       ? "var(--warning-600, #dc6803)"
@@ -262,19 +361,6 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
           <Icon icon="tabler:shield-check" width={20} /> Compliance readiness
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span
-            style={
-              enforcementOn
-                ? chip("var(--blue-50, #eff8ff)", "var(--blue-700, #175cd3)")
-                : NEUTRAL_CHIP
-            }
-          >
-            {enforcementOn
-              ? `Consent enforcement on${
-                  requiredPolicyVersion ? ` · policy v${requiredPolicyVersion}` : ""
-                }`
-              : "Consent enforcement off"}
-          </span>
           {isDemoCompany && (
             <Button size="small" type="primary" onClick={runSeed}>
               Load demo roster
@@ -287,6 +373,17 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
         <div style={{ ...caption, margin: "0 0 12px" }}>
           Compliance tracking applies to Education companies.
         </div>
+      )}
+
+      {/* What enforcement is and where to switch it on. Replaces a grey pill
+          that said "Consent enforcement off" and left the reader with no way to
+          find out what that meant or how to change it. */}
+      {isEducation && !settingsQuery.isLoading && (
+        <ConsentEnforcementCallout
+          enforcementOn={enforcementOn}
+          requiredPolicyVersion={requiredPolicyVersion}
+          audienceLabel={audienceLabel}
+        />
       )}
 
       <div
@@ -313,15 +410,34 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
         </div>
         <div style={tile}>
           <p style={label}>
-            <Icon icon="tabler:writing-sign" width={16} /> Consent coverage
+            <Icon icon="tabler:writing-sign" width={16} /> Minors who agreed
           </p>
+          {/* The headline is the count, not the percentage: "37 of 42" is the
+              number somebody is asked for. It counts STUDENTS, not register
+              rows — a student holds one row per policy version and per resend,
+              so the register's agreed total is a larger number answering a
+              different question.
+
+              When nothing could be read this shows a dash. It used to show
+              0/20 next to "100% coverage" and a celebratory empty list, all
+              three derived from an empty response. */}
           <p style={{ ...value, color: coverageColor }}>
-            {consentLoading ? "…" : `${kpis.coverage}%`}
+            {consentLoading || registerLoading
+              ? "…"
+              : kpis.known === 0
+              ? "—"
+              : `${kpis.agreed}/${kpis.requiring}`}
           </p>
           <p style={caption}>
-            {enforcementOn
-              ? `${kpis.agreed}/${kpis.requiring} requiring consent have agreed`
-              : "enforcement is off"}
+            {!enforcementOn
+              ? "enforcement is off"
+              : consentLoading || registerLoading
+              ? "reading consent records…"
+              : kpis.known === 0
+              ? "consent records could not be read"
+              : `${kpis.coverage}% of minors requiring consent${
+                  kpis.unknown > 0 ? ` · ${kpis.unknown} unread` : ""
+                }`}
           </p>
         </div>
         <div style={tile}>
@@ -388,85 +504,74 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
             Needs attention
           </span>
           <span style={caption}>
-            {consentLoading
-              ? "checking consent records…"
+            {consentLoading || registerLoading
+              ? "reading consent records…"
               : attention.length
-              ? `${attention.length} ${audienceLabel} cannot be assigned a device yet`
-              : enforcementOn
-              ? "every student requiring consent has agreed"
-              : "consent enforcement is off"}
+              ? `${attention.length} outstanding${
+                  kpis.unknown > 0 ? ` · ${kpis.unknown} could not be read` : ""
+                }`
+              : !enforcementOn
+              ? "consent enforcement is off"
+              : kpis.known === 0
+              ? "consent records could not be read"
+              : "every student requiring consent has agreed"}
           </span>
         </div>
 
-        {attention.length === 0 ? (
-          <div style={{ ...caption, padding: "20px", margin: 0 }}>
-            {consentLoading ? "Loading…" : "No outstanding consent actions. 🎉"}
-          </div>
+        {/* The consent register, in the header rather than as a second table:
+            these are counts of consent RECORDS company-wide, which is not the
+            same number as the list below. A student can hold several rows, and
+            a record whose student has since been deleted still counts here
+            while having nobody left to chase. */}
+        <div
+          style={{
+            padding: "10px 20px",
+            borderBottom: "1px solid var(--gray-200, #ddded6)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ ...caption, margin: 0 }}>Consent records on file</span>
+          {registerFailed ? (
+            <span style={WARN_CHIP}>register unavailable</span>
+          ) : registerLoading ? (
+            <span style={NEUTRAL_CHIP}>loading…</span>
+          ) : registerCounts.total === 0 ? (
+            <span style={NEUTRAL_CHIP}>none yet</span>
+          ) : (
+            <>
+              <span style={OK_CHIP}>{registerCounts.agreed} agreed</span>
+              <span style={WARN_CHIP}>{registerCounts.pending} awaiting</span>
+              <span style={ERROR_CHIP}>{registerCounts.expired} expired</span>
+              <span style={ERROR_CHIP}>{registerCounts.refused} refused</span>
+              <span style={{ ...caption, margin: 0 }}>
+                {registerCounts.total} total
+                {registerTruncated ? " · detail shown for the first 200 of each" : ""}
+              </span>
+            </>
+          )}
+        </div>
+
+        {consentLoading || registerLoading ? (
+          <p className="consent-attention__empty">Loading…</p>
+        ) : registerFailed || kpis.known === 0 ? (
+          /* Only celebrate on an answer. An empty list because nothing could be
+             read is not the same as an empty list because there is nothing to
+             do, and the second message was being shown for the first case. */
+          <p className="consent-attention__empty">
+            The consent records could not be read, so this list is not complete.
+            Reload to try again.
+          </p>
         ) : (
-          <div>
-            {attention.map((r) => {
-              const meta = STATUS_CHIP[r.status] ?? STATUS_CHIP.missing;
-              return (
-                <div
-                  key={r.memberId}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    padding: "12px 20px",
-                    borderTop: "1px solid var(--gray-100, #f2f4f7)",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      minWidth: 0,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "Inter, sans-serif",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "var(--gray-900, #171d1a)",
-                      }}
-                    >
-                      {r.member.first_name} {r.member.last_name}
-                    </span>
-                    {r.flags.dob_valid && (
-                      <span style={caption}>
-                        {r.flags.under_13
-                          ? `age ${r.flags.age} · under 13`
-                          : `age ${r.flags.age} · minor`}
-                      </span>
-                    )}
-                    <span style={caption}>{getConsentStatusCopy(r.status)}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={meta.style}>{meta.text}</span>
-                    <Link
-                      to={`/member/${r.memberId}/main`}
-                      style={{
-                        fontFamily: "Inter, sans-serif",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: "var(--blue-700, #175cd3)",
-                        textDecoration: "none",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Review →
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ConsentAttentionList
+            rows={attention}
+            describeRow={(row) =>
+              describeConsentRecord(row.record) ?? getConsentStatusCopy(row.status)
+            }
+            audienceLabel={audienceLabel}
+          />
         )}
       </div>
     </div>
