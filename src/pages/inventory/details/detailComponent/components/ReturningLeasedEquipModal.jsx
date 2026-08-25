@@ -80,7 +80,11 @@ const ReturningLeasedEquipModal = ({
       const returnDate = new Date().toISOString();
       const payload = {
         item_ids: [dataFound.item_id],
-        company_id: user.aqlInfo.company_id,
+        // `user.aqlInfo` — the only occurrence of that spelling in the
+        // codebase, and `undefined.company_id` throws. Step 1 of this handover
+        // never completed, which is why nobody had noticed that step 3 below
+        // was posting an empty body.
+        company_id: user.sqlInfo.company_id,
         updates: {
           warehouse: 1,
           enableAssignFeature: 0,
@@ -103,16 +107,14 @@ const ReturningLeasedEquipModal = ({
         user: user,
       });
 
-      // Step 3: Delete items from records
-      // const deleteQuery = `DELETE FROM item_inv WHERE item_id = ? AND company_id = ?`;
-      // const deleteValues = [dataFound.item_id, dataFound.company_id];
-      // const payloadDelete = {
-      //   query: deleteQuery,
-      //   values: deleteValues,
-      // };
-      await devitrakApi.post(
-        `/db_item/${dataFound.item_id}`,
-      );
+      // Step 3: Delete items from records.
+      // `POST /api/db_item/:id` reads company_id and item_id from the BODY and
+      // ignores the id in the path — it answers 400/403 without them, and this
+      // call was sending no body at all.
+      await devitrakApi.post(`/db_item/${dataFound.item_id}`, {
+        company_id: user.sqlInfo.company_id,
+        item_id: dataFound.item_id,
+      });
 
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
