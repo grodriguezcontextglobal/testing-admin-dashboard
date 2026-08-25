@@ -1,127 +1,92 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Col, Row, Tree, Empty, message } from "antd";
-import DevitrakLoading from "../../../components/animation/DevitrakLoading";
-import { useState, useMemo } from "react";
+import { Segmented } from "antd";
+import PropTypes from "prop-types";
+import { useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import ModalUX from "../../../components/UX/modal/ModalUX";
 import { devitrakApi } from "../../../api/devitrakApi";
-import { groupBy } from "lodash";
+import renderingTitle from "../../../components/general/renderingTitle";
+import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
+import BlueButtonConfirmationComponent from "../../../components/UX/buttons/BlueButtonConfirmation";
+import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
+import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
+import EmptyState from "../../../components/UX/emptyState/EmptyState";
+import Input from "../../../components/UX/inputs/Input";
+import Label from "../../../components/UX/inputs/Label";
+import ModalUX from "../../../components/UX/modal/ModalUX";
+import {
+  ProfileErrorState,
+  ProfileSkeleton,
+  ProfileStatTiles,
+  StatusChip,
+} from "../../../components/UX/profile";
+import BaseTable from "../../../components/UX/tables/BaseTable";
+import "../../../styles/global/actionForm.css";
 import useCompanyLocations from "../actions/utils/useCompanyLocations";
 import useSubLocations from "../actions/utils/useSubLocations";
-import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
-import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import Input from "../../../components/UX/inputs/Input";
-import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
-import MultiSelectComponent from "../../../components/UX/dropdown/MultiSelectComponent";
-import Chip from "../../../components/UX/Chip/Chip";
+import {
+  addScannedSerial,
+  buildCheckInPayload,
+  checkInBlockers,
+  expectedSerials,
+  nearMiss,
+  reconcile,
+  reconciliationRows,
+} from "./checkInFromEvent";
 
-// ─── Layout helpers ───────────────────────────────────────────────────────────
+const ROW_STATUS = {
+  missing: { label: "Not scanned", tone: "warning" },
+  scanned: { label: "Scanned", tone: "success" },
+  extra: { label: "Not in this event", tone: "critical" },
+};
 
-const SectionHeader = ({ step, title }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-    <div
-      style={{
-        width: "22px",
-        height: "22px",
-        borderRadius: "50%",
-        background: "#155EEF",
-        color: "white",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "11px",
-        fontWeight: 700,
-        flexShrink: 0,
-      }}
-    >
-      {step}
-    </div>
-    <span style={{ fontSize: "14px", fontWeight: 600, color: "#101828" }}>{title}</span>
-    <div style={{ flex: 1, height: "1px", background: "#EAECF0" }} />
-  </div>
-);
+const FILTERS = [
+  { value: "all", label: "All" },
+  { value: "missing", label: "Not scanned" },
+  { value: "scanned", label: "Scanned" },
+  { value: "extra", label: "Not in this event" },
+];
 
-const PanelCard = ({ title, children }) => (
-  <div style={{ border: "1px solid #EAECF0", borderRadius: "12px", overflow: "hidden" }}>
-    <div
-      style={{
-        padding: "10px 16px",
-        borderBottom: "1px solid #EAECF0",
-        background: "#F9FAFB",
-      }}
-    >
-      <span style={{ fontSize: "13px", fontWeight: 600, color: "#344054" }}>{title}</span>
-    </div>
-    <div style={{ padding: "12px" }}>{children}</div>
-  </div>
-);
+const stepClass = (done) =>
+  `action-form__step${done ? " action-form__step--done" : ""}`;
 
-const ResultCard = ({ title, items, borderColor, bgColor, textColor, chipColor }) => (
-  <div style={{ border: `1px solid ${borderColor}`, borderRadius: "12px", overflow: "hidden" }}>
-    <div
-      style={{
-        padding: "10px 14px",
-        background: bgColor,
-        borderBottom: `1px solid ${borderColor}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      <span style={{ fontSize: "13px", fontWeight: 600, color: textColor }}>{title}</span>
-      <span
-        style={{
-          background: "white",
-          color: textColor,
-          border: `1px solid ${borderColor}`,
-          borderRadius: "9999px",
-          padding: "1px 10px",
-          fontSize: "12px",
-          fontWeight: 700,
-        }}
-      >
-        {items.length}
-      </span>
-    </div>
-    <div
-      style={{
-        padding: "12px",
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "6px",
-        maxHeight: 160,
-        overflow: "auto",
-      }}
-    >
-      {items.length > 0 ? (
-        items.map((item) => (
-          <Chip key={item} label={item} color={chipColor} size="small" />
-        ))
-      ) : (
-        <span style={{ color: "#98A2B3", fontSize: "13px" }}>None</span>
-      )}
-    </div>
-  </div>
-);
-
-// ─── Main component ───────────────────────────────────────────────────────────
-
+/**
+ * Bringing an event's devices back into the warehouse.
+ *
+ * The screen reconciles what the event is holding against what was physically
+ * scanned off the pallet, then files the matches into a warehouse location.
+ *
+ * Two things about the old version drove this rewrite. The comparison sat
+ * behind a "Compare" button and was frozen into state, so scanning more devices
+ * after pressing it left the results stale — and the check-in posted that stale,
+ * smaller set of serials without a word. And the expected devices rendered as a
+ * collapsible tree on one side with the scans as a cloud of chips on the other,
+ * so with 300 devices there was no way to see which ones were still outstanding.
+ * The comparison is now derived on every keystroke, and both lists are one
+ * table you can read.
+ *
+ * No request changed: `buildCheckInPayload` pins the body that
+ * `POST /api/db_event/confirm-item-return` already accepts.
+ */
 const CheckInDevicesFromEventsModal = ({ open, close }) => {
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [selectedLocationObject, setSelectedLocationObject] = useState(null);
-  const [selectedSubLocations, setSelectedSubLocations] = useState(new Set());
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [eventInventory, setEventInventory] = useState([]);
-  const [scannedSerials, setScannedSerials] = useState([]);
-  const [comparisonResults, setComparisonResults] = useState({
-    matchedItems: [],
-    missingItems: [],
-    extraItems: [],
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [scannedSerialInput, setScannedSerialInput] = useState("");
-
   const { user } = useSelector((state) => state.admin);
+  const { notify, contextHolder } = useStatusNotification();
+  const queryClient = useQueryClient();
+  const scanFieldRef = useRef(null);
+
+  const [selectedEventOption, setSelectedEventOption] = useState(null);
+  const [eventInventory, setEventInventory] = useState([]);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+  const [inventoryError, setInventoryError] = useState(null);
+  const [scanned, setScanned] = useState([]);
+  const [scanInput, setScanInput] = useState("");
+  const [lastScan, setLastScan] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const [locationOption, setLocationOption] = useState(null);
+  const [subLocationSelection, setSubLocationSelection] = useState(new Set());
+
+  const selectedEventName = selectedEventOption?.label ?? null;
+  const selectedLocation = locationOption?.id ?? null;
 
   const { data: locations = [], isLoading: isLoadingLocations } = useCompanyLocations();
   const { data: subLocations = [], isLoading: isLoadingSubLocations } =
@@ -130,219 +95,450 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
   const {
     data: events = [],
     isLoading: isLoadingEvents,
-    refetch: eventListRefetch,
+    isError: isEventsError,
+    refetch: refetchEvents,
   } = useQuery({
     queryKey: ["finishedEvents", user.companyData.id],
     queryFn: async () => {
-      const respo = await devitrakApi.post(`/event/event-list`, {
+      const response = await devitrakApi.post(`/event/event-list`, {
         type: "event",
         company_id: user.companyData.id,
         logistic_inventory_status: "in-transit",
         active: false,
       });
-      return respo.data.list.filter((event) => event.active === false);
+      return response.data.list.filter((event) => event.active === false);
     },
     enabled: !!user.companyData.id,
   });
 
-  const queryClient = useQueryClient();
+  /* ─────────────────────────────────────────────────── derived, never stale ── */
 
-  const refetchInventory = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["finishedEvents", user.companyData.id], refetchActive: true });
-    await queryClient.invalidateQueries({ queryKey: ["listOfItemsInStock"], refetchActive: true });
-    await queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], refetchActive: true });
-    await queryClient.invalidateQueries({ queryKey: ["ItemsInInventoryCheckingQuery"], refetchActive: true });
-    await queryClient.invalidateQueries({ queryKey: ["RefactoredListInventoryCompany"], refetchActive: true });
-  };
+  const expected = useMemo(() => expectedSerials(eventInventory), [eventInventory]);
+  const comparison = useMemo(
+    () => reconcile(eventInventory, scanned),
+    [eventInventory, scanned]
+  );
+  const rows = useMemo(
+    () => reconciliationRows(eventInventory, scanned),
+    [eventInventory, scanned]
+  );
+  const visibleRows = useMemo(
+    () => (filter === "all" ? rows : rows.filter((row) => row.status === filter)),
+    [rows, filter]
+  );
 
-  const checkingInItemsToWarehouseMutation = useMutation({
-    mutationFn: async (template) =>
-      await devitrakApi.post("/db_event/confirm-item-return", template),
-    onSuccess: async () => {
-      message.success("Devices checked in successfully!");
-      await refetchInventory();
-      close();
-    },
+  const blockers = checkInBlockers({
+    eventName: selectedEventName,
+    location: selectedLocation,
+    matchedCount: comparison.matched.length,
   });
 
-  const handleEventSelection = async (event) => {
-    if (!event) {
-      setEventInventory([]);
-      setSelectedEvent(null);
-      return;
-    }
+  /* ───────────────────────────────────────────────────────────── the event ── */
+
+  const resetScanning = () => {
     setEventInventory([]);
-    setScannedSerials([]);
-    setComparisonResults({ matchedItems: [], missingItems: [], extraItems: [] });
-    setSelectedEvent(event.eventInfoDetail.eventName);
+    setScanned([]);
+    setScanInput("");
+    setLastScan(null);
+    setFilter("all");
+    setInventoryError(null);
+  };
 
-    if (!event.deviceSetup) {
-      message.warning("Selected event has no device setup.");
+  const loadEventInventory = async (event) => {
+    if (!event?.deviceSetup?.length) {
+      setInventoryError("This event has no device setup, so nothing is expected back.");
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingInventory(true);
     try {
-      const inventoryPromises = event.deviceSetup.map((item) =>
-        devitrakApi.post("/receiver/receiver-pool-list", {
-          type: item.group,
-          contract_type: "event",
-          company: user.companyData.id,
-          eventSelected: event.eventInfoDetail.eventName,
-        }),
+      const responses = await Promise.all(
+        event.deviceSetup.map((item) =>
+          devitrakApi.post("/receiver/receiver-pool-list", {
+            type: item.group,
+            contract_type: "event",
+            company: user.companyData.id,
+            eventSelected: event.eventInfoDetail.eventName,
+          })
+        )
       );
-      const responses = await Promise.all(inventoryPromises);
-      const allInventory = responses.flatMap((resp) => resp.data.receiversInventory);
-      setEventInventory(allInventory);
-      if (allInventory.length === 0) {
+      const inventory = responses.flatMap((response) => response.data.receiversInventory);
+      setEventInventory(inventory);
+
+      if (inventory.length === 0) {
+        // Pre-existing behaviour, kept: an event that turns out to hold nothing
+        // is closed out here. It used to happen silently behind an "info"
+        // toast that only mentioned the empty result, so the write is now
+        // named in the message.
         await devitrakApi.patch(`/event/edit-staff-event/${event.id}`, {
           logistic_inventory_status: "completed",
         });
-        await eventListRefetch();
-        message.info("No inventory found for this event.");
+        await refetchEvents();
+        setInventoryError(
+          "This event is not holding any devices. It has been marked completed."
+        );
       }
     } catch (error) {
       console.error("Failed to fetch event inventory:", error);
-      message.error("An error occurred while fetching event inventory.");
+      setInventoryError(
+        "The event inventory could not be loaded, so there is nothing to check against. Nothing was changed."
+      );
       setEventInventory([]);
     } finally {
-      setIsLoading(false);
+      setIsLoadingInventory(false);
     }
   };
 
-  const treeData = useMemo(() => {
-    const grouped = groupBy(eventInventory, "type");
-    return Object.entries(grouped).map(([type, items]) => ({
-      title: `${type} (${items.length})`,
-      key: type,
-      children: items.map((item) => ({
-        title: item.device,
-        key: `${type}-${item.device}`,
-        isLeaf: true,
-      })),
-    }));
-  }, [eventInventory]);
+  const handleEventSelection = async (option) => {
+    resetScanning();
+    setSelectedEventOption(option ?? null);
+    if (option?.original) await loadEventInventory(option.original);
+  };
 
-  const handleScanSerial = (e) => {
-    if (e.key === "Enter" && scannedSerialInput.trim() !== "") {
-      if (!scannedSerials.some((item) => item.value === scannedSerialInput.trim())) {
-        setScannedSerials((prev) => [
-          ...prev,
-          { id: Date.now(), value: scannedSerialInput.trim() },
-        ]);
-      }
-      setScannedSerialInput("");
+  /* ────────────────────────────────────────────────────────────── scanning ── */
+
+  const handleScan = () => {
+    const result = addScannedSerial(scanned, scanInput);
+    if (result.outcome === "empty") return;
+
+    setScanInput("");
+    scanFieldRef.current?.focus();
+
+    if (result.outcome === "duplicate") {
+      setLastScan({ tone: "warn", text: `${result.serial} was already scanned.` });
+      return;
     }
-  };
 
-  const handleRemoveSerial = (id) => {
-    setScannedSerials((prev) => prev.filter((item) => item.id !== id));
-  };
+    setScanned(result.list);
 
-  const handleRemoveSubLocation = (sub) => {
-    const next = new Set(selectedSubLocations);
-    next.delete(sub);
-    setSelectedSubLocations(next);
-  };
+    if (expected.includes(result.serial)) {
+      setLastScan({ tone: "ok", text: `${result.serial} matched.` });
+      return;
+    }
 
-  const handleItemChange = (value) => {
-    setSelectedSubLocations(value);
-  };
-
-  const handleCompare = () => {
-    const inventorySerials = eventInventory.map((item) => item.device);
-    const scanned = scannedSerials.map((item) => item.value);
-    setComparisonResults({
-      matchedItems: scanned.filter((s) => inventorySerials.includes(s)),
-      missingItems: inventorySerials.filter((s) => !scanned.includes(s)),
-      extraItems: scanned.filter((s) => !inventorySerials.includes(s)),
+    const suggestion = nearMiss(eventInventory, result.serial);
+    setLastScan({
+      tone: "error",
+      text: suggestion
+        ? `${result.serial} is not in this event — did you mean ${suggestion}?`
+        : `${result.serial} does not belong to this event. It will not be checked in.`,
     });
   };
 
-  const handleCheckIn = async () => {
-    if (!selectedLocation) {
-      message.error("Please select a check-in location.");
-      return;
-    }
-    if (!selectedEvent) {
-      message.error("Please select an event.");
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const template = {
-        serial_numbers: comparisonResults.matchedItems,
-        company_id: user.sqlInfo.company_id,
-        location: selectedLocation,
-        sub_location: Array.from(selectedSubLocations),
-        noSqlCompanyId: user.companyData.id,
-        noSqlEventName: selectedEvent,
-        user_id: user.sqlMemberInfo.staff_id,
-      };
-      checkingInItemsToWarehouseMutation.mutateAsync(template);
-    } catch (error) {
-      console.error(error);
-      message.error("Failed to check-in devices.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleScanKey = (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    handleScan();
   };
 
-  const itemsToDisplay = useMemo(
+  const handleRemoveScan = (serial) => {
+    setScanned((previous) => previous.filter((value) => value !== serial));
+    setLastScan(null);
+  };
+
+  /* ────────────────────────────────────────────────────────────── check in ── */
+
+  const invalidateInventory = async () => {
+    await Promise.all(
+      [
+        ["finishedEvents", user.companyData.id],
+        ["listOfItemsInStock"],
+        ["imagePerItemList"],
+        ["ItemsInInventoryCheckingQuery"],
+        ["RefactoredListInventoryCompany"],
+      ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
+    );
+  };
+
+  const checkInMutation = useMutation({
+    mutationFn: (payload) =>
+      devitrakApi.post("/db_event/confirm-item-return", payload),
+    onSuccess: async () => {
+      notify(
+        "success",
+        `${comparison.matched.length} device${
+          comparison.matched.length === 1 ? "" : "s"
+        } checked in.`
+      );
+      await invalidateInventory();
+      close();
+    },
+    // The old call was fired without await inside a try/catch, so a rejected
+    // request surfaced nowhere and the operator was left believing the devices
+    // had been filed.
+    onError: (error) => {
+      console.error(error);
+      notify(
+        "error",
+        "The devices could not be checked in. Nothing was changed — try again."
+      );
+    },
+  });
+
+  const handleCheckIn = () => {
+    if (blockers.length > 0) return;
+    checkInMutation.mutate(
+      buildCheckInPayload({
+        companyId: user.sqlInfo?.company_id,
+        eventName: selectedEventName,
+        location: selectedLocation,
+        matched: comparison.matched,
+        noSqlCompanyId: user.companyData?.id,
+        subLocations: subLocationSelection,
+        userId: user.sqlMemberInfo?.staff_id,
+      })
+    );
+  };
+
+  const isCheckingIn = checkInMutation.isPending;
+
+  const handleClose = () => {
+    if (isCheckingIn) return;
+    close();
+  };
+
+  /* ───────────────────────────────────────────────────────────────── table ── */
+
+  const columns = [
+    {
+      key: "serial",
+      title: "Serial number",
+      dataIndex: "serial",
+      render: (serial) => <span className="action-form__serial">{serial}</span>,
+    },
+    { key: "type", title: "Group", dataIndex: "type", responsive: ["md"] },
+    {
+      key: "status",
+      title: "Status",
+      dataIndex: "status",
+      render: (status) => (
+        <StatusChip label={ROW_STATUS[status].label} tone={ROW_STATUS[status].tone} pip />
+      ),
+    },
+    {
+      key: "action",
+      title: "",
+      render: (_, row) =>
+        row.status === "missing" ? null : (
+          <button
+            type="button"
+            className="action-form__remove"
+            onClick={() => handleRemoveScan(row.serial)}
+            disabled={isCheckingIn}
+          >
+            Undo scan
+          </button>
+        ),
+    },
+  ];
+
+  const subLocationItems = useMemo(
     () =>
       Array.isArray(subLocations)
         ? subLocations.map((sub) => ({ label: sub, id: sub }))
         : [],
-    [subLocations],
+    [subLocations]
   );
 
-  const hasComparisonResults =
-    comparisonResults.matchedItems.length > 0 ||
-    comparisonResults.missingItems.length > 0 ||
-    comparisonResults.extraItems.length > 0;
-
-  // ─── Modal body ─────────────────────────────────────────────────────────────
+  /* ────────────────────────────────────────────────────────────────── body ── */
 
   const body = (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "4px" }}>
+    <div className="action-form">
+      {contextHolder}
 
-      {/* ── 1. Location & Event ────────────────────────────────────────────── */}
-      <section>
-        <SectionHeader step="1" title="Location & Event" />
-        <Row gutter={[16, 16]} align="bottom">
-          <Col span={8}>
-            {isLoadingLocations ? (
-              <DevitrakLoading />
-            ) : (
-              <SelectComponent
-                label="Location"
-                placeholder="Select a location"
-                items={locations.map((loc) => ({ label: loc.location, id: loc.id }))}
-                value={selectedLocationObject}
-                onSelect={(option) => {
-                  setSelectedLocation(option?.id || null);
-                  setSelectedLocationObject(option);
-                  setSelectedSubLocations(new Set());
-                }}
-              />
+      <p className="action-form__lead">
+        Scan the devices coming back from a closed event. Only the ones that
+        match the event&apos;s inventory are checked in.
+      </p>
+
+      {/* 1 — the event */}
+      <section className={stepClass(Boolean(selectedEventName))}>
+        <div className="action-form__step-head">
+          <h3 className="action-form__step-title">
+            <span className="action-form__step-index">1</span>
+            Which event came back
+          </h3>
+        </div>
+
+        {isEventsError ? (
+          <ProfileErrorState
+            title="Couldn't load the closed events"
+            description="The service didn't respond. Nothing was changed."
+          />
+        ) : isLoadingEvents ? (
+          <ProfileSkeleton lines={1} />
+        ) : events.length === 0 ? (
+          <p className="action-form__empty">
+            No closed event has inventory still out. Events appear here once they
+            finish with devices in transit.
+          </p>
+        ) : (
+          <>
+            <SelectComponent
+              placeholder="Search closed events…"
+              items={events.map((event) => ({
+                id: event.id,
+                label: event.eventInfoDetail.eventName,
+                original: event,
+              }))}
+              value={selectedEventOption}
+              onSelect={handleEventSelection}
+              isRequired
+            />
+            {selectedEventName && !isLoadingInventory && !inventoryError && (
+              <p className="action-form__step-note">
+                {expected.length} device{expected.length === 1 ? "" : "s"} expected
+                back from this event.
+              </p>
             )}
-          </Col>
+          </>
+        )}
+      </section>
 
-          <Col span={8}>
-            {isLoadingSubLocations ? (
-              <DevitrakLoading />
-            ) : (
-              itemsToDisplay.length > 0 && (
+      {/* 2 — the scan */}
+      {selectedEventName && (
+        <section className={stepClass(comparison.matched.length > 0)}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">2</span>
+              Scan what arrived
+            </h3>
+          </div>
+
+          {isLoadingInventory ? (
+            <ProfileSkeleton lines={4} />
+          ) : inventoryError ? (
+            <p className="action-form__notice">{inventoryError}</p>
+          ) : (
+            <>
+              <div className="action-form__field">
+                <Label>Serial number</Label>
+                <Input
+                  ref={scanFieldRef}
+                  autoFocus
+                  value={scanInput}
+                  onChange={(event) => setScanInput(event.target.value)}
+                  onKeyDown={handleScanKey}
+                  placeholder="Scan or type a serial, then press Enter"
+                  disabled={isCheckingIn}
+                />
+                {lastScan && (
+                  <p
+                    className={`action-form__feedback action-form__feedback--${
+                      lastScan.tone === "ok" ? "ok" : "error"
+                    }`}
+                  >
+                    {lastScan.text}
+                  </p>
+                )}
+              </div>
+
+              <ProfileStatTiles
+                tiles={[
+                  { label: "Scanned & matched", value: comparison.matched.length },
+                  {
+                    label: "Still expected",
+                    value: comparison.missing.length,
+                    tone: comparison.missing.length > 0 ? "critical" : "neutral",
+                  },
+                  { label: "Not in this event", value: comparison.extra.length },
+                ]}
+              />
+
+              {rows.length > 0 && (
+                <>
+                  <div className="action-form__toolbar">
+                    <Segmented
+                      options={FILTERS}
+                      value={filter}
+                      onChange={setFilter}
+                      size="small"
+                    />
+                    <p className="action-form__count">
+                      <strong>{visibleRows.length}</strong> of {rows.length}
+                    </p>
+                  </div>
+
+                  <div className="action-form__scroll">
+                    <BaseTable
+                      className="profile-table"
+                      columns={columns}
+                      dataSource={visibleRows}
+                      rowKey={(row) => row.key}
+                      enablePagination={visibleRows.length > 12}
+                      pageSize={12}
+                      size="small"
+                      locale={{ emptyText: "Nothing in this list" }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {rows.length === 0 && (
+                <EmptyState
+                  icon="tabler:barcode"
+                  title="Nothing to reconcile"
+                  description="This event is not holding any devices."
+                />
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {/* 3 — where it lands */}
+      {comparison.matched.length > 0 && (
+        <section className={stepClass(Boolean(selectedLocation))}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">3</span>
+              Where the devices are stored
+            </h3>
+          </div>
+
+          <div className="action-form__grid">
+            <div className="action-form__field">
+              <Label>Location</Label>
+              {isLoadingLocations ? (
+                <ProfileSkeleton lines={1} />
+              ) : (
+                <SelectComponent
+                  placeholder="Select a location"
+                  items={locations.map((location) => ({
+                    label: location.location,
+                    id: location.id,
+                  }))}
+                  value={locationOption}
+                  onSelect={(option) => {
+                    setLocationOption(option ?? null);
+                    setSubLocationSelection(new Set());
+                  }}
+                  isRequired
+                />
+              )}
+            </div>
+
+            <div className="action-form__field">
+              <Label>Sub-locations (optional)</Label>
+              {isLoadingSubLocations ? (
+                <ProfileSkeleton lines={1} />
+              ) : subLocationItems.length === 0 ? (
+                <p className="action-form__step-note">
+                  {selectedLocation
+                    ? "This location has no sub-locations."
+                    : "Pick a location first."}
+                </p>
+              ) : (
                 <MultiSelectComponent
-                  label="Sub-locations"
                   placeholder="Select sub-locations"
-                  items={itemsToDisplay}
-                  selectedKeys={selectedSubLocations}
-                  onSelectionChange={handleItemChange}
-                  disabled={!selectedLocation}
-                  onReset={() => setSelectedSubLocations(new Set())}
+                  items={subLocationItems}
+                  selectedKeys={subLocationSelection}
+                  onSelectionChange={setSubLocationSelection}
+                  onReset={() => setSubLocationSelection(new Set())}
                   onSelectAll={() =>
-                    setSelectedSubLocations(new Set(itemsToDisplay.map((i) => i.id)))
+                    setSubLocationSelection(
+                      new Set(subLocationItems.map((item) => item.id))
+                    )
                   }
                 >
                   {(item) => (
@@ -355,198 +551,84 @@ const CheckInDevicesFromEventsModal = ({ open, close }) => {
                     </MultiSelectComponent.Item>
                   )}
                 </MultiSelectComponent>
-              )
-            )}
-          </Col>
-
-          <Col span={8}>
-            {isLoadingEvents ? (
-              <DevitrakLoading />
-            ) : (
-              <SelectComponent
-                label="Event"
-                placeholder="Search closed events…"
-                items={events.map((event) => ({
-                  id: event.id,
-                  label: event.eventInfoDetail.eventName,
-                  original: event,
-                }))}
-                value={selectedEvent}
-                onSelect={(option) => {
-                  setSelectedEvent(option?.label || null);
-                  handleEventSelection(option?.original || null);
-                }}
-              />
-            )}
-          </Col>
-        </Row>
-
-        {selectedSubLocations.size > 0 && (
-          <div style={{ marginTop: "12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {Array.from(selectedSubLocations).map((sub) => (
-              <Chip
-                key={sub}
-                label={sub}
-                color="success"
-                variant="outlined"
-                size="small"
-                onDelete={() => handleRemoveSubLocation(sub)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ── 2. Inventory & Scan ────────────────────────────────────────────── */}
-      <section>
-        <SectionHeader step="2" title="Inventory & Scan" />
-        <Row gutter={[16, 0]}>
-          <Col span={12}>
-            <PanelCard title={`Event Inventory (${eventInventory.length})`}>
-              {isLoading ? (
-                <div
-                  style={{
-                    height: 280,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <DevitrakLoading />
-                </div>
-              ) : treeData?.length > 0 ? (
-                <Tree treeData={treeData} height={280} defaultExpandAll />
-              ) : (
-                <div
-                  style={{
-                    height: 280,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Empty description="No inventory for this event." />
-                </div>
               )}
-            </PanelCard>
-          </Col>
-
-          <Col span={12}>
-            <PanelCard title={`Scanned Serials (${scannedSerials.length})`}>
-              <Input
-                placeholder="Scan or type and press Enter"
-                value={scannedSerialInput}
-                onChange={(e) => setScannedSerialInput(e.target.value)}
-                onKeyDown={handleScanSerial}
-              />
-              <div
-                style={{
-                  marginTop: "12px",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "6px",
-                  maxHeight: 220,
-                  overflow: "auto",
-                }}
-              >
-                {scannedSerials.length > 0 ? (
-                  scannedSerials.map((item) => (
-                    <Chip
-                      key={item.id}
-                      label={item.value}
-                      color="indigo"
-                      size="small"
-                      onDelete={() => handleRemoveSerial(item.id)}
-                    />
-                  ))
-                ) : (
-                  <span style={{ color: "#98A2B3", fontSize: "13px" }}>
-                    No serials scanned yet.
-                  </span>
-                )}
-              </div>
-            </PanelCard>
-          </Col>
-        </Row>
-
-        <div style={{ marginTop: "16px", display: "flex", justifyContent: "flex-end" }}>
-          <BlueButtonComponent
-            title="Compare"
-            func={handleCompare}
-            disabled={scannedSerials.length === 0 || eventInventory.length === 0}
-          />
-        </div>
-      </section>
-
-      {/* ── 3. Comparison Results ──────────────────────────────────────────── */}
-      {hasComparisonResults && (
-        <section>
-          <SectionHeader step="3" title="Comparison Results" />
-          <Row gutter={[12, 12]}>
-            <Col span={8}>
-              <ResultCard
-                title="Matched"
-                items={comparisonResults.matchedItems}
-                borderColor="#ABEFC6"
-                bgColor="#ECFDF3"
-                textColor="#067647"
-                chipColor="success"
-              />
-            </Col>
-            <Col span={8}>
-              <ResultCard
-                title="Missing"
-                items={comparisonResults.missingItems}
-                borderColor="#FECDCA"
-                bgColor="#FEF3F2"
-                textColor="#B42318"
-                chipColor="error"
-              />
-            </Col>
-            <Col span={8}>
-              <ResultCard
-                title="Not in Event"
-                items={comparisonResults.extraItems}
-                borderColor="#FEDF89"
-                bgColor="#FFFAEB"
-                textColor="#B54708"
-                chipColor="warning"
-              />
-            </Col>
-          </Row>
+            </div>
+          </div>
         </section>
       )}
 
-      {/* ── Footer actions ─────────────────────────────────────────────────── */}
-      {comparisonResults.matchedItems.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            justifyContent: "flex-end",
-            paddingTop: "4px",
-            borderTop: "1px solid #EAECF0",
-          }}
-        >
-          <GrayButtonComponent title="Cancel" func={close} />
-          <BlueButtonComponent
-            title="Check-In"
-            func={handleCheckIn}
-            loadingState={isLoading}
-          />
-        </div>
+      {comparison.missing.length > 0 && comparison.matched.length > 0 && (
+        <p className="action-form__notice">
+          {comparison.missing.length} device
+          {comparison.missing.length === 1 ? " is" : "s are"} still not scanned.
+          Checking in now files only the {comparison.matched.length} matched
+          device{comparison.matched.length === 1 ? "" : "s"}; the rest stay out
+          with the event.
+        </p>
       )}
+
+      {blockers.length > 0 && selectedEventName && (
+        <ul className="action-form__notice">
+          {blockers.map((blocker) => (
+            <li key={blocker}>{blocker}</li>
+          ))}
+        </ul>
+      )}
+
+      <div className="action-form__footer">
+        <p className="action-form__consequence">
+          Matched devices return to the warehouse and leave the event.
+        </p>
+        <GrayButtonComponent
+          title="Cancel"
+          buttonType="button"
+          disabled={isCheckingIn}
+          func={handleClose}
+        />
+        <BlueButtonConfirmationComponent
+          title={
+            comparison.matched.length > 0
+              ? `Check in ${comparison.matched.length} device${
+                  comparison.matched.length === 1 ? "" : "s"
+                }`
+              : "Check in devices"
+          }
+          buttonType="button"
+          disabled={blockers.length > 0 || isCheckingIn}
+          loadingState={isCheckingIn}
+          confirmationTitle={`Check in ${comparison.matched.length} device${
+            comparison.matched.length === 1 ? "" : "s"
+          }?`}
+          confirmationDescription={
+            comparison.missing.length > 0
+              ? `${comparison.missing.length} still unscanned device${
+                  comparison.missing.length === 1 ? "" : "s"
+                } stay out with the event.`
+              : "Everything the event was holding has been scanned."
+          }
+          okText="Check in"
+          func={handleCheckIn}
+        />
+      </div>
     </div>
   );
 
   return (
     <ModalUX
       openDialog={open}
-      closeModal={close}
-      title="Check-In Devices from Event"
+      closeModal={handleClose}
+      closable={!isCheckingIn}
+      title={renderingTitle("Check in devices from an event")}
+      width={840}
+      footer={null}
       body={body}
     />
   );
+};
+
+CheckInDevicesFromEventsModal.propTypes = {
+  open: PropTypes.bool,
+  close: PropTypes.func.isRequired,
 };
 
 export default CheckInDevicesFromEventsModal;
