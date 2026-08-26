@@ -51,7 +51,7 @@ const MainPage = () => {
                   func={() => setModalState(true)}
                 />
                 <DangerButtonComponent
-                  style={{ width: "fit-content" }}
+                  styles={{ width: "fit-content" }}
                   func={() => setDeleteModalState(true)}
                   title={"Delete staff members"}
                 />

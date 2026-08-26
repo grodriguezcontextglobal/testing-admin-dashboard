@@ -246,7 +246,7 @@ const Capturing = ({
                         .status !== "requires_capture"
                     }
                     buttonType="submit"
-                    style={{
+                    styles={{
                       display: transactionStatus ? "none" : "flex",
                     }}
                     title={"Capture deposit"} />
