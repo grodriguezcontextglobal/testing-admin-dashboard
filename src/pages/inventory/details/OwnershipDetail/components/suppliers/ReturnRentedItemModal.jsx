@@ -182,7 +182,17 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
           continue;
         }
 
-        await send(batch);
+        /* These endpoints answer HTTP 200 with `{ ok: false, msg }` when they
+           refuse the write. The response used to be discarded, so a refusal
+           advanced the progress bar and the modal reported the items returned
+           while nothing had been written. */
+        const response = await send(batch);
+        if (response?.data?.ok === false) {
+          throw new Error(
+            response.data.msg ||
+              "The server refused the update and returned no reason."
+          );
+        }
         done += batch.length;
         setProgress({ current: done, total: ids.length });
         index += 1;
@@ -291,11 +301,16 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
         "They are out of this company's inventory."
       );
       return handleClose();
-    } catch {
+    } catch (error) {
       // The batches that already went through are not rolled back, so the
-      // message must not claim nothing happened.
+      // message must not claim nothing happened. The server's own reason is
+      // carried through: a refused write says why, rather than reading as a
+      // dropped connection.
+      const reason = error?.response?.data?.msg || error?.message;
       setNotice(
-        "The return stopped partway. Some items may already be marked as returned — reopen this list to see what is left."
+        `The return stopped partway. Some items may already be marked as returned — reopen this list to see what is left.${
+          reason ? ` The server said: ${reason}` : ""
+        }`
       );
     } finally {
       setIsRunning(false);

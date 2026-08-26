@@ -98,6 +98,43 @@ describe("ReturnRentedItemModal", () => {
     ).toBeTruthy();
   });
 
+  it("does not report items returned when the server refused the write", async () => {
+    /* The live failure this was written for: update-large-data answers HTTP
+       200 with `{ ok: false, msg: "... disallowed column for update:
+       returnedRentedInfo" }`. The response was discarded, so the progress bar
+       filled, the supplier was emailed and the records were deleted for items
+       that had never been marked returned. */
+    post.mockImplementation((url) => {
+      if (url === "/db_inventory/update-large-data") {
+        return Promise.resolve({
+          data: {
+            ok: false,
+            msg: "Update item warehouse failed: disallowed column for update: returnedRentedInfo",
+          },
+        });
+      }
+      return Promise.resolve({ data: { result: [] } });
+    });
+
+    renderModal();
+    fireEvent.click(screen.getByText("Return all 2 items"));
+    // The confirmation's ok button is labelled "Return", not "Confirm".
+    fireEvent.click(await screen.findByText("Return"));
+
+    await waitFor(() =>
+      expect(screen.getByText(/disallowed column for update/)).toBeTruthy()
+    );
+    expect(screen.getByText(/stopped partway/)).toBeTruthy();
+
+    // Nothing downstream of the refused write may have run.
+    expect(emailSpy).not.toHaveBeenCalled();
+    expect(
+      post.mock.calls.some(([url]) => url === "/db_company/delete-bulk-items")
+    ).toBe(false);
+
+    post.mockResolvedValue({ data: { result: [] } });
+  });
+
   it("offers an empty state rather than an empty table", async () => {
     // An empty `data` means "nothing handed over", so it falls back to the
     // fetch — which the mock answers with no rows.

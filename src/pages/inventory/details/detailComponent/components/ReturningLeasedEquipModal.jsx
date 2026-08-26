@@ -92,7 +92,21 @@ const ReturningLeasedEquipModal = ({
           return_date: returnDate,
         }
       };
-      await devitrakApi.post("/db_inventory/update-large-data", payload);
+      /* Answers HTTP 200 with `{ ok: false, msg }` when it refuses the write,
+         so the response has to be read. Discarding it meant the flow went on
+         to email the supplier and delete the records for items that had not
+         been marked returned at all. This handover only started reaching the
+         server at 24dcfe80, which is why the refusal had never been seen. */
+      const updateResponse = await devitrakApi.post(
+        "/db_inventory/update-large-data",
+        payload
+      );
+      if (updateResponse?.data?.ok === false) {
+        throw new Error(
+          updateResponse.data.msg ||
+            "The server refused to mark the item as returned."
+        );
+      }
 
       message.loading({
         content: "Items returned to renter, now deleting records...",
@@ -125,8 +139,15 @@ const ReturningLeasedEquipModal = ({
       invalidatingQueriesForRefresh();
       return navigate("/inventory");
     } catch (error) {
-      message.error({ content: "Failed to process items", key: "processing" });
-      console.error("Error processing items:", error);
+      // "Failed to process items" was the same sentence for every cause, with
+      // the server's reason left in the console.
+      message.error({
+        content:
+          error?.response?.data?.msg ||
+          error?.message ||
+          "Failed to process items",
+        key: "processing",
+      });
     } finally {
       setLoadingStatus(false);
     }
