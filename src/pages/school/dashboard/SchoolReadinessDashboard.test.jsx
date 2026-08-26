@@ -162,7 +162,10 @@ describe("SchoolReadinessDashboard, on the consent register", () => {
     expect(await screen.findByText("Minors who agreed")).toBeTruthy();
     await waitFor(() => expect(screen.getByText("1/4")).toBeTruthy());
     expect(screen.queryByText("40/4")).toBeNull();
-    expect(screen.getByText("25% of minors requiring consent")).toBeTruthy();
+    // The percentage is the share that agreed, and says so: "25% of minors
+    // requiring consent" read as though 25% had NOT signed, which is the
+    // opposite of what the 1/4 above it means.
+    expect(screen.getByText("25% agreed · 3 still to sign")).toBeTruthy();
   });
 
   it("shows the register's four states in the Needs attention header", async () => {
@@ -267,8 +270,8 @@ describe("SchoolReadinessDashboard, when the per-student summary comes back empt
   it("never claims full coverage from an empty summary", async () => {
     wrap();
     await screen.findByText("Consent records on file");
-    await waitFor(() => expect(screen.getByText(/50% of minors/)).toBeTruthy());
-    expect(screen.queryByText(/100% of minors/)).toBeNull();
+    await waitFor(() => expect(screen.getByText(/^50% agreed/)).toBeTruthy());
+    expect(screen.queryByText(/^100% agreed/)).toBeNull();
   });
 
   it("shows the expired link the header is counting", async () => {

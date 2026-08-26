@@ -301,6 +301,11 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
     requiredPolicyVersion,
   ]);
 
+  /* Those on record who have not agreed yet. `unknown` is counted separately
+     -- it is what could not be read, not what is outstanding -- so the two
+     never double count. */
+  const pendingConsent = Math.max(0, kpis.known - kpis.agreed);
+
   const coverageColor =
     kpis.coverage === null
       ? "var(--gray-500, #777b73)"
@@ -435,9 +440,16 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
               ? "reading consent records…"
               : kpis.known === 0
               ? "consent records could not be read"
-              : `${kpis.coverage}% of minors requiring consent${
-                  kpis.unknown > 0 ? ` · ${kpis.unknown} unread` : ""
-                }`}
+              : /* The percentage is the share that HAS agreed, which is what
+                   the count above it and the colour of both are built on. It
+                   used to read "88% of minors requiring consent", where
+                   "requiring consent" parses as "still requiring it" -- so the
+                   number said 88 had signed and the sentence said 88 had not.
+                   It names what it counts now, and states what is outstanding
+                   rather than leaving it to be worked out. */
+                `${kpis.coverage}% agreed${
+                  pendingConsent > 0 ? ` · ${pendingConsent} still to sign` : ""
+                }${kpis.unknown > 0 ? ` · ${kpis.unknown} unread` : ""}`}
           </p>
         </div>
         <div style={tile}>
