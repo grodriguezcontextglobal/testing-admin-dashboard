@@ -192,3 +192,87 @@ export function describeEmailLookup({ email, isChecking, found, companyName }) {
     message: `New to ${companyName}. They will be invited to the company as an assistant, and added to this event.`,
   };
 }
+
+/* ------------------------------------------------------- The staff table --- */
+
+/**
+ * The role somebody holds *on this event*, read off the event's own staff
+ * lists.
+ *
+ * `buildStaffPayload` writes an entry as `{ firstName, lastName, email }` and
+ * nothing else — which bucket it sits in *is* the role. The table was instead
+ * testing `staff.role !== "Administrator"` on a row that carries no role, so
+ * every event administrator was displayed as an assistant.
+ */
+export function eventRoleFor({ event, email }) {
+  const wanted = key(email);
+  if (!wanted) return null;
+  const match = EVENT_STAFF_ROLES.find((role) =>
+    (Array.isArray(event?.staff?.[role.bucket]) ? event.staff[role.bucket] : []).some(
+      (entry) => key(entry?.email) === wanted
+    )
+  );
+  return match?.listLabel ?? null;
+}
+
+/**
+ * Two letters for the avatar.
+ *
+ * Was `String(name).toUpperCase().split(" ")` indexed at `[0][0]` and `[1][0]`:
+ * a one-word name threw a TypeError that took the table down, and a name saved
+ * as empty strings produced `["", ""]`, whose `[0]` is undefined — the avatar
+ * read "undefinedundefined".
+ */
+export function staffInitials(name) {
+  const parts = String(name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts.at(-1)[0]}`.toUpperCase();
+}
+
+/* Three shapes for one person are in circulation: an event staff entry
+   (`firstName`/`lastName`), a registered account (`name`/`lastName`) and the SQL
+   record (`first_name`/`last_name`). */
+const nameFrom = (source) => {
+  if (!source) return "";
+  const first = source.firstName ?? source.first_name ?? source.name ?? "";
+  const last = source.lastName ?? source.last_name ?? "";
+  return `${first} ${last}`.trim();
+};
+
+/**
+ * Rows for the event's staff table, from `/event/event-staff-detail/:id`.
+ *
+ * The bug this fixes: adding somebody who already works at the company stores
+ * `{ firstName: "", lastName: "", email }` — the modal does not ask for a name
+ * it already has on file — and the table read `staff.firstName` straight out of
+ * that entry, so the new row appeared with no name. The registered account is
+ * what carries the name in that case, which is how the modal's own list
+ * (`mergeEventStaff`) has always resolved it.
+ *
+ * Online state is deliberately not here: it is a request per member, and this
+ * has to stay synchronous to be the single source of what the table shows.
+ */
+export function buildStaffRows({ rows, event, accounts }) {
+  const byEmail = new Map();
+  (Array.isArray(accounts) ? accounts : []).forEach((account) => {
+    const email = key(account?.email);
+    if (email) byEmail.set(email, account);
+  });
+
+  return (Array.isArray(rows) ? rows : []).map((row, index) => {
+    const entry = row?.staff ?? {};
+    const email = String(entry.email ?? row?.email ?? "").trim();
+    const account = byEmail.get(key(email));
+    return {
+      key: key(email) || `row-${index}`,
+      id: row?.admin_id ?? account?.id ?? null,
+      // The email is a worse label than a name and a far better one than blank.
+      name: nameFrom(entry) || nameFrom(account) || email,
+      email,
+      role: eventRoleFor({ event, email }) ?? entry.role ?? "Assistant",
+      phone: row?.phone ?? "000-000-0000",
+      photo: row?.photo ?? "",
+    };
+  });
+}

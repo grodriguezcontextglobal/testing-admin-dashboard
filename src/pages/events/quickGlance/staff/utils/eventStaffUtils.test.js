@@ -4,6 +4,9 @@ import {
   buildStaffPayload,
   describeEmailLookup,
   mergeEventStaff,
+  buildStaffRows,
+  eventRoleFor,
+  staffInitials,
   validateNewStaff,
 } from "./eventStaffUtils";
 
@@ -322,5 +325,150 @@ describe("describeEmailLookup", () => {
     expect(hint.tone).toBe("warning");
     expect(hint.needsCreation).toBe(true);
     expect(hint.message).toContain("Context Global");
+  });
+});
+
+describe("eventRoleFor", () => {
+  it("reads the role off the event's own lists, not off the row", () => {
+    expect(eventRoleFor({ event, email: "ana@x.com" })).toBe("Administrator");
+    expect(eventRoleFor({ event, email: "luis@x.com" })).toBe("Assistant");
+  });
+
+  it("matches regardless of case and padding", () => {
+    expect(eventRoleFor({ event, email: "  ANA@X.COM " })).toBe("Administrator");
+  });
+
+  it("is null for somebody the event does not list", () => {
+    expect(eventRoleFor({ event, email: "nobody@x.com" })).toBeNull();
+    expect(eventRoleFor({ event: undefined, email: "ana@x.com" })).toBeNull();
+  });
+});
+
+describe("staffInitials", () => {
+  it("takes the first and last initial", () => {
+    expect(staffInitials("Ana Gómez")).toBe("AG");
+    expect(staffInitials("Ana Maria Gómez Ruiz")).toBe("AR");
+  });
+
+  it("uses two letters of a single-word name instead of throwing", () => {
+    // `initials[1][0]` on a one-word name was a TypeError that took the whole
+    // table down with it.
+    expect(staffInitials("Madonna")).toBe("MA");
+  });
+
+  it("never renders the word undefined", () => {
+    // A staff entry saved with empty name fields produced ["", ""], and
+    // `""[0]` is undefined — the avatar read "undefinedundefined".
+    expect(staffInitials(" ")).toBe("?");
+    expect(staffInitials("")).toBe("?");
+    expect(staffInitials(null)).toBe("?");
+    expect(staffInitials(undefined)).toBe("?");
+  });
+});
+
+describe("buildStaffRows", () => {
+  const rows = [
+    // Added as an existing colleague: the modal never asked for a name, so the
+    // event entry carries empty strings. This is the reported bug.
+    { admin_id: "a1", staff: { firstName: "", lastName: "", email: "ana@x.com" } },
+    // Invited from the modal: the name was typed, and there is no account yet.
+    { admin_id: null, staff: { firstName: "Sin", lastName: "Cuenta", email: "sin@x.com" } },
+  ];
+
+  it("falls back to the registered account for a name the entry does not carry", () => {
+    const [ana] = buildStaffRows({ rows, event, accounts: adminUsers });
+    expect(ana.name).toBe("Ana Gómez R.");
+  });
+
+  it("keeps the typed name for somebody with no account yet", () => {
+    const [, pending] = buildStaffRows({ rows, event, accounts: adminUsers });
+    expect(pending.name).toBe("Sin Cuenta");
+    expect(pending.id).toBeNull();
+  });
+
+  it("shows the email rather than a blank cell when nothing carries a name", () => {
+    const [row] = buildStaffRows({
+      rows: [{ admin_id: null, staff: { firstName: "", lastName: "", email: "ghost@x.com" } }],
+      event,
+      accounts: [],
+    });
+    expect(row.name).toBe("ghost@x.com");
+  });
+
+  it("reads a name written in any of the three shapes in use", () => {
+    const built = buildStaffRows({
+      rows: [
+        { staff: { firstName: "Event", lastName: "Entry", email: "a@x.com" } },
+        { staff: { name: "Account", lastName: "Shape", email: "b@x.com" } },
+        { staff: { first_name: "Sql", last_name: "Shape", email: "c@x.com" } },
+      ],
+      event,
+      accounts: [],
+    });
+    expect(built.map((row) => row.name)).toEqual([
+      "Event Entry",
+      "Account Shape",
+      "Sql Shape",
+    ]);
+  });
+
+  it("gives an event administrator the Administrator role", () => {
+    // The row carries no role at all — buildStaffPayload writes only
+    // firstName/lastName/email — and the table read `staff.role !==
+    // "Administrator"`, so every administrator was displayed as an assistant.
+    const [ana] = buildStaffRows({ rows, event, accounts: adminUsers });
+    expect(ana.role).toBe("Administrator");
+  });
+
+  it("falls back to the role on the row for somebody the event no longer lists", () => {
+    const [row] = buildStaffRows({
+      rows: [{ staff: { firstName: "Old", lastName: "Hand", email: "old@x.com", role: "Administrator" } }],
+      event,
+      accounts: [],
+    });
+    expect(row.role).toBe("Administrator");
+  });
+
+  it("defaults to Assistant when neither the event nor the row says", () => {
+    const [row] = buildStaffRows({
+      rows: [{ staff: { firstName: "No", lastName: "Role", email: "no@x.com" } }],
+      event,
+      accounts: [],
+    });
+    expect(row.role).toBe("Assistant");
+  });
+
+  it("carries the account id when the row has none, so the row stays clickable", () => {
+    const [row] = buildStaffRows({
+      rows: [{ admin_id: null, staff: { firstName: "Ana", lastName: "G", email: "ana@x.com" } }],
+      event,
+      accounts: adminUsers,
+    });
+    expect(row.id).toBe("a1");
+  });
+
+  it("keys every row, including one with no email", () => {
+    const built = buildStaffRows({
+      rows: [{ staff: { email: "ana@x.com" } }, { staff: {} }],
+      event,
+      accounts: adminUsers,
+    });
+    expect(built[0].key).toBe("ana@x.com");
+    expect(built[1].key).toBe("row-1");
+  });
+
+  it("keeps the placeholder phone and empty photo the table renders today", () => {
+    const [row] = buildStaffRows({
+      rows: [{ staff: { email: "ana@x.com" } }],
+      event,
+      accounts: [],
+    });
+    expect(row.phone).toBe("000-000-0000");
+    expect(row.photo).toBe("");
+  });
+
+  it("returns an empty list for a response that carried nothing", () => {
+    expect(buildStaffRows({ rows: undefined, event, accounts: adminUsers })).toEqual([]);
+    expect(buildStaffRows({ rows: null, event, accounts: null })).toEqual([]);
   });
 });
