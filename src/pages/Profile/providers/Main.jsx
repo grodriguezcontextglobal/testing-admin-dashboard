@@ -17,6 +17,7 @@ import DocumentUpload from "./actions/UploadDocument";
 import HistoryDocumentProvider from "./components/HistoryDocumentProvider";
 import ProviderCard from "./components/ProviderCard";
 import UpdateProvider from "./components/UpdateProvider";
+import { emptyProviderForm, setProviderField } from "./utils/providerForm";
 const Main = () => {
   const { user } = useSelector((state) => state.admin);
   const providersList = useQuery({
@@ -37,30 +38,10 @@ const Main = () => {
   const [providers, setProviders] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState("add");
-  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [selectedProviderId, setSelectedProviderId] = useState(null);
   const [openDocumentHistory, setOpenDocumentHistory] = useState(false);
   const [uploadDocumentModal, setUploadDocumentModal] = useState(false);
-  const [documentSortOrder, setDocumentSortOrder] = useState("desc");
-  const [newProvider, setNewProvider] = useState({
-      companyName: "",
-      industry: "not needed",
-      services: ["not needed"],
-      address: {
-        street: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "USA",
-      },
-      contactInfo: {
-        name:"",
-        email: "",
-        phone: "",
-        website: "",
-      },
-      status: "active",
-      documents: [],
-  });
+  const [newProvider, setNewProvider] = useState(emptyProviderForm());
 
   useEffect(() => {
     setProviders(providersList?.data?.data?.providerCompanies ?? []);
@@ -68,74 +49,41 @@ const Main = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setNewProvider((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
-    } else if (name === "services") {
-      setNewProvider((prev) => ({
-        ...prev,
-        services: value.split(",").map((service) => service.trim()),
-      }));
-    } else {
-      setNewProvider((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setNewProvider((prev) => setProviderField(prev, name, value));
   };
 
+  /* Held by id rather than by value. It used to be the provider *object*: after
+     filing a document the list refetched, but this still pointed at the copy
+     taken before the upload, so the new document did not appear until the modal
+     was closed and reopened. */
+  const idOf = (provider) => provider?.id ?? provider?._id ?? null;
+  const selectedProvider =
+    providers.find((provider) => idOf(provider) === selectedProviderId) ?? null;
+
   const handleViewDocuments = (provider) => {
-    setSelectedProvider(provider);
+    setSelectedProviderId(idOf(provider));
+    setUploadDocumentModal(false);
     setOpenDocumentHistory(true);
   };
 
   const handleUploadDocument = (provider) => {
-    setSelectedProvider(provider);
+    setSelectedProviderId(idOf(provider));
+    setOpenDocumentHistory(false);
     setUploadDocumentModal(true);
   };
 
   const handleEditClick = (provider) => {
-    setSelectedProvider(provider);
+    setSelectedProviderId(idOf(provider));
     setNewProvider(provider);
     setDialogMode("edit");
     setOpenDialog(true);
   };
 
-  const sortDocuments = (documents) => {
-    return [...(documents ?? [])].sort((a, b) => {
-      const dateA = new Date(a.uploadDate);
-      const dateB = new Date(b.uploadDate);
-      return documentSortOrder === "desc" ? dateB - dateA : dateA - dateB;
-    });
-  };
-
-  const clearUpForm = () => {
-    return setNewProvider({
-      companyName: "",
-      industry: "",
-      services: [],
-      address: {
-        street: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "USA",
-      },
-      contactInfo: {
-        email: "",
-        phone: "",
-        website: "",
-      },
-      status: "active",
-      documents: [],
-    });
-  };
+  /* Was a second, hand-written literal that blanked `industry` and `services`
+     — the two fields the endpoint requires — and dropped `contactInfo.name`
+     altogether, so the form was left in a shape the next save would be rejected
+     for. */
+  const clearUpForm = () => setNewProvider(emptyProviderForm());
   const handleSubmit = async () => {
     const isValidAddress =
       newProvider.address.street &&
@@ -300,9 +248,7 @@ const Main = () => {
           openDocumentHistory={openDocumentHistory}
           setOpenDocumentHistory={setOpenDocumentHistory}
           selectedProvider={selectedProvider}
-          setDocumentSortOrder={setDocumentSortOrder}
-          sortDocuments={sortDocuments}
-          documentSortOrder={documentSortOrder}
+          onUploadDocument={handleUploadDocument}
         />
       )}
 
@@ -310,8 +256,13 @@ const Main = () => {
         <DocumentUpload
           openDialog={uploadDocumentModal}
           setOpenDialog={setUploadDocumentModal}
-          providerId={selectedProvider?.id}
+          providerId={selectedProviderId}
+          providerName={selectedProvider?.companyName}
           refetch={() => providersList.refetch()}
+          onUploaded={() => {
+            setUploadDocumentModal(false);
+            setOpenDocumentHistory(true);
+          }}
         />
       )}
     </Grid>
