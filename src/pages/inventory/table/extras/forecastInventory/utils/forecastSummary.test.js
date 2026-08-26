@@ -32,6 +32,29 @@ describe("formatDay", () => {
     expect(formatDay("not a date")).toBe("not a date");
     expect(formatDay(undefined)).toBe("");
   });
+
+  it("renders the reported search window on its own days", () => {
+    // The bug as reported: searching 05/01/2026–05/05/2026 displayed
+    // 04/30/2026–05/04/2026 in the Events table of the result page. Every one
+    // of those dates went through `new Date(bare).toLocaleDateString()`.
+    expect(formatDay("2026-05-01")).toBe("May 1, 2026");
+    expect(formatDay("2026-05-05")).toBe("May 5, 2026");
+  });
+
+  it("does not shift the first day of any month", () => {
+    // The first of the month is where the off-by-one crosses into the previous
+    // month's name as well as the previous day.
+    const firsts = [
+      ["2026-01-01", "Jan 1, 2026"],
+      ["2026-03-01", "Mar 1, 2026"],
+      ["2026-07-01", "Jul 1, 2026"],
+      ["2026-10-01", "Oct 1, 2026"],
+      ["2027-01-01", "Jan 1, 2027"],
+    ];
+    firsts.forEach(([input, expected]) => {
+      expect(formatDay(input)).toBe(expected);
+    });
+  });
 });
 
 describe("formatPeriodLabel", () => {

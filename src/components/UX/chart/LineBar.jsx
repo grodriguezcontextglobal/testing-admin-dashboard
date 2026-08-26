@@ -11,7 +11,12 @@ import {
   ReferenceArea,
 } from "recharts";
 import { useMemo } from "react";
-import { getUSHolidaysForYears } from "../../../utils/dateUtils";
+import {
+  calendarWeekday,
+  formatCalendarDay,
+  getUSHolidaysForYears,
+  parseCalendarDay,
+} from "../../../utils/dateUtils";
 import "./LineBar.css";
 
 const CustomLegend = (props) => {
@@ -96,13 +101,19 @@ export const BarChart = ({ data }) => {
 
   const backgroundAreas = useMemo(() => {
     if (!data) return [];
-    const years = new Set(data.map((d) => new Date(d.date).getFullYear()));
+    /* Every one of these is a calendar day, not an instant. `new Date(d.date)`
+       on a bare YYYY-MM-DD is UTC midnight, so `getFullYear()` answered the
+       previous year for Jan 1 west of UTC, and the weekday used to be read off
+       a different clock than the axis labels — weekend shading could land a day
+       away from the label it was shading. */
+    const years = new Set(
+      data.map((d) => parseCalendarDay(d.date)?.year).filter(Boolean)
+    );
     const holidays = getUSHolidaysForYears(years);
     const areas = [];
     for (const item of data) {
-      const date = new Date(item.date);
-      const dayOfWeek = date.getUTCDay();
-      const dateString = item.date.split("T")[0];
+      const dayOfWeek = calendarWeekday(item.date);
+      const dateString = String(item.date ?? "").split("T")[0];
       if (holidays.has(dateString) || dayOfWeek === 0) {
         areas.push(
           <ReferenceArea
@@ -162,10 +173,7 @@ export const BarChart = ({ data }) => {
           interval="preserveStartEnd"
           dataKey="date"
           tickFormatter={(value) =>
-            new Date(value).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-            })
+            formatCalendarDay(value, { month: "short", day: "numeric" })
           }
         >
           <Label
@@ -196,7 +204,7 @@ export const BarChart = ({ data }) => {
         <Tooltip
           formatter={(value) => Number(value).toLocaleString()}
           labelFormatter={(value) =>
-            new Date(value).toLocaleDateString(undefined, {
+            formatCalendarDay(value, {
               year: "numeric",
               month: "long",
               day: "numeric",
