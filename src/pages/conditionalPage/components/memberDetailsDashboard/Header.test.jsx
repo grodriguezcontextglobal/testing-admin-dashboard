@@ -30,8 +30,14 @@ vi.mock("../../../../api/activityLog", () => ({
   registerStaffActivity: (...args) => activitySpy(...args),
 }));
 
+let consentResponse = null;
 vi.mock("../../utils/guardianConsentApi", () => ({
-  fetchStudentConsent: () => Promise.resolve(null),
+  fetchStudentConsent: () => Promise.resolve(consentResponse),
+}));
+
+let schoolSettings = { enforce: false, enforce_under_13_consent: false };
+vi.mock("../../../Profile/school_compliance/utils/schoolComplianceUtils", () => ({
+  fetchSchoolSettings: () => Promise.resolve({ ok: true, settings: schoolSettings }),
 }));
 
 const { default: MemberProfileIdentity } = await import("./Header");
@@ -43,6 +49,8 @@ const student = {
   email: "ada@school.edu",
   grade: "7",
   minor: 1,
+  // 11 years old, so both age scopes cover her.
+  date_of_birth: "2015-01-01",
 };
 
 const wrap = ({ deviceSummary = { out: 0, overdue: 0 }, member = student } = {}) => {
@@ -63,6 +71,8 @@ const deleteCalls = () =>
 
 beforeEach(() => {
   roleType = "admin";
+  consentResponse = null;
+  schoolSettings = { enforce: false, enforce_under_13_consent: false };
   post.mockClear();
   post.mockImplementation(() => Promise.resolve({ data: { ok: true } }));
   activitySpy.mockClear();
@@ -181,5 +191,53 @@ describe("the member page's delete action", () => {
 
     await waitFor(() => expect(screen.getByText("Network Error")).toBeInTheDocument());
     expect(navigate).not.toHaveBeenCalledWith("/members");
+  });
+});
+
+describe("the consent pill on the member page", () => {
+  it("shows nothing when the company does not require consent and none is on record", async () => {
+    /* Reported: a company that is not asking for consent still got "Consent not
+       requested" in warning yellow — a compliance failure to chase for
+       something nobody was supposed to have done. */
+    schoolSettings = { enforce: false, enforce_under_13_consent: false };
+    wrap();
+
+    await waitFor(() => expect(screen.getByText("Ada Lovelace")).toBeInTheDocument());
+    expect(screen.queryByText("Consent not requested")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Device AUP/)).not.toBeInTheDocument();
+  });
+
+  it("warns when the company DOES require consent and none was requested", async () => {
+    schoolSettings = { enforce: true };
+    // A record exists saying nothing has been asked. (A response of `null`
+    // shows no chip at all — pre-existing, and not what this change is about.)
+    consentResponse = { status: "missing" };
+    wrap();
+
+    await waitFor(() =>
+      expect(screen.getByText("Consent not requested")).toBeInTheDocument()
+    );
+  });
+
+  it("covers an under-13 through the COPPA toggle, read under the key the server sends", async () => {
+    // `/school/settings` returns `enforce_under_13_consent`; the helper only
+    // knew the write key `enforce_under_13`, so this was silently off.
+    schoolSettings = { enforce: false, enforce_under_13_consent: true };
+    consentResponse = { status: "missing" };
+    wrap();
+
+    await waitFor(() =>
+      expect(screen.getByText("Consent not requested")).toBeInTheDocument()
+    );
+  });
+
+  it("still shows a refusal when consent is not required, without the alarm", async () => {
+    // A guardian actually refused. Hiding that would hide real data.
+    schoolSettings = { enforce: false, enforce_under_13_consent: false };
+    consentResponse = { status: "refused" };
+    wrap();
+
+    await waitFor(() => expect(screen.getByText("Consent refused")).toBeInTheDocument());
+    expect(screen.getByText(/not currently requiring consent/)).toBeInTheDocument();
   });
 });

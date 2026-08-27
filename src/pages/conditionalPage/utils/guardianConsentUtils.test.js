@@ -11,6 +11,7 @@ import {
   isPolicyStale,
   normalizeConsentStatus,
   resolveConsentRecord,
+  describeMemberConsent,
 } from "./guardianConsentUtils";
 
 describe("normalizeConsentStatus", () => {
@@ -406,5 +407,120 @@ describe("isAssignmentBlockedByConsent", () => {
         isMinor: true,
       })
     ).toBe(true);
+  });
+});
+
+describe("enforcesUnder13Consent, through isConsentRequiredForMember", () => {
+  it("reads the key the server actually returns", () => {
+    /* /school/settings is asymmetric: the write key is `enforce_under_13`, the
+       read key is `enforce_under_13_consent`. This only knew the write key, so
+       on a fetched settings object a COPPA-only company required consent for
+       nobody. */
+    expect(
+      isConsentRequiredForMember({
+        isMinor: true,
+        isUnder13: true,
+        settings: { enforce_under_13_consent: true },
+      })
+    ).toBe(true);
+  });
+
+  it("still reads the write key, for a form-shaped object", () => {
+    expect(
+      isConsentRequiredForMember({
+        isMinor: true,
+        isUnder13: true,
+        settings: { enforce_under_13: true },
+      })
+    ).toBe(true);
+  });
+
+  it("does not cover a 15-year-old under the COPPA toggle alone", () => {
+    expect(
+      isConsentRequiredForMember({
+        isMinor: true,
+        isUnder13: false,
+        settings: { enforce_under_13_consent: true },
+      })
+    ).toBe(false);
+  });
+});
+
+describe("describeMemberConsent", () => {
+  const enforced = { enforce: true };
+  const notEnforced = { enforce: false, enforce_under_13_consent: false };
+
+  it("says nothing at all when consent is not being asked for and none is on record", () => {
+    /* The reported bug: a company that does not require consent still got
+       "Consent not requested" in warning yellow with an alarm pip — a
+       compliance failure to chase, for something nobody was meant to do. */
+    const result = describeMemberConsent({
+      status: "missing",
+      settings: notEnforced,
+      isMinor: true,
+      isUnder13: true,
+    });
+    expect(result.required).toBe(false);
+    expect(result.chip).toBeNull();
+    expect(result.fact).toBeNull();
+  });
+
+  it("says nothing for a member no age scope covers, whatever the settings", () => {
+    expect(
+      describeMemberConsent({ status: "missing", settings: enforced, isMinor: false }).chip
+    ).toBeNull();
+  });
+
+  it("keeps the warning when consent IS being asked for and none was requested", () => {
+    const result = describeMemberConsent({
+      status: "missing",
+      settings: enforced,
+      isMinor: true,
+    });
+    expect(result.required).toBe(true);
+    expect(result.chip).toMatchObject({
+      tone: "warning",
+      label: "Consent not requested",
+      pip: true,
+    });
+  });
+
+  it("keeps each enforced status in its own tone", () => {
+    const toneFor = (status) =>
+      describeMemberConsent({ status, settings: enforced, isMinor: true }).chip;
+    expect(toneFor("refused")).toMatchObject({ tone: "critical", pip: true });
+    expect(toneFor("expired")).toMatchObject({ tone: "critical", pip: true });
+    expect(toneFor("stale")).toMatchObject({ tone: "warning", pip: true });
+    expect(toneFor("pending")).toMatchObject({ tone: "neutral", pip: false });
+    // Good news belongs in the facts, not in the alarm row.
+    expect(toneFor("agreed")).toBeNull();
+  });
+
+  it("still shows a real record when consent is not required, without the alarm", () => {
+    // A guardian refused. Hiding that would hide real data — but nothing is out
+    // of compliance, so it is not an alarm.
+    const result = describeMemberConsent({
+      status: "refused",
+      settings: notEnforced,
+      isMinor: true,
+      isUnder13: true,
+    });
+    expect(result.chip).toMatchObject({ tone: "neutral", label: "Consent refused", pip: false });
+    expect(result.chip.title).toMatch(/not requiring consent/);
+    expect(result.fact.note).toMatch(/not currently requiring consent/);
+  });
+
+  it("shows an agreed record as on file rather than as an absence", () => {
+    expect(
+      describeMemberConsent({
+        status: "agreed",
+        settings: notEnforced,
+        isMinor: true,
+      }).chip
+    ).toMatchObject({ label: "Consent on file", tone: "neutral" });
+  });
+
+  it("does not throw on nothing", () => {
+    expect(describeMemberConsent()).toEqual({ required: false, chip: null, fact: null });
   });
 });

@@ -19,9 +19,11 @@ import {
   isCoordinatorLevel,
   resolveRoleType,
 } from "../../../../config/roles";
+import { fetchSchoolSettings } from "../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import { calculateStudentAgeFlags } from "../../utils/ageCalculationUtils";
 import { fetchStudentConsent } from "../../utils/guardianConsentApi";
 import {
-  getConsentStatusCopy,
+  describeMemberConsent,
   normalizeConsentStatus,
 } from "../../utils/guardianConsentUtils";
 import {
@@ -36,25 +38,6 @@ import {
   describeDeleteConsequence,
   memberLabel,
 } from "./utils/deleteMember";
-
-// Consent that needs someone to act reads louder than consent that's merely
-// waiting. "agreed" gets no chip at all — good news belongs in the fact list,
-// not in the alarm row.
-const CONSENT_CHIP_TONE = {
-  refused: "critical",
-  expired: "critical",
-  stale: "warning",
-  missing: "warning",
-  pending: "neutral",
-};
-
-const CONSENT_CHIP_LABEL = {
-  refused: "Consent refused",
-  expired: "Consent expired",
-  stale: "Consent out of date",
-  missing: "Consent not requested",
-  pending: "Consent pending",
-};
 
 const titleCase = (value) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
@@ -77,9 +60,31 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
     retry: false,
   });
 
+  /* Whether the company asks for consent at all decides how this reads. Same
+     query key and staleTime as the readiness dashboard, so the two share one
+     cached copy of the settings. */
+  const settingsQuery = useQuery({
+    queryKey: ["schoolSettings", companyId],
+    queryFn: () => fetchSchoolSettings(companyId),
+    enabled: Boolean(companyId && isStudent),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
   const consentStatus = consentQuery.data
     ? normalizeConsentStatus(consentQuery.data)
     : null;
+
+  /* A company that does not require consent used to get "Consent not requested"
+     in warning yellow with an alarm pip — a compliance failure to chase, for
+     something nobody was supposed to have done. */
+  const ageFlags = calculateStudentAgeFlags(detailMemberInfo?.date_of_birth);
+  const consent = describeMemberConsent({
+    status: consentStatus,
+    settings: settingsQuery.data?.settings,
+    isMinor: isStudent || ageFlags.minor,
+    isUnder13: ageFlags.under_13,
+  });
 
   const handleExportMemberData = async () => {
     try {
@@ -183,13 +188,13 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         }
       />
     ),
-    consentStatus && CONSENT_CHIP_LABEL[consentStatus] && (
+    consent.chip && (
       <StatusChip
         key="consent"
-        tone={CONSENT_CHIP_TONE[consentStatus]}
-        pip={CONSENT_CHIP_TONE[consentStatus] !== "neutral"}
-        label={CONSENT_CHIP_LABEL[consentStatus]}
-        title={getConsentStatusCopy(consentStatus)}
+        tone={consent.chip.tone}
+        pip={consent.chip.pip}
+        label={consent.chip.label}
+        title={consent.chip.title}
       />
     ),
     detailMemberInfo?.grade && (
@@ -240,11 +245,11 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
           { value: deleteFailure || removal.detail, muted: !deleteFailure },
         ],
       },
-    consentStatus && {
+    consent.fact && {
       label: "Consent",
       items: [
-        { value: `Device AUP · ${titleCase(consentStatus)}` },
-        { value: getConsentStatusCopy(consentStatus), muted: true },
+        { value: `Device AUP · ${titleCase(consent.fact.status)}` },
+        { value: consent.fact.note, muted: true },
       ],
     },
   ].filter(Boolean);

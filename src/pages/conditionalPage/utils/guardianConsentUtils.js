@@ -116,8 +116,19 @@ export function resolveConsentEnforcement(settings) {
 const enforcesMinorConsent = (settings) =>
   Boolean(settings?.enforce ?? settings?.enforce_member_consent ?? false);
 
-/** Company requires consent for under-13s specifically (COPPA). */
-const enforcesUnder13Consent = (settings) => Boolean(settings?.enforce_under_13);
+/**
+ * Company requires consent for under-13s specifically (COPPA).
+ *
+ * `/school/settings` is asymmetric on this toggle: the write key is
+ * `enforce_under_13` and the read key is `enforce_under_13_consent` -- both
+ * confirmed against the real response, and noted at
+ * SchoolComplianceSettings.jsx:62. This read only knew the write key, so on a
+ * settings object *fetched* from the server it was always false: a company with
+ * only the COPPA toggle on had consent required for nobody. Both spellings are
+ * accepted, the same way `enforcesMinorConsent` already accepts its two.
+ */
+const enforcesUnder13Consent = (settings) =>
+  Boolean(settings?.enforce_under_13_consent ?? settings?.enforce_under_13 ?? false);
 
 /**
  * Does THIS member need a recorded consent before receiving a device?
@@ -347,4 +358,80 @@ export function getConsentStatusCopy(status) {
   };
 
   return copyByStatus[status] || "Unknown consent status.";
+}
+
+
+/**
+ * How a member's consent should read on their own page.
+ *
+ * The chip used to be derived from the status alone, so a company that does not
+ * ask for consent at all still got "Consent not requested" in warning yellow
+ * with an alarm pip -- a compliance failure to chase, for something nobody was
+ * supposed to have done. Reported as exactly that.
+ *
+ * Whether consent is *required* is the question that decides the presentation:
+ *
+ *   required, any status        -> as before: the status, in its own tone
+ *   not required, nothing on
+ *   record                      -> nothing at all. There is no finding here.
+ *   not required, a real record -> shown, neutral and without a pip. A guardian
+ *                                  did something and hiding it would hide real
+ *                                  data, but nothing is out of compliance.
+ */
+const REQUIRED_CHIP = {
+  refused: { tone: "critical", label: "Consent refused" },
+  expired: { tone: "critical", label: "Consent expired" },
+  stale: { tone: "warning", label: "Consent out of date" },
+  missing: { tone: "warning", label: "Consent not requested" },
+  pending: { tone: "neutral", label: "Consent pending" },
+};
+
+/** A status that means a guardian actually did something. */
+const ON_RECORD = new Set(["agreed", "refused", "expired", "stale", "pending"]);
+
+const NOT_REQUIRED_LABEL = {
+  agreed: "Consent on file",
+  refused: "Consent refused",
+  expired: "Consent expired",
+  stale: "Consent out of date",
+  pending: "Consent pending",
+};
+
+export function describeMemberConsent({
+  status,
+  settings,
+  isMinor = false,
+  isUnder13 = false,
+} = {}) {
+  const required = isConsentRequiredForMember({ isMinor, isUnder13, settings });
+
+  if (required) {
+    const chip = REQUIRED_CHIP[status] ?? null;
+    return {
+      required: true,
+      chip: chip ? { ...chip, pip: chip.tone !== "neutral", title: getConsentStatusCopy(status) } : null,
+      fact: status
+        ? { status, note: getConsentStatusCopy(status) }
+        : null,
+    };
+  }
+
+  // Nothing is being asked for. An absence is not news.
+  if (!ON_RECORD.has(status)) {
+    return { required: false, chip: null, fact: null };
+  }
+
+  return {
+    required: false,
+    chip: {
+      tone: "neutral",
+      label: NOT_REQUIRED_LABEL[status] ?? "Consent on file",
+      pip: false,
+      title: "This company is not requiring consent, so nothing is outstanding.",
+    },
+    fact: {
+      status,
+      note: "On record. This company is not currently requiring consent.",
+    },
+  };
 }
