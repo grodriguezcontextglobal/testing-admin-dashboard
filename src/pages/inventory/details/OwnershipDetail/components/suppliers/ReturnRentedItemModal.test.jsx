@@ -223,6 +223,30 @@ describe("ReturnRentedItemModal", () => {
     expect(activitySpy).not.toHaveBeenCalled();
   });
 
+  it("returns an in-stock item even when the query answers without a status", async () => {
+    /* The reported failure: `inventory.itemsByIds` came back with only
+       item_id/serial_number/item_group, every item was judged "unknown", and an
+       item plainly in stock was refused with "still in use". */
+    post.mockImplementation((url, body) => {
+      if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
+        return Promise.resolve({
+          data: { result: rows.map(({ item_id, serial_number, item_group }) => ({ item_id, serial_number, item_group })) },
+        });
+      }
+      return Promise.resolve({ data: { result: [] } });
+    });
+
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedIds()).toEqual([200580, 200581]));
+    // And it says the guard did not run, rather than pretending it did.
+    await waitFor(() =>
+      expect(screen.getByText(/in-use check could not run/)).toBeTruthy()
+    );
+    expect(screen.queryByText(/still in use/)).toBeNull();
+  });
+
   it("deletes nothing when the state could not be read", async () => {
     // A return destroys the record, so an unreadable state is never assumed
     // free.

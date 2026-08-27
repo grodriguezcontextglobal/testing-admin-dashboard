@@ -28,9 +28,11 @@ export const itemIdOf = (item) => item?.item_id ?? item?.id ?? null;
  * **and** it is not in the warehouse. Either one on its own means it is
  * accounted for and can go back.
  *
- * Anything unreadable is treated as in use. A return deletes the record, so the
- * only safe default when the state cannot be established is to leave the item
- * alone — the operator is told, and nothing is deleted on an assumption.
+ * An item whose state cannot be read is reported as `unknown`, separately from
+ * `in-use`. Whether that blocks it is not decided here — see
+ * `stateIsReadable`: one unreadable row among readable ones is suspicious and
+ * is held back, but a whole response that carries neither field means the query
+ * does not project them and the check simply cannot run.
  */
 export const returnEligibility = (item) => {
   const status = text(item?.logistic_status).toLowerCase();
@@ -60,11 +62,35 @@ export const returnEligibility = (item) => {
 };
 
 /**
+ * Whether the response carries the two fields the check needs at all.
+ *
+ * `inventory.itemsByIds` is a server-side catalog entry and its projection is
+ * not something the client can see. If it returns neither `logistic_status` nor
+ * `warehouse` on any row, the in-use check has no input — and treating that as
+ * "every item is in use" blocks every return, which is what happened to an
+ * item that was plainly in stock.
+ */
+export const stateIsReadable = (items) =>
+  (Array.isArray(items) ? items : []).some((item) => {
+    const hasStatus = text(item?.logistic_status).length > 0;
+    const hasWarehouse =
+      item?.warehouse !== undefined &&
+      item?.warehouse !== null &&
+      item?.warehouse !== "";
+    return hasStatus || hasWarehouse;
+  });
+
+/**
  * Splits what was asked for into what may go and what may not.
  *
- * `requestedIds` matters: an id the state query did not answer for has no state
- * at all, which is exactly the case that must not be deleted. Dropping it
- * silently is how an in-use item would leave the inventory.
+ * `requestedIds` matters: an id the state query did not answer for is not in
+ * the inventory any more, and that is not something to delete on. Dropping it
+ * silently is how an in-use item would leave.
+ *
+ * `checked` says whether the in-use rule actually ran. When the response
+ * carries no state at all it could not, and the rows are let through rather
+ * than every return being blocked — the caller is expected to say so, because a
+ * guard that silently did not apply is worse than no guard.
  */
 export const partitionForReturn = ({ items, requestedIds }) => {
   const rows = Array.isArray(items) ? items : [];
@@ -74,6 +100,7 @@ export const partitionForReturn = ({ items, requestedIds }) => {
     if (id !== null && id !== undefined) byId.set(String(id), row);
   });
 
+  const checked = stateIsReadable(rows);
   const returnable = [];
   const blocked = [];
 
@@ -86,6 +113,11 @@ export const partitionForReturn = ({ items, requestedIds }) => {
         reason: "missing",
         detail: "it is no longer in the inventory",
       });
+      return;
+    }
+    // Nothing to check against: let it through, and let the caller say so.
+    if (!checked) {
+      returnable.push(row);
       return;
     }
     const verdict = returnEligibility(row);
@@ -101,24 +133,60 @@ export const partitionForReturn = ({ items, requestedIds }) => {
     }
   });
 
-  return { returnable, blocked };
+  return { returnable, blocked, checked };
 };
 
-/** What to tell the operator about the items that are staying. */
+const REASON_COPY = {
+  "in-use": { why: "still in use", fix: "Check them in first." },
+  missing: {
+    why: "no longer in the inventory",
+    fix: "Reopen this list to see what is left.",
+  },
+  unknown: {
+    why: "left alone because their state could not be read",
+    fix: "Try again, or check them on the inventory page.",
+  },
+};
+
+/**
+ * Names each item and, where there is one, the state that held it back.
+ *
+ * `detail` was computed and never shown, so "still in use" gave the reader no
+ * way to tell a genuinely assigned item from a status string the rule does not
+ * recognise. The status is in the message now.
+ */
+const nameThem = (entries) => {
+  const named = entries.slice(0, 3).map((entry) => {
+    const label = text(entry.serial_number) || `item ${entry.item_id}`;
+    const why = text(entry.detail);
+    return why ? `${label} (${why})` : label;
+  });
+  const rest = entries.length - named.length;
+  return `${named.join(", ")}${rest > 0 ? ` and ${rest} more` : ""}`;
+};
+
+/**
+ * What to tell the operator about the items that are staying, per reason.
+ *
+ * It used to say "still in use" for all three, so an item held back because its
+ * state could not be read was reported as being out with somebody -- which is
+ * how a plainly in-stock item came back as "still in use".
+ */
 export const describeBlocked = (blocked) => {
   const list = Array.isArray(blocked) ? blocked : [];
   if (list.length === 0) return null;
 
-  const named = list
-    .slice(0, 3)
-    .map((entry) => text(entry.serial_number) || `item ${entry.item_id}`);
-  const rest = list.length - named.length;
-
-  return `${list.length} item${list.length === 1 ? "" : "s"} ${
-    list.length === 1 ? "is" : "are"
-  } still in use and will not be returned: ${named.join(", ")}${
-    rest > 0 ? ` and ${rest} more` : ""
-  }. Check them in first.`;
+  return Object.keys(REASON_COPY)
+    .map((reason) => {
+      const entries = list.filter((entry) => entry.reason === reason);
+      if (entries.length === 0) return null;
+      const { why, fix } = REASON_COPY[reason];
+      return `${entries.length} item${entries.length === 1 ? "" : "s"} ${
+        entries.length === 1 ? "is" : "are"
+      } ${why} and will not be returned: ${nameThem(entries)}. ${fix}`;
+    })
+    .filter(Boolean)
+    .join(" ");
 };
 
 /**

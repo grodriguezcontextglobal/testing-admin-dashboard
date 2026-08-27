@@ -314,7 +314,7 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
          state rather than from the row on screen. */
       setActiveStep("check");
       setProgress({ current: 0, total: ids.length });
-      const { returnable, blocked } = partitionForReturn({
+      const { returnable, blocked, checked } = partitionForReturn({
         items: await readItemState(ids),
         requestedIds: ids,
       });
@@ -353,17 +353,25 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       refreshInventoryViews();
 
+      /* A guard that silently did not apply is worse than no guard: if the
+         state query answered without either field, the in-use rule had nothing
+         to run on, and that is said rather than assumed either way. */
+      const guardNote = checked
+        ? null
+        : "The in-use check could not run: the inventory query returned no status for these items, so they were returned as selected.";
+
       notify(
         "success",
         `${returnable.length} item${returnable.length === 1 ? "" : "s"} returned.`,
         blocked.length > 0
-          ? `${blocked.length} left in place because ${
-              blocked.length === 1 ? "it is" : "they are"
-            } still in use.`
+          ? `${blocked.length} left in place.`
           : "They are out of this company's inventory."
       );
-      if (blocked.length > 0) {
-        setNotice(describeBlocked(blocked));
+      const leftToSay = [describeBlocked(blocked), guardNote]
+        .filter(Boolean)
+        .join(" ");
+      if (leftToSay) {
+        setNotice(leftToSay);
         return;
       }
       return handleClose();
