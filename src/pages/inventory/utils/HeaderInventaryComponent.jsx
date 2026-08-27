@@ -181,7 +181,6 @@ const HeaderInventaryComponent = ({
         {canCreate && (
           <GrayButtonComponent
             title={"Import inventory (.xlsx)"}
-            styles={{ width: "100%" }}
             buttonType="button"
             titleStyles={{
               textTransform: "none",
