@@ -1,0 +1,265 @@
+/* The pages people outside the company see: an attendance confirmation, a
+   guardian consent request. One layout for both.
+
+   They were a title and one grey line in a bordered box, with no statement of
+   who was asking — which on an unauthenticated page that wants a decision is
+   the first thing a careful reader looks for. */
+
+.public-landing {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--gray-50, #f7f7f4);
+}
+
+.public-landing__card {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px;
+  text-align: left;
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgba(16, 24, 40, 0.1));
+}
+
+/* Wider when there is a document to read inside it. */
+.public-landing__card--wide {
+  max-width: 720px;
+}
+
+.public-landing__brand {
+  display: flex;
+  margin-bottom: 24px;
+}
+
+.public-landing__brand svg {
+  height: 28px;
+  width: auto;
+}
+
+.public-landing__eyebrow {
+  margin: 0 0 6px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+  color: var(--gray-500, #777b73);
+}
+
+.public-landing__eyebrow--ok {
+  color: var(--success-700, #067647);
+}
+
+.public-landing__eyebrow--warn {
+  color: var(--warning-700, #b54708);
+}
+
+.public-landing__title {
+  margin: 0 0 10px;
+  font-family: Inter, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  color: var(--gray-900, #171d1a);
+}
+
+.public-landing__lead {
+  margin: 0 0 20px;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--gray-600, #5d615a);
+}
+
+/* The facts a reader checks before deciding: two or three, not eight. */
+.public-landing__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 16px;
+  background: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-lg, 10px);
+}
+
+.public-landing__facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.public-landing__facts dt {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+.public-landing__facts dd {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+  overflow-wrap: anywhere;
+}
+
+.public-landing__facts-sub {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--gray-600, #5d615a);
+}
+
+.public-landing__note {
+  margin: 16px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--gray-500, #777b73);
+}
+
+.public-landing__note--boxed {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  color: var(--blue-800, #1849a9);
+  background: var(--blue-50, #eff8ff);
+  border: 1px solid var(--blue-200, #b2ddff);
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.public-landing__error {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--error-700, #9a3922);
+  background: var(--error-50, #fbeae5);
+  border: 1px solid var(--error-200, #eeb4a3);
+  border-radius: var(--radius-md, 8px);
+}
+
+.public-landing__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Two decisions of equal standing. Refusing consent is a legitimate answer, so
+   it is not styled as a destructive act — but it is not the primary one
+   either. */
+@media (min-width: 480px) {
+  .public-landing__actions--pair {
+    flex-direction: row-reverse;
+  }
+
+  .public-landing__actions--pair > * {
+    flex: 1 1 0;
+  }
+}
+
+/* ---------------------------------------------------------- The document --- */
+
+.public-landing__section-title {
+  margin: 24px 0 8px;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  color: var(--gray-900, #171d1a);
+}
+
+.public-landing__doc {
+  width: 100%;
+  height: 460px;
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-md, 8px);
+}
+
+.public-landing__doc-text {
+  max-height: 300px
+;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px;
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: var(--radius-md, 8px);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  color: var(--gray-700, #414651);
+}
+
+.public-landing__doc-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-700, #175cd3);
+}
+
+/* ------------------------------------------------------------- The field --- */
+
+.public-landing__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 20px 0 0;
+}
+
+.public-landing__field label {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--gray-700, #414651);
+}
+
+.public-landing__field-hint {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+.public-landing__field-error {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--error-700, #9a3922);
+}
+
+.public-landing__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-700, #414651);
+  cursor: pointer;
+}
+
+.public-landing__check input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}

@@ -63,6 +63,15 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+/** Fills the signature and ticks the read acknowledgement. */
+async function signAs(name = "Jane Guardian") {
+  fireEvent.change(await screen.findByLabelText("Your full name"), {
+    target: { value: name },
+  });
+  const ack = screen.queryByLabelText(/I have read the/i);
+  if (ack) fireEvent.click(ack);
+}
+
 describe("GuardianConsentResponsePage", () => {
   it("shows loading spinner while fetching", () => {
     retrievePublicConsent.mockReturnValue(new Promise(() => {}));
@@ -72,28 +81,28 @@ describe("GuardianConsentResponsePage", () => {
 
   it("shows error when OTC is missing", () => {
     renderPage("/school/consent/respond");
-    expect(screen.getByText("Invalid Link")).toBeInTheDocument();
+    expect(screen.getByText("This link is incomplete")).toBeInTheDocument();
     expect(
-      screen.getByText("No consent code was provided. Please check the link you received.")
+      screen.getByText(/carries no consent code/)
     ).toBeInTheDocument();
   });
 
   it("shows Invalid Link result on 404 error", async () => {
     retrievePublicConsent.mockRejectedValue({ response: { status: 404 } });
     renderPage();
-    expect(await screen.findByText("Invalid Link")).toBeInTheDocument();
+    expect(await screen.findByText("This link is not valid")).toBeInTheDocument();
     expect(
-      screen.getByText("This consent link is invalid. Please contact the school.")
+      screen.getByText(/could not be found/)
     ).toBeInTheDocument();
   });
 
   it("shows Link Expired result on 410 error", async () => {
     retrievePublicConsent.mockRejectedValue({ response: { status: 410 } });
     renderPage();
-    expect(await screen.findByText("Link Expired")).toBeInTheDocument();
+    expect(await screen.findByText("This link has expired")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "This consent link has expired. Please contact the school to request a new link."
+        /Nothing was recorded\. Contact the school/
       )
     ).toBeInTheDocument();
   });
@@ -106,7 +115,9 @@ describe("GuardianConsentResponsePage", () => {
       .mockResolvedValueOnce(pendingConsent);
     renderPage();
 
-    expect(await screen.findByText("Error")).toBeInTheDocument();
+    expect(
+      await screen.findByText("The request could not be loaded")
+    ).toBeInTheDocument();
     const retryButton = screen.getByRole("button", { name: "Try again" });
     fireEvent.click(retryButton);
 
@@ -119,9 +130,10 @@ describe("GuardianConsentResponsePage", () => {
     expect((await screen.findAllByText("Alex Student")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Context Global Academy").length).toBeGreaterThan(0);
     expect(screen.getByText("AUP version 2")).toBeInTheDocument();
-    expect(screen.getByText("guardian@example.com")).toBeInTheDocument();
-    expect(screen.getByText("5")).toBeInTheDocument();
-    expect(screen.getByText("5A")).toBeInTheDocument();
+    // The address the request was sent to, and the student's identifiers,
+    // are each one line now rather than a row of their own.
+    expect(screen.getByText(/guardian@example\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/Grade 5/)).toBeInTheDocument();
   });
 
   it("shows an expiry warning when the consent carries expires_at", async () => {
@@ -147,8 +159,9 @@ describe("GuardianConsentResponsePage", () => {
     renderPage();
     const container = await screen.findByTestId("consent-text-scroll");
     expect(container).toHaveTextContent(pendingConsent.consent.consent_text);
-    expect(container.style.maxHeight).toBe("240px");
-    expect(container.style.overflowY).toBe("auto");
+    // The height cap and the scroll live in publicLanding.css now, which
+    // happy-dom does not apply — the class is what this can assert.
+    expect(container.className).toContain("public-landing__doc-text");
   });
 
   it("renders the consent document iframe when the company has an assigned consent_document_id", async () => {
@@ -213,10 +226,12 @@ describe("GuardianConsentResponsePage", () => {
       consent: { ...pendingConsent.consent, status: "agreed" },
     });
     renderPage();
-    expect(await screen.findByText("Consent Already Provided")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Consent is already on file")
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Jane Guardian has already agreed to the consent request for Alex Student."
+        /Jane Guardian has already agreed to this request for Alex Student/
       )
     ).toBeInTheDocument();
   });
@@ -227,10 +242,12 @@ describe("GuardianConsentResponsePage", () => {
       consent: { ...pendingConsent.consent, status: "refused" },
     });
     renderPage();
-    expect(await screen.findByText("Consent Already Refused")).toBeInTheDocument();
+    expect(
+      await screen.findByText("This request was already refused")
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Jane Guardian has already refused the consent request for Alex Student."
+        /Jane Guardian has already refused this request for Alex Student/
       )
     ).toBeInTheDocument();
   });
@@ -270,7 +287,9 @@ describe("GuardianConsentResponsePage", () => {
     });
     renderPage();
     expect(
-      await screen.findByText("Guardian has already agreed to the consent request for Alex Student.")
+      await screen.findByText(
+        /The guardian has already agreed to this request for Alex Student/
+      )
     ).toBeInTheDocument();
   });
 
@@ -278,9 +297,7 @@ describe("GuardianConsentResponsePage", () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     respondPublicConsent.mockResolvedValue({ ok: true });
     renderPage();
-    fireEvent.change(await screen.findByLabelText("Full name of guardian signing"), {
-      target: { value: "Jane Guardian" },
-    });
+    await signAs();
     fireEvent.click(screen.getByRole("button", { name: "Agree" }));
     await waitFor(() => {
       expect(respondPublicConsent).toHaveBeenCalledWith(
@@ -295,9 +312,7 @@ describe("GuardianConsentResponsePage", () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     respondPublicConsent.mockResolvedValue({ ok: true });
     renderPage();
-    fireEvent.change(await screen.findByLabelText("Full name of guardian signing"), {
-      target: { value: "Jane Guardian" },
-    });
+    await signAs();
     fireEvent.click(screen.getByRole("button", { name: "Refuse" }));
     await waitFor(() => {
       expect(respondPublicConsent).toHaveBeenCalledWith(
@@ -312,14 +327,12 @@ describe("GuardianConsentResponsePage", () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     respondPublicConsent.mockResolvedValue({ ok: true, status: "agreed" });
     renderPage();
-    fireEvent.change(await screen.findByLabelText("Full name of guardian signing"), {
-      target: { value: "Jane Guardian" },
-    });
+    await signAs();
     fireEvent.click(screen.getByRole("button", { name: "Agree" }));
 
-    expect(await screen.findByText("Thank you!")).toBeInTheDocument();
+    expect(await screen.findByText("Consent recorded")).toBeInTheDocument();
     expect(
-      screen.getByText(/your response has been recorded/i)
+      screen.getByText(/has your answer for Alex Student/i)
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Agree" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Refuse" })).not.toBeInTheDocument();
@@ -331,26 +344,73 @@ describe("GuardianConsentResponsePage", () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     respondPublicConsent.mockResolvedValue({ ok: true, status: "refused" });
     renderPage();
-    fireEvent.change(await screen.findByLabelText("Full name of guardian signing"), {
-      target: { value: "Jane Guardian" },
-    });
+    await signAs();
     fireEvent.click(screen.getByRole("button", { name: "Refuse" }));
 
-    expect(await screen.findByText("Thank you!")).toBeInTheDocument();
     expect(
-      screen.getByText(/your response has been recorded/i)
+      await screen.findByText("Your refusal was recorded")
     ).toBeInTheDocument();
   });
 
-  it("shows warning when signer name is empty", async () => {
+  it("marks the signature field when it is empty, rather than a toast", async () => {
     retrievePublicConsent.mockResolvedValue(pendingConsent);
     renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Agree" }));
-    expect(mockNotify).toHaveBeenCalledWith(
-      "warning",
-      "Please enter your name",
-      "Your full name is required to sign.",
-    );
+
+    expect(
+      await screen.findByText("Type your full name to sign.")
+    ).toBeInTheDocument();
     expect(respondPublicConsent).not.toHaveBeenCalled();
+  });
+
+  it("will not record an agreement until the policy is acknowledged", async () => {
+    // Agree used to be pressable without the document having been opened.
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    renderPage();
+    fireEvent.change(await screen.findByLabelText("Your full name"), {
+      target: { value: "Jane Guardian" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Agree" }));
+
+    expect(
+      await screen.findByText(
+        "Confirm you have read the document before agreeing."
+      )
+    ).toBeInTheDocument();
+    expect(respondPublicConsent).not.toHaveBeenCalled();
+  });
+
+  it("ends the page when the link is spent, instead of leaving Agree live", async () => {
+    /* A 410 raised a corner toast and changed nothing, so the guardian
+       could press Agree against a link that will never accept it. */
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    respondPublicConsent.mockRejectedValue({ response: { status: 410 } });
+    renderPage();
+    await signAs();
+    fireEvent.click(screen.getByRole("button", { name: "Agree" }));
+
+    expect(await screen.findByText("This link has expired")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Agree" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the form open for a failure worth retrying", async () => {
+    retrievePublicConsent.mockResolvedValue(pendingConsent);
+    // A 4xx that is not one of the four terminal ones: not retried, and the
+    // form has to stay open.
+    respondPublicConsent.mockRejectedValue({
+      response: { status: 400, data: { msg: "Signature was rejected" } },
+    });
+    renderPage();
+    await signAs();
+    fireEvent.click(screen.getByRole("button", { name: "Agree" }));
+
+    expect(
+      await screen.findByText("Signature was rejected")
+    ).toBeInTheDocument();
+    // The form is still there to answer with — asserted on the field rather
+    // than on the button, whose accessible name carries antd's spinner while
+    // its loading icon animates out.
+    expect(screen.getByLabelText("Your full name")).toBeInTheDocument();
+    expect(screen.queryByText("This link has expired")).not.toBeInTheDocument();
   });
 });
