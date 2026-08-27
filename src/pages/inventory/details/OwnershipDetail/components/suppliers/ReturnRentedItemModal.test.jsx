@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const admin = {
   name: "Root",
@@ -18,6 +18,11 @@ vi.mock("../../../../../../api/devitrakApi", () => ({
   devitrakApi: { post: (...args) => post(...args) },
 }));
 
+const activitySpy = vi.fn().mockResolvedValue(null);
+vi.mock("../../../../../../api/activityLog", () => ({
+  registerStaffActivity: (...args) => activitySpy(...args),
+}));
+
 const emailSpy = vi.fn().mockResolvedValue(null);
 vi.mock("../../../../../../components/notification/email/EmailReturnRentalItems", () => ({
   default: (...args) => emailSpy(...args),
@@ -33,6 +38,40 @@ const rows = [
   { item_id: 200580, serial_number: "SN-A1", item_group: "Tablet" },
   { item_id: 200581, serial_number: "SN-B2", item_group: "Radio" },
 ];
+
+/**
+ * Answers the flow's requests. `state` overrides what `inventory.itemsByIds`
+ * reports for each item, which is what decides whether it may be returned.
+ */
+const serverAnswers = ({ state = {}, deleteAnswer } = {}) =>
+  post.mockImplementation((url, body) => {
+    if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
+      return Promise.resolve({
+        data: {
+          result: rows.map((row) => ({
+            logistic_status: "in-stock",
+            warehouse: 1,
+            ...row,
+            ...(state[row.item_id] ?? {}),
+          })),
+        },
+      });
+    }
+    if (url === "/db_company/delete-bulk-items" && deleteAnswer) {
+      return Promise.resolve(deleteAnswer);
+    }
+    return Promise.resolve({ data: { result: [] } });
+  });
+
+const runReturn = async () => {
+  fireEvent.click(screen.getByText("Return all 2 items"));
+  fireEvent.click(await screen.findByText("Return"));
+};
+
+const deletedIds = () =>
+  post.mock.calls
+    .filter(([url]) => url === "/db_company/delete-bulk-items")
+    .flatMap(([, body]) => body.item_ids ?? []);
 
 /** Ticks the checkbox on the row showing `serial`, by row rather than by index. */
 const tickRow = (serial) => {
@@ -56,6 +95,13 @@ const renderModal = (props = {}) => {
     </QueryClientProvider>
   );
 };
+
+beforeEach(() => {
+  post.mockReset();
+  post.mockResolvedValue({ data: { result: [] } });
+  emailSpy.mockClear();
+  activitySpy.mockClear();
+});
 
 describe("ReturnRentedItemModal", () => {
   it("shows one table, not two tabs for the same rows", () => {
@@ -98,41 +144,138 @@ describe("ReturnRentedItemModal", () => {
     ).toBeTruthy();
   });
 
-  it("does not report items returned when the server refused the write", async () => {
-    /* The live failure this was written for: update-large-data answers HTTP
-       200 with `{ ok: false, msg: "... disallowed column for update:
-       returnedRentedInfo" }`. The response was discarded, so the progress bar
-       filled, the supplier was emailed and the records were deleted for items
-       that had never been marked returned. */
-    post.mockImplementation((url) => {
-      if (url === "/db_inventory/update-large-data") {
-        return Promise.resolve({
-          data: {
-            ok: false,
-            msg: "Update item warehouse failed: disallowed column for update: returnedRentedInfo",
-          },
-        });
-      }
-      return Promise.resolve({ data: { result: [] } });
+  it("does not report items returned when the server refused the delete", async () => {
+    /* These endpoints answer HTTP 200 with `{ ok: false, msg }` when they
+       refuse a write. The response used to be discarded, so the progress bar
+       filled and the modal reported the items returned while nothing had been
+       written. */
+    serverAnswers({
+      deleteAnswer: { data: { ok: false, msg: "delete refused by the server" } },
     });
 
     renderModal();
-    fireEvent.click(screen.getByText("Return all 2 items"));
-    // The confirmation's ok button is labelled "Return", not "Confirm".
-    fireEvent.click(await screen.findByText("Return"));
+    await runReturn();
 
     await waitFor(() =>
-      expect(screen.getByText(/disallowed column for update/)).toBeTruthy()
+      expect(screen.getByText(/delete refused by the server/)).toBeTruthy()
     );
     expect(screen.getByText(/stopped partway/)).toBeTruthy();
+  });
 
-    // Nothing downstream of the refused write may have run.
-    expect(emailSpy).not.toHaveBeenCalled();
+  it("never asks update-large-data to mark items as returned", async () => {
+    /* The old first step wrote warehouse, enableAssignFeature,
+       returnedRentedInfo and return_date onto rows the last step deletes.
+       Nothing read any of it, and the call was being rejected outright for
+       carrying `returnedRentedInfo`. */
+    serverAnswers();
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedIds()).toHaveLength(2));
     expect(
-      post.mock.calls.some(([url]) => url === "/db_company/delete-bulk-items")
+      post.mock.calls.some(([url]) => url === "/db_inventory/update-large-data")
     ).toBe(false);
+  });
 
-    post.mockResolvedValue({ data: { result: [] } });
+  it("leaves an item that is in use where it is", async () => {
+    // Not in stock and not in the warehouse: it is out with somebody.
+    serverAnswers({
+      state: { 200581: { logistic_status: "assigned", warehouse: 0 } },
+    });
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedIds()).toEqual([200580]));
+    expect(deletedIds()).not.toContain(200581);
+    await waitFor(() =>
+      expect(screen.getByText(/still in use and will not be returned: SN-B2/)).toBeTruthy()
+    );
+  });
+
+  it("returns an item that is accounted for by either half of the rule", async () => {
+    serverAnswers({
+      state: {
+        200580: { logistic_status: "in-stock", warehouse: 0 },
+        200581: { logistic_status: "in-transit", warehouse: 1 },
+      },
+    });
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedIds()).toEqual([200580, 200581]));
+  });
+
+  it("deletes nothing when every item is in use", async () => {
+    serverAnswers({
+      state: {
+        200580: { logistic_status: "assigned", warehouse: 0 },
+        200581: { logistic_status: "in-event", warehouse: 0 },
+      },
+    });
+    renderModal();
+    await runReturn();
+
+    await waitFor(() =>
+      expect(screen.getByText(/still in use and will not be returned/)).toBeTruthy()
+    );
+    expect(deletedIds()).toEqual([]);
+    expect(emailSpy).not.toHaveBeenCalled();
+    expect(activitySpy).not.toHaveBeenCalled();
+  });
+
+  it("deletes nothing when the state could not be read", async () => {
+    // A return destroys the record, so an unreadable state is never assumed
+    // free.
+    post.mockImplementation((url, body) => {
+      if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
+        return Promise.resolve({ data: { result: [] } });
+      }
+      return Promise.resolve({ data: { result: [] } });
+    });
+    renderModal();
+    await runReturn();
+
+    await waitFor(() =>
+      expect(screen.getByText(/no longer in the inventory|state could not be read|will not be returned/)).toBeTruthy()
+    );
+    expect(deletedIds()).toEqual([]);
+  });
+
+  it("reports the return before deleting anything", async () => {
+    // The report is the record: once the rows are gone, nothing that is not in
+    // it survives.
+    serverAnswers();
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedIds()).toHaveLength(2));
+    const emailAt = emailSpy.mock.invocationCallOrder[0];
+    const deleteAt = post.mock.calls.findIndex(
+      ([url]) => url === "/db_company/delete-bulk-items"
+    );
+    expect(emailAt).toBeGreaterThan(0);
+    expect(deleteAt).toBeGreaterThan(-1);
+    // The report received the rows it is built from, not just ids.
+    expect(emailSpy.mock.calls[0][0].resolvedItems).toHaveLength(2);
+    expect(emailSpy.mock.calls[0][0].returnedAt).toBeTruthy();
+  });
+
+  it("writes one activity-log row per item, since the records are about to go", async () => {
+    serverAnswers();
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(activitySpy).toHaveBeenCalledTimes(2));
+    expect(activitySpy.mock.calls[0][0]).toMatchObject({
+      action: "DELETE",
+      target_model: "Item",
+      target_id: 200580,
+    });
+    expect(activitySpy.mock.calls[0][0].details).toMatchObject({
+      reason: "returned_to_supplier",
+      returned_by: "Root",
+      serial_number: "SN-A1",
+    });
   });
 
   it("offers an empty state rather than an empty table", async () => {

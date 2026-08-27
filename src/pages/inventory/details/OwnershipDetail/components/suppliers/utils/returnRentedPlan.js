@@ -74,9 +74,20 @@ export function describeReturnAction({ totalItems = 0, selectedCount = 0 } = {})
 }
 
 /** The steps the run reports, in the order they actually happen. */
+/**
+ * The steps a return actually runs.
+ *
+ * "Marking items as returned" is gone. It wrote `warehouse`,
+ * `enableAssignFeature`, `returnedRentedInfo` and `return_date` onto rows that
+ * the last step deletes seconds later, and nothing read any of it -- the report
+ * is built from the item's own serial and group, and stamps its own date. The
+ * first step is now reading the state, which is what decides whether an item
+ * may leave at all.
+ */
 export const RETURN_STEPS = [
-  { key: "return", label: "Marking items as returned" },
-  { key: "email", label: "Emailing the team" },
+  { key: "check", label: "Checking which items can be returned" },
+  { key: "email", label: "Reporting the return" },
+  { key: "audit", label: "Recording it in the activity log" },
   { key: "delete", label: "Removing them from inventory" },
 ];
 

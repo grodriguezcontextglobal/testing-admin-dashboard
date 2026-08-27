@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import EmailReturnRentalItems from "../../../../../components/notification/email/EmailReturnRentalItems";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
@@ -15,6 +16,11 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import {
+  buildReturnAuditEntries,
+  describeBlocked,
+  partitionForReturn,
+} from "../../OwnershipDetail/components/suppliers/utils/returnToSupplier";
 import "../../../../events/newEventProcess/style/NewEventInfoSetup.css";
 
 const ReturningLeasedEquipModal = ({
@@ -50,23 +56,25 @@ const ReturningLeasedEquipModal = ({
     queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
     return null;
   };
+  /* Deps declared rather than left empty — a pre-existing lint failure in this
+     file, which `max-warnings=0` was already tripping over. `supplier_info` is
+     read defensively too: the condition called `.length` on it unguarded. */
+  const supplierId = dataFound?.supplier_info;
+  const companyId = user?.companyData?.id;
   useEffect(() => {
-    if (dataFound.supplier_info.length > 0 || dataFound.supplier_info !== "") {
-      const checkingSupplier = async () => {
-        const supplier = await devitrakApi.get("/company/provider-companies", {
-          params: {
-            creator: user?.companyData?.id,
-          },
-        });
-        setSupplierInfo(
-          supplier?.data?.providerCompanies.filter(
-            (ele) => ele.id === dataFound.supplier_info
-          )
-        );
-      };
-      checkingSupplier();
-    }
-  }, []);
+    if (!String(supplierId ?? "").trim()) return;
+    const checkingSupplier = async () => {
+      const supplier = await devitrakApi.get("/company/provider-companies", {
+        params: { creator: companyId },
+      });
+      setSupplierInfo(
+        (supplier?.data?.providerCompanies ?? []).filter(
+          (ele) => ele.id === supplierId
+        )
+      );
+    };
+    checkingSupplier();
+  }, [supplierId, companyId]);
 
   const handleReturnRentalItem = async () => {
     setLoadingStatus(true);
@@ -76,50 +84,57 @@ const ReturningLeasedEquipModal = ({
         key: "processing",
       });
 
-      // Step 1: Return items to renter
+      /* An item that is out with somebody cannot go back to its supplier, and
+         step 3 deletes the record — so what may leave is decided first, from
+         the server's own state.
+
+         This replaces the old first step, which wrote `warehouse`,
+         `enableAssignFeature`, `returnedRentedInfo` and `return_date` onto a
+         row that step 3 deletes. Nothing read any of it, and
+         `update-large-data` was rejecting the call outright for carrying
+         `returnedRentedInfo`. */
       const returnDate = new Date().toISOString();
-      const payload = {
-        item_ids: [dataFound.item_id],
-        // `user.aqlInfo` — the only occurrence of that spelling in the
-        // codebase, and `undefined.company_id` throws. Step 1 of this handover
-        // never completed, which is why nobody had noticed that step 3 below
-        // was posting an empty body.
-        company_id: user.sqlInfo.company_id,
-        updates: {
-          warehouse: 1,
-          enableAssignFeature: 0,
-          returnedRentedInfo: JSON.stringify([]),
-          return_date: returnDate,
-        }
-      };
-      /* Answers HTTP 200 with `{ ok: false, msg }` when it refuses the write,
-         so the response has to be read. Discarding it meant the flow went on
-         to email the supplier and delete the records for items that had not
-         been marked returned at all. This handover only started reaching the
-         server at 24dcfe80, which is why the refusal had never been seen. */
-      const updateResponse = await devitrakApi.post(
-        "/db_inventory/update-large-data",
-        payload
-      );
-      if (updateResponse?.data?.ok === false) {
-        throw new Error(
-          updateResponse.data.msg ||
-            "The server refused to mark the item as returned."
-        );
+      const stateResponse = await devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.itemsByIds",
+        params: {
+          itemIds: [dataFound.item_id],
+          supplierId: dataFound.supplier_info || undefined,
+        },
+      });
+      const { returnable, blocked } = partitionForReturn({
+        items: stateResponse.data?.result ?? [],
+        requestedIds: [dataFound.item_id],
+      });
+      if (returnable.length === 0) {
+        message.warning({
+          content:
+            describeBlocked(blocked) ?? "This item cannot be returned right now.",
+          key: "processing",
+        });
+        return;
       }
 
-      message.loading({
-        content: "Items returned to renter, now deleting records...",
-        key: "processing",
-      });
-
-      // Step 2: Email notification to staff
+      /* The report goes out before the delete, because it is the record: once
+         the row is gone, nothing that is not in it survives. */
       await EmailReturnRentalItems({
         items: [dataFound.item_id],
+        resolvedItems: returnable,
+        returnedAt: returnDate,
         setProgress,
         supplier_id: dataFound.supplier_info,
         user: user,
       });
+
+      /* The item record itself is about to be deleted, so this is the only
+         place the return stays accounted for. Fire-and-forget by design. */
+      await Promise.allSettled(
+        buildReturnAuditEntries({
+          items: returnable,
+          supplierId: dataFound.supplier_info || null,
+          returnedBy: user?.name,
+          timestamp: returnDate,
+        }).map((entry) => registerStaffActivity(entry))
+      );
 
       // Step 3: Delete items from records.
       // `POST /api/db_item/:id` reads company_id and item_id from the BODY and

@@ -1,7 +1,31 @@
 import { utils, write } from "xlsx";
 
-const generateOptimizedXLSXFile = ({ itemsDataResult }) => {
-  const headers = ["Item ID", "Serial Number", "Item Group", "Return Date"];
+/**
+ * The attachment is the record of the return: the item rows are deleted right
+ * after it goes out, so anything not in here is gone.
+ *
+ * It used to carry three columns off the item and a "Return Date" computed here
+ * with `new Date()` — not the date anything was actually stored under. The
+ * supplier, who returned them and the real timestamp are the provenance the
+ * item row was trying to hold in `returnedRentedInfo`, which the bulk update
+ * refuses and the delete would have destroyed anyway.
+ */
+const generateOptimizedXLSXFile = ({
+  itemsDataResult,
+  supplierName = "",
+  returnedBy = "",
+  returnedAt = "",
+}) => {
+  const headers = [
+    "Item ID",
+    "Serial Number",
+    "Item Group",
+    "Supplier",
+    "Returned By",
+    "Returned At",
+  ];
+
+  const stamp = String(returnedAt || new Date().toISOString());
 
   // Limit data to essential fields to reduce file size
   const wsData = [
@@ -10,7 +34,9 @@ const generateOptimizedXLSXFile = ({ itemsDataResult }) => {
       item?.item_id || "",
       item?.serial_number || "",
       item?.item_group || "",
-      new Date().toISOString().split("T")[0],
+      supplierName || "",
+      returnedBy || "",
+      stamp,
     ]),
   ];
 
@@ -18,7 +44,14 @@ const generateOptimizedXLSXFile = ({ itemsDataResult }) => {
   const ws = utils.aoa_to_sheet(wsData);
 
   // Optimize column widths
-  ws["!cols"] = [{ width: 15 }, { width: 20 }, { width: 20 }, { width: 15 }];
+  ws["!cols"] = [
+    { width: 15 },
+    { width: 20 },
+    { width: 20 },
+    { width: 24 },
+    { width: 18 },
+    { width: 26 },
+  ];
 
   utils.book_append_sheet(wb, ws, "Returned Items");
 

@@ -43,7 +43,6 @@ const KNOWN_UNMATCHED = [
   "POST /api/admin/push/broadcast",
   "POST /api/cloudinary/upload-image",
   "POST /api/db_location/sub-location-path/delete",
-  "POST /api/nodemailer/returned-items-summary-notification",
   // Live on the server since 2026-08-25, but newer than the generated
   // artifacts in src/docs -- the backend regenerates those, we do not. Drop
   // this line once api-payloads.json carries the route.

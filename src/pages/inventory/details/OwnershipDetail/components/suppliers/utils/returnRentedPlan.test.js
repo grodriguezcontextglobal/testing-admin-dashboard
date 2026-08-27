@@ -110,10 +110,18 @@ describe("RETURN_STEPS", () => {
     // staff" and set the progress step to "Sending email notification" *after*
     // the delete had already finished.
     expect(RETURN_STEPS.map((step) => step.key)).toEqual([
-      "return",
+      "check",
       "email",
+      "audit",
       "delete",
     ]);
+  });
+
+  it("no longer marks items as returned before deleting them", () => {
+    // That step wrote four columns onto rows the last step deletes, and nothing
+    // read any of them. It is a state *read* now, which is what decides
+    // whether an item may leave at all.
+    expect(RETURN_STEPS.map((step) => step.key)).not.toContain("return");
   });
 });
 

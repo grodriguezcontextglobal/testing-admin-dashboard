@@ -1,5 +1,16 @@
 # `update-large-data` rejects `returnedRentedInfo`
 
+> **Update 2026-08-27 — no longer blocking the return flow.** Both return
+> screens dropped the state-change step entirely, so neither calls
+> `update-large-data` any more. Nothing read what that call wrote and the
+> delete threw it away seconds later; the return's provenance now lives in the
+> report and in the staff activity log, which outlast the item. See
+> `returnToSupplier.js`.
+>
+> The question below still stands for anyone else who needs to update that
+> column in bulk, and the second question — whether `enableAssignFeature` and
+> `return_date` are on the allowlist — is still unanswered.
+
 Raised 2026-08-26. One question for the backend, and what the client did in the
 meantime.
 

@@ -16,6 +16,7 @@ import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import BaseTable from "../../../../../../components/UX/tables/BaseTable";
 import { checkRequestSize } from "../../../../../../components/utils/checkRequestSize";
 import "../../../../../../styles/global/actionForm.css";
+import { registerStaffActivity } from "../../../../../../api/activityLog";
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 import {
   RETURN_STEPS,
@@ -26,6 +27,12 @@ import {
   nextBatchSize,
   progressPercent,
 } from "./utils/returnRentedPlan";
+import {
+  buildReturnAuditEntries,
+  describeBlocked,
+  itemIdOf,
+  partitionForReturn,
+} from "./utils/returnToSupplier";
 
 const INITIAL_BATCH_SIZE = 200;
 const BATCH_PAUSE_MS = 150;
@@ -208,29 +215,48 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
     }
   };
 
-  const markReturned = (ids) => {
-    const returnDate = new Date().toISOString();
-    const moreInfo = {
-      supplier_id: supplier_id || null,
-      company_id: user.sqlInfo.company_id,
-      returned_by: user.name,
-      return_timestamp: returnDate,
-    };
-
-    return runBatched({
-      ids,
-      send: (batch) =>
-        devitrakApi.post("/db_inventory/update-large-data", {
-          item_ids: batch,
-          company_id: user.sqlInfo.company_id,
-          updates: {
-            warehouse: 1,
-            enableAssignFeature: 0,
-            returnedRentedInfo: JSON.stringify(moreInfo),
-            return_date: returnDate,
-          },
-        }),
+  /**
+   * The state of every item being returned, straight from the server.
+   *
+   * This replaces the old first step, which wrote `warehouse`,
+   * `enableAssignFeature`, `returnedRentedInfo` and `return_date` onto rows the
+   * last step deletes seconds later. Nothing read any of it: the report is
+   * built from the item's own serial and group and stamps its own date. It was
+   * also the call `update-large-data` was rejecting for carrying
+   * `returnedRentedInfo`, so a return could not complete at all.
+   *
+   * Reading instead of writing is what makes the next decision possible.
+   */
+  const readItemState = async (ids) => {
+    const response = await devitrakApi.post("/db_company/inventory-query", {
+      queryName: "inventory.itemsByIds",
+      params: { itemIds: ids, supplierId: supplier_id || undefined },
     });
+    return response.data?.result ?? [];
+  };
+
+  /**
+   * One activity-log row per item, because the item record itself is about to
+   * be deleted — this is the only place each one stays accounted for.
+   *
+   * Chunked, and never allowed to fail the return: `registerStaffActivity` is
+   * fire-and-forget by design.
+   */
+  const recordInActivityLog = async (items, timestamp) => {
+    const entries = buildReturnAuditEntries({
+      items,
+      supplierId: supplier_id || null,
+      returnedBy: user?.name,
+      timestamp,
+    });
+    setProgress({ current: 0, total: entries.length });
+    const batches = chunkForBatching(entries, 50);
+    let done = 0;
+    for (const batch of batches) {
+      await Promise.allSettled(batch.map((entry) => registerStaffActivity(entry)));
+      done += batch.length;
+      setProgress({ current: done, total: entries.length });
+    }
   };
 
   const removeFromInventory = (ids) =>
@@ -282,24 +308,64 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
         return;
       }
 
-      setActiveStep("return");
-      await markReturned(ids);
+      /* An item that is out with somebody cannot go back to its supplier, and
+         the last step of this flow deletes the record — so what may leave is
+         decided before anything is reported or removed, from the server's own
+         state rather than from the row on screen. */
+      setActiveStep("check");
+      setProgress({ current: 0, total: ids.length });
+      const { returnable, blocked } = partitionForReturn({
+        items: await readItemState(ids),
+        requestedIds: ids,
+      });
+      setProgress({ current: ids.length, total: ids.length });
 
+      if (returnable.length === 0) {
+        setNotice(
+          describeBlocked(blocked) ??
+            "None of these items can be returned right now."
+        );
+        return;
+      }
+
+      const returnedAt = new Date().toISOString();
+      const returnableIds = returnable.map((item) => itemIdOf(item));
+
+      /* The report goes out before anything is deleted, because it is the
+         record: once the rows are gone, nothing that is not in it survives. */
       setActiveStep("email");
       setProgress({ current: 0, total: 1 });
-      await EmailReturnRentalItems({ items: ids, supplier_id, user, setProgress });
+      await EmailReturnRentalItems({
+        items: returnableIds,
+        resolvedItems: returnable,
+        supplier_id,
+        user,
+        setProgress,
+        returnedAt,
+      });
+
+      setActiveStep("audit");
+      await recordInActivityLog(returnable, returnedAt);
 
       setActiveStep("delete");
-      await removeFromInventory(ids);
+      await removeFromInventory(returnableIds);
 
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       refreshInventoryViews();
 
       notify(
         "success",
-        `${ids.length} item${ids.length === 1 ? "" : "s"} returned.`,
-        "They are out of this company's inventory."
+        `${returnable.length} item${returnable.length === 1 ? "" : "s"} returned.`,
+        blocked.length > 0
+          ? `${blocked.length} left in place because ${
+              blocked.length === 1 ? "it is" : "they are"
+            } still in use.`
+          : "They are out of this company's inventory."
       );
+      if (blocked.length > 0) {
+        setNotice(describeBlocked(blocked));
+        return;
+      }
       return handleClose();
     } catch (error) {
       // The batches that already went through are not rolled back, so the
@@ -308,7 +374,7 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
       // dropped connection.
       const reason = error?.response?.data?.msg || error?.message;
       setNotice(
-        `The return stopped partway. Some items may already be marked as returned — reopen this list to see what is left.${
+        `The return stopped partway. Some items may already have been reported or removed — reopen this list to see what is left.${
           reason ? ` The server said: ${reason}` : ""
         }`
       );
