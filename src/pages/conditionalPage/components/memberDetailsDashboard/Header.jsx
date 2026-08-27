@@ -300,6 +300,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
           ariaLabel={
             removal.deletable ? "Delete member" : `Cannot delete: ${removal.detail}`
           }
+          styles={{ width:"100%" }}
         />
       )}
     </>
