@@ -85,7 +85,7 @@ export function describeReturnAction({ totalItems = 0, selectedCount = 0 } = {})
  * may leave at all.
  */
 export const RETURN_STEPS = [
-  { key: "check", label: "Checking which items can be returned" },
+  { key: "read", label: "Reading the items being returned" },
   { key: "email", label: "Reporting the return" },
   { key: "audit", label: "Recording it in the activity log" },
   { key: "delete", label: "Removing them from inventory" },

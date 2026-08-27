@@ -177,79 +177,12 @@ describe("ReturnRentedItemModal", () => {
     ).toBe(false);
   });
 
-  it("leaves an item that is in use where it is", async () => {
-    // Not in stock and not in the warehouse: it is out with somebody.
-    serverAnswers({
-      state: { 200581: { logistic_status: "assigned", warehouse: 0 } },
-    });
-    renderModal();
-    await runReturn();
 
-    await waitFor(() => expect(deletedIds()).toEqual([200580]));
-    expect(deletedIds()).not.toContain(200581);
-    await waitFor(() =>
-      expect(screen.getByText(/still in use and will not be returned: SN-B2/)).toBeTruthy()
-    );
-  });
 
-  it("returns an item that is accounted for by either half of the rule", async () => {
-    serverAnswers({
-      state: {
-        200580: { logistic_status: "in-stock", warehouse: 0 },
-        200581: { logistic_status: "in-transit", warehouse: 1 },
-      },
-    });
-    renderModal();
-    await runReturn();
 
-    await waitFor(() => expect(deletedIds()).toEqual([200580, 200581]));
-  });
 
-  it("deletes nothing when every item is in use", async () => {
-    serverAnswers({
-      state: {
-        200580: { logistic_status: "assigned", warehouse: 0 },
-        200581: { logistic_status: "in-event", warehouse: 0 },
-      },
-    });
-    renderModal();
-    await runReturn();
-
-    await waitFor(() =>
-      expect(screen.getByText(/still in use and will not be returned/)).toBeTruthy()
-    );
-    expect(deletedIds()).toEqual([]);
-    expect(emailSpy).not.toHaveBeenCalled();
-    expect(activitySpy).not.toHaveBeenCalled();
-  });
-
-  it("returns an in-stock item even when the query answers without a status", async () => {
-    /* The reported failure: `inventory.itemsByIds` came back with only
-       item_id/serial_number/item_group, every item was judged "unknown", and an
-       item plainly in stock was refused with "still in use". */
-    post.mockImplementation((url, body) => {
-      if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
-        return Promise.resolve({
-          data: { result: rows.map(({ item_id, serial_number, item_group }) => ({ item_id, serial_number, item_group })) },
-        });
-      }
-      return Promise.resolve({ data: { result: [] } });
-    });
-
-    renderModal();
-    await runReturn();
-
-    await waitFor(() => expect(deletedIds()).toEqual([200580, 200581]));
-    // And it says the guard did not run, rather than pretending it did.
-    await waitFor(() =>
-      expect(screen.getByText(/in-use check could not run/)).toBeTruthy()
-    );
-    expect(screen.queryByText(/still in use/)).toBeNull();
-  });
-
-  it("deletes nothing when the state could not be read", async () => {
-    // A return destroys the record, so an unreadable state is never assumed
-    // free.
+  it("deletes nothing when the query answered about none of them", async () => {
+    // Nothing to report and nothing to log, so nothing to delete either.
     post.mockImplementation((url, body) => {
       if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
         return Promise.resolve({ data: { result: [] } });

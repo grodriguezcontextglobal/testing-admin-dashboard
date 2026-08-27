@@ -110,7 +110,7 @@ describe("RETURN_STEPS", () => {
     // staff" and set the progress step to "Sending email notification" *after*
     // the delete had already finished.
     expect(RETURN_STEPS.map((step) => step.key)).toEqual([
-      "check",
+      "read",
       "email",
       "audit",
       "delete",

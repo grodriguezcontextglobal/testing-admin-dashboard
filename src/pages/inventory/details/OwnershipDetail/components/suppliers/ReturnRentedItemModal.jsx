@@ -216,7 +216,7 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
   };
 
   /**
-   * The state of every item being returned, straight from the server.
+   * The rows for every item being returned, straight from the server.
    *
    * This replaces the old first step, which wrote `warehouse`,
    * `enableAssignFeature`, `returnedRentedInfo` and `return_date` onto rows the
@@ -225,7 +225,8 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
    * also the call `update-large-data` was rejecting for carrying
    * `returnedRentedInfo`, so a return could not complete at all.
    *
-   * Reading instead of writing is what makes the next decision possible.
+   * They are what the report and the audit log are built from, so they are
+   * read once here and handed on rather than fetched again by each.
    */
   const readItemState = async (ids) => {
     const response = await devitrakApi.post("/db_company/inventory-query", {
@@ -308,13 +309,12 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
         return;
       }
 
-      /* An item that is out with somebody cannot go back to its supplier, and
-         the last step of this flow deletes the record — so what may leave is
-         decided before anything is reported or removed, from the server's own
-         state rather than from the row on screen. */
-      setActiveStep("check");
+      /* The rows the report and the audit log are built from. An id the
+         server does not answer for is held back: there is no serial to report
+         and nothing to log, and its absence is not a reason to delete it. */
+      setActiveStep("read");
       setProgress({ current: 0, total: ids.length });
-      const { returnable, blocked, checked } = partitionForReturn({
+      const { returnable, blocked } = partitionForReturn({
         items: await readItemState(ids),
         requestedIds: ids,
       });
@@ -323,7 +323,7 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
       if (returnable.length === 0) {
         setNotice(
           describeBlocked(blocked) ??
-            "None of these items can be returned right now."
+            "None of these items could be found in the inventory."
         );
         return;
       }
@@ -353,13 +353,6 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       refreshInventoryViews();
 
-      /* A guard that silently did not apply is worse than no guard: if the
-         state query answered without either field, the in-use rule had nothing
-         to run on, and that is said rather than assumed either way. */
-      const guardNote = checked
-        ? null
-        : "The in-use check could not run: the inventory query returned no status for these items, so they were returned as selected.";
-
       notify(
         "success",
         `${returnable.length} item${returnable.length === 1 ? "" : "s"} returned.`,
@@ -367,9 +360,7 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
           ? `${blocked.length} left in place.`
           : "They are out of this company's inventory."
       );
-      const leftToSay = [describeBlocked(blocked), guardNote]
-        .filter(Boolean)
-        .join(" ");
+      const leftToSay = describeBlocked(blocked);
       if (leftToSay) {
         setNotice(leftToSay);
         return;

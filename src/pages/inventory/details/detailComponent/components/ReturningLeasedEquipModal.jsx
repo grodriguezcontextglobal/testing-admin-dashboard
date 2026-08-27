@@ -84,9 +84,9 @@ const ReturningLeasedEquipModal = ({
         key: "processing",
       });
 
-      /* An item that is out with somebody cannot go back to its supplier, and
-         step 3 deletes the record — so what may leave is decided first, from
-         the server's own state.
+      /* The row the report and the audit log are built from. An id the server
+         does not answer for is held back: there is nothing to report about it,
+         and its absence is not a reason to delete it.
 
          This replaces the old first step, which wrote `warehouse`,
          `enableAssignFeature`, `returnedRentedInfo` and `return_date` onto a
@@ -108,7 +108,8 @@ const ReturningLeasedEquipModal = ({
       if (returnable.length === 0) {
         message.warning({
           content:
-            describeBlocked(blocked) ?? "This item cannot be returned right now.",
+            describeBlocked(blocked) ??
+            "This item could not be found in the inventory.",
           key: "processing",
         });
         return;

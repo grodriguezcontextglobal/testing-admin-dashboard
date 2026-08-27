@@ -98,3 +98,25 @@ raw payload inspection to find rather than showing up as an error:
 
 A regression test pins the exact response above and asserts that neither the
 email nor the delete runs after a refused write.
+
+## Second ask: the in-use guard has no input
+
+Raised 2026-08-27, after building it and taking it back out.
+
+The rule we wanted on the return flow was: **an item that is out with somebody
+must not be deleted** — `logistic_status !== "in-stock"` **and**
+`warehouse !== 1`.
+
+It cannot be evaluated. The return reads its rows from the
+`inventory.itemsByIds` catalog entry, whose projection returns neither column.
+With no input the guard could only do one of two useless things: refuse every
+item as unreadable, or announce on every single return that it could not run.
+Both were seen in practice. It is removed rather than left pretending.
+
+**The ask: add `logistic_status` and `warehouse` to `inventory.itemsByIds`.**
+Both already exist on the row — the main inventory table renders them — and the
+rule is three lines of client code the day they arrive.
+
+Until then, worth saying plainly: **returning items to a supplier can delete an
+item that is still assigned to somebody.** The item record is removed, the
+assignment behind it is not, and nothing on the client can tell.
