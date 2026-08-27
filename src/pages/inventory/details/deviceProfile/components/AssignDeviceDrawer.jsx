@@ -18,7 +18,11 @@ import {
 } from "../../../../conditionalPage/utils/assignmentErrorUtils";
 import { buildAssignmentRollbackPayload } from "../../../../conditionalPage/utils/leaseReturnUtils";
 import useAssignmentConsentGate from "../hooks/useAssignmentConsentGate";
-import { clean, resolveLocation } from "../utils/deviceProfileModel";
+import {
+  clean,
+  nextAssignLocation,
+  resolveLocation,
+} from "../utils/deviceProfileModel";
 import "../deviceProfile.css";
 
 /**
@@ -68,6 +72,9 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
   const [selected, setSelected] = useState(null);
   const [dueDate, setDueDate] = useState(() => presetDate(14));
   const [where, setWhere] = useState(() => resolveLocation(item) ?? "");
+  /* Whether the operator has typed in the location themselves. Picking a person
+     suggests their address, but only while nobody has overridden it. */
+  const [whereTouched, setWhereTouched] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const rosterQuery = useQuery({
@@ -133,6 +140,10 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
     if (saving) return;
     setTerm("");
     setSelected(null);
+    // The page unmounts this on close, so these are belt and braces — but the
+    // reset above already was, and half a reset is worse than either.
+    setWhere(resolveLocation(item) ?? "");
+    setWhereTouched(false);
     onClose();
   };
 
@@ -309,7 +320,19 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
                 type="button"
                 key={`${person.kind}-${person.id}`}
                 className={`assign-result${active ? " is-selected" : ""}`}
-                onClick={() => setSelected(person)}
+                onClick={() => {
+                  setSelected(person);
+                  /* Standing at the device, the address of whoever is taking it
+                     is the answer to "where will this be used" more often than
+                     the shelf it is on. `raw.address` alone was wrong for most
+                     of the roster: a member's address arrives as four separate
+                     `address_*` columns as often as one string, and a staff
+                     record carries none — which would have handed a controlled
+                     input `undefined` and wiped the default. */
+                  setWhere((current) =>
+                    nextAssignLocation({ person, current, touched: whereTouched })
+                  );
+                }}
                 disabled={saving}
               >
                 <span className="assign-result__avatar">{initials(person.label)}</span>
@@ -406,12 +429,18 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
               <Input
                 id="assign-where"
                 value={where}
-                onChange={(event) => setWhere(event.target.value)}
+                onChange={(event) => {
+                  setWhereTouched(true);
+                  setWhere(event.target.value);
+                }}
                 placeholder="e.g. Lincoln High School, Room 214"
                 disabled={saving}
                 fullWidth
               />
-              <span className="assign-hint">Prefilled from the device&apos;s current location.</span>
+              <span className="assign-hint">
+                Prefilled from the member&apos;s address, or the device&apos;s
+                current location when there is none on file.
+              </span>
             </div>
           </>
         )}
