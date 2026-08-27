@@ -1,11 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import PropTypes from "prop-types";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { utils, writeFile } from "xlsx";
+import { registerStaffActivity } from "../../../../api/activityLog";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import DangerButtonConfirmationComponent from "../../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import {
   ProfileIdentityCard,
@@ -26,6 +29,13 @@ import {
   buildAssignedDevicesExportRows,
   buildMemberProfileExportPairs,
 } from "../../utils/memberExportUtils";
+import {
+  buildDeleteMemberAuditEntry,
+  buildDeleteMemberPayload,
+  deleteMemberEligibility,
+  describeDeleteConsequence,
+  memberLabel,
+} from "./utils/deleteMember";
 
 // Consent that needs someone to act reads louder than consent that's merely
 // waiting. "agreed" gets no chip at all — good news belongs in the fact list,
@@ -52,6 +62,8 @@ const titleCase = (value) =>
 const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMember }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [deleteFailure, setDeleteFailure] = useState("");
 
   const memberId = detailMemberInfo?.member_id;
   const companyId = user?.sqlInfo?.company_id;
@@ -116,6 +128,42 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
       message.error("Failed to export member data. Please try again.");
     }
   };
+
+  /* Removing the member from their own page, which the bulk modal on the list
+     could already do for a selection. The one thing it never asked: whether
+     they are still holding anything. */
+  const removal = deleteMemberEligibility(deviceSummary);
+
+  const deleteMemberMutation = useMutation({
+    mutationFn: async () => {
+      const response = await devitrakApi.post(
+        "/db_member/delete-member-info",
+        buildDeleteMemberPayload({ memberId, companyId })
+      );
+      // These endpoints answer 200 with `{ ok: false, msg }` when they refuse.
+      if (response?.data?.ok === false) {
+        throw new Error(response.data.msg || "The member was not deleted.");
+      }
+      return response?.data;
+    },
+    onSuccess: () => {
+      // The record is about to be gone, so the audit row is the only place the
+      // name survives.
+      registerStaffActivity(buildDeleteMemberAuditEntry(detailMemberInfo));
+      ["allMembersInfoDataQuery", "membersInfoQuery"].forEach((queryKey) =>
+        queryClient.invalidateQueries({ queryKey: [queryKey], exact: true })
+      );
+      message.success(`${memberLabel(detailMemberInfo)} was removed.`);
+      navigate("/members");
+    },
+    onError: (error) => {
+      setDeleteFailure(
+        error?.response?.data?.msg ||
+          error?.message ||
+          "The member was not deleted. Nothing was changed — try again."
+      );
+    },
+  });
 
   const fullName = `${detailMemberInfo?.first_name ?? ""} ${
     detailMemberInfo?.last_name ?? ""
@@ -185,6 +233,13 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         { value: detailMemberInfo?.parent_guardian_phone_number },
       ].filter(Boolean),
     },
+    hasPermission("member:delete", resolveRoleType(user)) &&
+      (deleteFailure || (!removal.deletable && removal.reason === "holding-devices")) && {
+        label: "Removing this member",
+        items: [
+          { value: deleteFailure || removal.detail, muted: !deleteFailure },
+        ],
+      },
     consentStatus && {
       label: "Consent",
       items: [
@@ -220,6 +275,26 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         <GrayButtonComponent
           title={"Add new member"}
           func={() => setAddingNewMember(true)}
+        />
+      )}
+      {hasPermission("member:delete", roleType) && (
+        <DangerButtonConfirmationComponent
+          title={"Delete member"}
+          confirmationTitle={`Delete ${memberLabel(detailMemberInfo)}?`}
+          confirmationDescription={describeDeleteConsequence(detailMemberInfo)}
+          okText="Delete"
+          func={() => {
+            setDeleteFailure("");
+            deleteMemberMutation.mutate();
+          }}
+          /* Held back while they are still holding a device: deleting them
+             leaves the assignment pointing at nobody. The reason is on the
+             button rather than only in a message nobody asked for. */
+          isDisabled={!removal.deletable}
+          isLoading={deleteMemberMutation.isPending}
+          ariaLabel={
+            removal.deletable ? "Delete member" : `Cannot delete: ${removal.detail}`
+          }
         />
       )}
     </>
