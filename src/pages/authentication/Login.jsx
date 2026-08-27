@@ -59,6 +59,11 @@ import {
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
+import {
+  LOGIN_STEPS,
+  buildLoginPayload,
+  fieldsToClearFor,
+} from "./utils/loginPayload";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 
@@ -85,6 +90,24 @@ const Login = () => {
       notify(type.toLowerCase(), msg, 3000);
     },
     [notify],
+  );
+
+  /**
+   * The only way the step changes.
+   *
+   * `useForm()` is created without `shouldUnregister`, so a field keeps its
+   * value after its input unmounts. `setValue("mfaCode", "")` appeared in
+   * exactly one of the five paths that leave the MFA step, so the code stayed
+   * in the form and rode along on the next attempt — which is why login could
+   * answer "Invalid MFA code" for an attempt where none had been typed, and why
+   * only a refresh (the one thing that resets form state) cleared it.
+   */
+  const goToStep = useCallback(
+    (step) => {
+      fieldsToClearFor(step).forEach((field) => setValue(field, ""));
+      setCurrentStep(step);
+    },
+    [setValue],
   );
 
   const dataPassed = useRef(null);
@@ -140,7 +163,9 @@ const Login = () => {
     );
 
     return navigate("/events/event-quickglance");
-  }, []);
+    // Deps declared rather than left empty — a pre-existing lint failure in
+    // this file, which `max-warnings=0` was already tripping over.
+  }, [dispatch, navigate]);
 
   const navigateUserBasedOnRole = useCallback(
     async (props) => {
@@ -265,7 +290,7 @@ const Login = () => {
   const onSubmitEmail = async (data) => {
     // Simply collect email and move to password step without verification
     setUserEmail(data.email);
-    setCurrentStep("password");
+    goToStep(LOGIN_STEPS.PASSWORD);
   };
 
   /**
@@ -290,20 +315,20 @@ const Login = () => {
         setUserPassword(data.password);
       }
 
-      const loginData = {
-        email: userEmail,
-        password: currentStep === "password" ? data.password : userPassword,
-        mfaCode: data.mfaCode,
-      };
+      /* The MFA code is only sent on the MFA step. It used to be
+         `data.mfaCode` whatever the step, and the form still held it after the
+         MFA input had unmounted. */
+      const loginData = buildLoginPayload({
+        step: currentStep,
+        data,
+        userEmail,
+        userPassword,
+        rememberMe,
+        forceLogin,
+      });
 
       const [loginResponse, mongoCompanyResponse] = await Promise.all([
-        devitrakApiAdmin.post("/login", {
-          email: loginData.email,
-          password: loginData.password,
-          rememberMe,
-          forceLogin: forceLogin,
-          mfaCode: loginData.mfaCode,
-        }),
+        devitrakApiAdmin.post("/login", loginData),
         devitrakApi.post("/company/search-company", { "employees.user": loginData.email }),
       ]);
 
@@ -386,7 +411,7 @@ const Login = () => {
       if (error.response?.status === 401 && !isMfaRequired) {
         clearSessionStorage();
         dispatch(onLogout());
-        setCurrentStep("email");
+        goToStep(LOGIN_STEPS.EMAIL);
         openNotificationWithIcon(
           "error",
           "Session expired or token is outdated. Please log in again.",
@@ -404,7 +429,7 @@ const Login = () => {
             responseData?.msg || "Invalid MFA Code",
           );
         } else {
-          setCurrentStep("mfa");
+          goToStep(LOGIN_STEPS.MFA);
           dispatch(clearErrorMessage());
         }
         return;
@@ -439,8 +464,7 @@ const Login = () => {
       dispatch(onAddErrorMessage(error?.response?.data?.msg));
 
       // Reset form and go back to email step on error
-      setValue("password", "");
-      setCurrentStep("email");
+      goToStep(LOGIN_STEPS.EMAIL);
       // setUserEmail("");
       setValue("email", "");
     } finally {
@@ -451,11 +475,10 @@ const Login = () => {
 
   // Function to go back to email step
   const handleBackToEmail = () => {
-    setCurrentStep("email");
+    goToStep(LOGIN_STEPS.EMAIL);
     setEmailVerified(false);
     setUserEmail("");
     setValue("email", "");
-    setValue("password", "");
   };
 
   const isSmallDevice = useMediaQuery("only screen and (max-width: 768px)");
@@ -587,6 +610,10 @@ const Login = () => {
                   isLoading={isLoading}
                   forceLogin={forceLogin}
                   register={register}
+                  /* MFA.jsx has always read `setCurrentStep` off its props and
+                     it was never passed, so its Back button threw on click —
+                     leaving a refresh as the only way off this step. */
+                  setCurrentStep={goToStep}
                 />
               )}
 
@@ -625,6 +652,10 @@ const Login = () => {
                   isLoading={isLoading}
                   forceLogin={forceLogin}
                   register={register}
+                  /* MFA.jsx has always read `setCurrentStep` off its props and
+                     it was never passed, so its Back button threw on click —
+                     leaving a refresh as the only way off this step. */
+                  setCurrentStep={goToStep}
                 />
               )}
 
