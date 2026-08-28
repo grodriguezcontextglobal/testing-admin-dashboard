@@ -13,6 +13,9 @@ export const renderFields = ({
   retrieveItemOptions,
   subLocationsOptions,
   suppliersOptions,
+  /* The company's word for who a device goes to. Defaults to the wording this
+     field always had, so a caller that does not render it changes nothing. */
+  assignableTargets = "staff or events",
   // isLoadingLocations,
   // isLocationSetupAllowed,
 }) => {
@@ -216,14 +219,14 @@ export const renderFields = ({
     {
       name: "enableAssignFeature",
       placeholder: "Select assign option",
-      label: "Is device assignable to staff/events?",
+      label: `Is device assignable to ${assignableTargets}?`,
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
       options: normalizeOptions(["YES", "NO"]),
       htmlOption: 3,
       tooltip: true,
-      tooltipMessage: "Select if the device is assignable to staff or events.",
+      tooltipMessage: `Select if the device is assignable to ${assignableTargets}.`,
       displayField: true,
       section: "assignable",
     },

@@ -71,4 +71,21 @@ export const getIndustryProfile = (industry) => {
   return { audience, hiddenNavTabs: [], ...profile };
 };
 
+/**
+ * The three kinds of holder a device can be assigned to, in one phrase.
+ *
+ * The add-inventory form asked "Is device assignable to staff/events?" and left
+ * out the third: the people in the members module, who are handed devices
+ * through the conditional page. What they are called is industry-specific, so
+ * the question is asked in the company's own word for them — and falls back to
+ * staff and events for an industry that has no members module at all, where
+ * naming a third party would be a question about nothing.
+ */
+export const assignableTargetsLabel = (industry) => {
+  const { audience } = getIndustryProfile(industry);
+  return audience
+    ? `staff, events or ${String(audience).toLowerCase()}`
+    : "staff or events";
+};
+
 export default getIndustryProfile;

@@ -20,6 +20,7 @@ import {
 } from "../../../../../../../inventory/actions/utils/BulkComponents";
 import "../../style.css";
 import { renderFields } from "../../../../../../../inventory/actions/utils/SingleItemFields";
+import { useAssignableTargets } from "../../../../../../../inventory/actions/utils/useAssignableTargets";
 
 const SingleItemForm = ({
   acceptImage,
@@ -66,6 +67,8 @@ const SingleItemForm = ({
   valueObject,
   watch,
 }) => {
+  const assignableTargets = useAssignableTargets();
+
   const renderingErrorMessage = (error) => {
     if (error) {
       return (
@@ -85,6 +88,7 @@ const SingleItemForm = ({
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {renderFields({
+          assignableTargets,
           OutlinedInputStyle,
           retrieveItemOptions,
           renderLocationOptions,

@@ -19,6 +19,7 @@ import { renderFields } from "../../../utils/EditBulkFields";
 import ImageUploaderComponent from "../../../utils/uxForm/ImageUploaderComponent";
 import FieldsSections from "../../../utils/uxForm/FieldsSections";
 import { formatTrackedFieldValue } from "../../../utils/updateInventoryMatchSummary";
+import { useAssignableTargets } from "../../../utils/useAssignableTargets";
 
 const SECTIONS = [
   { key: "identity", title: "Identity", hint: "What the item is called across the app" },
@@ -77,7 +78,10 @@ const EditFieldsStep = ({
     );
   };
 
+  const assignableTargets = useAssignableTargets();
+
   const fields = renderFields({
+    assignableTargets,
     displayContainerSplotLimitField,
     displayPreviewImage,
     isRented,

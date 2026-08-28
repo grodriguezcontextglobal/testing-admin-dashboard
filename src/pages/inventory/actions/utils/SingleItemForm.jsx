@@ -13,6 +13,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../components/UX/Chip/Chip";
 import {
+import { useAssignableTargets } from "./useAssignableTargets";
   addingExtraInfo,
   renderingMoreInfoSubmitted,
   renderingOptionsButtons,
@@ -66,6 +67,8 @@ const SingleItemForm = ({
   // isLoadingLocations,
   // isLocationSetupAllowed,
 }) => {
+  const assignableTargets = useAssignableTargets();
+
   const renderingErrorMessage = (error) => {
     if (error) {
       return (
@@ -86,6 +89,7 @@ const SingleItemForm = ({
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {renderFields({
+          assignableTargets,
           OutlinedInputStyle,
           retrieveItemOptions,
           renderLocationOptions,

@@ -18,6 +18,7 @@ import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/ImageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "./uxForm/SerialNumberAndMoreInfoComponentForm";
 import CopyFromExistingDevicePanel from "./uxForm/CopyFromExistingDevicePanel";
+import { useAssignableTargets } from "./useAssignableTargets";
 
 const SECTIONS = [
   { key: "info", title: "Info", hint: "What the item is and what it costs" },
@@ -85,7 +86,10 @@ const BulkItemForm = ({
     );
   };
 
+  const assignableTargets = useAssignableTargets();
+
   const allFields = renderFields({
+    assignableTargets,
     retrieveItemOptions,
     OutlinedInputStyle,
     renderLocationOptions,

@@ -13,6 +13,7 @@ import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorSty
 import Chip from "../../../../../../components/UX/Chip/Chip";
 import SerialNumberAndMoreInfoComponentForm from "../../../../../inventory/actions/utils/uxForm/SerialNumberAndMoreInfoComponentForm";
 import ButtonsForm from "../../../../../inventory/actions/utils/uxForm/ButtonsForm";
+import { useAssignableTargets } from "../../../../../inventory/actions/utils/useAssignableTargets";
 
 const BulkRentedItems = ({
   acceptImage,
@@ -56,6 +57,8 @@ const BulkRentedItems = ({
   suppliersOptions,
   watch,
 }) => {
+  const assignableTargets = useAssignableTargets();
+
   const renderingErrorMessage = (error) => {
     if (error) {
       return (
@@ -75,6 +78,7 @@ const BulkRentedItems = ({
     <form onSubmit={handleSubmit(savingNewItem)}>
       <Grid container spacing={1}>
         {renderFields({
+          assignableTargets,
           retrieveItemOptions,
           OutlinedInputStyle,
           renderLocationOptions,
