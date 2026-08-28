@@ -77,7 +77,7 @@ const ReviewStep = ({
         </span>
         <div>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            unit{count === 1 ? "" : "s"} will be created in {categoryName} / {itemGroup}
+            unit{count === 1 ? "" : "s"} will be added to {categoryName} / {itemGroup}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Each one is a separate item, all sharing the details below.
@@ -143,7 +143,7 @@ const ReviewStep = ({
       </div>
 
       <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-200, #eaecf0)" }}>
-        <Typography variant="body1" sx={{ fontWeight: 600, mb: 1.5 }}>What happens after you create</Typography>
+        <Typography variant="body1" sx={{ fontWeight: 600, mb: 1.5 }}>What happens after you add</Typography>
         <div style={{ display: "flex", gap: "12px" }}>
           {[
             { t: "1. Queued", d: "You get a note that the group was registered. You can leave this page right away." },
@@ -168,7 +168,7 @@ const ReviewStep = ({
           />
           <div>
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              I understand this creates {count} new item{count === 1 ? "" : "s"} in inventory.
+              I understand this adds {count} new item{count === 1 ? "" : "s"} to inventory.
             </Typography>
             <Typography variant="body2" color="text.secondary">
               There is no bulk undo. Removing them afterwards means deleting the units one group at a time.
@@ -190,7 +190,7 @@ const ReviewStep = ({
       >
         <GrayButtonComponent title="Back to units" buttonType="button" func={() => goToStep(3)} />
         <BlueButtonComponent
-          title={`Create ${count} item${count === 1 ? "" : "s"}`}
+          title={`Add ${count} item${count === 1 ? "" : "s"}`}
           buttonType="button"
           size="lg"
           func={handleSubmit(savingNewItem)}

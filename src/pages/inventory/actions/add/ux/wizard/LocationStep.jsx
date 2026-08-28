@@ -9,7 +9,7 @@ import { cardBodyStyle, cardFootStyle, cardHeadStyle, cardStyle } from "./wizard
  * Step 2: where the units live, and where they are deductible for taxes —
  * they do not have to be the same place. Today a mismatch between the two
  * only surfaces as a native alert() inside bulkItemInsertAlphanumeric, fired
- * AFTER Create is pressed; this step says so inline, before that click.
+ * AFTER Add is pressed; this step says so inline, before that click.
  */
 const LocationStep = ({
   addingSubLocation,
@@ -109,7 +109,7 @@ const LocationStep = ({
             <path d="M10 13.3V9.2M10 6.7h.01M17.5 10a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
           </svg>
           <Typography variant="body2" sx={{ color: "var(--gray-600, #475467)" }}>
-            A location that does not exist yet is created for you — type a new name and it is registered when you create the group.
+            A location that does not exist yet is added for you — type a new name and it is registered when you add the group.
           </Typography>
         </div>
       </div>

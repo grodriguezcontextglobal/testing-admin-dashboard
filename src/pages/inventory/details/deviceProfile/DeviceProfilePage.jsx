@@ -227,7 +227,7 @@ const DeviceProfilePage = () => {
         tone: state.loan?.tone === "critical" ? "critical" : "neutral",
         sub: state.openLease?.expectedReturnDate
           ? formatLoanDate(state.openLease.expectedReturnDate)
-          : "This loan was created without one",
+          : "This loan was recorded without one",
         testId: "device-stat-due",
       };
 

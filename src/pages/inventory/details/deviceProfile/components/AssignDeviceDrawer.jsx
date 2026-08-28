@@ -230,7 +230,7 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
             assigned_date: formatDate(new Date()),
           }
         );
-        if (!lease?.data?.ok) throw new Error("Failed to create the device lease record.");
+        if (!lease?.data?.ok) throw new Error("Failed to add the device lease record.");
       } catch (error) {
         const rollback = buildAssignmentRollbackPayload({
           serials: [item.serial_number],

@@ -154,7 +154,7 @@ const CopyFromExistingDevicePanel = ({
             Pick a device already in your inventory and its cost, brand,
             description, ownership and image are filled into the form below, so
             you do not retype them. You can change anything afterwards, and
-            nothing is {mode === "edit" ? "changed" : "created"} until you save.
+            nothing is {mode === "edit" ? "changed" : "added"} until you save.
           </Typography>
 
           <Grid container spacing={1} alignItems="flex-end">

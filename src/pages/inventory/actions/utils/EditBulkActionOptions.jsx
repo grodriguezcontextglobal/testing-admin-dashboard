@@ -150,7 +150,7 @@ export const bulkItemUpdateSequential = async ({
     setValue(key, "");
   });
   openNotificationWithIcon(
-    "Items updated successfully. New group of items were created and stored in database."
+    "Items updated successfully. New group of items were added and stored in database."
   );
   setLoadingStatus(false);
   await clearCacheMemory(

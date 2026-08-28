@@ -42,10 +42,52 @@ const Body = ({ sortData }) => {
                 textAlign: "left",
               }}
             >
+              {/* Who acted is the title, because that is what the trail is
+                  read for; the email sits with the name because a name alone
+                  does not identify a person. What they did and when is the
+                  description. */}
               <List.Item.Meta
                 avatar={<Avatar src={<IconListTable />} />}
-                title={<Typography>{item?.actionTaken}</Typography>}
-                description={new Date(`${item.time}`).toUTCString()}
+                title={
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
+                    <Typography component="span" style={{ fontWeight: 600 }}>
+                      {item?.staffName}
+                    </Typography>
+                    {item?.staffEmail && (
+                      <Typography
+                        component="span"
+                        style={{
+                          color: "var(--gray-600, #5d615a)",
+                          fontSize: "13px",
+                        }}
+                      >
+                        {item.staffEmail}
+                      </Typography>
+                    )}
+                  </span>
+                }
+                description={
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
+                    <span style={{ fontWeight: 500 }}>{item?.actionTaken}</span>
+                    <span style={{ color: "var(--gray-500, #777b73)" }}>
+                      {new Date(`${item.time}`).toUTCString()}
+                    </span>
+                  </span>
+                }
               />
             </List.Item>
           )}

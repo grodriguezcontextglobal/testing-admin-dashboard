@@ -58,7 +58,7 @@ const MainProfileSettings = () => {
     // { label: "Notifications",   route: "notifications",            permission: "profile:staff_settings" },
     { label: "Company info",    route: "company-info",             permission: "profile:company_settings"},
     { label: "Roles",           route: "roles",                    permission: "staff:assign_role"      },
-    { label: "Staff activity",  route: "staff-activity",           permission: "staff:read"             },
+    { label: "Audit trail",     route: "staff-activity",           permission: "staff:read"             },
     { label: "Stripe account",  route: "stripe_connected_account", permission: "profile:billing"        },
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },

@@ -30,7 +30,7 @@ export const renderTitle = () => {
           textTransform={"none"}
           style={{ ...Subtitle, textWrap: "balance" }}
         >
-          Create multiple devices at once by entering a base identifier and a number range. Each device in the range will be added to your inventory automatically.        </Typography>
+          Add multiple devices at once by entering a base identifier and a number range. Each device in the range will be added to your inventory automatically.        </Typography>
       </InputLabel>
     </>
   );
@@ -368,7 +368,7 @@ export const renderTitleSingleItem = () => {
           textTransform={"none"}
           style={{ ...Subtitle, textWrap: "balance" }}
         >
-          Item serial number can be created by inputting a serial number base to
+          Item serial number can be added by inputting a serial number base to
           define the category of item depending on your inventory.
         </Typography>
       </InputLabel>

@@ -28,9 +28,26 @@ const buildLog = (overrides = {}) => ({
 // ─── mapLogToListItem ─────────────────────────────────────────────────────────
 
 describe("mapLogToListItem(log)", () => {
-  it("construye actionTaken a partir del nombre del staff, la acción y el modelo afectado", () => {
+  it("separa quién actuó de lo que hizo, para que la lista muestre nombre y email", () => {
     const result = mapLogToListItem(buildLog());
-    expect(result.actionTaken).toBe("Jane Doe LOGIN AdminUser");
+    expect(result.staffName).toBe("Jane Doe");
+    expect(result.staffEmail).toBe("jane@x.com");
+    expect(result.actionTaken).toBe("LOGIN AdminUser");
+  });
+
+  it("cae al email de los detalles cuando el staff poblado no lo trae", () => {
+    // El registro guarda `details.email` en el login; es la misma persona.
+    const result = mapLogToListItem(
+      buildLog({ staff_member_id: { _id: "staff-1", name: "Jane", lastName: "Doe" } })
+    );
+    expect(result.staffEmail).toBe("jane@x.com");
+  });
+
+  it("deja el email en null cuando nadie lo sabe, en vez de inventarlo", () => {
+    const result = mapLogToListItem(
+      buildLog({ staff_member_id: { _id: "s", name: "Jane" }, details: {} })
+    );
+    expect(result.staffEmail).toBeNull();
   });
 
   it("conserva el timestamp crudo en 'time' (Body.jsx ya lo formatea con new Date())", () => {
@@ -45,7 +62,8 @@ describe("mapLogToListItem(log)", () => {
 
   it("usa 'Unknown staff' cuando staff_member_id viene null (staff eliminado)", () => {
     const result = mapLogToListItem(buildLog({ staff_member_id: null }));
-    expect(result.actionTaken).toBe("Unknown staff LOGIN AdminUser");
+    expect(result.staffName).toBe("Unknown staff");
+    expect(result.actionTaken).toBe("LOGIN AdminUser");
   });
 });
 

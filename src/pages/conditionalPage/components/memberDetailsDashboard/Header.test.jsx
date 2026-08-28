@@ -60,7 +60,6 @@ const wrap = ({ deviceSummary = { out: 0, overdue: 0 }, member = student } = {})
       <MemberProfileIdentity
         detailMemberInfo={member}
         deviceSummary={deviceSummary}
-        setAddingNewMember={vi.fn()}
       />
     </QueryClientProvider>
   );

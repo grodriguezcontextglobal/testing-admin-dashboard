@@ -1302,7 +1302,7 @@ const RenderingFilters = ({
                       func={() => setOpenPathModal(true)}
                     /> */}
                     <BlueButtonComponent
-                      title={"Create location"}
+                      title={"Add location"}
                       styles={{ width: "fit-content" }}
                       buttonType="button"
                       titleStyles={{

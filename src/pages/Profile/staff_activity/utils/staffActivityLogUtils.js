@@ -21,12 +21,22 @@ const staffFullName = (staff) =>
 
 /**
  * Adapts one raw `GET /api/admin/activity-logs` row into what Body.jsx renders.
+ *
+ * Who acted is separate from what they did. It used to be one string --
+ * "Jane Doe LOGIN AdminUser" -- which read as a sentence but could not be laid
+ * out: the trail is read to answer "who did this", and a name with no email
+ * does not identify a person in a company with two Janes.
  */
 export const mapLogToListItem = (log) => ({
   id: log?.id,
-  actionTaken: [staffFullName(log?.staff_member_id), log?.action, log?.target_model]
-    .filter(Boolean)
-    .join(" "),
+  staffName: staffFullName(log?.staff_member_id),
+  /* The populated staff record is the source; `details.email` is the fallback,
+     since the register endpoint stamps it on the login rows and it is the same
+     person either way. */
+  staffEmail:
+    String(log?.staff_member_id?.email ?? log?.details?.email ?? "").trim() ||
+    null,
+  actionTaken: [log?.action, log?.target_model].filter(Boolean).join(" "),
   time: log?.timestamp,
 });
 

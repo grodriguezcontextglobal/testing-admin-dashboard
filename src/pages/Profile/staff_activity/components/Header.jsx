@@ -61,7 +61,7 @@ const Header = ({ staffOptions, filters, onFiltersChange }) => {
             fontSize={"18px"}
             lineHeight={"28px"}
           >
-            View staff activity
+            Audit trail
           </Typography>
           <Typography
             textTransform={"none"}
@@ -75,7 +75,7 @@ const Header = ({ staffOptions, filters, onFiltersChange }) => {
             fontSize={"14x"}
             lineHeight={"20px"}
           >
-            View all the activity of all your events’ staff and consumers.
+            Every action your staff and consumers have taken, most recent first.
           </Typography>
         </Grid>
         <Grid

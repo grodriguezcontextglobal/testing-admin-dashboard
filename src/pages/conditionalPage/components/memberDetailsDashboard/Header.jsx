@@ -16,7 +16,6 @@ import {
 } from "../../../../components/UX/profile";
 import {
   hasPermission,
-  isCoordinatorLevel,
   resolveRoleType,
 } from "../../../../config/roles";
 import { fetchSchoolSettings } from "../../../Profile/school_compliance/utils/schoolComplianceUtils";
@@ -42,7 +41,7 @@ import {
 const titleCase = (value) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
 
-const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMember }) => {
+const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -276,12 +275,6 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         title={"Export data (.xlsx)"}
         func={handleExportMemberData}
       />
-      {isCoordinatorLevel(user.roleType) && (
-        <GrayButtonComponent
-          title={"Add new member"}
-          func={() => setAddingNewMember(true)}
-        />
-      )}
       {hasPermission("member:delete", roleType) && (
         <DangerButtonConfirmationComponent
           title={"Delete member"}
@@ -296,7 +289,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
              leaves the assignment pointing at nobody. The reason is on the
              button rather than only in a message nobody asked for. */
           isDisabled={!removal.deletable}
-          isLoading={deleteMemberMutation.isPending}
+          isLoading={deleteMemberMutation.isLoading}
           ariaLabel={
             removal.deletable ? "Delete member" : `Cannot delete: ${removal.detail}`
           }
@@ -321,13 +314,11 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
 MemberProfileIdentity.propTypes = {
   detailMemberInfo: PropTypes.object,
   deviceSummary: PropTypes.object,
-  setAddingNewMember: PropTypes.func,
 };
 
 MemberProfileIdentity.defaultProps = {
   detailMemberInfo: null,
   deviceSummary: null,
-  setAddingNewMember: () => {},
 };
 
 export default MemberProfileIdentity;

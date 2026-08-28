@@ -427,7 +427,7 @@ const SingleItemForm = ({
         })}
       </Grid>
       <Divider />
-      <Tooltip title="This information will be applied to all serial numbers created for this device.">
+      <Tooltip title="This information will be applied to all serial numbers added for this device.">
         <div style={{ width: "100%" }}>
           <BlueButtonComponent
             title={"Add more information"}

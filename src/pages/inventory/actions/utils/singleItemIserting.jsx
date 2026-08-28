@@ -71,7 +71,7 @@ export const singleItemInserting = async ({
   setValue("tax_location", "");
   setValue("container", "");
   setValue("containerSpotLimit", "0");
-  openNotificationWithIcon("New item was created and stored in database.");
+  openNotificationWithIcon("New item was added and stored in database.");
   setLoadingStatus(false);
   await clearCacheMemory(
     `company_id=${user.companyData.id}&warehouse=true&enableAssignFeature=1`

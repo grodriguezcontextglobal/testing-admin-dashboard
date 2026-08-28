@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -18,7 +18,6 @@ import { hasPermission, resolveRoleType } from "../../../../config/roles";
 import { onAddMemberInfo, onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import useMemberAssignedDevices from "../../hooks/useMemberAssignedDevices";
-import AddNewMember from "../modals/AddNewMember";
 import MemberProfileIdentity from "./Header";
 
 const breadcrumbLinkStyle = {
@@ -58,7 +57,6 @@ const MainPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const groupName = String(location.state?.referencing || "").replace(/-/g, " ");
-  const [addingNewmember, setAddingNewMember] = useState(false);
 
   const companyId = user?.sqlInfo?.company_id;
 
@@ -193,26 +191,19 @@ const MainPage = () => {
   );
 
   return (
-    <>
-      <ProfileShell
-        breadcrumb={<Breadcrumb path={breadcrumbItems} />}
-        identity={
-          <MemberProfileIdentity
-            detailMemberInfo={detailMemberInfo}
-            deviceSummary={summary}
-            setAddingNewMember={setAddingNewMember}
-          />
-        }
-        stats={<ProfileStatTiles tiles={statTiles} testId="member-stats" />}
-        tabs={<ProfileTabs items={visibleTabs} />}
-      >
-        <Outlet />
-      </ProfileShell>
-      <AddNewMember
-        openModal={addingNewmember}
-        setOpenModal={setAddingNewMember}
-      />
-    </>
+    <ProfileShell
+      breadcrumb={<Breadcrumb path={breadcrumbItems} />}
+      identity={
+        <MemberProfileIdentity
+          detailMemberInfo={detailMemberInfo}
+          deviceSummary={summary}
+        />
+      }
+      stats={<ProfileStatTiles tiles={statTiles} testId="member-stats" />}
+      tabs={<ProfileTabs items={visibleTabs} />}
+    >
+      <Outlet />
+    </ProfileShell>
   );
 };
 

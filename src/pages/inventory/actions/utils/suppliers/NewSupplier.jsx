@@ -89,7 +89,7 @@ const NewSupplier = ({
       if (!response.data?.ok) {
         setFailure(
           response.data?.msg ||
-            "The supplier was not saved. Nothing was created — try again."
+            "The supplier was not saved. Nothing was added — try again."
         );
         setIsSaving(false);
         return;

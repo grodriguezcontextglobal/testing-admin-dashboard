@@ -26,7 +26,7 @@ const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
     >
               {canCreate && Number(user.companyData?.employees?.find((emp) => emp.user === user.email)?.role) === 0 && (
                 <BlueButtonComponent
-                  title={"Create Location"}
+                  title={"Add Location"}
                   styles={{ width: "100%" }}
                   // icon={
                   //   <WhiteCirclePlusIcon style={{ height: "21px", margin: "auto" }} />

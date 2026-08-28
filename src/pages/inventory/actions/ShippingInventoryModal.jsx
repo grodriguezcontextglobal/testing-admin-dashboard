@@ -161,7 +161,7 @@ const ShippingInventoryModal = ({ visible, onClose, user }) => {
       return data;
     },
     onError: () =>
-      setNotice("The shipment record was not created. Nothing was shipped."),
+      setNotice("The shipment record was not saved. Nothing was shipped."),
     onSuccess: () => {
       if (items.length === 0) {
         notify("success", "Shipment recorded.");

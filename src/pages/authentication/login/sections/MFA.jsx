@@ -16,11 +16,14 @@ const MFA = ({ handleSubmit, formFittingTrigger, register, isLoading, onSubmitLo
                   item
                   xs={12}
                 >
-                  <FormLabel style={{ marginBottom: "0.9rem" }}>
-                    MFA Code
+                  <FormLabel
+                    htmlFor="login-mfa-code"
+                    style={{ marginBottom: "0.9rem" }}
+                  >
+                    Multi Factor Authentication Code
                   </FormLabel>
                   <Input
-                  // label={"MFA Code"}
+                    id="login-mfa-code"
                     type="text"
                     required
                     {...register("mfaCode", {

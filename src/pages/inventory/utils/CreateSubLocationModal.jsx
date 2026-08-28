@@ -43,7 +43,7 @@ const CreateSubLocationModal = ({
         active: 1,
       }),
     onSuccess: () => {
-      message.success("Sub-location created successfully");
+      message.success("Sub-location added successfully");
       queryClient.invalidateQueries({
         queryKey: ["locationsAndSublocationsWithTypes"],
       });
@@ -129,7 +129,7 @@ const CreateSubLocationModal = ({
               buttonType="button"
             />
             <BlueButtonComponent
-              title="Create Sub-location"
+              title="Add Sub-location"
               func={handleSubmit((data) => mutation.mutate(data))}
               buttonType="submit"
               loadingState={mutation.isPending}
