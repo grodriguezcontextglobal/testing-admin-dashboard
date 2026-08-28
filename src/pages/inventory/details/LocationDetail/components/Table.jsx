@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { groupBy, uniqueId } from "lodash";
+import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import DevitrakLoading from "../../../../../components/animation/DevitrakLoading
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
+import { buildLocationRows, filterLocationRows } from "../utils/locationRows";
 
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
 
@@ -60,40 +61,25 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     refetchOnMount: false,
   });
   
-  const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data.result;
-  
-  const structuredData = useMemo(() => {
-    const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = groupBy(
-      itemsInInventoryQuery?.data?.data?.items,
-      "serial_number"
-    );
-    if (renderedListItems?.length > 0) {
-      for (let data of renderedListItems) {
-        if (groupingBySerialNumber[data.serial_number]) {
-          resultFormatToDisplay.add({
-            key: `${data.item_id}-${uniqueId()}`,
-            ...data,
-            data: {
-              ...data,
-              location:
-                groupingBySerialNumber[data.serial_number]?.at(-1).location,
-              ...groupingBySerialNumber[data.serial_number]?.at(-1),
-            },
-            location:
-              groupingBySerialNumber[data.serial_number]?.at(-1).location,
-            image_url:
-              groupingBySerialNumber[data.serial_number]?.at(-1).image_url ??
-              groupingByDeviceType[data.item_group]?.at(-1).image_url,
-          });
-        }
-      }
-      return Array.from(resultFormatToDisplay);
-    }
-    return [];
-  }, [renderedListItems, itemsInInventoryQuery.data, groupingByDeviceType]);
+  /* Memoized, because `structuredData` is memoized on it. It used to be a bare
+     `groupBy(...)` recomputed inline, so the rows below were rebuilt on every
+     render — see utils/locationRows for what that did to the table. */
+  const groupingByDeviceType = useMemo(
+    () => groupBy(listImagePerItemQuery?.data?.data?.item, "item_group"),
+    [listImagePerItemQuery?.data?.data?.item]
+  );
+  const renderedListItems = listItemsQuery?.data?.data?.result;
+  const locatedItems = itemsInInventoryQuery?.data?.data?.items;
+
+  const structuredData = useMemo(
+    () =>
+      buildLocationRows({
+        items: renderedListItems,
+        inventoryItems: locatedItems,
+        imagesByGroup: groupingByDeviceType,
+      }),
+    [renderedListItems, locatedItems, groupingByDeviceType]
+  );
   
   useEffect(() => {
     const controller = new AbortController();
@@ -106,17 +92,10 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     };
   }, [user.company, location.key]);
 
-  const dataToDisplay = useMemo(() => {
-    if (!searchItem || searchItem === "") {
-      return structuredData;
-    }
-    const filteredData = structuredData?.filter((item) =>
-      JSON.stringify(item)
-        .toLowerCase()
-        .includes(String(searchItem).toLowerCase())
-    );
-    return filteredData;
-  }, [structuredData, searchItem]);
+  const dataToDisplay = useMemo(
+    () => filterLocationRows(structuredData, searchItem),
+    [structuredData, searchItem]
+  );
 
   useEffect(() => {
     if (dataToDisplay) {
@@ -144,13 +123,19 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     };
   }, [itemsInInventoryQuery.data]);
   
+  /* Depends on the three numbers being reported, not on the identity of the
+     objects holding them. The parent's setter stores whatever it is handed, so
+     an effect that re-fired on identity handed it a new object on every render
+     and the parent re-rendered — which rebuilt these rows, which re-fired the
+     effect. */
+  const { totalAvailable } = availabilityInfo;
   useEffect(() => {
     referenceData({
       totalDevices: structuredData.length,
-      totalValue: totalValue,
-      totalAvailable: availabilityInfo.totalAvailable,
+      totalValue,
+      totalAvailable,
     });
-  }, [structuredData, totalValue, availabilityInfo, referenceData, location.key]);
+  }, [structuredData.length, totalValue, totalAvailable, referenceData]);
 
   const dictionary = {
     Permanent: "Permanent",
@@ -201,12 +186,6 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           })}
           dataSource={dataToDisplay}
           className="table-ant-customized"
-          onRow={() => ({
-            onClick: () => {
-              // navigate(`/inventory/item?id=${itemId}`);
-            },
-          })}
-          // onChange={handleTableChange}
         />
       </Grid>
     </Suspense>
