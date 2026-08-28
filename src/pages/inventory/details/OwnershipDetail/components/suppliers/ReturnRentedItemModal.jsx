@@ -28,8 +28,10 @@ import {
   progressPercent,
 } from "./utils/returnRentedPlan";
 import {
+  buildDeleteCriteriaGroups,
   buildReturnAuditEntries,
   describeBlocked,
+  describeUndeletable,
   itemIdOf,
   partitionForReturn,
 } from "./utils/returnToSupplier";
@@ -61,8 +63,10 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * The batching loop mutated its own index to retry a shrunken batch. It is a
  * queue now, and the shrink rule is `nextBatchSize`, which cannot grow.
  *
- * Every request is unchanged: the same three catalog entries, the same
- * `update-large-data`, `delete-bulk-items`, email helper and cache key.
+ * The delete step is the one request that has changed since. It used to be
+ * `POST /db_company/delete-bulk-items` with `{ item_ids, company_id }`, which
+ * does not work; it is now `POST /db_item/delete-bulk-items-criteria`, which
+ * deletes by category, group and serial number. See `removeFromInventory`.
  */
 const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) => {
   const { user } = useSelector((state) => state.admin);
@@ -167,13 +171,17 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
    * currentBatchSize; continue;` and relied on the `for` step putting it back,
    * which only worked because the two happened to cancel out.
    */
-  const runBatched = async ({ ids, send }) => {
+  const runBatched = async ({ ids, send, offset = 0, overallTotal = null }) => {
+    /* `offset`/`overallTotal` exist because the delete step now issues one
+       request per category+group, and the progress bar is about the whole
+       return rather than about whichever group is in flight. */
+    const total = overallTotal ?? ids.length;
     let size = INITIAL_BATCH_SIZE;
     let queue = chunkForBatching(ids, size);
     let index = 0;
     let done = 0;
 
-    setProgress({ current: 0, total: ids.length });
+    setProgress({ current: offset, total });
 
     const reshapeRemaining = () => {
       const remaining = queue.slice(index).flat();
@@ -201,7 +209,7 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
           );
         }
         done += batch.length;
-        setProgress({ current: done, total: ids.length });
+        setProgress({ current: offset + done, total });
         index += 1;
         if (index < queue.length) await wait(BATCH_PAUSE_MS);
       } catch (error) {
@@ -260,15 +268,61 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
     }
   };
 
-  const removeFromInventory = (ids) =>
-    runBatched({
-      ids,
-      send: (batch) =>
-        devitrakApi.post("/db_company/delete-bulk-items", {
-          item_ids: batch,
-          company_id: user.sqlInfo.company_id,
-        }),
+  /**
+   * Removes the returned items from this company's inventory.
+   *
+   * `POST /db_company/delete-bulk-items` (`{ item_ids, company_id }`) is gone:
+   * the endpoint that works is `POST /db_item/delete-bulk-items-criteria`,
+   * which deletes by what an item is rather than by its id. Its body carries a
+   * single `category_name` and a single `item_group`, so one request cannot
+   * span two of either — `buildDeleteCriteriaGroups` splits the items
+   * accordingly and refuses to build a body with no serial numbers, which the
+   * server would read as "delete this whole category".
+   *
+   * @returns {Promise<{undeletable: object[], queued: boolean}>} the items that
+   *   could not be targeted, and whether the server queued the work.
+   */
+  const removeFromInventory = async (returnedRows) => {
+    const { groups, undeletable } = buildDeleteCriteriaGroups({
+      items: returnedRows,
+      companyId: user.sqlInfo.company_id,
+      fallbackRows: usingProvidedData ? providedRows : [],
     });
+
+    const totalSerials = groups.reduce(
+      (count, group) => count + group.serial_number.length,
+      0
+    );
+    setProgress({ current: 0, total: totalSerials });
+
+    let queued = false;
+    let done = 0;
+
+    for (const group of groups) {
+      await runBatched({
+        ids: group.serial_number,
+        offset: done,
+        overallTotal: totalSerials,
+        send: async (batch) => {
+          const response = await devitrakApi.post(
+            "/db_item/delete-bulk-items-criteria",
+            {
+              company_id: group.company_id,
+              serial_number: batch,
+              category_name: group.category_name,
+              ...(group.item_group ? { item_group: group.item_group } : {}),
+            }
+          );
+          // The endpoint may answer 202 and finish the work on a queue.
+          if (response?.status === 202) queued = true;
+          return response;
+        },
+      });
+      done += group.serial_number.length;
+    }
+
+    return { undeletable, queued };
+  };
 
   const refreshInventoryViews = () => {
     [
@@ -348,19 +402,24 @@ const ReturnRentedItemModal = ({ open, handleClose, supplier_id, data = null }) 
       await recordInActivityLog(returnable, returnedAt);
 
       setActiveStep("delete");
-      await removeFromInventory(returnableIds);
+      const { undeletable, queued } = await removeFromInventory(returnable);
 
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
       refreshInventoryViews();
 
+      const removedCount = returnable.length - undeletable.length;
       notify(
         "success",
         `${returnable.length} item${returnable.length === 1 ? "" : "s"} returned.`,
-        blocked.length > 0
-          ? `${blocked.length} left in place.`
+        queued
+          ? `Removing ${removedCount} from inventory is running in the background.`
+          : blocked.length > 0 || undeletable.length > 0
+          ? `${removedCount} removed from this company's inventory.`
           : "They are out of this company's inventory."
       );
-      const leftToSay = describeBlocked(blocked);
+      const leftToSay = [describeBlocked(blocked), describeUndeletable(undeletable)]
+        .filter(Boolean)
+        .join(" ");
       if (leftToSay) {
         setNotice(leftToSay);
         return;

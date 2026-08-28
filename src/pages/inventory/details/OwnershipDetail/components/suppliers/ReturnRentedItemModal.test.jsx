@@ -34,9 +34,11 @@ vi.mock("../../../../../../utils/actions/clearCacheMemory", () => ({
 
 const { default: ReturnRentedItemModal } = await import("./ReturnRentedItemModal");
 
+const DELETE_URL = "/db_item/delete-bulk-items-criteria";
+
 const rows = [
-  { item_id: 200580, serial_number: "SN-A1", item_group: "Tablet" },
-  { item_id: 200581, serial_number: "SN-B2", item_group: "Radio" },
+  { item_id: 200580, serial_number: "SN-A1", item_group: "Tablet", category_name: "Tablet" },
+  { item_id: 200581, serial_number: "SN-B2", item_group: "Radio", category_name: "Radio" },
 ];
 
 /**
@@ -57,7 +59,7 @@ const serverAnswers = ({ state = {}, deleteAnswer } = {}) =>
         },
       });
     }
-    if (url === "/db_company/delete-bulk-items" && deleteAnswer) {
+    if (url === DELETE_URL && deleteAnswer) {
       return Promise.resolve(deleteAnswer);
     }
     return Promise.resolve({ data: { result: [] } });
@@ -68,10 +70,10 @@ const runReturn = async () => {
   fireEvent.click(await screen.findByText("Return"));
 };
 
-const deletedIds = () =>
-  post.mock.calls
-    .filter(([url]) => url === "/db_company/delete-bulk-items")
-    .flatMap(([, body]) => body.item_ids ?? []);
+const deleteCalls = () => post.mock.calls.filter(([url]) => url === DELETE_URL);
+
+const deletedSerials = () =>
+  deleteCalls().flatMap(([, body]) => body.serial_number ?? []);
 
 /** Ticks the checkbox on the row showing `serial`, by row rather than by index. */
 const tickRow = (serial) => {
@@ -171,7 +173,7 @@ describe("ReturnRentedItemModal", () => {
     renderModal();
     await runReturn();
 
-    await waitFor(() => expect(deletedIds()).toHaveLength(2));
+    await waitFor(() => expect(deletedSerials()).toHaveLength(2));
     expect(
       post.mock.calls.some(([url]) => url === "/db_inventory/update-large-data")
     ).toBe(false);
@@ -195,7 +197,7 @@ describe("ReturnRentedItemModal", () => {
     await waitFor(() =>
       expect(screen.getByText(/no longer in the inventory|state could not be read|will not be returned/)).toBeTruthy()
     );
-    expect(deletedIds()).toEqual([]);
+    expect(deletedSerials()).toEqual([]);
   });
 
   it("reports the return before deleting anything", async () => {
@@ -205,16 +207,85 @@ describe("ReturnRentedItemModal", () => {
     renderModal();
     await runReturn();
 
-    await waitFor(() => expect(deletedIds()).toHaveLength(2));
+    await waitFor(() => expect(deletedSerials()).toHaveLength(2));
     const emailAt = emailSpy.mock.invocationCallOrder[0];
-    const deleteAt = post.mock.calls.findIndex(
-      ([url]) => url === "/db_company/delete-bulk-items"
-    );
+    const deleteAt = post.mock.calls.findIndex(([url]) => url === DELETE_URL);
     expect(emailAt).toBeGreaterThan(0);
     expect(deleteAt).toBeGreaterThan(-1);
     // The report received the rows it is built from, not just ids.
     expect(emailSpy.mock.calls[0][0].resolvedItems).toHaveLength(2);
     expect(emailSpy.mock.calls[0][0].returnedAt).toBeTruthy();
+  });
+
+  it("deletes by criteria, one request per category and group", async () => {
+    /* `POST /db_company/delete-bulk-items` took `{ item_ids, company_id }` and
+       does not work. The criteria endpoint takes a single `category_name` and
+       a single `item_group`, so the two fixture rows cannot share a request. */
+    serverAnswers();
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedSerials()).toHaveLength(2));
+
+    const bodies = deleteCalls().map(([, body]) => body);
+    expect(bodies).toEqual(
+      expect.arrayContaining([
+        {
+          company_id: 7,
+          serial_number: ["SN-A1"],
+          category_name: "Tablet",
+          item_group: "Tablet",
+        },
+        {
+          company_id: 7,
+          serial_number: ["SN-B2"],
+          category_name: "Radio",
+          item_group: "Radio",
+        },
+      ])
+    );
+  });
+
+  it("never asks the server to delete a whole category", async () => {
+    /* `category_name` is required and `serial_number` is optional, so a body
+       with a category and no serials deletes everything in it. An item whose
+       category cannot be established is reported and left in place instead. */
+    post.mockImplementation((url, body) => {
+      if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
+        return Promise.resolve({
+          data: { result: rows.map(({ category_name, ...rest }) => rest) },
+        });
+      }
+      return Promise.resolve({ data: { result: [] } });
+    });
+
+    // The table's own rows are consulted first, so they must not carry it
+    // either — otherwise the category is legitimately recovered from them.
+    renderModal({ data: rows.map(({ category_name, ...rest }) => rest) });
+    await runReturn();
+
+    await waitFor(() =>
+      expect(screen.getByText(/no category recorded for it/)).toBeTruthy()
+    );
+    expect(deleteCalls()).toEqual([]);
+  });
+
+  it("recovers a missing category from the rows the table already had", async () => {
+    // `inventory.itemsByIds` is a narrow projection and may not return it.
+    post.mockImplementation((url, body) => {
+      if (url === "/db_company/inventory-query" && body?.queryName === "inventory.itemsByIds") {
+        return Promise.resolve({
+          data: { result: rows.map(({ category_name, ...rest }) => rest) },
+        });
+      }
+      return Promise.resolve({ data: { result: [] } });
+    });
+
+    renderModal();
+    await runReturn();
+
+    await waitFor(() => expect(deletedSerials()).toHaveLength(2));
+    expect(deleteCalls().every(([, body]) => body.category_name)).toBe(true);
   });
 
   it("writes one activity-log row per item, since the records are about to go", async () => {

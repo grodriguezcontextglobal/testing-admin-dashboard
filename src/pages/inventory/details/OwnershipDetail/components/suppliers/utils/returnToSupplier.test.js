@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildDeleteCriteriaGroups,
   buildReturnAuditEntries,
   buildReturnReportRows,
+  describeUndeletable,
   describeBlocked,
   itemIdOf,
   partitionForReturn,
@@ -199,5 +201,179 @@ describe("itemIdOf", () => {
     expect(itemIdOf({ item_id: 7 })).toBe(7);
     expect(itemIdOf({ id: 8 })).toBe(8);
     expect(itemIdOf({})).toBeNull();
+  });
+});
+
+describe("buildDeleteCriteriaGroups", () => {
+  const laptopA = {
+    item_id: 1,
+    serial_number: "15001519",
+    category_name: "Laptop",
+    item_group: "Group Test 1",
+  };
+  const laptopB = { ...laptopA, item_id: 2, serial_number: "15001520" };
+  const radio = {
+    item_id: 3,
+    serial_number: "RD-01",
+    category_name: "Radio",
+    item_group: "Handhelds",
+  };
+
+  it("builds the body the criteria endpoint takes", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [laptopA],
+      companyId: 137,
+    });
+
+    expect(groups).toEqual([
+      {
+        company_id: 137,
+        serial_number: ["15001519"],
+        category_name: "Laptop",
+        item_group: "Group Test 1",
+      },
+    ]);
+  });
+
+  it("puts every serial of one category and group in a single request", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [laptopA, laptopB],
+      companyId: 137,
+    });
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].serial_number).toEqual(["15001519", "15001520"]);
+  });
+
+  it("splits by category and group, because the body carries one of each", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [laptopA, radio],
+      companyId: 137,
+    });
+
+    expect(groups).toHaveLength(2);
+    expect(groups.map((group) => group.category_name)).toEqual([
+      "Laptop",
+      "Radio",
+    ]);
+  });
+
+  it("separates two groups inside the same category", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [laptopA, { ...laptopA, item_id: 9, serial_number: "X", item_group: "Group Test 2" }],
+      companyId: 137,
+    });
+
+    expect(groups).toHaveLength(2);
+  });
+
+  it("never emits a body with no serial numbers", () => {
+    /* `serial_number` is the only thing narrowing the delete: the endpoint
+       requires `category_name` and treats the rest as optional filters, so a
+       body without serials is a request to delete the whole category. */
+    const { groups, undeletable } = buildDeleteCriteriaGroups({
+      items: [{ ...laptopA, serial_number: "  " }],
+      companyId: 137,
+    });
+
+    expect(groups).toEqual([]);
+    expect(undeletable).toEqual([
+      { item_id: 1, serial_number: null, reason: "no-serial" },
+    ]);
+  });
+
+  it("holds back an item with no category rather than guessing one", () => {
+    const { groups, undeletable } = buildDeleteCriteriaGroups({
+      items: [{ ...laptopA, category_name: null }],
+      companyId: 137,
+    });
+
+    expect(groups).toEqual([]);
+    expect(undeletable).toEqual([
+      { item_id: 1, serial_number: "15001519", reason: "no-category" },
+    ]);
+  });
+
+  it("recovers the category from the rows the table already had", () => {
+    // `inventory.itemsByIds` is a narrow projection; the table's own rows carry
+    // `category_name`, so they are used to fill the gap before giving up.
+    const { groups, undeletable } = buildDeleteCriteriaGroups({
+      items: [{ item_id: 1, serial_number: "15001519", item_group: "Group Test 1" }],
+      companyId: 137,
+      fallbackRows: [laptopA],
+    });
+
+    expect(undeletable).toEqual([]);
+    expect(groups[0].category_name).toBe("Laptop");
+  });
+
+  it("matches a fallback row by serial when the ids do not line up", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [{ item_id: 999, serial_number: "15001519" }],
+      companyId: 137,
+      fallbackRows: [laptopA],
+    });
+
+    expect(groups[0].category_name).toBe("Laptop");
+    expect(groups[0].item_group).toBe("Group Test 1");
+  });
+
+  it("omits item_group when nothing knows it, since it is optional", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [{ item_id: 1, serial_number: "15001519", category_name: "Laptop" }],
+      companyId: 137,
+    });
+
+    expect(groups).toEqual([
+      { company_id: 137, serial_number: ["15001519"], category_name: "Laptop" },
+    ]);
+  });
+
+  it("does not repeat a serial", () => {
+    const { groups } = buildDeleteCriteriaGroups({
+      items: [laptopA, { ...laptopA }],
+      companyId: 137,
+    });
+
+    expect(groups[0].serial_number).toEqual(["15001519"]);
+  });
+
+  it("refuses to build anything without a company", () => {
+    // Without it the server rejects the body, and a delete is not something to
+    // send hopefully.
+    expect(buildDeleteCriteriaGroups({ items: [laptopA] })).toEqual({
+      groups: [],
+      undeletable: [{ item_id: 1, serial_number: "15001519", reason: "no-company" }],
+    });
+  });
+
+  it("survives nothing at all", () => {
+    expect(buildDeleteCriteriaGroups({})).toEqual({ groups: [], undeletable: [] });
+  });
+});
+
+describe("describeUndeletable", () => {
+  it("is null when everything could be targeted", () => {
+    expect(describeUndeletable([])).toBeNull();
+  });
+
+  it("says what is staying and why", () => {
+    expect(
+      describeUndeletable([
+        { item_id: 1, serial_number: "15001519", reason: "no-category" },
+      ])
+    ).toBe(
+      "1 item was reported but not removed, because the inventory has no category recorded for it: 15001519. Remove it by hand from the inventory table."
+    );
+  });
+
+  it("names three and counts the rest", () => {
+    const list = Array.from({ length: 7 }, (_, index) => ({
+      item_id: index,
+      serial_number: `SN-${index}`,
+      reason: "no-serial",
+    }));
+    expect(describeUndeletable(list)).toContain("SN-0, SN-1, SN-2 and 4 more");
+    expect(describeUndeletable(list)).toContain("7 items were");
   });
 });

@@ -125,3 +125,107 @@ export const buildReturnAuditEntries = ({ items, supplierId, returnedBy, timesta
       item_group: text(item?.item_group) || null,
     },
   }));
+
+/**
+ * The bodies for `POST /api/db_item/delete-bulk-items-criteria`.
+ *
+ * This replaces `POST /db_company/delete-bulk-items`, which took
+ * `{ item_ids, company_id }`. The criteria endpoint deletes by what an item
+ * *is* rather than by its id, and its contract is asymmetric:
+ * `category_name` and `company_id` are required, `item_group` and
+ * `serial_number` are optional filters. So one request cannot span two
+ * categories or two groups, and the items are grouped accordingly.
+ *
+ * The safety rule is `serial_number`. It is the only field narrowing the delete
+ * down to the items being returned — a body carrying a category and no serials
+ * asks the server to delete that entire category. This never emits one. An item
+ * that cannot be pinned to a serial, a category and a company is reported back
+ * instead, and stays in the inventory.
+ *
+ * @param {object[]} items the rows being returned
+ * @param {number|string} companyId the SQL company id
+ * @param {object[]} fallbackRows rows from the table, consulted for a
+ *   `category_name` the server projection did not include
+ * @returns {{groups: object[], undeletable: object[]}}
+ */
+export const buildDeleteCriteriaGroups = ({ items, companyId, fallbackRows }) => {
+  const rows = Array.isArray(items) ? items : [];
+  if (rows.length === 0) return { groups: [], undeletable: [] };
+
+  const byId = new Map();
+  const bySerial = new Map();
+  (Array.isArray(fallbackRows) ? fallbackRows : []).forEach((row) => {
+    const id = itemIdOf(row);
+    if (id !== null && id !== undefined) byId.set(String(id), row);
+    const serial = text(row?.serial_number);
+    if (serial) bySerial.set(serial, row);
+  });
+
+  const fallbackFor = (item) =>
+    byId.get(String(itemIdOf(item))) ?? bySerial.get(text(item?.serial_number));
+
+  const company = text(companyId);
+  const groups = new Map();
+  const undeletable = [];
+
+  rows.forEach((item) => {
+    const serial = text(item?.serial_number) || null;
+    const known = fallbackFor(item);
+    const category =
+      text(item?.category_name) || text(known?.category_name) || null;
+    const group = text(item?.item_group) || text(known?.item_group) || null;
+
+    /* Reported in the order the request is judged: no company means nothing can
+       be built at all, then the serial that narrows it, then the category the
+       server requires. */
+    const reason = !company
+      ? "no-company"
+      : !serial
+      ? "no-serial"
+      : !category
+      ? "no-category"
+      : null;
+
+    if (reason) {
+      undeletable.push({ item_id: itemIdOf(item), serial_number: serial, reason });
+      return;
+    }
+
+    const key = `${category}\u0000${group ?? ""}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        company_id: companyId,
+        serial_number: [],
+        category_name: category,
+        ...(group ? { item_group: group } : {}),
+      });
+    }
+    const serials = groups.get(key).serial_number;
+    if (!serials.includes(serial)) serials.push(serial);
+  });
+
+  return { groups: Array.from(groups.values()), undeletable };
+};
+
+const UNDELETABLE_REASONS = {
+  "no-company": "this session has no company id",
+  "no-serial": "the inventory has no serial number recorded for it",
+  "no-category": "the inventory has no category recorded for it",
+};
+
+/**
+ * What to tell the operator about items that were reported and logged but could
+ * not be targeted for deletion. They are still in the inventory, and saying so
+ * is the difference between a stale table and a silent data loss.
+ */
+export const describeUndeletable = (undeletable) => {
+  const list = Array.isArray(undeletable) ? undeletable : [];
+  if (list.length === 0) return null;
+
+  const reason =
+    UNDELETABLE_REASONS[list[0]?.reason] ?? "the inventory record is incomplete";
+
+  return `${list.length} item${list.length === 1 ? " was" : "s were"} reported but not removed, because ${reason}: ${nameThem(
+    list
+  )}. Remove ${list.length === 1 ? "it" : "them"} by hand from the inventory table.`;
+};
