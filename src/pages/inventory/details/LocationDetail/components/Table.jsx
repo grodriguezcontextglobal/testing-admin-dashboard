@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "lodash";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -21,44 +21,43 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   
-  // State to track filtered data count for dynamic pagination
-  // eslint-disable-next-line no-unused-vars
-  const [filteredDataCount, setFilteredDataCount] = useState(0);
-  
-  const urlQuery =
-    location.state === null
-      ? `/db_company/inventory-based-on-location-and-sublocation`
-      : `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`;
-      
+  /* Both halves of "which inventory is this page showing". They belong in the
+     query keys: without them React Query answers a second location from the
+     first one's cache, which is why this component used to carry a mount effect
+     that called `.refetch()` on all three queries by hand. */
+  const locationLabel = decodeURI(locationName[0].slice(1));
+  const subLocation = location.state?.sub_location ?? null;
+
+  const urlQuery = subLocation
+    ? `/db_company/inventory-based-on-location-and-sublocation?sub_location=${subLocation}`
+    : `/db_company/inventory-based-on-location-and-sublocation`;
+
   const listItemsQuery = useQuery({
-    queryKey: ["currentStateDevicePerLocation"],
+    queryKey: ["currentStateDevicePerLocation", locationLabel],
     queryFn: () =>
       devitrakApi.post("/db_company/inventory-query", {
         queryName: "inventory.byAttribute",
-        params: {
-          attribute: "location",
-          value: decodeURI(locationName[0].slice(1)),
-        },
+        params: { attribute: "location", value: locationLabel },
       }),
-    refetchOnMount: false,
     enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
-    queryKey: ["deviceImagePerLocation"],
+    queryKey: ["deviceImages", user.companyData.id],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
-    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000,
+    enabled: !!user.companyData.id,
   });
 
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["deviceInInventoryPerLocation"],
+    queryKey: ["deviceInInventoryPerLocation", locationLabel, subLocation],
     queryFn: () =>
       devitrakApi.post(urlQuery, {
         company_id: user.sqlInfo.company_id,
-        location: String(decodeURI(locationName[0].slice(1))).toLowerCase(),
+        location: String(locationLabel).toLowerCase(),
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
   
   /* Memoized, because `structuredData` is memoized on it. It used to be a bare
@@ -81,27 +80,10 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     [renderedListItems, locatedItems, groupingByDeviceType]
   );
   
-  useEffect(() => {
-    const controller = new AbortController();
-    listItemsQuery.refetch();
-    listImagePerItemQuery.refetch();
-    itemsInInventoryQuery.refetch();
-
-    return () => {
-      controller.abort();
-    };
-  }, [user.company, location.key]);
-
   const dataToDisplay = useMemo(
     () => filterLocationRows(structuredData, searchItem),
     [structuredData, searchItem]
   );
-
-  useEffect(() => {
-    if (dataToDisplay) {
-      setFilteredDataCount(dataToDisplay.length);
-    }
-  }, [dataToDisplay]);
 
   const totalValue = useMemo(() => {
     let result = 0;
