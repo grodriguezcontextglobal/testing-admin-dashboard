@@ -477,6 +477,7 @@ const AssignmentDevicesToMember = () => {
         member: memberInfo,
         devices: deviceInfo,
         company: user?.company,
+        companyLogo: user?.companyData?.company_logo,
         date: stampTime,
         staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
         reference: expectedReturnDate ? `Due ${expectedReturnDate}` : "",

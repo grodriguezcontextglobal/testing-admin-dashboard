@@ -209,3 +209,62 @@ describe("buildReminderPayload", () => {
     );
   });
 });
+
+// ─── who the reminder comes from ─────────────────────────────────────────────
+
+describe("the sign-off names the staff member sending it", () => {
+  /* It used to be the company name alone. A member holding a device and given
+     three days to return it needs to know who asked — an unsigned message from
+     an institution is the one people ignore, and there is nobody to reply to. */
+  const member = { first_name: "Ana", email: "ana@x.com" };
+  const overdue = [
+    { device_item_group: "Chromebook", device_serial_number: "SN-1", expected_return_date: "2026-08-01" },
+  ];
+  const upcoming = [
+    { device_item_group: "Chromebook", device_serial_number: "SN-2", expected_return_date: "2026-09-30" },
+  ];
+
+  const build = (key, context) =>
+    REMINDER_TEMPLATES.find((template) => template.key === key).build({
+      member,
+      overdue,
+      upcoming,
+      companyName: "Context Global",
+      ...context,
+    }).message;
+
+  it("signs the overdue reminder with the sender, then the company", () => {
+    const message = build("overdue", { staffName: "Gustavo Rodriguez" });
+    expect(message).toContain("Thank you,\nGustavo Rodriguez\nContext Global");
+  });
+
+  it("signs the upcoming reminder the same way", () => {
+    const message = build("upcoming", { staffName: "Gustavo Rodriguez" });
+    expect(message).toContain("Thank you,\nGustavo Rodriguez\nContext Global");
+  });
+
+  it("falls back to the company alone when the sender is unknown", () => {
+    const message = build("overdue", {});
+    expect(message).toContain("Thank you,\nContext Global");
+    expect(message).not.toContain("Thank you,\n\n");
+  });
+
+  it("does not print an empty line for a blank sender", () => {
+    const message = build("overdue", { staffName: "   " });
+    expect(message).toContain("Thank you,\nContext Global");
+  });
+
+  it("says who to reply to when the sender has an email", () => {
+    const message = build("overdue", {
+      staffName: "Gustavo Rodriguez",
+      staffEmail: "grodriguez@contextglobal.com",
+    });
+    expect(message).toContain("reply to grodriguez@contextglobal.com");
+  });
+
+  it("keeps the generic reply line when there is no sender email", () => {
+    expect(build("overdue", { staffName: "Gustavo Rodriguez" })).toContain(
+      "reply to this email"
+    );
+  });
+});

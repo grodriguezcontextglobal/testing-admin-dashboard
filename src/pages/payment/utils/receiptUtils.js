@@ -217,10 +217,24 @@ export const mapTransactionToReceipt = (transaction) => {
  * @param {string} [args.reference] e.g. expected return date
  * @param {boolean} [args.returned] true once the device is back
  */
+/**
+ * The company logo to print, or null.
+ *
+ * `companyData.company_logo` is a Cloudinary secure_url, and "" for a company
+ * that never uploaded one. Only http(s) is accepted: this document is printed
+ * and can be opened from a QR scan, so a `javascript:` or `data:` src has no
+ * business being rendered as its letterhead.
+ */
+export const resolveReceiptLogo = (value) => {
+  const url = String(value ?? "").trim();
+  return /^https?:\/\//i.test(url) ? url : null;
+};
+
 export const mapAssignmentToReceipt = ({
   member,
   devices,
   company,
+  companyLogo,
   date,
   staffName,
   reference,
@@ -252,6 +266,7 @@ export const mapAssignmentToReceipt = ({
     total: null,
     status: returned ? RECEIPT_STATUS.RETURNED : RECEIPT_STATUS.OPEN,
     company: `${company ?? ""}`,
+    logoUrl: resolveReceiptLogo(companyLogo),
     reference: `${reference ?? ""}`,
   };
 };
@@ -363,6 +378,7 @@ export const mapReturnToReceipt = ({
   outcome,
   note,
   company,
+  companyLogo,
   date,
   staffName,
 } = {}) => {
@@ -402,6 +418,46 @@ export const mapReturnToReceipt = ({
         ? RECEIPT_STATUS.DECLARED_LOST
         : RECEIPT_STATUS.RETURNED,
     company: `${company ?? ""}`,
+    logoUrl: resolveReceiptLogo(companyLogo),
     reference: "",
   };
+};
+
+/**
+ * The signature lines a receipt carries, in print order.
+ *
+ * A handover slip is the paper record of who took custody of a device, and it
+ * is signed on both sides: unsigned, the document asserts a transfer nobody
+ * agreed to. A payment receipt is not signed — the card transaction is the
+ * proof, and a signature line on it only invites one that means nothing.
+ *
+ * The captions follow the direction the device moved, so the same slip cannot
+ * be read backwards: on a handover the holder receives and the staff issues; on
+ * a return the holder returns and the staff receives; on a lost declaration the
+ * holder declares.
+ */
+const SIGNATURE_CAPTIONS = {
+  [RECEIPT_KIND.ASSIGNMENT]: ["Received by", "Issued by"],
+  [RECEIPT_KIND.RETURN]: ["Returned by", "Received by"],
+};
+
+export const receiptSignatures = (receipt) => {
+  const captions = SIGNATURE_CAPTIONS[receipt?.kind];
+  if (!captions) return [];
+
+  const [holderCaption, staffCaption] =
+    receipt?.status === RECEIPT_STATUS.DECLARED_LOST
+      ? ["Declared by", captions[1]]
+      : captions;
+
+  return [
+    { caption: holderCaption, name: `${receipt?.payer?.name ?? ""}`.trim() },
+    /* `id` is the staff member's name on both of these documents -- it is what
+       `idLabel` ("Issued by" / "Recorded by") is describing. The em dash the
+       mappers fall back to is a placeholder for a table cell, not a name. */
+    {
+      caption: staffCaption,
+      name: `${receipt?.id ?? ""}`.trim() === "—" ? "" : `${receipt?.id ?? ""}`.trim(),
+    },
+  ];
 };

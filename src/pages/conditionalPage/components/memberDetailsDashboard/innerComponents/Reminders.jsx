@@ -93,7 +93,14 @@ const Reminders = () => {
   const applyTemplate = (template) => {
     setNotice(null);
     setTemplateKey(template.key);
-    const filled = template.build({ member: memberInfo, overdue, upcoming, companyName });
+    const filled = template.build({
+      member: memberInfo,
+      overdue,
+      upcoming,
+      companyName,
+      staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
+      staffEmail: user?.email,
+    });
     setSubject(filled.subject);
     setMessage(filled.message);
   };

@@ -48,6 +48,29 @@ export function reminderRecipients(member) {
   return recipients;
 }
 
+/**
+ * How a reminder ends.
+ *
+ * It used to be the company name alone. A member holding a device and asked to
+ * bring it back needs to know who asked: an unsigned message from an
+ * institution is the one people ignore, and there is nobody to reply to. The
+ * sender's name goes above the company, and drops out cleanly when it is not
+ * known rather than leaving a blank line where a name should be.
+ */
+export function signOff({ staffName, companyName }) {
+  return ["Thank you,", text(staffName), text(companyName)].filter(Boolean);
+}
+
+/** How the member is told to answer -- by name when there is one to give. */
+export function replyLine({ staffEmail, whenLate = false }) {
+  const email = text(staffEmail);
+  const tail = email ? `reply to ${email}` : "reply to this email";
+
+  return whenLate
+    ? `Please return it as soon as you can, or ${tail} if you need more time.`
+    : `No action is needed if you are already planning to return it on time. If something has changed, ${tail}.`;
+}
+
 /** One loan, in the words the email uses. */
 export function describeLoan(row) {
   const name = text(row?.device_item_group) || "Device";
@@ -103,7 +126,7 @@ export const REMINDER_TEMPLATES = [
     label: "Overdue return",
     hint: "For devices already past their due date.",
     available: ({ overdue }) => overdue.length > 0,
-    build: ({ member, overdue, companyName }) => ({
+    build: ({ member, overdue, companyName, staffName, staffEmail }) => ({
       subject: `Overdue device${overdue.length === 1 ? "" : "s"}`,
       message: [
         `Hi ${memberDisplayName(member)},`,
@@ -114,10 +137,9 @@ export const REMINDER_TEMPLATES = [
         "",
         bulletList(overdue),
         "",
-        "Please return it as soon as you can, or reply to this email if you need more time.",
+        replyLine({ staffEmail, whenLate: true }),
         "",
-        `Thank you,`,
-        text(companyName),
+        ...signOff({ staffName, companyName }),
       ].join("\n"),
     }),
   },
@@ -126,7 +148,7 @@ export const REMINDER_TEMPLATES = [
     label: "Return coming up",
     hint: "For devices due back in the next few days.",
     available: ({ upcoming }) => upcoming.length > 0,
-    build: ({ member, upcoming, companyName }) => ({
+    build: ({ member, upcoming, companyName, staffName, staffEmail }) => ({
       subject: `Device return reminder`,
       message: [
         `Hi ${memberDisplayName(member)},`,
@@ -137,10 +159,9 @@ export const REMINDER_TEMPLATES = [
         "",
         bulletList(upcoming),
         "",
-        "No action is needed if you are already planning to return it on time.",
+        replyLine({ staffEmail }),
         "",
-        `Thank you,`,
-        text(companyName),
+        ...signOff({ staffName, companyName }),
       ].join("\n"),
     }),
   },

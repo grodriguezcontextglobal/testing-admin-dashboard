@@ -148,6 +148,7 @@ const Return = ({
         outcome: variables?.outcome,
         note: variables?.note,
         company: user?.company,
+        companyLogo: user?.companyData?.company_logo,
         date: new Date().toISOString(),
         staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
       });

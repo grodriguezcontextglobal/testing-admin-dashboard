@@ -25,6 +25,48 @@
   gap: 16px;
 }
 
+/* Bounded in both directions: a company logo is whatever they uploaded, and an
+   unconstrained one pushes the whole slip onto a second page. */
+.receipt__logo {
+  order: -1;
+  max-height: 48px;
+  max-width: 140px;
+  width: auto;
+  object-fit: contain;
+}
+
+.receipt__signatures {
+  display: flex;
+  gap: 24px;
+  margin-top: 28px;
+}
+
+.receipt__signature {
+  flex: 1;
+  min-width: 0;
+}
+
+.receipt__signature-line {
+  display: block;
+  border-bottom: 1px solid #101828;
+  height: 32px;
+}
+
+.receipt__signature-caption {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gray-600, #5d615a);
+}
+
+.receipt__signature-name {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #101828;
+}
+
 .receipt__company {
   font-size: 18px;
   font-weight: 600;
@@ -156,6 +198,14 @@
 }
 
 @media print {
+  /* One slip, one sheet. A handover receipt that runs onto a second page gets
+     the signatures separated from the item list, which is exactly the pairing
+     the document exists to record. */
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+
   /* Only the receipt reaches the paper. */
   body * {
     visibility: hidden;
@@ -173,6 +223,28 @@
     border: none;
     max-width: 100%;
     padding: 0;
+    /* Tightened for paper: on screen this is a card in a modal, on paper it is
+       the whole sheet and the generous spacing is what pushed it over. */
+    font-size: 12px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Nothing inside may be split across the fold either. */
+  .receipt__lines,
+  .receipt__signatures,
+  .receipt__qr,
+  .receipt__meta {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .receipt__signatures {
+    margin-top: 20px;
+  }
+
+  .receipt__qr {
+    margin-top: 16px;
   }
 
   /* Browsers strip backgrounds by default, which would erase the void band and
