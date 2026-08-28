@@ -10,6 +10,7 @@ import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle"
 import {
   hasReferenceCriteria,
   hasReferenceOptions,
+  matchesTypedText,
   referenceSourceLabel,
   REFERENCE_FIELDS,
   toOptions,
@@ -185,6 +186,10 @@ const CopyFromExistingDevicePanel = ({
                       onChange={onChange}
                       options={optionsByField[index]}
                       placeholder={field.placeholder}
+                      /* AutoComplete does not filter on its own — its
+                         `filterOption` defaults to false, so without this the
+                         field listed every option no matter what was typed. */
+                      filterOption={matchesTypedText}
                       allowClear
                     />
                   )}

@@ -10,6 +10,7 @@ import Input from "../../../../../components/UX/inputs/Input";
 import AddedUnitsTable from "./AddedUnitsTable";
 import PasteUnitsPanel from "./PasteUnitsPanel";
 import ScanUnitsPanel from "./ScanUnitsPanel";
+import { matchesTypedText } from "../referenceLookup";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
 
@@ -267,6 +268,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
                       handleIdentifierChange(identifier.id, "type", value)
                     }
                     onKeyDown={handleKeyDown}
+                    filterOption={matchesTypedText}
                     placeholder="Select or type a name"
                   />
                 </Grid>

@@ -114,3 +114,22 @@ export const findReferenceMatches = (inventoryItems, criteria = {}) => {
     imageConflict: images.length > 1,
   };
 };
+
+/**
+ * Whether an option should stay visible for what has been typed.
+ *
+ * antd's `AutoComplete` defaults `filterOption` to `false` — unlike `Select`,
+ * which defaults it to `true` — so the category, group and brand fields on the
+ * add-inventory form listed every option no matter what was typed into them.
+ * On a company with a few hundred groups that makes the field a scroll, which
+ * is the thing typing was supposed to avoid.
+ *
+ * Substring rather than prefix: nobody remembers the leading word of a model.
+ */
+export const matchesTypedText = (typed, option) => {
+  const needle = String(typed ?? "").trim().toLowerCase();
+  if (needle === "") return true;
+
+  const haystack = String(option?.label ?? option?.value ?? "").toLowerCase();
+  return haystack.includes(needle);
+};

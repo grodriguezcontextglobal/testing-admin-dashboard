@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { assertWriteSucceeded } from "./utils/assignmentWrites";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../../../components/UX/Chip/Chip";
@@ -198,6 +199,8 @@ const AssignmentFromExistingInventory = () => {
       contact_name: `${user.name} ${user.lastName}`,
     });
 
+    assertWriteSucceeded(response, "Opening the lease record");
+
     const insertId = response.data?.consumer?.insertId;
     // Previously caught and turned into `null`, which made the caller's guard
     // fail and the whole submission end without a word either way.
@@ -205,15 +208,18 @@ const AssignmentFromExistingInventory = () => {
     return insertId;
   };
 
-  const updateDeviceInWarehouse = (deviceInfo) =>
-    devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: 0,
-      logistic_status: "assigned",
-      company_id: user.sqlInfo.company_id,
-      item_group: deviceInfo[0].item_group,
-      category_name: deviceInfo[0].category_name,
-      data: deviceInfo.map((item) => item.serial_number),
-    });
+  const updateDeviceInWarehouse = async (deviceInfo) =>
+    assertWriteSucceeded(
+      await devitrakApi.post("/db_item/item-out-warehouse", {
+        warehouse: 0,
+        logistic_status: "assigned",
+        company_id: user.sqlInfo.company_id,
+        item_group: deviceInfo[0].item_group,
+        category_name: deviceInfo[0].category_name,
+        data: deviceInfo.map((item) => item.serial_number),
+      }),
+      "Taking the units out of the warehouse"
+    );
 
   const createVerification = async () => {
     const verification = await devitrakApi.post(
@@ -226,7 +232,17 @@ const AssignmentFromExistingInventory = () => {
         date: stampTime,
       }
     );
-    return verification.data?.verificationInfo?._id;
+    assertWriteSucceeded(verification, "Recording the signed document");
+
+    const verificationId = verification.data?.verificationInfo?._id;
+    /* Every lease and the event below are written against this id. Letting an
+       undefined one through wrote a set of records that point at nothing. */
+    if (!verificationId) {
+      throw new Error(
+        "The signed document was not recorded, so the lease has nothing to reference. Nothing else was written."
+      );
+    }
+    return verificationId;
   };
 
   const createLeases = async ({ deviceInfo, address, verificationId }) => {
@@ -236,15 +252,18 @@ const AssignmentFromExistingInventory = () => {
     }
 
     for (const device of deviceInfo) {
-      await devitrakApi.post("/db_lease/new-lease", {
-        staff_admin_id: user.sqlMemberInfo.staff_id,
-        company_id: user.sqlInfo.company_id,
-        subscription_expected_return_data: dateToUse,
-        location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
-        staff_member_id: staffMember.staff_id,
-        device_id: device.item_id,
-        verification_id: verificationId,
-      });
+      assertWriteSucceeded(
+        await devitrakApi.post("/db_lease/new-lease", {
+          staff_admin_id: user.sqlMemberInfo.staff_id,
+          company_id: user.sqlInfo.company_id,
+          subscription_expected_return_data: dateToUse,
+          location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
+          staff_member_id: staffMember.staff_id,
+          device_id: device.item_id,
+          verification_id: verificationId,
+        }),
+        `Leasing ${device.serial_number}`
+      );
     }
   };
 
@@ -268,17 +287,20 @@ const AssignmentFromExistingInventory = () => {
   const registerDevicesInPool = async ({ deviceInfo, verificationId }) => {
     const items = [];
     for (const device of deviceInfo) {
-      await devitrakApi.post("/receiver/receivers-pool", {
-        device: device.serial_number,
-        status: "Operational",
-        activity: true,
-        comment: "No comment",
-        eventSelected: eventName,
-        provider: user.company,
-        type: device.item_group,
-        company: user.companyData.id,
-        contract_type: "lease",
-      });
+      assertWriteSucceeded(
+        await devitrakApi.post("/receiver/receivers-pool", {
+          device: device.serial_number,
+          status: "Operational",
+          activity: true,
+          comment: "No comment",
+          eventSelected: eventName,
+          provider: user.company,
+          type: device.item_group,
+          company: user.companyData.id,
+          contract_type: "lease",
+        }),
+        `Registering ${device.serial_number}`
+      );
       items.push({
         serial_number: device.serial_number,
         type: device.item_group,
@@ -360,18 +382,24 @@ const AssignmentFromExistingInventory = () => {
     }
 
     const created = checkArray(response.data.event);
-    await devitrakApi.patch(`/event/edit-event/${created.id}`, {
-      qrCodeLink: `https://app.devitrak.net/?event=${created.id}&company=${user.companyData.id}`,
-    });
+    assertWriteSucceeded(
+      await devitrakApi.patch(`/event/edit-event/${created.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${created.id}&company=${user.companyData.id}`,
+      }),
+      "Stamping the lease event with its QR link"
+    );
     await registerDevicesInPool({ deviceInfo, verificationId });
   };
 
   const linkDevicesToEvent = async ({ sqlEventId, deviceInfo }) => {
     for (const device of deviceInfo) {
-      await devitrakApi.post("/db_event/event_device_directly", {
-        event_id: sqlEventId,
-        item_id: device.item_id,
-      });
+      assertWriteSucceeded(
+        await devitrakApi.post("/db_event/event_device_directly", {
+          event_id: sqlEventId,
+          item_id: device.item_id,
+        }),
+        `Linking ${device.serial_number} to the lease event`
+      );
     }
 
     ["staffMemberInfo", "imagePerItemList", "ItemsInventoryCheckingQuery"].forEach(
