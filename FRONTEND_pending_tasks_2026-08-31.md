@@ -135,13 +135,16 @@ all, so a logo *taken off* the company kept printing until the next login.
 replacing — the payload is the update and does not carry `id`. Both mutations
 now dispatch it, and the forced logout is gone.
 
-**Still open — payment receipts have no letterhead at all.**
-`mapAssignmentToReceipt` and `mapReturnToReceipt` both take `companyLogo`;
-`mapTransactionToReceipt` (`receiptUtils.js:168`) never sets `logoUrl`. It
-cannot simply be added: `/receipt` is registered in **both** `AuthRoutes` and
-`NoAuthRoutes`, so the page is opened by people outside the company from a QR
-scan, where there is no Redux session to read a logo from. The logo would have
-to arrive on the transaction response — raised with the backend in
+**Payment receipts — done for signed-in viewers (`e5f1fbdc`).**
+`mapTransactionToReceipt` never set `logoUrl`, so the one receipt a paying
+customer actually sees carried no mark of who issued it. It could not be read
+from Redux inside the mapper: `/receipt` is registered in **both** `AuthRoutes`
+and `NoAuthRoutes`. So the caller passes it, and both callers that have a
+session now do — the receipt page and the Stripe transaction table.
+
+Still open for the public case: a viewer opening the same URL from a QR scan is
+outside the company and gets no letterhead. That half needs the logo on the
+transaction response — raised with the backend in
 `FRONTEND_backend_ask_write_refusal_semantics.md` §5.
 
 ---
