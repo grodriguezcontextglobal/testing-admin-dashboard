@@ -23,6 +23,7 @@ import { AntSelectorStyle } from "../../../../../../../styles/global/AntSelector
 import "../../../../../../../styles/global/actionForm.css";
 import {
   buildInventoryOptions,
+  formatLeaseLocation,
   isAddressUsable,
   remainingUnits,
   resolveSerialScan,
@@ -341,7 +342,11 @@ const AssignmentDevicesToMember = () => {
         {
           staff_member_id: user.sqlMemberInfo.staff_id,
           company_id: user.sqlInfo.company_id,
-          location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
+          location: formatLeaseLocation({
+            address,
+            deviceLocation: device.location,
+            companyAddress: user?.companyData?.address,
+          }),
           member_id: memberInfo.member_id,
           device_id: device.item_id,
           verification_id: verificationId,

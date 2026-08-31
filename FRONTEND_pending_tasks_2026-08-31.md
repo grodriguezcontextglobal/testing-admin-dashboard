@@ -282,6 +282,29 @@ field, right?"*
 Note (`23:50`): for school members the address already prefills from the
 student's record. That behaviour stays.
 
+**Regression from this change, found in manual testing and fixed same day.**
+Making the field optional was only half the job: the lease payload still built
+`location` by interpolating the four address fields into one template, so a
+blank address arrived on the wire as `"   "` — three spaces. Present enough to
+pass a client check, absent enough for the server:
+
+```
+POST /api/db_lease/new-lease  →  400
+{ "ok": false, "msg": "Missing required fields: location" }
+```
+
+New tested `formatLeaseLocation` (6 tests) **joins instead of interpolating**,
+which removes the whitespace, and falls back in the order that loses the least
+information: what was typed → the shelf the unit came off → the company's own
+address. That last one is the answer Fredrik predicted people would give anyway
+(*"most of these answers are going to be the school address"*), so it is a real
+value rather than a placeholder. Applied to all six lease payloads across the
+staff, member and new-device flows.
+
+**Lesson worth keeping:** optional in the form is not optional on the wire.
+Any field that stops being required needs its payload checked, not just its
+validator.
+
 ### B7 — Return condition dropdown — **done**
 
 `39:18`–`40:51`. All three parts shipped 2026-08-31.

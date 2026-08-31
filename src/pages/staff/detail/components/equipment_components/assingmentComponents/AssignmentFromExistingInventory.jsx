@@ -21,6 +21,7 @@ import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
 import {
   buildInventoryOptions,
   findOptionForDevice,
+  formatLeaseLocation,
   isAddressUsable,
   remainingUnits,
   resolveSerialScan,
@@ -283,6 +284,15 @@ const AssignmentFromExistingInventory = () => {
     return verificationId;
   };
 
+  /* The address is optional now, so this can no longer be four fields glued
+     together: a blank one produced "   " and the lease endpoint refused it. */
+  const leaseLocation = (address) =>
+    formatLeaseLocation({
+      address,
+      deviceLocation: selection?.location,
+      companyAddress: user?.companyData?.address,
+    });
+
   const createLeases = async ({ deviceInfo, address, verificationId }) => {
     const staffMember = checkArray(staffMemberQuery.data?.data?.member);
     if (!staffMember?.staff_id) {
@@ -295,7 +305,7 @@ const AssignmentFromExistingInventory = () => {
           staff_admin_id: user.sqlMemberInfo.staff_id,
           company_id: user.sqlInfo.company_id,
           subscription_expected_return_data: dateToUse,
-          location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
+          location: leaseLocation(address),
           staff_member_id: staffMember.staff_id,
           device_id: device.item_id,
           verification_id: verificationId,
@@ -359,8 +369,8 @@ const AssignmentFromExistingInventory = () => {
       subscription: [],
       eventInfoDetail: {
         eventName,
-        eventLocation: `${address.state}, ${address.zip}`,
-        address: `${address.street}, ${address.city} ${address.state}, ${address.zip}`,
+        eventLocation: leaseLocation(address),
+        address: leaseLocation(address),
         building: eventName,
         floor: "",
         merchant: false,

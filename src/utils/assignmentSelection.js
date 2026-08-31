@@ -204,3 +204,43 @@ export function findOptionForDevice(options, device) {
   }
   return sameGroup.length === 1 ? sameGroup[0] : null;
 }
+
+/**
+ * Where the lease records the device as being kept.
+ *
+ * The address became optional, but `location` is still required on the wire —
+ * `POST /db_lease/new-lease` answers "Missing required fields: location"
+ * without it. The payload used to build this by interpolating the four address
+ * fields into one template, so a blank address arrived as `"   "`: three
+ * spaces, which is present enough to pass a client check and absent enough for
+ * the server to refuse.
+ *
+ * Joining instead of interpolating is the fix for the whitespace. The fallbacks
+ * are the fix for the emptiness, in the order that loses the least information:
+ * what the operator typed, then the shelf the unit came off, then the company's
+ * own address — which is the answer Fredrik expected people to give anyway.
+ *
+ * @param {object} [address] the four typed fields
+ * @param {string} [deviceLocation] where the unit is currently held
+ * @param {object} [companyAddress] the company record's own address
+ * @returns {string} a location, or "" when nothing at all is known
+ */
+export function formatLeaseLocation({
+  address,
+  deviceLocation,
+  companyAddress,
+} = {}) {
+  const join = (...parts) => parts.map((part) => text(part)).filter(Boolean).join(" ");
+
+  return (
+    join(address?.street, address?.city, address?.state, address?.zip) ||
+    text(deviceLocation) ||
+    join(
+      companyAddress?.street,
+      companyAddress?.city,
+      companyAddress?.state,
+      companyAddress?.postal_code ?? companyAddress?.zip
+    ) ||
+    ""
+  );
+}

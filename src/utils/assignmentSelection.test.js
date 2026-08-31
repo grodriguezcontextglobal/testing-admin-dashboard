@@ -4,6 +4,7 @@ import {
   isAddressComplete,
   isAddressUsable,
   findOptionForDevice,
+  formatLeaseLocation,
   remainingUnits,
   resolveSerialScan,
   summarizePick,
@@ -243,5 +244,65 @@ describe("findOptionForDevice", () => {
     ).toBeNull();
     expect(findOptionForDevice(options, null)).toBeNull();
     expect(findOptionForDevice(null, { category_name: "Laptops" })).toBeNull();
+  });
+});
+
+/**
+ * Regression from making the address optional (B6): the lease payload still
+ * built its location by interpolating the four fields into one template, so a
+ * blank address produced "   " — three spaces — and
+ * POST /db_lease/new-lease answered
+ * `{ ok: false, msg: "Missing required fields: location" }`.
+ *
+ * Optional in the form does not mean absent on the wire. The server needs
+ * somewhere the device is recorded as kept, and when nobody typed one there are
+ * two better answers than whitespace: the shelf it came off, and the company's
+ * own address — which is the answer Fredrik predicted people would give anyway
+ * ("most of these answers are going to be the school address").
+ */
+describe("formatLeaseLocation", () => {
+  const typed = { street: "1 Main", city: "Austin", state: "TX", zip: "78701" };
+  const company = {
+    street: "500 Bridges Rd",
+    city: "Washington",
+    state: "DC",
+    postal_code: "20001",
+  };
+
+  it("uses the typed address when there is one", () => {
+    expect(
+      formatLeaseLocation({ address: typed, deviceLocation: "IT office" })
+    ).toBe("1 Main Austin TX 78701");
+  });
+
+  it("never returns whitespace for a blank address", () => {
+    expect(formatLeaseLocation({ address: { street: "", city: "", state: "", zip: "" } }))
+      .toBe("");
+    expect(formatLeaseLocation({})).toBe("");
+  });
+
+  it("falls back to where the device is kept", () => {
+    expect(
+      formatLeaseLocation({ address: {}, deviceLocation: "IT office" })
+    ).toBe("IT office");
+  });
+
+  it("falls back to the company address when the device has no location", () => {
+    expect(
+      formatLeaseLocation({ address: {}, deviceLocation: "  ", companyAddress: company })
+    ).toBe("500 Bridges Rd Washington DC 20001");
+  });
+
+  it("reads either spelling of the company's postcode", () => {
+    expect(
+      formatLeaseLocation({ companyAddress: { city: "Austin", zip: "78701" } })
+    ).toBe("Austin 78701");
+  });
+
+  it("drops the gaps a missing field would leave", () => {
+    // The bug in one line: a template leaves the spaces behind, a join does not.
+    expect(
+      formatLeaseLocation({ address: { street: "1 Main", city: "", state: "TX", zip: "" } })
+    ).toBe("1 Main TX");
   });
 });
