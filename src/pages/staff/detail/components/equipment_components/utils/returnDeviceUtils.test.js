@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   RETURN_REASONS,
+  STAFF_EQUIPMENT_QUERY_KEYS,
   isReasonValid,
   buildReturningItemPayload,
   buildUpdateLeasePayload,
@@ -86,5 +87,43 @@ describe("buildDeleteLeasePayload", () => {
       staff_member_id: "sm-1",
       device_id: "item-99",
     });
+  });
+});
+
+/**
+ * Returning a device left the staff table showing it as still out.
+ *
+ * Three separate reasons, all in the same three lines:
+ *
+ *  1. The keys were invalidated with `exact: true` against a ONE-element key,
+ *     while every query in useStaffEquipmentData is keyed with two —
+ *     ["staffMemberInfo", email]. An exact match on ["staffMemberInfo"] matches
+ *     nothing at all, so all three calls were no-ops.
+ *  2. `assignedEquipmentStaff` — the query that actually feeds the table — was
+ *     never in the list.
+ *  3. They sat nested inside `if (eventInfoForRemovingRow.data)`, so a return
+ *     that took any other branch invalidated nothing.
+ */
+describe("STAFF_EQUIPMENT_QUERY_KEYS", () => {
+  it("includes the query the assigned-devices table actually reads", () => {
+    expect(STAFF_EQUIPMENT_QUERY_KEYS).toContain("assignedEquipmentStaff");
+  });
+
+  it("covers every query useStaffEquipmentData opens", () => {
+    expect(STAFF_EQUIPMENT_QUERY_KEYS).toEqual([
+      "staffMemberInfo",
+      "imagePerItemList",
+      "ItemsInventoryCheckingQuery",
+      "assignedEquipmentStaff",
+    ]);
+  });
+
+  it("is a list of root keys, so invalidation matches by prefix", () => {
+    // The moment one of these becomes an array, someone has reintroduced the
+    // bug: a full key can only be invalidated exactly, and the real keys carry
+    // an email or a company id this modal does not have.
+    for (const key of STAFF_EQUIPMENT_QUERY_KEYS) {
+      expect(typeof key).toBe("string");
+    }
   });
 });

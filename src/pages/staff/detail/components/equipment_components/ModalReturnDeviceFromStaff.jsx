@@ -23,6 +23,7 @@ import {
   buildReturningItemPayload,
   buildUpdateLeasePayload,
   isReasonValid,
+  refreshStaffEquipmentQueries,
 } from "./utils/returnDeviceUtils";
 
 const ModalReturnDeviceFromStaff = ({
@@ -50,6 +51,14 @@ const ModalReturnDeviceFromStaff = ({
     } catch (error) {
       setIsLoading(false);
       throw new Error(error);
+    } finally {
+      /* Once the return has been attempted the table must stop showing the
+         device as out, whichever branch the chain took afterwards — including
+         a failure, where the truth is whatever the server now holds. In
+         `finally` rather than in closeModal because closeModal also runs on
+         Cancel, and refetching four queries because somebody changed their
+         mind is noise. */
+      refreshStaffEquipmentQueries(queryClient);
     }
   };
 
@@ -78,12 +87,6 @@ const ModalReturnDeviceFromStaff = ({
         await devitrakApi.post("/db_record/removing-row-item-event-record", {
           item_id: deviceInfo.device_id,
           event_id: eventInfoForRemovingRow.data.result[0].event_id,
-        });
-        queryClient.invalidateQueries({ queryKey: ["staffMemberInfo"], exact: true });
-        queryClient.invalidateQueries({ queryKey: ["imagePerItemList"], exact: true });
-        queryClient.invalidateQueries({
-          queryKey: ["ItemsInventoryCheckingQuery"],
-          exact: true,
         });
         return closingEventAndReturningDevice();
       }
