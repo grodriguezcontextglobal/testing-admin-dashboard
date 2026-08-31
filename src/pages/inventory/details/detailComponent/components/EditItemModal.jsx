@@ -38,7 +38,7 @@ import {
   resolveSupplierName,
 } from "../../utils/editItemFormModel";
 
-const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
+const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Resale" }];
 const EditItemModal = ({
   dataFound,
   openEditItemModal,
