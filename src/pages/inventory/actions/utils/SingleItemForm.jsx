@@ -8,12 +8,11 @@ import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import { AntSelectorStyle } from "../../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { renderFields } from "../utils/SingleItemFields";
-
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../components/UX/Chip/Chip";
-import {
 import { useAssignableTargets } from "./useAssignableTargets";
+import {
   addingExtraInfo,
   renderingMoreInfoSubmitted,
   renderingOptionsButtons,
@@ -85,7 +84,7 @@ const SingleItemForm = ({
   };
   return (
     <form onSubmit={handleSubmit(savingNewItem)}>
-       {/* className="form" */}
+      {/* className="form" */}
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {renderFields({
@@ -251,13 +250,13 @@ const SingleItemForm = ({
                 sm={12}
                 md={
                   item.name === "descript_item" ||
-                  item.name === "reference_item_group"
+                    item.name === "reference_item_group"
                     ? 12
                     : gripingFields(item.name)
                 }
                 lg={
                   item.name === "descript_item" ||
-                  item.name === "reference_item_group"
+                    item.name === "reference_item_group"
                     ? 12
                     : gripingFields(item.name)
                 }
@@ -288,10 +287,9 @@ const SingleItemForm = ({
                     rules={
                       item.required
                         ? {
-                            required: `${
-                              item.label || "This field"
+                          required: `${item.label || "This field"
                             } is required`,
-                          }
+                        }
                         : {}
                     }
                     render={({ field: { value, onChange } }) => (
@@ -339,7 +337,7 @@ const SingleItemForm = ({
                         <Grid
                           display={
                             item.label === "Main location" ||
-                            item.label === "Sub location"
+                              item.label === "Sub location"
                               ? "flex"
                               : "none"
                           }
@@ -365,7 +363,7 @@ const SingleItemForm = ({
                             style={{
                               display:
                                 item.label === "Sub location" ||
-                                displaySublocationFields.length > 0
+                                  displaySublocationFields.length > 0
                                   ? "flex"
                                   : "none",
                               width: "100%",
@@ -456,7 +454,7 @@ const SingleItemForm = ({
         handleDeleteMoreInfo,
       })}{" "}
       <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
-      <div style={{ ...stylingComponents({ loadingStatus }).styleDivParent, margin:"1rem 0"}}>
+      <div style={{ ...stylingComponents({ loadingStatus }).styleDivParent, margin: "1rem 0" }}>
         <div
           style={{
             textAlign: "left",
