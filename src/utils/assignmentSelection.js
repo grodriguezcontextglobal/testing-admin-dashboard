@@ -152,3 +152,55 @@ export function isAddressComplete(address) {
     Boolean(text(address?.[field]))
   );
 }
+
+/**
+ * Whether the address can be accepted as typed.
+ *
+ * Answering is voluntary: the field asks where a device will be kept, and the
+ * honest answer is usually the school's own address, or — for a device going
+ * home with a child — a family's home address that nothing in the product ever
+ * reads back. Holding it because a form insisted is the kind of collection
+ * worth not doing.
+ *
+ * Optional is not unchecked, though. A half-typed address looks like a record
+ * and cannot be delivered to, so it is all four fields or none. And the zip has
+ * to contain a digit: the gate this replaces was satisfied by a single letter
+ * in every field, which is how "F, F, F" got accepted during the review.
+ */
+export function isAddressUsable(address) {
+  const fields = ["street", "city", "state", "zip"];
+  const filled = fields.filter((field) => Boolean(text(address?.[field])));
+  if (filled.length === 0) return true;
+  if (filled.length < fields.length) return false;
+  return /\d/.test(text(address?.zip));
+}
+
+/**
+ * The inventory group that holds a given device, or null.
+ *
+ * Assigning from a device's own page hands the staff flow a serial and expects
+ * its group to be selected already. Category and group alone are not enough to
+ * identify one — the same model sits in several locations — so the location
+ * narrows it. When the device carries no location, category and group are
+ * accepted only if exactly one group matches: picking the wrong one would load
+ * the wrong shelf's serials and quietly hand over a different unit.
+ */
+export function findOptionForDevice(options, device) {
+  const list = Array.isArray(options) ? options : [];
+  if (!device || list.length === 0) return null;
+
+  const category = text(device.category_name);
+  const group = text(device.item_group);
+  const location = text(device.location);
+
+  const sameGroup = list.filter(
+    (option) =>
+      text(option.category_name) === category && text(option.item_group) === group
+  );
+  if (sameGroup.length === 0) return null;
+
+  if (location) {
+    return sameGroup.find((option) => text(option.location) === location) ?? null;
+  }
+  return sameGroup.length === 1 ? sameGroup[0] : null;
+}

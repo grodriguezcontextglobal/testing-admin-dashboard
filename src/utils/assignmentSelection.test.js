@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildInventoryOptions,
   isAddressComplete,
+  isAddressUsable,
+  findOptionForDevice,
   remainingUnits,
   resolveSerialScan,
   summarizePick,
@@ -155,5 +157,91 @@ describe("isAddressComplete", () => {
       isAddressComplete({ street: " ", city: "Austin", state: "TX", zip: "78701" })
     ).toBe(false);
     expect(isAddressComplete(undefined)).toBe(false);
+  });
+});
+
+/**
+ * The address stopped being mandatory after the product review. The reasoning
+ * was data minimisation, in his words: most answers are the school's own
+ * address, and for a device going home with a child it is a family's home
+ * address — "do you really need to have that in this database? Probably not."
+ *
+ * Optional is not the same as unchecked. A half-typed address is worse than no
+ * address, because it looks like a record and cannot be delivered to, and the
+ * old gate accepted a single letter in every field.
+ */
+describe("isAddressUsable", () => {
+  const full = { street: "1 Main", city: "Austin", state: "TX", zip: "78701" };
+
+  it("accepts a completely empty address — answering is voluntary", () => {
+    expect(isAddressUsable({ street: "", city: "", state: "", zip: "" })).toBe(true);
+    expect(isAddressUsable({})).toBe(true);
+    expect(isAddressUsable(undefined)).toBe(true);
+  });
+
+  it("accepts whitespace as empty, not as an answer", () => {
+    expect(
+      isAddressUsable({ street: "  ", city: " ", state: "", zip: "   " })
+    ).toBe(true);
+  });
+
+  it("accepts a complete address", () => {
+    expect(isAddressUsable(full)).toBe(true);
+  });
+
+  it("rejects a half-typed one — that is a slip, not a choice", () => {
+    expect(isAddressUsable({ ...full, city: "" })).toBe(false);
+    expect(isAddressUsable({ street: "1 Main", city: "", state: "", zip: "" })).toBe(
+      false
+    );
+  });
+
+  it("rejects a zip with no digit in it", () => {
+    // He typed F into the zip, the state and the city, and the form took it.
+    expect(isAddressUsable({ ...full, zip: "F" })).toBe(false);
+  });
+});
+
+describe("findOptionForDevice", () => {
+  const options = [
+    { key: "Laptops|Chromebook|IT office", category_name: "Laptops", item_group: "Chromebook", location: "IT office" },
+    { key: "Laptops|Chromebook|Main office", category_name: "Laptops", item_group: "Chromebook", location: "Main office" },
+    { key: "Tablets|iPad|IT office", category_name: "Tablets", item_group: "iPad", location: "IT office" },
+  ];
+
+  it("finds the group holding a device, location included", () => {
+    expect(
+      findOptionForDevice(options, {
+        category_name: "Laptops",
+        item_group: "Chromebook",
+        location: "Main office",
+      })?.key
+    ).toBe("Laptops|Chromebook|Main office");
+  });
+
+  it("falls back to category and group when the location is unknown, if that is unambiguous", () => {
+    expect(
+      findOptionForDevice(options, {
+        category_name: "Tablets",
+        item_group: "iPad",
+      })?.key
+    ).toBe("Tablets|iPad|IT office");
+  });
+
+  it("refuses to guess when the location is unknown and several groups match", () => {
+    expect(
+      findOptionForDevice(options, {
+        category_name: "Laptops",
+        item_group: "Chromebook",
+      })
+    ).toBeNull();
+  });
+
+  it("is null for a device no group holds, or no device at all", () => {
+    expect(
+      findOptionForDevice(options, { category_name: "Phones", item_group: "Pixel" })
+    ).toBeNull();
+    expect(findOptionForDevice(options, null)).toBeNull();
+    expect(findOptionForDevice(null, { category_name: "Laptops" })).toBeNull();
   });
 });

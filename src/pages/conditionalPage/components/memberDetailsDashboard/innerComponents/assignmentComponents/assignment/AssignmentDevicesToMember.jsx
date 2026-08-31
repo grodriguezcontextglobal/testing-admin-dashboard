@@ -23,7 +23,7 @@ import { AntSelectorStyle } from "../../../../../../../styles/global/AntSelector
 import "../../../../../../../styles/global/actionForm.css";
 import {
   buildInventoryOptions,
-  isAddressComplete,
+  isAddressUsable,
   remainingUnits,
   resolveSerialScan,
   summarizePick,
@@ -507,8 +507,10 @@ const AssignmentDevicesToMember = () => {
         message: "Pick at least one unit to hand over.",
       });
     }
-    if (!isAddressComplete(data)) {
-      return setNotice("Fill in the full address where the device will be kept.");
+    if (!isAddressUsable(data)) {
+      return setNotice(
+        "Complete the address or leave it empty — answering is optional, but a partial address cannot be used, and the ZIP needs to contain numbers."
+      );
     }
     if (isBlocked) {
       // Belt and braces: the button is already disabled for both cases.
@@ -633,7 +635,7 @@ const AssignmentDevicesToMember = () => {
             )}
           </div>
           <div className="action-form__field">
-            <Label>Pick from the warehouse</Label>
+            <Label>Pick a unit</Label>
             <Select
               className="custom-autocomplete"
               showSearch
@@ -768,7 +770,7 @@ const AssignmentDevicesToMember = () => {
         )}
 
         {/* 3 — where and until when */}
-        <section className={stepClass(isAddressComplete(watch()))}>
+        <section className={stepClass(isAddressUsable(watch()))}>
           <div className="action-form__step-head">
             <h3 className="action-form__step-title">
               <span className="action-form__step-index">3</span>

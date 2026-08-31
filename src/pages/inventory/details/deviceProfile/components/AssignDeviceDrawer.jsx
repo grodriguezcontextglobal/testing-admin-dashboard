@@ -173,7 +173,19 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
           companyData: company,
         })
       );
-      navigate(`/staff/${adminUser.id}/assignment`);
+      /* The notice above promises the device comes along. It did not: the staff
+         form opened empty and the operator re-picked the unit they were
+         standing over. */
+      navigate(`/staff/${adminUser.id}/assignment`, {
+        state: {
+          device: {
+            serial_number: item.serial_number,
+            item_group: item.item_group,
+            category_name: item.category_name,
+            location: resolveLocation(item),
+          },
+        },
+      });
     } catch (error) {
       notify("error", error.message, "");
     } finally {

@@ -208,7 +208,7 @@ group at a time", which Fredrik could not parse. Now:
 B2 and B3 are one paragraph and shipped together, with `ReviewStep.test.jsx`
 (4 tests) covering both plus the singular/plural count.
 
-### B4 — Assigning from a device does not carry the device with it
+### B4 — Assigning from a device does not carry the device with it — **done**
 
 `22:36`. Clicking assign on a device navigates to the person's profile and
 starts from an empty form.
@@ -217,19 +217,39 @@ starts from an empty form.
 > device location. So it should already know the location and the serial number
 > and whatever else it is."*
 
-Navigating to the profile is fine — he said so explicitly. The device, its
-serial and its current location must arrive with it.
+The member path was already right — `AssignDeviceDrawer` assigns in place. The
+**staff** path, which is the one he was on (`21:16`, *"I want to assign that to
+myself"*), hands off to `/staff/:id/assignment` — and the drawer's own notice
+says *"We'll take you there with {serial} in hand"*, **a promise the code did
+not keep**. It hydrated the staff profile and navigated, carrying nothing.
 
-### B5 — The assign button names a hardcoded location
+**Fixed 2026-08-31.** The hand-off passes the serial, group, category and
+location in route state. The staff form selects the group and picks the unit on
+arrival, in two steps because the serials load asynchronously.
 
-`21:46`. The button text names where the device currently sits.
+New tested `findOptionForDevice` (4 tests) resolves which inventory group holds
+the device. It **refuses to guess**: category and group alone are accepted only
+when exactly one group matches, because the same model sits in several
+locations and loading the wrong shelf would hand over a different unit with the
+same name. The pick is routed through the existing `resolveSerialScan`, so a
+device that moved between the drawer reading it and the form opening is refused
+with the same message a mistyped scan gets, rather than silently assigning
+something else.
+
+### B5 — The assign screen named a location the device was not in — **done**
+
+`21:40`, standing on a device in the IT office: *"So it's not from the warehouse
+here."* Then `21:46`:
 
 > *"You don't have to say the actual location where it's currently at, meaning
 > the IT office, but that has to be dynamically assigned… Or you can just say
 > assign. Assign device."*
 
-Simplest correct answer: **"Assign device"**. If the location stays, it must be
-read from the device, never written into the string.
+`Assignment.jsx:28` read **"Assign a device from the warehouse"**, and both
+assignment forms labelled the picker **"Pick from the warehouse"**. Neither is
+true: `warehouse: 1` on that query is a flag meaning *in company stock*, and the
+location column beside it says IT office, Main office, HR office. The header is
+now **"Assign device"** and the picker says **"Pick a unit"**.
 
 ### B6 — Address must be optional, and its validation is theatre
 
@@ -245,9 +265,19 @@ formalises — worth noting when A3/FedRAMP gap analysis happens.
 
 **Validation** — `36:23`–`36:55`: he typed `F` into the zip, `F` into state, `F`
 into city and the form accepted it. *"So it's just requires something in the
-field, right?"* Presence-only validation on an address that is about to become
-optional is the worst of both worlds. Once optional: validate the shape when
-something is typed, accept nothing when it is blank.
+field, right?"*
+
+**Both done 2026-08-31.** New tested `isAddressUsable` (6 tests) replaces
+`isAddressComplete` at all four gates across the member and staff flows:
+
+- **Blank is accepted** — answering is voluntary, which was the ask.
+- **A half-typed address is not.** Optional is not the same as unchecked: a
+  partial address looks like a record and cannot be delivered to. All four
+  fields or none.
+- **The ZIP must contain a digit**, which is the narrowest thing that stops
+  `F` without inventing a format policy. He did not ask for stricter shape
+  validation — he observed the gap and moved on — so nothing beyond this was
+  added.
 
 Note (`23:50`): for school members the address already prefills from the
 student's record. That behaviour stays.

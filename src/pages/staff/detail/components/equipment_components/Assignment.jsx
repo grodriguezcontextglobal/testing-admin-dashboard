@@ -25,7 +25,7 @@ const Assignment = () => {
 
   return (
     <ModalUX
-      title={renderingTitle("Assign a device from the warehouse")}
+      title={renderingTitle("Assign device")}
       body={<AssignmentFromExistingInventory />}
       openDialog
       closeModal={closeModal}
