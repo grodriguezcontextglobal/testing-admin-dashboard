@@ -1,5 +1,6 @@
 import {
   Grid,
+  IconButton,
   MenuItem,
   OutlinedInput,
   Select,
@@ -10,6 +11,11 @@ import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { useForm } from "react-hook-form";
 import { assertWriteSucceeded } from "../../../../../../utils/assignmentWrites";
+import { X } from "lucide-react";
+import {
+  RETURN_CONDITIONS,
+  conditionLabel,
+} from "../../../../utils/returnConditions";
 import { useState } from "react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Divider, message } from "antd";
@@ -27,7 +33,6 @@ import {
   buildReturnNotification,
   shouldOfferFeeCollection,
 } from "../../../../utils/leaseReturnUtils";
-const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
 /**
  * @param {Function} [onFeePending] called instead of a plain close when a fee
@@ -44,7 +49,7 @@ const Return = ({
   onFeePending,
   onDeclarationRecorded,
 }) => {
-  const { register, handleSubmit, watch } = useForm();
+  const { register, handleSubmit, watch, setValue } = useForm();
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector((state) => state.member);
@@ -328,20 +333,46 @@ const Return = ({
         )}
         {watch("outcome") !== "lost" && (
         <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-          <Select
-            className="custom-autocomplete"
-            {...register("reason", { required: watch("outcome") !== "lost" })}
-            style={{ ...AntSelectorStyle, width: "100%" }}
-            autoComplete="off"
-            clearable={true}
-          >
-            <MenuItem value="">None</MenuItem>
-            {options.map((option) => (
-              <MenuItem key={option} value={option}>
-                <Typography>{option}</Typography>
-              </MenuItem>
-            ))}
-          </Select>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Select
+              className="custom-autocomplete"
+              {...register("reason", { required: watch("outcome") !== "lost" })}
+              value={watch("reason") ?? ""}
+              displayEmpty
+              renderValue={(selected) =>
+                selected ? (
+                  <Typography>{conditionLabel(selected)}</Typography>
+                ) : (
+                  <Typography style={{ color: "var(--gray-500, #667085)" }}>
+                    Select a condition
+                  </Typography>
+                )
+              }
+              style={{ ...AntSelectorStyle, width: "100%" }}
+              autoComplete="off"
+            >
+              {/* No "None": an absent condition is a blank field, not a choice
+                  on the list -- and picking it left the form unable to submit. */}
+              {RETURN_CONDITIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  <Typography>{option.label}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+            {/* Without this there is no way back to blank once something is
+                picked, which is the state the form starts in. */}
+            {watch("reason") ? (
+              <IconButton
+                aria-label="Clear the condition"
+                size="small"
+                onClick={() =>
+                  setValue("reason", "", { shouldValidate: true })
+                }
+              >
+                <X size={16} />
+              </IconButton>
+            ) : null}
+          </div>
         </Grid>
         )}
         {(watch("outcome") === "lost" || watch("reason") !== "") && (

@@ -252,28 +252,44 @@ something is typed, accept nothing when it is blank.
 Note (`23:50`): for school members the address already prefills from the
 student's record. That behaviour stays.
 
-### B7 — Return condition dropdown
+### B7 — Return condition dropdown — **done**
 
-`39:18`–`40:51`. Options today: Operational, Network, Hardware, Damaged, and
-`None`.
+`39:18`–`40:51`. All three parts shipped 2026-08-31.
 
-- **`None` must go.** `40:17` — *"definitely not none, should not be an option
-  here. Oh, so it's blank then. So you can say leave blank then or something
-  like that."* Verified at
-  `src/pages/conditionalPage/tables/detailTableComponents/acions/return/Return.jsx:328`
-  — `<MenuItem value="">None</MenuItem>`.
-- **Network and Hardware need describing.** `39:33` — *"Network, I don't know
-  what that means in terms of condition."* They are damage categories, which is
-  not readable from the word alone. Keep them, label them so they explain
-  themselves.
-- **Add a clear (✗) affordance** — Cesar's suggestion at `40:39`, so a user who
-  picked a value can get back to blank.
+- **`None` is gone.** `40:17` — *"definitely not none, should not be an option
+  here. Oh, so it's blank then."* It was worse than cosmetic: the submit button
+  only renders while `reason !== ""`, so picking "None" made the button vanish
+  with no explanation. The field now starts blank with a *Select a condition*
+  placeholder, which is what "None" was pretending to be.
+- **Network and Hardware describe themselves.** `39:33` — *"Network, I don't
+  know what that means in terms of condition."* Each option now reads
+  `value — what it means` (*Network — will not connect*, *Hardware — a part has
+  failed*, *Battery — will not hold a charge*).
+- **Clear (✗) added** — Cesar at `40:39`. Nothing could return the field to
+  blank once a value was picked, which is the state the form starts in.
 
-### B8 — The legal-document button does not change its label
+The list moved to a tested `src/pages/conditionalPage/utils/returnConditions.js`
+(5 tests). **The values are a server contract** — `reason` is sent verbatim as
+`status` to `/db_event/returning-item` — so a test pins the five exact strings
+and another pins that no option is ever empty. `conditionLabel` hands an
+unrecognised value straight back rather than blanking it, because rows written
+before this list existed are still history.
+
+Note the old `clearable={true}` on the MUI `Select` was a no-op — MUI has no
+such prop. That is presumably why nothing cleared.
+
+### B8 — The legal-document button does not change its label — **done**
 
 `25:31`, Gustavo live: *"Just click add legal document again. I have to just
-change the label."* The button toggles add/remove; the text always says add.
-This was also the trigger for the 400 in **A1**.
+change the label."*
+
+`LegalDocumentModal.jsx:293` — the button toggles `addContracts`, but its title
+was the constant `"Add legal document"`. So the way out of the state was to
+press a button that said you were entering it, which is why the only person who
+knew how to undo it was the one who wrote it. Now reads **"Remove legal
+document"** while the section is open.
+
+This was also what put Fredrik into the 400 in **A1**.
 
 ### B9 — One word for a person, not two
 

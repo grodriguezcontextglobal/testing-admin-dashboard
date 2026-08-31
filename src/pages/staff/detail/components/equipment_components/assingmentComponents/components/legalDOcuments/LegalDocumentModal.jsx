@@ -290,7 +290,7 @@ const LegalDocumentModal = ({
               Do you want to email a device contract to {titleRef}?{" "}
             </p>
             <BlueButtonComponent
-              title={"Add legal document"}
+              title={addContracts ? "Remove legal document" : "Add legal document"}
               func={() => setAddContracts(!addContracts)}
               styles={buttonContainerStyling().button}
               titleStyles={buttonContainerStyling().p}
