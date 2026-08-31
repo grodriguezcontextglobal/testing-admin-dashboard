@@ -165,7 +165,15 @@ export const receiptTotal = (transaction) => {
  *   lines: Array<{label: string, amount: number}>, total: number,
  *   status: string, company: string, reference: string}}
  */
-export const mapTransactionToReceipt = (transaction) => {
+/**
+ * @param {object} transaction
+ * @param {object} [options]
+ * @param {string} [options.companyLogo] the company's logo, when the caller has
+ *   a session to read it from. /receipt is registered in both the authorized
+ *   and unauthorized route trees -- it is opened from a QR scan by people
+ *   outside the company -- so this cannot be read from Redux in here.
+ */
+export const mapTransactionToReceipt = (transaction, { companyLogo } = {}) => {
   const consumer = transaction?.consumerInfo ?? {};
   const lines = (Array.isArray(transaction?.device) ? transaction.device : []).map(
     (line) => ({
@@ -193,6 +201,7 @@ export const mapTransactionToReceipt = (transaction) => {
     status: resolveReceiptStatus(transaction),
     company: `${transaction?.provider ?? ""}`,
     reference: `${transaction?.eventSelected ?? ""}`,
+    logoUrl: resolveReceiptLogo(companyLogo),
   };
 };
 

@@ -610,3 +610,52 @@ describe("receiptSignatures", () => {
     expect(receiptSignatures({})).toEqual([]);
   });
 });
+
+/**
+ * The payment receipt was the only one with no letterhead. Handover and return
+ * slips both take a companyLogo; this one never set logoUrl, so the one receipt
+ * a paying customer actually sees carried no mark of who issued it.
+ *
+ * It cannot come from the session unconditionally: /receipt is registered in
+ * both AuthRoutes and NoAuthRoutes and is opened from a QR scan by people
+ * outside the company. So the caller passes it when there is a session, and the
+ * page renders without one when there is not.
+ */
+describe("mapTransactionToReceipt — company letterhead", () => {
+  const transaction = { paymentIntent: "pi_1", provider: "Bridges", device: [] };
+
+  it("carries the logo when the caller has a session to read it from", () => {
+    expect(
+      mapTransactionToReceipt(transaction, {
+        companyLogo: "https://res.cloudinary.com/x/logo.png",
+      }).logoUrl
+    ).toBe("https://res.cloudinary.com/x/logo.png");
+  });
+
+  it("renders without one for a viewer who is not signed in", () => {
+    expect(mapTransactionToReceipt(transaction).logoUrl).toBeNull();
+    expect(mapTransactionToReceipt(transaction, {}).logoUrl).toBeNull();
+  });
+
+  it("holds the logo to the same rule as every other receipt", () => {
+    // resolveReceiptLogo: absolute http(s) only. A receipt is printed and can
+    // be opened from a QR scan, so a javascript: or data: src has no business
+    // being its letterhead.
+    expect(
+      mapTransactionToReceipt(transaction, { companyLogo: "javascript:alert(1)" })
+        .logoUrl
+    ).toBeNull();
+    expect(
+      mapTransactionToReceipt(transaction, { companyLogo: "/uploads/logo.png" })
+        .logoUrl
+    ).toBeNull();
+  });
+
+  it("leaves the rest of the receipt exactly as it was", () => {
+    const withLogo = mapTransactionToReceipt(transaction, {
+      companyLogo: "https://res.cloudinary.com/x/logo.png",
+    });
+    const without = mapTransactionToReceipt(transaction);
+    expect({ ...withLogo, logoUrl: null }).toEqual(without);
+  });
+});

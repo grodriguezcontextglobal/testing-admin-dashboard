@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Alert } from "antd";
+import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
@@ -34,6 +35,10 @@ import {
  * here.
  */
 const ReceiptPage = () => {
+  /* Empty for a viewer opening this from a QR scan, which is the point: the
+     page serves both, and the letterhead is the part only a member of the
+     company can supply. */
+  const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const paymentIntent = readPaymentIntentFromSearch(location.search);
 
@@ -124,7 +129,15 @@ const ReceiptPage = () => {
   // No qrValue: the reader is already here, and a QR pointing at the page you
   // are looking at is noise.
   return frame(
-    <ReceiptDocument receipt={mapTransactionToReceipt(receiptQuery.data)} />
+    <ReceiptDocument
+      receipt={mapTransactionToReceipt(receiptQuery.data, {
+        /* Only a signed-in viewer has a company to read. Someone opening this
+           from a QR scan is outside the company and gets the receipt without
+           its letterhead -- which is the backend ask, not something the client
+           can answer. */
+        companyLogo: user?.companyData?.company_logo,
+      })}
+    />
   );
 };
 
