@@ -162,7 +162,7 @@ const MultiSelectComponent = ({
         {label && (
           <label className="multiselect-label">
             {label}
-            {isRequired && <span className="required-asterisk">*</span>}
+            {isRequired && <span className="form-label__required" aria-hidden="true">*</span>}
           </label>
         )}
         {tooltip && (

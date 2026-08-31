@@ -143,7 +143,7 @@ const DocumentUpload = ({
           </h3>
         </div>
         <div className="action-form__field">
-          <Label htmlFor="provider-document-file">Document file *</Label>
+          <Label htmlFor="provider-document-file" required>Document file</Label>
           <input
             ref={fileInputRef}
             id="provider-document-file"
@@ -183,7 +183,7 @@ const DocumentUpload = ({
         </div>
         <div className="action-form__grid">
           <div className="action-form__field action-form__field--wide">
-            <Label htmlFor="provider-document-title">Title *</Label>
+            <Label htmlFor="provider-document-title" required>Title</Label>
             <Input
               id="provider-document-title"
               value={title}

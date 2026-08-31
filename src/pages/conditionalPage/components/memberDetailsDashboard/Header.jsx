@@ -3,6 +3,7 @@ import { message } from "antd";
 import PropTypes from "prop-types";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { audienceWords } from "../../../../config/industryProfiles";
 import { useNavigate } from "react-router-dom";
 import { utils, writeFile } from "xlsx";
 import { registerStaffActivity } from "../../../../api/activityLog";
@@ -43,6 +44,11 @@ const titleCase = (value) =>
 
 const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
   const { user } = useSelector((state) => state.admin);
+  /* One directory decides what these people are called: the same
+     industriesList entry that titles the nav tab. A school reads "Student"
+     here, a clinic "Patient". Routes, permissions, API paths and test ids stay
+     `member` -- those are identifiers, not words anyone reads. */
+  const who = audienceWords(user?.companyData?.industry);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [deleteFailure, setDeleteFailure] = useState("");
@@ -105,7 +111,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
         ...profilePairs.map((p) => [p.field, p.value]),
       ]);
       profileWs["!cols"] = [{ width: 24 }, { width: 30 }];
-      utils.book_append_sheet(wb, profileWs, "Member Profile");
+      utils.book_append_sheet(wb, profileWs, `${who.Singular} Profile`);
 
       const devicesWs = utils.aoa_to_sheet([
         ASSIGNED_DEVICES_EXPORT_COLUMNS.map((c) => c.label),
@@ -127,9 +133,9 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
         detailMemberInfo?.last_name ?? ""
       }`.replace(/\s+/g, "_");
       writeFile(wb, `${fileNameLabel}_export_${Date.now()}.xlsx`);
-      message.success("Member data exported.");
+      message.success(`${who.Singular} data exported.`);
     } catch {
-      message.error("Failed to export member data. Please try again.");
+      message.error(`Failed to export ${who.singular} data. Please try again.`);
     }
   };
 
@@ -146,7 +152,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
       );
       // These endpoints answer 200 with `{ ok: false, msg }` when they refuse.
       if (response?.data?.ok === false) {
-        throw new Error(response.data.msg || "The member was not deleted.");
+        throw new Error(response.data.msg || `The ${who.singular} was not deleted.`);
       }
       return response?.data;
     },
@@ -164,7 +170,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
       setDeleteFailure(
         error?.response?.data?.msg ||
           error?.message ||
-          "The member was not deleted. Nothing was changed — try again."
+          `The ${who.singular} was not deleted. Nothing was changed — try again.`
       );
     },
   });
@@ -239,7 +245,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
     },
     hasPermission("member:delete", resolveRoleType(user)) &&
       (deleteFailure || (!removal.deletable && removal.reason === "holding-devices")) && {
-        label: "Removing this member",
+        label: `Removing this ${who.singular}`,
         items: [
           { value: deleteFailure || removal.detail, muted: !deleteFailure },
         ],
@@ -277,7 +283,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
       />
       {hasPermission("member:delete", roleType) && (
         <DangerButtonConfirmationComponent
-          title={"Delete member"}
+          title={`Delete ${who.singular}`}
           confirmationTitle={`Delete ${memberLabel(detailMemberInfo)}?`}
           confirmationDescription={describeDeleteConsequence(detailMemberInfo)}
           okText="Delete"
@@ -291,7 +297,9 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
           isDisabled={!removal.deletable}
           isLoading={deleteMemberMutation.isLoading}
           ariaLabel={
-            removal.deletable ? "Delete member" : `Cannot delete: ${removal.detail}`
+            removal.deletable
+              ? `Delete ${who.singular}`
+              : `Cannot delete: ${removal.detail}`
           }
           styles={{ width:"100%" }}
         />

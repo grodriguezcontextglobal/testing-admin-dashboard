@@ -195,7 +195,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
           <span className="action-form__step-note">PDF only</span>
         </div>
         <div className="action-form__field">
-          <Label htmlFor="document-file">PDF file *</Label>
+          <Label htmlFor="document-file" required>PDF file</Label>
           <input
             ref={fileInputRef}
             id="document-file"
@@ -226,7 +226,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
         </div>
         <div className="action-form__grid">
           <div className="action-form__field action-form__field--wide">
-            <Label htmlFor="document-title">Title *</Label>
+            <Label htmlFor="document-title" required>Title</Label>
             <Input
               id="document-title"
               value={title}

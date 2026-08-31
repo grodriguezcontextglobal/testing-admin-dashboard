@@ -255,3 +255,12 @@ html {
 ::-webkit-scrollbar-thumb:hover {
     background-color: var(--gray500);
 } */
+
+/* The mandatory marker. Danger red carries the meaning — a grey asterisk reads
+   as a footnote — and the left margin keeps it off the last letter of the
+   title. */
+.form-label__required {
+  color: var(--danger-action, #b42318);
+  margin-left: 0.125rem;
+  font-weight: 600;
+}

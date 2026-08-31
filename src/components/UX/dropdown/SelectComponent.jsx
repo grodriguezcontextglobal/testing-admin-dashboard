@@ -90,7 +90,7 @@ const SelectComponent = ({
       {label && (
         <label className="select-label">
           {label}
-          {isRequired && <span>*</span>}
+          {isRequired && <span className="form-label__required" aria-hidden="true">*</span>}
         </label>
       )}
       <div className="select-input-wrapper">

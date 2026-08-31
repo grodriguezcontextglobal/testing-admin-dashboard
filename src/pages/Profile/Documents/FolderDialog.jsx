@@ -168,7 +168,7 @@ const FolderDialog = ({
         </div>
         <div className="action-form__grid">
           <div className="action-form__field action-form__field--wide">
-            <Label htmlFor="folder_name">Name *</Label>
+            <Label htmlFor="folder_name" required>Name</Label>
             <Input
               id="folder_name"
               value={folderForm?.folder_name ?? ""}
@@ -185,7 +185,7 @@ const FolderDialog = ({
           </div>
 
           <div className="action-form__field action-form__field--wide">
-            <Label htmlFor="folder_description">Description *</Label>
+            <Label htmlFor="folder_description" required>Description</Label>
             <TextArea
               id="folder_description"
               value={folderForm?.folder_description ?? ""}

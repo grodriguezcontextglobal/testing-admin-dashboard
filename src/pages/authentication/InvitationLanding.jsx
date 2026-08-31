@@ -390,7 +390,7 @@ const InvitationLanding = () => {
                 {/* Password */}
                 <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Password <span style={{ fontWeight: 800 }}>*</span>
+                    Password <span className="form-label__required" aria-hidden="true">*</span>
                   </FormLabel>
                   <Input
                     {...register("password", {
@@ -437,7 +437,7 @@ const InvitationLanding = () => {
                 {/* Confirm password */}
                 <Grid marginY="20px" marginX={0} textAlign="left" item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Confirm password <span style={{ fontWeight: 800 }}>*</span>
+                    Confirm password <span className="form-label__required" aria-hidden="true">*</span>
                   </FormLabel>
                   <Input
                     required

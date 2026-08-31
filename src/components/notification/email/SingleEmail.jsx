@@ -132,7 +132,7 @@ const SingleEmailNotification = ({
 
       <div className="action-form__grid">
         <div className="action-form__field action-form__field--wide">
-          <Label htmlFor="email-subject">Subject *</Label>
+          <Label htmlFor="email-subject" required>Subject</Label>
           <Input
             id="email-subject"
             value={subject}
@@ -149,7 +149,7 @@ const SingleEmailNotification = ({
         </div>
 
         <div className="action-form__field action-form__field--wide">
-          <Label htmlFor="email-message">Message *</Label>
+          <Label htmlFor="email-message" required>Message</Label>
           <TextArea
             id="email-message"
             value={message}

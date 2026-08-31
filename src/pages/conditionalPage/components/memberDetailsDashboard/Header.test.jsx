@@ -79,21 +79,25 @@ beforeEach(() => {
 });
 
 describe("the member page's delete action", () => {
+  /* The fixture company's industry is Education, so every label below reads
+     "student". That is the point of the assertions: the word comes from the
+     industry directory, not from the component. A clinic would read "patient"
+     here without a line of this file changing except the fixture. */
   it("is offered to a role that may delete members", () => {
     wrap();
-    expect(screen.getByText("Delete member")).toBeInTheDocument();
+    expect(screen.getByText("Delete student")).toBeInTheDocument();
   });
 
   it("is not offered to a role that may not", () => {
     // member:delete is EVENT_D — root_admin, admin, event_manager.
     roleType = "assistant";
     wrap();
-    expect(screen.queryByText("Delete member")).not.toBeInTheDocument();
+    expect(screen.queryByText("Delete student")).not.toBeInTheDocument();
   });
 
   it("asks before it acts, naming the member", async () => {
     wrap();
-    fireEvent.click(screen.getByText("Delete member"));
+    fireEvent.click(screen.getByText("Delete student"));
 
     await waitFor(() =>
       expect(document.querySelector(".ant-popconfirm")).toBeTruthy()
@@ -105,7 +109,7 @@ describe("the member page's delete action", () => {
 
   it("deletes on confirmation, with the body the endpoint takes", async () => {
     wrap();
-    fireEvent.click(screen.getByText("Delete member"));
+    fireEvent.click(screen.getByText("Delete student"));
     fireEvent.click(await screen.findByText("Delete"));
 
     await waitFor(() => expect(deleteCalls()).toHaveLength(1));
@@ -114,7 +118,7 @@ describe("the member page's delete action", () => {
 
   it("records who was removed, since the record itself is going", async () => {
     wrap();
-    fireEvent.click(screen.getByText("Delete member"));
+    fireEvent.click(screen.getByText("Delete student"));
     fireEvent.click(await screen.findByText("Delete"));
 
     await waitFor(() => expect(activitySpy).toHaveBeenCalledTimes(1));
@@ -128,7 +132,7 @@ describe("the member page's delete action", () => {
 
   it("goes back to the list, since the page it was on no longer has a member", async () => {
     wrap();
-    fireEvent.click(screen.getByText("Delete member"));
+    fireEvent.click(screen.getByText("Delete student"));
     fireEvent.click(await screen.findByText("Delete"));
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith("/members"));
@@ -138,7 +142,7 @@ describe("the member page's delete action", () => {
     // Deleting them leaves the assignment pointing at nobody.
     wrap({ deviceSummary: { out: 2, overdue: 1 } });
 
-    const button = screen.getByText("Delete member").closest("button");
+    const button = screen.getByText("Delete student").closest("button");
     expect(button.disabled).toBe(true);
     fireEvent.click(button);
     await waitFor(() => expect(deleteCalls()).toHaveLength(0));
@@ -156,7 +160,7 @@ describe("the member page's delete action", () => {
   it("waits rather than offering to delete while the device count is unknown", () => {
     // `null`, not `undefined` — the destructuring default would swallow that.
     wrap({ deviceSummary: null });
-    expect(screen.getByText("Delete member").closest("button").disabled).toBe(true);
+    expect(screen.getByText("Delete student").closest("button").disabled).toBe(true);
   });
 
   it("reports a refused delete and stays on the page", async () => {
@@ -167,7 +171,7 @@ describe("the member page's delete action", () => {
       return Promise.resolve({ data: { ok: true } });
     });
     wrap();
-    fireEvent.click(screen.getByText("Delete member"));
+    fireEvent.click(screen.getByText("Delete student"));
     fireEvent.click(await screen.findByText("Delete"));
 
     await waitFor(() =>
@@ -185,7 +189,7 @@ describe("the member page's delete action", () => {
       return Promise.resolve({ data: { ok: true } });
     });
     wrap();
-    fireEvent.click(screen.getByText("Delete member"));
+    fireEvent.click(screen.getByText("Delete student"));
     fireEvent.click(await screen.findByText("Delete"));
 
     await waitFor(() => expect(screen.getByText("Network Error")).toBeInTheDocument());

@@ -204,7 +204,7 @@ const AdvanceSearchModal = ({
           </h3>
         </div>
         <div className="action-form__field">
-          <Label htmlFor="forecast-period">Period *</Label>
+          <Label htmlFor="forecast-period" required>Period</Label>
           <RangePicker
             id="forecast-period"
             size="large"

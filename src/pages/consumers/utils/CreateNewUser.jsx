@@ -269,7 +269,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
               className={`action-form__field${field.wide ? " action-form__field--wide" : ""}`}
               key={field.key}
             >
-              <Label htmlFor={field.key}>{field.label} *</Label>
+              <Label htmlFor={field.key} required>{field.label}</Label>
               <Input
                 id={field.key}
                 type={field.type ?? "text"}
@@ -288,7 +288,7 @@ export const CreateNewConsumer = ({ createUserButton, setCreateUserButton }) => 
           ))}
 
           <div className="action-form__field action-form__field--wide">
-            <Label htmlFor="phoneNumber">Phone number *</Label>
+            <Label htmlFor="phoneNumber" required>Phone number</Label>
             <PhoneInput
               id="phoneNumber"
               countrySelectProps={{ unicodeFlags: true }}

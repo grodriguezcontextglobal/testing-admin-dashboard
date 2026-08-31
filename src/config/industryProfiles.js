@@ -89,3 +89,43 @@ export const assignableTargetsLabel = (industry) => {
 };
 
 export default getIndustryProfile;
+
+/**
+ * The singular of an audience word.
+ *
+ * Every entry the directory currently serves is a regular `-s` plural
+ * (Students, Patients, Contractors, End-users, IT Professionals), so dropping
+ * the final `s` is enough — but only when it is really a plural. "Staff" and
+ * "Press" are not, and a word ending in a double `s` never is, so both are left
+ * as they are rather than being mangled into "Staf" if the directory grows.
+ */
+export const singularizeAudience = (word) => {
+  const text = String(word ?? "").trim();
+  if (!/s$/i.test(text) || /ss$/i.test(text)) return text;
+  return text.slice(0, -1);
+};
+
+/**
+ * What this company calls the people in its members module, ready to drop into
+ * a sentence or a heading.
+ *
+ * The word comes from one place — the same `industriesList` entry that titles
+ * the nav tab — so a school reads "Student" on every screen, a clinic reads
+ * "Patient" and a rental company reads "Renter", without any of those words
+ * being written into a component. An industry with no audience falls back to
+ * "member", which is what the module was called before it learned to adapt.
+ *
+ * @param {string} industry the company's industry string
+ * @returns {{singular: string, plural: string, Singular: string, Plural: string}}
+ */
+export const audienceWords = (industry) => {
+  const { audience } = getIndustryProfile(industry);
+  const Plural = String(audience ?? "").trim() || "Members";
+  const Singular = singularizeAudience(Plural);
+  return {
+    singular: Singular.toLowerCase(),
+    plural: Plural.toLowerCase(),
+    Singular,
+    Plural,
+  };
+};

@@ -97,7 +97,7 @@ const CreateSubLocationModal = ({
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            <label style={{ fontWeight: 600 }}>Sub-location Name *</label>
+            <label style={{ fontWeight: 600 }}>Sub-location Name <span className="form-label__required" aria-hidden="true">*</span></label>
             <Controller
               name="name"
               control={control}

@@ -13,7 +13,10 @@ import {
   ProfileStatTiles,
   ProfileTabs,
 } from "../../../../components/UX/profile";
-import { getIndustryProfile } from "../../../../config/industryProfiles";
+import {
+  audienceWords,
+  getIndustryProfile,
+} from "../../../../config/industryProfiles";
 import { hasPermission, resolveRoleType } from "../../../../config/roles";
 import { onAddMemberInfo, onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
@@ -52,6 +55,10 @@ const NAV_TABS = [
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
+  /* The company's own word for these people, from the same industriesList entry
+     that titles the nav tab. Identifiers stay `member` throughout — routes,
+     permissions, query keys and test ids are not read by anyone. */
+  const who = audienceWords(user?.companyData?.industry);
   const { id: memberId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -125,8 +132,8 @@ const MainPage = () => {
     return (
       <ProfileShell breadcrumb={<Breadcrumb path={breadcrumbItems} />}>
         <ProfileErrorState
-          title="Couldn't load this member"
-          description="The member service didn't respond. Nothing was changed."
+          title={`Couldn't load this ${who.singular}`}
+          description={`The ${who.singular} service didn't respond. Nothing was changed.`}
           action={
             <GrayButtonComponent
               title={"Try again"}

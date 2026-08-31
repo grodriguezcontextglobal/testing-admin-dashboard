@@ -143,7 +143,7 @@ const CreateSubLocationPathModal = ({
             <div
               style={{ display: "flex", flexDirection: "column", gap: "5px" }}
             >
-              <label style={{ fontWeight: 600 }}>Location *</label>
+              <label style={{ fontWeight: 600 }}>Location <span className="form-label__required" aria-hidden="true">*</span></label>
               <Select
                 style={{ width: "100%" }}
                 placeholder="Select a location"

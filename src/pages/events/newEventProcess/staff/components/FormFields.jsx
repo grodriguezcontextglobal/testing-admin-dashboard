@@ -99,7 +99,7 @@ const FormFields = ({
 
         {/* Role selection remains manual */}
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <InputLabel>Role *</InputLabel>
+          <InputLabel>Role <span className="form-label__required" aria-hidden="true">*</span></InputLabel>
           <FormControl fullWidth>
             <Select
               className="custom-autocomplete"
@@ -136,7 +136,7 @@ const FormFields = ({
             spacing={2}
           >
             <Grid item xs={12} sm={12} md={6} lg={6}>
-              <InputLabel fullWidth>First Name *</InputLabel>
+              <InputLabel fullWidth>First Name <span className="form-label__required" aria-hidden="true">*</span></InputLabel>
               <OutlinedInput
                 {...register("firstName")}
                 style={OutlinedInputStyle}
@@ -146,7 +146,7 @@ const FormFields = ({
               />
             </Grid>
             <Grid item xs={12} sm={12} md={6} lg={6}>
-              <InputLabel fullWidth>Last Name *</InputLabel>
+              <InputLabel fullWidth>Last Name <span className="form-label__required" aria-hidden="true">*</span></InputLabel>
               <OutlinedInput
                 {...register("lastName")}
                 style={OutlinedInputStyle}
@@ -160,7 +160,7 @@ const FormFields = ({
           {/* Email field uses employee.user and is disabled unless adding new */}
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <InputLabel fullWidth>Email *</InputLabel>
+          <InputLabel fullWidth>Email <span className="form-label__required" aria-hidden="true">*</span></InputLabel>
           <OutlinedInput
             {...register("email")}
             style={OutlinedInputStyle}

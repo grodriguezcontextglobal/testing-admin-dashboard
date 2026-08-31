@@ -281,7 +281,7 @@ const Registration = () => {
             {/* ── Email ── */}
             <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
-                Email <span style={{ fontWeight: 800 }}>*</span>
+                Email <span className="form-label__required" aria-hidden="true">*</span>
               </FormLabel>
               <Input
                 required
@@ -295,7 +295,7 @@ const Registration = () => {
             {/* ── Confirm email ── */}
             <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
               <FormLabel style={{ marginBottom: "0.5rem" }}>
-                Confirm email <span style={{ fontWeight: 800 }}>*</span>
+                Confirm email <span className="form-label__required" aria-hidden="true">*</span>
               </FormLabel>
               <Input
                 required
@@ -323,7 +323,7 @@ const Registration = () => {
               <>
                 <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Password <span style={{ fontWeight: 800 }}>*</span>
+                    Password <span className="form-label__required" aria-hidden="true">*</span>
                   </FormLabel>
                   <Input
                     {...register("password", {
@@ -368,7 +368,7 @@ const Registration = () => {
 
                 <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Repeat password <span style={{ fontWeight: 800 }}>*</span>
+                    Repeat password <span className="form-label__required" aria-hidden="true">*</span>
                   </FormLabel>
                   <Input
                     required
@@ -405,14 +405,14 @@ const Registration = () => {
 
                 <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    First name <span style={{ fontWeight: 800 }}>*</span>
+                    First name <span className="form-label__required" aria-hidden="true">*</span>
                   </FormLabel>
                   <Input required {...register("firstName")} type="text" placeholder="Enter your name" fullWidth />
                 </Grid>
 
                 <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>
                   <FormLabel style={{ marginBottom: "0.5rem" }}>
-                    Last name <span style={{ fontWeight: 800 }}>*</span>
+                    Last name <span className="form-label__required" aria-hidden="true">*</span>
                   </FormLabel>
                   <Input required {...register("lastName")} type="text" placeholder="Enter your last name" fullWidth />
                 </Grid>
@@ -420,7 +420,7 @@ const Registration = () => {
                 <Grid display={"flex"} flexDirection={"column"} justifyContent={"flex-start"} alignItems={"center"} marginY={0} gap={2} item xs={12} sm={12} md={12}>
                   <Grid display={"flex"} justifyContent={"flex-start"} alignSelf={"stretch"} marginY={0} gap={2} item xs={12} sm={12} md={12}>
                     <FormLabel style={{ marginBottom: "0.5rem" }}>
-                      Profile photo <span style={{ fontWeight: 800 }}>*</span>
+                      Profile photo <span className="form-label__required" aria-hidden="true">*</span>
                     </FormLabel>
                   </Grid>
                   <Grid display={"flex"} justifyContent={"flex-start"} alignSelf={"stretch"} marginY={0} gap={2} item xs={12} sm={12} md={12}>

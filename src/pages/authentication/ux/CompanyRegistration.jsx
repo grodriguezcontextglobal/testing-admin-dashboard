@@ -108,7 +108,7 @@ const CompanyRegistration = ({
                 xs={12}
               >
                 <FormLabel style={{ marginBottom: "0.5rem" }}>
-                  Company name <span style={{ fontWeight: 800 }}>*</span>
+                  Company name <span className="form-label__required" aria-hidden="true">*</span>
                 </FormLabel>
                 <Grid
                   item
@@ -139,7 +139,7 @@ const CompanyRegistration = ({
                 lg={12}
               >
                 <FormLabel style={{ marginBottom: "0.5rem" }}>
-                  Main phone number <span style={{ fontWeight: 800 }}>*</span>
+                  Main phone number <span className="form-label__required" aria-hidden="true">*</span>
                   <Input
                     required
                     disabled={loadingStatus || companyExists}
@@ -174,7 +174,7 @@ const CompanyRegistration = ({
               </Grid>
               <Grid marginX={0} textAlign={"left"} item xs={12}>
                 <FormLabel style={{ marginBottom: "0.5rem" }}>
-                  Website <span style={{ fontWeight: 800 }}>*</span>
+                  Website <span className="form-label__required" aria-hidden="true">*</span>
                 </FormLabel>
                 <Input
                   required
@@ -199,7 +199,7 @@ const CompanyRegistration = ({
                 lg={12}
               >
                 <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-                  Country <span style={{ fontWeight: 800 }}>*</span>
+                  Country <span className="form-label__required" aria-hidden="true">*</span>
                   <Input
                     required
                     disabled={loadingStatus || companyExists}
@@ -224,7 +224,7 @@ const CompanyRegistration = ({
               >
                 <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
                   Address for company headquarters{" "}
-                  <span style={{ fontWeight: 800 }}>*</span>
+                  <span className="form-label__required" aria-hidden="true">*</span>
                   <Input
                     required
                     disabled={loadingStatus || companyExists}
@@ -258,7 +258,7 @@ const CompanyRegistration = ({
                 lg={12}
               >
                 <FormLabel style={{ marginBottom: "0.5rem", width: "100%" }}>
-                  City <span style={{ fontWeight: 800 }}>*</span>
+                  City <span className="form-label__required" aria-hidden="true">*</span>
                   <Input
                     required
                     disabled={loadingStatus || companyExists}
@@ -286,7 +286,7 @@ const CompanyRegistration = ({
               >
                 {" "}
                 <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                  State <span style={{ fontWeight: 800 }}>*</span>
+                  State <span className="form-label__required" aria-hidden="true">*</span>
                   <Input
                     required
                     disabled={loadingStatus || companyExists}
@@ -297,7 +297,7 @@ const CompanyRegistration = ({
                   />
                 </FormLabel>
                 <FormLabel style={{ marginBottom: "0.5rem", width: "50%" }}>
-                  Zip code <span style={{ fontWeight: 800 }}>*</span>
+                  Zip code <span className="form-label__required" aria-hidden="true">*</span>
                   <Input
                     required
                     disabled={loadingStatus || companyExists}
@@ -329,7 +329,7 @@ const CompanyRegistration = ({
                     width: "100%",
                   }}
                 >
-                  Industry <span style={{ fontWeight: 800 }}>*</span>
+                  Industry <span className="form-label__required" aria-hidden="true">*</span>
                   <AutoComplete
                     className="custom-autocomplete" // Add a custom className here
                     disabled={loadingStatus || companyExists}
@@ -364,7 +364,7 @@ const CompanyRegistration = ({
               >
                 <FormLabel style={{ marginBottom: "0.5rem" }}>
                   Your company locations{" "}
-                  <span style={{ fontWeight: 800 }}>*</span>
+                  <span className="form-label__required" aria-hidden="true">*</span>
                 </FormLabel>
                 <div
                   style={{

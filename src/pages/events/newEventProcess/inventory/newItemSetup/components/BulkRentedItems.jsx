@@ -133,7 +133,7 @@ const BulkRentedItems = ({
                       <Typography
                         style={stylingComponents({ loadingStatus }).styling}
                       >
-                        {item.label} <strong>*</strong>{" "}
+                        {item.label} <span className="form-label__required" aria-hidden="true">*</span>{" "}
                         {item.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
@@ -236,7 +236,7 @@ const BulkRentedItems = ({
                         }).styling
                       }
                     >
-                      {item.label} <strong>*</strong>{" "}
+                      {item.label} <span className="form-label__required" aria-hidden="true">*</span>{" "}
                       {item.tooltip && <QuestionIcon />}
                     </Typography>
                   </Tooltip>

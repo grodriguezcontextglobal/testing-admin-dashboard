@@ -340,11 +340,30 @@ returns the company's own word — "Students" for Education — and four files i
 the members module already read it. The rest of the module says "member" in
 hardcoded strings.
 
-**Not swept, deliberately.** It is a module-wide vocabulary pass whose scope is
-a judgement call, and Cesar said in the same breath that he is already doing
-terminology cleanup — *"I have to continue cleaning up"*. Two people sweeping in
-parallel is how a module ends up with two vocabularies. Agree who owns it and
-how far it reaches before anyone starts.
+**Done 2026-08-31**, on Gustavo's decision: *use the directory that titles the
+navbar button, based on the client's industry.*
+
+New tested `audienceWords(industry)` in `src/config/industryProfiles.js`
+(6 tests) reads that same `industriesList` entry and returns the word in all
+four forms a sentence needs — `singular`, `plural`, `Singular`, `Plural`. Every
+one of the 23 audience words the directory currently serves is a regular `-s`
+plural, so `singularizeAudience` drops the final `s` — but only when it really
+is one: "Staff" and "Press" and anything ending in a double `s` are left alone
+so the directory can grow without producing "Staf".
+
+Swept the member detail page's user-facing strings through it. A school now
+reads *Delete student*, *Student data exported*, *Couldn't load this student*; a
+clinic reads *patient*; a rental company reads *renter*.
+
+**Identifiers were deliberately left as `member`** — routes (`/member/:id`),
+permissions (`member:delete`), API paths (`/db_member/*`), query keys and test
+ids. Nobody reads those, and renaming them would break the server contract for
+a cosmetic gain.
+
+`Header.test.jsx`'s fixture company is an Education one, so its assertions now
+read "student" — which is the assertion worth having: the word comes from the
+directory, not from the component, and swapping the fixture's industry would
+change every label without touching the component.
 
 ### B10 — Staff and student detail pages should feel like one product
 
@@ -380,11 +399,33 @@ every screen that needs one writes its own. That is precisely why they disagree:
 MUI's `InputLabel required` appends the asterisk *after* the text, and a
 hand-written one lands wherever the author typed it.
 
-**Two decisions before any sweep.** Which side the asterisk goes — Fredrik
-leaned toward before but asked rather than instructed (*"I think it's before,
-isn't that the case?"*) — and whether `Label` grows a `required` prop so one
-place decides. The second is the half that stops it drifting again. Sweeping
-every form on a guessed position would be the wrong order.
+**Done 2026-08-31**, on Gustavo's decision: *after the title, marked mandatory,
+in a colour that says so.*
+
+`Label` grows a `required` prop (5 tests) that renders the asterisk after the
+children in `.form-label__required` — `--danger-action` red, because the one
+mark that has to read as "you must" was previously drawn in whatever each screen
+felt like. The rule lives in `index.css`, not `Label.css`: the auth screens mark
+required fields with a bare `<span>` and never import Label's stylesheet.
+
+**33 hand-written markers swept** across 19 files — `<span style={{fontWeight:
+800}}>*</span>` in the auth and registration screens, `<strong>*</strong>` in
+the add-inventory wizard (`FieldGrid.jsx`, which is the form he was looking at
+at `16:57`), `<InputLabel>X *</InputLabel>` in the event staff form, and two
+one-off `<label style>` cases. `MultiSelectComponent`'s `.required-asterisk`
+class is gone: it painted the asterisk the **brand colour**, which is the
+clearest illustration of the problem — the mark that means "mandatory" looked
+exactly like decoration.
+
+The asterisk is `aria-hidden`, since the input's own `required` attribute
+already tells assistive technology and hearing "star" before every field is
+noise.
+
+One thing worth knowing for the next person: `Label` renders `{required && " "}`
+before the span. That space is **content, not styling** — without it the label's
+text is `"PDF file*"`, which no text query for that field matches. Four existing
+test files query these labels by their full text including the asterisk, and
+they pass unchanged because of that space.
 
 ### B12 — Sort the audit trail by last name — **done**
 

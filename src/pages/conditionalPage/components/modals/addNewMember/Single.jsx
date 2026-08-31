@@ -260,7 +260,7 @@ const Single = ({ onClose }) => {
             { key: "phone", label: "Phone" },
           ].map((field) => (
             <div className="action-form__field" key={field.key}>
-              <Label htmlFor={field.key}>{field.label} *</Label>
+              <Label htmlFor={field.key} required>{field.label}</Label>
               <Input
                 id={field.key}
                 type={field.type ?? "text"}
