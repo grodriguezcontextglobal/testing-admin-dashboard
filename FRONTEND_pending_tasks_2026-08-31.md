@@ -109,23 +109,40 @@ domains share it, new tested `strandedAfterRollback` (5 tests) for hole 2, and
 Each guard names its step, so the notice says *which* write failed rather than
 "the assignment did not complete".
 
-### A2 — Confirm the receipt logo actually prints for a real company
+### A2 — The receipt logo — root cause found in the session, not the renderer
 
 Fredrik at `45:13`: *"That did not transfer over the logo for the receipts. May
 want to investigate that."*
 
-`97f9ac3a` added `resolveReceiptLogo`, which accepts only absolute `http(s)` and
-drops the image silently on error. The source is
-`user?.companyData?.company_logo`
-(`AssignmentDevicesToMember.jsx:480`), and that field is `""` for a company that
-never uploaded one.
+`97f9ac3a` added `resolveReceiptLogo` (absolute `http(s)` only, silent drop on
+error) and both the handover and return receipts pass
+`user?.companyData?.company_logo`. That path is correct. The problem was one
+level up: **`companyData` in Redux was only ever refreshed by logging in again.**
 
-So this may be **data, not code** — exactly the failure mode the "Stored"
-fallback on supplier documents already taught us. Before touching the renderer,
-read `companyData.company_logo` for the demo company and see whether it is
-empty, relative, or a Cloudinary url that 404s. If it is empty, the real task is
-making the Company Info screen's logo upload reachable and obvious, not fixing
-the receipt.
+`Body.jsx` (Company Info) saved the company and then dispatched **`onLogout()`**
+on success. That is the whole mechanism — a re-login was the only thing that
+put the new record into the session, so:
+
+- editing anything in Company Info threw the user out of the app, and
+- until they signed back in, every receipt printed the stale company record —
+  with no letterhead, if the logo was exactly what had just been uploaded.
+
+`removeLogoMutation` was worse in the other direction: it dispatched nothing at
+all, so a logo *taken off* the company kept printing until the next login.
+
+**Fixed 2026-08-31.** New `onUpdateCompanyData` reducer in `adminSlice.js`
+(5 tests) folds the saved record into `user.companyData` by **merging**, not
+replacing — the payload is the update and does not carry `id`. Both mutations
+now dispatch it, and the forced logout is gone.
+
+**Still open — payment receipts have no letterhead at all.**
+`mapAssignmentToReceipt` and `mapReturnToReceipt` both take `companyLogo`;
+`mapTransactionToReceipt` (`receiptUtils.js:168`) never sets `logoUrl`. It
+cannot simply be added: `/receipt` is registered in **both** `AuthRoutes` and
+`NoAuthRoutes`, so the page is opened by people outside the company from a QR
+scan, where there is no Redux session to read a logo from. The logo would have
+to arrive on the transaction response — raised with the backend in
+`FRONTEND_backend_ask_write_refusal_semantics.md` §5.
 
 ---
 

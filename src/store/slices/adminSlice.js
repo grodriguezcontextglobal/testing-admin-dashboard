@@ -62,6 +62,23 @@ const adminSlice = createSlice({
     onUpdateMfaStatus: (state, { payload }) => {
       state.mfaEnabled = payload;
     },
+    /**
+     * Folds a saved company record back into the session.
+     *
+     * Saving Company Info used to dispatch onLogout, because a re-login was the
+     * only thing that refreshed companyData. That threw the user out of the app
+     * for editing a phone number, and until they came back the receipts kept
+     * printing the stale record — with no letterhead, if the logo was what had
+     * just been uploaded. Merges rather than replaces: the payload is the
+     * update, not the whole company, and `id` is not in it.
+     */
+    onUpdateCompanyData: (state, { payload }) => {
+      if (!payload || typeof payload !== "object") return;
+      state.user = {
+        ...state.user,
+        companyData: { ...(state.user?.companyData ?? {}), ...payload },
+      };
+    },
   },
 });
 
@@ -75,6 +92,7 @@ export const {
   clearErrorMessage,
   onAddCompanyAccountStripe,
   onUpdateMfaStatus,
+  onUpdateCompanyData,
 } = adminSlice.actions;
 
 export default adminSlice.reducer;

@@ -160,6 +160,23 @@ migration doc, but there is no client call site for that exact path. The nearest
 is `POST /db_event/allocate-device-container-event`. Rename, or an endpoint we
 never integrated?
 
+**Payment receipts cannot show the company logo.** Handover and return receipts
+read it from the Redux session, which works because those are printed by a
+logged-in staff member. The payment receipt at `/receipt` is registered in both
+the authorized and unauthorized route trees — it is opened from a QR scan by
+people outside the company, where there is no session to read from.
+
+*Ask:* could the transaction lookup that backs that page include the company's
+`company_logo` (absolute URL) in its response? Without it, the one receipt a
+customer actually sees is the only one with no letterhead. Small, and it is the
+only way the client can get the value in that context.
+
+**Does the login response's `company_data[0]` always carry `company_logo`?**
+The client stores that object verbatim as `companyData`
+(`Login.jsx:248`) and receipts read the logo straight off it. If the field is
+ever omitted rather than sent as `""`, receipts silently lose their letterhead
+for that session. A yes/no is enough.
+
 ---
 
 ## 6. Heads-up — FedRAMP as a design constraint

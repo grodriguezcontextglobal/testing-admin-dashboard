@@ -7,7 +7,7 @@ import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import SectionFooter from "../../../../components/documents/new_form_components/SectionFooter";
 import SectionHeader from "../../../../components/documents/new_form_components/SectionHeader";
-import { onLogout } from "../../../../store/slices/adminSlice";
+import { onUpdateCompanyData } from "../../../../store/slices/adminSlice";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import "./Body.css";
 import BodyForm from "./BodyForm.refactored";
@@ -233,16 +233,19 @@ const Body = () => {
           });
         }
       }
-      // dispatch(onLogout());
       return {
         companyUpdateResult,
         dbCompanyUpdateResult,
         companyUpdatePayload,
       };
     },
-    onSuccess: () => {
+    onSuccess: ({ companyUpdatePayload }) => {
       openNotificationWithIcon("success", "Company information updated successfully", 3);
-      dispatch(onLogout());
+      // Was dispatch(onLogout()): the saved record only reached the session by
+      // logging the user out and making them sign in again. Folding it into
+      // companyData does the same job without ending the session, and the new
+      // logo reaches the next printed receipt instead of the next login.
+      dispatch(onUpdateCompanyData(companyUpdatePayload));
     },
     onError: (error) => {
       message.error(
@@ -262,6 +265,9 @@ const Body = () => {
     },
     onSuccess: () => {
       openNotificationWithIcon("success", "Company logo removed successfully", 3);
+      // The removal never reached the session at all, so a logo taken off the
+      // company kept printing on receipts until the next login.
+      dispatch(onUpdateCompanyData({ company_logo: "" }));
     },
     onError: () => {
       message.error("Failed to remove company logo. Please try again.");
