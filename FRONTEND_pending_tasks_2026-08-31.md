@@ -674,6 +674,43 @@ from here on, and they are the reason several items above exist at all.
 
 ---
 
+## Later — Profile saves end the session
+
+Raised by Gustavo 2026-08-31 from manual testing: every option under Profile
+saves correctly and then logs the user out. It should save and stay put.
+
+This is the same defect A2 found in Company Info, which turned out not to be a
+logo bug at all: `dispatch(onLogout())` was the only mechanism anyone had for
+getting a saved record back into the session. Company Info is fixed
+(`507c6ae3`, via the `onUpdateCompanyData` reducer). Three call sites remain,
+and they are **not all the same thing**:
+
+| Where | What it does | Verdict |
+|---|---|---|
+| `Profile/my_details/components/Body.jsx:208` | success toast → "Please log in again" → `onLogout()` → `window.location.reload(true)` | **Bug.** Same as Company Info |
+| `Profile/my_details/components/Body.jsx:242` | the other save path (the two branches are admin vs staff) | **Bug.** Same |
+| `Profile/my_password/components/Body.jsx:81` | `onLogout()` → `window.location.reload(true)` after a password change | **Ask first** |
+| `Profile/MainProfileSettings.jsx:51` | resets every slice, `clearSessionStorage()`, then `onLogout()` | **Correct.** This is the actual logout button — do not touch |
+
+**Why the password one is not obviously a bug:** ending the session after a
+password change is standard practice. The JWT in hand was issued against the
+old credentials, and forcing a fresh sign-in is how you prove the person who
+changed it is the person holding the session. Confirm the intent before
+"fixing" it; if it stays, the copy should say so deliberately rather than
+reading like the others.
+
+**Shape of the work for the two real ones.** Company Info's fix folded the
+saved record into `user.companyData`. My details lives in the root fields of
+`admin.user` (name, lastName, email, imageProfile), so it needs either a sibling
+`onUpdateProfile` reducer in `adminSlice.js` or a widened one — with the same
+merge-don't-replace rule, since the payload is the update and not the whole
+user.
+
+Note the second hammer while you are there: both paths also call
+`window.location.reload(true)`. Even with the logout gone, a hard reload throws
+away the whole React tree and every cached query to show a changed name. If the
+session update lands, the reload has nothing left to do.
+
 ## Suggested order
 
 1. **A1** — the partial write on the member path. Same bug he caught live, on
