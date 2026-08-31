@@ -168,9 +168,9 @@ const StaffDetail = () => {
       return respoCompany.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"] });
       queryClient.invalidateQueries({
-        queryKey: ["employeesPerCompanyLis"],
+        queryKey: ["employeesPerCompanyList"],
         exact: true,
       });
       queryClient.invalidateQueries({ queryKey: ["events"], exact: true });

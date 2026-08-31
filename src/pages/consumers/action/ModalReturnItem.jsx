@@ -152,7 +152,6 @@ const ModalReturnItem = ({
           });
           queryClient.invalidateQueries({
             queryKey: ["assignedDevicesByTransaction"],
-            exact: true,
           });
           return closeModal();
         }

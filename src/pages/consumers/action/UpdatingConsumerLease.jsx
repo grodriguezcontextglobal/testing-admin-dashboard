@@ -69,11 +69,9 @@ const UpdatingConsumerLease = ({
       });
       queryClient.invalidateQueries({
         queryKey: ["imagePerItemList"],
-        exact: true,
       });
       queryClient.invalidateQueries({
         queryKey: ["ItemsInventoryCheckingQuery"],
-        exact: true,
       });
       refetching();
       return closeModal();

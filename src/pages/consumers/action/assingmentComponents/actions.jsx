@@ -163,15 +163,12 @@ export const addDeviceToEvent = async ({
     await insertingDeviceSQL();
     queryClient.invalidateQueries({
       queryKey: ["staffMemberInfo"],
-      exact: true,
     });
     queryClient.invalidateQueries({
       queryKey: ["imagePerItemList"],
-      exact: true,
     });
     return queryClient.invalidateQueries({
       queryKey: ["ItemsInventoryCheckingQuery"],
-      exact: true,
     });
   } catch (error) {
     console.log(error);
