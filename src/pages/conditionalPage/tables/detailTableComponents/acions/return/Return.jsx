@@ -9,6 +9,7 @@ import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueBut
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { useForm } from "react-hook-form";
+import { assertWriteSucceeded } from "../../../../../../utils/assignmentWrites";
 import { useState } from "react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Divider, message } from "antd";
@@ -57,15 +58,18 @@ const Return = ({
   const returnItemToInventoryCompany = useMutation({
     mutationKey: ["returnItemToInventoryCompany"],
     mutationFn: async (data) =>
-      await devitrakApi.post("/db_event/returning-item", {
-        warehouse: 1,
-        status: data.reason,
-        update_at: formatDate(new Date()),
-        serial_number: storedRecord.device_serial_number,
-        category_name: storedRecord.device_category_name,
-        item_group: storedRecord.device_item_group,
-        company_id: user.sqlInfo.company_id,
-      }),
+      assertWriteSucceeded(
+        await devitrakApi.post("/db_event/returning-item", {
+          warehouse: 1,
+          status: data.reason,
+          update_at: formatDate(new Date()),
+          serial_number: storedRecord.device_serial_number,
+          category_name: storedRecord.device_category_name,
+          item_group: storedRecord.device_item_group,
+          company_id: user.sqlInfo.company_id,
+        }),
+        "Putting the unit back in stock"
+      ),
     onError: (error) => {
       setLoading(false);
       throw new Error(error);
@@ -81,7 +85,10 @@ const Return = ({
         companyId: user.sqlInfo.company_id,
       });
       if (!payload) return null;
-      return await devitrakApi.post("/db_item/item-out-warehouse", payload);
+      return assertWriteSucceeded(
+        await devitrakApi.post("/db_item/item-out-warehouse", payload),
+        "Marking the device lost"
+      );
     },
     onError: (error) => {
       setLoading(false);
@@ -112,9 +119,12 @@ const Return = ({
           },
         }
       );
-      if (response.data && response.data.ok) {
-        return response.data;
-      }
+      // A refusal used to fall out of here as `undefined`, which react-query
+      // still counts as a resolved mutation: onSuccess then invalidated the
+      // list, logged the UNASSIGN and mailed the member about a return the
+      // server had just declined to record.
+      assertWriteSucceeded(response, "Closing the lease");
+      return response.data;
     },
     onSuccess: async (_data, variables) => {
       queryClient.invalidateQueries({

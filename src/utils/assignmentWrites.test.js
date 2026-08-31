@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { assertWriteSucceeded, readWriteFailure } from "./assignmentWrites";
+import {
+  assertWriteSucceeded,
+  readWriteFailure,
+  strandedAfterRollback,
+} from "./assignmentWrites";
 
 /**
  * Assigning inventory to a staff member is six writes in a row: the lease
@@ -75,5 +79,41 @@ describe("assertWriteSucceeded", () => {
     expect(() => assertWriteSucceeded(null, "Recording the lease")).toThrow(
       /Recording the lease failed/
     );
+  });
+});
+
+/**
+ * The undo has the same problem as the writes it undoes. Putting a device back
+ * on the shelf is itself one of these endpoints, so a refused restock resolves
+ * rather than throwing — and a rollback that reports success it did not have is
+ * worse than no rollback at all, because nobody goes looking for the device.
+ */
+describe("strandedAfterRollback", () => {
+  const serials = ["SN-1", "SN-2"];
+
+  it("strands nothing when the units really went back", () => {
+    expect(strandedAfterRollback({ data: { ok: true } }, serials)).toEqual([]);
+  });
+
+  it("strands every serial when the restock was refused with a 200", () => {
+    expect(
+      strandedAfterRollback({ status: 200, data: { ok: false, msg: "no" } }, serials)
+    ).toEqual(serials);
+  });
+
+  it("strands every serial when the restock never answered", () => {
+    expect(strandedAfterRollback(null, serials)).toEqual(serials);
+    expect(strandedAfterRollback(undefined, serials)).toEqual(serials);
+  });
+
+  it("strands every serial on a non-2xx that did not throw", () => {
+    expect(strandedAfterRollback({ status: 500, data: {} }, serials)).toEqual(
+      serials
+    );
+  });
+
+  it("has nothing to strand when no serial was moved", () => {
+    expect(strandedAfterRollback({ data: { ok: false } }, [])).toEqual([]);
+    expect(strandedAfterRollback({ data: { ok: false } }, undefined)).toEqual([]);
   });
 });

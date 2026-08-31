@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import { assertWriteSucceeded } from "./utils/assignmentWrites";
+import { assertWriteSucceeded } from "../../../../../../utils/assignmentWrites";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../../../components/UX/Chip/Chip";

@@ -1,0 +1,495 @@
+# Meeting Walkthrough — Engineering Punch List
+
+> Source: full 71-minute recording of Fredrik Starmark's walkthrough of the
+> dashboard, with Cesar Caminero and Gustavo Rodriguez. Transcript reviewed
+> 2026-08-31.
+>
+> **This is the meeting that produced commits `e0e1c1f9`, `97f9ac3a`,
+> `846b2a44` and `46d14527` (2026-08-27/28).** Roughly half the list was
+> already actioned from notes taken live. What follows separates what is
+> genuinely closed from what is still open, so the same ground is not covered
+> twice.
+>
+> Scope: engineering only. Sales follow-ups, the Bridges account, competitor
+> research and the FedRAMP marketplace listing are deliberately excluded.
+>
+> Context that sets priority: at `58:44` Fredrik answered "can we present it?"
+> with **"I think we're there."** Everything in P1 is pre-demo polish on a
+> product about to be shown to a customer.
+
+---
+
+## Already closed by the 2026-08-27/28 commits
+
+Listed so nobody re-opens them. Timestamp is where Fredrik raised it.
+
+| # | Item | Where he said it | Commit |
+|---|---|---|---|
+| 1 | MFA field needs plain-language context | `0:31` | `e0e1c1f9`, **corrected** in `9235cb2d` — see note below |
+| 2 | Inventory says "add", not "create" | `14:15` | `e0e1c1f9` |
+| 3 | "Add new member" does not belong on a member's own page | `29:39` | `e0e1c1f9` |
+| 4 | "Staff activity" is really an **audit trail** | `55:14` | `e0e1c1f9` |
+| 5 | Audit trail must show first **and** last name, not last alone | `56:31` | `e0e1c1f9` |
+| 6 | Company logo should print on receipts | `45:13` | `97f9ac3a` — **verify, see A2** |
+| 7 | Receipt needs a "Signature (if applicable)" line, because a minor cannot sign | `38:03` | `97f9ac3a` |
+| 8 | Receipt printed 4 identical pages | `37:24` | `97f9ac3a` (`@page` + `break-inside: avoid`) |
+| 9 | Email should name who sent it and give someone to contact | `34:01` | `97f9ac3a` (`signOff`, `replyLine`) — **verify wording, see B14** |
+| 10 | A failed write must not leave the device transferred | `26:30` | `846b2a44` — **staff path only, see A1** |
+
+### Note on #1 — the ask was read backwards
+
+`e0e1c1f9` labelled the field **"Multi Factor Authentication Code"**, reading
+"we need more context" as "spell the acronym out". Fredrik asked for the
+opposite at `0:44`: *"just say, you know, authentication app or code or
+something like that."* Fixed 2026-08-31 in `9235cb2d` — the label is now
+"Authentication code" with a hint naming the authenticator app, and a test pins
+both strings so the jargon cannot come back a third time.
+
+---
+
+## P0 — Data integrity
+
+### A1 — The failed-write guard never reached the member/student path
+
+**This is the highest-priority item on the list.**
+
+What Fredrik hit at `25:17`–`27:03`: assigning a device returned
+`Request failed with status 400`, the modal stayed open — and the device had
+**already been transferred anyway**. He caught it because the next screen said
+*"These units are no longer available in this location."*
+
+> `26:30` — *"it would not give me this, those are no longer at this location.
+> That means that the transfer was probably executed on the first time when it
+> returned an error message."*
+>
+> `26:48` — *"if you are going to give an error message, it should not be
+> transferred. So you need to look into that."*
+>
+> `27:03` — *"if this was somebody else, they would just be confused here,
+> couldn't click on anything, and then they would cancel, and then they wouldn't
+> know that the unit was assigned already, and it would create problems."*
+
+`846b2a44` built exactly the right fix — `assignmentWrites.js`
+(`readWriteFailure` / `assertWriteSucceeded`, 10 tests) — for the six-write
+chain in
+`src/pages/staff/detail/components/equipment_components/assingmentComponents/AssignmentFromExistingInventory.jsx`.
+That is the path Fredrik was on when he hit it: at `21:16` he says *"I want to
+assign that to myself"*, so his 400 came from the staff chain, and that chain is
+now guarded.
+
+**The same defect class was still open on the member/student path.** Verified
+before the fix: no reference to `assignmentWrites`, `assertWriteSucceeded` or
+`readWriteFailure` existed anywhere under `src/pages/conditionalPage/` or
+`src/pages/consumers/`.
+
+The member path was not unprotected — earlier work had given it a
+`rollbackWarehouseAssignment` that puts devices back when the lease is refused.
+Three holes remained, all the same root cause: these endpoints answer **HTTP 200
+with `{ ok: false, msg }`** when they refuse a write, and axios does not treat
+that as an error.
+
+1. **The warehouse move was never checked.** It is the first write in the chain;
+   a refusal read as success and the lease was written against a move that had
+   not happened.
+2. **The rollback reported success it did not have.** It only caught throws, so
+   a *refused* restock returned "nothing stranded" — the worst outcome
+   available, because the device is off the shelf and no longer on anyone's list
+   to look for.
+3. **Closing a lease on return fell through as `undefined`** instead of
+   throwing. react-query still counts that as resolved, so `onSuccess` ran:
+   list invalidated, `UNASSIGN` logged, and the member emailed about a return
+   the server had just declined to record.
+
+**Fixed 2026-08-31.** `assignmentWrites.js` promoted to `src/utils/` so both
+domains share it, new tested `strandedAfterRollback` (5 tests) for hole 2, and
+`assertWriteSucceeded` wired into all five unguarded writes across:
+- `.../assignmentComponents/assignment/AssignmentDevicesToMember.jsx`
+- `.../detailTableComponents/acions/return/Return.jsx`
+
+Each guard names its step, so the notice says *which* write failed rather than
+"the assignment did not complete".
+
+### A2 — Confirm the receipt logo actually prints for a real company
+
+Fredrik at `45:13`: *"That did not transfer over the logo for the receipts. May
+want to investigate that."*
+
+`97f9ac3a` added `resolveReceiptLogo`, which accepts only absolute `http(s)` and
+drops the image silently on error. The source is
+`user?.companyData?.company_logo`
+(`AssignmentDevicesToMember.jsx:480`), and that field is `""` for a company that
+never uploaded one.
+
+So this may be **data, not code** — exactly the failure mode the "Stored"
+fallback on supplier documents already taught us. Before touching the renderer,
+read `companyData.company_logo` for the demo company and see whether it is
+empty, relative, or a Cloudinary url that 404s. If it is empty, the real task is
+making the Company Info screen's logo upload reachable and obvious, not fixing
+the receipt.
+
+---
+
+## P1 — Pre-demo polish
+
+### B1 — Rewrite the scan-to-add panel copy
+
+`src/pages/inventory/actions/utils/uxForm/ScanUnitsPanel.jsx:64-69`. Current
+text, verified still in place:
+
+> Point the scanner at each label and pull the trigger. Every read is recorded
+> and the field clears itself, ready for the next one — you never have to touch
+> the keyboard. Units added this way carry a serial number and nothing else; use
+> **One at a time** if a unit needs extra identifiers.
+
+Fredrik went through this line by line between `6:37` and `9:23`:
+
+- `7:06` — the sentence about which units carry identifiers *"is not a correct
+  sentence. Let's start with that."*
+- `7:40` — *"you can take that away. You don't have to put that there. Never
+  have to touch the keyboard."* → **delete the clause.**
+- `8:49` — *"you end the sentence here, units added this way carry a serial
+  number only. That's the only thing you need to say there."*
+- `9:05` — *"Use, and then quotation mark, one at a time, end quotation mark,
+  because you're referring to the menu item."*
+- `9:23` — *"if a unit needs **additional** identifiers, that's what you would
+  say."*
+
+**Target:**
+> Point the scanner at each label and pull the trigger. Every read is recorded
+> and the field clears itself, ready for the next one. Units added this way
+> carry a serial number only. Use "One at a time" if a unit needs additional
+> identifiers.
+
+### B2 — Destructive confirmations use the standard sentence
+
+`14:51`–`15:14`. The confirmation before creating the batch should read the way
+every other system writes it:
+
+> Are you sure you want to continue? This operation cannot be undone.
+
+Also at `14:06`, drop the line saying the items will be added to the database —
+*"of course it's going to add it to database. I mean, what's the purpose of
+doing this in the first place?"*
+
+And `14:35`: it adds N new items **to** the inventory, not *in* the inventory.
+
+### B3 — The "removing them afterwards" sentence says nothing
+
+`15:18`–`15:39`. Current text talks about "deleting the units one group at a
+time", which Fredrik could not parse. What it should say:
+
+> If you need to remove them after adding them, you have to do that one at a
+> time.
+
+### B4 — Assigning from a device does not carry the device with it
+
+`22:36`. Clicking assign on a device navigates to the person's profile and
+starts from an empty form.
+
+> *"What should happen here is… it should pre-populate, because I came from the
+> device location. So it should already know the location and the serial number
+> and whatever else it is."*
+
+Navigating to the profile is fine — he said so explicitly. The device, its
+serial and its current location must arrive with it.
+
+### B5 — The assign button names a hardcoded location
+
+`21:46`. The button text names where the device currently sits.
+
+> *"You don't have to say the actual location where it's currently at, meaning
+> the IT office, but that has to be dynamically assigned… Or you can just say
+> assign. Assign device."*
+
+Simplest correct answer: **"Assign device"**. If the location stays, it must be
+read from the device, never written into the string.
+
+### B6 — Address must be optional, and its validation is theatre
+
+Two findings on the same field.
+
+**Optional** — `24:43`–`25:15`: *"could you make that non-mandatory? … most of
+these answers are going to be the school address, and in terms of parents where
+they're using the computer is probably at the home. But do you really need to
+have that in this database? Probably not. So let's make it voluntary."*
+
+That is a **data-minimisation** decision, and it is the same instinct FedRAMP
+formalises — worth noting when A3/FedRAMP gap analysis happens.
+
+**Validation** — `36:23`–`36:55`: he typed `F` into the zip, `F` into state, `F`
+into city and the form accepted it. *"So it's just requires something in the
+field, right?"* Presence-only validation on an address that is about to become
+optional is the worst of both worlds. Once optional: validate the shape when
+something is typed, accept nothing when it is blank.
+
+Note (`23:50`): for school members the address already prefills from the
+student's record. That behaviour stays.
+
+### B7 — Return condition dropdown
+
+`39:18`–`40:51`. Options today: Operational, Network, Hardware, Damaged, and
+`None`.
+
+- **`None` must go.** `40:17` — *"definitely not none, should not be an option
+  here. Oh, so it's blank then. So you can say leave blank then or something
+  like that."* Verified at
+  `src/pages/conditionalPage/tables/detailTableComponents/acions/return/Return.jsx:328`
+  — `<MenuItem value="">None</MenuItem>`.
+- **Network and Hardware need describing.** `39:33` — *"Network, I don't know
+  what that means in terms of condition."* They are damage categories, which is
+  not readable from the word alone. Keep them, label them so they explain
+  themselves.
+- **Add a clear (✗) affordance** — Cesar's suggestion at `40:39`, so a user who
+  picked a value can get back to blank.
+
+### B8 — The legal-document button does not change its label
+
+`25:31`, Gustavo live: *"Just click add legal document again. I have to just
+change the label."* The button toggles add/remove; the text always says add.
+This was also the trigger for the 400 in **A1**.
+
+### B9 — One word for a person, not two
+
+`29:39`–`30:10`. The screen is titled "Students" and the button says "Add new
+member".
+
+> Cesar, `29:52` — *"we have to also clean up the terminology… if it's new
+> students that we're adding, it's just like new students, not new members. We
+> have to only stick to one term."*
+
+Since the label is already per-company customisable, this is about making the
+**vocabulary flow from one source** rather than having "member" hardcoded next
+to a customised "Students" heading.
+
+### B10 — Staff and student detail pages should feel like one product
+
+`42:14`: *"I think you should compare the two menus here… the look and feel
+should be exactly the same. So the menu items should be similar to each
+other."*
+
+Compare the two action rails and reconcile. `ProfileShell` is the shared shell
+they should both be built on.
+
+Positive finding worth keeping: at `42:38` he checked that **Delete member is
+disabled while inventory is out** and confirmed *"That logic is good."* Do not
+regress it.
+
+### B11 — The required-field asterisk moves around
+
+`16:57`: *"You may want to move this asterisk to the beginning here. Well, you
+have it after here too."*
+
+The real defect is the **inconsistency** — the same form places it on both
+sides. Pick one and sweep. Fredrik leans toward before the label; his exact
+words were *"I think it's before, isn't that the case?"*, so this is a decision
+to confirm, not an instruction to follow blindly.
+
+### B12 — Sort the audit trail by last name
+
+`56:31`. `e0e1c1f9` added name **and** email, which handles the collision he
+worried about. The ordering half of the ask is still open: *"you may want to
+have first name, last name, or at least sort them by last name, but then put
+first name as well."*
+
+### B13 — "Custody history" should be called "Audit trail"
+
+`57:44`–`58:09`. He was explicit that the word itself is worth something:
+
+> *"if you are gonna put it in, call it audit trail because people like to hear
+> that audit trail… it lends credibility. If you say that to somebody, they will
+> not question what it says."*
+
+`src/pages/inventory/details/deviceProfile/DeviceProfilePage.jsx:309` renders
+`<h3>Custody history</h3>`, with the tab labelled `Custody` at `:254`.
+
+The larger idea behind it (`55:48`–`56:31`) is that in QuickBooks and Bill.com
+an audit trail is **scoped to the record you are looking at** — open an invoice,
+see who entered, approved and paid it, all timestamped. Our per-device custody
+timeline already is that. Renaming it is the cheap half; offering the same
+per-record view elsewhere is the expensive half, and it is also a genuine
+FedRAMP control rather than only a naming preference.
+
+### B14 — Verify the email footer against his exact wording
+
+`33:47`–`35:40`. `97f9ac3a` added `signOff` and `replyLine`; check the rendered
+result says what he dictated:
+
+> Message from **[Company name]'s inventory system**.
+> …
+> This email was sent by the user from an unmonitored account, do not reply to
+> this email. Should you have any questions, please contact **[the user]**.
+
+Shared components live in `src/components/notification/email/`, so any change
+reaches every screen that sends mail — check each caller first.
+
+### B15 — Confirm what a duplicate serial scan does
+
+`10:29`: *"what happens if I put in the same serial number here, mistakenly scan
+the thing again?"* Gustavo answered that they are handled, but the recording
+cuts before the demonstration. Worth an explicit test in `ScanUnitsPanel` —
+scanning the same label twice is the single most likely operator error in a
+scan-until-done flow.
+
+### B16 — "Send a reminder" is below the fold
+
+`31:35`–`31:54`. He looked for it, could not find it, and needed to be told to
+scroll. Minor, but it is on the member page he will demo.
+
+---
+
+## P2 — Larger work
+
+### C1 — Custom roles with a permission matrix
+
+The single biggest feature ask in the meeting. `43:51`–`55:05`.
+
+He first confirmed what exists: per-company **role renaming** — *"Okay, I love
+it. This is great. Perfect."* (`44:01`). That validates the shipped work.
+
+Then he spent ten minutes screen-sharing two reference implementations, and was
+explicit about what he wanted from each:
+
+**QuickBooks** (`46:29`–`48:52`) — his preferred model:
+- Roles live in their **own tab** next to Users
+- Predefined roles listed, plus **"Add a role"** to define a custom one
+- Per-area permissions with **view / create / edit / delete**
+- **Expandable menus**, which is what keeps the page short
+- *"fairly intuitive actually"*
+
+**Bill.com** (`53:42`–`54:54`):
+- Every operation listed with a **red ✗ or a ✓** per role — very legible
+- An Edit button flips it to checkboxes, then Save
+- His objection: *"the problem with this one is that if you have a lot, the page
+  gets really long."*
+
+His synthesis (`49:28`–`50:21`):
+
+> *"our next step is like, how do we customize that, if you want to add a
+> particular role and then customize a role. We have predefined roles here and
+> that's it… you have all these items that you have predefined, which kind of
+> basically acts like a **keychain**."*
+
+And the reason the timing works (`49:53`):
+
+> *"Once we have — and I think we're there now — where we're not really going to
+> add many functionalities to it."*
+
+That is the important engineering signal: the feature surface is stabilising, so
+freezing a permission matrix into a user-facing product is now viable rather
+than a moving target.
+
+**Where it lands:** `PERMISSIONS` in `src/config/roles.js` is already exactly
+the `domain:action` → allowed-roles matrix this UI would edit. The work is
+turning a compile-time constant into per-company data without losing
+`hasPermission`/`resolveRoleType` as the single source of truth, and without
+regressing the frozen `ALL_ROLES` pinning test. It also has to reconcile with
+the scoped-roles work already in flight.
+
+**Known trap to design around:** several `PERMISSIONS` entries are empty arrays
+(`transaction:stripe_*`, `event:quickGlance_*`), which today hide gated UI from
+every role. A matrix editor would surface those as rows nobody can check —
+either fix them first or the first thing Fredrik sees is a wall of unusable
+toggles.
+
+Recommend the QuickBooks layout: grouped, expandable, view/create/edit/delete
+columns. It is the one he called intuitive, and it is the one that survives our
+permission count.
+
+### C2 — RFID bulk reader (OR2505) does not reach the app
+
+`58:44`–`1:05:21`. Two devices, and only one works:
+
+| Device | Behaviour | Status |
+|---|---|---|
+| **OR2508** (small gun) | Acts as an HID keyboard wedge — types into the focused field | **Works today.** This is the demo scanner |
+| **OR2505 RFID** | Wave over a whole box, reads everything at once. **Not an HID device** | **Not compatible.** Nothing reaches our inputs |
+
+Gustavo, `1:00:55`: *"that's the way the device handles the information and it's
+transferred to our system. So it's not compatible. The other one does, because
+it works like a regular scanner."*
+
+Fredrik, `1:03:43`: **"Please work a little bit on this."** His reason is a
+sales demo, and he was specific about it (`1:02:47`, `1:03:07`): walk in with a
+cart of 100 receivers, wave the reader once, watch the whole cart appear. He has
+**already relabelled 100 receivers with RFID labels** and they are ready to load
+as ContextGlobal or a demo company.
+
+**Engineering shape:** every scan path we have assumes a keyboard wedge — a
+focused input that receives characters and an Enter. A non-HID reader needs a
+different ingestion path entirely (WebHID / WebSerial / WebUSB, or a vendor SDK
+with a local bridge), and it is **many-reads-at-once** rather than one-read-one-
+field. That is a new input mode in the scan UI, not a driver swap.
+
+**Blocked:** the vendor is sending the spec for what the integration requires
+(`1:04:03`). Do not design against guesses — but it is worth deciding now
+whether the bulk path reuses `ScanUnitsPanel` with a different source or becomes
+its own screen.
+
+### C3 — FedRAMP as a design constraint
+
+`1:06:52`–`1:11:04`. Fredrik was clear this is not a certification project yet:
+
+> *"I don't think we're ready to go through a certification yet, but that doesn't
+> mean that…"* — and then, `1:09:37`: *"you can spend a day on this… just
+> understand the specifications involved, what is required, so that when we
+> develop something, we create it with this in mind so that down the line, maybe
+> we don't have to change it."*
+
+**The engineering deliverable is one day of reading and a short written gap
+analysis**, not a compliance programme.
+
+Already in our favour: MFA at login, the audit trail, per-company scoping in
+`sessionHeaders.js`, a single permission source, JWT validation with automatic
+session expiry.
+
+Concrete gaps worth listing on day one:
+- **The audit-log endpoint has no server-side rank filter.** The hierarchy is
+  enforced client-side only, so a lower-rank browser still receives the whole
+  company log over the wire. This was already flagged as a backend ask; under a
+  security review it stops being optional.
+- **113 dependency vulnerabilities** reported by GitHub on the default branch
+  (45 high, 59 moderate, 9 low). Vulnerability management is an explicit control,
+  not housekeeping.
+- Log retention, and whether any log line carries personal data.
+- Password and session-expiry policy.
+- Whether MFA is enforced or optional per role.
+- B6's data-minimisation instinct, generalised: stop collecting fields nobody
+  reads.
+
+---
+
+## Cross-cutting rules Fredrik gave
+
+These are style rules, not one-off fixes. They apply to every string written
+from here on, and they are the reason several items above exist at all.
+
+1. **Never phrase an instruction in the negative.** `7:40` — *"whenever you do
+   descriptions, you do not ever put in a negative, meaning like 'oh, you don't
+   have to do this'. Just stick to what you have to do when you're doing
+   instructions to people."*
+2. **Do not state the obvious.** `14:06` — telling the user that adding items
+   adds them to the database explains nothing.
+3. **"Add", not "create"** — and things are added **to** the inventory.
+4. **Quote menu items when you refer to them**, so the reader knows it is a
+   thing on screen and not a manner of doing something.
+5. **Destructive actions get the standard confirmation sentence** (B2).
+6. **Prefer the word with weight.** "Audit trail" over "activity" — his point at
+   `55:38` was that the term itself buys credibility with a buyer.
+
+---
+
+## Suggested order
+
+1. **A1** — the partial write on the member path. Same bug he caught live, on
+   the vertical being demoed, with the fix already written and tested next door.
+2. **A2** — five minutes of looking at `company_logo` before assuming a bug.
+3. **B1, B2, B3** — the scan panel, one file, all copy, all quoted verbatim above.
+4. **B7, B8** — return dropdown and the document button; both small, both on
+   the demo path.
+5. **B4, B5, B6** — the assign flow. B4 is the only one with real logic in it.
+6. **B13, B12** — audit trail naming and ordering, cheap and he will look for them.
+7. **B9, B10, B11, B14, B15, B16** — sweep together.
+8. **C3** — the FedRAMP day, once the demo is out of the way.
+9. **C1** — custom roles. Design first; this one deserves a written plan before
+   any code.
+10. **C2** — RFID, when the vendor spec lands.

@@ -5,6 +5,10 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { registerStaffActivity } from "../../../../../../../api/activityLog";
+import {
+  assertWriteSucceeded,
+  strandedAfterRollback,
+} from "../../../../../../../utils/assignmentWrites";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
@@ -293,24 +297,30 @@ const AssignmentDevicesToMember = () => {
 
   // ─── The write path. Same requests, same order, same bodies. ──────────────
 
-  const updateDeviceInWarehouse = (deviceInfo) =>
-    devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: 0,
-      logistic_status: "assigned",
-      company_id: user.sqlInfo.company_id,
-      item_group: deviceInfo[0].item_group,
-      category_name: deviceInfo[0].category_name,
-      data: deviceInfo.map((item) => item.serial_number),
-    });
+  const updateDeviceInWarehouse = async (deviceInfo) =>
+    assertWriteSucceeded(
+      await devitrakApi.post("/db_item/item-out-warehouse", {
+        warehouse: 0,
+        logistic_status: "assigned",
+        company_id: user.sqlInfo.company_id,
+        item_group: deviceInfo[0].item_group,
+        category_name: deviceInfo[0].category_name,
+        data: deviceInfo.map((item) => item.serial_number),
+      }),
+      "Taking the units out of the warehouse"
+    );
 
-  const verificationContractMember = () =>
-    devitrakApi.post("/document/verification/member/signed_document", {
-      contract_list: contractList,
-      date: stampTime,
-      company_id: user.sqlInfo.company_id,
-      member_id: memberInfo.member_id,
-      assigner_staff_member_id: user.sqlMemberInfo.staff_id,
-    });
+  const verificationContractMember = async () =>
+    assertWriteSucceeded(
+      await devitrakApi.post("/document/verification/member/signed_document", {
+        contract_list: contractList,
+        date: stampTime,
+        company_id: user.sqlInfo.company_id,
+        member_id: memberInfo.member_id,
+        assigner_staff_member_id: user.sqlMemberInfo.staff_id,
+      }),
+      "Recording the signed document"
+    );
 
   const createNewLease = async ({ deviceInfo, address, expectedReturnDate }) => {
     const verification = await verificationContractMember();
@@ -374,8 +384,11 @@ const AssignmentDevicesToMember = () => {
     });
     if (!payload) return [];
     try {
-      await devitrakApi.post("/db_item/item-out-warehouse", payload);
-      return [];
+      const restock = await devitrakApi.post(
+        "/db_item/item-out-warehouse",
+        payload
+      );
+      return strandedAfterRollback(restock, payload.data);
     } catch {
       return payload.data;
     }

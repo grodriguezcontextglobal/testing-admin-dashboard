@@ -44,3 +44,21 @@ export const assertWriteSucceeded = (response, step) => {
   }
   return response;
 };
+
+/**
+ * The serials a rollback failed to put back, given the restock's own answer.
+ *
+ * Undoing a warehouse move goes through the same endpoint as making one, so a
+ * refused undo resolves with `{ ok: false }` instead of throwing. A caller that
+ * only catches throws reads that as "everything was restored" and tells nobody
+ * — which is the one outcome worse than not rolling back at all, because the
+ * device is off the shelf and no longer on anyone's list to look for.
+ *
+ * @param {object|null} response the restock's axios response
+ * @param {string[]} serials the serials the rollback tried to restore
+ * @returns {string[]} the serials still stranded; empty when the undo landed
+ */
+export const strandedAfterRollback = (response, serials) => {
+  if (!serials?.length) return [];
+  return readWriteFailure(response) ? [...serials] : [];
+};
