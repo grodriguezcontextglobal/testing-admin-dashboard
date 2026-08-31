@@ -11,7 +11,11 @@ import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { AntSelectorStyle } from "../../../styles/global/AntSelectorStyle";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { formatDate } from "../../inventory/utils/dateFormat";
-const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
+import {
+  RETURN_CONDITIONS,
+  conditionLabel,
+} from "../../../utils/returnConditions";
+
 
 const UpdatingConsumerLease = ({
   openReturnDeviceStaffModal,
@@ -95,12 +99,24 @@ const UpdatingConsumerLease = ({
             <Select
               className="custom-autocomplete"
               {...register("reason", { required: true })}
+              value={watch("reason") ?? ""}
+              displayEmpty
+              renderValue={(selected) =>
+                selected ? (
+                  <Typography>{conditionLabel(selected)}</Typography>
+                ) : (
+                  <Typography style={{ color: "var(--gray-500, #667085)" }}>
+                    Select a condition
+                  </Typography>
+                )
+              }
               style={{ ...AntSelectorStyle, width: "100%" }}
             >
-              <MenuItem value="">None</MenuItem>
-              {options.map((option) => (
-                <MenuItem key={option} value={option}>
-                  <Typography>{option}</Typography>
+              {/* No "None": the absence of a condition is a blank field, not an
+                  entry on the list. */}
+              {RETURN_CONDITIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  <Typography>{option.label}</Typography>
                 </MenuItem>
               ))}
             </Select>

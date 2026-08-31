@@ -1,4 +1,5 @@
-import { MenuItem, Select, Typography } from "@mui/material";
+import { IconButton, MenuItem, Select, Typography } from "@mui/material";
+import { X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { useState } from "react";
@@ -11,10 +12,13 @@ import GrayButton from "../../../../../components/UX/buttons/GrayButton";
 import Label from "../../../../../components/UX/inputs/Label";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { AntSelectorStyle } from "../../../../../styles/global/AntSelectorStyle";
+import {
+  RETURN_CONDITIONS,
+  conditionLabel,
+} from "../../../../../utils/returnConditions";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import { formatDate } from "../../../../inventory/utils/dateFormat";
 import {
-  RETURN_REASONS,
   buildDeleteLeasePayload,
   buildReturningItemPayload,
   buildUpdateLeasePayload,
@@ -27,7 +31,7 @@ const ModalReturnDeviceFromStaff = ({
   deviceInfo,
 }) => {
   const { user } = useSelector((state) => state.admin);
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: { reason: "" },
   });
   const queryClient = useQueryClient();
@@ -128,20 +132,44 @@ const ModalReturnDeviceFromStaff = ({
       onSubmit={handleSubmit(handleReturnDevice)}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <Label>Reason for return</Label>
-        <Select
-          className="custom-autocomplete"
-          defaultValue=""
-          {...register("reason", { required: true })}
-          style={{ ...AntSelectorStyle, width: "100%" }}
-        >
-          <MenuItem value="">None</MenuItem>
-          {RETURN_REASONS.map((option) => (
-            <MenuItem key={option} value={option}>
-              <Typography>{option}</Typography>
-            </MenuItem>
-          ))}
-        </Select>
+        <Label htmlFor="staff-return-condition">Returned device condition</Label>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Select
+            id="staff-return-condition"
+            className="custom-autocomplete"
+            {...register("reason", { required: true })}
+            value={watch("reason") ?? ""}
+            displayEmpty
+            renderValue={(selected) =>
+              selected ? (
+                <Typography>{conditionLabel(selected)}</Typography>
+              ) : (
+                <Typography style={{ color: "var(--gray-500, #667085)" }}>
+                  Select a condition
+                </Typography>
+              )
+            }
+            style={{ ...AntSelectorStyle, width: "100%" }}
+          >
+            {/* No "None": an absent condition is a blank field, not an entry on
+                the list -- and picking it only disabled the save button. */}
+            {RETURN_CONDITIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                <Typography>{option.label}</Typography>
+              </MenuItem>
+            ))}
+          </Select>
+          {/* The way back to blank, which is where the form opens. */}
+          {watch("reason") ? (
+            <IconButton
+              aria-label="Clear the condition"
+              size="small"
+              onClick={() => setValue("reason", "", { shouldValidate: true })}
+            >
+              <X size={16} />
+            </IconButton>
+          ) : null}
+        </div>
       </div>
 
       <div

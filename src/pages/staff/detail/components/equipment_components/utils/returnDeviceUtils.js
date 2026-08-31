@@ -4,13 +4,19 @@
  * unit-testable; the component formats the dates and passes them in.
  */
 
-export const RETURN_REASONS = [
-  "Operational",
-  "Network",
-  "Hardware",
-  "Damaged",
-  "Battery",
-];
+import { conditionValues } from "../../../../../../utils/returnConditions";
+
+/**
+ * Re-exported, not redeclared.
+ *
+ * This module used to hold its own copy of the five conditions. The member
+ * return modal held an identical one, and both send the value verbatim as
+ * `status` to /db_event/returning-item -- two lists of the same server
+ * contract in two folders, which is how one ends up a word behind the other.
+ * The list lives in src/utils/returnConditions.js now, with the descriptions
+ * the product review asked for.
+ */
+export const RETURN_REASONS = conditionValues();
 
 export const isReasonValid = (reason) => `${reason ?? ""}`.trim().length > 0;
 

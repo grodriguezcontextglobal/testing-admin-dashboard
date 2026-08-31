@@ -140,6 +140,7 @@ const ConfirmationButton = ({
           isDisabled={false}
           loadingState={resolvedLoading}
           isLoading={resolvedLoading}
+          styles={{ ...styles, width: "100%" }}
         />
       </span>
     </Popconfirm>
