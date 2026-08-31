@@ -1,15 +1,11 @@
-import { Button, Divider } from "antd";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
-import { WhiteCirclePlusIcon } from "../../../../../../components/icons/WhiteCirclePlusIcon";
-import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import DatePicker from "react-datepicker";
 import { TextFontSize30LineHeight38 } from "../../../../../../styles/global/TextFontSize30LineHeight38";
 import { TextFontSize20LineHeight30 } from "../../../../../../styles/global/TextFontSize20HeightLine30";
-import Chip from "../../../../../../components/UX/Chip/Chip";
 
 export const renderingOptionsButtons = ({
   label,
@@ -31,93 +27,16 @@ export const renderingOptionsButtons = ({
   }
 };
 
-export const addingExtraInfo = ({
-  keyObject,
-  valueObject,
-  setKeyObject,
-  setValueObject,
-  handleMoreInfoPerDevice,
-}) => {
-  return (
-    <div
-      style={{
-        width: "100%",
-        ...CenteringGrid,
-        justifyContent: "space-between",
-        gap: "5px",
-      }}
-    >
-      <OutlinedInput
-        style={{ ...OutlinedInputStyle, width: "100%" }}
-        placeholder="e.g IMEI"
-        name="key"
-        value={keyObject}
-        onChange={(e) => setKeyObject(e.target.value)}
-      />
-      <OutlinedInput
-        style={{ ...OutlinedInputStyle, width: "100%" }}
-        placeholder="e.g YABSDA56AKJ"
-        name="key"
-        value={valueObject}
-        onChange={(e) => setValueObject(e.target.value)}
-      />
-      <Button
-        htmlType="button"
-        onClick={() => handleMoreInfoPerDevice()}
-        style={{ ...BlueButton, ...CenteringGrid }}
-      >
-        <WhiteCirclePlusIcon />
-      </Button>
-    </div>
-  );
-};
+/* addingExtraInfo and renderingMoreInfoSubmitted lived here. They rendered two
+   unlabelled inputs and a row of MUI Chips reading "key:value" that did not
+   wrap, and they kept the whole list behind the "Add more information" button —
+   so an item that already had an IMEI showed nothing until you clicked a button
+   that said you were adding one. Replaced by ExtraIdentifiersPanel.
 
-export const renderingMoreInfoSubmitted = ({
-  moreInfo,
-  moreInfoDisplay,
-  handleDeleteMoreInfo,
-}) => {
-  return (
-    <>
-      <Divider
-        style={{
-          marginBottom: "-15px",
-          display: moreInfoDisplay ? "" : "none",
-        }}
-      />
-      <div
-        style={{
-          width: "100%",
-          display: moreInfoDisplay ? "flex" : "none",
-          justifyContent: "flex-start",
-          alignSelf: "flex-start",
-        }}
-      >
-        <p style={Subtitle}>More information</p>
-      </div>
-
-      <div
-        style={{
-          width: "100%",
-          display: moreInfoDisplay ? "flex" : "none",
-          justifyContent: "flex-start",
-          alignItems: "center",
-        }}
-      >
-        {moreInfo.length > 0 &&
-          moreInfo.map((item, index) => (
-            <Chip
-              key={`${item.keyObject}-${item.valueObject}`}
-              label={`${item.keyObject}:${item.valueObject}`}
-              onDelete={() => handleDeleteMoreInfo(index)}
-              variant="outlined"
-              color="default"
-            />
-          ))}
-      </div>
-    </>
-  );
-};
+   NOTE: near-identical copies still live in inventory/actions/utils/
+   BulkComponents.jsx and events/.../BulkRentedItemsComponents.jsx, used by
+   SingleItemForm and the new-device SingleForm. Those screens have the same
+   problem and are worth the same treatment. */
 
 export const stylingComponents = ({ loadingStatus }) => {
   const styling = {

@@ -52,3 +52,135 @@
   color: var(--gray-600, #475467);
   margin-top: 4px;
 }
+
+/* ── Extra identifiers ──────────────────────────────────────────────────────
+   Replaces a row of MUI Chips labelled "key:value" that did not wrap, had no
+   gap between them, and hid the whole list behind an "Add" button. */
+.identifiers {
+  width: 100%;
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 8px;
+  text-align: left;
+}
+.identifiers__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.identifiers__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 14px/20px Inter, sans-serif;
+  color: var(--gray-900, #101828);
+}
+/* The count is the answer to "is there anything here?", which is the first
+   question anyone asks of this section. */
+.identifiers__count {
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--blue-dark-50, #eff4ff);
+  color: var(--blue-dark-700, #004eeb);
+  font: 600 12px/20px Inter, sans-serif;
+}
+.identifiers__lead,
+.identifiers__empty {
+  font: 400 12px/18px Inter, sans-serif;
+  color: var(--gray-600, #475467);
+  margin-top: 2px;
+}
+.identifiers__empty {
+  margin-top: 12px;
+}
+.identifiers__list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* One per row rather than chips in a line: a value is compared character by
+   character, and a horizontal run of them cannot be scanned down. */
+.identifiers__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-200, #eaecf0);
+  border-radius: 8px;
+  background: var(--gray-50, #f9fafb);
+}
+.identifiers__pair {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.identifiers__name {
+  font: 500 12px/18px Inter, sans-serif;
+  color: var(--gray-600, #475467);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* Monospace because this is the half somebody reads against a label on a box. */
+.identifiers__value {
+  font: 500 14px/20px ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--gray-900, #101828);
+  overflow-wrap: anywhere;
+}
+.identifiers__remove {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gray-500, #667085);
+  cursor: pointer;
+}
+.identifiers__remove:hover:not(:disabled) {
+  background: var(--error-50, #fef3f2);
+  color: var(--danger-action, #b42318);
+}
+.identifiers__remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.identifiers__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--gray-200, #eaecf0);
+}
+.identifiers__actions {
+  display: flex;
+  gap: 8px;
+}
+.identifiers__error {
+  grid-column: 1 / -1;
+  font: 400 12px/18px Inter, sans-serif;
+  color: var(--danger-action, #b42318);
+}
+@media (max-width: 640px) {
+  .identifiers__form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}

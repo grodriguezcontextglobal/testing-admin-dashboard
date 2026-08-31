@@ -22,6 +22,7 @@ import { formatDate } from "../../../utils/dateFormat";
 import useSuppliers from "../../../utils/hooks/useSuppliers";
 import generateIdempotencyKey from "../../../../../utils/actions/generateIdempotencyKey";
 import { renderTitle } from "./ux/EditItemComponents";
+import { appendIdentifier } from "../../../utils/extraIdentifiers";
 import EditItemForm from "./ux/EditItemForm";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { deviceProfileKeys } from "../../deviceProfile/hooks/useDeviceProfile";
@@ -44,10 +45,7 @@ const EditItemModal = ({
   setOpenEditItemModal,
 }) => {
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [moreInfoDisplay, setMoreInfoDisplay] = useState(false);
   const [moreInfo, setMoreInfo] = useState([]);
-  const [keyObject, setKeyObject] = useState("");
-  const [valueObject, setValueObject] = useState("");
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
@@ -277,12 +275,12 @@ const EditItemModal = ({
     }
   };
 
-  const handleMoreInfoPerDevice = () => {
-    const result = [...moreInfo, { keyObject, valueObject }];
-    setKeyObject("");
-    setValueObject("");
-    return setMoreInfo(result);
-  };
+  /* The two typed halves come from the panel, which owns its own draft and has
+     already validated them. appendIdentifier refuses anything that would not
+     validate a second time, so an empty or duplicate entry cannot reach the
+     list even if a future caller forgets to ask first. */
+  const handleMoreInfoPerDevice = ({ name, value }) =>
+    setMoreInfo((current) => appendIdentifier(current, { name, value }));
 
   const handleDeleteMoreInfo = (index) => {
     const result = [...moreInfo];
@@ -417,13 +415,12 @@ const EditItemModal = ({
 
     setSubLocationsSubmitted(parseSubLocations(item.sub_location));
 
-    // Load the extra identifiers the item already has into the editor, and open
-    // the panel when there are any. They were invisible here before, which is
-    // why the save had to guess and ended up sending [] — erasing them.
-    // Seeding them means the delete button on a chip now genuinely deletes.
-    const storedExtraInfo = parseExtraInfoEntries(item);
-    setMoreInfo(storedExtraInfo);
-    if (storedExtraInfo.length > 0) setMoreInfoDisplay(true);
+    // Load the extra identifiers the item already has into the editor. They
+    // were invisible here before, which is why the save had to guess and ended
+    // up sending [] — erasing them. Nothing needs opening any more: the panel
+    // shows what is recorded without being asked, and only the add form is
+    // behind a button.
+    setMoreInfo(parseExtraInfoEntries(item));
 
     // Rented units carry a due date. It lives in component state, which the old
     // key-walking seed could not reach, so it reset to today on every edit and
@@ -518,10 +515,8 @@ const EditItemModal = ({
           imageUploadedValue={convertImageTo64ForPreview}
           imageUrlGenerated={imageUrlGenerated}
           isRented={isRented}
-          keyObject={keyObject}
           loadingStatus={loadingStatus}
           moreInfo={moreInfo}
-          moreInfoDisplay={moreInfoDisplay}
           options={options}
           OutlinedInputStyle={OutlinedInputStyle}
           register={register}
@@ -532,15 +527,11 @@ const EditItemModal = ({
           returningDate={returningDate}
           savingNewItem={savingNewItem}
           setImageUploadedValue={setImageUploadedValue}
-          setKeyObject={setKeyObject}
-          setMoreInfoDisplay={setMoreInfoDisplay}
           setRemoveImage={setRemoveImage}
           setReturningDate={setReturningDate}
           setSubLocationsSubmitted={setSubLocationsSubmitted}
-          setValueObject={setValueObject}
           subLocationsOptions={subLocationsOptions}
           subLocationsSubmitted={subLocationsSubmitted}
-          valueObject={valueObject}
           watch={watch}
           suppliersOptions={supplierList}
           closeModal={setOpenEditItemModal}

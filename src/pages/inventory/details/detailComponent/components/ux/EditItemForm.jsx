@@ -11,14 +11,13 @@ import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorSty
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { gripingFields } from "../../../../actions/utils/BulkComponents";
 import {
-  addingExtraInfo,
-  renderingMoreInfoSubmitted,
   renderingOptionsButtons,
   renderOptional,
   stylingComponents,
 } from "./EditItemComponents";
 import editItemFields from "./EditItemFields";
 import StockStateField from "./StockStateField";
+import ExtraIdentifiersPanel from "./ExtraIdentifiersPanel";
 
 const EditItemForm = ({
   acceptImage,
@@ -34,10 +33,8 @@ const EditItemForm = ({
   imageUploadedValue,
   imageUrlGenerated,
   isRented,
-  keyObject,
   loadingStatus,
   moreInfo,
-  moreInfoDisplay,
   options,
   OutlinedInputStyle,
   register,
@@ -47,14 +44,10 @@ const EditItemForm = ({
   returningDate,
   savingNewItem,
   setImageUploadedValue,
-  setKeyObject,
-  setMoreInfoDisplay,
   setReturningDate,
   setSubLocationsSubmitted,
-  setValueObject,
   subLocationsOptions,
   subLocationsSubmitted,
-  valueObject,
   watch,
   suppliersOptions,
   closeModal,
@@ -492,31 +485,13 @@ const EditItemForm = ({
         })}
       </Grid>
       <Divider />
-      <BlueButtonComponent
-        buttonType="button"
-        onClick={() => setMoreInfoDisplay(!moreInfoDisplay)}
-        styles={
-          stylingComponents({
-            loadingStatus,
-          }).buttonStyleLoading
-        }
-      >
-        Add more information
-      </BlueButtonComponent>
-      {moreInfoDisplay &&
-        addingExtraInfo({
-          keyObject,
-          valueObject,
-          setKeyObject,
-          setValueObject,
-          handleMoreInfoPerDevice,
-        })}
-      {renderingMoreInfoSubmitted({
-        moreInfo,
-        moreInfoDisplay,
-        handleDeleteMoreInfo,
-      })}{" "}
-      <Divider style={{ display: moreInfoDisplay ? "" : "none" }} />
+      <ExtraIdentifiersPanel
+        entries={moreInfo}
+        onAdd={handleMoreInfoPerDevice}
+        onRemove={handleDeleteMoreInfo}
+        disabled={loadingStatus}
+      />
+      <Divider />
       <div style={stylingComponents({ loadingStatus }).styleDivParent}>
         <div
           style={{
@@ -547,10 +522,11 @@ const EditItemForm = ({
             title={"Update item"}
             loadingState={loadingStatus}
             disabled={loadingStatus}
-            styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
+            // styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
             // icon={<WhiteCirclePlusIcon />}
             titleStyles={{ ...CenteringGrid, textTransform: "none" }}
             buttonType="submit"
+            iconLeading={<WhiteCirclePlusIcon />}
           />
         </div>
       </div>
