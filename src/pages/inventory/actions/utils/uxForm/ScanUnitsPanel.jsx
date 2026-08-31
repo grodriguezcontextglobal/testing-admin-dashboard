@@ -62,10 +62,10 @@ const ScanUnitsPanel = ({ existingSerials, onScan }) => {
         sx={{ width: "100%", textAlign: "left", mb: 2 }}
       >
         Point the scanner at each label and pull the trigger. Every read is
-        recorded and the field clears itself, ready for the next one — you never
-        have to touch the keyboard. Units added this way carry a serial number
-        and nothing else; use <strong>One at a time</strong> if a unit needs
-        extra identifiers.
+        recorded and the field clears itself, ready for the next one. Units
+        added this way carry a serial number only. Use{" "}
+        <strong>&quot;One at a time&quot;</strong> if a unit needs additional
+        identifiers.
       </Typography>
 
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>

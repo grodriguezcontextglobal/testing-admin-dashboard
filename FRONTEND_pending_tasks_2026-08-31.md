@@ -177,26 +177,36 @@ Fredrik went through this line by line between `6:37` and `9:23`:
 > carry a serial number only. Use "One at a time" if a unit needs additional
 > identifiers.
 
-### B2 — Destructive confirmations use the standard sentence
+**Done 2026-08-31**, with `ScanUnitsPanel.test.jsx` (3 tests) pinning it — the
+paragraph has now been rewritten more than once, so the negative clause and
+"extra identifiers" are both asserted absent, not just the new wording present.
 
-`14:51`–`15:14`. The confirmation before creating the batch should read the way
-every other system writes it:
+### B2 — Destructive confirmations use the standard sentence — **done**
 
-> Are you sure you want to continue? This operation cannot be undone.
+`14:51`–`15:14`, and `14:35`: it adds N new items **to** the inventory, not
+*in* the inventory.
 
-Also at `14:06`, drop the line saying the items will be added to the database —
-*"of course it's going to add it to database. I mean, what's the purpose of
-doing this in the first place?"*
+The confirmation lives in
+`src/pages/inventory/actions/add/ux/wizard/ReviewStep.jsx`, on the checkbox the
+user has to tick before the batch is written. It now reads:
 
-And `14:35`: it adds N new items **to** the inventory, not *in* the inventory.
+> I understand this adds N new items **to the** inventory.
+> **This operation cannot be undone.** …
 
-### B3 — The "removing them afterwards" sentence says nothing
+The `14:06` note — drop the line saying the items will be added to the database —
+did not apply to this screen; nothing here states it. Watch for it in the bulk
+range panel (`BulkComponents.jsx:33`), whose copy was not part of this pass.
 
-`15:18`–`15:39`. Current text talks about "deleting the units one group at a
-time", which Fredrik could not parse. What it should say:
+### B3 — The "removing them afterwards" sentence says nothing — **done**
+
+`15:18`–`15:39`. It said "Removing them afterwards means deleting the units one
+group at a time", which Fredrik could not parse. Now:
 
 > If you need to remove them after adding them, you have to do that one at a
 > time.
+
+B2 and B3 are one paragraph and shipped together, with `ReviewStep.test.jsx`
+(4 tests) covering both plus the singular/plural count.
 
 ### B4 — Assigning from a device does not carry the device with it
 
@@ -339,13 +349,19 @@ result says what he dictated:
 Shared components live in `src/components/notification/email/`, so any change
 reaches every screen that sends mail — check each caller first.
 
-### B15 — Confirm what a duplicate serial scan does
+### B15 — Duplicate serial scan — **no work needed, already covered**
 
 `10:29`: *"what happens if I put in the same serial number here, mistakenly scan
-the thing again?"* Gustavo answered that they are handled, but the recording
-cuts before the demonstration. Worth an explicit test in `ScanUnitsPanel` —
-scanning the same label twice is the single most likely operator error in a
-scan-until-done flow.
+the thing again?"* Gustavo said it was handled and the recording cut before the
+demonstration. Verified: it is.
+
+`acceptScan` in `src/pages/inventory/actions/utils/scanQueue.js` returns a
+`DUPLICATE` status, and `scanQueue.test.js` pins that it matches
+**case-insensitively** (`ab1` against `AB1`) and **ignores surrounding
+whitespace** (`A1` against `" A1 "`) — the two ways the same label comes back
+looking different. `ScanUnitsPanel` announces it, clears the field and keeps
+scanning, which is the right behaviour for a flow driven by a trigger: anything
+needing a click to dismiss would cost more than the duplicate.
 
 ### B16 — "Send a reminder" is below the fold
 

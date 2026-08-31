@@ -168,10 +168,10 @@ const ReviewStep = ({
           />
           <div>
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              I understand this adds {count} new item{count === 1 ? "" : "s"} to inventory.
+              I understand this adds {count} new item{count === 1 ? "" : "s"} to the inventory.
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              There is no bulk undo. Removing them afterwards means deleting the units one group at a time.
+              This operation cannot be undone. If you need to remove them after adding them, you have to do that one at a time.
             </Typography>
           </div>
         </div>
