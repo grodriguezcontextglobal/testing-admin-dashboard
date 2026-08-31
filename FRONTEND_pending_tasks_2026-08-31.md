@@ -330,9 +330,21 @@ member".
 > students that we're adding, it's just like new students, not new members. We
 > have to only stick to one term."*
 
-Since the label is already per-company customisable, this is about making the
-**vocabulary flow from one source** rather than having "member" hardcoded next
-to a customised "Students" heading.
+**The button he pointed at no longer exists.** `e0e1c1f9` removed it; the only
+remaining occurrence of that string under `src` is a code comment explaining why
+it went.
+
+Cesar's wider point is still open, and the machinery for it already exists:
+`getIndustryProfile(industry).audience` in `src/config/industryProfiles.js`
+returns the company's own word — "Students" for Education — and four files in
+the members module already read it. The rest of the module says "member" in
+hardcoded strings.
+
+**Not swept, deliberately.** It is a module-wide vocabulary pass whose scope is
+a judgement call, and Cesar said in the same breath that he is already doing
+terminology cleanup — *"I have to continue cleaning up"*. Two people sweeping in
+parallel is how a module ends up with two vocabularies. Agree who owns it and
+how far it reaches before anyone starts.
 
 ### B10 — Staff and student detail pages should feel like one product
 
@@ -340,8 +352,15 @@ to a customised "Students" heading.
 should be exactly the same. So the menu items should be similar to each
 other."*
 
-Compare the two action rails and reconcile. `ProfileShell` is the shared shell
-they should both be built on.
+**Looked at both; this needs a decision, not a fix.** `StaffDetail.jsx` and the
+`memberDetailsDashboard` tree were rebuilt on `ProfileShell` at different times
+and grew different action sets — some of it accidental drift, some of it
+legitimate, since guardian consent has no staff equivalent and staff have
+events.
+
+So "make them the same" has no single correct answer. It needs a side-by-side of
+the two action lists and a call on which items are genuinely per-audience and
+which are drift. **Not guessed at**; worth its own task with both screens open.
 
 Positive finding worth keeping: at `42:38` he checked that **Delete member is
 disabled while inventory is out** and confirmed *"That logic is good."* Do not
@@ -353,16 +372,34 @@ regress it.
 have it after here too."*
 
 The real defect is the **inconsistency** — the same form places it on both
-sides. Pick one and sweep. Fredrik leans toward before the label; his exact
-words were *"I think it's before, isn't that the case?"*, so this is a decision
-to confirm, not an instruction to follow blindly.
+sides.
 
-### B12 — Sort the audit trail by last name
+**Root cause found, not fixed.** The shared `Label`
+(`src/components/UX/inputs/Label.jsx`) has **no required marker at all**, so
+every screen that needs one writes its own. That is precisely why they disagree:
+MUI's `InputLabel required` appends the asterisk *after* the text, and a
+hand-written one lands wherever the author typed it.
 
-`56:31`. `e0e1c1f9` added name **and** email, which handles the collision he
-worried about. The ordering half of the ask is still open: *"you may want to
-have first name, last name, or at least sort them by last name, but then put
-first name as well."*
+**Two decisions before any sweep.** Which side the asterisk goes — Fredrik
+leaned toward before but asked rather than instructed (*"I think it's before,
+isn't that the case?"*) — and whether `Label` grows a `required` prop so one
+place decides. The second is the half that stops it drifting again. Sweeping
+every form on a guessed position would be the wrong order.
+
+### B12 — Sort the audit trail by last name — **done**
+
+`56:31`. `e0e1c1f9` added name **and** email, which handles the collision. The
+ordering half was still open: *"you may want to have first name, last name, or
+at least sort them by last name, but then put first name as well."*
+
+`buildStaffFilterOptions` did not sort at all — the picker was in whatever order
+the company record happened to hold. Now sorted by last name, then first, both
+case- and whitespace-insensitive, with a record missing a last name kept in the
+list rather than dropped: it is still somebody who did something. 4 tests.
+
+He framed it as scale, not tidiness: *"you have to assume that if you have a
+school and you have 200 employees, that at least two of them is going to have
+the same last name. Maybe they're related even."*
 
 ### B13 — "Custody history" should be called "Audit trail"
 
@@ -372,8 +409,8 @@ first name as well."*
 > that audit trail… it lends credibility. If you say that to somebody, they will
 > not question what it says."*
 
-`src/pages/inventory/details/deviceProfile/DeviceProfilePage.jsx:309` renders
-`<h3>Custody history</h3>`, with the tab labelled `Custody` at `:254`.
+**Done 2026-08-31.** In `DeviceProfilePage.jsx` the tab and the heading both say
+**Audit trail**; they said `Custody` and `Custody history`.
 
 The larger idea behind it (`55:48`–`56:31`) is that in QuickBooks and Bill.com
 an audit trail is **scoped to the record you are looking at** — open an invoice,
@@ -382,18 +419,34 @@ timeline already is that. Renaming it is the cheap half; offering the same
 per-record view elsewhere is the expensive half, and it is also a genuine
 FedRAMP control rather than only a naming preference.
 
-### B14 — Verify the email footer against his exact wording
+### B14 — Email footer — **client half done, the wrapper is server-side**
 
-`33:47`–`35:40`. `97f9ac3a` added `signOff` and `replyLine`; check the rendered
-result says what he dictated:
+`33:47`–`35:40`. What he dictated:
 
 > Message from **[Company name]'s inventory system**.
 > …
 > This email was sent by the user from an unmonitored account, do not reply to
 > this email. Should you have any questions, please contact **[the user]**.
 
-Shared components live in `src/components/notification/email/`, so any change
-reaches every screen that sends mail — check each caller first.
+**Checked, and it splits in two.**
+
+The message *body* is built client-side in `reminderTemplates.js`. The framing
+he read out — "sent from X's inventory system", "unmonitored account" — is **not
+in this repo**. It comes from the server's nodemailer wrapper, so that half is a
+backend ask and has been added to
+`FRONTEND_backend_ask_write_refusal_semantics.md`.
+
+The client half was wrong in a way worth fixing regardless. `replyLine` said
+*"reply to {email}"*. Reminders go out through the company's notification
+account rather than the sender's mailbox, so replying to what arrives reaches an
+account nobody reads — which is the point he was making. It now says **"write to
+{email}"**, an instruction that holds whichever way the mail was sent, and
+**"contact the person who sent this"** when no address is known. Two existing
+tests pinned the old wording and were updated with the reason written next to
+them.
+
+Shared components live in `src/components/notification/email/`, so any further
+change there reaches every screen that sends mail — check each caller first.
 
 ### B15 — Duplicate serial scan — **no work needed, already covered**
 

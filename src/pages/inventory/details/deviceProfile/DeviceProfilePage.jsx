@@ -251,7 +251,7 @@ const DeviceProfilePage = () => {
   /* ---- tabs ------------------------------------------------------------ */
 
   const tabs = [
-    { key: "custody", label: "Custody" },
+    { key: "custody", label: "Audit trail" },
     { key: "specs", label: "Specs" },
     Number(item.container) > 0 && { key: "contents", label: "Contents" },
   ].filter(Boolean);
@@ -306,7 +306,7 @@ const DeviceProfilePage = () => {
             {tab === "custody" && (
               <section className="device-card">
                 <div className="device-card__head">
-                  <h3 className="device-card__title">Custody history</h3>
+                  <h3 className="device-card__title">Audit trail</h3>
                   <span className="device-card__note">
                     {timeline.length} {timeline.length === 1 ? "event" : "events"}
                   </span>

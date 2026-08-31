@@ -61,10 +61,20 @@ export function signOff({ staffName, companyName }) {
   return ["Thank you,", text(staffName), text(companyName)].filter(Boolean);
 }
 
-/** How the member is told to answer -- by name when there is one to give. */
+/**
+ * How the member is told to answer -- by address when there is one to give.
+ *
+ * "Reply to this email" was the instruction, and reminders go out through the
+ * company's notification account, not the sender's mailbox. Replying to what
+ * arrives reaches an account nobody reads. Naming the address to write to works
+ * whichever way the mail was sent, which is why it is "write to" and not
+ * "reply to".
+ */
 export function replyLine({ staffEmail, whenLate = false }) {
   const email = text(staffEmail);
-  const tail = email ? `reply to ${email}` : "reply to this email";
+  const tail = email
+    ? `write to ${email}`
+    : "contact the person who sent this";
 
   return whenLate
     ? `Please return it as soon as you can, or ${tail} if you need more time.`

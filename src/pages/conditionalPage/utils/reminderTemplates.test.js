@@ -254,17 +254,23 @@ describe("the sign-off names the staff member sending it", () => {
     expect(message).toContain("Thank you,\nContext Global");
   });
 
-  it("says who to reply to when the sender has an email", () => {
+  /* These two asserted "reply to ...". Reminders go out through the company's
+     notification account rather than the sender's mailbox, so replying to what
+     arrives reaches an account nobody reads -- the instruction was wrong, not
+     the wording. Naming the address to write to holds whichever way the mail
+     was sent. */
+  it("names the address to write to when the sender has an email", () => {
     const message = build("overdue", {
       staffName: "Gustavo Rodriguez",
       staffEmail: "grodriguez@contextglobal.com",
     });
-    expect(message).toContain("reply to grodriguez@contextglobal.com");
+    expect(message).toContain("write to grodriguez@contextglobal.com");
+    expect(message).not.toContain("reply to");
   });
 
-  it("keeps the generic reply line when there is no sender email", () => {
-    expect(build("overdue", { staffName: "Gustavo Rodriguez" })).toContain(
-      "reply to this email"
-    );
+  it("points at the person, not the mailbox, when there is no sender email", () => {
+    const message = build("overdue", { staffName: "Gustavo Rodriguez" });
+    expect(message).toContain("contact the person who sent this");
+    expect(message).not.toContain("reply to this email");
   });
 });
