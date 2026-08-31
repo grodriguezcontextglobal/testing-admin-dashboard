@@ -32,6 +32,7 @@ import {
   parseExtraInfoEntries,
   parseReturnDate,
   parseSubLocations,
+  resolveStockFields,
   resolveSupplierId,
   resolveSupplierName,
 } from "../../utils/editItemFormModel";
@@ -179,7 +180,15 @@ const EditItemModal = ({
         brand: data.brand,
         descript_item: data.descript_item,
         ownership: data.ownership,
-        warehouse: true,
+        /* Was `warehouse: true`. Saving a description change on a device that
+           was out with a member put it back on the shelf in the item table
+           while the lease still said somebody held it. An out-of-stock unit now
+           gets its own values back unchanged; where it is belongs to the lease,
+           not to this form. */
+        ...resolveStockFields({
+          item: dataFound[0],
+          requestedState: data.stock_state,
+        }),
         main_warehouse: data.tax_location,
         update_at: formatDate(new Date()),
         company: user.company,
@@ -497,6 +506,8 @@ const EditItemModal = ({
           acceptImage={acceptAndGenerateImage}
           addingSubLocation={addingSubLocation}
           control={control}
+          item={dataFound[0]}
+          setValue={setValue}
           displayContainerSplotLimitField={displayContainerSplotLimitField}
           displayPreviewImage={displayPreviewImage}
           displaySublocationFields={displaySublocationFields}

@@ -18,6 +18,7 @@ import {
   stylingComponents,
 } from "./EditItemComponents";
 import editItemFields from "./EditItemFields";
+import StockStateField from "./StockStateField";
 
 const EditItemForm = ({
   acceptImage,
@@ -57,9 +58,19 @@ const EditItemForm = ({
   watch,
   suppliersOptions,
   closeModal,
+  item,
+  setValue,
 }) => {
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
+      {/* First, because it frames everything below it: half these fields mean
+          something different for a unit that is out with somebody. */}
+      <StockStateField
+        item={item}
+        value={watch("stock_state")}
+        onChange={(next) => setValue("stock_state", next)}
+        disabled={loadingStatus}
+      />
       <Grid container spacing={1}>
         {/* style={styleDivParent} */}
         {editItemFields({

@@ -32,3 +32,23 @@
   border: 1px solid var(--gray-300, #d0d5dd);
   background: var(--gray-100, #f2f4f7);
 }
+
+/* Edit item — the stock state field.
+   The locked variant is a statement of fact, not a disabled input: a greyed
+   select invites clicking, a panel explains. */
+.edit-item__locked {
+  border: 1px solid var(--gray-300, #d0d5dd);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--gray-50, #f9fafb);
+}
+.edit-item__locked-value {
+  font: 600 14px/20px Inter, sans-serif;
+  color: var(--gray-900, #101828);
+}
+.edit-item__locked-note,
+.edit-item__hint {
+  font: 400 12px/18px Inter, sans-serif;
+  color: var(--gray-600, #475467);
+  margin-top: 4px;
+}

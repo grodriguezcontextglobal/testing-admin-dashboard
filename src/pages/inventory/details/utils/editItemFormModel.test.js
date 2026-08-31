@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  EDITABLE_STOCK_STATES,
   buildEditItemFormValues,
+  isItemInStock,
+  resolveStockFields,
   buildExtraSerialNumberPayload,
   parseExtraInfoEntries,
   parseReturnDate,
@@ -218,5 +221,116 @@ describe("resolveSupplierName / resolveSupplierId", () => {
     expect(resolveSupplierId(dicSuppliers, "Typed By Hand")).toBeNull();
     expect(resolveSupplierId(dicSuppliers, "")).toBeNull();
     expect(resolveSupplierId(undefined, "TechCorp")).toBeNull();
+  });
+});
+
+/**
+ * Editing an item used to send `warehouse: true` no matter what the item was,
+ * so saving a description change on a device that was out with a member put it
+ * back on the shelf — in the item table, while the lease still said somebody
+ * held it. The two records then disagreed and only a human could tell which
+ * was right.
+ *
+ * Where a unit is, is not this form's fact to state when the unit is out: that
+ * is the lease's, and it is written by the assignment and return flows.
+ */
+describe("isItemInStock", () => {
+  it("reads the flag however the endpoint serialised it", () => {
+    expect(isItemInStock({ warehouse: 1 })).toBe(true);
+    expect(isItemInStock({ warehouse: "1" })).toBe(true);
+    expect(isItemInStock({ warehouse: true })).toBe(true);
+    expect(isItemInStock({ warehouse: 0 })).toBe(false);
+    expect(isItemInStock({ warehouse: "0" })).toBe(false);
+    expect(isItemInStock({})).toBe(false);
+    expect(isItemInStock(undefined)).toBe(false);
+  });
+});
+
+describe("resolveStockFields", () => {
+  const out = { warehouse: 0, logistic_status: "assigned" };
+  const shelf = { warehouse: 1, logistic_status: "in-stock" };
+
+  it("leaves an assigned unit exactly where it was", () => {
+    // The bug, in one assertion: this used to come back as warehouse 1.
+    expect(resolveStockFields({ item: out, requestedState: "in-stock" })).toEqual({
+      warehouse: 0,
+      logistic_status: "assigned",
+    });
+  });
+
+  it("ignores any requested state at all while the unit is out", () => {
+    for (const state of ["in-stock", "in-transit", "lost", "", undefined]) {
+      expect(resolveStockFields({ item: out, requestedState: state })).toEqual({
+        warehouse: 0,
+        logistic_status: "assigned",
+      });
+    }
+  });
+
+  it("applies a state the form owns when the unit is on the shelf", () => {
+    expect(
+      resolveStockFields({ item: shelf, requestedState: "in-transit" })
+    ).toEqual({ warehouse: 1, logistic_status: "in-transit" });
+  });
+
+  it("derives warehouse from the state, so the two can never disagree", () => {
+    expect(resolveStockFields({ item: shelf, requestedState: "lost" })).toEqual({
+      warehouse: 0,
+      logistic_status: "lost",
+    });
+  });
+
+  it("refuses a state this form does not own, and keeps what was there", () => {
+    // "assigned" and "in-event" are written by the flows that create the lease
+    // or the event record. Typing them here would claim a handover nobody made.
+    for (const state of ["assigned", "in-event", "nonsense"]) {
+      expect(resolveStockFields({ item: shelf, requestedState: state })).toEqual({
+        warehouse: 1,
+        logistic_status: "in-stock",
+      });
+    }
+  });
+
+  it("falls back to in-stock when the record never carried a status", () => {
+    expect(
+      resolveStockFields({ item: { warehouse: 1 }, requestedState: undefined })
+    ).toEqual({ warehouse: 1, logistic_status: "in-stock" });
+  });
+});
+
+describe("EDITABLE_STOCK_STATES", () => {
+  it("offers only the states a record edit can honestly claim", () => {
+    expect(EDITABLE_STOCK_STATES.map((state) => state.value)).toEqual([
+      "in-stock",
+      "in-transit",
+      "lost",
+    ]);
+  });
+
+  it("carries the warehouse flag each state implies", () => {
+    const byValue = Object.fromEntries(
+      EDITABLE_STOCK_STATES.map((state) => [state.value, state.warehouse])
+    );
+    expect(byValue["in-stock"]).toBe(1);
+    expect(byValue["in-transit"]).toBe(1);
+    expect(byValue["lost"]).toBe(0);
+  });
+});
+
+describe("buildEditItemFormValues — stock_state", () => {
+  it("opens showing where the unit actually is", () => {
+    expect(
+      buildEditItemFormValues({ warehouse: 0, logistic_status: "assigned" })
+        .stock_state
+    ).toBe("assigned");
+    expect(
+      buildEditItemFormValues({ warehouse: 1, logistic_status: "in-transit" })
+        .stock_state
+    ).toBe("in-transit");
+  });
+
+  it("falls back to the flag when no status was stored", () => {
+    expect(buildEditItemFormValues({ warehouse: 1 }).stock_state).toBe("in-stock");
+    expect(buildEditItemFormValues({ warehouse: 0 }).stock_state).toBe("assigned");
   });
 });
