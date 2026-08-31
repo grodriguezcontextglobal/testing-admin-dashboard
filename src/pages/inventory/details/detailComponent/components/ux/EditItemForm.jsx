@@ -18,6 +18,7 @@ import {
 import editItemFields from "./EditItemFields";
 import StockStateField from "./StockStateField";
 import ExtraIdentifiersPanel from "./ExtraIdentifiersPanel";
+import { UpdateIcon } from "../../../../../../components/icons/UpdateIcon";
 
 const EditItemForm = ({
   acceptImage,
@@ -512,23 +513,21 @@ const EditItemForm = ({
             buttonType="reset"
           />
         </div>
-        <div
+        {/* <div
           style={{
             textAlign: "right",
             width: "50%",
           }}
-        >
+        > */}
           <BlueButtonComponent
             title={"Update item"}
             loadingState={loadingStatus}
             disabled={loadingStatus}
-            // styles={stylingComponents({ loadingStatus }).buttonStyleLoading}
-            // icon={<WhiteCirclePlusIcon />}
             titleStyles={{ ...CenteringGrid, textTransform: "none" }}
             buttonType="submit"
-            iconLeading={<WhiteCirclePlusIcon />}
+            iconLeading={<UpdateIcon stroke={"#fff"} />}
           />
-        </div>
+        {/* </div> */}
       </div>
     </form>
   );

@@ -33,10 +33,13 @@ export const renderingOptionsButtons = ({
    so an item that already had an IMEI showed nothing until you clicked a button
    that said you were adding one. Replaced by ExtraIdentifiersPanel.
 
-   NOTE: near-identical copies still live in inventory/actions/utils/
+   Near-identical copies still live in inventory/actions/utils/
    BulkComponents.jsx and events/.../BulkRentedItemsComponents.jsx, used by
-   SingleItemForm and the new-device SingleForm. Those screens have the same
-   problem and are worth the same treatment. */
+   SingleItemForm and the new-device SingleForm. Those are deliberately left
+   alone: on the creation screens the identifiers are entered from the serial
+   numbers section, alongside the serial they belong to, which is a different
+   flow from editing a unit that already exists. Do not "unify" them without
+   checking that first. */
 
 export const stylingComponents = ({ loadingStatus }) => {
   const styling = {

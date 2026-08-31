@@ -159,7 +159,7 @@ const ExtraIdentifiersPanel = ({ entries, onAdd, onRemove, disabled }) => {
               }}
             />
             <BlueButtonComponent
-              title="Add"
+              title="Add Identifier"
               buttonType="button"
               size="sm"
               disabled={disabled}
