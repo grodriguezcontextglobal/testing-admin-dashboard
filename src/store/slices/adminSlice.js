@@ -79,6 +79,33 @@ const adminSlice = createSlice({
         companyData: { ...(state.user?.companyData ?? {}), ...payload },
       };
     },
+    /**
+     * Folds saved profile fields back into the session.
+     *
+     * The sibling of onUpdateCompanyData, for the same reason: saving "My
+     * details" used to end with onLogout and a hard reload, because nothing
+     * else put the new name, email or photo into the session. Changing your
+     * own phone number should not sign you out.
+     *
+     * Merges rather than replaces, at both levels — the payload is the update,
+     * not the whole user, and `data` carries the login response's own copy of
+     * these fields, which the rest of the app still reads.
+     *
+     * Deliberately not onLogin: that one replaces `user` wholesale and
+     * recomputes `mfaEnabled` from the payload, so re-using it for an edit can
+     * quietly turn MFA off in the session.
+     */
+    onUpdateProfile: (state, { payload }) => {
+      if (!payload || typeof payload !== "object") return;
+      const { data: dataPatch, ...rootPatch } = payload;
+      state.user = {
+        ...state.user,
+        ...rootPatch,
+        ...(dataPatch && typeof dataPatch === "object"
+          ? { data: { ...(state.user?.data ?? {}), ...dataPatch } }
+          : {}),
+      };
+    },
   },
 });
 
@@ -93,6 +120,7 @@ export const {
   onAddCompanyAccountStripe,
   onUpdateMfaStatus,
   onUpdateCompanyData,
+  onUpdateProfile,
 } = adminSlice.actions;
 
 export default adminSlice.reducer;

@@ -3,6 +3,7 @@ import reducer, {
   onLogin,
   onLogout,
   onUpdateCompanyData,
+  onUpdateProfile,
 } from "./adminSlice";
 
 const initialState = reducer(undefined, { type: "@@INIT" });
@@ -119,5 +120,74 @@ describe("adminSlice — onUpdateCompanyData", () => {
     const bare = reducer(initialState, onLogin({ email: "a@b.c" }));
     const state = reducer(bare, onUpdateCompanyData({ company_logo: "u" }));
     expect(state.user.companyData).toEqual({ company_logo: "u" });
+  });
+});
+
+describe("adminSlice — onUpdateProfile", () => {
+  const logged = reducer(
+    initialState,
+    onLogin({
+      name: "Ana",
+      lastName: "Perez",
+      email: "ana@test.com",
+      roleType: "admin",
+      imageProfile: "https://res.cloudinary.com/old.png",
+      companyData: { id: "co-1" },
+      data: { name: "Ana", lastName: "Perez", email: "ana@test.com", uid: "u-1" },
+    })
+  );
+
+  it("actualiza los campos guardados sin cerrar la sesión", () => {
+    const state = reducer(
+      logged,
+      onUpdateProfile({ name: "Ana Maria", phone: "555-1234" })
+    );
+    expect(state.user.name).toBe("Ana Maria");
+    expect(state.user.phone).toBe("555-1234");
+    expect(state.status).toBe("authenticated");
+  });
+
+  it("conserva lo que el payload no trae", () => {
+    // El payload es la actualización, no el usuario completo: perder roleType
+    // aquí deja al usuario sin permisos hasta que vuelva a entrar.
+    const state = reducer(logged, onUpdateProfile({ name: "Ana Maria" }));
+    expect(state.user.roleType).toBe("admin");
+    expect(state.user.email).toBe("ana@test.com");
+    expect(state.user.companyData.id).toBe("co-1");
+  });
+
+  it("fusiona `data` en vez de reemplazarlo", () => {
+    const state = reducer(
+      logged,
+      onUpdateProfile({
+        email: "ana.nueva@test.com",
+        data: { email: "ana.nueva@test.com" },
+      })
+    );
+    expect(state.user.data.email).toBe("ana.nueva@test.com");
+    expect(state.user.data.uid).toBe("u-1");
+    expect(state.user.data.name).toBe("Ana");
+  });
+
+  it("acepta una foto nueva y también su borrado", () => {
+    const withPhoto = reducer(
+      logged,
+      onUpdateProfile({ imageProfile: "https://res.cloudinary.com/new.png" })
+    );
+    expect(withPhoto.user.imageProfile).toBe(
+      "https://res.cloudinary.com/new.png"
+    );
+    const removed = reducer(withPhoto, onUpdateProfile({ imageProfile: null }));
+    expect(removed.user.imageProfile).toBeNull();
+  });
+
+  it("ignora un payload que no es un objeto", () => {
+    expect(reducer(logged, onUpdateProfile(null)).user.name).toBe("Ana");
+    expect(reducer(logged, onUpdateProfile("nope")).user.name).toBe("Ana");
+  });
+
+  it("no inventa `data` cuando el payload no lo trae", () => {
+    const state = reducer(logged, onUpdateProfile({ phone: "555" }));
+    expect(state.user.data.uid).toBe("u-1");
   });
 });
