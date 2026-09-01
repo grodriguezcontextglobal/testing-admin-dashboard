@@ -7,6 +7,7 @@ import {
   mapReturnToReceipt,
   buildReceiptUrl,
   readPaymentIntentFromSearch,
+  readReceiptLogoFromSearch,
   resolveReceiptStatus,
   isTransactionVoided,
   formatReceiptAmount,
@@ -58,6 +59,86 @@ describe("buildReceiptUrl", () => {
     expect(buildReceiptUrl("https://x.com", "")).toBe("");
     expect(buildReceiptUrl("https://x.com", null)).toBe("");
     expect(buildReceiptUrl("", "pi_123")).toBe("");
+  });
+
+  // The link is built by someone who IS signed in, and opened by someone who is
+  // not. Carrying the logo on the link is the only way the letterhead survives
+  // that hand-off without the transaction response growing a field.
+  it("carries the company logo so a scanned receipt keeps its letterhead", () => {
+    expect(
+      buildReceiptUrl("https://x.com", "pi_123", {
+        companyLogo: "https://res.cloudinary.com/dsuynhcgd/image/upload/logo.png",
+      })
+    ).toBe(
+      `https://x.com${RECEIPT_ROUTE}?tx=pi_123&logo=${encodeURIComponent(
+        "https://res.cloudinary.com/dsuynhcgd/image/upload/logo.png"
+      )}`
+    );
+  });
+
+  it("leaves the parameter off when the company has no logo", () => {
+    expect(buildReceiptUrl("https://x.com", "pi_123", { companyLogo: "" })).toBe(
+      `https://x.com${RECEIPT_ROUTE}?tx=pi_123`
+    );
+    expect(buildReceiptUrl("https://x.com", "pi_123")).toBe(
+      `https://x.com${RECEIPT_ROUTE}?tx=pi_123`
+    );
+  });
+
+  it("refuses to link an image we did not host", () => {
+    // Every logo in the app is uploaded through /cloudinary/upload-image, so a
+    // URL anywhere else did not come from a company record.
+    expect(
+      buildReceiptUrl("https://x.com", "pi_123", {
+        companyLogo: "https://tracker.example/pixel.png",
+      })
+    ).toBe(`https://x.com${RECEIPT_ROUTE}?tx=pi_123`);
+    expect(
+      buildReceiptUrl("https://x.com", "pi_123", {
+        companyLogo: "http://res.cloudinary.com/x/logo.png",
+      })
+    ).toBe(`https://x.com${RECEIPT_ROUTE}?tx=pi_123`);
+  });
+});
+
+describe("readReceiptLogoFromSearch", () => {
+  const logo = "https://res.cloudinary.com/dsuynhcgd/image/upload/logo.png";
+
+  it("reads the logo back out of the link", () => {
+    expect(
+      readReceiptLogoFromSearch(`?tx=pi_123&logo=${encodeURIComponent(logo)}`)
+    ).toBe(logo);
+  });
+
+  it("works without the leading question mark", () => {
+    expect(readReceiptLogoFromSearch(`logo=${encodeURIComponent(logo)}`)).toBe(
+      logo
+    );
+  });
+
+  it("is null when the link carries no logo", () => {
+    expect(readReceiptLogoFromSearch("?tx=pi_123")).toBeNull();
+    expect(readReceiptLogoFromSearch("?logo=")).toBeNull();
+    expect(readReceiptLogoFromSearch("")).toBeNull();
+    expect(readReceiptLogoFromSearch(undefined)).toBeNull();
+  });
+
+  it("refuses an image from anywhere but our own host", () => {
+    // This value arrives in a URL anyone can edit. Without the host check the
+    // receipt page renders whatever image a stranger points it at, on a page
+    // that is meant to look official.
+    expect(
+      readReceiptLogoFromSearch("?logo=https%3A%2F%2Ftracker.example%2Fpixel.png")
+    ).toBeNull();
+    expect(
+      readReceiptLogoFromSearch(
+        "?logo=https%3A%2F%2Fres.cloudinary.com.evil.test%2Flogo.png"
+      )
+    ).toBeNull();
+    expect(readReceiptLogoFromSearch("?logo=javascript%3Aalert(1)")).toBeNull();
+    expect(
+      readReceiptLogoFromSearch("?logo=data%3Aimage%2Fpng%3Bbase64%2CAAA")
+    ).toBeNull();
   });
 });
 

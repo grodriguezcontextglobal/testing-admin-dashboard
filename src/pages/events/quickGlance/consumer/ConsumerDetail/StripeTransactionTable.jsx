@@ -361,7 +361,10 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           })}
           qrValue={buildReceiptUrl(
             window.location.origin,
-            receiptTransaction?.paymentIntent
+            receiptTransaction?.paymentIntent,
+            // Carried on the link so the scanned copy keeps the letterhead the
+            // printed one has.
+            { companyLogo: user?.companyData?.company_logo }
           )}
         />
       )}

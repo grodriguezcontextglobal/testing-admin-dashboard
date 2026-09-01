@@ -9,6 +9,7 @@ import ReceiptDocument from "./components/ReceiptDocument";
 import {
   mapTransactionToReceipt,
   readPaymentIntentFromSearch,
+  readReceiptLogoFromSearch,
 } from "./utils/receiptUtils";
 
 /**
@@ -36,8 +37,7 @@ import {
  */
 const ReceiptPage = () => {
   /* Empty for a viewer opening this from a QR scan, which is the point: the
-     page serves both, and the letterhead is the part only a member of the
-     company can supply. */
+     page serves both. The letterhead then comes off the link instead. */
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const paymentIntent = readPaymentIntentFromSearch(location.search);
@@ -131,11 +131,13 @@ const ReceiptPage = () => {
   return frame(
     <ReceiptDocument
       receipt={mapTransactionToReceipt(receiptQuery.data, {
-        /* Only a signed-in viewer has a company to read. Someone opening this
-           from a QR scan is outside the company and gets the receipt without
-           its letterhead -- which is the backend ask, not something the client
-           can answer. */
-        companyLogo: user?.companyData?.company_logo,
+        /* Signed in, the logo comes from the session. Opened from a QR scan or
+           a link out of an email there is no session, so it comes from the
+           link itself -- put there by whoever printed or sent the receipt, and
+           accepted only when it points at our own image host. */
+        companyLogo:
+          user?.companyData?.company_logo ||
+          readReceiptLogoFromSearch(location.search),
       })}
     />
   );

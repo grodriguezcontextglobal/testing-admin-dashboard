@@ -19,6 +19,36 @@
 /** Route the QR points at. Registered in both route trees — see ReceiptPage. */
 export const RECEIPT_ROUTE = "/receipt";
 
+/**
+ * The only host a logo may be loaded from.
+ *
+ * Every image in the app is uploaded through POST /cloudinary/upload-image and
+ * stored as the `secure_url` that call returns, so a logo URL pointing anywhere
+ * else was not written by us. That matters because the receipt link is handed
+ * to people outside the company: without this check, editing the URL turns an
+ * official-looking document into a frame for any image on the internet.
+ */
+const TRUSTED_LOGO_HOST = "res.cloudinary.com";
+
+/**
+ * The logo URL when it is one of ours over https, otherwise null.
+ *
+ * @param {string} value
+ * @returns {string|null}
+ */
+const trustedLogoUrl = (value) => {
+  const url = resolveReceiptLogo(value);
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const trusted =
+      parsed.protocol === "https:" && parsed.hostname === TRUSTED_LOGO_HOST;
+    return trusted ? url : null;
+  } catch {
+    return null;
+  }
+};
+
 export const RECEIPT_STATUS = {
   PAID: "paid",
   VOID: "void",
@@ -55,11 +85,16 @@ const RETURN_OUTCOME_LABEL = {
  * @param {string} paymentIntent
  * @returns {string}
  */
-export const buildReceiptUrl = (origin, paymentIntent) => {
+export const buildReceiptUrl = (origin, paymentIntent, { companyLogo } = {}) => {
   const base = `${origin ?? ""}`.replace(/\/+$/, "");
   const id = `${paymentIntent ?? ""}`.trim();
   if (!base || !id) return "";
-  return `${base}${RECEIPT_ROUTE}?tx=${encodeURIComponent(id)}`;
+  const link = `${base}${RECEIPT_ROUTE}?tx=${encodeURIComponent(id)}`;
+  /* The letterhead rides along with the link. Whoever prints or emails a
+     receipt is signed in and can read `companyData.company_logo`; whoever
+     scans it is outside the company and has no session to read it from. */
+  const logo = trustedLogoUrl(companyLogo);
+  return logo ? `${link}&logo=${encodeURIComponent(logo)}` : link;
 };
 
 /**
@@ -74,6 +109,22 @@ export const readPaymentIntentFromSearch = (search) => {
   const value = new URLSearchParams(raw).get("tx");
   const trimmed = `${value ?? ""}`.trim();
   return trimmed || null;
+};
+
+/**
+ * The company logo the link carried, for a viewer with no session to read it
+ * from — a QR scan, or the link out of a receipt email.
+ *
+ * Anything but one of our own hosted images is dropped: this parameter is
+ * visible in the address bar and anyone can retype it.
+ *
+ * @param {string} search location.search, with or without the leading "?"
+ * @returns {string|null}
+ */
+export const readReceiptLogoFromSearch = (search) => {
+  const raw = `${search ?? ""}`.replace(/^\?/, "");
+  if (!raw) return null;
+  return trustedLogoUrl(new URLSearchParams(raw).get("logo"));
 };
 
 /**
