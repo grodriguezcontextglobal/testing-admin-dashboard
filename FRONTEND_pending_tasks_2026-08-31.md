@@ -142,9 +142,23 @@ from Redux inside the mapper: `/receipt` is registered in **both** `AuthRoutes`
 and `NoAuthRoutes`. So the caller passes it, and both callers that have a
 session now do — the receipt page and the Stripe transaction table.
 
-Still open for the public case: a viewer opening the same URL from a QR scan is
-outside the company and gets no letterhead. That half needs the logo on the
-transaction response — raised with the backend in
+**The public case — closed 2026-09-01 without waiting for the backend**, on
+Gustavo's suggestion: read the logo from what the frontend already sends out.
+The company logo cannot be read from Redux by a viewer with no session, but the
+person who *prints or emails* the receipt does have one — so the logo now rides
+along on the link. `buildReceiptUrl` appends it, `readReceiptLogoFromSearch`
+reads it back, and `ReceiptPage` falls back to it when there is no session.
+
+The parameter is in a URL anyone can retype, so it is accepted only from
+`res.cloudinary.com` over https — every image in the app is uploaded through
+`POST /cloudinary/upload-image` and stored as the `secure_url` it returns, so
+anything from another host was not written by us. Without that check the receipt
+page renders whatever image a stranger points it at, on a document meant to look
+official. 12 tests.
+
+What is still a backend ask, and separately: a logged-out scan of
+`GET /transaction/transaction` may 401 outright — see the note in
+`ReceiptPage.jsx`. Also raised in
 `FRONTEND_backend_ask_write_refusal_semantics.md` §5.
 
 ---
@@ -397,15 +411,29 @@ change every label without touching the component.
 should be exactly the same. So the menu items should be similar to each
 other."*
 
-**Looked at both; this needs a decision, not a fix.** `StaffDetail.jsx` and the
-`memberDetailsDashboard` tree were rebuilt on `ProfileShell` at different times
-and grew different action sets — some of it accidental drift, some of it
-legitimate, since guardian consent has no staff equivalent and staff have
-events.
+`StaffDetail.jsx` and the `memberDetailsDashboard` tree were rebuilt on
+`ProfileShell` at different times and grew different action sets — some of it
+accidental drift, some of it legitimate, since guardian consent has no staff
+equivalent and staff have events.
 
-So "make them the same" has no single correct answer. It needs a side-by-side of
-the two action lists and a call on which items are genuinely per-audience and
-which are drift. **Not guessed at**; worth its own task with both screens open.
+**Done 2026-09-01**, on Gustavo's decision: *the staff menu should feel like the
+student one.* The side-by-side, and what each difference turned out to be:
+
+| | Student | Staff (before) | Verdict |
+|---|---|---|---|
+| Primary action | "Assign devices" | "Assign a device" | **Drift.** One button, two labels |
+| Secondary actions | flat in the rail | five of six behind a **"Manage"** dropdown | **Drift.** Same kind of action, one click on one page and three on the other |
+| Tab for the device list | "Devices" | "Assigned devices" | **Drift.** Now "Devices"; the section *heading* still reads "Assigned devices", which is what a heading is for |
+| Delete / access | "Delete student" | Grant/Remove access | **Per-audience.** You do not delete an employee, you take their sign-in away |
+| Send reminder | yes | — | **Per-audience.** No staff reminder flow exists |
+| Export data (.xlsx) | yes | — | **Per-audience for now.** Giving staff an export is new functionality, not alignment — left out deliberately |
+| Details | a tab (`update-member-information`) | `EditProfileModal` | **Left alone.** Moving the modal into a section is its own task |
+
+The rail's order and wording now come from a tested
+`staffProfileActionList` (`staff/detail/utils/`, 6 tests) written to be read
+beside the member rail rather than guessed at: one primary blue action, the
+rest flat and secondary, the destructive one last — the shape the member page
+already had.
 
 Positive finding worth keeping: at `42:38` he checked that **Delete member is
 disabled while inventory is out** and confirmed *"That logic is good."* Do not
@@ -529,10 +557,27 @@ looking different. `ScanUnitsPanel` announces it, clears the field and keeps
 scanning, which is the right behaviour for a flow driven by a trigger: anything
 needing a click to dismiss would cost more than the duplicate.
 
-### B16 — "Send a reminder" is below the fold
+### B16 — "Send a reminder" is below the fold — **done**
 
 `31:35`–`31:54`. He looked for it, could not find it, and needed to be told to
 scroll. Minor, but it is on the member page he will demo.
+
+**Done 2026-09-01**, on Gustavo's decision: *give it its own tab, so clicking it
+goes straight to the page the way "Update" does.*
+
+Reminders was already a route with a page behind it (`/member/:id/reminders`),
+reachable only from a button in the action rail — and the rail is what sits
+below the fold. It is now a tab, and the rail button is gone: two doors into one
+room is its own kind of confusing, and the tab is the one that stays on screen.
+
+This is not a walk-back of "tabs are places, actions are buttons". The label is
+what decides it — **"Reminders"** is a noun and a place you can come back to;
+*sending* one is still a verb and still a button, on the page itself.
+`ProfileTabs`' own docstring was updated to say so, since it used "Send email
+reminder" as its example of what does not belong in a tab bar.
+
+The list moved to a tested `memberNavTabs` (`memberDetailsDashboard/utils/`,
+5 tests) that filters by permission and asserts no tab label starts with a verb.
 
 ---
 
@@ -677,7 +722,7 @@ from here on, and they are the reason several items above exist at all.
 
 ---
 
-## Later — Profile saves end the session
+## Profile saves end the session — **My details done, password still a question**
 
 Raised by Gustavo 2026-08-31 from manual testing: every option under Profile
 saves correctly and then logs the user out. It should save and stay put.
@@ -690,8 +735,8 @@ and they are **not all the same thing**:
 
 | Where | What it does | Verdict |
 |---|---|---|
-| `Profile/my_details/components/Body.jsx:208` | success toast → "Please log in again" → `onLogout()` → `window.location.reload(true)` | **Bug.** Same as Company Info |
-| `Profile/my_details/components/Body.jsx:242` | the other save path (the two branches are admin vs staff) | **Bug.** Same |
+| `Profile/my_details/components/Body.jsx:208` | success toast → "Please log in again" → `onLogout()` → `window.location.reload(true)` | **Bug.** Same as Company Info — **fixed 2026-09-01** |
+| `Profile/my_details/components/Body.jsx:242` | the other save path (the two branches are with a photo and without) | **Bug.** Same — **fixed 2026-09-01** |
 | `Profile/my_password/components/Body.jsx:81` | `onLogout()` → `window.location.reload(true)` after a password change | **Ask first** |
 | `Profile/MainProfileSettings.jsx:51` | resets every slice, `clearSessionStorage()`, then `onLogout()` | **Correct.** This is the actual logout button — do not touch |
 
@@ -702,30 +747,52 @@ changed it is the person holding the session. Confirm the intent before
 "fixing" it; if it stays, the copy should say so deliberately rather than
 reading like the others.
 
-**Shape of the work for the two real ones.** Company Info's fix folded the
-saved record into `user.companyData`. My details lives in the root fields of
-`admin.user` (name, lastName, email, imageProfile), so it needs either a sibling
-`onUpdateProfile` reducer in `adminSlice.js` or a widened one — with the same
-merge-don't-replace rule, since the payload is the update and not the whole
-user.
+**The two real ones are fixed (2026-09-01).** New `onUpdateProfile` reducer in
+`adminSlice.js` (7 tests), the sibling of `onUpdateCompanyData`: merges at both
+levels, since the payload is the update and `user.data` carries the login
+response's own copy of the same fields. Both save paths dispatch it and neither
+logs out or reloads any more.
 
-Note the second hammer while you are there: both paths also call
-`window.location.reload(true)`. Even with the logout gone, a hard reload throws
-away the whole React tree and every cached query to show a changed name. If the
-session update lands, the reload has nothing left to do.
+Three things that came out of doing it:
+
+- **The reload was the second hammer.** Even with the logout gone,
+  `window.location.reload(true)` throws away the whole React tree and every
+  cached query to show a changed name. Both calls are gone, and `setLoading`
+  now has to be reset by hand — the reload used to hide that.
+- **The photo was only half-written.** The image branch already dispatched the
+  new name into the session, but wrote `imageProfile` only inside `user.data`,
+  never at the root where the navbar avatar reads it. Invisible while a forced
+  reload followed every save.
+- **`onLogin` is the wrong tool for an edit**, and was being used for one here
+  and in "remove photo". It replaces `user` wholesale *and* recomputes
+  `mfaEnabled` from the payload, so patching one field through it can quietly
+  turn MFA off in the session. Both call sites now use `onUpdateProfile`.
+
+Also folded in: the company `employees` row the save rewrites is now merged back
+into the session with `onUpdateCompanyData`, so the old name does not come back
+on the next screen that reads it.
+
+**Still open — the password one**, which is the "ask first" row above. Nobody
+has answered whether ending the session after a password change is deliberate.
+It is standard practice and the code is untouched.
 
 ## Suggested order
 
-1. **A1** — the partial write on the member path. Same bug he caught live, on
-   the vertical being demoed, with the fix already written and tested next door.
-2. **A2** — five minutes of looking at `company_logo` before assuming a bug.
-3. **B1, B2, B3** — the scan panel, one file, all copy, all quoted verbatim above.
-4. **B7, B8** — return dropdown and the document button; both small, both on
-   the demo path.
-5. **B4, B5, B6** — the assign flow. B4 is the only one with real logic in it.
-6. **B13, B12** — audit trail naming and ordering, cheap and he will look for them.
-7. **B9, B10, B11, B14, B15, B16** — sweep together.
-8. **C3** — the FedRAMP day, once the demo is out of the way.
-9. **C1** — custom roles. Design first; this one deserves a written plan before
-   any code.
-10. **C2** — RFID, when the vendor spec lands.
+**A1, A2 and every B item are done** (2026-08-31 and 2026-09-01). What the
+original order was, and where each one landed, is written under its own heading
+above. What is left:
+
+1. **The password logout** — one question, not one fix: is ending the session
+   after a password change deliberate? Nobody has answered it, so the code is
+   untouched.
+2. **C3** — the FedRAMP day, once the demo is out of the way. Its first finding
+   is already known: the audit-log endpoint has no server-side rank filter.
+3. **C1** — custom roles. Design first; this one deserves a written plan before
+   any code, and the empty `PERMISSIONS` arrays have to go first or the matrix
+   opens on a wall of toggles nobody can check.
+4. **C2** — RFID, when the vendor spec lands.
+
+Still carried on the two other lists rather than this one: **D1/D2** (documents
+and folders grouped by `trigger_action`), **E4** (the payment confirmation
+page), **R3** and **Issue #1** from the scoped-roles work, and the 113
+dependency advisories, which C3 turns from housekeeping into a control.

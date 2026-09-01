@@ -72,10 +72,9 @@ attached.
 
 ## Housekeeping (not urgent, flagged for awareness)
 
-- `.claude/`, `.atl/`, `graphify-out/` are untracked but **not** in
-  `.gitignore` — they show up in `git status` every session. Worth adding to
-  `.gitignore` at some point so they stop appearing as noise (never decided
-  either way so far).
+- ~~`.claude/`, `.atl/`, `graphify-out/` are untracked but **not** in
+  `.gitignore`~~ — **resolved.** All three are ignored now; they are local
+  tool state and stay out of the repository.
 
 ## Recommended order
 
