@@ -17,11 +17,12 @@ import {
   audienceWords,
   getIndustryProfile,
 } from "../../../../config/industryProfiles";
-import { hasPermission, resolveRoleType } from "../../../../config/roles";
+import { resolveRoleType } from "../../../../config/roles";
 import { onAddMemberInfo, onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import useMemberAssignedDevices from "../../hooks/useMemberAssignedDevices";
 import MemberProfileIdentity from "./Header";
+import { memberNavTabs } from "./utils/memberNavTabs";
 
 const breadcrumbLinkStyle = {
   textTransform: "none",
@@ -38,20 +39,6 @@ const breadcrumbCurrentStyle = {
   ...TextFontsize18LineHeight28,
   textTransform: "none",
 };
-
-// Sections are places, so they get noun labels. The verbs that used to sit in
-// this bar — "Assign devices", "Send email reminder" — moved to the identity
-// card's action rail: a one-shot action in a tab bar makes people believe
-// they've navigated somewhere, and then wonder how to get back.
-const NAV_TABS = [
-  { key: "main", label: "Devices", to: "main", permission: "nav:members" },
-  {
-    key: "details",
-    label: "Details",
-    to: "update-member-information",
-    permission: "member:update",
-  },
-];
 
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
@@ -193,9 +180,7 @@ const MainPage = () => {
     },
   ];
 
-  const visibleTabs = NAV_TABS.filter((tab) =>
-    hasPermission(tab.permission, roleType)
-  );
+  const visibleTabs = memberNavTabs(roleType);
 
   return (
     <ProfileShell

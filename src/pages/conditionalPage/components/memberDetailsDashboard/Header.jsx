@@ -271,12 +271,10 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
           func={() => navigate(`/member/${memberId}/assignment`)}
         />
       )}
-      {hasPermission("member:notify", roleType) && (
-        <GrayButtonComponent
-          title={"Send reminder"}
-          func={() => navigate(`/member/${memberId}/reminders`)}
-        />
-      )}
+      {/* "Send reminder" used to be here. It is a page, so it is a tab now —
+          the rail sits below the fold on this profile and nobody found it.
+          Two doors to one room is its own kind of confusing, so this one
+          closed rather than being kept as a shortcut. */}
       <GrayButtonComponent
         title={"Export data (.xlsx)"}
         func={handleExportMemberData}
