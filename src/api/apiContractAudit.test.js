@@ -51,9 +51,9 @@ const KNOWN_UNMATCHED = [
 
 /** Literal payloads that omit a field the handler rejects the request without. */
 const KNOWN_MISSING = [
-  // Forming.jsx is dead code — nothing imports it — which is the only reason
-  // this has never been reported.
-  "POST /api/db_item/item-out-warehouse @ src/pages/events/quickGlance/inventory/action/components/Forming.jsx",
+  // Empty on purpose. The only entry was Forming.jsx's item-out-warehouse call,
+  // and that file has been deleted — it was unreachable, so the payload it built
+  // was never sent. A new entry here means a live call site is short a field.
 ];
 
 const SUFFIX = {
