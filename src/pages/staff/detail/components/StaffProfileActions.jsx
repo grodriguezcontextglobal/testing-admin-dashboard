@@ -2,22 +2,28 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonConfirmationComponent from "../../../../components/UX/buttons/DangerButtonConfirmation";
+import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import GrayButtonConfirmationComponent from "../../../../components/UX/buttons/GrayButtonConfirmation";
-import Dropdown from "../../../../components/UX/dropdown/DropDownComponent";
+import { staffProfileActionList } from "../utils/staffProfileActionList";
 
 /**
  * Everything you can *do* to a staff member, in the identity card's action rail.
  *
- * These six were the page's navigation. They sat in a pill bar next to a "Home"
- * tab — "Assign devices", "Assign user to event", "Assign Location/Permission",
- * "Update contact info", "Change role", "Send password reset email" — so six
- * verbs looked like six places, and clicking one replaced the profile with a
- * form. The shared profile shell says it plainly: a tab is a place, and a
- * one-shot action in a nav bar makes people believe they have arrived somewhere.
+ * These were the page's navigation once: six verbs in a pill bar next to a
+ * "Home" tab, so six actions looked like six places and clicking one replaced
+ * the profile with a form. They moved to the rail — a tab is a place, an action
+ * is a button.
+ *
+ * They then spent a while collapsed behind a "Manage" dropdown, which is the
+ * difference this rebuild removes: the member profile lists its actions flat,
+ * this one hid all but two, and the two pages read as two products. The order
+ * and the labels now come from `staffProfileActionList`, which is written to be
+ * compared with the member rail rather than guessed at.
  *
  * Access is the one destructive action here, so it is a confirmation button
  * rather than what it used to be: a `NavLink` with a mutation on its `onClick`,
  * which navigated *and* wrote, with nothing to confirm and no way to cancel.
+ * It sits last, where the member rail keeps "Delete".
  */
 const StaffProfileActions = ({
   staffId,
@@ -32,54 +38,36 @@ const StaffProfileActions = ({
   accessToggle,
 }) => {
   const navigate = useNavigate();
-  const go = (route) => navigate(`/staff/${staffId}/${route}`);
 
-  const manageOptions = [
-    canEditDetails && {
-      label: "Edit details",
-      value: "__edit-details",
-    },
-    canAssignEvent && {
-      label: "Assign to an event",
-      value: "assign-staff-events",
-    },
-    canAssignLocation && {
-      label: "Locations & permissions",
-      value: "assign-location-manager",
-    },
-    canChangeRole && { label: "Change role", value: "update-role-company" },
-    canUpdateContact && {
-      label: "Update contact info",
-      value: "update-contact-info",
-    },
-    canResetPassword && {
-      label: "Send password reset email",
-      value: "reset-password-link",
-    },
-  ].filter(Boolean);
+  const actions = staffProfileActionList({
+    assignDevices: canAssignDevices,
+    editDetails: canEditDetails,
+    assignEvent: canAssignEvent,
+    assignLocation: canAssignLocation,
+    changeRole: canChangeRole,
+    updateContact: canUpdateContact,
+    resetPassword: canResetPassword,
+  });
+
+  const run = (action) =>
+    action.route
+      ? navigate(`/staff/${staffId}/${action.route}`)
+      : onEditDetails?.();
 
   return (
     <>
-      {canAssignDevices && (
-        <BlueButtonComponent
-          title="Assign a device"
-          buttonType="button"
-          func={() => go("assignment")}
-        />
-      )}
-
-      {manageOptions.length > 0 && (
-        <Dropdown
-          label="Manage"
-          variant="outline"
-          options={manageOptions}
-          onChange={(route) =>
-            route === "__edit-details" ? onEditDetails?.() : go(route)
-          }
-          placement="bottom-end"
-          menuWidth={240}
-        />
-      )}
+      {actions.map((action) => {
+        const Button =
+          action.tone === "primary" ? BlueButtonComponent : GrayButtonComponent;
+        return (
+          <Button
+            key={action.key}
+            title={action.label}
+            buttonType="button"
+            func={() => run(action)}
+          />
+        );
+      })}
 
       {accessToggle &&
         (accessToggle.isActive ? (

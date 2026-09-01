@@ -72,10 +72,15 @@ describe("StaffDetail shell", () => {
     expect(screen.getByText("Devices out")).toBeTruthy();
     expect(screen.getByText("Value held")).toBeTruthy();
     expect(screen.getByText("Contracts pending")).toBeTruthy();
-    // Verbs are actions, not tabs.
-    expect(screen.getByText("Assigned devices")).toBeTruthy();
-    expect(screen.getByText("Assign a device")).toBeTruthy();
-    expect(screen.getByText("Manage")).toBeTruthy();
+    // Verbs are actions, not tabs. The tab is a noun and matches the member
+    // profile's word for the same section.
+    expect(screen.getByText("Devices")).toBeTruthy();
+    expect(screen.getByTestId("staff-devices-section")).toBeTruthy();
+    // Flat, like the member rail — no "Manage" dropdown to open first.
+    expect(screen.getByText("Assign devices")).toBeTruthy();
+    expect(screen.getByText("Change role")).toBeTruthy();
+    expect(screen.getByText("Send password reset email")).toBeTruthy();
+    expect(screen.queryByText("Manage")).toBeNull();
     expect(screen.getByText("Remove access")).toBeTruthy();
     expect(screen.getAllByText("$120.00").length).toBeGreaterThan(1);
   });

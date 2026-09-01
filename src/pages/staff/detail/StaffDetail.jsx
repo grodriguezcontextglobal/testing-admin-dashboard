@@ -69,8 +69,12 @@ const breadcrumbCurrentStyle = {
   color: "var(--gray-900, #101828)",
 };
 
+// Nouns, and the same first word the member profile uses for the same section
+// — "Devices" there, "Assigned devices" here read as two different products.
+// The section heading below still says "Assigned devices", which is what a
+// heading is for: the tab names the place, the heading describes it.
 const TABS = [
-  { key: "devices", label: "Assigned devices" },
+  { key: "devices", label: "Devices" },
   { key: "events", label: "Events" },
 ];
 
