@@ -144,6 +144,9 @@ const ReceiptPage = lazy(() => import("../../pages/payment/ReceiptPage"));
 const CompanyInfo = lazy(() =>
   import("../../pages/Profile/company_info/MainPage")
 );
+const EmailBrandingSettings = lazy(() =>
+  import("../../pages/Profile/email_branding/EmailBrandingSettings")
+);
 const SchoolComplianceSettings = lazy(() =>
   import("../../pages/Profile/school_compliance/SchoolComplianceSettings")
 );
@@ -472,6 +475,9 @@ const AuthRoutes = () => {
                   />
                 </Route>
                 <Route path="company-info" element={<CompanyInfo />} />
+                <Route element={<PermissionGuard action="profile:company_settings" />}>
+                  <Route path="email-branding" element={<EmailBrandingSettings />} />
+                </Route>
                 <Route element={<PermissionGuard action="member:update" />}>
                   <Route path="school-compliance" element={<SchoolComplianceSettings />} />
                 </Route>

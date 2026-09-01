@@ -55,8 +55,13 @@ export const buildRequestPath = (baseURL = "", url = "") => {
   return `${basePath}${url || ""}`.replace(/\/{2,}/g, "/");
 };
 
-// x-company-id → /api/staff | /api/admin | /api/company | /api/stripe
-const COMPANY_ID_ROUTE = /\/api\/(staff|admin|company|stripe)(\/|$)/;
+// x-company-id → /api/staff | /api/admin | /api/company | /api/stripe | /api/nodemailer
+//
+// nodemailer is here so notification emails can wear the company's own
+// branding: the server resolves Company.email_branding from this header rather
+// than from the payload, which lets all forty-odd notification call sites stay
+// as they are. See server nodeMailer/branding.js#resolveBranding.
+const COMPANY_ID_ROUTE = /\/api\/(staff|admin|company|stripe|nodemailer)(\/|$)/;
 // s-company-lq → any /api/db_* route
 const COMPANY_SQL_ROUTE = /\/api\/db_/;
 
