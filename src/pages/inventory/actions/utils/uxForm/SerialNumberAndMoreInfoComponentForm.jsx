@@ -45,12 +45,31 @@ const newRow = () => ({
  */
 const SerialNumberAndMoreInfoComponentForm = ({
   style,
+  moreInfo,
   scannedSerialNumbers,
   setScannedSerialNumbers,
   setMoreInfo,
 }) => {
   const [mode, setMode] = useState("one");
-  const [units, setUnits] = useState([]);
+  /**
+   * Seeded from what the parent already holds, because the wizard renders this
+   * step conditionally: stepping to Review unmounts it and stepping back gives
+   * a fresh component. Starting from [] meant the next commit() republished
+   * only the unit just added and silently dropped every earlier one — three
+   * staged units plus one more created one item.
+   *
+   * A lazy initialiser, so it rebuilds on mount and never fights later edits.
+   */
+  const [units, setUnits] = useState(() =>
+    (scannedSerialNumbers ?? []).map((serial) => ({
+      id: uniqueId("unit-"),
+      serial,
+      identifiers:
+        (moreInfo ?? []).find(
+          (entry) => entry && Object.prototype.hasOwnProperty.call(entry, serial),
+        )?.[serial] ?? [],
+    })),
+  );
   const [identifiers, setIdentifiers] = useState([newRow()]);
   const [primaryRow, setPrimaryRow] = useState(0);
 
