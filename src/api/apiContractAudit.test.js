@@ -47,6 +47,12 @@ const KNOWN_UNMATCHED = [
   // artifacts in src/docs -- the backend regenerates those, we do not. Drop
   // this line once api-payloads.json carries the route.
   "POST /api/school/consent/list",
+  // Same shape: the branding-preview routes ship in the server's
+  // feat/school-consent-backend branch (nodeMailer/brandingPreview.js), which is
+  // newer than the generated artifacts in src/docs. The settings page needs the
+  // template list to populate its preview selector. Drop this line once
+  // api-payloads.json carries the route.
+  "GET /api/nodemailer/branding-preview/templates",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */

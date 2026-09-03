@@ -49,7 +49,11 @@ describe("buildRouteScopedHeaders", () => {
     "/api/admin/login",
     "/api/company/search-company",
     "/api/stripe/account",
-  ])("attaches x-company-id on company/staff/admin/stripe route %s", (path) => {
+    // Notification emails resolve the sender's branding from this header, so
+    // every /api/nodemailer send has to carry it.
+    "/api/nodemailer/member-lease-return-device-notification",
+    "/api/nodemailer/confirm-returned-device-notification",
+  ])("attaches x-company-id on company/staff/admin/stripe/nodemailer route %s", (path) => {
     const headers = buildRouteScopedHeaders(path, values);
     expect(headers["x-company-id"]).toBe("665f0abc");
     expect(headers).not.toHaveProperty("s-company-lq");
