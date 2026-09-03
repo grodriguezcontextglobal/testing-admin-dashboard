@@ -42,6 +42,49 @@ export function addScannedSerial(scanned, raw) {
   return { list: [serial, ...list], outcome: "added", serial };
 }
 
+/**
+ * A whole pass added at once.
+ *
+ * `addScannedSerial` is one trigger pull, and it checks the list it already has
+ * with `includes()` — fine for a hand scanner, quadratic for a bulk read:
+ * filing 500 devices one call at a time is 125,000 string comparisons. A bulk
+ * reader hands over the whole pallet in one go, so this walks the batch once
+ * against a Set.
+ *
+ * Repeats are expected rather than wrong. The reader hears the same tag dozens
+ * of times per pass, and a device can be read again on a second sweep, so
+ * `duplicates` is information for the summary line, not a warning per item.
+ *
+ * @returns {{list: string[], added: string[], duplicates: string[], empty: number}}
+ *   `list` keeps the newest-first order of the single version, so the operator
+ *   is still reading the top of the list.
+ */
+export function addScannedSerials(scanned, incoming) {
+  const list = Array.isArray(scanned) ? scanned : [];
+  const batch = Array.isArray(incoming) ? incoming : [];
+
+  const seen = new Set(list.map(text).filter(Boolean));
+  const added = [];
+  const duplicates = [];
+  let empty = 0;
+
+  batch.forEach((raw) => {
+    const serial = text(raw);
+    if (!serial) {
+      empty += 1;
+      return;
+    }
+    if (seen.has(serial)) {
+      duplicates.push(serial);
+      return;
+    }
+    seen.add(serial);
+    added.push(serial);
+  });
+
+  return { list: [...added].reverse().concat(list), added, duplicates, empty };
+}
+
 /* ─────────────────────────────────────────────────────────── reconciling ── */
 
 /**
@@ -79,6 +122,36 @@ export function nearMiss(eventInventory, raw) {
 
   const lower = serial.toLowerCase();
   return expected.find((candidate) => candidate.toLowerCase() === lower) ?? null;
+}
+
+/**
+ * The count reported when an event closes.
+ *
+ * One object rather than four `.length` reads spread through the screen, so the
+ * number on the tile, the number in the sentence and the number that would be
+ * recorded against the event cannot disagree.
+ *
+ * `counted` is everything physically found — matched plus extra. A device from
+ * another event was on the pallet and was counted; it just cannot close a line
+ * on this one.
+ *
+ * `complete` needs at least one count. Nothing expected and nothing scanned is
+ * a screen nobody used, not a finished reconciliation, and calling it complete
+ * would file a closed event that was never checked.
+ */
+export function countSummary(eventInventory, scanned) {
+  const { matched, missing, extra } = reconcile(eventInventory, scanned);
+  const expected = expectedSerials(eventInventory).length;
+  const counted = matched.length + extra.length;
+
+  return {
+    expected,
+    counted,
+    matched: matched.length,
+    missing: missing.length,
+    extra: extra.length,
+    complete: counted > 0 && missing.length === 0,
+  };
 }
 
 const STATUS_ORDER = { missing: 0, extra: 1, scanned: 2 };

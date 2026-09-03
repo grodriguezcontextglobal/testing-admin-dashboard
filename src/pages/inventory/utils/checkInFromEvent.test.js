@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   addScannedSerial,
+  addScannedSerials,
   buildCheckInPayload,
+  countSummary,
   checkInBlockers,
   expectedSerials,
   nearMiss,
@@ -192,5 +194,109 @@ describe("checkInBlockers", () => {
 
   it("lists every blocker at once", () => {
     expect(checkInBlockers({})).toHaveLength(3);
+  });
+});
+
+/* ─────────────────────────── a whole pass at once, not one trigger pull ── */
+
+describe("addScannedSerials", () => {
+  it("adds a batch and keeps the newest-first order of the single version", () => {
+    const result = addScannedSerials([], ["SN-001", "SN-002"]);
+    expect(result.list).toEqual(["SN-002", "SN-001"]);
+    expect(result.added).toEqual(["SN-001", "SN-002"]);
+    expect(result.duplicates).toEqual([]);
+  });
+
+  it("merges into a list that already has scans", () => {
+    const result = addScannedSerials(["SN-001"], ["SN-002"]);
+    expect(result.list).toEqual(["SN-002", "SN-001"]);
+  });
+
+  it("counts a serial repeated inside the batch once", () => {
+    // A bulk read hears the same device many times in one pass.
+    const result = addScannedSerials([], ["SN-001", "SN-001", "SN-002"]);
+    expect(result.added).toEqual(["SN-001", "SN-002"]);
+    expect(result.duplicates).toEqual(["SN-001"]);
+    expect(result.list).toHaveLength(2);
+  });
+
+  it("reports a serial already on the list without adding it twice", () => {
+    const result = addScannedSerials(["SN-001"], ["SN-001", "SN-002"]);
+    expect(result.added).toEqual(["SN-002"]);
+    expect(result.duplicates).toEqual(["SN-001"]);
+    expect(result.list).toEqual(["SN-002", "SN-001"]);
+  });
+
+  it("reports empty values instead of adding blanks", () => {
+    const result = addScannedSerials([], ["SN-001", "", "  ", null]);
+    expect(result.added).toEqual(["SN-001"]);
+    expect(result.empty).toBe(3);
+  });
+
+  it("trims each value, like the single version does", () => {
+    expect(addScannedSerials([], [" SN-001 "]).added).toEqual(["SN-001"]);
+  });
+
+  it("survives a missing batch or a missing list", () => {
+    expect(addScannedSerials(undefined, undefined).list).toEqual([]);
+    expect(addScannedSerials(["SN-001"], undefined).list).toEqual(["SN-001"]);
+    expect(addScannedSerials(undefined, ["SN-001"]).list).toEqual(["SN-001"]);
+  });
+
+  it("takes a pallet-sized batch without degrading", () => {
+    // The reason this exists at all: addScannedSerial checks the list with
+    // includes(), so filing 500 devices one call at a time is 125,000 string
+    // comparisons. This is one pass with a Set.
+    const batch = Array.from({ length: 500 }, (_, i) => `SN-${i}`);
+    const result = addScannedSerials([], [...batch, ...batch]);
+    expect(result.added).toHaveLength(500);
+    expect(result.duplicates).toHaveLength(500);
+    expect(result.list).toHaveLength(500);
+  });
+});
+
+/* ──────────────────────────── the number recorded when an event closes ── */
+
+describe("countSummary", () => {
+  it("reports the count an operator is asked for at close", () => {
+    const summary = countSummary(inventory, ["SN-001", "SN-002"]);
+    expect(summary).toEqual({
+      expected: 3,
+      counted: 2,
+      matched: 2,
+      missing: 1,
+      extra: 0,
+      complete: false,
+    });
+  });
+
+  it("is complete only when nothing is still expected", () => {
+    const summary = countSummary(inventory, ["SN-001", "SN-002", "CH-001"]);
+    expect(summary.complete).toBe(true);
+    expect(summary.missing).toBe(0);
+  });
+
+  it("counts a device from another event as counted but not matched", () => {
+    // It was physically on the pallet, so it was counted; it is not part of
+    // this event's return, so it cannot close a line on it.
+    const summary = countSummary(inventory, ["SN-001", "OTHER-9"]);
+    expect(summary.counted).toBe(2);
+    expect(summary.matched).toBe(1);
+    expect(summary.extra).toBe(1);
+    expect(summary.complete).toBe(false);
+  });
+
+  it("does not call an empty event complete on an empty count", () => {
+    // Nothing expected and nothing scanned is a screen nobody used, not a
+    // finished count. Saying "complete" there would file a closed event that
+    // was never reconciled.
+    const summary = countSummary([], []);
+    expect(summary.expected).toBe(0);
+    expect(summary.counted).toBe(0);
+    expect(summary.complete).toBe(false);
+  });
+
+  it("survives missing arguments", () => {
+    expect(countSummary(undefined, undefined).expected).toBe(0);
   });
 });
