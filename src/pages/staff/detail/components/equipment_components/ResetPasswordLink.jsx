@@ -36,13 +36,25 @@ const ForgetPasswordLinkFromStaffPage = () => {
   const { notify, contextHolder } = useStatusNotification();
   const [notice, setNotice] = useState(null);
 
+  /**
+   * The account behind this profile, looked up by its own email.
+   *
+   * It used to fetch every admin user in the company and filter, gated on
+   * `companyData.companyName` — a field the session does not carry; it is
+   * `company_name`. So `enabled` was false, and a disabled query in
+   * react-query v4 stays at status "loading" forever: the modal sat on its
+   * skeleton with no error and no way out.
+   *
+   * By email there is nothing to gate on. `profile.email` is what the parent
+   * profile requires before it renders anything at all, and one record is all
+   * this screen ever needed. The key keeps the `listOfAdminUsers` prefix so the
+   * invalidation in StaffDetail still reaches it.
+   */
   const adminUsersQuery = useQuery({
-    queryKey: ["listOfAdminUsers", user.companyData.companyName],
+    queryKey: ["listOfAdminUsers", profile.email],
     queryFn: () =>
-      devitrakApi.post("/staff/admin-users", {
-        company: user.companyData.companyName,
-      }),
-    enabled: Boolean(user.companyData.companyName),
+      devitrakApi.post("/staff/admin-users", { email: profile.email }),
+    enabled: Boolean(profile.email),
   });
 
   // The lookup exists to read the account's id and name for the email body, so
@@ -87,7 +99,13 @@ const ForgetPasswordLinkFromStaffPage = () => {
     <div className="action-form">
       {contextHolder}
 
-      {adminUsersQuery.isLoading ? (
+      {/* `isLoading` alone is not "a request is in flight" in react-query v4:
+          a disabled query reports status "loading" forever, so gating a
+          spinner on it is how a modal ends up loading with nothing to wait
+          for. Pairing it with `isFetching` asks the question that was meant.
+          Without a request, the state below is truthful — "Not found", the
+          reason, and a button that cannot be pressed. */}
+      {adminUsersQuery.isLoading && adminUsersQuery.isFetching ? (
         <ProfileSkeleton lines={2} />
       ) : (
         <>
