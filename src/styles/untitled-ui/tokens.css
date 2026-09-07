@@ -190,3 +190,291 @@
   --ud-radius: var(--radius-md);
   --ud-radius-sm: var(--radius-sm);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dark
+   ═══════════════════════════════════════════════════════════════════════════
+   A first pass, for looking at rather than for shipping: the definitive values
+   are a design decision (see FRONTEND_theme_light_dark_system_plan.md §5).
+
+   The method, which is why so few tokens carry so much: every ramp keeps its
+   HUE and swaps its ROLES. Components read `--gray-900` for text and
+   `--gray-50` for a hover, so making 900 the lightest and 50 the darkest turns
+   text light and hovers dark everywhere at once, without touching a component.
+   The same for the semantic families: their -25/-50/-100 are chip and banner
+   BACKGROUNDS and become dark tints, their -600/-700 are foregrounds and stay
+   legible.
+
+   Deliberately NOT redefined:
+
+   - `--base-white`. It serves two roles at once — a surface, and the text on
+     a coloured button (`--ud-text-on-primary`). Turning it dark would make
+     every primary button's label vanish. Surfaces are handled by the grey
+     ramp and by `--main-background-color` instead.
+   - The `--brand-*` and `--action-*` ramps. Deep Blue chrome and the CTA blue
+     already read on a dark ground, and moving them would change what the
+     product looks like rather than what colour scheme it is in.
+
+   Three states, on purpose:
+     :root                                  the light palette (above)
+     prefers-color-scheme + :not([light])   the OS decides — this is "system"
+     [data-theme="dark"]                    an explicit choice, wins either way
+   ═════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    /* Neutrals: the ramp read from the other end, still khaki-warmed. */
+    --gray-25: #141714;
+    --gray-50: #1a1e19;
+    --gray-100: #232823;
+    --gray-200: #2f352e;
+    --gray-300: #414740;
+    --gray-400: #6b7069;
+    --gray-500: #9aa096;
+    --gray-600: #b9beb4;
+    --gray-700: #d3d7ce;
+    --gray-800: #e6e9e1;
+    --gray-900: #f4f6f0;
+
+    /* Surfaces */
+    --main-background-color: #101310;
+    --gray-background: #171a16;
+    /* The card/table/modal surface. */
+    --base-white: #1a1e19;
+    /* index.css defines a second white under a second name; 44 surfaces
+       read it, so it follows too. */
+    --basewhite: #1a1e19;
+  /* Ink, aliased so it tracks the ramp. */
+  --text-primary: var(--gray-900);
+  --text-input: var(--gray-900);
+  --text-input-placeholder: var(--gray-500);
+  /* Measured on the card surface #1a1e19: #84adff = 7.56:1, and the brand
+     ink becomes the neutral at 15.51:1. What they replace measured 1.05:1
+     for --brand-600 and 3.12:1 for --action-600 — invisible and failing. */
+  --text-link: #84adff;
+  --text-brand: var(--gray-900);
+  /* 3.33:1 on the card, which fails AA for text. */
+  --gray-400: #8a9086;
+    /* Ink, aliased so it tracks the ramp. */
+    --text-primary: var(--gray-900);
+    --text-input: var(--gray-900);
+    --text-input-placeholder: var(--gray-500);
+    /* Measured on the card surface #1a1e19: #84adff = 7.56:1, and the brand
+       ink becomes the neutral at 15.51:1. What they replace measured 1.05:1
+       for --brand-600 and 3.12:1 for --action-600 — invisible and failing. */
+    --text-link: #84adff;
+    --text-brand: var(--gray-900);
+    /* 3.33:1 on the card, which fails AA for text. */
+    --gray-400: #8a9086;
+  /* ── Other names for the same ramps ─────────────────────────────────────
+     The app grew three naming families for one neutral ramp: --gray-600
+     (canonical, here), --gray600 (index.css + navbar/style.css) and
+     --Gray-600 (already an alias). Only the first followed the theme, which
+     left 55 places painting near-black ink on a near-black ground -- the
+     spec sheet on the item page was one of them.
+     Aliased rather than copied, so they can never drift apart again. Doing
+     the same in the light block would be right too, but it would change 55
+     places visibly; unifying the names is Phase 3. */
+  --gray25: var(--gray-25);
+  --gray50: var(--gray-50);
+  --gray100: var(--gray-100);
+  --gray200: var(--gray-200);
+  --gray300: var(--gray-300);
+  --gray400: var(--gray-400);
+  --gray500: var(--gray-500);
+  --gray600: var(--gray-600);
+  --gray700: var(--gray-700);
+  --gray800: var(--gray-800);
+  --gray900: var(--gray-900);
+  --success700: var(--success-700);
+  --error700: var(--error-700);
+  --warning700: var(--warning-700);
+
+  /* Light tints used as chip and banner BACKGROUNDS. Left alone they are
+     near-white panels holding light text. The action/blue hues stay -- only
+     the lightness moves, the same treatment the semantic families got. */
+  --action-25: #101a2b;
+  --action-50: #12203a;
+  --action-100: #16294a;
+  --blue-25: #0f1a26;
+  --blue-50: #111f2e;
+  --blue-100: #16293c;
+  --blue-dark-25: #101a2b;
+  --blue-dark-50: #12203a;
+  --blue-dark-100: #16294a;
+  --blue-dark--100: #16294a;
+  --brand-25: #131a20;
+  --brand-50: #16202a;
+
+    /* ── Other names for the same ramps ─────────────────────────────────────
+       The app grew three naming families for one neutral ramp: --gray-600
+       (canonical, here), --gray600 (index.css + navbar/style.css) and
+       --Gray-600 (already an alias). Only the first followed the theme, which
+       left 55 places painting near-black ink on a near-black ground -- the
+       spec sheet on the item page was one of them.
+       Aliased rather than copied, so they can never drift apart again. Doing
+       the same in the light block would be right too, but it would change 55
+       places visibly; unifying the names is Phase 3. */
+    --gray25: var(--gray-25);
+    --gray50: var(--gray-50);
+    --gray100: var(--gray-100);
+    --gray200: var(--gray-200);
+    --gray300: var(--gray-300);
+    --gray400: var(--gray-400);
+    --gray500: var(--gray-500);
+    --gray600: var(--gray-600);
+    --gray700: var(--gray-700);
+    --gray800: var(--gray-800);
+    --gray900: var(--gray-900);
+    --success700: var(--success-700);
+    --error700: var(--error-700);
+    --warning700: var(--warning-700);
+
+    /* Light tints used as chip and banner BACKGROUNDS. Left alone they are
+       near-white panels holding light text. The action/blue hues stay -- only
+       the lightness moves, the same treatment the semantic families got. */
+    --action-25: #101a2b;
+    --action-50: #12203a;
+    --action-100: #16294a;
+    --blue-25: #0f1a26;
+    --blue-50: #111f2e;
+    --blue-100: #16293c;
+    --blue-dark-25: #101a2b;
+    --blue-dark-50: #12203a;
+    --blue-dark-100: #16294a;
+    --blue-dark--100: #16294a;
+    --brand-25: #131a20;
+    --brand-50: #16202a;
+
+    --wild-sand: #1f231e;
+    --cultured-pearl: #1f231e;
+    --concrete: #232823;
+
+    /* Error — Ember, lifted for a dark ground; tints become dark washes. */
+    --error-25: #1e1512;
+    --error-50: #2a1a15;
+    --error-100: #3d241c;
+    --error-200: #5a3327;
+    --error-300: #7d4632;
+    --error-400: #b0603f;
+    --error-500: #dd6a48;
+    --error-600: #ea8161;
+    --error-700: #f19a7e;
+    --error-800: #f7b8a2;
+
+    /* Warning */
+    --warning-25: #1c1710;
+    --warning-50: #251d12;
+    --warning-100: #3a2a13;
+    --warning-200: #573d17;
+    --warning-300: #7d571c;
+    --warning-400: #b07a20;
+    --warning-500: #e0a020;
+    --warning-600: #f0b74a;
+    --warning-700: #f8cd78;
+
+    /* Success */
+    --success-25: #0e1a13;
+    --success-50: #12231a;
+    --success-100: #163524;
+    --success-200: #1c4c32;
+    --success-300: #226844;
+    --success-400: #2f8f5c;
+    --success-500: #3cb878;
+    --success-600: #63cd95;
+    --success-700: #8adfb0;
+
+    /* Shadows read as depth only against light; on dark they read as grime. */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.45), 0 1px 2px -1px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 24px -4px rgba(0, 0, 0, 0.55), 0 8px 8px -4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --gray-25: #141714;
+  --gray-50: #1a1e19;
+  --gray-100: #232823;
+  --gray-200: #2f352e;
+  --gray-300: #414740;
+  --gray-400: #6b7069;
+  --gray-500: #9aa096;
+  --gray-600: #b9beb4;
+  --gray-700: #d3d7ce;
+  --gray-800: #e6e9e1;
+  --gray-900: #f4f6f0;
+
+  --main-background-color: #101310;
+  --gray-background: #171a16;
+  /* The card/table/modal surface. */
+  --base-white: #1a1e19;
+  /* index.css defines a second white under a second name; 44 surfaces
+     read it, so it follows too. */
+  --basewhite: #1a1e19;
+  --wild-sand: #1f231e;
+  --cultured-pearl: #1f231e;
+  --concrete: #232823;
+
+  --error-25: #1e1512;
+  --error-50: #2a1a15;
+  --error-100: #3d241c;
+  --error-200: #5a3327;
+  --error-300: #7d4632;
+  --error-400: #b0603f;
+  --error-500: #dd6a48;
+  --error-600: #ea8161;
+  --error-700: #f19a7e;
+  --error-800: #f7b8a2;
+
+  --warning-25: #1c1710;
+  --warning-50: #251d12;
+  --warning-100: #3a2a13;
+  --warning-200: #573d17;
+  --warning-300: #7d571c;
+  --warning-400: #b07a20;
+  --warning-500: #e0a020;
+  --warning-600: #f0b74a;
+  --warning-700: #f8cd78;
+
+  --success-25: #0e1a13;
+  --success-50: #12231a;
+  --success-100: #163524;
+  --success-200: #1c4c32;
+  --success-300: #226844;
+  --success-400: #2f8f5c;
+  --success-500: #3cb878;
+  --success-600: #63cd95;
+  --success-700: #8adfb0;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.45), 0 1px 2px -1px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 24px -4px rgba(0, 0, 0, 0.55), 0 8px 8px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* Paper is always light. A receipt printed from a dark screen wastes ink and
+   reads badly, and the receipt is a document somebody signs. */
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    color-scheme: light;
+    --gray-25: #fcfcfa;
+    --gray-50: #f7f7f4;
+    --gray-100: #eeefe9;
+    --gray-200: #ddded6;
+    --gray-300: #c6c7bb;
+    --gray-400: #a2a69b;
+    --gray-500: #777b73;
+    --gray-600: #5d615a;
+    --gray-700: #454944;
+    --gray-800: #2d302c;
+    --gray-900: #171d1a;
+    --main-background-color: var(--base-white, #ffffff);
+    --gray-background: #fafafa;
+  }
+}

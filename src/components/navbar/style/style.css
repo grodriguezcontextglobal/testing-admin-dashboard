@@ -125,7 +125,7 @@
   position: relative;
 }
 .text-main-navbar-updated {
-  color: var(--basewhite);
+  color: var(--text-on-action);
   font-weight: 600;
   line-height: 24px;
   margin-top: -1px;
@@ -270,16 +270,71 @@
 }
 
 .MuiFilledInput-input {
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
 }
 @media (max-width: 991px) {
   .navbar-collapse {
     z-index: 7;
     padding: 20px;
-    background: #fff;
+    background: var(--base-white, #fff);
     border: 1px solid #f0f0f0;
     border-radius: 12px;
     margin-top: 3dvh;
     box-shadow: rgba(16, 24, 40, 0.06) 0px 1px 2px 0px, rgba(16, 24, 40, 0.1) 0px 1px 3px 0px;
+  }
+}
+/* The navbar's two monochrome icons are image files, not glyphs, so their
+   colour is baked in and no CSS variable reaches it — on a dark navbar they
+   disappear into it. Inverting is the honest fix for a monochrome asset and
+   costs nothing; a real icon component would be better and is a separate job.
+   The brand mark is deliberately NOT included: it carries colour, and
+   inverting a logo is worse than leaving it. It needs a dark asset instead. */
+:root[data-theme="dark"] .navbar-icon-img {
+  filter: invert(1) brightness(1.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .navbar-icon-img {
+    filter: invert(1) brightness(1.6);
+  }
+}
+
+/* ── Dark: the bar and its pills have to separate ─────────────────────────────
+   In light mode the pills deliberately blend into the bar (the comment above
+   says so). On a dark ground that stops working: measured, the active pill sat
+   at 1.31:1 against the bar and the bar at 1.37:1 against the page — three
+   near-black navies stacked, with nothing telling them apart.
+
+   These values are measured, not picked: active pill against the bar is
+   3.21:1, white on the pill is 4.92:1, and the border reads at 4.11:1 against
+   the bar. The border carries the separation for the inactive pill, where a
+   fill light enough to reach 3:1 would look like a second active item. */
+:root[data-theme="dark"] .header-navigation-main-navbar-updated,
+:root[data-theme="dark"] .nav-item-base-main-navbar-updated,
+:root[data-theme="dark"] .nav-item-base-1-main-navbar-updated,
+:root[data-theme="dark"] .nav-item-button-main-navbar-updated {
+  --blue-dark--600: #3b74aa;
+  --blue-dark--700: #2f5f8f;
+  --blue-dark--800: transparent;
+  --brand-500: #0e2438;
+}
+
+:root[data-theme="dark"] .nav-item-base-1-main-navbar-updated {
+  border: 1px solid #4d86bd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .header-navigation-main-navbar-updated,
+  :root:not([data-theme="light"]) .nav-item-base-main-navbar-updated,
+  :root:not([data-theme="light"]) .nav-item-base-1-main-navbar-updated,
+  :root:not([data-theme="light"]) .nav-item-button-main-navbar-updated {
+    --blue-dark--600: #3b74aa;
+    --blue-dark--700: #2f5f8f;
+    --blue-dark--800: transparent;
+    --brand-500: #0e2438;
+  }
+
+  :root:not([data-theme="light"]) .nav-item-base-1-main-navbar-updated {
+    border: 1px solid #4d86bd;
   }
 }

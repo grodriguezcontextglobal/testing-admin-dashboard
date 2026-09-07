@@ -50,6 +50,8 @@ import DevitrakWordmark from "../icons/DevitrakWordmark";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
 import "./style/style.css";
+import { FEATURE_THEME_SWITCH } from "../../config/featureFlags";
+import ThemeToggle from "../theme/ThemeToggle";
 const { PropTypes } = pkg;
 // Same icons as the command menu navigation group (tabler set)
 const NAV_ICONS = {
@@ -247,7 +249,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "var(--blue700)",
+        backgroundColor: "var(--text-brand)",
         margin: "auto",
       }}
     >
@@ -256,7 +258,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
         style={{
           ...CenteringGrid,
           justifyContent: "space-between",
-          backgroundColor: "var(--blue700)",
+          backgroundColor: "var(--text-brand)",
           width: isSmallDevice ? "100vw" : renderOtherWidth(),
         }}
       >
@@ -286,7 +288,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             sx={{
               mr: 2,
               display: { sm: "flex", md: "none", lg: "none" },
-              backgroundColor: "var(--blue700)",
+              backgroundColor: "var(--text-brand)",
               borderBottom: "solid 1px var(--blue-dark--600)",
               padding: "0 24px 0 0",
               borderRadius: "50%",
@@ -490,13 +492,18 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 <div className="content-2-main-navbar-updated">
                   <div className="text-1-main-navbar-updated text-mdsemibold">
                     <p style={{ textTransform: "capitalize", fontSize: "25px" }}>
-                      <img src={MagnifyIcon} alt="search-icon" />
+                      <img
+                        className="navbar-icon-img"
+                        src={MagnifyIcon}
+                        alt="search-icon"
+                      />
                     </p>
                   </div>
                 </div>
               </article>
             </div>
           </button>
+          {FEATURE_THEME_SWITCH && <ThemeToggle />}
           <NavLink key={"/profile/my_details"} to={`/profile/my_details`}>
             <div className="content-main-navbar-updated">
               <article
@@ -509,7 +516,11 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
                 <div className="content-2-main-navbar-updated">
                   <div className="text-1-main-navbar-updated text-mdsemibold">
                     <p style={{ textTransform: "capitalize", fontSize: "25px" }}>
-                      <img src={Profile} alt="Logo" />
+                      <img
+                        className="navbar-icon-img"
+                        src={Profile}
+                        alt="Profile"
+                      />
                     </p>
                   </div>
                 </div>

@@ -20,3 +20,19 @@ export const FEATURE_SCOPED_ROLES =
  */
 export const FEATURE_MEMBER_FEES =
   import.meta.env.VITE_APP_FEATURE_MEMBER_FEES === "true";
+
+/**
+ * Light / dark / system theming. Default OFF while the dark palette is still
+ * being worked out (FRONTEND_theme_light_dark_system_plan.md).
+ *
+ * With the flag off the switch is not rendered AND the resolved theme is
+ * forced to light, which matters more than it looks: anyone who tried dark
+ * before it was parked has "dark" sitting in their localStorage, and hiding
+ * the button alone would leave them stuck in a half-finished theme with no way
+ * back. The stored preference is kept, not deleted, so flipping the flag on in
+ * .env.dev returns them to where they were.
+ *
+ * Set VITE_APP_FEATURE_THEME_SWITCH=true in .env.dev to work on it.
+ */
+export const FEATURE_THEME_SWITCH =
+  import.meta.env.VITE_APP_FEATURE_THEME_SWITCH === "true";
