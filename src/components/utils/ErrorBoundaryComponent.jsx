@@ -46,11 +46,11 @@ export const ErrorBoundaryComponent = ({ error, resetErrorBoundary }) => {
   return (
     <Card
       style={{
-        backgroundColor: "var(--blue700)",
+        backgroundColor: "var(--text-brand)",
         width: "50%",
         margin: "0 auto",
         padding: "12px",
-        color: "var(--basewhite)",
+        color: "var(--text-on-action)",
       }}
       styles={{
         body: {

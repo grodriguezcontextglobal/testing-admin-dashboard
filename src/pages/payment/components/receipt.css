@@ -8,8 +8,8 @@
 
 .receipt {
   position: relative;
-  background: #ffffff;
-  color: #101828;
+  background: var(--base-white, #ffffff);
+  color: var(--gray-900, #101828);
   padding: 24px;
   max-width: 480px;
   margin: 0 auto;
@@ -64,7 +64,7 @@
 .receipt__signature-name {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #101828;
+  color: var(--gray-900, #101828);
 }
 
 .receipt__company {
@@ -114,7 +114,7 @@
    device is simply still out. */
 .receipt__band--open {
   background: var(--blue-50, #eff8ff);
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
   border: 1px solid var(--blue-200, #b2ddff);
 }
 

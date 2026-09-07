@@ -176,7 +176,7 @@ const RegisterStripeConnectedAccount = () => {
           </Grid>
 
           <Grid item xs={12} textAlign="center">
-            <p style={{ color: "#475467", fontSize: "14px" }}>
+            <p style={{ color: "var(--gray-600, #475467)", fontSize: "14px" }}>
               Already have an account?{" "}
               <Link to="/login" style={{ color: "#004EEB", fontWeight: "600" }}>
                 Sign in

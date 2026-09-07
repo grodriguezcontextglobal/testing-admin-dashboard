@@ -35,7 +35,7 @@ const KpiCard = ({ icon, label, value, hint }) => (
           height: "40px",
           borderRadius: "8px",
           background: "var(--gray-50, #f7f7f4)",
-          color: "var(--brand-600, #021833)",
+          color: "var(--text-brand)",
           flexShrink: 0,
         }}
       >

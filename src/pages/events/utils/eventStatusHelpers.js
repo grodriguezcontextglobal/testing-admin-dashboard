@@ -98,7 +98,7 @@ export const getLogisticsStatus = (event) => {
         tone: "info",
         step: 2,
         barColor: "var(--blue-500, #2E90FA)",
-        labelColor: "var(--blue-700, #175CD3)",
+        labelColor: "var(--text-link)",
       };
     case "in-idle":
       return {

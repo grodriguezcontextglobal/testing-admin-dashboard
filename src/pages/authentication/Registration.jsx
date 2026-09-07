@@ -305,13 +305,13 @@ const Registration = () => {
                 fullWidth
               />
               {isCheckingUser && (
-                <Typography style={{ fontSize: "12px", color: "#667085", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Typography style={{ fontSize: "12px", color: "var(--gray-500, #667085)", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
                   <Icon icon="svg-spinners:ring-resize" width={14} height={14} />
                   Checking account...
                 </Typography>
               )}
               {emailCheckDone && !isCheckingUser && userExists.length === 0 && (
-                <Typography style={{ fontSize: "12px", color: "#667085", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Typography style={{ fontSize: "12px", color: "var(--gray-500, #667085)", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
                   <Icon icon="mdi:account-plus-outline" width={14} height={14} />
                   New account — please complete the form below
                 </Typography>
@@ -355,11 +355,11 @@ const Registration = () => {
                   {watchPassword && (
                     <div style={{ marginTop: "8px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <Typography style={{ fontSize: "12px", color: "#667085" }}>Password strength</Typography>
+                        <Typography style={{ fontSize: "12px", color: "var(--gray-500, #667085)" }}>Password strength</Typography>
                         <Typography style={{ fontSize: "12px", color: strengthInfo.color, fontWeight: "500" }}>{strengthInfo.text}</Typography>
                       </div>
                       <Progress percent={passwordStrength} strokeColor={strengthInfo.color} showInfo={false} size="small" />
-                      <Typography style={{ fontSize: "11px", color: "#667085", marginTop: "4px" }}>
+                      <Typography style={{ fontSize: "11px", color: "var(--gray-500, #667085)", marginTop: "4px" }}>
                         Use 8+ characters with uppercase, lowercase, numbers, and symbols
                       </Typography>
                     </div>

@@ -40,7 +40,7 @@ const ErrorLandingPage = () => {
               style={{
                 fontSize: "14px",
                 fontWeight: 600,
-                color: "var(--blue700)",
+                color: "var(--text-brand)",
               }}
             >
               404 error

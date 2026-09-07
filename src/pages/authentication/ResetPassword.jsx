@@ -21,8 +21,8 @@ const schema = yup.object().shape({
 
 const FeaturedIcon = ({ children, color = "gray" }) => {
     const colorStyles = {
-        gray: { border: "1px solid #e4e7ec", background: "#fff", color: "#344054" },
-        warning: { border: "1px solid #fec84b", background: "#fffcf5", color: "#b54708" },
+        gray: { border: "1px solid #e4e7ec", background: "var(--base-white, #fff)", color: "var(--gray-700, #344054)" },
+        warning: { border: "1px solid #fec84b", background: "#fffcf5", color: "var(--warning-700, #b54708)" },
     };
     return (
         <div
@@ -76,8 +76,8 @@ const ResetPassword = () => {
 
     if (adminStaffQuery.isLoading) {
         return (
-            <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
-                <p style={{ color: "#667085", fontSize: "16px" }}>Loading...</p>
+            <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--base-white, #fff)" }}>
+                <p style={{ color: "var(--gray-500, #667085)", fontSize: "16px" }}>Loading...</p>
             </section>
         );
     }
@@ -107,7 +107,7 @@ const ResetPassword = () => {
     const pageStyle = {
         minHeight: "100vh",
         overflow: "hidden",
-        background: "#fff",
+        background: "var(--base-white, #fff)",
         padding: "48px 16px",
         display: "flex",
         alignItems: "flex-start",
@@ -142,10 +142,10 @@ const ResetPassword = () => {
                             <BackgroundPattern />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px", position: "relative", zIndex: 10 }}>
-                            <h1 style={{ fontSize: "24px", fontWeight: 600, color: "#101828", lineHeight: "32px", margin: 0 }}>
+                            <h1 style={{ fontSize: "24px", fontWeight: 600, color: "var(--gray-900, #101828)", lineHeight: "32px", margin: 0 }}>
                                 Link expired
                             </h1>
-                            <p style={{ fontSize: "16px", color: "#667085", lineHeight: "24px", margin: 0 }}>
+                            <p style={{ fontSize: "16px", color: "var(--gray-500, #667085)", lineHeight: "24px", margin: 0 }}>
                                 This password reset link has expired. Please request a new one.
                             </p>
                         </div>
@@ -169,17 +169,17 @@ const ResetPassword = () => {
                         <BackgroundPattern />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px", position: "relative", zIndex: 10 }}>
-                        <h1 style={{ fontSize: "24px", fontWeight: 600, color: "#101828", lineHeight: "32px", margin: 0 }}>
+                        <h1 style={{ fontSize: "24px", fontWeight: 600, color: "var(--gray-900, #101828)", lineHeight: "32px", margin: 0 }}>
                             Set new password
                         </h1>
-                        <p style={{ fontSize: "16px", color: "#667085", lineHeight: "24px", margin: 0 }}>
+                        <p style={{ fontSize: "16px", color: "var(--gray-500, #667085)", lineHeight: "24px", margin: 0 }}>
                             Your new password must be at least 6 characters.
                         </p>
                     </div>
                 </div>
 
                 {successMessage ? (
-                    <p style={{ textAlign: "center", fontSize: "16px", color: "#027a48", position: "relative", zIndex: 10 }}>
+                    <p style={{ textAlign: "center", fontSize: "16px", color: "var(--success-700, #027a48)", position: "relative", zIndex: 10 }}>
                         {successMessage}
                     </p>
                 ) : (

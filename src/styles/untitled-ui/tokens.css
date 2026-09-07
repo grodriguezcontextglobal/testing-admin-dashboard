@@ -10,8 +10,27 @@
 
 :root {
   /* ---- Base ---------------------------------------------------------- */
+  /* A surface. 106 of its 130 uses are a background, which is why the dark
+     blocks below turn it dark. */
   --base-white: #ffffff;
   --base-black: #000000;
+  /* Ink on a coloured button. Stays white in every scheme -- this is the half
+     of --base-white that must NOT follow the theme, and separating the two is
+     what lets surfaces go dark without erasing every primary button's label. */
+  --text-on-action: #ffffff;
+  /* Inherited ink. index.css set this as a literal on :root, so every element
+     that does not name its own colour inherited near-black -- which in dark
+     mode is most of the text in the app. The light values below are the
+     literals it replaces, character for character, so light does not move. */
+  --text-primary: rgba(39, 38, 38, 0.87);
+  --text-input: #000;
+  --text-input-placeholder: #000;
+  /* Ink whose LIGHT value is a dark blue. Split off from the fills because a
+     fill cannot move: white on --action-600 (#155eef) measures 5.41:1 and
+     passes, but on anything lighter it drops below 4.5 and the button label
+     stops being readable. So the fill stays put and the ink moves. */
+  --text-link: var(--action-600);
+  --text-brand: var(--brand-600);
 
   /* ---- Gray (khaki-warmed neutral ramp) ------------------------------ */
   --gray-25: #fcfcfa;

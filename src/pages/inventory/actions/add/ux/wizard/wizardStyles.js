@@ -1,6 +1,6 @@
 /** Shared card chrome for every create-group wizard step. */
 export const cardStyle = {
-  background: "#fff",
+  background: "var(--base-white, #fff)",
   border: "1px solid var(--gray-200, #eaecf0)",
   borderRadius: "12px",
   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)",

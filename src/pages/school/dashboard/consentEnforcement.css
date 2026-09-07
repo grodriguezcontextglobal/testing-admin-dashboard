@@ -70,7 +70,7 @@
   font-family: Inter, sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
   text-decoration: none;
   width: 100%;
   text-align: right;

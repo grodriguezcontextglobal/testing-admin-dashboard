@@ -303,7 +303,7 @@ const AssignLocationManager = () => {
                 displayEmpty
                 disabled={Boolean(editing) || isSaving}
                 onChange={(event) => setLocation(event.target.value)}
-                style={{ ...AntSelectorStyle, background: "#fff" }}
+                style={{ ...AntSelectorStyle, background: "var(--base-white, #fff)" }}
               >
                 <MenuItem value="" disabled>
                   Select a location

@@ -64,7 +64,7 @@
   height: 20px;
   font-size: 11px;
   font-weight: 700;
-  color: var(--base-white, #fff);
+  color: var(--text-on-action, #fff);
   background: var(--gray-500, #777b73);
   border-radius: var(--radius-full, 9999px);
 }
@@ -304,7 +304,7 @@
 }
 
 .action-form__banner--info {
-  color: var(--blue-800, #1849a9);
+  color: var(--text-link);
   background: var(--blue-50, #eff8ff);
   border-color: var(--blue-200, #b2ddff);
 }

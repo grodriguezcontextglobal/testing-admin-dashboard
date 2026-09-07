@@ -94,7 +94,7 @@ const CustomerHeader = () => {
                 textTransform: "capitalize",
                 textAlign: "left",
                 fontWeight: 600,
-                color: "var(--blue-dark-600, #155EEF)",
+                color: "var(--text-link)",
                 cursor: "pointer",
               }}
               onClick={() => handleBackAction()}

@@ -4,5 +4,5 @@ export const DangerButtonText = {
     fontStyle: "normal",
     fontWeight: 600,
     lineHeight: "20px",
-    color: "var(--basewhite)",
+    color: "var(--text-on-action)",
 }

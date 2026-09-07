@@ -31,14 +31,14 @@
   border-radius: 8px !important;
   border: 1px solid var(--action-600, #155eef) !important;
   background: var(--action-600, #155eef) !important;
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
   box-shadow: var(--shadow-xs, 0 1px 2px 0 rgba(16, 24, 40, 0.05)) !important;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 .customized__blueButton.ant-btn:not(:disabled):not(.ant-btn-disabled):hover {
   background: var(--action-700, #004eea) !important;
   border-color: var(--action-700, #004eea) !important;
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
 }
 .customized__blueButton.ant-btn:not(:disabled):focus-visible {
   outline: none !important;
@@ -49,13 +49,13 @@
 .customized__blueButton.ant-btn.ant-btn-disabled {
   background: var(--action-200, #b2ccff) !important;
   border-color: var(--action-200, #b2ccff) !important;
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
 }
 .customized__blueButton .customized__blueButtonText,
 .customized__blueButton .ant-btn-content {
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
   font: 600 14px/20px Inter, sans-serif !important;
   text-transform: none !important;
 }
@@ -120,14 +120,14 @@
   border-radius: 8px !important;
   border: 1px solid var(--error-600, #d92d20) !important;
   background: var(--error-600, #d92d20) !important;
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
   box-shadow: var(--shadow-xs, 0 1px 2px 0 rgba(16, 24, 40, 0.05)) !important;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 .customized__dangerButton.ant-btn:not(:disabled):not(.ant-btn-disabled):hover {
   background: var(--error-700, #b42318) !important;
   border-color: var(--error-700, #b42318) !important;
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
 }
 .customized__dangerButton.ant-btn:not(:disabled):focus-visible {
   outline: none !important;
@@ -138,13 +138,13 @@
 .customized__dangerButton.ant-btn.ant-btn-disabled {
   background: var(--error-200, #fecdca) !important;
   border-color: var(--error-200, #fecdca) !important;
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
 }
 .customized__dangerButton .customized__dangerButtonText,
 .customized__dangerButton .ant-btn-content {
-  color: var(--base-white, #fff) !important;
+  color: var(--text-on-action, #fff) !important;
   font: 600 14px/20px Inter, sans-serif !important;
   text-transform: none !important;
 }
@@ -160,7 +160,7 @@
   border-radius: 8px !important;
   border: 1px solid var(--brand-100, #d1e0ff) !important;
   background: var(--brand-100, #d1e0ff) !important;
-  color: var(--brand-800, #0040c1) !important;
+  color: var(--text-brand) !important;
   box-shadow: var(--shadow-xs, 0 1px 2px 0 rgba(16, 24, 40, 0.05)) !important;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
@@ -175,7 +175,7 @@
 }
 .customized__lightBlueButton .customized__lightBlueButtonText,
 .customized__lightBlueButton .ant-btn-content {
-  color: var(--brand-800, #0040c1) !important;
+  color: var(--text-brand) !important;
   font: 600 14px/20px Inter, sans-serif !important;
   text-transform: none !important;
 }
@@ -317,7 +317,7 @@
 .outlinedInputStyle {
   border-radius: 8px;
   outline: none;
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
   vertical-align: center;
   box-shadow: 1px 1px 2px rgba(16, 24, 40, 0.05);
   height: 2.5rem;
@@ -328,7 +328,7 @@
 .antSelectorStyle {
   border-radius: 8px;
   outline: none;
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
   vertical-align: center;
   box-shadow: 1px 1px 2px rgba(16, 24, 40, 0.05);
   height: 2.5rem;
@@ -339,7 +339,7 @@
 .selectorStyle {
   border-radius: 8px;
   outline: none;
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
   vertical-align: center;
   box-shadow: 1px 1px 2px rgba(16, 24, 40, 0.05);
   height: 2.5rem;

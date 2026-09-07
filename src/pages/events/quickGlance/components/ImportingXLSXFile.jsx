@@ -293,7 +293,7 @@ const ImportingXLSXFile = ({
             onChange={handleFileChange}
           />
           {fileName ? (
-            <div style={{ marginTop: 8, color: "#667085" }}>
+            <div style={{ marginTop: 8, color: "var(--gray-500, #667085)" }}>
               File: {fileName}
             </div>
           ) : null}
@@ -323,7 +323,7 @@ const ImportingXLSXFile = ({
         </div>
 
         {/* <div style={{ margin: "0 0 1rem" }}>
-          <div style={{ color: "#475467" }}>Required columns:</div>
+          <div style={{ color: "var(--gray-600, #475467)" }}>Required columns:</div>
           <ul style={{ margin: 4 }}>
             <li>Device ID (database)</li>
             <li>Serial Number</li>
@@ -359,7 +359,7 @@ const ImportingXLSXFile = ({
                 gap: 4,
               }}
             >
-              <div style={{ fontWeight: 600, color: "#344054" }}>
+              <div style={{ fontWeight: 600, color: "var(--gray-700, #344054)" }}>
                 Groups by item group ({rows.length} items total):
               </div>
               <BlueButtonComponent
@@ -379,7 +379,7 @@ const ImportingXLSXFile = ({
                 }}
               >
                 <div style={{ fontWeight: 600 }}>{g.item_group}</div>
-                <div style={{ color: "#667085", marginBottom: 6 }}>
+                <div style={{ color: "var(--gray-500, #667085)", marginBottom: 6 }}>
                   {g.totalCount} items
                 </div>
                 {g.locations.map((loc) => (
@@ -394,7 +394,7 @@ const ImportingXLSXFile = ({
                   >
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 500 }}>{loc.location}</div>
-                      <div style={{ color: "#667085" }}>{loc.count} items</div>
+                      <div style={{ color: "var(--gray-500, #667085)" }}>{loc.count} items</div>
                     </div>
                     <BlueButtonComponent
                       title={"View"}
@@ -448,9 +448,9 @@ const ImportingXLSXFile = ({
           gap: 8,
         }}
       >
-        <div style={{ fontWeight: 600, color: "#344054" }}>{item_group}</div>
-        <div style={{ color: "#667085" }}>{location}</div>
-        <div style={{ color: "#667085" }}>{items.length} items</div>
+        <div style={{ fontWeight: 600, color: "var(--gray-700, #344054)" }}>{item_group}</div>
+        <div style={{ color: "var(--gray-500, #667085)" }}>{location}</div>
+        <div style={{ color: "var(--gray-500, #667085)" }}>{items.length} items</div>
         <div style={{ border: "1px solid #EAECF0", borderRadius: 8 }}>
           <div
             style={{
@@ -459,7 +459,7 @@ const ImportingXLSXFile = ({
               gap: 8,
               padding: "8px 12px",
               background: "#F9FAFB",
-              color: "#344054",
+              color: "var(--gray-700, #344054)",
               fontWeight: 600,
             }}
           >
@@ -479,9 +479,9 @@ const ImportingXLSXFile = ({
                   borderTop: "1px solid #EAECF0",
                 }}
               >
-                <div style={{ color: "#475467" }}>{it.item_id}</div>
-                <div style={{ color: "#475467" }}>{it.serial_number}</div>
-                <div style={{ color: "#475467" }}>{it.warehouse}</div>
+                <div style={{ color: "var(--gray-600, #475467)" }}>{it.item_id}</div>
+                <div style={{ color: "var(--gray-600, #475467)" }}>{it.serial_number}</div>
+                <div style={{ color: "var(--gray-600, #475467)" }}>{it.warehouse}</div>
               </div>
             ))}
           </div>

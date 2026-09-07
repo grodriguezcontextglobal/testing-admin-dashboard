@@ -69,7 +69,7 @@ const NotesRendering = ({ props, title }) => {
                 onClick={() => setOpenAddNoteModal(true)}
                 icon="ic:round-add"
                 width={18}
-                style={{ cursor: "pointer", color: "var(--blue-dark-600, #155EEF)" }}
+                style={{ cursor: "pointer", color: "var(--text-link)" }}
               />
             </Tooltip>
             {isAdmin && (

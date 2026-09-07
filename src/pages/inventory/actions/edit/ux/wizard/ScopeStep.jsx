@@ -80,7 +80,7 @@ const ScopeStep = ({
   const canContinue = updateAll || scannedSerialNumbers.length > 0;
 
   return (
-    <div style={{ background: "#fff", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)" }}>
+    <div style={{ background: "var(--base-white, #fff)", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)" }}>
       <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--gray-200, #eaecf0)" }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           How many of the {scopeSummary.matchCount} items are you changing?
@@ -249,7 +249,7 @@ const ScopeStep = ({
               <button
                 type="button"
                 onClick={() => setScannedSerialNumbers([])}
-                style={{ background: "none", border: "none", color: "var(--blue-700, #175cd3)", font: "600 14px/20px Inter, sans-serif", cursor: "pointer" }}
+                style={{ background: "none", border: "none", color: "var(--text-link)", font: "600 14px/20px Inter, sans-serif", cursor: "pointer" }}
               >
                 Clear selection
               </button>

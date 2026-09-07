@@ -70,7 +70,7 @@ const CategoryInventory = () => {
             style={{
               borderRadius: "9999px",
               background: "var(--action-50, #eff4ff)",
-              color: "var(--action-700, #004eea)",
+              color: "var(--text-link)",
               fontFamily: "Inter, sans-serif",
               fontSize: "12px",
               fontWeight: 500,

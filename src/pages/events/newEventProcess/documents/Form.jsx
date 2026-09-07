@@ -272,7 +272,7 @@ const FormDocuments = () => {
               borderRadius: "8px",
               padding: "12px",
               minHeight: "260px",
-              backgroundColor: "#fff",
+              backgroundColor: "var(--base-white, #fff)",
             }}
           >
             <Typography variant="subtitle2" sx={{ mb: 1 }}>

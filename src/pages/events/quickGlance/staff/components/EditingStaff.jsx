@@ -316,7 +316,7 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
             <Avatar
               size={36}
               style={{
-                backgroundColor: "var(--action-600, #155eef)",
+                backgroundColor: "var(--text-link)",
                 color: "#fff",
                 fontWeight: 600,
                 flex: "none",

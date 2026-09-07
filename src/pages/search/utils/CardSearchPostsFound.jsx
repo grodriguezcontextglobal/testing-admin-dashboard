@@ -4,7 +4,7 @@ const CardSearchPostsFound = ({ props, fn }) => {
     <Card onClick={() => fn()} style={{
       borderRadius: '12px',
       border: '1px solid #D0D5DD',
-      background: '#FFF',
+      background: 'var(--base-white, #FFF)',
       boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.05)',
       display: 'flex',
       padding: '5px',

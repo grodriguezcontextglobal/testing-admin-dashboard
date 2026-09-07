@@ -224,7 +224,7 @@ const ReturningLeasedEquipModal = ({
         <Typography
           style={{
             ...Subtitle,
-            color: "var(--blue-700, #175CD3)",
+            color: "var(--text-link)",
             fontWeight: 600,
             marginBottom: "12px",
           }}

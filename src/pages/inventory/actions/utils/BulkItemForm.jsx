@@ -27,7 +27,7 @@ const SECTIONS = [
   { key: "ownership", title: "Ownership", hint: "Cost, ownership and, if it's rented, who it is rented from" },
 ];
 
-const cardStyle = { background: "#fff", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)", marginBottom: "20px" };
+const cardStyle = { background: "var(--base-white, #fff)", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)", marginBottom: "20px" };
 const cardHeadStyle = { padding: "18px 24px", borderBottom: "1px solid var(--gray-200, #eaecf0)" };
 const cardBodyStyle = { padding: "24px" };
 
@@ -221,7 +221,7 @@ const BulkItemForm = ({
             }}
           >
             <div style={{ width: "100%" }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: "var(--blue-700, #175cd3)", mb: 1.5 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: "var(--text-link)", mb: 1.5 }}>
                 Rented equipment needs a return date and a vendor
               </Typography>
               <Grid container spacing={2}>

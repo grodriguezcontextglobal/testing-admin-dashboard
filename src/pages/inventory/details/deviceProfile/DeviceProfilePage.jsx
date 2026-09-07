@@ -41,7 +41,7 @@ const breadcrumbLink = {
   fontSize: "18px",
   fontFamily: "Inter",
   lineHeight: "28px",
-  color: "var(--blue-dark-600, #155dee)",
+  color: "var(--text-link)",
 };
 
 const breadcrumbCurrent = {

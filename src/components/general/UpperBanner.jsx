@@ -10,7 +10,7 @@ const UpperBanner = forwardRef(function UpperBanner() {
       banner
       showIcon={false}
       style={{
-        backgroundColor: "var(--blue-dark--800)",
+        backgroundColor: "var(--text-link)",
         color:"var(--blue-dark--100)",
         fontFamily:"Inter, serif-sans",
         fontWeight:400,

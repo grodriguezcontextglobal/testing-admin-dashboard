@@ -443,7 +443,7 @@ const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
                 style={{
                   ...OutlinedInputStyle,
                   border: "solid 1px rgba(0, 0, 0, 0.23)",
-                  background: "#fff",
+                  background: "var(--base-white, #fff)",
                   borderRadius: "12px",
                   padding: "16.5px 14px",
                   margin: "0.1rem auto 1rem",

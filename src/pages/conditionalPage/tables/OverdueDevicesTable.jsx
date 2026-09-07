@@ -145,7 +145,7 @@ const OverdueDevicesTable = () => {
             border: "none",
             padding: 0,
             cursor: "pointer",
-            color: "var(--action-700, #004eeb)",
+            color: "var(--text-link)",
             fontFamily: "Inter, sans-serif",
             fontSize: "14px",
             fontWeight: 600,

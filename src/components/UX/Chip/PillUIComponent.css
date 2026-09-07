@@ -29,17 +29,17 @@
 /* Colors */
 .brand {
   background-color: var(--brand-50, #f2f3f5);
-  color: var(--brand-600, #021833);
+  color: var(--text-brand);
 }
 
 .gray {
   background-color: #F2F4F7;
-  color: #344054;
+  color: var(--gray-700, #344054);
 }
 
 .error {
   background-color: #FEF3F2;
-  color: #D92D20;
+  color: var(--error-600, #D92D20);
 }
 
 .warning {
@@ -49,5 +49,5 @@
 
 .success {
   background-color: #F6FEF9;
-  color: #027A48;
+  color: var(--success-700, #027A48);
 }

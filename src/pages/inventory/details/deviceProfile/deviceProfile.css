@@ -331,7 +331,7 @@
 }
 
 .assign-chip--member {
-  color: var(--blue-dark-600, #155dee);
+  color: var(--text-link);
   background: var(--blue-dark--100, #d1e0ff);
 }
 
@@ -364,7 +364,7 @@
 .assign-notice--info,
 .assign-notice--neutral {
   background: var(--blue-dark--100, #d1e0ff);
-  color: var(--blue-dark--800, #0040c1);
+  color: var(--text-link);
   border-color: rgba(21, 93, 238, 0.24);
 }
 

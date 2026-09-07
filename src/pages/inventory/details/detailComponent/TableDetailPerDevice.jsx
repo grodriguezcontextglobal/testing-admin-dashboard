@@ -188,7 +188,7 @@ const TableDetailPerDevice = ({ dataFound }) => {
     fontStyle: "normal",
     fontWeight: 400,
     lineHeight: "20px",
-    // color: "var(--blue-dark-600)",
+    // color: "var(--text-link)",
     width: "100%",
   };
 

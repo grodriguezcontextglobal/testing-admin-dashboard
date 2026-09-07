@@ -178,7 +178,7 @@ const ImageUploaderUX = ({
           style={{
             borderRadius: "12px",
             border: "1px solid var(--gray-200, #EAECF0)",
-            background: "#FFF",
+            background: "var(--base-white, #FFF)",
             overflow: "hidden",
           }}
         >

@@ -14,7 +14,7 @@ import { formatLoanDate } from "../../../../../components/UX/profile";
  */
 
 const ICONS = {
-  assigned: { icon: "tabler:user-plus", color: "var(--blue-dark-600, #155dee)" },
+  assigned: { icon: "tabler:user-plus", color: "var(--text-link)" },
   returned: { icon: "tabler:check", color: "var(--success700, #027947)" },
   overdue: { icon: "tabler:alert-circle", color: "var(--error-700, #b42318)" },
   created: { icon: "tabler:plus", color: "var(--gray500, #667084)" },

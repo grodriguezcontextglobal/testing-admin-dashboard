@@ -72,7 +72,7 @@ const ReviewStep = ({
           borderRadius: "12px 12px 0 0",
         }}
       >
-        <span style={{ font: "600 36px/44px Inter, sans-serif", color: "var(--blue-700, #175cd3)", letterSpacing: "-0.72px" }}>
+        <span style={{ font: "600 36px/44px Inter, sans-serif", color: "var(--text-link)", letterSpacing: "-0.72px" }}>
           {count}
         </span>
         <div>

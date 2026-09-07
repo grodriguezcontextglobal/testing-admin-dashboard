@@ -209,7 +209,7 @@ const InvitationLanding = () => {
         <Grid style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }} container>
           <Grid item xs={12} display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap={2}>
             <Icon icon="svg-spinners:ring-resize" width={40} height={40} color="#155eef" />
-            <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter" }}>
+            <Typography style={{ color: "var(--gray-500, #667085)", fontSize: "16px", fontFamily: "Inter" }}>
               Verifying your invitation...
             </Typography>
           </Grid>
@@ -244,10 +244,10 @@ const InvitationLanding = () => {
             <div style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "24px" }}>
               {/* Header */}
               <div>
-                <Typography style={{ color: "#101828", fontSize: "30px", fontFamily: "Inter", fontWeight: 600, lineHeight: "38px", marginBottom: "8px" }}>
+                <Typography style={{ color: "var(--gray-900, #101828)", fontSize: "30px", fontFamily: "Inter", fontWeight: 600, lineHeight: "38px", marginBottom: "8px" }}>
                   Welcome back!
                 </Typography>
-                <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
+                <Typography style={{ color: "var(--gray-500, #667085)", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
                   You have been invited to join a new company.
                 </Typography>
               </div>
@@ -259,10 +259,10 @@ const InvitationLanding = () => {
                     <Icon icon="mdi:account-outline" width={22} height={22} color="#155eef" />
                   </div>
                   <div>
-                    <Typography style={{ fontSize: "14px", fontWeight: 600, color: "#101828", fontFamily: "Inter" }}>
+                    <Typography style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900, #101828)", fontFamily: "Inter" }}>
                       {existingUser.name} {existingUser.lastName}
                     </Typography>
-                    <Typography style={{ fontSize: "13px", color: "#667085", fontFamily: "Inter" }}>
+                    <Typography style={{ fontSize: "13px", color: "var(--gray-500, #667085)", fontFamily: "Inter" }}>
                       {email}
                     </Typography>
                   </div>
@@ -275,10 +275,10 @@ const InvitationLanding = () => {
                     <Icon icon="mdi:office-building-outline" width={22} height={22} color="#155eef" />
                   </div>
                   <div>
-                    <Typography style={{ fontSize: "12px", color: "#667085", fontFamily: "Inter" }}>
+                    <Typography style={{ fontSize: "12px", color: "var(--gray-500, #667085)", fontFamily: "Inter" }}>
                       Invited to
                     </Typography>
-                    <Typography style={{ fontSize: "14px", fontWeight: 600, color: "#101828", fontFamily: "Inter" }}>
+                    <Typography style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900, #101828)", fontFamily: "Inter" }}>
                       {displayCompanyName}
                     </Typography>
                   </div>
@@ -355,10 +355,10 @@ const InvitationLanding = () => {
               <form className="register-form-container" onSubmit={handleSubmit(handleNewUserSubmit)}>
                 {/* Header */}
                 <Grid item xs={12} display="flex" flexDirection="column" justifyContent="space-around" alignItems="center">
-                  <Typography style={{ color: "#101828", fontSize: "30px", fontFamily: "Inter", fontWeight: 600, lineHeight: "38px", marginBottom: "1rem" }}>
+                  <Typography style={{ color: "var(--gray-900, #101828)", fontSize: "30px", fontFamily: "Inter", fontWeight: 600, lineHeight: "38px", marginBottom: "1rem" }}>
                     Complete your registration
                   </Typography>
-                  <Typography style={{ color: "#667085", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
+                  <Typography style={{ color: "var(--gray-500, #667085)", fontSize: "16px", fontFamily: "Inter", lineHeight: "24px" }}>
                     You have been invited to <strong>{displayCompanyName}</strong>. Set a password to finish.
                   </Typography>
                 </Grid>
@@ -423,11 +423,11 @@ const InvitationLanding = () => {
                   {watchPassword && (
                     <div style={{ marginTop: "8px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <Typography style={{ fontSize: "12px", color: "#667085" }}>Password strength</Typography>
+                        <Typography style={{ fontSize: "12px", color: "var(--gray-500, #667085)" }}>Password strength</Typography>
                         <Typography style={{ fontSize: "12px", color: strengthInfo.color, fontWeight: 500 }}>{strengthInfo.text}</Typography>
                       </div>
                       <Progress percent={passwordStrength} strokeColor={strengthInfo.color} showInfo={false} size="small" />
-                      <Typography style={{ fontSize: "11px", color: "#667085", marginTop: "4px" }}>
+                      <Typography style={{ fontSize: "11px", color: "var(--gray-500, #667085)", marginTop: "4px" }}>
                         Use 8+ characters with uppercase, lowercase, numbers, and symbols
                       </Typography>
                     </div>
@@ -485,7 +485,7 @@ const InvitationLanding = () => {
                 </Grid>
 
                 <Grid item xs={12} justifyContent="center" alignItems="center">
-                  <Typography style={{ color: "#475467", fontSize: "14px", fontFamily: "Inter", lineHeight: "20px" }}>
+                  <Typography style={{ color: "var(--gray-600, #475467)", fontSize: "14px", fontFamily: "Inter", lineHeight: "20px" }}>
                     Already have an account?{" "}
                     <Link to="/login">
                       <button

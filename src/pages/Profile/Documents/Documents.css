@@ -19,7 +19,7 @@
 }
 
 .tab-item.active {
-  color: var(--action-600, #155eef);
+  color: var(--text-link);
   border-bottom: 2px solid var(--action-600, #155eef);
 }
 
@@ -195,7 +195,7 @@
   border-radius: 8px;
   font-size: 16px;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
   color: var(--gray-900, #171d1a);
   font-family: "Inter", sans-serif;
 

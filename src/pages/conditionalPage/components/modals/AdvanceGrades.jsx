@@ -26,7 +26,7 @@ const cellNameStyle = {
 };
 
 const STATUS_BADGE = {
-  advanced: { text: "Advances", bg: "var(--blue-50, #eff8ff)", border: "var(--blue-200, #b2ddff)", color: "var(--blue-800, #1849a9)" },
+  advanced: { text: "Advances", bg: "var(--blue-50, #eff8ff)", border: "var(--blue-200, #b2ddff)", color: "var(--text-link)" },
   graduated: { text: "Graduates", bg: "var(--success-50, #ecfdf3)", border: "var(--success-300, #6ce9a6)", color: "var(--success-700, #027a48)" },
   already_graduated: { text: "Already graduated", bg: "var(--gray-50, #f7f7f4)", border: "var(--gray-300, #c6c7bb)", color: "var(--gray-700, #454944)" },
   unrecognized: { text: "Needs review — unchanged", bg: "var(--error-25, #fdf7f5)", border: "var(--error-300, #e28f75)", color: "var(--error-700, #9a3922)" },

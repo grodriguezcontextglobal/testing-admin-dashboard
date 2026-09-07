@@ -1,7 +1,7 @@
 .form-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #344054;
+  color: var(--gray-700, #344054);
   margin-bottom: 0.5rem;
   display: block;
 }

@@ -39,7 +39,7 @@ const searchInputStyle = {
   color: "var(--gray-900, #171d1a)",
   outline: "none",
   width: "200px",
-  background: "#fff",
+  background: "var(--base-white, #fff)",
   boxShadow: "var(--shadow-xs)",
 };
 
@@ -277,7 +277,7 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
             <Avatar>{initials.map((item) => item[0])}</Avatar>&nbsp;
             <p
               style={{
-                color: "var(--blue-dark-600, #155EEF)",
+                color: "var(--text-link)",
                 fontFamily: "Inter",
                 fontSize: "14px",
                 fontStyle: "normal",

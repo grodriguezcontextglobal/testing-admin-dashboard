@@ -90,7 +90,7 @@ const InventorySearchBar = ({
               lg: "50%",
             },
             fontWeight: 600,
-            color: "#344054",
+            color: "var(--gray-700, #344054)",
           }}
         >
           Search inventory:&nbsp;
@@ -208,7 +208,7 @@ const InventorySearchBar = ({
                 <span
                   style={{
                     background: "var(--blue-50, #EFF8FF)",
-                    color: "var(--blue-700, #175CD3)",
+                    color: "var(--text-link)",
                     borderRadius: "9999px",
                     padding: "0 8px",
                     fontSize: "12px",

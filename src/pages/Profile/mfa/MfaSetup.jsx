@@ -213,7 +213,7 @@ const MfaSetup = () => {
           {mfaEnabled && (
             <Grid item xs={12}>
               <Typography
-                sx={{ ...sectionTitleStyle, color: "var(--action-600, #155eef)", mb: 2 }}
+                sx={{ ...sectionTitleStyle, color: "var(--text-link)", mb: 2 }}
               >
                 MFA is Active
               </Typography>

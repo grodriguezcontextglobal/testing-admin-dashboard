@@ -22,7 +22,7 @@ const OfflineIndicator = () => {
         padding: "8px 12px",
         borderRadius: "8px",
         backgroundColor: "var(--gray-900, #101828)",
-        color: "var(--basewhite, #fff)",
+        color: "var(--text-on-action, #fff)",
         fontSize: "14px",
       }}
     >

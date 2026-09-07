@@ -58,7 +58,7 @@ const FormFields = ({
             <FormControl fullWidth>
               <Select
                 className="custom-autocomplete"
-                style={{ ...AntSelectorStyle, background: "#fff" }}
+                style={{ ...AntSelectorStyle, background: "var(--base-white, #fff)" }}
                 value={
                   selectedEmployee?._id ?? (isAddingNewMember ? "__new__" : "")
                 }
@@ -103,7 +103,7 @@ const FormFields = ({
           <FormControl fullWidth>
             <Select
               className="custom-autocomplete"
-              style={{ ...AntSelectorStyle, background: "#fff" }}
+              style={{ ...AntSelectorStyle, background: "var(--base-white, #fff)" }}
               {...register("role")}
               value={currentRole ?? ""} // NEW: controlled value from form
               displayEmpty // NEW: show placeholder when empty

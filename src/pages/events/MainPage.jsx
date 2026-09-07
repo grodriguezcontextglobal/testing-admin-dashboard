@@ -105,7 +105,7 @@ const MainPage = () => {
     textAlign: "left",
     width: "100%",
     fontWeight: 600,
-    color: "#344054",
+    color: "var(--gray-700, #344054)",
   };
   return (
     <Suspense
@@ -259,7 +259,7 @@ const MainPage = () => {
               borderRadius: "8px",
               fontSize: "14px",
               fontFamily: "Inter",
-              color: "#344054",
+              color: "var(--gray-700, #344054)",
               outline: "none",
             }}
           />

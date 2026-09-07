@@ -33,7 +33,7 @@ const ReceiptModal = ({
   };
 
   const body = (
-    <div style={{ backgroundColor: "#ffffff", padding: "8px" }}>
+    <div style={{ backgroundColor: "var(--base-white, #ffffff)", padding: "8px" }}>
       <ReceiptDocument receipt={receipt} qrValue={qrValue} />
       <div
         className="receipt__no-print"

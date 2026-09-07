@@ -20,7 +20,7 @@ const PageSpinner = () => (
         width: 40,
         height: 40,
         border: "4px solid var(--gray-100, #eeefe9)",
-        borderTopColor: "var(--action-600, #155eef)",
+        borderTopColor: "var(--text-link)",
         borderRadius: "50%",
         display: "inline-block",
         animation: "page-spinner-rotate 0.8s linear infinite",

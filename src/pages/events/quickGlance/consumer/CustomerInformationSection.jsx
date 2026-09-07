@@ -32,7 +32,7 @@ const CustomerInformationSection = () => {
     },
     2: {
       backgroundColor: "#ECFDF3",
-      color: "#027A48",
+      color: "var(--success-700, #027A48)",
       text: "Devices in use",
       description: "All devices of all transactions are in use",
     },

@@ -30,7 +30,7 @@ const chipBase = {
 const chipActive = {
   background: "var(--gray-900, #171d1a)",
   borderColor: "var(--gray-900, #171d1a)",
-  color: "var(--base-white, #fff)",
+  color: "var(--text-on-action, #fff)",
 };
 const chipEmpty = {
   borderStyle: "dashed",

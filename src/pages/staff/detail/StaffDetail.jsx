@@ -60,7 +60,7 @@ import {
 
 const breadcrumbLinkStyle = {
   ...TextFontsize18LineHeight28,
-  color: "var(--blue-dark-600, #155EEF)",
+  color: "var(--text-link)",
   cursor: "pointer",
 };
 

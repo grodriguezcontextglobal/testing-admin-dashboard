@@ -13,7 +13,7 @@ const PathsTreeView = ({ data }) => {
         style={{
           padding: "24px 16px",
           textAlign: "center",
-          color: "#667085",
+          color: "var(--gray-500, #667085)",
           fontSize: "14px",
           background: "var(--gray-50, #f9fafb)",
           borderRadius: "8px",

@@ -194,7 +194,7 @@ const CreateSubLocationPathModal = ({
                   <span
                     style={{
                       minWidth: "20px",
-                      color: "#667085",
+                      color: "var(--gray-500, #667085)",
                       fontSize: "12px",
                       textAlign: "right",
                     }}
@@ -273,7 +273,7 @@ const CreateSubLocationPathModal = ({
                   margin: 0,
                   padding: "0 0 0 16px",
                   fontSize: "13px",
-                  color: "#344054",
+                  color: "var(--gray-700, #344054)",
                 }}
               >
                 {savedPaths.map((p, i) => (

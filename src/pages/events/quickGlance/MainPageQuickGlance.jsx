@@ -235,7 +235,7 @@ const MainPageQuickGlance = () => {
                 fontSize: "18px",
                 fontFamily: "Inter",
                 lineHeight: "28px",
-                color: "var(--blue-dark-600, #155EEF)",
+                color: "var(--text-link)",
               }}
             >
               All events

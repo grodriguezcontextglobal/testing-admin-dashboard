@@ -127,7 +127,7 @@
 
 .section-label--required::after {
   content: "*";
-  color: #d92d20;
+  color: var(--error-600, #d92d20);
   /* Danger color */
   margin-left: 4px;
 }
@@ -172,7 +172,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid var(--gray-300, #c6c7bb);
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
   box-shadow: var(--shadow-xs, 0 1px 2px 0 rgba(23, 29, 26, 0.05));
   font-size: 16px;
   width: 100%;
@@ -223,7 +223,7 @@
   padding: 16px;
   border: 1px dashed var(--gray-300, #c6c7bb);
   border-radius: 12px;
-  background-color: #fff;
+  background-color: var(--base-white, #fff);
   width: 100%;
   text-align: center;
 }
@@ -244,7 +244,7 @@
 }
 
 .file-upload-dropzone__cta {
-  color: var(--action-600, #155eef);
+  color: var(--text-link);
   font-weight: 600;
   cursor: pointer;
 }

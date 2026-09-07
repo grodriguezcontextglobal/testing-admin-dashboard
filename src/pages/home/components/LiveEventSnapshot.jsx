@@ -152,7 +152,7 @@ const LiveEventSnapshot = () => {
           fontFamily: "Inter, sans-serif",
           fontSize: "14px",
           fontWeight: 600,
-          color: "var(--action-600, #155eef)",
+          color: "var(--text-link)",
           cursor: "pointer",
         }}
       >

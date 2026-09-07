@@ -60,7 +60,7 @@ const ReassignConfirmModal = ({
             background: "var(--blue-50, #eff6ff)",
             fontSize: "13px",
             fontWeight: 600,
-            color: "var(--blue-700, #1d4ed8)",
+            color: "var(--text-link)",
           }}
         >
           {toLabel}

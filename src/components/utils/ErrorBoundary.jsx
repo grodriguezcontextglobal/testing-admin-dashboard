@@ -76,8 +76,8 @@ class ErrorBoundary extends Component {
               style={{
                 whiteSpace: "pre-wrap",
                 fontSize: "12px",
-                color: "#667085",
-                background: "#fff",
+                color: "var(--gray-500, #667085)",
+                background: "var(--base-white, #fff)",
                 padding: "12px",
                 borderRadius: "8px",
                 overflowX: "auto",

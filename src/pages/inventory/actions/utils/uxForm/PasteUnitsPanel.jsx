@@ -45,7 +45,7 @@ const PasteUnitsPanel = ({ existingSerials, onAdd }) => {
         title: column.isPrimary ? (
           <span>
             {column.label}{" "}
-            <span style={{ color: "var(--blue-dark-600, #155dee)" }}>
+            <span style={{ color: "var(--text-link)" }}>
               · serial number
             </span>
           </span>

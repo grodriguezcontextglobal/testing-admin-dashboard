@@ -17,7 +17,7 @@ const HighlightedPill = ({props}) => {
           fontSize: "12px",
           fontFamily: "Inter",
           lineHeight: "28px",
-          color: "var(--blue-dark-700, #004EEB)",
+          color: "var(--text-link)",
           padding: "0px 8px",
         }}
       >

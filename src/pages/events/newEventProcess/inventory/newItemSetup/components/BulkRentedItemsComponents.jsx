@@ -358,7 +358,7 @@ export const renderOptional = ({
       aria-invalid={errors.descript_item}
       style={{
         borderRadius: "8px",
-        backgroundColor: "#fff",
+        backgroundColor: "var(--base-white, #fff)",
         color: "#000",
         verticalAlign: "center",
         boxShadow: "1px 1px 2px rgba(16, 24, 40, 0.05)",

@@ -64,7 +64,7 @@
 /* One decision — the tone — drives the number, the bar and the pill. */
 .case-tone--under .case-meter__used,
 .case-tone--unknown .case-meter__used {
-  color: var(--blue-dark-600, #155eef);
+  color: var(--text-link);
 }
 .case-tone--under .case-meter__fill,
 .case-tone--unknown .case-meter__fill {
@@ -111,7 +111,7 @@
 .case-tone--unknown .case-pill {
   background: #eff8ff;
   border-color: #b2ddff;
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
 }
 .case-tone--under .case-pill__dot,
 .case-tone--unknown .case-pill__dot {
@@ -148,7 +148,7 @@
 
 .case-banner__icon {
   display: flex;
-  color: #d92d20;
+  color: var(--error-600, #d92d20);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -280,7 +280,7 @@
 
 .case-empty__icon {
   display: flex;
-  color: #98a2b3;
+  color: var(--gray-400, #98a2b3);
 }
 
 .case-empty__title {
@@ -331,7 +331,7 @@
 
 .case-pending__icon {
   display: flex;
-  color: #b54708;
+  color: var(--warning-700, #b54708);
 }
 
 .case-pending__actions {
@@ -398,7 +398,7 @@
   height: 40px;
   border-radius: 9999px;
   background: #fef3f2;
-  color: #d92d20;
+  color: var(--error-600, #d92d20);
   flex-shrink: 0;
 }
 
@@ -544,7 +544,7 @@
   padding: 0 12px;
   border: 1px solid var(--gray-300, #d0d5dd);
   border-radius: 8px;
-  background: #fff;
+  background: var(--base-white, #fff);
   box-shadow: 1px 1px 2px rgba(16, 24, 40, 0.05);
   font-family: Inter, sans-serif;
   font-size: 14px;
@@ -606,7 +606,7 @@
 }
 
 .case-row:hover {
-  background: #fff;
+  background: var(--base-white, #fff);
 }
 
 .case-pane--stock .case-row:hover {
@@ -621,7 +621,7 @@
   height: 28px;
   border-radius: 6px;
   border: 1px solid var(--gray-300, #d0d5dd);
-  background: #fff;
+  background: var(--base-white, #fff);
   color: var(--gray-700, #344054);
   flex-shrink: 0;
   cursor: pointer;
@@ -646,7 +646,7 @@
 }
 
 .case-row__move:disabled:hover {
-  background: #fff;
+  background: var(--base-white, #fff);
   border-color: var(--gray-300, #d0d5dd);
   color: var(--gray-700, #344054);
 }
@@ -684,7 +684,7 @@
   border-radius: 9999px;
   background: #eff8ff;
   border: 1px solid #b2ddff;
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
   font-family: Inter, sans-serif;
   font-size: 12px;
   font-weight: 500;
@@ -703,7 +703,7 @@
 
 .case-list__blank-icon {
   display: flex;
-  color: #98a2b3;
+  color: var(--gray-400, #98a2b3);
 }
 
 .case-pack__delta {

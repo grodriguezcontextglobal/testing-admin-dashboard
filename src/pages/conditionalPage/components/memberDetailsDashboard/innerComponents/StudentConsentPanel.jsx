@@ -242,7 +242,7 @@ export const StudentConsentPanel = ({
         padding: "1rem",
         display: "grid",
         gap: "0.75rem",
-        background: "#ffffff",
+        background: "var(--base-white, #ffffff)",
       }}
     >
       {contextHolder}

@@ -133,7 +133,7 @@
 .public-landing__note--boxed {
   margin: 0 0 20px;
   padding: 12px 14px;
-  color: var(--blue-800, #1849a9);
+  color: var(--text-link);
   background: var(--blue-50, #eff8ff);
   border: 1px solid var(--blue-200, #b2ddff);
   border-radius: var(--radius-md, 8px);
@@ -211,7 +211,7 @@
   font-family: Inter, sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
 }
 
 /* ------------------------------------------------------------- The field --- */

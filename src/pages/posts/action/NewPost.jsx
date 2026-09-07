@@ -40,12 +40,12 @@ const CustomReactQuill = styled(ReactQuill)(() => ({
     minHeight: "200px",
     fontSize: "0.875rem",
     fontFamily: "Inter, sans-serif",
-    color: "#101828",
+    color: "var(--gray-900, #101828)",
     lineHeight: "1.5rem",
     padding: "12px 14px",
   },
   "& .ql-editor.ql-blank::before": {
-    color: "#667085",
+    color: "var(--gray-500, #667085)",
     fontStyle: "normal",
     fontSize: "0.875rem",
   },
@@ -62,7 +62,7 @@ const CustomReactQuill = styled(ReactQuill)(() => ({
     fill: "#155eef",
   },
   "& .ql-toolbar .ql-picker-label": {
-    color: "#344054",
+    color: "var(--gray-700, #344054)",
   },
   "& .ql-toolbar .ql-picker-label:hover": {
     color: "#155eef",

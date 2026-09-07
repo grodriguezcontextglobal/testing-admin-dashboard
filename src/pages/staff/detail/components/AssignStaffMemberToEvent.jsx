@@ -162,7 +162,7 @@ const AssignStaffMemberToEvent = () => {
                   displayEmpty
                   disabled={isSubmitting}
                   onChange={(event) => setEventId(event.target.value)}
-                  style={{ ...AntSelectorStyle, background: "#fff" }}
+                  style={{ ...AntSelectorStyle, background: "var(--base-white, #fff)" }}
                 >
                   <MenuItem value="" disabled>
                     Select an event
@@ -183,7 +183,7 @@ const AssignStaffMemberToEvent = () => {
                   displayEmpty
                   disabled={isSubmitting}
                   onChange={(event) => setRole(event.target.value)}
-                  style={{ ...AntSelectorStyle, background: "#fff" }}
+                  style={{ ...AntSelectorStyle, background: "var(--base-white, #fff)" }}
                 >
                   <MenuItem value="" disabled>
                     Select a role

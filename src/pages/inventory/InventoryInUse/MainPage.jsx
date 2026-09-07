@@ -92,7 +92,7 @@ const MainPage = () => {
                     >
                         <OutlinedInput
                             {...register("searchDevice")}
-                            style={{ borderRadius: "12px", color: "#344054", height: "5dvh" }}
+                            style={{ borderRadius: "12px", color: "var(--gray-700, #344054)", height: "5dvh" }}
                             fullWidth
                             placeholder="Search inventory here"
                             startAdornment={

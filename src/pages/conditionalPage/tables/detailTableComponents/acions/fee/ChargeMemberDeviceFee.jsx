@@ -286,7 +286,7 @@ const ChargeMemberDeviceFee = ({
     <div
       style={{
         minWidth: "fit-content",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--base-white, #ffffff)",
         padding: "20px",
       }}
     >

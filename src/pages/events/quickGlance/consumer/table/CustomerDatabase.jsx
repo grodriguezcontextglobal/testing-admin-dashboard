@@ -65,7 +65,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     },
     2: {
       backgroundColor: "#ECFDF3",
-      color: "#027A48",
+      color: "var(--success-700, #027A48)",
     },
     3: {
       backgroundColor: "#EFF8FF",

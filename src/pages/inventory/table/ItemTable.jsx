@@ -428,7 +428,7 @@ const ItemTable = ({
               <p style={{ fontWeight: 600, fontSize: "18px", margin: 0 }}>
                 No inventory in your scope yet
               </p>
-              <p style={{ color: "#667085", marginTop: "8px" }}>
+              <p style={{ color: "var(--gray-500, #667085)", marginTop: "8px" }}>
                 You don&apos;t have any{" "}
                 {isCategoryScopedRole(scopedRoleType) ? "categories" : "locations"}{" "}
                 assigned. Contact your administrator to get access to inventory.

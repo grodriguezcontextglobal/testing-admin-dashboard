@@ -51,7 +51,7 @@ const statusChip = (lease) => {
       new Date(lease.expected_return_date).getTime() < Date.now();
     return overdue
       ? { ...base, background: "var(--error-25, #fdf7f5)", border: "1px solid var(--error-300, #e28f75)", color: "var(--error-700, #9a3922)", text: "Overdue — please return" }
-      : { ...base, background: "var(--blue-50, #eff8ff)", border: "1px solid var(--blue-200, #b2ddff)", color: "var(--blue-800, #1849a9)", text: "Checked out to you" };
+      : { ...base, background: "var(--blue-50, #eff8ff)", border: "1px solid var(--blue-200, #b2ddff)", color: "var(--text-link)", text: "Checked out to you" };
   }
   const map = {
     returned: { background: "var(--success-50, #ecfdf3)", border: "1px solid var(--success-200, #abefc6)", color: "var(--success-700, #067647)", text: "Returned" },
@@ -168,7 +168,7 @@ const MyDevicesPortal = () => {
                 borderRadius: "var(--radius-md, 8px)",
                 border: "none",
                 background: "var(--action-600, #155eef)",
-                color: "var(--base-white, #fff)",
+                color: "var(--text-on-action, #fff)",
                 fontFamily: "Inter, sans-serif",
                 fontSize: "14px",
                 fontWeight: 600,
@@ -268,7 +268,7 @@ const MyDevicesPortal = () => {
               }}
             >
               Something look wrong, or need to report damage or loss? Email{" "}
-              <a href="mailto:it.director@summitunified.edu" style={{ color: "var(--action-700, #004eeb)" }}>
+              <a href="mailto:it.director@summitunified.edu" style={{ color: "var(--text-link)" }}>
                 your district IT office
               </a>{" "}
               — include the device serial number.

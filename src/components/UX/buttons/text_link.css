@@ -8,13 +8,13 @@
   padding: 0;
   margin: 0;
   font: 600 14px/20px Inter, sans-serif;
-  color: var(--brand-700, #004eea);
+  color: var(--text-brand);
   cursor: pointer;
   text-decoration: none;
   transition: color 0.15s ease;
 }
 .customized__textLink:hover {
-  color: var(--brand-800, #0040c1);
+  color: var(--text-brand);
   text-decoration: underline;
 }
 .customized__textLink:focus-visible {

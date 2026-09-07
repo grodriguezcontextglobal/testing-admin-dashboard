@@ -53,15 +53,15 @@ const BannerNotificationTemplate = ({
       iconColor: "var(--gray-600)",
       titleColor: "var(--gray-900)",
       bodyColor: "var(--gray-600)",
-      actionColor: "var(--blue700)",
+      actionColor: "var(--text-brand)",
     },
     brand: {
       background: "var(--pending-leased-equip-alert)",
       border: "var(--gray-200)",
-      iconColor: "var(--blue700)",
+      iconColor: "var(--text-brand)",
       titleColor: "var(--gray-900)",
       bodyColor: "var(--gray-700)",
-      actionColor: "var(--blue700)",
+      actionColor: "var(--text-brand)",
     },
     gray: {
       background: "var(--basewhite)",
@@ -69,7 +69,7 @@ const BannerNotificationTemplate = ({
       iconColor: "var(--gray-600)",
       titleColor: "var(--gray-900)",
       bodyColor: "var(--gray-600)",
-      actionColor: "var(--blue700)",
+      actionColor: "var(--text-brand)",
     },
     error: {
       background: "var(--basewhite)",

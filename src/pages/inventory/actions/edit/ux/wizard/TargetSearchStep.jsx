@@ -44,7 +44,7 @@ const TargetSearchStep = ({
 
   if (!hasReferenceOptions(optionsByField)) {
     return (
-      <div style={{ background: "#fff", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px" }}>
+      <div style={{ background: "var(--base-white, #fff)", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px" }}>
         <div style={{ padding: "32px", textAlign: "center" }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
             Your inventory is empty
@@ -58,7 +58,7 @@ const TargetSearchStep = ({
   }
 
   return (
-    <div style={{ background: "#fff", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)" }}>
+    <div style={{ background: "var(--base-white, #fff)", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)" }}>
       <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid var(--gray-200, #eaecf0)" }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           Which items do you want to update?
@@ -118,7 +118,7 @@ const TargetSearchStep = ({
                 borderRadius: "12px",
               }}
             >
-              <span style={{ font: "600 30px/38px Inter, sans-serif", color: "var(--blue-700, #175cd3)", letterSpacing: "-0.72px" }}>
+              <span style={{ font: "600 30px/38px Inter, sans-serif", color: "var(--text-link)", letterSpacing: "-0.72px" }}>
                 {matchSummary.matchCount}
               </span>
               <div style={{ flexGrow: 1 }}>

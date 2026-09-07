@@ -10,7 +10,7 @@
   align-self: stretch;
   text-align: center;
   color-scheme: light; /* light-only app: 'light dark' caused dark canvas/controls in OS dark mode */
-  color: rgba(39, 38, 38, 0.87);
+  color: var(--text-primary, rgba(39, 38, 38, 0.87));
   background-color: var(--main-background-color);
   font-family: "Inter", sans-serif;
   line-height: 1.5;
@@ -126,8 +126,8 @@ h1 {
 }
 
 input {
-  background: #fff;
-  color: #000;
+  background: var(--base-white, #fff);
+  color: var(--text-input, #000);
   border: none;
   height: auto;
   box-sizing: border-box;
@@ -137,8 +137,8 @@ input {
 input::placeholder {
   font-family: "Inter";
   font-size: 14px;
-  background: #fff;
-  color: #000;
+  background: var(--base-white, #fff);
+  color: var(--text-input-placeholder, #000);
   box-sizing: border-box;
 }
 
@@ -204,7 +204,7 @@ button:focus-visible {
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    background-color: var(--base-white, #ffffff);
   }
   a:hover {
     color: #747bff;

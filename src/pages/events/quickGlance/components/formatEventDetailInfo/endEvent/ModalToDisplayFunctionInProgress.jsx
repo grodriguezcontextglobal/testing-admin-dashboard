@@ -31,7 +31,7 @@ const ModalToDisplayFunctionInProgress = ({
         display: "flex",
         justifyContent: "flex-end",
         alignItems: "center",
-        backgroundColor: "var(--blue700)",
+        backgroundColor: "var(--text-brand)",
         borderRadius: "8px 8px 0 0",
         padding: "1rem",
       }}
@@ -86,7 +86,7 @@ const ModalToDisplayFunctionInProgress = ({
     <div
       style={{
         width: "100%",
-        backgroundColor: "var(--blue700)",
+        backgroundColor: "var(--text-brand)",
         borderRadius: "0 0 8px 8px",
         padding: "1rem",
       }}

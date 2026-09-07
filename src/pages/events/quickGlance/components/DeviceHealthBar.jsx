@@ -15,7 +15,7 @@ import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSi
  *   lost       — flagged lost
  */
 const SEGMENTS = [
-  { key: "checkedOut", label: "Checked out", color: "var(--brand-600)" },
+  { key: "checkedOut", label: "Checked out", color: "var(--text-brand)" },
   { key: "onHand", label: "On hand", color: "var(--success-500)" },
   { key: "needsRepair", label: "Needs repair", color: "var(--warning-500)" },
   { key: "lost", label: "Lost", color: "var(--error-500)" },

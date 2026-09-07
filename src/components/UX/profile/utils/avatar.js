@@ -8,9 +8,9 @@
 // Only non-semantic ramps: a red or amber avatar would read as a warning about
 // the person rather than a way to recognise them.
 const TINTS = [
-  { background: "var(--action-50, #eff4ff)", color: "var(--action-700, #004eeb)" },
-  { background: "var(--blue-50, #eff8ff)", color: "var(--blue-700, #175cd3)" },
-  { background: "var(--brand-50, #e6edf4)", color: "var(--brand-500, #0a2f52)" },
+  { background: "var(--action-50, #eff4ff)", color: "var(--text-link)" },
+  { background: "var(--blue-50, #eff8ff)", color: "var(--text-link)" },
+  { background: "var(--brand-50, #e6edf4)", color: "var(--text-brand)" },
   { background: "var(--blue-dark-50, #eff4ff)", color: "var(--blue-dark-800, #0040c1)" },
   { background: "var(--gray-100, #eeefe9)", color: "var(--gray-700, #454944)" },
 ];

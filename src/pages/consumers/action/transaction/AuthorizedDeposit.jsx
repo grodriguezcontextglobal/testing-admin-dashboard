@@ -290,10 +290,10 @@ const AuthorizedDeposit = () => {
   if (status === "no-transaction") {
     return (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "60vh", gap: "8px", fontFamily: "Inter" }}>
-        <p style={{ fontSize: "16px", color: "#B42318", margin: 0 }}>
+        <p style={{ fontSize: "16px", color: "var(--error-700, #B42318)", margin: 0 }}>
           No se encontró información de la transacción en sesión.
         </p>
-        <p style={{ fontSize: "13px", color: "#667085", margin: 0 }}>
+        <p style={{ fontSize: "13px", color: "var(--gray-500, #667085)", margin: 0 }}>
           Revisa la consola del navegador para más detalles.
         </p>
       </div>
@@ -303,10 +303,10 @@ const AuthorizedDeposit = () => {
   if (status === "error") {
     return (
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "60vh", gap: "8px", fontFamily: "Inter" }}>
-        <p style={{ fontSize: "16px", color: "#B42318", margin: 0 }}>
+        <p style={{ fontSize: "16px", color: "var(--error-700, #B42318)", margin: 0 }}>
           Error procesando la transacción.
         </p>
-        <p style={{ fontSize: "13px", color: "#667085", margin: 0 }}>
+        <p style={{ fontSize: "13px", color: "var(--gray-500, #667085)", margin: 0 }}>
           payment_intent: {payment_intent} — Revisa la consola para detalles.
         </p>
       </div>
@@ -315,10 +315,10 @@ const AuthorizedDeposit = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "60vh", gap: "12px", fontFamily: "Inter" }}>
-      <p style={{ fontSize: "16px", color: "#475467", margin: 0 }}>
+      <p style={{ fontSize: "16px", color: "var(--gray-600, #475467)", margin: 0 }}>
         Procesando transacción...
       </p>
-      <p style={{ fontSize: "13px", color: "#98A2B3", margin: 0 }}>
+      <p style={{ fontSize: "13px", color: "var(--gray-400, #98A2B3)", margin: 0 }}>
         {payment_intent}
       </p>
     </div>

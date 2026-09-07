@@ -32,7 +32,7 @@ const searchInputStyle = {
   color: "var(--gray-900, #101828)",
   outline: "none",
   width: "200px",
-  background: "#fff",
+  background: "var(--base-white, #fff)",
   boxShadow: "0px 1px 2px rgba(16, 24, 40, 0.05)",
 };
 
@@ -161,7 +161,7 @@ const MainPage = () => {
                   fontSize: "12px",
                   fontFamily: "Inter",
                   lineHeight: "28px",
-                  color: "var(--blue-dark-700, #004EEB)",
+                  color: "var(--text-link)",
                 }}
               >
                 {isSearching

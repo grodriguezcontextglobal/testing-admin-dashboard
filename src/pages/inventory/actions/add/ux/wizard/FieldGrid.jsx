@@ -168,7 +168,7 @@ const FieldGrid = ({
             }}
           >
             <div style={{ width: "100%" }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: "var(--blue-700, #175cd3)", mb: 1.5 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: "var(--text-link)", mb: 1.5 }}>
                 Rented equipment needs a return date and a vendor
               </Typography>
               <Grid container spacing={2}>

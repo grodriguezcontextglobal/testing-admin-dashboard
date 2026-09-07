@@ -9,7 +9,7 @@
 }
 
 .button-group-item {
-  background-color: white;
+  background-color: var(--base-white, white);
   border: none;
   padding: 10px 16px;
   cursor: pointer;

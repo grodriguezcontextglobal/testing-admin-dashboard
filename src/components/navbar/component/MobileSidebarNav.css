@@ -60,11 +60,11 @@
 
 .mobile-sidebar-nav__item--active {
   background-color: var(--blue-dark--100);
-  color: var(--blue-dark--800);
+  color: var(--text-link);
 }
 
 .mobile-sidebar-nav__item--active .mobile-sidebar-nav__icon {
-  color: var(--blue-dark--800);
+  color: var(--text-link);
 }
 
 .mobile-sidebar-nav__icon {

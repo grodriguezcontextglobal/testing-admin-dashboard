@@ -137,7 +137,7 @@
 }
 
 .profile-factgroup dd a:hover {
-  color: var(--action-600, #155eef);
+  color: var(--text-link);
   border-bottom-color: var(--action-200, #b2ccff);
 }
 
@@ -209,7 +209,7 @@
 .profile-status--action {
   background: var(--action-50, #eff4ff);
   border-color: var(--action-200, #b2ccff);
-  color: var(--action-700, #004eeb);
+  color: var(--text-link);
 }
 
 /* -------------------------------------------------------------- Stat tiles */

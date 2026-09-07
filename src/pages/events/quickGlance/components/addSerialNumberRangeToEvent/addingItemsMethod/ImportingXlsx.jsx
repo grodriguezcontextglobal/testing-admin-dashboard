@@ -337,7 +337,7 @@ const ImportingXlsx = ({
           onChange={handleFileChange}
         />
         {fileName ? (
-          <div style={{ marginTop: 8, color: "#667085" }}>File: {fileName}</div>
+          <div style={{ marginTop: 8, color: "var(--gray-500, #667085)" }}>File: {fileName}</div>
         ) : null}
         <div
           style={{
@@ -365,7 +365,7 @@ const ImportingXlsx = ({
       </div>
 
       {/* <div style={{ margin: "0 0 1rem" }}>
-        <div style={{ color: "#475467" }}>Required columns:</div>
+        <div style={{ color: "var(--gray-600, #475467)" }}>Required columns:</div>
         <ul style={{ margin: 4 }}>
           <li>Device ID (database)</li>
           <li>Serial Number</li>
@@ -393,7 +393,7 @@ const ImportingXlsx = ({
 
       {groupedByLocation.length ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ fontWeight: 600, color: "#344054" }}>
+          <div style={{ fontWeight: 600, color: "var(--gray-700, #344054)" }}>
             Groups detected ({rows.length} items total):
           </div>
           {groupedByLocation.map((g) => (
@@ -410,7 +410,7 @@ const ImportingXlsx = ({
             >
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600 }}>{g.location}</div>
-                <div style={{ color: "#667085" }}>{g.count} items</div>
+                <div style={{ color: "var(--gray-500, #667085)" }}>{g.count} items</div>
               </div>
               <BlueButtonComponent
                 title={"Add from this location"}

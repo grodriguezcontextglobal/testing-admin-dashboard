@@ -283,7 +283,7 @@ const MainPage = () => {
               textAlign: "left",
               width: "100%",
               fontWeight: 600,
-              color: "#344054",
+              color: "var(--gray-700, #344054)",
             }}
           >
             Quick glance

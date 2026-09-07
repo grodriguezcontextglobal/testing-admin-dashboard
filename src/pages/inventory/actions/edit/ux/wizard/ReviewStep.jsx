@@ -52,9 +52,9 @@ const ReviewStep = ({
   const extraSerials = scannedSerialNumbers.length - shownSerials.length;
 
   return (
-    <div style={{ background: "#fff", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)" }}>
+    <div style={{ background: "var(--base-white, #fff)", border: "1px solid var(--gray-200, #eaecf0)", borderRadius: "12px", boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px 24px", background: "var(--action-50, #eff4ff)", borderBottom: "1px solid var(--action-100, #d1e0ff)" }}>
-        <span style={{ font: "600 36px/44px Inter, sans-serif", color: "var(--blue-700, #175cd3)", letterSpacing: "-0.72px" }}>
+        <span style={{ font: "600 36px/44px Inter, sans-serif", color: "var(--text-link)", letterSpacing: "-0.72px" }}>
           {count}
         </span>
         <div>

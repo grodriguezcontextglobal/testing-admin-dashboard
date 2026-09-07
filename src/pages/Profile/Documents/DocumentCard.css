@@ -52,7 +52,7 @@
 }
 
 .document-card-link {
-    color: var(--action-600, #155eef);
+    color: var(--text-link);
     text-decoration: none;
     font-family: "Inter", sans-serif;
     font-size: 0.875rem;

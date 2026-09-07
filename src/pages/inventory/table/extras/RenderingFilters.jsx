@@ -1150,7 +1150,7 @@ const RenderingFilters = ({
             <span
               style={{
                 fontSize: "12px",
-                color: "#475467",
+                color: "var(--gray-600, #475467)",
                 padding: "0 8px 0 12px",
               }}
             >

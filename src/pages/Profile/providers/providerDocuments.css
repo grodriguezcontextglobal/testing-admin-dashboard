@@ -41,13 +41,13 @@
 }
 
 .provider-docs__chip.is-active {
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
   background: var(--blue-50, #eff8ff);
   border-color: var(--blue-200, #b2ddff);
 }
 
 .provider-docs__chip.is-active span {
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
 }
 
 .provider-docs__search {
@@ -127,7 +127,7 @@
 }
 
 .provider-docs__type--invoice {
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
   background: var(--blue-50, #eff8ff);
 }
 
@@ -141,7 +141,7 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 20px;
-  color: var(--blue-700, #175cd3);
+  color: var(--text-link);
   text-decoration: none;
   white-space: nowrap;
 }
