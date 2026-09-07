@@ -215,7 +215,7 @@ const ExpandedLostButton = ({
                 color: `${
                   record.status
                     ? GrayButtonText.color
-                    : "var(--disabled0gray-button-text)"
+                    : "var(--disabled-gray-button-text)"
                 }`,
               }}
             >

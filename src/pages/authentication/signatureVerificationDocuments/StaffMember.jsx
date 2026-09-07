@@ -400,7 +400,7 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
                           ...OutlinedInputStyle,
                           border: validPassword
                             ? OutlinedInputStyle.backgroundColor
-                            : "0.5px solid var(--danger-action",
+                            : "0.5px solid var(--danger-action)",
                         }}
                         placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
                         type={showPassword ? "text" : "password"}
