@@ -133,6 +133,12 @@ export const buildCloseoutReport = ({
   const view = count && typeof count === "object" ? count : {};
   const counted = view.ok === true;
 
+  /* No list at all is not the same as a list this serial is not in. The first
+     means we do not know who holds anything; the second means nobody does.
+     Treating them alike reports a whole event as unaccounted for whenever that
+     lookup fails, and marks devices unchargeable that somebody is holding. */
+  const holdersKnown = Array.isArray(receivers);
+
   /* Serial is the only thing both records share: the warehouse side speaks in
      item_inv rows and the consumer side in receiver documents. Case-folded,
      because the two were written by different flows. */
@@ -177,7 +183,7 @@ export const buildCloseoutReport = ({
     /* Missing from the sweep and held by nobody. Either it never left, or a
        return was recorded on one side and not the other. Reported rather than
        charged: there is no one to charge. */
-    if (!receiver) {
+    if (holdersKnown && !receiver) {
       disputed.push({
         serial,
         itemId: item?.item_id ?? null,
@@ -195,15 +201,16 @@ export const buildCloseoutReport = ({
       email: consumer?.email ?? null,
       paymentIntent: receiver?.paymentIntent ?? null,
       value: money(receiver?.device?.deviceValue),
-      /* Only a device someone actually holds can be charged for. */
-      chargeable: Boolean(receiver),
+      /* Only a device someone actually holds can be charged for -- and null,
+         not false, while the holder list is unknown. */
+      chargeable: holdersKnown ? Boolean(receiver) : null,
       ambiguousWith: view.ambiguousByItem?.[item?.item_id]?.item_ids ?? null,
     };
   });
 
   /* The other direction, and the one that bills the wrong person: it came back
      to the shelf and the consumer record still shows it out. */
-  returning.forEach((row) => {
+  if (holdersKnown) returning.forEach((row) => {
     const receiver = heldBySerial.get(key(row.serial));
     if (!receiver) return;
     disputed.push({
@@ -223,8 +230,12 @@ export const buildCloseoutReport = ({
       returning: returning.length,
       outstanding: outstanding.length,
       outstandingValue: outstanding.reduce((sum, row) => sum + row.value, 0),
-      chargeable: outstanding.filter((row) => row.chargeable).length,
+      chargeable: holdersKnown
+        ? outstanding.filter((row) => row.chargeable).length
+        : null,
     },
+    /** Whether the consumer-side lookup answered at all. */
+    holdersKnown,
     /**
      * Whether a count has happened at all — the one thing closing waits for.
      *

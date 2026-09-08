@@ -251,3 +251,33 @@ describe("buildCloseoutReport — with no tag information", () => {
     expect(outstanding[0].chargeable).toBe(true);
   });
 });
+
+describe("buildCloseoutReport — when the holder list could not be read", () => {
+  it("does not invent a dispute for every missing device", () => {
+    // No receivers list at all is not the same as a receivers list that does
+    // not contain this serial. The first means we do not know; the second
+    // means nobody holds it. Treating them alike would report the whole event
+    // as unaccounted for whenever that lookup fails.
+    const view = buildCloseoutReport({ count });
+    expect(view.holdersKnown).toBe(false);
+    expect(view.disputed).toEqual([]);
+    expect(view.outstanding).toHaveLength(2);
+  });
+
+  it("says nothing about chargeability it cannot know", () => {
+    const view = buildCloseoutReport({ count });
+    view.outstanding.forEach((row) => {
+      expect(row.chargeable).toBeNull();
+      expect(row.holder).toBeNull();
+    });
+    expect(view.totals.chargeable).toBeNull();
+  });
+
+  it("knows the holders once the list arrives, even if it is empty", () => {
+    // An empty list is an answer: this event has nothing out with anybody.
+    const view = buildCloseoutReport({ count, receivers: [] });
+    expect(view.holdersKnown).toBe(true);
+    expect(view.disputed).toHaveLength(2);
+    expect(view.outstanding.every((row) => row.chargeable === false)).toBe(true);
+  });
+});

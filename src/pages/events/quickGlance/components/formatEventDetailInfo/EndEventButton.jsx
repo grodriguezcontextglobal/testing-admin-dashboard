@@ -1,6 +1,5 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { Modal } from "antd";
 import { groupBy } from "lodash";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,11 +15,13 @@ import { useStatusNotification } from "../../../../../components/notification/al
 const ModalToDisplayFunctionInProgress = lazy(
   () => import("./endEvent/ModalToDisplayFunctionInProgress"),
 );
+const EndEventCountModal = lazy(() => import("./endEvent/EndEventCountModal"));
 
 const EndEventButton = () => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const [openEndingEventModal, setOpenEndingEventModal] = useState(false);
+  const [openCountModal, setOpenCountModal] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, step: "" });
   const dispatch = useDispatch();
   const staffRemoveAccessRef = useRef([]);
@@ -692,37 +693,32 @@ const EndEventButton = () => {
     }
   };
 
-  // Devices still with consumers (same "in use" definition the closure flow
-  // uses at line ~473): active in the pool, or flagged lost.
-  // receiversInventory can arrive as a JSON string — normalize first.
+  // The event's receivers pool: what the event is holding, and the expected
+  // set the count modal reconciles against. receiversInventory can arrive as a
+  // JSON string — normalize first.
   const poolInventory = checkTypeFetchResponse(
     eventInventoryQuery?.data?.data?.receiversInventory,
   );
-  const outstandingDevices = (
-    Array.isArray(poolInventory) ? poolInventory : []
-  ).filter(
-    (item) => item.activity || `${item.status}`.toLowerCase() === "lost",
-  ).length;
 
-  // Imperative Modal.confirm (portal-rendered) instead of Popconfirm: this
-  // subtree re-renders often (query refetches + Million memoization), which
-  // resets Popconfirm's internal open state and made the popup flash away.
-  const confirmEndEvent = () => {
-    Modal.confirm({
-      title:
-        outstandingDevices > 0
-          ? `${outstandingDevices} device${outstandingDevices > 1 ? "s are" : " is"} still checked out`
-          : "End this event?",
-      content:
-        outstandingDevices > 0
-          ? "Ending the event now will close out all outstanding device assignments and remove staff access. This cannot be reversed."
-          : "This will return inventory, close transactions, and remove staff access. This cannot be reversed.",
-      okText: outstandingDevices > 0 ? "End event anyway" : "End event",
-      cancelText: "Cancel",
-      okButtonProps: { danger: true },
-      centered: true,
-      onOk: updatingItemInDB,
-    });
+  /**
+   * Ending an event starts by counting it.
+   *
+   * This used to be a confirmation and nothing else. It named
+   * `outstandingDevices` — the devices the *database* believes are still out —
+   * which reads like a count and is not one: it says nothing about what is
+   * physically on the pallet, and consolidating that inventory by hand is the
+   * step this closure costs the most time on. Whatever was miscounted then
+   * became irreversible on the next click.
+   *
+   * The count modal answers it properly, and offers the two outcomes that
+   * actually exist: close and return what was counted, or keep the event open
+   * and go find the rest.
+   */
+  const confirmEndEvent = () => setOpenCountModal(true);
+
+  const closeAfterCounting = () => {
+    setOpenCountModal(false);
+    return updatingItemInDB();
   };
 
   return (
@@ -762,6 +758,14 @@ const EndEventButton = () => {
           </Grid>
         )}
       </Grid>
+      {openCountModal && (
+        <EndEventCountModal
+          open={openCountModal}
+          poolInventory={poolInventory}
+          onKeepOpen={() => setOpenCountModal(false)}
+          onCloseEvent={closeAfterCounting}
+        />
+      )}
       {openEndingEventModal && (
         <ModalToDisplayFunctionInProgress
           openEndingEventModal={openEndingEventModal}
