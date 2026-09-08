@@ -1,6 +1,7 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Space, Tag, Tooltip } from "antd";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import RefreshButton from "../../../../components/utils/UX/RefreshButton";
@@ -10,6 +11,10 @@ import { Title } from "../../../../styles/global/Title";
 import { CustomerDatabase } from "./table/CustomerDatabase";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import { useSelector } from "react-redux";
+import {
+  CONSUMER_STATUSES,
+  toggleStatusFilter,
+} from "./utils/consumerStatusFilter";
 
 const CustomerInformationSection = () => {
   const { register, watch } = useForm();
@@ -17,32 +22,13 @@ const CustomerInformationSection = () => {
   const { event } = useSelector((state) => state.event);
   const queryClient = useQueryClient();
 
-  const styleDic = {
-    0: {
-      backgroundColor: "#dad7d7",
-      color: "#262424",
-      text: "No devices",
-      description: "No devices assigned",
-    },
-    1: {
-      backgroundColor: "#FFF4ED",
-      color: "#B93815",
-      text: "Devices pending to return",
-      description: "Devices in use but also some returned",
-    },
-    2: {
-      backgroundColor: "#ECFDF3",
-      color: "var(--success-700, #027A48)",
-      text: "Devices in use",
-      description: "All devices of all transactions are in use",
-    },
-    3: {
-      backgroundColor: "#EFF8FF",
-      color: "#175CD3",
-      text: "Devices returned",
-      description: "All devices of all transactions are returned",
-    },
-  };
+  /* The legend was read-only, so finding the consumers who still owe a device
+     meant opening the Status column's dropdown — three clicks away from a row
+     of labels that already named exactly that group. The pills now are the
+     filter: one selection, shared with the column, clearable by clicking the
+     active pill again. */
+  const [statusFilter, setStatusFilter] = useState(null);
+  const filtering = statusFilter !== null;
 
   const refreshCustomerDatabase = async () => {
     await clearCacheMemory(`event=${event.id}&company=${user.companyData.id}`);
@@ -103,32 +89,65 @@ const CustomerInformationSection = () => {
         <RefreshButton propsFn={refreshCustomerDatabase} />
         <Grid>
           <Space>
-            {new Array(4).fill(0).map((_, index) => (
-              <Tooltip key={index} title={styleDic[index].description}>
-                <Tag
-                  color={styleDic[index].backgroundColor}
-                  style={{
-                    ...TextFontSize14LineHeight20,
-                    letterSpacing: "0.00938em",
-                    fontWeight: 500,
-                    color: styleDic[index].color,
-                    borderRadius: "16px",
-                    padding: "2px 8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                  }}
+            {CONSUMER_STATUSES.map((status) => {
+              const selected = statusFilter === status.value;
+              return (
+                <Tooltip
+                  key={status.value}
+                  title={
+                    selected
+                      ? "Showing only these consumers. Click to show all again."
+                      : status.description
+                  }
                 >
-                  <p style={{ color: styleDic[index].color }}>
-                    {styleDic[index].text}
-                  </p>
-                </Tag>
-              </Tooltip>
-            ))}
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() =>
+                      setStatusFilter((current) =>
+                        toggleStatusFilter(current, status.value),
+                      )
+                    }
+                    style={{
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      cursor: "pointer",
+                      /* Dim the buckets that are being filtered out, so which
+                         one is doing it is legible without reading the table. */
+                      opacity: !filtering || selected ? 1 : 0.45,
+                    }}
+                  >
+                    <Tag
+                      color={status.backgroundColor}
+                      style={{
+                        ...TextFontSize14LineHeight20,
+                        letterSpacing: "0.00938em",
+                        fontWeight: 500,
+                        color: status.color,
+                        borderRadius: "16px",
+                        padding: "2px 8px",
+                        margin: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        boxShadow: selected ? `0 0 0 2px ${status.color}` : "none",
+                      }}
+                    >
+                      <p style={{ color: status.color }}>{status.label}</p>
+                    </Tag>
+                  </button>
+                </Tooltip>
+              );
+            })}
           </Space>
         </Grid>
         <Grid item xs={12}>
-          <CustomerDatabase searchAttendees={watch("searchCustomer")} />
+          <CustomerDatabase
+            searchAttendees={watch("searchCustomer")}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
         </Grid>
       </Grid>
     </>

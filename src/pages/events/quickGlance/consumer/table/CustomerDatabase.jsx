@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Typography } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, Table } from "antd";
+import PropTypes from "prop-types";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,8 +15,26 @@ import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
+import {
+  CONSUMER_STATUSES,
+  consumerStatus,
+  matchesStatusFilter,
+  normalizeConsumerStatus,
+  statusColumnFilterValue,
+  statusFilterFromTableChange,
+} from "../utils/consumerStatusFilter";
 
-export const CustomerDatabase = ({ searchAttendees }) => {
+/**
+ * `statusFilter` is owned by the legend above the table, and the Status column
+ * is controlled by it, so the pills and the column dropdown are one selection
+ * instead of two that intersect. `onStatusFilterChange` is how the dropdown
+ * hands its own choice back to the pills.
+ */
+export const CustomerDatabase = ({
+  searchAttendees,
+  statusFilter = null,
+  onStatusFilterChange,
+}) => {
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const navigate = useNavigate();
@@ -54,31 +73,7 @@ export const CustomerDatabase = ({ searchAttendees }) => {
     );
   };
 
-  const styleDic = {
-    0: {
-      backgroundColor: "#dad7d7",
-      color: "#262424",
-    },
-    1: {
-      backgroundColor: "#FFF4ED",
-      color: "#B93815",
-    },
-    2: {
-      backgroundColor: "#ECFDF3",
-      color: "var(--success-700, #027A48)",
-    },
-    3: {
-      backgroundColor: "#EFF8FF",
-      color: "#175CD3",
-    },
-  };
   const response = attendeesAndTransactionsEventQuery?.data?.data?.data;
-  const dicStatus = {
-    0: "No devices",
-    1: "Devices pending to return",
-    2: "Devices in use",
-    3: "Devices returned",
-  };
 
   const columns = [
     {
@@ -124,30 +119,21 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       width: "15%",
       responsive: ["md", "lg"],
       showSorterTooltip: { target: "full-header" },
-      filters: [
-        ...Object.entries(dicStatus).map(([statusValue, statusText]) => {
-          return {
-            text: statusText,
-            value: parseInt(statusValue), // Use actual status values (0, 1, 2, 3)
-          };
-        }),
-      ],
-      onFilter: (value, record) => {
-        // Return boolean to actually filter the data
-        // The record.status contains the transaction data, and record.status.status contains the actual status number
-        const userStatus = record.status;
-        return userStatus === value;
-      },
+      filters: CONSUMER_STATUSES.map((status) => ({
+        text: status.label,
+        value: status.value,
+      })),
+      filteredValue: statusColumnFilterValue(statusFilter),
+      onFilter: (value, record) => matchesStatusFilter(value, record.status),
       sorter: {
-        compare: (a, b) => {
-          const statusA = a.status?.status || 0;
-          const statusB = b.status?.status || 0;
-          return statusA - statusB;
-        },
+        /* Read `a.status.status` before, which is undefined — `status` is the
+           bucket number itself — so every row sorted as 0 and the sorter did
+           nothing at all. */
+        compare: (a, b) =>
+          normalizeConsumerStatus(a.status) - normalizeConsumerStatus(b.status),
       },
       render: (status) => {
-        // Use status.status to get the actual status number for rendering
-        const statusValue = status || 0;
+        const bucket = consumerStatus(status);
         return (
           <span
             style={{
@@ -156,12 +142,12 @@ export const CustomerDatabase = ({ searchAttendees }) => {
               display: "flex",
               padding: "2px 8px",
               alignItems: "center",
-              background: `${styleDic[statusValue]?.backgroundColor}`,
+              background: bucket.backgroundColor,
               width: "fit-content",
             }}
           >
             <Typography
-              color={`${styleDic[statusValue]?.color}`}
+              color={bucket.color}
               textTransform={"capitalize"}
               style={{
                 ...Subtitle,
@@ -169,15 +155,15 @@ export const CustomerDatabase = ({ searchAttendees }) => {
                 display: "flex",
                 justifyContent: "flex-start",
                 alignItems: "center",
-                color: `${styleDic[statusValue]?.color}`,
+                color: bucket.color,
               }}
             >
               <Icon
                 icon="tabler:point-filled"
                 rotate={3}
-                color={`${styleDic[statusValue]?.color}`}
+                color={bucket.color}
               />
-              {dicStatus[statusValue]}
+              {bucket.label}
             </Typography>
           </span>
         );
@@ -271,9 +257,18 @@ export const CustomerDatabase = ({ searchAttendees }) => {
       }}
       className="table-ant-customized"
       style={{ cursor: "pointer" }}
+      onChange={(_pagination, filters) =>
+        onStatusFilterChange?.(statusFilterFromTableChange(filters))
+      }
       onRow={(record) => {
         return { onClick: () => handleDataDetailUser(record) };
       }}
     />
   );
+};
+
+CustomerDatabase.propTypes = {
+  searchAttendees: PropTypes.string,
+  statusFilter: PropTypes.number,
+  onStatusFilterChange: PropTypes.func,
 };
