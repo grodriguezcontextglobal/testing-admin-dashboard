@@ -40,7 +40,7 @@ const ConfirmationPaymentPage = () => {
   const stripePaymentIntentQuery = useQuery({
     queryKey: ["listOfPaymentIntent"],
     queryFn: () =>
-      devitrakApi.get("/stripe-transactions-saved-list", {
+      devitrakApi.get("/stripe/stripe-transactions-saved-list", {
         paymentIntent: payment_intent,
       }),
   });

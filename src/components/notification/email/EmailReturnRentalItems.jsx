@@ -3,7 +3,25 @@ import { message } from "antd";
 import generateOptimizedXLSXFile from "../../../pages/inventory/details/OwnershipDetail/components/suppliers/actions/generateOptimizedXLSXFile";
 import { checkRequestSize } from "../../utils/checkRequestSize";
 
-const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user }) => {
+/**
+ * The report that goes out when rented equipment goes back to its supplier.
+ *
+ * This is the record of the return. The items are deleted straight afterwards,
+ * so anything not in here does not survive — which is why the attachment now
+ * carries the supplier, who returned them and when, instead of only three
+ * columns and a date computed at report time.
+ *
+ * `resolvedItems` lets a caller that has already read the rows hand them over
+ * rather than have them read twice; `items` alone still works.
+ */
+const EmailReturnRentalItems = async ({
+  items,
+  setProgress,
+  supplier_id,
+  user,
+  resolvedItems = null,
+  returnedAt = null,
+}) => {
   try {
     setProgress({
       current: 0,
@@ -22,20 +40,32 @@ const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user })
     // `ownership = 'Rent'` and the company scope are baked into the catalog
     // entry, so neither is sent. supplierId is optional — undefined drops the
     // supplier_info clause, which is what the old else-branch did.
-    const itemsData = await devitrakApi.post(
-      "/db_company/inventory-query",
-      {
-        queryName: "inventory.itemsByIds",
-        params: { itemIds: props, supplierId: supplier_id || undefined },
-      }
-    );
-    if (itemsData.data.result.length === 0) {
+    let itemsDataResult = resolvedItems;
+    if (!Array.isArray(itemsDataResult)) {
+      const itemsData = await devitrakApi.post(
+        "/db_company/inventory-query",
+        {
+          queryName: "inventory.itemsByIds",
+          params: { itemIds: props, supplierId: supplier_id || undefined },
+        }
+      );
+      itemsDataResult = itemsData.data.result;
+    }
+    if (itemsDataResult.length === 0) {
       return message.warning("No items found to return");
     }
-    const itemsDataResult = itemsData.data.result;
-    // Generate XLSX file with size optimization
 
-    const xlsxAttachment = generateOptimizedXLSXFile({ itemsDataResult });
+    const supplierName =
+      supplierInfo.data.providerCompanies?.companyName ??
+      supplierInfo.data.providerCompanies?.[0]?.companyName ??
+      "";
+
+    const xlsxAttachment = generateOptimizedXLSXFile({
+      itemsDataResult,
+      supplierName,
+      returnedBy: user?.name,
+      returnedAt: returnedAt ?? new Date().toISOString(),
+    });
 
     // If file is too large, send summary email instead
     if (xlsxAttachment.size > 20) {
@@ -52,8 +82,13 @@ const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user })
         message: `Due to the large number of items (${props.length}), detailed information has been omitted. Please check the system for complete details.`,
       };
 
+      /* `returned-items-summary-notification` does not exist -- the backend
+         confirmed it in FRONTEND_api_payload_findings.md B3 -- so a return
+         whose spreadsheet passed 20 MB reported nothing at all. The real route
+         takes `attachments` as optional, so the same notification goes out
+         without the file until that endpoint is built. */
       const response = await devitrakApi.post(
-        "/nodemailer/returned-items-summary-notification",
+        "/nodemailer/returned-items-to-renter-notification",
         summaryPayload
       );
       if (response.data) {
@@ -109,7 +144,8 @@ const EmailReturnRentalItems = async ({ items, setProgress, supplier_id, user })
       // Fallback to summary email without attachment
       try {
         await devitrakApi.post(
-          "/nodemailer/returned-items-summary-notification",
+          // Same missing route as above.
+          "/nodemailer/returned-items-to-renter-notification",
           {
             subject:
               "Returned items to renter - Summary (Attachment too large)",

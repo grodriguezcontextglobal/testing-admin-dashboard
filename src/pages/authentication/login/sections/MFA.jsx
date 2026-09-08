@@ -16,11 +16,14 @@ const MFA = ({ handleSubmit, formFittingTrigger, register, isLoading, onSubmitLo
                   item
                   xs={12}
                 >
-                  <FormLabel style={{ marginBottom: "0.9rem" }}>
-                    MFA Code
+                  <FormLabel
+                    htmlFor="login-mfa-code"
+                    style={{ marginBottom: "0.9rem" }}
+                  >
+                    Authentication code
                   </FormLabel>
                   <Input
-                  // label={"MFA Code"}
+                    id="login-mfa-code"
                     type="text"
                     required
                     {...register("mfaCode", {
@@ -32,6 +35,8 @@ const MFA = ({ handleSubmit, formFittingTrigger, register, isLoading, onSubmitLo
                       marginTop: "6px",
                     }}
                     placeholder="000000"
+                    helperText="Enter the 6-digit code from your authenticator app."
+                    aria-describedby="login-mfa-code-helper-text"
                     fullWidth
                     autoFocus
                   />

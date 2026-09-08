@@ -7,6 +7,7 @@ import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayBut
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import {
   hasReferenceOptions,
+  matchesTypedText,
   REFERENCE_FIELDS,
   toOptions,
 } from "../../../utils/referenceLookup";
@@ -89,6 +90,7 @@ const TargetSearchStep = ({
                     onChange={onChange}
                     options={optionsByField[index]}
                     placeholder={field.name === "reference_brand" ? "Any brand" : field.placeholder}
+                    filterOption={matchesTypedText}
                     allowClear
                   />
                 )}

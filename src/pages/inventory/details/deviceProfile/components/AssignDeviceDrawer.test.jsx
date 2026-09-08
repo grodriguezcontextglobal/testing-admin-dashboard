@@ -36,6 +36,12 @@ const ADULT = {
   last_name: "Webb",
   minor: 0,
   email: "marcus@school.org",
+  // Arrives as four columns as often as one string, which is the whole reason
+  // `raw.address` was the wrong field to read.
+  address_street: "1 Main St",
+  address_city: "Austin",
+  address_state: "TX",
+  address_zip: "78701",
 };
 
 // A minor with no guardian on file — the case the gate exists for.
@@ -151,5 +157,45 @@ describe("AssignDeviceDrawer", () => {
     fireEvent.click(await screen.findByText("Dana Ruiz"));
     expect(screen.getByText(/Staff assignments run through the staff profile/i)).toBeTruthy();
     expect(screen.queryByText(/^Assign to /)).toBeNull();
+  });
+});
+
+describe("AssignDeviceDrawer — where it'll be used", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    devitrakApi.post.mockImplementation((url) => respond(url));
+  });
+
+  // The field only exists once a member is picked, so every case starts there.
+  const whereField = () => screen.getByLabelText(/Where it'll be used/i);
+
+  it("offers the member's address once they are picked", async () => {
+    // Standing at the device, where the person is taking it answers the
+    // question better than the shelf it is sitting on.
+    renderDrawer();
+    fireEvent.click(await screen.findByText("Marcus Webb"));
+    await waitFor(() =>
+      expect(whereField()).toHaveValue("1 Main St, Austin, TX, 78701")
+    );
+  });
+
+  it("keeps the device's location for a member with no address on file", async () => {
+    /* `raw.address` would have been `undefined` here — a member's address
+       arrives as four `address_*` columns as often as one string — and handing
+       a controlled input `undefined` would have wiped the default. */
+    renderDrawer();
+    fireEvent.click(await screen.findByText("Aisha Bello"));
+    await waitFor(() => expect(whereField()).toHaveValue("Central Warehouse"));
+  });
+
+  it("does not overwrite what the operator typed", async () => {
+    renderDrawer();
+    fireEvent.click(await screen.findByText("Aisha Bello"));
+    await waitFor(() => expect(whereField()).toBeTruthy());
+
+    fireEvent.change(whereField(), { target: { value: "Gym, room 2" } });
+    fireEvent.click(screen.getByText("Marcus Webb"));
+
+    await waitFor(() => expect(whereField()).toHaveValue("Gym, room 2"));
   });
 });

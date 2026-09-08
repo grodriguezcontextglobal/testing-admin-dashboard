@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -13,13 +13,16 @@ import {
   ProfileStatTiles,
   ProfileTabs,
 } from "../../../../components/UX/profile";
-import { getIndustryProfile } from "../../../../config/industryProfiles";
-import { hasPermission, resolveRoleType } from "../../../../config/roles";
+import {
+  audienceWords,
+  getIndustryProfile,
+} from "../../../../config/industryProfiles";
+import { resolveRoleType } from "../../../../config/roles";
 import { onAddMemberInfo, onRemoveMemberInfo } from "../../../../store/slices/memberSlice";
 import TextFontsize18LineHeight28 from "../../../../styles/global/TextFontSize18LineHeight28";
 import useMemberAssignedDevices from "../../hooks/useMemberAssignedDevices";
-import AddNewMember from "../modals/AddNewMember";
 import MemberProfileIdentity from "./Header";
+import { memberNavTabs } from "./utils/memberNavTabs";
 
 const breadcrumbLinkStyle = {
   textTransform: "none",
@@ -37,28 +40,17 @@ const breadcrumbCurrentStyle = {
   textTransform: "none",
 };
 
-// Sections are places, so they get noun labels. The verbs that used to sit in
-// this bar — "Assign devices", "Send email reminder" — moved to the identity
-// card's action rail: a one-shot action in a tab bar makes people believe
-// they've navigated somewhere, and then wonder how to get back.
-const NAV_TABS = [
-  { key: "main", label: "Devices", to: "main", permission: "nav:members" },
-  {
-    key: "details",
-    label: "Details",
-    to: "update-member-information",
-    permission: "member:update",
-  },
-];
-
 const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
+  /* The company's own word for these people, from the same industriesList entry
+     that titles the nav tab. Identifiers stay `member` throughout — routes,
+     permissions, query keys and test ids are not read by anyone. */
+  const who = audienceWords(user?.companyData?.industry);
   const { id: memberId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const groupName = String(location.state?.referencing || "").replace(/-/g, " ");
-  const [addingNewmember, setAddingNewMember] = useState(false);
 
   const companyId = user?.sqlInfo?.company_id;
 
@@ -127,8 +119,8 @@ const MainPage = () => {
     return (
       <ProfileShell breadcrumb={<Breadcrumb path={breadcrumbItems} />}>
         <ProfileErrorState
-          title="Couldn't load this member"
-          description="The member service didn't respond. Nothing was changed."
+          title={`Couldn't load this ${who.singular}`}
+          description={`The ${who.singular} service didn't respond. Nothing was changed.`}
           action={
             <GrayButtonComponent
               title={"Try again"}
@@ -188,31 +180,22 @@ const MainPage = () => {
     },
   ];
 
-  const visibleTabs = NAV_TABS.filter((tab) =>
-    hasPermission(tab.permission, roleType)
-  );
+  const visibleTabs = memberNavTabs(roleType);
 
   return (
-    <>
-      <ProfileShell
-        breadcrumb={<Breadcrumb path={breadcrumbItems} />}
-        identity={
-          <MemberProfileIdentity
-            detailMemberInfo={detailMemberInfo}
-            deviceSummary={summary}
-            setAddingNewMember={setAddingNewMember}
-          />
-        }
-        stats={<ProfileStatTiles tiles={statTiles} testId="member-stats" />}
-        tabs={<ProfileTabs items={visibleTabs} />}
-      >
-        <Outlet />
-      </ProfileShell>
-      <AddNewMember
-        openModal={addingNewmember}
-        setOpenModal={setAddingNewMember}
-      />
-    </>
+    <ProfileShell
+      breadcrumb={<Breadcrumb path={breadcrumbItems} />}
+      identity={
+        <MemberProfileIdentity
+          detailMemberInfo={detailMemberInfo}
+          deviceSummary={summary}
+        />
+      }
+      stats={<ProfileStatTiles tiles={statTiles} testId="member-stats" />}
+      tabs={<ProfileTabs items={visibleTabs} />}
+    >
+      <Outlet />
+    </ProfileShell>
   );
 };
 

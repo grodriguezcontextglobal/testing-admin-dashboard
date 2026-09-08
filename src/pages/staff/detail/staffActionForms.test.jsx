@@ -23,7 +23,11 @@ const admin = {
   company: "Dev Co",
   companyData: {
     id: "co-1",
-    companyName: "Dev Co",
+    // `company_name`, which is what the session actually carries — see
+    // UpperBanner and EventLinkNotification. This fixture used to say
+    // `companyName`, a field nothing in the app writes, and inventing it here
+    // hid a modal that loaded forever in production.
+    company_name: "Dev Co",
     employees: [{ user: "root@x.com", role: "0" }],
     roleLabels: {},
   },
@@ -116,6 +120,27 @@ describe("staff action forms render", () => {
     wrap(<ResetPasswordLink />);
     expect(await screen.findByText("Send a password reset link")).toBeTruthy();
     expect(await screen.findByText("Sending to")).toBeTruthy();
+  });
+
+  it("reset password settles instead of loading forever", async () => {
+    // The modal used to sit on its skeleton with no way out. It looked up the
+    // account by fetching the whole company's admin users, gated on
+    // `companyData.companyName` — a field the session does not carry — so
+    // `enabled` was false, and a disabled query in react-query v4 stays at
+    // status "loading" for good. The spinner was permanent and nothing errored.
+    wrap(<ResetPasswordLink />);
+    expect(await screen.findByText("Ada L")).toBeTruthy();
+    expect(await screen.findByText("Send reset link")).toBeTruthy();
+  });
+
+  it("looks the account up by the person's own email", async () => {
+    // One record instead of every admin user in the company, and no dependency
+    // on a company name to get there.
+    wrap(<ResetPasswordLink />);
+    await screen.findByText("Send reset link");
+    expect(post).toHaveBeenCalledWith("/staff/admin-users", {
+      email: "ada@x.com",
+    });
   });
 
   it("locations and permissions", async () => {

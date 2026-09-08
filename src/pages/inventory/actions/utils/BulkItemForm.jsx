@@ -18,6 +18,7 @@ import FieldsSections from "./uxForm/FieldsSections";
 import ImageUploaderComponent from "./uxForm/ImageUploaderComponent";
 import SerialNumberAndMoreInfoComponentForm from "./uxForm/SerialNumberAndMoreInfoComponentForm";
 import CopyFromExistingDevicePanel from "./uxForm/CopyFromExistingDevicePanel";
+import { useAssignableTargets } from "./useAssignableTargets";
 
 const SECTIONS = [
   { key: "info", title: "Info", hint: "What the item is and what it costs" },
@@ -85,7 +86,10 @@ const BulkItemForm = ({
     );
   };
 
+  const assignableTargets = useAssignableTargets();
+
   const allFields = renderFields({
+    assignableTargets,
     retrieveItemOptions,
     OutlinedInputStyle,
     renderLocationOptions,
@@ -114,7 +118,7 @@ const BulkItemForm = ({
           <InputLabel style={{ marginBottom: "1rem", width: "100%", display: imageUploadedValue ? "block" : "none" }}>
             <Tooltip placement="top" title={item.tooltipMessage} style={{ width: "100%" }}>
               <Typography style={stylingComponents({ loadingStatus }).styling}>
-                {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+                {item.label} <span className="form-label__required" aria-hidden="true">*</span> {item.tooltip && <QuestionIcon />}
               </Typography>
             </Tooltip>
             <div>
@@ -139,7 +143,7 @@ const BulkItemForm = ({
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Tooltip placement="top" title={item.tooltipMessage} style={{ width: "100%" }}>
             <Typography style={stylingComponents({ loadingStatus }).styling}>
-              {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+              {item.label} <span className="form-label__required" aria-hidden="true">*</span> {item.tooltip && <QuestionIcon />}
             </Typography>
           </Tooltip>
         </InputLabel>
@@ -228,7 +232,7 @@ const BulkItemForm = ({
                       <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                         <Tooltip placement="top" title={child.tooltipMessage} style={{ width: "100%" }}>
                           <Typography style={stylingComponents({ loadingStatus }).styling}>
-                            {child.label} <strong>*</strong> {child.tooltip && <QuestionIcon />}
+                            {child.label} <span className="form-label__required" aria-hidden="true">*</span> {child.tooltip && <QuestionIcon />}
                           </Typography>
                         </Tooltip>
                       </InputLabel>
@@ -271,7 +275,7 @@ const BulkItemForm = ({
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip placement="top" title={child.tooltipMessage} style={{ width: "100%" }}>
                       <Typography style={stylingComponents({ loadingStatus }).styling}>
-                        {child.label} <strong>*</strong> {child.tooltip && <QuestionIcon />}
+                        {child.label} <span className="form-label__required" aria-hidden="true">*</span> {child.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>

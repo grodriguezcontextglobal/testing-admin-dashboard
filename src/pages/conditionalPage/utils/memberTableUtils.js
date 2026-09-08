@@ -3,8 +3,14 @@
  * Kept out of the component so they can be unit-tested and memoized cheaply.
  */
 
-/** Joins the address parts, skipping any that are empty. */
-const composeAddress = (m) => {
+/**
+ * Joins the address parts, skipping any that are empty.
+ *
+ * Exported because it is the only place in the app that knows a member's
+ * address can arrive either as one `address` string or as four separate
+ * `address_*` columns. The device-assignment drawer needs the same answer.
+ */
+export const composeMemberAddress = (m = {}) => {
   if (m.address) return m.address;
   const street = m.address_street ?? "";
   const parts = [
@@ -14,6 +20,8 @@ const composeAddress = (m) => {
   ].filter(Boolean);
   return [street, parts.join(", ")].filter(Boolean).join(", ").trim();
 };
+
+const composeAddress = composeMemberAddress;
 
 /**
  * Maps member records to the row shape consumed by the delete table,

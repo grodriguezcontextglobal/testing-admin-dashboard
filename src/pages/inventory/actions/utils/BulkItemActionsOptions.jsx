@@ -16,6 +16,7 @@ export const bulkItemInsertAlphanumeric = async ({
   user,
   navigate,
   openNotificationWithIcon,
+  openSuccessNotification,
   setLoadingStatus,
   setValue,
   img_url,
@@ -92,7 +93,7 @@ export const bulkItemInsertAlphanumeric = async ({
     setValue("container", "");
     setValue("containerSpotLimit", "0");
     setScannedSerialNumbers([]);
-    openNotificationWithIcon(
+    openSuccessNotification(
       "Your upload was registered and is processing in the background. We'll notify you when it's ready."
     );
     setLoadingStatus(false);
@@ -100,7 +101,7 @@ export const bulkItemInsertAlphanumeric = async ({
       onTrackBackgroundJob({
         jobId: response.jobId,
         type: "bulk-inventory-insert",
-        successMessage: "New group of items were successfully created in inventory.",
+        successMessage: "New group of items were successfully added to inventory.",
         failureMessage: "The inventory upload failed.",
         invalidateKeys: inventoryPageQueryKeys(user.sqlInfo.company_id),
         clearCacheKeys: inventoryCacheKeys({
@@ -110,7 +111,7 @@ export const bulkItemInsertAlphanumeric = async ({
     );
     return navigate("/inventory");
   } catch (error) {
-    message.error("Failed to create new item: " + error.message);
+    message.error("Failed to add new item: " + error.message);
     throw error;
   }
 };
@@ -185,7 +186,7 @@ export const bulkItemInsertSequential = async ({
     setValue("container", "");
     setValue("containerSpotLimit", "0");
     openNotificationWithIcon(
-      "New group of items were created and stored in database."
+      "New group of items were added and stored in database."
     );
     setLoadingStatus(false);
     await clearCacheMemory(

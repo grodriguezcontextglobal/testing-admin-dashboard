@@ -209,3 +209,68 @@ describe("buildReminderPayload", () => {
     );
   });
 });
+
+// ─── who the reminder comes from ─────────────────────────────────────────────
+
+describe("the sign-off names the staff member sending it", () => {
+  /* It used to be the company name alone. A member holding a device and given
+     three days to return it needs to know who asked — an unsigned message from
+     an institution is the one people ignore, and there is nobody to reply to. */
+  const member = { first_name: "Ana", email: "ana@x.com" };
+  const overdue = [
+    { device_item_group: "Chromebook", device_serial_number: "SN-1", expected_return_date: "2026-08-01" },
+  ];
+  const upcoming = [
+    { device_item_group: "Chromebook", device_serial_number: "SN-2", expected_return_date: "2026-09-30" },
+  ];
+
+  const build = (key, context) =>
+    REMINDER_TEMPLATES.find((template) => template.key === key).build({
+      member,
+      overdue,
+      upcoming,
+      companyName: "Context Global",
+      ...context,
+    }).message;
+
+  it("signs the overdue reminder with the sender, then the company", () => {
+    const message = build("overdue", { staffName: "Gustavo Rodriguez" });
+    expect(message).toContain("Thank you,\nGustavo Rodriguez\nContext Global");
+  });
+
+  it("signs the upcoming reminder the same way", () => {
+    const message = build("upcoming", { staffName: "Gustavo Rodriguez" });
+    expect(message).toContain("Thank you,\nGustavo Rodriguez\nContext Global");
+  });
+
+  it("falls back to the company alone when the sender is unknown", () => {
+    const message = build("overdue", {});
+    expect(message).toContain("Thank you,\nContext Global");
+    expect(message).not.toContain("Thank you,\n\n");
+  });
+
+  it("does not print an empty line for a blank sender", () => {
+    const message = build("overdue", { staffName: "   " });
+    expect(message).toContain("Thank you,\nContext Global");
+  });
+
+  /* These two asserted "reply to ...". Reminders go out through the company's
+     notification account rather than the sender's mailbox, so replying to what
+     arrives reaches an account nobody reads -- the instruction was wrong, not
+     the wording. Naming the address to write to holds whichever way the mail
+     was sent. */
+  it("names the address to write to when the sender has an email", () => {
+    const message = build("overdue", {
+      staffName: "Gustavo Rodriguez",
+      staffEmail: "grodriguez@contextglobal.com",
+    });
+    expect(message).toContain("write to grodriguez@contextglobal.com");
+    expect(message).not.toContain("reply to");
+  });
+
+  it("points at the person, not the mailbox, when there is no sender email", () => {
+    const message = build("overdue", { staffName: "Gustavo Rodriguez" });
+    expect(message).toContain("contact the person who sent this");
+    expect(message).not.toContain("reply to this email");
+  });
+});

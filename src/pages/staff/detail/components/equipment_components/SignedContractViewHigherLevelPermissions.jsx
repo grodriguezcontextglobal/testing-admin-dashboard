@@ -150,7 +150,7 @@ const SignedContractViewHigherPermissionLevel = () => {
             })
           }
           buttonType="button"
-          titleStyles={{ textTransform: "none", with: "100%", gap: "2px" }}
+          titleStyles={{ textTransform: "none", width: "100%", gap: "2px" }}
         />
         <Grid
           container

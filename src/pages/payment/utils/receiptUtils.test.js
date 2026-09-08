@@ -7,6 +7,7 @@ import {
   mapReturnToReceipt,
   buildReceiptUrl,
   readPaymentIntentFromSearch,
+  readReceiptLogoFromSearch,
   resolveReceiptStatus,
   isTransactionVoided,
   formatReceiptAmount,
@@ -14,6 +15,8 @@ import {
   receiptTotal,
   mapTransactionToReceipt,
   mapFeeChargeToReceipt,
+  receiptSignatures,
+  resolveReceiptLogo,
 } from "./receiptUtils";
 
 const transaction = {
@@ -56,6 +59,86 @@ describe("buildReceiptUrl", () => {
     expect(buildReceiptUrl("https://x.com", "")).toBe("");
     expect(buildReceiptUrl("https://x.com", null)).toBe("");
     expect(buildReceiptUrl("", "pi_123")).toBe("");
+  });
+
+  // The link is built by someone who IS signed in, and opened by someone who is
+  // not. Carrying the logo on the link is the only way the letterhead survives
+  // that hand-off without the transaction response growing a field.
+  it("carries the company logo so a scanned receipt keeps its letterhead", () => {
+    expect(
+      buildReceiptUrl("https://x.com", "pi_123", {
+        companyLogo: "https://res.cloudinary.com/dsuynhcgd/image/upload/logo.png",
+      })
+    ).toBe(
+      `https://x.com${RECEIPT_ROUTE}?tx=pi_123&logo=${encodeURIComponent(
+        "https://res.cloudinary.com/dsuynhcgd/image/upload/logo.png"
+      )}`
+    );
+  });
+
+  it("leaves the parameter off when the company has no logo", () => {
+    expect(buildReceiptUrl("https://x.com", "pi_123", { companyLogo: "" })).toBe(
+      `https://x.com${RECEIPT_ROUTE}?tx=pi_123`
+    );
+    expect(buildReceiptUrl("https://x.com", "pi_123")).toBe(
+      `https://x.com${RECEIPT_ROUTE}?tx=pi_123`
+    );
+  });
+
+  it("refuses to link an image we did not host", () => {
+    // Every logo in the app is uploaded through /cloudinary/upload-image, so a
+    // URL anywhere else did not come from a company record.
+    expect(
+      buildReceiptUrl("https://x.com", "pi_123", {
+        companyLogo: "https://tracker.example/pixel.png",
+      })
+    ).toBe(`https://x.com${RECEIPT_ROUTE}?tx=pi_123`);
+    expect(
+      buildReceiptUrl("https://x.com", "pi_123", {
+        companyLogo: "http://res.cloudinary.com/x/logo.png",
+      })
+    ).toBe(`https://x.com${RECEIPT_ROUTE}?tx=pi_123`);
+  });
+});
+
+describe("readReceiptLogoFromSearch", () => {
+  const logo = "https://res.cloudinary.com/dsuynhcgd/image/upload/logo.png";
+
+  it("reads the logo back out of the link", () => {
+    expect(
+      readReceiptLogoFromSearch(`?tx=pi_123&logo=${encodeURIComponent(logo)}`)
+    ).toBe(logo);
+  });
+
+  it("works without the leading question mark", () => {
+    expect(readReceiptLogoFromSearch(`logo=${encodeURIComponent(logo)}`)).toBe(
+      logo
+    );
+  });
+
+  it("is null when the link carries no logo", () => {
+    expect(readReceiptLogoFromSearch("?tx=pi_123")).toBeNull();
+    expect(readReceiptLogoFromSearch("?logo=")).toBeNull();
+    expect(readReceiptLogoFromSearch("")).toBeNull();
+    expect(readReceiptLogoFromSearch(undefined)).toBeNull();
+  });
+
+  it("refuses an image from anywhere but our own host", () => {
+    // This value arrives in a URL anyone can edit. Without the host check the
+    // receipt page renders whatever image a stranger points it at, on a page
+    // that is meant to look official.
+    expect(
+      readReceiptLogoFromSearch("?logo=https%3A%2F%2Ftracker.example%2Fpixel.png")
+    ).toBeNull();
+    expect(
+      readReceiptLogoFromSearch(
+        "?logo=https%3A%2F%2Fres.cloudinary.com.evil.test%2Flogo.png"
+      )
+    ).toBeNull();
+    expect(readReceiptLogoFromSearch("?logo=javascript%3Aalert(1)")).toBeNull();
+    expect(
+      readReceiptLogoFromSearch("?logo=data%3Aimage%2Fpng%3Bbase64%2CAAA")
+    ).toBeNull();
   });
 });
 
@@ -490,5 +573,170 @@ describe("mapFeeChargeToReceipt — proof that a device fee was settled", () => 
       expect(receipt.status).toBe(RECEIPT_STATUS.PAID);
       expect(receipt.payer.name).toBe("");
     }
+  });
+});
+
+// ─── the company logo ────────────────────────────────────────────────────────
+
+describe("resolveReceiptLogo", () => {
+  it("keeps the hosted logo url", () => {
+    expect(resolveReceiptLogo("https://res.cloudinary.com/x/logo.png")).toBe(
+      "https://res.cloudinary.com/x/logo.png"
+    );
+  });
+
+  it("is null when the company has no logo", () => {
+    // `company_logo` is stored as "" for a company that never uploaded one.
+    expect(resolveReceiptLogo("")).toBeNull();
+    expect(resolveReceiptLogo("   ")).toBeNull();
+    expect(resolveReceiptLogo(null)).toBeNull();
+    expect(resolveReceiptLogo(undefined)).toBeNull();
+  });
+
+  it("refuses anything that is not an http(s) url", () => {
+    // The receipt is printed and can be opened from a scan; a javascript: or
+    // data: src has no business in it.
+    expect(resolveReceiptLogo("javascript:alert(1)")).toBeNull();
+    expect(resolveReceiptLogo("data:image/png;base64,AAA")).toBeNull();
+    expect(resolveReceiptLogo("/uploads/logo.png")).toBeNull();
+  });
+});
+
+describe("mapAssignmentToReceipt logo", () => {
+  it("carries the company logo onto the document", () => {
+    const receipt = mapAssignmentToReceipt({
+      member: { first_name: "Ana" },
+      devices: [],
+      company: "Context Global",
+      companyLogo: "https://res.cloudinary.com/x/logo.png",
+    });
+    expect(receipt.logoUrl).toBe("https://res.cloudinary.com/x/logo.png");
+  });
+
+  it("leaves it null when there is none", () => {
+    expect(mapAssignmentToReceipt({ devices: [] }).logoUrl).toBeNull();
+  });
+});
+
+describe("mapReturnToReceipt logo", () => {
+  it("carries the company logo onto the document", () => {
+    const receipt = mapReturnToReceipt({
+      record: {},
+      companyLogo: "https://res.cloudinary.com/x/logo.png",
+    });
+    expect(receipt.logoUrl).toBe("https://res.cloudinary.com/x/logo.png");
+  });
+});
+
+// ─── signatures ──────────────────────────────────────────────────────────────
+
+describe("receiptSignatures", () => {
+  /* A handover slip is the paper record of who took custody of a device. It is
+     signed on both sides — without it the document asserts a transfer nobody
+     agreed to. Payment receipts are not signed: the card transaction is the
+     proof. */
+
+  it("asks the holder and the issuer to sign a handover", () => {
+    const receipt = mapAssignmentToReceipt({
+      member: { first_name: "Ana", last_name: "Ruiz" },
+      devices: [],
+      staffName: "Gustavo R",
+    });
+    expect(receiptSignatures(receipt)).toEqual([
+      { caption: "Received by", name: "Ana Ruiz" },
+      { caption: "Issued by", name: "Gustavo R" },
+    ]);
+  });
+
+  it("flips the captions for a return", () => {
+    const receipt = mapReturnToReceipt({
+      member: { first_name: "Ana", last_name: "Ruiz" },
+      record: {},
+      outcome: "returned",
+      staffName: "Gustavo R",
+    });
+    expect(receiptSignatures(receipt)).toEqual([
+      { caption: "Returned by", name: "Ana Ruiz" },
+      { caption: "Received by", name: "Gustavo R" },
+    ]);
+  });
+
+  it("still asks for both on a lost-device declaration", () => {
+    // This is the document that says a device is gone; it is the one that most
+    // needs a signature.
+    const receipt = mapReturnToReceipt({
+      member: { first_name: "Ana" },
+      record: {},
+      outcome: "lost",
+      staffName: "Gustavo R",
+    });
+    expect(receiptSignatures(receipt)).toHaveLength(2);
+    expect(receiptSignatures(receipt)[0].caption).toBe("Declared by");
+  });
+
+  it("leaves a payment receipt unsigned", () => {
+    expect(receiptSignatures(mapTransactionToReceipt({ transaction }))).toEqual([]);
+  });
+
+  it("prints an empty line rather than a name it does not have", () => {
+    const receipt = mapAssignmentToReceipt({ devices: [] });
+    expect(receiptSignatures(receipt)).toEqual([
+      { caption: "Received by", name: "" },
+      { caption: "Issued by", name: "" },
+    ]);
+  });
+
+  it("survives nothing at all", () => {
+    expect(receiptSignatures(null)).toEqual([]);
+    expect(receiptSignatures({})).toEqual([]);
+  });
+});
+
+/**
+ * The payment receipt was the only one with no letterhead. Handover and return
+ * slips both take a companyLogo; this one never set logoUrl, so the one receipt
+ * a paying customer actually sees carried no mark of who issued it.
+ *
+ * It cannot come from the session unconditionally: /receipt is registered in
+ * both AuthRoutes and NoAuthRoutes and is opened from a QR scan by people
+ * outside the company. So the caller passes it when there is a session, and the
+ * page renders without one when there is not.
+ */
+describe("mapTransactionToReceipt — company letterhead", () => {
+  const transaction = { paymentIntent: "pi_1", provider: "Bridges", device: [] };
+
+  it("carries the logo when the caller has a session to read it from", () => {
+    expect(
+      mapTransactionToReceipt(transaction, {
+        companyLogo: "https://res.cloudinary.com/x/logo.png",
+      }).logoUrl
+    ).toBe("https://res.cloudinary.com/x/logo.png");
+  });
+
+  it("renders without one for a viewer who is not signed in", () => {
+    expect(mapTransactionToReceipt(transaction).logoUrl).toBeNull();
+    expect(mapTransactionToReceipt(transaction, {}).logoUrl).toBeNull();
+  });
+
+  it("holds the logo to the same rule as every other receipt", () => {
+    // resolveReceiptLogo: absolute http(s) only. A receipt is printed and can
+    // be opened from a QR scan, so a javascript: or data: src has no business
+    // being its letterhead.
+    expect(
+      mapTransactionToReceipt(transaction, { companyLogo: "javascript:alert(1)" })
+        .logoUrl
+    ).toBeNull();
+    expect(
+      mapTransactionToReceipt(transaction, { companyLogo: "/uploads/logo.png" })
+        .logoUrl
+    ).toBeNull();
+  });
+
+  it("leaves the rest of the receipt exactly as it was", () => {
+    const withLogo = mapTransactionToReceipt(transaction, {
+      companyLogo: "https://res.cloudinary.com/x/logo.png",
+    });
+    const without = mapTransactionToReceipt(transaction);
+    expect({ ...withLogo, logoUrl: null }).toEqual(without);
   });
 });

@@ -141,7 +141,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
         clearCacheMemory(`_id=${user.companyData.id}`),
         clearCacheMemory(`company_id=${user.companyData.id}`),
       ]);
-      queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["listOfAdminUsers"] });
       queryClient.invalidateQueries({ queryKey: ["employeesPerCompanyList"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["events"], exact: true });
       notify("success", "Staff members deleted");

@@ -223,12 +223,26 @@ const EditingStaff = ({ editingStaff, setEditingStaff }) => {
       if (needsCreation) await inviteToCompany();
       else if (lookedUpCompany) await reactivateExistingEmployee();
 
+      /* An existing colleague is never asked for a name — the company already
+         has it — so these two used to be stored as empty strings, and the staff
+         table behind this modal showed the new row with no name. Fill them in
+         from the account so the entry describes itself. */
+      const account = (accountsQuery.data?.data?.adminUsers ?? []).find(
+        (entry) =>
+          String(entry?.email ?? "").trim().toLowerCase() ===
+          email.trim().toLowerCase()
+      );
+
       await applyEventStaff(
         buildStaffPayload({
           event,
           action: "add",
           role,
-          member: { firstName: name, lastName, email: email.trim() },
+          member: {
+            firstName: name || account?.name || "",
+            lastName: lastName || account?.lastName || "",
+            email: email.trim(),
+          },
         })
       );
 

@@ -4,6 +4,7 @@ import {
   hasReferenceCriteria,
   hasReferenceOptions,
   referenceSourceLabel,
+  matchesTypedText,
 } from "./referenceLookup";
 
 const items = [
@@ -195,5 +196,51 @@ describe("referenceSourceLabel", () => {
     expect(referenceSourceLabel({ serial_number: "" })).toBe("an existing device");
     expect(referenceSourceLabel({})).toBe("an existing device");
     expect(referenceSourceLabel(null)).toBe("an existing device");
+  });
+});
+
+// ─── matchesTypedText ────────────────────────────────────────────────────────
+
+describe("matchesTypedText(typed, option)", () => {
+  /* antd's AutoComplete defaults `filterOption` to false — unlike Select — so
+     these three fields showed the whole list no matter what was typed. This is
+     the predicate that makes typing narrow them. */
+  const option = { value: "Chromebook 11 G8", label: "Chromebook 11 G8" };
+
+  it("keeps an option containing what was typed", () => {
+    expect(matchesTypedText("chrome", option)).toBe(true);
+  });
+
+  it("ignores case on both sides", () => {
+    expect(matchesTypedText("CHROMEBOOK", option)).toBe(true);
+    expect(matchesTypedText("g8", option)).toBe(true);
+  });
+
+  it("matches in the middle, not only at the start", () => {
+    // Someone looking for a model rarely remembers the leading word.
+    expect(matchesTypedText("11 g8", option)).toBe(true);
+  });
+
+  it("drops an option that does not contain it", () => {
+    expect(matchesTypedText("thinkpad", option)).toBe(false);
+  });
+
+  it("shows everything while nothing has been typed", () => {
+    expect(matchesTypedText("", option)).toBe(true);
+    expect(matchesTypedText("   ", option)).toBe(true);
+    expect(matchesTypedText(undefined, option)).toBe(true);
+  });
+
+  it("ignores the whitespace around what was typed", () => {
+    expect(matchesTypedText("  chrome  ", option)).toBe(true);
+  });
+
+  it("falls back to the value when an option carries no label", () => {
+    expect(matchesTypedText("chrome", { value: "Chromebook" })).toBe(true);
+  });
+
+  it("survives an option that is nothing at all", () => {
+    expect(matchesTypedText("chrome", null)).toBe(false);
+    expect(matchesTypedText("chrome", {})).toBe(false);
   });
 });

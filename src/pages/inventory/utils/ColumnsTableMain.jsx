@@ -7,6 +7,7 @@ import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
 import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
 import FilterIconSVG from "../../../components/icons/filter.svg";
+import { resolveItemRowId } from "./itemRowId";
 import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
 import { warehouseDicStatus } from "./warehouseDicStatus";
 import { getLogisticStatusColor, logisticStatusFilters } from "./logisticStatusConfig";
@@ -236,41 +237,45 @@ const columnsTableMain = ({
       key: "action",
       responsive: responsive[7],
       render: (_, record) => {
-        // Robust item_id resolution across possible shapes
-        const itemId =
-          record?.item_id ??
-          record?.data?.item_id ??
-          (record?.key && String(record.key).includes("-")
-            ? String(record.key).split("-")[0]
-            : null);
+        const itemId = resolveItemRowId(record);
 
+        /* A row with no id has no item page to open. The icon says so and
+           stays out of the way, rather than navigating to
+           `/inventory/item?id=undefined` — which is what the old
+           `record.key.split("-")[0]` fallback produced for such a row, and why
+           the icon appeared to do nothing. See resolveItemRowId. */
         return (
-          <button
-            style={{
-              ...cellStyle,
-              backgroundColor: "transparent",
-              border: "none",
-              cursor: itemId ? "pointer" : "not-allowed",
-              padding: "8px",
-              borderRadius: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: itemId ? 1 : 0.5,
-            }}
-            type="button"
-            disabled={!itemId}
-            onClick={() => {
-              if (itemId) {
-                navigate(`/inventory/item?id=${itemId}`);
-              } else {
-                alert("Unable to navigate to item details. Please try again.");
-              }
-            }}
-            aria-label="View item details"
+          <span
+            style={cellStyle}
+            title={
+              itemId
+                ? "View item details"
+                : "This row arrived without an item id, so its details cannot be opened. Refresh the table."
+            }
           >
-            <RightNarrowInCircle />
-          </button>
+            <button
+              style={{
+                ...cellStyle,
+                backgroundColor: "transparent",
+                border: "none",
+                cursor: itemId ? "pointer" : "not-allowed",
+                padding: "8px",
+                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: itemId ? 1 : 0.4,
+              }}
+              type="button"
+              disabled={!itemId}
+              onClick={() => navigate(`/inventory/item?id=${itemId}`)}
+              aria-label={
+                itemId ? "View item details" : "Item details unavailable"
+              }
+            >
+              <RightNarrowInCircle />
+            </button>
+          </span>
         );
       },
     },

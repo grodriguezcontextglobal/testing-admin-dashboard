@@ -110,6 +110,17 @@ const useBulkActionLogic = () => {
     },
     [notify],
   );
+  /**
+   * The same notifier, in the register the message actually belongs to.
+   * "Your upload was registered and is processing" was going out through the
+   * error channel above, so a create that worked announced itself in red.
+   */
+  const openSuccessNotification = useCallback(
+    (msg) => {
+      notify("success", msg);
+    },
+    [notify],
+  );
 
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
@@ -224,6 +235,7 @@ const useBulkActionLogic = () => {
           navigate,
           dispatch,
           openNotificationWithIcon,
+          openSuccessNotification,
           setLoadingStatus,
           setValue,
           img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,
@@ -261,6 +273,7 @@ const useBulkActionLogic = () => {
         navigate,
         dispatch,
         openNotificationWithIcon,
+        openSuccessNotification,
         setLoadingStatus,
         setValue,
         img_url: imageUrlGenerated ? imageUrlGenerated : data.image_url,

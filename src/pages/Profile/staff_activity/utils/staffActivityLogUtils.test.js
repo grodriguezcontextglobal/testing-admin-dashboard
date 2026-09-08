@@ -28,9 +28,26 @@ const buildLog = (overrides = {}) => ({
 // ─── mapLogToListItem ─────────────────────────────────────────────────────────
 
 describe("mapLogToListItem(log)", () => {
-  it("construye actionTaken a partir del nombre del staff, la acción y el modelo afectado", () => {
+  it("separa quién actuó de lo que hizo, para que la lista muestre nombre y email", () => {
     const result = mapLogToListItem(buildLog());
-    expect(result.actionTaken).toBe("Jane Doe LOGIN AdminUser");
+    expect(result.staffName).toBe("Jane Doe");
+    expect(result.staffEmail).toBe("jane@x.com");
+    expect(result.actionTaken).toBe("LOGIN AdminUser");
+  });
+
+  it("cae al email de los detalles cuando el staff poblado no lo trae", () => {
+    // El registro guarda `details.email` en el login; es la misma persona.
+    const result = mapLogToListItem(
+      buildLog({ staff_member_id: { _id: "staff-1", name: "Jane", lastName: "Doe" } })
+    );
+    expect(result.staffEmail).toBe("jane@x.com");
+  });
+
+  it("deja el email en null cuando nadie lo sabe, en vez de inventarlo", () => {
+    const result = mapLogToListItem(
+      buildLog({ staff_member_id: { _id: "s", name: "Jane" }, details: {} })
+    );
+    expect(result.staffEmail).toBeNull();
   });
 
   it("conserva el timestamp crudo en 'time' (Body.jsx ya lo formatea con new Date())", () => {
@@ -45,7 +62,8 @@ describe("mapLogToListItem(log)", () => {
 
   it("usa 'Unknown staff' cuando staff_member_id viene null (staff eliminado)", () => {
     const result = mapLogToListItem(buildLog({ staff_member_id: null }));
-    expect(result.actionTaken).toBe("Unknown staff LOGIN AdminUser");
+    expect(result.staffName).toBe("Unknown staff");
+    expect(result.actionTaken).toBe("LOGIN AdminUser");
   });
 });
 
@@ -173,5 +191,78 @@ describe("buildStaffFilterOptions(staffList, viewerRoleType, viewerId)", () => {
     ];
     const options = buildStaffFilterOptions(numericStaffList, "admin", "s-admin");
     expect(options.map((option) => option.value)).toEqual(["s-admin", "s-assist"]);
+  });
+});
+
+/**
+ * The picker was in whatever order the company record happened to hold. He
+ * raised it as a scale problem, not a tidiness one: "you have to assume that if
+ * you have a school and you have 200 employees, at least two of them is going
+ * to have the same last name. Maybe they're related even."
+ *
+ * Sorted by last name, so relatives land next to each other and the reader can
+ * tell them apart by the first name beside it, rather than hunting a list for
+ * the second Smith.
+ */
+describe("buildStaffFilterOptions — ordering", () => {
+  const viewer = "root_admin";
+
+  it("sorts by last name", () => {
+    const options = buildStaffFilterOptions(
+      [
+        { _id: "3", name: "Ana", lastName: "Zamora", roleType: "admin" },
+        { _id: "1", name: "Bob", lastName: "Adams", roleType: "admin" },
+        { _id: "2", name: "Cy", lastName: "Mills", roleType: "admin" },
+      ],
+      viewer,
+      null
+    );
+    expect(options.map((option) => option.label)).toEqual([
+      "Bob Adams",
+      "Cy Mills",
+      "Ana Zamora",
+    ]);
+  });
+
+  it("puts two of the same last name next to each other, first name deciding", () => {
+    const options = buildStaffFilterOptions(
+      [
+        { _id: "2", name: "John", lastName: "Smith", roleType: "admin" },
+        { _id: "3", name: "Ada", lastName: "Smith", roleType: "admin" },
+        { _id: "1", name: "Zoe", lastName: "Baker", roleType: "admin" },
+      ],
+      viewer,
+      null
+    );
+    expect(options.map((option) => option.label)).toEqual([
+      "Zoe Baker",
+      "Ada Smith",
+      "John Smith",
+    ]);
+  });
+
+  it("does not care about case or stray spacing when ordering", () => {
+    const options = buildStaffFilterOptions(
+      [
+        { _id: "2", name: "Ann", lastName: "  bell ", roleType: "admin" },
+        { _id: "1", name: "Ivo", lastName: "Ash", roleType: "admin" },
+      ],
+      viewer,
+      null
+    );
+    expect(options.map((option) => option.value)).toEqual(["1", "2"]);
+  });
+
+  it("keeps a record with no last name in the list rather than dropping it", () => {
+    const options = buildStaffFilterOptions(
+      [
+        { _id: "2", name: "Solo", roleType: "admin" },
+        { _id: "1", name: "Ivo", lastName: "Ash", roleType: "admin" },
+      ],
+      viewer,
+      null
+    );
+    expect(options).toHaveLength(2);
+    expect(options.map((option) => option.label)).toContain("Solo");
   });
 });

@@ -15,6 +15,7 @@ export const bulkItemUpdateAlphanumeric = async ({
   navigate,
   dispatch,
   openNotificationWithIcon,
+  openSuccessNotification,
   setLoadingStatus,
   setValue,
   img_url,
@@ -75,7 +76,7 @@ export const bulkItemUpdateAlphanumeric = async ({
       setValue(key, "");
     });
     setScannedSerialNumbers([]);
-    openNotificationWithIcon(
+    openSuccessNotification(
       "Your update was registered and is processing in the background. We'll notify you when it's ready."
     );
     setLoadingStatus(false);
@@ -150,7 +151,7 @@ export const bulkItemUpdateSequential = async ({
     setValue(key, "");
   });
   openNotificationWithIcon(
-    "Items updated successfully. New group of items were created and stored in database."
+    "Items updated successfully. New group of items were added and stored in database."
   );
   setLoadingStatus(false);
   await clearCacheMemory(

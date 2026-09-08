@@ -5,6 +5,10 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { registerStaffActivity } from "../../../../../../../api/activityLog";
+import {
+  assertWriteSucceeded,
+  strandedAfterRollback,
+} from "../../../../../../../utils/assignmentWrites";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { useStatusNotification } from "../../../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
@@ -19,7 +23,8 @@ import { AntSelectorStyle } from "../../../../../../../styles/global/AntSelector
 import "../../../../../../../styles/global/actionForm.css";
 import {
   buildInventoryOptions,
-  isAddressComplete,
+  formatLeaseLocation,
+  isAddressUsable,
   remainingUnits,
   resolveSerialScan,
   summarizePick,
@@ -293,24 +298,30 @@ const AssignmentDevicesToMember = () => {
 
   // ─── The write path. Same requests, same order, same bodies. ──────────────
 
-  const updateDeviceInWarehouse = (deviceInfo) =>
-    devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: 0,
-      logistic_status: "assigned",
-      company_id: user.sqlInfo.company_id,
-      item_group: deviceInfo[0].item_group,
-      category_name: deviceInfo[0].category_name,
-      data: deviceInfo.map((item) => item.serial_number),
-    });
+  const updateDeviceInWarehouse = async (deviceInfo) =>
+    assertWriteSucceeded(
+      await devitrakApi.post("/db_item/item-out-warehouse", {
+        warehouse: 0,
+        logistic_status: "assigned",
+        company_id: user.sqlInfo.company_id,
+        item_group: deviceInfo[0].item_group,
+        category_name: deviceInfo[0].category_name,
+        data: deviceInfo.map((item) => item.serial_number),
+      }),
+      "Taking the units out of the warehouse"
+    );
 
-  const verificationContractMember = () =>
-    devitrakApi.post("/document/verification/member/signed_document", {
-      contract_list: contractList,
-      date: stampTime,
-      company_id: user.sqlInfo.company_id,
-      member_id: memberInfo.member_id,
-      assigner_staff_member_id: user.sqlMemberInfo.staff_id,
-    });
+  const verificationContractMember = async () =>
+    assertWriteSucceeded(
+      await devitrakApi.post("/document/verification/member/signed_document", {
+        contract_list: contractList,
+        date: stampTime,
+        company_id: user.sqlInfo.company_id,
+        member_id: memberInfo.member_id,
+        assigner_staff_member_id: user.sqlMemberInfo.staff_id,
+      }),
+      "Recording the signed document"
+    );
 
   const createNewLease = async ({ deviceInfo, address, expectedReturnDate }) => {
     const verification = await verificationContractMember();
@@ -331,7 +342,11 @@ const AssignmentDevicesToMember = () => {
         {
           staff_member_id: user.sqlMemberInfo.staff_id,
           company_id: user.sqlInfo.company_id,
-          location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
+          location: formatLeaseLocation({
+            address,
+            deviceLocation: device.location,
+            companyAddress: user?.companyData?.address,
+          }),
           member_id: memberInfo.member_id,
           device_id: device.item_id,
           verification_id: verificationId,
@@ -374,8 +389,11 @@ const AssignmentDevicesToMember = () => {
     });
     if (!payload) return [];
     try {
-      await devitrakApi.post("/db_item/item-out-warehouse", payload);
-      return [];
+      const restock = await devitrakApi.post(
+        "/db_item/item-out-warehouse",
+        payload
+      );
+      return strandedAfterRollback(restock, payload.data);
     } catch {
       return payload.data;
     }
@@ -477,6 +495,7 @@ const AssignmentDevicesToMember = () => {
         member: memberInfo,
         devices: deviceInfo,
         company: user?.company,
+        companyLogo: user?.companyData?.company_logo,
         date: stampTime,
         staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
         reference: expectedReturnDate ? `Due ${expectedReturnDate}` : "",
@@ -493,8 +512,10 @@ const AssignmentDevicesToMember = () => {
         message: "Pick at least one unit to hand over.",
       });
     }
-    if (!isAddressComplete(data)) {
-      return setNotice("Fill in the full address where the device will be kept.");
+    if (!isAddressUsable(data)) {
+      return setNotice(
+        "Complete the address or leave it empty — answering is optional, but a partial address cannot be used, and the ZIP needs to contain numbers."
+      );
     }
     if (isBlocked) {
       // Belt and braces: the button is already disabled for both cases.
@@ -619,7 +640,7 @@ const AssignmentDevicesToMember = () => {
             )}
           </div>
           <div className="action-form__field">
-            <Label>Pick from the warehouse</Label>
+            <Label>Pick a unit</Label>
             <Select
               className="custom-autocomplete"
               showSearch
@@ -754,7 +775,7 @@ const AssignmentDevicesToMember = () => {
         )}
 
         {/* 3 — where and until when */}
-        <section className={stepClass(isAddressComplete(watch()))}>
+        <section className={stepClass(isAddressUsable(watch()))}>
           <div className="action-form__step-head">
             <h3 className="action-form__step-title">
               <span className="action-form__step-index">3</span>

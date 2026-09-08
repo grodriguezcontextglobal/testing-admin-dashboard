@@ -10,6 +10,7 @@ import DangerButtonComponent from "../../../../../components/UX/buttons/DangerBu
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import Input from "../../../../../components/UX/inputs/Input";
 import RenderingItemsAddedForStore from "../../utils/uxForm/RenderingItemsAddedForStore";
+import { matchesTypedText } from "../../utils/referenceLookup";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
 
@@ -262,6 +263,7 @@ const SerialNumberAndMoreInfoComponentForm = ({
                     onChange={(newValue) =>
                       handleIdentifierChange(identifier.id, "type", newValue)
                     }
+                    filterOption={matchesTypedText}
                     placeholder="Select type"
                   />
                 </Grid>

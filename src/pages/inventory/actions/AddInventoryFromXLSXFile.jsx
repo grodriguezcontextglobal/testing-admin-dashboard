@@ -45,7 +45,7 @@ const AddInventoryFromXLSXFile = ({ openModal, closeModal }) => {
       return (
         <Alert
           message="Permission Denied"
-          description="You do not have permission to create inventory items in any location."
+          description="You do not have permission to add inventory items in any location."
           type="error"
           showIcon
         />

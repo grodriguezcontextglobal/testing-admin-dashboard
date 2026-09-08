@@ -1,5 +1,6 @@
 import {
   Grid,
+  IconButton,
   MenuItem,
   OutlinedInput,
   Select,
@@ -9,6 +10,12 @@ import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueBut
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import { useForm } from "react-hook-form";
+import { assertWriteSucceeded } from "../../../../../../utils/assignmentWrites";
+import { X } from "lucide-react";
+import {
+  RETURN_CONDITIONS,
+  conditionLabel,
+} from "../../../../../../utils/returnConditions";
 import { useState } from "react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Divider, message } from "antd";
@@ -26,7 +33,6 @@ import {
   buildReturnNotification,
   shouldOfferFeeCollection,
 } from "../../../../utils/leaseReturnUtils";
-const options = ["Operational", "Network", "Hardware", "Damaged", "Battery"];
 
 /**
  * @param {Function} [onFeePending] called instead of a plain close when a fee
@@ -43,7 +49,7 @@ const Return = ({
   onFeePending,
   onDeclarationRecorded,
 }) => {
-  const { register, handleSubmit, watch } = useForm();
+  const { register, handleSubmit, watch, setValue } = useForm();
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const { memberInfo } = useSelector((state) => state.member);
@@ -57,15 +63,18 @@ const Return = ({
   const returnItemToInventoryCompany = useMutation({
     mutationKey: ["returnItemToInventoryCompany"],
     mutationFn: async (data) =>
-      await devitrakApi.post("/db_event/returning-item", {
-        warehouse: 1,
-        status: data.reason,
-        update_at: formatDate(new Date()),
-        serial_number: storedRecord.device_serial_number,
-        category_name: storedRecord.device_category_name,
-        item_group: storedRecord.device_item_group,
-        company_id: user.sqlInfo.company_id,
-      }),
+      assertWriteSucceeded(
+        await devitrakApi.post("/db_event/returning-item", {
+          warehouse: 1,
+          status: data.reason,
+          update_at: formatDate(new Date()),
+          serial_number: storedRecord.device_serial_number,
+          category_name: storedRecord.device_category_name,
+          item_group: storedRecord.device_item_group,
+          company_id: user.sqlInfo.company_id,
+        }),
+        "Putting the unit back in stock"
+      ),
     onError: (error) => {
       setLoading(false);
       throw new Error(error);
@@ -81,7 +90,10 @@ const Return = ({
         companyId: user.sqlInfo.company_id,
       });
       if (!payload) return null;
-      return await devitrakApi.post("/db_item/item-out-warehouse", payload);
+      return assertWriteSucceeded(
+        await devitrakApi.post("/db_item/item-out-warehouse", payload),
+        "Marking the device lost"
+      );
     },
     onError: (error) => {
       setLoading(false);
@@ -112,9 +124,12 @@ const Return = ({
           },
         }
       );
-      if (response.data && response.data.ok) {
-        return response.data;
-      }
+      // A refusal used to fall out of here as `undefined`, which react-query
+      // still counts as a resolved mutation: onSuccess then invalidated the
+      // list, logged the UNASSIGN and mailed the member about a return the
+      // server had just declined to record.
+      assertWriteSucceeded(response, "Closing the lease");
+      return response.data;
     },
     onSuccess: async (_data, variables) => {
       queryClient.invalidateQueries({
@@ -148,6 +163,7 @@ const Return = ({
         outcome: variables?.outcome,
         note: variables?.note,
         company: user?.company,
+        companyLogo: user?.companyData?.company_logo,
         date: new Date().toISOString(),
         staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
       });
@@ -317,20 +333,46 @@ const Return = ({
         )}
         {watch("outcome") !== "lost" && (
         <Grid margin={"1rem auto"} item xs={12} sm={12} md={12} lg={12}>
-          <Select
-            className="custom-autocomplete"
-            {...register("reason", { required: watch("outcome") !== "lost" })}
-            style={{ ...AntSelectorStyle, width: "100%" }}
-            autoComplete="off"
-            clearable={true}
-          >
-            <MenuItem value="">None</MenuItem>
-            {options.map((option) => (
-              <MenuItem key={option} value={option}>
-                <Typography>{option}</Typography>
-              </MenuItem>
-            ))}
-          </Select>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Select
+              className="custom-autocomplete"
+              {...register("reason", { required: watch("outcome") !== "lost" })}
+              value={watch("reason") ?? ""}
+              displayEmpty
+              renderValue={(selected) =>
+                selected ? (
+                  <Typography>{conditionLabel(selected)}</Typography>
+                ) : (
+                  <Typography style={{ color: "var(--gray-500, #667085)" }}>
+                    Select a condition
+                  </Typography>
+                )
+              }
+              style={{ ...AntSelectorStyle, width: "100%" }}
+              autoComplete="off"
+            >
+              {/* No "None": an absent condition is a blank field, not a choice
+                  on the list -- and picking it left the form unable to submit. */}
+              {RETURN_CONDITIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  <Typography>{option.label}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+            {/* Without this there is no way back to blank once something is
+                picked, which is the state the form starts in. */}
+            {watch("reason") ? (
+              <IconButton
+                aria-label="Clear the condition"
+                size="small"
+                onClick={() =>
+                  setValue("reason", "", { shouldValidate: true })
+                }
+              >
+                <X size={16} />
+              </IconButton>
+            ) : null}
+          </div>
         </Grid>
         )}
         {(watch("outcome") === "lost" || watch("reason") !== "") && (

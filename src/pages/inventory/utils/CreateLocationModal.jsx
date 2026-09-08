@@ -64,7 +64,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
         address_details: data.address_details || "",
       }),
     onSuccess: (_res, variables) => {
-      message.success(`Location "${variables.location_name}" created`);
+      message.success(`Location "${variables.location_name}" added`);
       invalidateLocationData();
       handleClose();
     },
@@ -131,7 +131,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
       openDialog={openModal}
       closeModal={handleClose}
       footer={null}
-      title={<Typography style={Subtitle}>Create New Location</Typography>}
+      title={<Typography style={Subtitle}>Add New Location</Typography>}
       body={
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -196,8 +196,8 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
             />
             <span style={{ fontSize: "12px", color: "var(--gray-500, #667085)" }}>
               {parentLocation
-                ? `This will be created as a sub-location inside "${parentLocation.name}".`
-                : "Leave empty to create a standalone, top-level location."}
+                ? `This will be added as a sub-location inside "${parentLocation.name}".`
+                : "Leave empty to add a standalone, top-level location."}
             </span>
           </div>
 
@@ -210,7 +210,7 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
               buttonType="button"
             />
             <BlueButtonComponent
-              title={parentLocation ? "Create Sub-location" : "Create Location"}
+              title={parentLocation ? "Add Sub-location" : "Add Location"}
               func={handleSubmit(onSubmit)}
               buttonType="submit"
               loadingState={isPending}

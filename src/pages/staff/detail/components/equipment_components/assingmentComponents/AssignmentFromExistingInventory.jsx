@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select } from "antd";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
+import { assertWriteSucceeded } from "../../../../../../utils/assignmentWrites";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import Chip from "../../../../../../components/UX/Chip/Chip";
@@ -19,7 +20,9 @@ import "../../../../../../styles/global/actionForm.css";
 import LegalDocumentModal from "./components/legalDOcuments/LegalDocumentModal";
 import {
   buildInventoryOptions,
-  isAddressComplete,
+  findOptionForDevice,
+  formatLeaseLocation,
+  isAddressUsable,
   remainingUnits,
   resolveSerialScan,
   summarizePick,
@@ -64,6 +67,14 @@ const AssignmentFromExistingInventory = () => {
   const [notice, setNotice] = useState(null);
   const [isLoadingUnits, setIsLoadingUnits] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* Arriving from a device's own page, which already knows which unit is in
+     hand. The drawer there promises "we'll take you there with <serial> in
+     hand" and used to land on an empty form, so the operator picked the
+     category, the location and the serial they had just been standing over. */
+  const handedOverDevice = useLocation().state?.device ?? null;
+  const [pendingSerial, setPendingSerial] = useState(null);
+  const prefilledFromDevice = useRef(false);
 
   const [addContracts, setAddContracts] = useState(false);
   const [contractList, setContractList] = useState([]);
@@ -150,6 +161,35 @@ const AssignmentFromExistingInventory = () => {
     }
   };
 
+  /* Step 1, done for you: pick the group that holds the device we arrived with.
+     findOptionForDevice refuses to guess when the location is unknown and the
+     same model sits in more than one place — loading the wrong shelf would hand
+     over a different unit with the same model name. */
+  useEffect(() => {
+    if (prefilledFromDevice.current || !handedOverDevice || options.length === 0) {
+      return;
+    }
+    const option = findOptionForDevice(options, handedOverDevice);
+    if (!option) return;
+    prefilledFromDevice.current = true;
+    setPendingSerial(handedOverDevice.serial_number);
+    handleSelectGroup(option.value);
+    // handleSelectGroup is recreated every render and this must run once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options, handedOverDevice]);
+
+  /* Step 2: the serials arrive asynchronously, so the unit can only be picked
+     once they are here. Routed through resolveSerialScan rather than pushed
+     straight into `picked`, so a device that has moved since the drawer read it
+     is refused with the same message a mistyped scan gets. */
+  useEffect(() => {
+    if (!pendingSerial || available.length === 0) return;
+    const result = resolveSerialScan({ serial: pendingSerial, available, picked: [] });
+    setPendingSerial(null);
+    if (result.ok) setPicked([result.unit]);
+    setFeedback({ tone: result.ok ? "ok" : "error", message: result.message });
+  }, [available, pendingSerial]);
+
   const addUnit = (unit, message) => {
     setPicked((current) => [...current, unit]);
     setFeedback({ tone: "ok", message });
@@ -198,6 +238,8 @@ const AssignmentFromExistingInventory = () => {
       contact_name: `${user.name} ${user.lastName}`,
     });
 
+    assertWriteSucceeded(response, "Opening the lease record");
+
     const insertId = response.data?.consumer?.insertId;
     // Previously caught and turned into `null`, which made the caller's guard
     // fail and the whole submission end without a word either way.
@@ -205,15 +247,18 @@ const AssignmentFromExistingInventory = () => {
     return insertId;
   };
 
-  const updateDeviceInWarehouse = (deviceInfo) =>
-    devitrakApi.post("/db_item/item-out-warehouse", {
-      warehouse: 0,
-      logistic_status: "assigned",
-      company_id: user.sqlInfo.company_id,
-      item_group: deviceInfo[0].item_group,
-      category_name: deviceInfo[0].category_name,
-      data: deviceInfo.map((item) => item.serial_number),
-    });
+  const updateDeviceInWarehouse = async (deviceInfo) =>
+    assertWriteSucceeded(
+      await devitrakApi.post("/db_item/item-out-warehouse", {
+        warehouse: 0,
+        logistic_status: "assigned",
+        company_id: user.sqlInfo.company_id,
+        item_group: deviceInfo[0].item_group,
+        category_name: deviceInfo[0].category_name,
+        data: deviceInfo.map((item) => item.serial_number),
+      }),
+      "Taking the units out of the warehouse"
+    );
 
   const createVerification = async () => {
     const verification = await devitrakApi.post(
@@ -226,8 +271,27 @@ const AssignmentFromExistingInventory = () => {
         date: stampTime,
       }
     );
-    return verification.data?.verificationInfo?._id;
+    assertWriteSucceeded(verification, "Recording the signed document");
+
+    const verificationId = verification.data?.verificationInfo?._id;
+    /* Every lease and the event below are written against this id. Letting an
+       undefined one through wrote a set of records that point at nothing. */
+    if (!verificationId) {
+      throw new Error(
+        "The signed document was not recorded, so the lease has nothing to reference. Nothing else was written."
+      );
+    }
+    return verificationId;
   };
+
+  /* The address is optional now, so this can no longer be four fields glued
+     together: a blank one produced "   " and the lease endpoint refused it. */
+  const leaseLocation = (address) =>
+    formatLeaseLocation({
+      address,
+      deviceLocation: selection?.location,
+      companyAddress: user?.companyData?.address,
+    });
 
   const createLeases = async ({ deviceInfo, address, verificationId }) => {
     const staffMember = checkArray(staffMemberQuery.data?.data?.member);
@@ -236,15 +300,18 @@ const AssignmentFromExistingInventory = () => {
     }
 
     for (const device of deviceInfo) {
-      await devitrakApi.post("/db_lease/new-lease", {
-        staff_admin_id: user.sqlMemberInfo.staff_id,
-        company_id: user.sqlInfo.company_id,
-        subscription_expected_return_data: dateToUse,
-        location: `${address.street} ${address.city} ${address.state} ${address.zip}`,
-        staff_member_id: staffMember.staff_id,
-        device_id: device.item_id,
-        verification_id: verificationId,
-      });
+      assertWriteSucceeded(
+        await devitrakApi.post("/db_lease/new-lease", {
+          staff_admin_id: user.sqlMemberInfo.staff_id,
+          company_id: user.sqlInfo.company_id,
+          subscription_expected_return_data: dateToUse,
+          location: leaseLocation(address),
+          staff_member_id: staffMember.staff_id,
+          device_id: device.item_id,
+          verification_id: verificationId,
+        }),
+        `Leasing ${device.serial_number}`
+      );
     }
   };
 
@@ -268,17 +335,20 @@ const AssignmentFromExistingInventory = () => {
   const registerDevicesInPool = async ({ deviceInfo, verificationId }) => {
     const items = [];
     for (const device of deviceInfo) {
-      await devitrakApi.post("/receiver/receivers-pool", {
-        device: device.serial_number,
-        status: "Operational",
-        activity: true,
-        comment: "No comment",
-        eventSelected: eventName,
-        provider: user.company,
-        type: device.item_group,
-        company: user.companyData.id,
-        contract_type: "lease",
-      });
+      assertWriteSucceeded(
+        await devitrakApi.post("/receiver/receivers-pool", {
+          device: device.serial_number,
+          status: "Operational",
+          activity: true,
+          comment: "No comment",
+          eventSelected: eventName,
+          provider: user.company,
+          type: device.item_group,
+          company: user.companyData.id,
+          contract_type: "lease",
+        }),
+        `Registering ${device.serial_number}`
+      );
       items.push({
         serial_number: device.serial_number,
         type: device.item_group,
@@ -299,8 +369,8 @@ const AssignmentFromExistingInventory = () => {
       subscription: [],
       eventInfoDetail: {
         eventName,
-        eventLocation: `${address.state}, ${address.zip}`,
-        address: `${address.street}, ${address.city} ${address.state}, ${address.zip}`,
+        eventLocation: leaseLocation(address),
+        address: leaseLocation(address),
         building: eventName,
         floor: "",
         merchant: false,
@@ -360,18 +430,24 @@ const AssignmentFromExistingInventory = () => {
     }
 
     const created = checkArray(response.data.event);
-    await devitrakApi.patch(`/event/edit-event/${created.id}`, {
-      qrCodeLink: `https://app.devitrak.net/?event=${created.id}&company=${user.companyData.id}`,
-    });
+    assertWriteSucceeded(
+      await devitrakApi.patch(`/event/edit-event/${created.id}`, {
+        qrCodeLink: `https://app.devitrak.net/?event=${created.id}&company=${user.companyData.id}`,
+      }),
+      "Stamping the lease event with its QR link"
+    );
     await registerDevicesInPool({ deviceInfo, verificationId });
   };
 
   const linkDevicesToEvent = async ({ sqlEventId, deviceInfo }) => {
     for (const device of deviceInfo) {
-      await devitrakApi.post("/db_event/event_device_directly", {
-        event_id: sqlEventId,
-        item_id: device.item_id,
-      });
+      assertWriteSucceeded(
+        await devitrakApi.post("/db_event/event_device_directly", {
+          event_id: sqlEventId,
+          item_id: device.item_id,
+        }),
+        `Linking ${device.serial_number} to the lease event`
+      );
     }
 
     ["staffMemberInfo", "imagePerItemList", "ItemsInventoryCheckingQuery"].forEach(
@@ -389,8 +465,10 @@ const AssignmentFromExistingInventory = () => {
         message: "Pick at least one unit to assign.",
       });
     }
-    if (!isAddressComplete(data)) {
-      return setNotice("Fill in the full address where the equipment will be used.");
+    if (!isAddressUsable(data)) {
+      return setNotice(
+        "Complete the address or leave it empty — answering is optional, but a partial address cannot be used, and the ZIP needs to contain numbers."
+      );
     }
 
     setIsSubmitting(true);
@@ -469,7 +547,7 @@ const AssignmentFromExistingInventory = () => {
             )}
           </div>
           <div className="action-form__field">
-            <Label>Pick from the warehouse</Label>
+            <Label>Pick a unit</Label>
             <Select
               className="custom-autocomplete"
               showSearch
@@ -599,7 +677,7 @@ const AssignmentFromExistingInventory = () => {
         )}
 
         {/* 3 — where it will be used */}
-        <section className={stepClass(isAddressComplete(watch()))}>
+        <section className={stepClass(isAddressUsable(watch()))}>
           <div className="action-form__step-head">
             <h3 className="action-form__step-title">
               <span className="action-form__step-index">3</span>

@@ -21,12 +21,22 @@ const staffFullName = (staff) =>
 
 /**
  * Adapts one raw `GET /api/admin/activity-logs` row into what Body.jsx renders.
+ *
+ * Who acted is separate from what they did. It used to be one string --
+ * "Jane Doe LOGIN AdminUser" -- which read as a sentence but could not be laid
+ * out: the trail is read to answer "who did this", and a name with no email
+ * does not identify a person in a company with two Janes.
  */
 export const mapLogToListItem = (log) => ({
   id: log?.id,
-  actionTaken: [staffFullName(log?.staff_member_id), log?.action, log?.target_model]
-    .filter(Boolean)
-    .join(" "),
+  staffName: staffFullName(log?.staff_member_id),
+  /* The populated staff record is the source; `details.email` is the fallback,
+     since the register endpoint stamps it on the login rows and it is the same
+     person either way. */
+  staffEmail:
+    String(log?.staff_member_id?.email ?? log?.details?.email ?? "").trim() ||
+    null,
+  actionTaken: [log?.action, log?.target_model].filter(Boolean).join(" "),
   time: log?.timestamp,
 });
 
@@ -59,6 +69,29 @@ export const buildActionFilterOptions = () =>
  * comes from the same /company/search-company employees array the rest of
  * the Staff pages use, where `role` is the legacy numeric value.
  */
+const nameKeys = (staff) => [
+  String(staff?.lastName ?? "").trim().toLowerCase(),
+  String(staff?.name ?? "").trim().toLowerCase(),
+];
+
+/**
+ * Last name, then first.
+ *
+ * The trail is read to answer "who did this", in a company big enough to have
+ * two of them: "you have to assume that if you have a school and you have 200
+ * employees, that at least two of them is going to have the same last name.
+ * Maybe they're related even." Sorting this way puts those two next to each
+ * other, where the first name beside the surname is what tells them apart.
+ *
+ * Someone with no last name recorded sorts under the empty string rather than
+ * being dropped — they are still somebody who did something.
+ */
+const byLastNameThenFirst = (a, b) => {
+  const [aLast, aFirst] = nameKeys(a);
+  const [bLast, bFirst] = nameKeys(b);
+  return aLast === bLast ? aFirst.localeCompare(bFirst) : aLast.localeCompare(bLast);
+};
+
 export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => {
   if (!Array.isArray(staffList)) return [];
   return staffList
@@ -67,6 +100,9 @@ export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => 
       if (viewerId && id && String(id) === String(viewerId)) return true;
       return canViewStaffActivity(viewerRoleType, resolveRoleType(staff));
     })
+    /* Sorted on the records rather than on the built options, so no ordering
+       key has to be carried on the option and stripped off again. */
+    .sort(byLastNameThenFirst)
     .map((staff) => ({
       label: staffFullName(staff),
       value: staffId(staff),

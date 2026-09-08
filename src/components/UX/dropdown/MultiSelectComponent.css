@@ -36,10 +36,10 @@
   color: var(--text-color);
 }
 
-.required-asterisk {
-  color: var(--primary-color);
-  margin-left: 2px;
-}
+/* .required-asterisk removed: its only caller now uses the shared
+   .form-label__required in index.css. It was also the clearest example of why
+   the marker drifted -- it painted the asterisk the brand colour, so the one
+   mark that has to read as "you must" looked exactly like a decoration. */
 
 .tooltip-icon {
   color: var(--text-color-light);

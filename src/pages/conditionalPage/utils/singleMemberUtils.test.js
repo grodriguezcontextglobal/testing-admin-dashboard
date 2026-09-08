@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   EMPTY_SINGLE_MEMBER_FORM,
   buildSingleMemberPayload,
+  singleMemberFieldErrors,
   validateSingleMemberForm,
 } from "./singleMemberUtils";
 
@@ -156,5 +157,37 @@ describe("buildSingleMemberPayload", () => {
     });
     expect(payload.under_13).toBe(false);
     expect(payload.minor).toBe(true);
+  });
+});
+
+describe("singleMemberFieldErrors", () => {
+  it("keys each message by the field it belongs to", () => {
+    expect(singleMemberFieldErrors({})).toMatchObject({
+      first_name: "First name is required.",
+      last_name: "Last name is required.",
+      email: "Email is required.",
+      phone: "Phone is required.",
+    });
+  });
+
+  it("keys the guardian messages too, using the industry's label", () => {
+    const errors = singleMemberFieldErrors(
+      { first_name: "A", last_name: "B", email: "c@d.e", phone: "1", date_of_birth: "2015-01-01" },
+      { representativeLabel: "Parent / Guardian" }
+    );
+    expect(errors.parent_guardian_email).toBe(
+      "Parent / Guardian email is required for minors."
+    );
+  });
+
+  it("is empty for a valid form", () => {
+    expect(singleMemberFieldErrors(validAdult)).toEqual({});
+  });
+
+  it("is the same content the array form reports, in the same order", () => {
+    // The two shapes must not be able to disagree.
+    expect(Object.values(singleMemberFieldErrors({}))).toEqual(
+      validateSingleMemberForm({})
+    );
   });
 });

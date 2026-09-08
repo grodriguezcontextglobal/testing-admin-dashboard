@@ -1,11 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import PropTypes from "prop-types";
+import { useState } from "react";
 import { useSelector } from "react-redux";
+import { audienceWords } from "../../../../config/industryProfiles";
 import { useNavigate } from "react-router-dom";
 import { utils, writeFile } from "xlsx";
+import { registerStaffActivity } from "../../../../api/activityLog";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
+import DangerButtonConfirmationComponent from "../../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import {
   ProfileIdentityCard,
@@ -13,12 +17,13 @@ import {
 } from "../../../../components/UX/profile";
 import {
   hasPermission,
-  isCoordinatorLevel,
   resolveRoleType,
 } from "../../../../config/roles";
+import { fetchSchoolSettings } from "../../../Profile/school_compliance/utils/schoolComplianceUtils";
+import { calculateStudentAgeFlags } from "../../utils/ageCalculationUtils";
 import { fetchStudentConsent } from "../../utils/guardianConsentApi";
 import {
-  getConsentStatusCopy,
+  describeMemberConsent,
   normalizeConsentStatus,
 } from "../../utils/guardianConsentUtils";
 import {
@@ -26,32 +31,27 @@ import {
   buildAssignedDevicesExportRows,
   buildMemberProfileExportPairs,
 } from "../../utils/memberExportUtils";
-
-// Consent that needs someone to act reads louder than consent that's merely
-// waiting. "agreed" gets no chip at all — good news belongs in the fact list,
-// not in the alarm row.
-const CONSENT_CHIP_TONE = {
-  refused: "critical",
-  expired: "critical",
-  stale: "warning",
-  missing: "warning",
-  pending: "neutral",
-};
-
-const CONSENT_CHIP_LABEL = {
-  refused: "Consent refused",
-  expired: "Consent expired",
-  stale: "Consent out of date",
-  missing: "Consent not requested",
-  pending: "Consent pending",
-};
+import {
+  buildDeleteMemberAuditEntry,
+  buildDeleteMemberPayload,
+  deleteMemberEligibility,
+  describeDeleteConsequence,
+  memberLabel,
+} from "./utils/deleteMember";
 
 const titleCase = (value) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
 
-const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMember }) => {
+const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
   const { user } = useSelector((state) => state.admin);
+  /* One directory decides what these people are called: the same
+     industriesList entry that titles the nav tab. A school reads "Student"
+     here, a clinic "Patient". Routes, permissions, API paths and test ids stay
+     `member` -- those are identifiers, not words anyone reads. */
+  const who = audienceWords(user?.companyData?.industry);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [deleteFailure, setDeleteFailure] = useState("");
 
   const memberId = detailMemberInfo?.member_id;
   const companyId = user?.sqlInfo?.company_id;
@@ -65,9 +65,31 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
     retry: false,
   });
 
+  /* Whether the company asks for consent at all decides how this reads. Same
+     query key and staleTime as the readiness dashboard, so the two share one
+     cached copy of the settings. */
+  const settingsQuery = useQuery({
+    queryKey: ["schoolSettings", companyId],
+    queryFn: () => fetchSchoolSettings(companyId),
+    enabled: Boolean(companyId && isStudent),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
   const consentStatus = consentQuery.data
     ? normalizeConsentStatus(consentQuery.data)
     : null;
+
+  /* A company that does not require consent used to get "Consent not requested"
+     in warning yellow with an alarm pip — a compliance failure to chase, for
+     something nobody was supposed to have done. */
+  const ageFlags = calculateStudentAgeFlags(detailMemberInfo?.date_of_birth);
+  const consent = describeMemberConsent({
+    status: consentStatus,
+    settings: settingsQuery.data?.settings,
+    isMinor: isStudent || ageFlags.minor,
+    isUnder13: ageFlags.under_13,
+  });
 
   const handleExportMemberData = async () => {
     try {
@@ -89,7 +111,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         ...profilePairs.map((p) => [p.field, p.value]),
       ]);
       profileWs["!cols"] = [{ width: 24 }, { width: 30 }];
-      utils.book_append_sheet(wb, profileWs, "Member Profile");
+      utils.book_append_sheet(wb, profileWs, `${who.Singular} Profile`);
 
       const devicesWs = utils.aoa_to_sheet([
         ASSIGNED_DEVICES_EXPORT_COLUMNS.map((c) => c.label),
@@ -111,11 +133,47 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         detailMemberInfo?.last_name ?? ""
       }`.replace(/\s+/g, "_");
       writeFile(wb, `${fileNameLabel}_export_${Date.now()}.xlsx`);
-      message.success("Member data exported.");
+      message.success(`${who.Singular} data exported.`);
     } catch {
-      message.error("Failed to export member data. Please try again.");
+      message.error(`Failed to export ${who.singular} data. Please try again.`);
     }
   };
+
+  /* Removing the member from their own page, which the bulk modal on the list
+     could already do for a selection. The one thing it never asked: whether
+     they are still holding anything. */
+  const removal = deleteMemberEligibility(deviceSummary);
+
+  const deleteMemberMutation = useMutation({
+    mutationFn: async () => {
+      const response = await devitrakApi.post(
+        "/db_member/delete-member-info",
+        buildDeleteMemberPayload({ memberId, companyId })
+      );
+      // These endpoints answer 200 with `{ ok: false, msg }` when they refuse.
+      if (response?.data?.ok === false) {
+        throw new Error(response.data.msg || `The ${who.singular} was not deleted.`);
+      }
+      return response?.data;
+    },
+    onSuccess: () => {
+      // The record is about to be gone, so the audit row is the only place the
+      // name survives.
+      registerStaffActivity(buildDeleteMemberAuditEntry(detailMemberInfo));
+      ["allMembersInfoDataQuery", "membersInfoQuery"].forEach((queryKey) =>
+        queryClient.invalidateQueries({ queryKey: [queryKey], exact: true })
+      );
+      message.success(`${memberLabel(detailMemberInfo)} was removed.`);
+      navigate("/members");
+    },
+    onError: (error) => {
+      setDeleteFailure(
+        error?.response?.data?.msg ||
+          error?.message ||
+          `The ${who.singular} was not deleted. Nothing was changed — try again.`
+      );
+    },
+  });
 
   const fullName = `${detailMemberInfo?.first_name ?? ""} ${
     detailMemberInfo?.last_name ?? ""
@@ -135,13 +193,13 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         }
       />
     ),
-    consentStatus && CONSENT_CHIP_LABEL[consentStatus] && (
+    consent.chip && (
       <StatusChip
         key="consent"
-        tone={CONSENT_CHIP_TONE[consentStatus]}
-        pip={CONSENT_CHIP_TONE[consentStatus] !== "neutral"}
-        label={CONSENT_CHIP_LABEL[consentStatus]}
-        title={getConsentStatusCopy(consentStatus)}
+        tone={consent.chip.tone}
+        pip={consent.chip.pip}
+        label={consent.chip.label}
+        title={consent.chip.title}
       />
     ),
     detailMemberInfo?.grade && (
@@ -185,11 +243,18 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
         { value: detailMemberInfo?.parent_guardian_phone_number },
       ].filter(Boolean),
     },
-    consentStatus && {
+    hasPermission("member:delete", resolveRoleType(user)) &&
+      (deleteFailure || (!removal.deletable && removal.reason === "holding-devices")) && {
+        label: `Removing this ${who.singular}`,
+        items: [
+          { value: deleteFailure || removal.detail, muted: !deleteFailure },
+        ],
+      },
+    consent.fact && {
       label: "Consent",
       items: [
-        { value: `Device AUP · ${titleCase(consentStatus)}` },
-        { value: getConsentStatusCopy(consentStatus), muted: true },
+        { value: `Device AUP · ${titleCase(consent.fact.status)}` },
+        { value: consent.fact.note, muted: true },
       ],
     },
   ].filter(Boolean);
@@ -206,20 +271,35 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
           func={() => navigate(`/member/${memberId}/assignment`)}
         />
       )}
-      {hasPermission("member:notify", roleType) && (
-        <GrayButtonComponent
-          title={"Send reminder"}
-          func={() => navigate(`/member/${memberId}/reminders`)}
-        />
-      )}
+      {/* "Send reminder" used to be here. It is a page, so it is a tab now —
+          the rail sits below the fold on this profile and nobody found it.
+          Two doors to one room is its own kind of confusing, so this one
+          closed rather than being kept as a shortcut. */}
       <GrayButtonComponent
         title={"Export data (.xlsx)"}
         func={handleExportMemberData}
       />
-      {isCoordinatorLevel(user.roleType) && (
-        <GrayButtonComponent
-          title={"Add new member"}
-          func={() => setAddingNewMember(true)}
+      {hasPermission("member:delete", roleType) && (
+        <DangerButtonConfirmationComponent
+          title={`Delete ${who.singular}`}
+          confirmationTitle={`Delete ${memberLabel(detailMemberInfo)}?`}
+          confirmationDescription={describeDeleteConsequence(detailMemberInfo)}
+          okText="Delete"
+          func={() => {
+            setDeleteFailure("");
+            deleteMemberMutation.mutate();
+          }}
+          /* Held back while they are still holding a device: deleting them
+             leaves the assignment pointing at nobody. The reason is on the
+             button rather than only in a message nobody asked for. */
+          isDisabled={!removal.deletable}
+          isLoading={deleteMemberMutation.isLoading}
+          ariaLabel={
+            removal.deletable
+              ? `Delete ${who.singular}`
+              : `Cannot delete: ${removal.detail}`
+          }
+          styles={{ width:"100%" }}
         />
       )}
     </>
@@ -240,13 +320,11 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary, setAddingNewMe
 MemberProfileIdentity.propTypes = {
   detailMemberInfo: PropTypes.object,
   deviceSummary: PropTypes.object,
-  setAddingNewMember: PropTypes.func,
 };
 
 MemberProfileIdentity.defaultProps = {
   detailMemberInfo: null,
   deviceSummary: null,
-  setAddingNewMember: () => {},
 };
 
 export default MemberProfileIdentity;

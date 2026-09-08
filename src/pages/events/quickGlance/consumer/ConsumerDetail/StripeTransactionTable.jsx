@@ -356,10 +356,15 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
         <ReceiptModal
           openModal={Boolean(receiptTransaction)}
           setOpenModal={() => setReceiptTransaction(null)}
-          receipt={mapTransactionToReceipt(receiptTransaction)}
+          receipt={mapTransactionToReceipt(receiptTransaction, {
+            companyLogo: user?.companyData?.company_logo,
+          })}
           qrValue={buildReceiptUrl(
             window.location.origin,
-            receiptTransaction?.paymentIntent
+            receiptTransaction?.paymentIntent,
+            // Carried on the link so the scanned copy keeps the letterhead the
+            // printed one has.
+            { companyLogo: user?.companyData?.company_logo }
           )}
         />
       )}

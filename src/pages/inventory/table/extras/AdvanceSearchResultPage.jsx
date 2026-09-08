@@ -10,6 +10,7 @@ import {
   onAddSearchParameters,
 } from "../../../../store/slices/searchBarResultSlice";
 import UX from "./forecastInventory/UX";
+import { formatDay } from "./forecastInventory/utils/forecastSummary";
 import { AdvanceSearchContext } from "./RenderingFilters";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import {
@@ -238,15 +239,20 @@ const AdvanceSearchResultPage = () => {
   const eventDetailsColumns = [
     { key: "event_name", title: "Event Name", dataIndex: "event_name" },
     // { key: "event_id", title: "Event ID", dataIndex: "event_id" },
+    /* `new Date("2026-05-01")` parses a bare YYYY-MM-DD as UTC midnight, and
+       `toLocaleDateString()` then renders it in local time — the previous day
+       for every user west of UTC. Searching 05/01–05/05 displayed 04/30–05/04.
+       `formatDay` reads the parts out of the string instead, so no timezone is
+       involved; it is the same helper the rest of this screen already uses. */
     {
       key: "date_begin",
       title: "Start Date",
-      render: (row) => new Date(row.date_begin).toLocaleDateString(),
+      render: (row) => formatDay(row.date_begin),
     },
     {
       key: "date_end",
       title: "End Date",
-      render: (row) => new Date(row.date_end).toLocaleDateString(),
+      render: (row) => formatDay(row.date_end),
     },
     {
       key: "device_count",

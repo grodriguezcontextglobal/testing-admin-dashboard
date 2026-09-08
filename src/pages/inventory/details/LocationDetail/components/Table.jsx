@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { groupBy, uniqueId } from "lodash";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { groupBy } from "lodash";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -11,6 +11,7 @@ import DevitrakLoading from "../../../../../components/animation/DevitrakLoading
 import RefreshButton from "../../../../../components/utils/UX/RefreshButton";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import columnsTableMain from "../../../utils/ColumnsTableMain";
+import { buildLocationRows, filterLocationRows } from "../utils/locationRows";
 
 const DownloadingXlslFile = lazy(() => import("../../../actions/DownloadXlsx"));
 
@@ -20,109 +21,69 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   
-  // State to track filtered data count for dynamic pagination
-  // eslint-disable-next-line no-unused-vars
-  const [filteredDataCount, setFilteredDataCount] = useState(0);
-  
-  const urlQuery =
-    location.state === null
-      ? `/db_company/inventory-based-on-location-and-sublocation`
-      : `/db_company/inventory-based-on-location-and-sublocation?sub_location=${location.state.sub_location}`;
-      
+  /* Both halves of "which inventory is this page showing". They belong in the
+     query keys: without them React Query answers a second location from the
+     first one's cache, which is why this component used to carry a mount effect
+     that called `.refetch()` on all three queries by hand. */
+  const locationLabel = decodeURI(locationName[0].slice(1));
+  const subLocation = location.state?.sub_location ?? null;
+
+  const urlQuery = subLocation
+    ? `/db_company/inventory-based-on-location-and-sublocation?sub_location=${subLocation}`
+    : `/db_company/inventory-based-on-location-and-sublocation`;
+
   const listItemsQuery = useQuery({
-    queryKey: ["currentStateDevicePerLocation"],
+    queryKey: ["currentStateDevicePerLocation", locationLabel],
     queryFn: () =>
       devitrakApi.post("/db_company/inventory-query", {
         queryName: "inventory.byAttribute",
-        params: {
-          attribute: "location",
-          value: decodeURI(locationName[0].slice(1)),
-        },
+        params: { attribute: "location", value: locationLabel },
       }),
-    refetchOnMount: false,
     enabled: !!user.sqlInfo.company_id,
   });
 
   const listImagePerItemQuery = useQuery({
-    queryKey: ["deviceImagePerLocation"],
+    queryKey: ["deviceImages", user.companyData.id],
     queryFn: () =>
       devitrakApi.post("/image/images", { company: user.companyData.id }),
-    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000,
+    enabled: !!user.companyData.id,
   });
 
   const itemsInInventoryQuery = useQuery({
-    queryKey: ["deviceInInventoryPerLocation"],
+    queryKey: ["deviceInInventoryPerLocation", locationLabel, subLocation],
     queryFn: () =>
       devitrakApi.post(urlQuery, {
         company_id: user.sqlInfo.company_id,
-        location: String(decodeURI(locationName[0].slice(1))).toLowerCase(),
+        location: String(locationLabel).toLowerCase(),
       }),
-    refetchOnMount: false,
+    enabled: !!user.sqlInfo.company_id,
   });
   
-  const imageSource = listImagePerItemQuery?.data?.data?.item;
-  const groupingByDeviceType = groupBy(imageSource, "item_group");
-  const renderedListItems = listItemsQuery?.data?.data.result;
+  /* Memoized, because `structuredData` is memoized on it. It used to be a bare
+     `groupBy(...)` recomputed inline, so the rows below were rebuilt on every
+     render — see utils/locationRows for what that did to the table. */
+  const groupingByDeviceType = useMemo(
+    () => groupBy(listImagePerItemQuery?.data?.data?.item, "item_group"),
+    [listImagePerItemQuery?.data?.data?.item]
+  );
+  const renderedListItems = listItemsQuery?.data?.data?.result;
+  const locatedItems = itemsInInventoryQuery?.data?.data?.items;
+
+  const structuredData = useMemo(
+    () =>
+      buildLocationRows({
+        items: renderedListItems,
+        inventoryItems: locatedItems,
+        imagesByGroup: groupingByDeviceType,
+      }),
+    [renderedListItems, locatedItems, groupingByDeviceType]
+  );
   
-  const structuredData = useMemo(() => {
-    const resultFormatToDisplay = new Set();
-    const groupingBySerialNumber = groupBy(
-      itemsInInventoryQuery?.data?.data?.items,
-      "serial_number"
-    );
-    if (renderedListItems?.length > 0) {
-      for (let data of renderedListItems) {
-        if (groupingBySerialNumber[data.serial_number]) {
-          resultFormatToDisplay.add({
-            key: `${data.item_id}-${uniqueId()}`,
-            ...data,
-            data: {
-              ...data,
-              location:
-                groupingBySerialNumber[data.serial_number]?.at(-1).location,
-              ...groupingBySerialNumber[data.serial_number]?.at(-1),
-            },
-            location:
-              groupingBySerialNumber[data.serial_number]?.at(-1).location,
-            image_url:
-              groupingBySerialNumber[data.serial_number]?.at(-1).image_url ??
-              groupingByDeviceType[data.item_group]?.at(-1).image_url,
-          });
-        }
-      }
-      return Array.from(resultFormatToDisplay);
-    }
-    return [];
-  }, [renderedListItems, itemsInInventoryQuery.data, groupingByDeviceType]);
-  
-  useEffect(() => {
-    const controller = new AbortController();
-    listItemsQuery.refetch();
-    listImagePerItemQuery.refetch();
-    itemsInInventoryQuery.refetch();
-
-    return () => {
-      controller.abort();
-    };
-  }, [user.company, location.key]);
-
-  const dataToDisplay = useMemo(() => {
-    if (!searchItem || searchItem === "") {
-      return structuredData;
-    }
-    const filteredData = structuredData?.filter((item) =>
-      JSON.stringify(item)
-        .toLowerCase()
-        .includes(String(searchItem).toLowerCase())
-    );
-    return filteredData;
-  }, [structuredData, searchItem]);
-
-  useEffect(() => {
-    if (dataToDisplay) {
-      setFilteredDataCount(dataToDisplay.length);
-    }
-  }, [dataToDisplay]);
+  const dataToDisplay = useMemo(
+    () => filterLocationRows(structuredData, searchItem),
+    [structuredData, searchItem]
+  );
 
   const totalValue = useMemo(() => {
     let result = 0;
@@ -144,13 +105,19 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
     };
   }, [itemsInInventoryQuery.data]);
   
+  /* Depends on the three numbers being reported, not on the identity of the
+     objects holding them. The parent's setter stores whatever it is handed, so
+     an effect that re-fired on identity handed it a new object on every render
+     and the parent re-rendered — which rebuilt these rows, which re-fired the
+     effect. */
+  const { totalAvailable } = availabilityInfo;
   useEffect(() => {
     referenceData({
       totalDevices: structuredData.length,
-      totalValue: totalValue,
-      totalAvailable: availabilityInfo.totalAvailable,
+      totalValue,
+      totalAvailable,
     });
-  }, [structuredData, totalValue, availabilityInfo, referenceData, location.key]);
+  }, [structuredData.length, totalValue, totalAvailable, referenceData]);
 
   const dictionary = {
     Permanent: "Permanent",
@@ -201,12 +168,6 @@ const TableDeviceLocation = ({ searchItem, referenceData }) => {
           })}
           dataSource={dataToDisplay}
           className="table-ant-customized"
-          onRow={() => ({
-            onClick: () => {
-              // navigate(`/inventory/item?id=${itemId}`);
-            },
-          })}
-          // onChange={handleTableChange}
         />
       </Grid>
     </Suspense>

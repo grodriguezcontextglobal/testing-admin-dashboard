@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Alert } from "antd";
+import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
@@ -8,6 +9,7 @@ import ReceiptDocument from "./components/ReceiptDocument";
 import {
   mapTransactionToReceipt,
   readPaymentIntentFromSearch,
+  readReceiptLogoFromSearch,
 } from "./utils/receiptUtils";
 
 /**
@@ -34,6 +36,9 @@ import {
  * here.
  */
 const ReceiptPage = () => {
+  /* Empty for a viewer opening this from a QR scan, which is the point: the
+     page serves both. The letterhead then comes off the link instead. */
+  const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const paymentIntent = readPaymentIntentFromSearch(location.search);
 
@@ -124,7 +129,17 @@ const ReceiptPage = () => {
   // No qrValue: the reader is already here, and a QR pointing at the page you
   // are looking at is noise.
   return frame(
-    <ReceiptDocument receipt={mapTransactionToReceipt(receiptQuery.data)} />
+    <ReceiptDocument
+      receipt={mapTransactionToReceipt(receiptQuery.data, {
+        /* Signed in, the logo comes from the session. Opened from a QR scan or
+           a link out of an email there is no session, so it comes from the
+           link itself -- put there by whoever printed or sent the receipt, and
+           accepted only when it points at our own image host. */
+        companyLogo:
+          user?.companyData?.company_logo ||
+          readReceiptLogoFromSearch(location.search),
+      })}
+    />
   );
 };
 

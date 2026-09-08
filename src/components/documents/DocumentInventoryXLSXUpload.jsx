@@ -322,7 +322,17 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                     const fileInput = document.getElementById("xlsx-importer");
                                     if (fileInput) fileInput.value = "";
                                 }}
-                                styles={{ width: "fit-content" }}
+                                /* `width: fit-content` was dead here until the
+                                   `style` -> `styles` rename in 586829c4 made
+                                   it live, and it squashed the button: this is
+                                   a flex row, where the button already sizes to
+                                   its label, and a definite width let it shrink
+                                   below that beside a wide file input. The
+                                   Import trigger above keeps its own
+                                   `fit-content` -- that one is not in a flex
+                                   row, so without it the button stretches to
+                                   the full width of the page. */
+                                styles={{ flexShrink: 0 }}
                             />
                         )}
                     </div>

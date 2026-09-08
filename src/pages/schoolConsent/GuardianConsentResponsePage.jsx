@@ -1,46 +1,67 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  Alert,
-  Button,
-  Card,
-  Divider,
-  Input,
-  Result,
-  Space,
-  Spin,
-  Typography,
-} from "antd";
+import { Spin } from "antd";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
+import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
+import Input from "../../components/UX/inputs/Input";
+import {
+  consentFormErrors,
+  describeConsentPrompt,
+  formatConsentExpiryMessage,
+  isConsentSettled,
+  readRespondError,
+  shouldRetryTransientError,
+} from "./consentPageUtils";
 import {
   fetchPublicConsentDocument,
   respondPublicConsent,
   retrievePublicConsent,
 } from "./guardianConsentPublicApi";
-import {
-  formatConsentExpiryMessage,
-  shouldRetryTransientError,
-} from "./consentPageUtils";
-import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
+import "../authentication/publicLanding.css";
 
-const { Title, Text, Paragraph } = Typography;
-
-const pageShellStyle = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  minHeight: "100vh",
-  padding: 24,
-};
-
+/**
+ * The page a guardian lands on from a consent email. No session, no login: a
+ * one-time code in the URL is the whole of the authentication, so everything
+ * rendered comes from the server's answer to it.
+ *
+ * The redesign, none of it on the wire — the same three calls, in the same
+ * order, with the same arguments:
+ *
+ *  - **The document was fourth.** The order was title, greeting, six fact rows,
+ *    expiry warning, *then* the thing being agreed to. Three of those rows
+ *    (guardian, student, school) repeated the greeting immediately above them,
+ *    and on a phone a guardian scrolled past their child's homeroom to reach
+ *    the policy. The document is now the second thing on the page, and the
+ *    facts are the three that identify what is being asked.
+ *  - **Agree could be pressed without the document being opened.** For a
+ *    signature that is a weak place to be. There is a read acknowledgement now,
+ *    and it appears only when there is something to read.
+ *  - **"Please enter your name as shown above: {name}" implied a match that is
+ *    not checked.** The server accepts any name. It now says what it is for.
+ *  - **Refuse was styled `danger`.** Refusing consent is a legitimate answer,
+ *    not a destructive act, and colouring it as one pressures the reader.
+ *  - **A spent link left the form live.** 404/410/409/422 raised a corner toast
+ *    and changed nothing, so Agree could be pressed against a link that will
+ *    never accept it. Those four end the page and say what was recorded.
+ *  - **Validation was a corner toast**, so the field that was wrong was never
+ *    marked.
+ */
 const GuardianConsentResponsePage = () => {
   const [searchParams] = useSearchParams();
   const otc = searchParams.get("otc");
 
   const [signerName, setSignerName] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [decision, setDecision] = useState(null);
   const [submittedStatus, setSubmittedStatus] = useState(null);
-  const { notify, contextHolder } = useStatusNotification();
+  const [failure, setFailure] = useState(null);
+  /* Owned here rather than read off the mutation: this project is on React
+     Query v4, where a mutation reports `isLoading` and has no `isPending` —
+     which is what the buttons were reading. */
+  const [busy, setBusy] = useState(false);
 
   const {
     data: consentData,
@@ -62,75 +83,68 @@ const GuardianConsentResponsePage = () => {
 
   const { data: documentData } = useQuery({
     queryKey: ["publicConsentDocument", consentDocumentId],
-    queryFn: () => fetchPublicConsentDocument(consentDocumentId, documentViewerId),
+    queryFn: () =>
+      fetchPublicConsentDocument(consentDocumentId, documentViewerId),
     enabled: Boolean(consentDocumentId),
   });
 
   const submitMutation = useMutation({
-    mutationFn: ({
-      otc: consentOtc,
-      decision: consentDecision,
-      signerName: name,
-    }) => respondPublicConsent(consentOtc, consentDecision, name),
+    mutationFn: ({ otc: consentOtc, decision: consentDecision, signerName: name }) =>
+      respondPublicConsent(consentOtc, consentDecision, name),
     // The respond endpoint is idempotent-safe for a resubmit (backend
     // returns "already <status>" on a repeat), so retrying transient
     // failures here can't cause a double-write.
     retry: shouldRetryTransientError,
-
     onSuccess: (data, variables) => {
       // Render the confirmation from the mutation result itself — no need
       // to re-fetch retrievePublicConsent just to learn what we already know.
+      setBusy(false);
       setSubmittedStatus(data?.status || variables?.decision);
-      notify("success", "Consent submitted successfully", "Thank you for your response.");
     },
-
     onError: (err) => {
-      const status = err?.response?.status;
-      const msg = err?.response?.data?.msg;
-
-      if (status === 404) {
-        notify("error", "Invalid link", "This consent link is invalid.");
-        return;
-      }
-
-      if (status === 410) {
-        notify(
-          "error",
-          "Link expired",
-          "This consent link has expired. Please contact the school to request a new link.",
-        );
-        return;
-      }
-
-      if (status === 409) {
-        notify("warning", "Already responded", "This consent request has already been answered.");
-        return;
-      }
-
-      if (status === 422) {
-        notify("error", "Cannot change response", "This consent request can no longer be changed.");
-        return;
-      }
-
-      notify("error", "Error", msg || "An unexpected error occurred.");
+      setBusy(false);
+      setFailure(readRespondError(err));
     },
   });
 
-  if (!otc) {
-    return (
-      <div style={pageShellStyle}>
-        <Result
-          status="error"
-          title="Invalid Link"
-          subTitle="No consent code was provided. Please check the link you received."
-        />
+  const shell = (children, wide = false) => (
+    <div className="public-landing">
+      <div className={`public-landing__card${wide ? " public-landing__card--wide" : ""}`}>
+        <div className="public-landing__brand">
+          <DevitrakLogo />
+        </div>
+        {children}
       </div>
+    </div>
+  );
+
+  const ended = ({ tone = "warn", title, message, extra = null }) =>
+    shell(
+      <>
+        <p
+          className={`public-landing__eyebrow public-landing__eyebrow--${
+            tone === "ok" ? "ok" : "warn"
+          }`}
+        >
+          {tone === "ok" ? "Done" : "Nothing to do here"}
+        </p>
+        <h1 className="public-landing__title">{title}</h1>
+        <p className="public-landing__lead">{message}</p>
+        {extra}
+      </>
     );
+
+  if (!otc) {
+    return ended({
+      title: "This link is incomplete",
+      message:
+        "It carries no consent code, so there is nothing to respond to. Check the link in the email, or ask the school to send it again.",
+    });
   }
 
   if (isLoading) {
-    return (
-      <div style={pageShellStyle}>
+    return shell(
+      <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
         <Spin aria-label="Loading consent details" size="large" />
       </div>
     );
@@ -140,299 +154,249 @@ const GuardianConsentResponsePage = () => {
     const status = error?.response?.status;
 
     if (status === 404) {
-      return (
-        <div style={pageShellStyle}>
-          <Result
-            status="error"
-            title="Invalid Link"
-            subTitle="This consent link is invalid. Please contact the school."
-          />
-        </div>
-      );
+      return ended({
+        title: "This link is not valid",
+        message:
+          "The consent request behind it could not be found. Contact the school and they can send a new one.",
+      });
     }
 
     if (status === 410) {
-      return (
-        <div style={pageShellStyle}>
-          <Result
-            status="warning"
-            title="Link Expired"
-            subTitle="This consent link has expired. Please contact the school to request a new link."
-          />
-        </div>
-      );
+      return ended({
+        title: "This link has expired",
+        message:
+          "Nothing was recorded. Contact the school and they can send a new request.",
+      });
     }
 
-    return (
-      <div style={pageShellStyle}>
-        <Result
-          status="error"
-          title="Error"
-          subTitle="Unable to load consent details. Please try again later."
-          extra={
-            <Button type="primary" onClick={() => refetch()}>
-              Try again
-            </Button>
-          }
-        />
-      </div>
-    );
+    return ended({
+      title: "The request could not be loaded",
+      message:
+        "Nothing was recorded. This is usually temporary — try again in a moment.",
+      extra: (
+        <div className="public-landing__actions" style={{ marginTop: 20 }}>
+          <BlueButtonComponent
+            title="Try again"
+            func={() => refetch()}
+            styles={{ width: "100%" }}
+          />
+        </div>
+      ),
+    });
   }
 
   const consent = consentData?.consent;
-  const company = consentData?.company;
-  const guardian = consentData?.guardian;
-  const student = consentData?.student;
-
-  const companyName = company?.name || "the school";
-  const guardianName = guardian?.full_name || "";
-  const studentName = student?.full_name || "the student";
+  const prompt = describeConsentPrompt(consentData);
   const expiryMessage = formatConsentExpiryMessage(consent?.expires_at);
-
-  // `mutable` is the authoritative "already responded" signal from the
-  // server; fall back to the agreed/refused status allowlist only for
-  // older responses that don't carry the field yet.
-  const hasMutableFlag = typeof consent?.mutable === "boolean";
-  const isAlreadyResponded = hasMutableFlag
-    ? consent.mutable === false
-    : consent?.status === "agreed" || consent?.status === "refused";
-
+  const alreadyAnswered = isConsentSettled(consent);
   const finalStatus = submittedStatus || consent?.status;
 
-  if (submittedStatus || isAlreadyResponded) {
-    const isAgreed = finalStatus === "agreed";
-
-    return (
-      <div style={pageShellStyle}>
-        <Result
-          status={isAgreed ? "success" : "info"}
-          title={submittedStatus ? "Thank you!" : (isAgreed ? "Consent Already Provided" : "Consent Already Refused")}
-          subTitle={
-            submittedStatus
-              ? `Your response has been recorded for ${studentName}.`
-              : `${guardianName || "Guardian"} has already ${
-                  isAgreed ? "agreed to" : "refused"
-                } the consent request for ${studentName}.`
-          }
-        />
-      </div>
-    );
+  // A spent link cannot take another answer, so the form does not exist.
+  if (failure?.terminal) {
+    return ended(failure);
   }
 
-  const handleSubmit = (nextDecision) => {
-    const normalizedSignerName = signerName.trim();
+  if (submittedStatus || alreadyAnswered) {
+    const agreed = finalStatus === "agreed";
+    return ended({
+      tone: submittedStatus || agreed ? "ok" : "warn",
+      title: submittedStatus
+        ? agreed
+          ? "Consent recorded"
+          : "Your refusal was recorded"
+        : agreed
+        ? "Consent is already on file"
+        : "This request was already refused",
+      message: submittedStatus
+        ? `${prompt.companyName} has your answer for ${prompt.studentName}. Nothing else is needed — you can close this page.`
+        : `${prompt.guardianName || "The guardian"} has already ${
+            agreed ? "agreed to" : "refused"
+          } this request for ${prompt.studentName}. Nothing was recorded twice.`,
+      extra: (
+        <p className="public-landing__note">
+          To change this answer, contact {prompt.companyName} — this link cannot.
+        </p>
+      ),
+    });
+  }
 
-    if (!normalizedSignerName) {
-      notify("warning", "Please enter your name", "Your full name is required to sign.");
-      return;
-    }
+  const hasDocument = Boolean(documentData?.viewUrl);
+  const hasText = Boolean(consent?.consent_text);
+  const needsAcknowledgement = hasDocument || hasText;
+
+  const errors = consentFormErrors({
+    signerName,
+    acknowledged,
+    needsAcknowledgement,
+  });
+  const errorFor = (key) => (submitAttempted ? errors[key] : undefined);
+
+  const handleSubmit = (nextDecision) => {
+    setSubmitAttempted(true);
+    setFailure(null);
+    if (Object.keys(errors).length > 0) return;
 
     setDecision(nextDecision);
-
+    setBusy(true);
     submitMutation.mutate({
       otc,
       decision: nextDecision,
-      signerName: normalizedSignerName,
+      signerName: signerName.trim(),
     });
   };
 
-  return (
-    <div style={{ ...pageShellStyle, backgroundColor: "#f5f5f5" }}>
-      {contextHolder}
-      <Card style={{ maxWidth: 640, width: "100%" }}>
-        <Title level={3} style={{ textAlign: "center", marginBottom: 8 }}>
-          Student Consent Request
-        </Title>
+  return shell(
+    <>
+      <p className="public-landing__eyebrow">{prompt.companyName}</p>
+      <h1 className="public-landing__title">Consent request</h1>
+      <p className="public-landing__lead">
+        {prompt.companyName} is asking for your consent for{" "}
+        <strong>{prompt.studentName}</strong>. Read the policy below, then agree
+        or refuse.
+      </p>
 
-        <Paragraph
-          type="secondary"
-          style={{
-            textAlign: "center",
-            fontSize: 16,
-            marginBottom: 0,
-          }}
-        >
-          Hello <Text strong>{guardianName || "Guardian"}</Text>.{" "}
-          <Text strong>{companyName}</Text> is requesting your consent for{" "}
-          <Text strong>{studentName}</Text>.
-        </Paragraph>
-
-        <Divider />
-
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
-          <div>
-            <Text type="secondary">Guardian</Text>
-            <br />
-            <Text strong>{guardianName || "—"}</Text>
-          </div>
-
-          <div>
-            <Text type="secondary">Student</Text>
-            <br />
-            <Text strong>{studentName}</Text>
-          </div>
-
-          <div>
-            <Text type="secondary">School or organization</Text>
-            <br />
-            <Text strong>{companyName}</Text>
-          </div>
-
-          <div>
-            <Text type="secondary">Policy</Text>
-            <br />
-            <Text strong>
-              {consent?.policy_type || "AUP"} version{" "}
-              {consent?.policy_version || "1"}
-            </Text>
-          </div>
-
-          {student?.grade && (
-            <div>
-              <Text type="secondary">Grade</Text>
-              <br />
-              <Text>{student.grade}</Text>
-            </div>
-          )}
-
-          {student?.homeroom && (
-            <div>
-              <Text type="secondary">Homeroom</Text>
-              <br />
-              <Text>{student.homeroom}</Text>
-            </div>
-          )}
-        </Space>
-
+      <dl className="public-landing__facts">
+        <div>
+          <dt>Student</dt>
+          <dd>
+            {prompt.studentName}
+            {prompt.studentIdentifiers && (
+              <span className="public-landing__facts-sub">
+                {prompt.studentIdentifiers}
+              </span>
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Policy</dt>
+          <dd>{prompt.policyLabel}</dd>
+        </div>
         {expiryMessage && (
-          <Alert
-            type="warning"
-            showIcon
-            message={expiryMessage}
-            style={{ marginTop: 12 }}
-          />
+          <div>
+            <dt>Expires</dt>
+            <dd>
+              <span className="public-landing__facts-sub">{expiryMessage}</span>
+            </dd>
+          </div>
         )}
+      </dl>
 
-        {documentData?.viewUrl ? (
+      {/* What is being agreed to, before what is being typed. */}
+      {hasDocument ? (
+        <>
+          <h2 className="public-landing__section-title">
+            {documentData.title || "Consent document"}
+          </h2>
+          <iframe
+            className="public-landing__doc"
+            src={documentData.viewUrl}
+            title={documentData.title || "Consent document"}
+          />
+          <a
+            className="public-landing__doc-link"
+            href={documentData.viewUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open in a new tab
+          </a>
+        </>
+      ) : (
+        hasText && (
           <>
-            <Divider />
-
-            <Title level={5}>Consent document</Title>
-
-            <iframe
-              src={documentData.viewUrl}
-              title={documentData.title || "Consent document"}
-              style={{
-                width: "100%",
-                height: 420,
-                border: "1px solid #f0f0f0",
-                borderRadius: 6,
-              }}
-            />
-
-            <Paragraph type="secondary" style={{ marginTop: 8 }}>
-              <a href={documentData.viewUrl} target="_blank" rel="noreferrer">
-                Open in a new tab
-              </a>
-            </Paragraph>
-          </>
-        ) : (
-          consent?.consent_text && (
-            <>
-              <Divider />
-
-              <Title level={5}>Consent details</Title>
-
-              <div
-                data-testid="consent-text-scroll"
-                style={{
-                  maxHeight: 240,
-                  overflowY: "auto",
-                  border: "1px solid #f0f0f0",
-                  borderRadius: 6,
-                  padding: "8px 12px",
-                }}
-              >
-                <Paragraph style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
-                  {consent.consent_text}
-                </Paragraph>
-              </div>
-            </>
-          )
-        )}
-
-        <Divider />
-
-        <div style={{ marginBottom: 16 }}>
-          <Text type="secondary">Guardian email</Text>
-          <br />
-          <Text>{guardian?.email || consent?.signer_email || "—"}</Text>
-        </div>
-
-        <div style={{ marginBottom: 20 }}>
-          <label htmlFor="guardian-consent-signer-name">
-            <Text strong>Full name of guardian signing</Text>
-          </label>
-
-          <Input
-            id="guardian-consent-signer-name"
-            placeholder={guardianName || "Enter your full name"}
-            value={signerName}
-            onChange={(event) => setSignerName(event.target.value)}
-            autoComplete="name"
-            style={{ marginTop: 6 }}
-          />
-
-          {guardianName && (
-            <Text
-              type="secondary"
-              style={{ display: "block", marginTop: 6 }}
+            <h2 className="public-landing__section-title">Consent details</h2>
+            <div
+              data-testid="consent-text-scroll"
+              className="public-landing__doc-text"
             >
-              Please enter your name as shown above: {guardianName}.
-            </Text>
+              {consent.consent_text}
+            </div>
+          </>
+        )
+      )}
+
+      {needsAcknowledgement && (
+        <>
+          <label className="public-landing__check" htmlFor="consent-acknowledged">
+            <input
+              id="consent-acknowledged"
+              type="checkbox"
+              checked={acknowledged}
+              disabled={busy}
+              onChange={(event) => setAcknowledged(event.target.checked)}
+            />
+            <span>
+              I have read the {prompt.policyType} policy above and I am
+              authorised to answer for {prompt.studentName}.
+            </span>
+          </label>
+          {errorFor("acknowledged") && (
+            <p className="public-landing__field-error" role="alert">
+              {errorFor("acknowledged")}
+            </p>
           )}
-        </div>
+        </>
+      )}
 
-        <Paragraph type="secondary">
-          By selecting “Agree,” you confirm that you are authorized to provide
-          consent for {studentName} regarding the{" "}
-          {consent?.policy_type || "school"} policy issued by {companyName}.
-        </Paragraph>
+      <div className="public-landing__field">
+        <label htmlFor="guardian-consent-signer-name">
+          Your full name{prompt.guardianName ? "" : ""}
+        </label>
+        <Input
+          id="guardian-consent-signer-name"
+          value={signerName}
+          onChange={(event) => setSignerName(event.target.value)}
+          placeholder={prompt.guardianName || "Enter your full name"}
+          autoComplete="name"
+          disabled={busy}
+          error={Boolean(errorFor("signerName"))}
+          fullWidth
+        />
+        {errorFor("signerName") ? (
+          <p className="public-landing__field-error" role="alert">
+            {errorFor("signerName")}
+          </p>
+        ) : (
+          <p className="public-landing__field-hint">
+            Typed here, this is your signature. Sent to{" "}
+            {prompt.guardianEmail || "your email"}.
+          </p>
+        )}
+      </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            justifyContent: "flex-end",
-            flexWrap: "wrap",
-          }}
-        >
-          <Button
-            danger
-            size="large"
-            loading={
-              submitMutation.isPending && decision === "refused"
-            }
-            disabled={submitMutation.isPending}
-            onClick={() => handleSubmit("refused")}
-          >
-            Refuse
-          </Button>
+      {failure && !failure.terminal && (
+        <p className="public-landing__error" role="alert" style={{ marginTop: 16 }}>
+          {failure.message}
+        </p>
+      )}
 
-          <Button
-            type="primary"
-            size="large"
-            loading={
-              submitMutation.isPending && decision === "agreed"
-            }
-            disabled={submitMutation.isPending}
-            onClick={() => handleSubmit("agreed")}
-          >
-            Agree
-          </Button>
-        </div>
-      </Card>
-    </div>
+      <div
+        className="public-landing__actions public-landing__actions--pair"
+        style={{ marginTop: 20 }}
+      >
+        <BlueButtonComponent
+          title="Agree"
+          buttonType="button"
+          func={() => handleSubmit("agreed")}
+          isLoading={busy && decision === "agreed"}
+          isDisabled={busy}
+        />
+        {/* A legitimate answer, so it is secondary — not destructive. */}
+        <GrayButtonComponent
+          title="Refuse"
+          buttonType="button"
+          func={() => handleSubmit("refused")}
+          isLoading={busy && decision === "refused"}
+          isDisabled={busy}
+        />
+      </div>
+
+      <p className="public-landing__note">
+        Either answer is recorded with {prompt.companyName} and cannot be changed
+        from this link afterwards.
+      </p>
+    </>,
+    hasDocument
   );
 };
 

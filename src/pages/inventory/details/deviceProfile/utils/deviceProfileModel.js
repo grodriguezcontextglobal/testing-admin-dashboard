@@ -14,6 +14,7 @@ import {
   startOfLocalDay,
   toDate,
 } from "../../../../../components/UX/profile/utils/loanStatus";
+import { composeMemberAddress } from "../../../../conditionalPage/utils/memberTableUtils";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -362,4 +363,33 @@ export function buildCustodyTimeline({
     if (right === undefined || right === null || Number.isNaN(right)) return -1;
     return right - left;
   });
+}
+
+
+/* --------------------------------------------- Assigning from the device --- */
+
+/**
+ * Where a person would take the device.
+ *
+ * A member carries an address — as one `address` string or as four separate
+ * `address_*` columns, which is why this goes through the member helper rather
+ * than reading `raw.address` and getting `undefined` for most of the roster.
+ * A company employee carries no address at all, so there is nothing to offer.
+ */
+export function resolvePersonLocation(person) {
+  if (person?.kind !== "member") return "";
+  return clean(composeMemberAddress(person?.raw ?? {})) ?? "";
+}
+
+/**
+ * The location to show after somebody is picked.
+ *
+ * Two things it will not do: blank a field because the person has no address on
+ * file, and overwrite something the operator typed. `touched` is the operator's
+ * own edit — once they have set it, picking a different person leaves it alone.
+ */
+export function nextAssignLocation({ person, current, touched = false }) {
+  if (touched) return current ?? "";
+  const suggestion = resolvePersonLocation(person);
+  return suggestion || (current ?? "");
 }

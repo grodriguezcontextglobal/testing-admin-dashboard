@@ -4,6 +4,7 @@ import {
   RECEIPT_STATUS,
   formatReceiptAmount,
   formatReceiptDate,
+  receiptSignatures,
 } from "../utils/receiptUtils";
 import "./receipt.css";
 
@@ -53,6 +54,7 @@ const ReceiptDocument = ({ receipt, qrValue }) => {
   // null total means this document carries no money at all (a handover slip),
   // so the amount column is dropped rather than filled with $0.00.
   const showAmounts = receipt?.total !== null && receipt?.total !== undefined;
+  const signatures = receiptSignatures(receipt);
 
   return (
     <div className="receipt" data-testid="receipt-document">
@@ -63,6 +65,18 @@ const ReceiptDocument = ({ receipt, qrValue }) => {
       )}
 
       <div className="receipt__head">
+        {/* The company's own logo when it has one. `onError` drops it rather
+            than leaving a broken-image icon on a printed document. */}
+        {receipt?.logoUrl && (
+          <img
+            className="receipt__logo"
+            src={receipt.logoUrl}
+            alt=""
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
+          />
+        )}
         <div>
           <p className="receipt__company">{receipt?.company || "Receipt"}</p>
           <p className="receipt__title">{receipt?.title || "Receipt"}</p>
@@ -125,6 +139,23 @@ const ReceiptDocument = ({ receipt, qrValue }) => {
         </tbody>
       </table>
 
+      {/* A handover is signed on both sides: unsigned, this document asserts a
+          transfer nobody agreed to. Payment receipts get none — the card
+          transaction is the proof. */}
+      {signatures.length > 0 && (
+        <div className="receipt__signatures">
+          {signatures.map((signature) => (
+            <div className="receipt__signature" key={signature.caption}>
+              <span className="receipt__signature-line" aria-hidden="true" />
+              <p className="receipt__signature-caption">{signature.caption}</p>
+              {signature.name && (
+                <p className="receipt__signature-name">{signature.name}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* No QR unless the caller supplied a target — one that scans into a page
           which cannot look anything up is worse than none. */}
       {qrValue && (
@@ -155,6 +186,7 @@ ReceiptDocument.propTypes = {
     }),
     idLabel: PropTypes.string,
     id: PropTypes.string,
+    logoUrl: PropTypes.string,
     lines: PropTypes.arrayOf(
       PropTypes.shape({
         label: PropTypes.string,

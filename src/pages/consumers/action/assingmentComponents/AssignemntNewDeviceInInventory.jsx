@@ -71,12 +71,12 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           <BlueButtonComponent
             // disabled={true}
             title={"Add supplier"}
-            styles={{ with: "100%" }}
+            styles={{ width: "100%" }}
             icon={<WhiteCirclePlusIcon />}
             buttonType="button"
             titleStyles={{
               textTransform: "none",
-              with: "100%",
+              width: "100%",
             }}
             func={() => setSupplierModal(true)}
           />

@@ -19,6 +19,7 @@ import { renderFields } from "../../../utils/EditBulkFields";
 import ImageUploaderComponent from "../../../utils/uxForm/ImageUploaderComponent";
 import FieldsSections from "../../../utils/uxForm/FieldsSections";
 import { formatTrackedFieldValue } from "../../../utils/updateInventoryMatchSummary";
+import { useAssignableTargets } from "../../../utils/useAssignableTargets";
 
 const SECTIONS = [
   { key: "identity", title: "Identity", hint: "What the item is called across the app" },
@@ -77,7 +78,10 @@ const EditFieldsStep = ({
     );
   };
 
+  const assignableTargets = useAssignableTargets();
+
   const fields = renderFields({
+    assignableTargets,
     displayContainerSplotLimitField,
     displayPreviewImage,
     isRented,
@@ -134,7 +138,7 @@ const EditFieldsStep = ({
           <InputLabel style={{ marginBottom: "0.2rem", width: "100%", display: imageUploadedValue ? "block" : "none" }}>
             <Tooltip placement="top" title={item.tooltipMessage} style={{ width: "100%" }}>
               <Typography style={stylingComponents({ loadingStatus }).styling}>
-                {item.label} {item.required && <strong>*</strong>} {item.tooltip && <QuestionIcon />}
+                {item.label} {item.required && <span className="form-label__required" aria-hidden="true">*</span>} {item.tooltip && <QuestionIcon />}
               </Typography>
             </Tooltip>
             <div>
@@ -166,7 +170,7 @@ const EditFieldsStep = ({
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Tooltip placement="top" title={item.tooltipMessage} style={{ width: "100%" }}>
             <Typography style={stylingComponents({ loadingStatus }).styling}>
-              {item.label} {item.required && <strong>*</strong>} {item.tooltip && <QuestionIcon />}
+              {item.label} {item.required && <span className="form-label__required" aria-hidden="true">*</span>} {item.tooltip && <QuestionIcon />}
               {changeBadge(item.name)}
             </Typography>
           </Tooltip>
@@ -233,7 +237,7 @@ const EditFieldsStep = ({
                 <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                   <Tooltip placement="top" title={child.tooltipMessage} style={{ width: "100%" }}>
                     <Typography style={stylingComponents({ loadingStatus }).styling}>
-                      {child.label} {child.required && <strong>*</strong>} {child.tooltip && <QuestionIcon />}
+                      {child.label} {child.required && <span className="form-label__required" aria-hidden="true">*</span>} {child.tooltip && <QuestionIcon />}
                     </Typography>
                   </Tooltip>
                 </InputLabel>

@@ -5,7 +5,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { useRoleLabel } from "../../../../hooks/useRoleLabel";
-import { onLogin, onLogout } from "../../../../store/slices/adminSlice";
+import {
+  onUpdateCompanyData,
+  onUpdateProfile,
+} from "../../../../store/slices/adminSlice";
 import "./Body.css";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import BodyRendering from "./BodyRendering.refactored";
@@ -164,16 +167,17 @@ const Body = () => {
           imageProfile: base64,
         });
         if (resp) {
-          const dataUser = user.data;
           dispatch(
-            onLogin({
-              ...user,
+            onUpdateProfile({
               name: data.name,
               lastName: data.lastName,
               email: data.email,
               phone: data.phone,
+              // Root level as well as inside `data`: the avatar in the navbar
+              // reads `user.imageProfile`, and only the nested copy was being
+              // written — invisible until the forced reload stopped hiding it.
+              imageProfile: base64,
               data: {
-                ...dataUser,
                 name: data.name,
                 lastName: data.lastName,
                 email: data.email,
@@ -203,10 +207,13 @@ const Body = () => {
             ),
             updatedStaffInEvent(data),
           ]);
+          // The company record in the session holds the same employee row that
+          // was just rewritten; leaving it stale is how the old name comes back
+          // on the next screen that reads it.
+          dispatch(onUpdateCompanyData({ employees: newEmployeeData }));
           openNotificationWithIcon("success", "Information updated.", 3);
-          openNotificationWithIcon("warning", "Please log in again.", 3);
-          dispatch(onLogout());
-          return window.location.reload(true);
+          setLoading(false);
+          return;
         }
       } else {
         const resp = await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
@@ -216,6 +223,20 @@ const Body = () => {
           phone: data.phone,
         });
         if (resp?.data?.ok) {
+          dispatch(
+            onUpdateProfile({
+              name: data.name,
+              lastName: data.lastName,
+              email: data.email,
+              phone: data.phone,
+              data: {
+                name: data.name,
+                lastName: data.lastName,
+                email: data.email,
+                phone: data.phone,
+              },
+            })
+          );
           const newDataUpdatedEmployeeCompany = {
             firstName: data.name,
             lastName: data.lastName,
@@ -237,10 +258,10 @@ const Body = () => {
             ),
             updatedStaffInEvent(data),
           ]);
+          dispatch(onUpdateCompanyData({ employees: newEmployeeData }));
           openNotificationWithIcon("success", "Information updated.", 3);
-          openNotificationWithIcon("warning", "Please log in again.", 3);
-          dispatch(onLogout());
-          return window.location.reload(true);
+          setLoading(false);
+          return;
         }
       }
     } catch (error) {
@@ -262,14 +283,12 @@ const Body = () => {
       await devitrakApi.patch(`/admin/admin-user/${user.uid}`, {
         imageProfile: null,
       });
-      dispatch(onLogin({
-        ...user,
-        imageProfile: null,
-        data:{
-          ...user.data,
-          imageProfile: null,
-        }
-      }));
+      // Same reducer as a save. onLogin would work, but it replaces the whole
+      // user and recomputes mfaEnabled from the payload, which is a lot of
+      // session to rewrite for one removed photo.
+      dispatch(
+        onUpdateProfile({ imageProfile: null, data: { imageProfile: null } })
+      );
       setValue("photo", null);
       return message.success("Image removed");
     } catch (error) {

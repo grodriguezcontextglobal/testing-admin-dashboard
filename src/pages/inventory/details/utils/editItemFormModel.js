@@ -118,5 +118,84 @@ export const buildEditItemFormValues = (item, { supplierName = "" } = {}) => ({
   // The sub-location input is for adding the next one; the ones already on the
   // item render as chips from parseSubLocations.
   sub_location: "",
+  // Seeded from the record so the control opens showing where the unit
+  // actually is, rather than defaulting to a state nobody chose.
+  stock_state: String(item?.logistic_status ?? "").trim() ||
+    (isFlagOn(item?.warehouse) ? "in-stock" : "assigned"),
   quantity: 0,
 });
+
+/**
+ * Whether the unit is on the shelf.
+ *
+ * `warehouse === 1` is the item table's own answer and the one every other
+ * screen reads, so it is the one this form reads too.
+ */
+export const isItemInStock = (item) => isFlagOn(item?.warehouse);
+
+/**
+ * The stock states a record edit may honestly claim.
+ *
+ * "assigned" and "in-event" are absent on purpose. Those are written by the
+ * flows that also create the lease or the event record; setting one here would
+ * assert a handover that never happened, with nothing on the other side of it.
+ *
+ * Each state carries the warehouse flag it implies, so the two fields are
+ * derived from one choice instead of being set independently — which is how
+ * they came to disagree in the first place.
+ */
+export const EDITABLE_STOCK_STATES = Object.freeze([
+  {
+    value: "in-stock",
+    warehouse: 1,
+    label: "In stock",
+    hint: "On the shelf and available to hand out.",
+  },
+  {
+    value: "in-transit",
+    warehouse: 1,
+    label: "In transit",
+    hint: "Being moved between locations; still counted as stock.",
+  },
+  {
+    value: "lost",
+    warehouse: 0,
+    label: "Lost",
+    hint: "Cannot be accounted for. Takes it out of available stock.",
+  },
+]);
+
+/**
+ * What `warehouse` and `logistic_status` should be after this edit.
+ *
+ * The form used to send `warehouse: true` unconditionally, so saving a
+ * description change on a device that was out with a member put it back on the
+ * shelf in the item table while the lease still recorded somebody holding it.
+ *
+ * Where a unit is, is not this form's fact to state while the unit is out. It
+ * belongs to the lease, and it is written by the assignment and return flows.
+ * So an out-of-stock item gets its own values back, unchanged: sent rather than
+ * omitted, because an update endpoint that requires the key should get one that
+ * changes nothing rather than none at all.
+ *
+ * @param {object} item the stored record
+ * @param {string} [requestedState] what the operator picked
+ * @returns {{warehouse: number, logistic_status: string}}
+ */
+export const resolveStockFields = ({ item, requestedState } = {}) => {
+  const current = {
+    warehouse: isItemInStock(item) ? 1 : 0,
+    logistic_status:
+      String(item?.logistic_status ?? "").trim() ||
+      (isItemInStock(item) ? "in-stock" : "assigned"),
+  };
+
+  if (!isItemInStock(item)) return current;
+
+  const chosen = EDITABLE_STOCK_STATES.find(
+    (state) => state.value === requestedState
+  );
+  if (!chosen) return current;
+
+  return { warehouse: chosen.warehouse, logistic_status: chosen.value };
+};

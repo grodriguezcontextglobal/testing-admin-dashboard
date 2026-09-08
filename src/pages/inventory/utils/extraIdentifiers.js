@@ -86,3 +86,44 @@ export const parseExtraIdentifiers = (raw, serialNumber) => {
   }
   return [];
 };
+
+const cleanText = (value) => String(value ?? "").trim();
+
+/**
+ * Whether a typed identifier can join the ones already on the item.
+ *
+ * The panel had no rules: the add button pushed whatever sat in the two boxes
+ * onto the list. An empty pill was one stray click away, and the same name
+ * could be added twice with different values — leaving two entries both
+ * claiming to be the item's IMEI, with nothing to say which was right.
+ *
+ * @returns {{ok: boolean, reason?: string}} the reason is shown to the operator
+ */
+export const validateNewIdentifier = ({ name, value, existing = [] } = {}) => {
+  const cleanName = cleanText(name);
+  const cleanValue = cleanText(value);
+
+  if (!cleanName) return { ok: false, reason: "Give the identifier a name." };
+  if (!cleanValue) {
+    return { ok: false, reason: `What is the ${cleanName}? A name on its own says nothing.` };
+  }
+
+  const taken = (Array.isArray(existing) ? existing : []).some(
+    (entry) => cleanText(entry?.keyObject).toLowerCase() === cleanName.toLowerCase()
+  );
+  if (taken) {
+    return { ok: false, reason: `This item already has a ${cleanName}.` };
+  }
+
+  return { ok: true };
+};
+
+/**
+ * The list with one more identifier on it, or the same list when it would not
+ * validate — so a caller cannot add something the rules just refused.
+ */
+export const appendIdentifier = (existing, { name, value } = {}) => {
+  const list = Array.isArray(existing) ? existing : [];
+  if (!validateNewIdentifier({ name, value, existing: list }).ok) return existing;
+  return [...list, { keyObject: cleanText(name), valueObject: cleanText(value) }];
+};

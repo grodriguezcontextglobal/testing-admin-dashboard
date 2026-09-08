@@ -43,7 +43,7 @@ const CreateSubLocationModal = ({
         active: 1,
       }),
     onSuccess: () => {
-      message.success("Sub-location created successfully");
+      message.success("Sub-location added successfully");
       queryClient.invalidateQueries({
         queryKey: ["locationsAndSublocationsWithTypes"],
       });
@@ -97,7 +97,7 @@ const CreateSubLocationModal = ({
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            <label style={{ fontWeight: 600 }}>Sub-location Name *</label>
+            <label style={{ fontWeight: 600 }}>Sub-location Name <span className="form-label__required" aria-hidden="true">*</span></label>
             <Controller
               name="name"
               control={control}
@@ -129,7 +129,7 @@ const CreateSubLocationModal = ({
               buttonType="button"
             />
             <BlueButtonComponent
-              title="Create Sub-location"
+              title="Add Sub-location"
               func={handleSubmit((data) => mutation.mutate(data))}
               buttonType="submit"
               loadingState={mutation.isPending}

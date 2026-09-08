@@ -1,10 +1,19 @@
 import { useMemo, useState } from "react";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
 import {
   buildConsumerEventPayloads,
   parseConfirmationParams,
 } from "../conditionalPage/utils/eventRegistrationUtils";
+import {
+  describeInvitation,
+  isAlreadyInEvent,
+  readConfirmationError,
+  readExistingConsumer,
+  writeSucceeded,
+} from "./utils/attendanceConfirmation";
+import "./publicLanding.css";
 
 /**
  * Public attendance-confirmation landing — reached from the link emailed by
@@ -18,59 +27,56 @@ import {
  * src/pages/consumers/utils/CreateNewUser.jsx exactly. Idempotent: revisiting
  * or re-clicking after a successful confirmation shows "already confirmed"
  * instead of duplicating the consumer record.
+ *
+ * What the redesign changed, none of it on the wire:
+ *
+ *  - The link carries `company`, `minor` and `guardianEmail`, and none of the
+ *    three was rendered. An unauthenticated page asked somebody to confirm
+ *    without saying who was asking, and a guardian opening a link about their
+ *    child was shown "{child} has been invited" with no statement that they
+ *    were the one confirming — which is what the write has always done.
+ *  - The event, the person and the decision are now three separate lines
+ *    instead of one sentence carrying all of it.
+ *  - `POST /auth/new` answers 200 with `{ ok: false }` when it refuses. The
+ *    response was discarded, so the flow created the SQL consumer anyway and
+ *    reported the attendance confirmed for a person who had not been created.
+ *  - The "already confirmed" check compared the URL's string id to a possibly
+ *    numeric one with `===`, so somebody already confirmed was offered the
+ *    button again.
+ *  - Every terminal state was a title and one line. They say what happens next.
  */
-const card = {
-  background: "var(--base-white, #fff)",
-  border: "1px solid var(--gray-200, #ddded6)",
-  borderRadius: "var(--radius-xl, 12px)",
-  boxShadow: "var(--shadow-sm)",
-  padding: "32px",
-  width: "100%",
-  maxWidth: "480px",
-  textAlign: "left",
-};
-const page = {
-  minHeight: "100dvh",
-  width: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "24px",
-  boxSizing: "border-box",
-  background: "var(--gray-50, #f7f7f4)",
-};
-const title = {
-  fontFamily: "Inter, sans-serif",
-  fontSize: "22px",
-  fontWeight: 700,
-  color: "var(--gray-900, #171d1a)",
-  margin: "0 0 8px",
-};
-const subtitle = {
-  fontFamily: "Inter, sans-serif",
-  fontSize: "14px",
-  color: "var(--gray-600, #475467)",
-  margin: "0 0 20px",
-  lineHeight: "20px",
-};
-
 const AttendanceConfirmationLanding = () => {
   const parsed = useMemo(
     () => parseConfirmationParams(new URLSearchParams(window.location.search)),
-    [],
+    []
   );
 
   const [status, setStatus] = useState("idle"); // idle | loading | confirmed | already-confirmed | error
   const [errorMessage, setErrorMessage] = useState("");
 
-  if (parsed.error) {
-    return (
-      <div style={page}>
-        <div style={card}>
-          <p style={title}>Invalid link</p>
-          <p style={subtitle}>{parsed.error}</p>
+  const invitation = useMemo(() => describeInvitation(parsed), [parsed]);
+
+  const shell = (children) => (
+    <div className="public-landing">
+      <div className="public-landing__card">
+        <div className="public-landing__brand">
+          <DevitrakLogo />
         </div>
+        {children}
       </div>
+    </div>
+  );
+
+  if (parsed.error) {
+    return shell(
+      <>
+        <h1 className="public-landing__title">This link is not usable</h1>
+        <p className="public-landing__lead">{parsed.error}</p>
+        <p className="public-landing__note">
+          Ask whoever sent the invitation to send it again — nothing has been
+          recorded either way.
+        </p>
+      </>
     );
   }
 
@@ -84,8 +90,6 @@ const AttendanceConfirmationLanding = () => {
     companyId,
   } = parsed;
 
-  const memberDisplayName = `${memberFirstName} ${memberLastName}`.trim() || memberEmail;
-
   const handleConfirm = async () => {
     setStatus("loading");
     setErrorMessage("");
@@ -98,77 +102,142 @@ const AttendanceConfirmationLanding = () => {
       const event = { id: eventId, eventInfoDetail: { eventName } };
       const companyRecord = { id: companyId, name: company };
 
-      const lookup = await devitrakApi.post("/auth/user-query", { email: memberEmail });
-      const existingConsumer = lookup?.data?.ok && lookup.data.users?.length > 0
-        ? lookup.data.users.at(-1)
-        : null;
+      const lookup = await devitrakApi.post("/auth/user-query", {
+        email: memberEmail,
+      });
+      const existingConsumer = readExistingConsumer(lookup);
 
       if (existingConsumer) {
-        const alreadyConfirmed = (existingConsumer.event_providers ?? []).some(
-          (id) => id === eventId,
-        );
-        if (alreadyConfirmed) {
+        if (isAlreadyInEvent(existingConsumer, eventId)) {
           setStatus("already-confirmed");
           return;
         }
-        const { merge } = buildConsumerEventPayloads(member, event, companyRecord, existingConsumer);
-        await devitrakApi.patch(`/auth/${existingConsumer.id}`, merge);
+        const { merge } = buildConsumerEventPayloads(
+          member,
+          event,
+          companyRecord,
+          existingConsumer
+        );
+        const merged = await devitrakApi.patch(
+          `/auth/${existingConsumer.id}`,
+          merge
+        );
+        if (!writeSucceeded(merged)) {
+          throw new Error(
+            merged?.data?.msg || "The confirmation was not saved."
+          );
+        }
         setStatus("confirmed");
         return;
       }
 
-      const { auth, db } = buildConsumerEventPayloads(member, event, companyRecord, null);
-      await devitrakApi.post("/auth/new", auth);
+      const { auth, db } = buildConsumerEventPayloads(
+        member,
+        event,
+        companyRecord,
+        null
+      );
+      /* Checked, because a refusal here used to be followed by the SQL insert
+         and an "Attendance confirmed" screen. */
+      const created = await devitrakApi.post("/auth/new", auth);
+      if (!writeSucceeded(created)) {
+        throw new Error(created?.data?.msg || "The confirmation was not saved.");
+      }
       await devitrakApi.post("/db_consumer/new_consumer", db);
       setStatus("confirmed");
     } catch (error) {
-      setErrorMessage(error?.response?.data?.msg ?? "Something went wrong. Please try again.");
+      setErrorMessage(readConfirmationError(error));
       setStatus("error");
     }
   };
 
   if (status === "confirmed") {
-    return (
-      <div style={page}>
-        <div style={card}>
-          <p style={title}>Attendance confirmed</p>
-          <p style={subtitle}>See you at {eventName}!</p>
-        </div>
-      </div>
+    return shell(
+      <>
+        <p className="public-landing__eyebrow public-landing__eyebrow--ok">
+          Confirmed
+        </p>
+        <h1 className="public-landing__title">
+          {invitation.memberName} is going to {eventName}
+        </h1>
+        <p className="public-landing__lead">
+          {company ? `${company} has been told.` : "The organiser has been told."}{" "}
+          Nothing else is needed — you can close this page.
+        </p>
+        <p className="public-landing__note">
+          If anything changes, contact {company || "the organiser"} directly;
+          this link cannot cancel a confirmation.
+        </p>
+      </>
     );
   }
 
   if (status === "already-confirmed") {
-    return (
-      <div style={page}>
-        <div style={card}>
-          <p style={title}>Already confirmed</p>
-          <p style={subtitle}>
-            {memberDisplayName} is already confirmed to attend {eventName}.
-          </p>
-        </div>
-      </div>
+    return shell(
+      <>
+        <p className="public-landing__eyebrow public-landing__eyebrow--ok">
+          Already confirmed
+        </p>
+        <h1 className="public-landing__title">
+          {invitation.memberName} is already going to {eventName}
+        </h1>
+        <p className="public-landing__lead">
+          Nothing was recorded twice. You can close this page.
+        </p>
+      </>
     );
   }
 
-  return (
-    <div style={page}>
-      <div style={card}>
-        <p style={title}>Confirm your attendance</p>
-        <p style={subtitle}>
-          {memberDisplayName} has been invited to attend <strong>{eventName}</strong>.
+  return shell(
+    <>
+      <p className="public-landing__eyebrow">
+        {company || "Event invitation"}
+      </p>
+      <h1 className="public-landing__title">{invitation.heading}</h1>
+
+      <dl className="public-landing__facts">
+        <div>
+          <dt>Event</dt>
+          <dd>{eventName}</dd>
+        </div>
+        <div>
+          <dt>{invitation.isMinor ? "Student" : "Attendee"}</dt>
+          <dd>
+            {invitation.memberName}
+            {memberEmail && invitation.memberName !== memberEmail && (
+              <span className="public-landing__facts-sub">{memberEmail}</span>
+            )}
+          </dd>
+        </div>
+      </dl>
+
+      {invitation.roleLine && (
+        <p className="public-landing__note public-landing__note--boxed">
+          {invitation.roleLine}
         </p>
-        {status === "error" && (
-          <p style={{ ...subtitle, color: "var(--error-700, #9a3922)" }}>{errorMessage}</p>
-        )}
+      )}
+
+      {status === "error" && (
+        <p className="public-landing__error" role="alert">
+          {errorMessage}
+        </p>
+      )}
+
+      <div className="public-landing__actions">
         <BlueButtonComponent
-          title={status === "error" ? "Retry" : "Confirm attendance"}
+          title={status === "error" ? "Try again" : "Confirm attendance"}
           func={handleConfirm}
           loadingState={status === "loading"}
+          isDisabled={status === "loading"}
           styles={{ width: "100%" }}
         />
       </div>
-    </div>
+
+      <p className="public-landing__note">
+        Confirming records the attendance with {company || "the organiser"}. To
+        decline, reply to the invitation email — this page can only confirm.
+      </p>
+    </>
   );
 };
 

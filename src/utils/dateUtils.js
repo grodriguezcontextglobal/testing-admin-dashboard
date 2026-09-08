@@ -1,3 +1,47 @@
+/**
+ * Dates that are days, not instants.
+ *
+ * A rental window, an event's start, a forecast axis: all of them are calendar
+ * days, and `new Date("2026-08-28")` is not one — it is UTC midnight, which is
+ * 8pm on the 27th in New York. Rendering it with `toLocaleDateString()` then
+ * shows the previous day to every user west of UTC. These read the parts out of
+ * the string, so no timezone is ever involved.
+ */
+
+const CALENDAR_DAY = /^(\d{4})-(\d{1,2})-(\d{1,2})/;
+
+/** `{ year, month, day }` from `2026-08-28`, `2026-8-28` or a timestamp. */
+export const parseCalendarDay = (value) => {
+  const match = CALENDAR_DAY.exec(String(value ?? "").trim());
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return { year: Number(year), month: Number(month), day: Number(day) };
+};
+
+/**
+ * The day as a person reads it, in their own locale.
+ *
+ * Built through a *local* midnight, so `toLocaleDateString` cannot move it.
+ * `options` is passed straight through, so a caller can ask for "Aug 28" or
+ * "August 28, 2026". A value that is not a date comes back untouched.
+ */
+export const formatCalendarDay = (value, options, locale) => {
+  const parts = parseCalendarDay(value);
+  if (!parts) return String(value ?? "").trim();
+  return new Date(
+    parts.year,
+    parts.month - 1,
+    parts.day
+  ).toLocaleDateString(locale, options);
+};
+
+/** 0 = Sunday … 6 = Saturday, for the calendar day rather than a local clock. */
+export const calendarWeekday = (value) => {
+  const parts = parseCalendarDay(value);
+  if (!parts) return null;
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+};
+
 const formatDate = (date) => {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");

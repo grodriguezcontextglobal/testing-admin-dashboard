@@ -4,13 +4,19 @@
  * unit-testable; the component formats the dates and passes them in.
  */
 
-export const RETURN_REASONS = [
-  "Operational",
-  "Network",
-  "Hardware",
-  "Damaged",
-  "Battery",
-];
+import { conditionValues } from "../../../../../../utils/returnConditions";
+
+/**
+ * Re-exported, not redeclared.
+ *
+ * This module used to hold its own copy of the five conditions. The member
+ * return modal held an identical one, and both send the value verbatim as
+ * `status` to /db_event/returning-item -- two lists of the same server
+ * contract in two folders, which is how one ends up a word behind the other.
+ * The list lives in src/utils/returnConditions.js now, with the descriptions
+ * the product review asked for.
+ */
+export const RETURN_REASONS = conditionValues();
 
 export const isReasonValid = (reason) => `${reason ?? ""}`.trim().length > 0;
 
@@ -43,3 +49,35 @@ export const buildDeleteLeasePayload = (deviceInfo) => ({
   staff_member_id: deviceInfo.staff_member_id,
   device_id: deviceInfo.item_id_info.item_id,
 });
+
+/**
+ * Every query `useStaffEquipmentData` opens, by root key.
+ *
+ * Returning a device has to put the staff profile's table back in touch with
+ * reality, and the table reads `assignedEquipmentStaff` — which the return
+ * modal never invalidated. The three keys it did invalidate were no-ops
+ * anyway: they were passed with `exact: true` against a one-element key, while
+ * every real key here carries a second element (an email, a company id, the
+ * staff record itself).
+ *
+ * Root keys only, deliberately. Invalidating without `exact` matches by prefix,
+ * so this list does not need the email or the company id that the modal has no
+ * business knowing. If an entry here ever becomes an array, the bug is back.
+ */
+export const STAFF_EQUIPMENT_QUERY_KEYS = [
+  "staffMemberInfo",
+  "imagePerItemList",
+  "ItemsInventoryCheckingQuery",
+  "assignedEquipmentStaff",
+];
+
+/**
+ * Refetch the staff equipment views after a return.
+ *
+ * @param {object} queryClient react-query's client
+ */
+export const refreshStaffEquipmentQueries = (queryClient) => {
+  for (const key of STAFF_EQUIPMENT_QUERY_KEYS) {
+    queryClient.invalidateQueries({ queryKey: [key] });
+  }
+};

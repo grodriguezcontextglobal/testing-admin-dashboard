@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { registerStaffActivity } from "../../../../../api/activityLog";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import EmailReturnRentalItems from "../../../../../components/notification/email/EmailReturnRentalItems";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
@@ -15,6 +16,11 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../../../styles/global/TextFontSize30LineHeight38";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
+import {
+  buildReturnAuditEntries,
+  describeBlocked,
+  partitionForReturn,
+} from "../../OwnershipDetail/components/suppliers/utils/returnToSupplier";
 import "../../../../events/newEventProcess/style/NewEventInfoSetup.css";
 
 const ReturningLeasedEquipModal = ({
@@ -50,23 +56,25 @@ const ReturningLeasedEquipModal = ({
     queryClient.invalidateQueries({ queryKey: ["deviceInInventoryPerGroup"] });
     return null;
   };
+  /* Deps declared rather than left empty — a pre-existing lint failure in this
+     file, which `max-warnings=0` was already tripping over. `supplier_info` is
+     read defensively too: the condition called `.length` on it unguarded. */
+  const supplierId = dataFound?.supplier_info;
+  const companyId = user?.companyData?.id;
   useEffect(() => {
-    if (dataFound.supplier_info.length > 0 || dataFound.supplier_info !== "") {
-      const checkingSupplier = async () => {
-        const supplier = await devitrakApi.get("/company/provider-companies", {
-          params: {
-            creator: user?.companyData?.id,
-          },
-        });
-        setSupplierInfo(
-          supplier?.data?.providerCompanies.filter(
-            (ele) => ele.id === dataFound.supplier_info
-          )
-        );
-      };
-      checkingSupplier();
-    }
-  }, []);
+    if (!String(supplierId ?? "").trim()) return;
+    const checkingSupplier = async () => {
+      const supplier = await devitrakApi.get("/company/provider-companies", {
+        params: { creator: companyId },
+      });
+      setSupplierInfo(
+        (supplier?.data?.providerCompanies ?? []).filter(
+          (ele) => ele.id === supplierId
+        )
+      );
+    };
+    checkingSupplier();
+  }, [supplierId, companyId]);
 
   const handleReturnRentalItem = async () => {
     setLoadingStatus(true);
@@ -76,43 +84,67 @@ const ReturningLeasedEquipModal = ({
         key: "processing",
       });
 
-      // Step 1: Return items to renter
+      /* The row the report and the audit log are built from. An id the server
+         does not answer for is held back: there is nothing to report about it,
+         and its absence is not a reason to delete it.
+
+         This replaces the old first step, which wrote `warehouse`,
+         `enableAssignFeature`, `returnedRentedInfo` and `return_date` onto a
+         row that step 3 deletes. Nothing read any of it, and
+         `update-large-data` was rejecting the call outright for carrying
+         `returnedRentedInfo`. */
       const returnDate = new Date().toISOString();
-      const payload = {
-        item_ids: [dataFound.item_id],
-        company_id: user.aqlInfo.company_id,
-        updates: {
-          warehouse: 1,
-          enableAssignFeature: 0,
-          returnedRentedInfo: JSON.stringify([]),
-          return_date: returnDate,
-        }
-      };
-      await devitrakApi.post("/db_inventory/update-large-data", payload);
-
-      message.loading({
-        content: "Items returned to renter, now deleting records...",
-        key: "processing",
+      const stateResponse = await devitrakApi.post("/db_company/inventory-query", {
+        queryName: "inventory.itemsByIds",
+        params: {
+          itemIds: [dataFound.item_id],
+          supplierId: dataFound.supplier_info || undefined,
+        },
       });
+      const { returnable, blocked } = partitionForReturn({
+        items: stateResponse.data?.result ?? [],
+        requestedIds: [dataFound.item_id],
+      });
+      if (returnable.length === 0) {
+        message.warning({
+          content:
+            describeBlocked(blocked) ??
+            "This item could not be found in the inventory.",
+          key: "processing",
+        });
+        return;
+      }
 
-      // Step 2: Email notification to staff
+      /* The report goes out before the delete, because it is the record: once
+         the row is gone, nothing that is not in it survives. */
       await EmailReturnRentalItems({
         items: [dataFound.item_id],
+        resolvedItems: returnable,
+        returnedAt: returnDate,
         setProgress,
         supplier_id: dataFound.supplier_info,
         user: user,
       });
 
-      // Step 3: Delete items from records
-      // const deleteQuery = `DELETE FROM item_inv WHERE item_id = ? AND company_id = ?`;
-      // const deleteValues = [dataFound.item_id, dataFound.company_id];
-      // const payloadDelete = {
-      //   query: deleteQuery,
-      //   values: deleteValues,
-      // };
-      await devitrakApi.post(
-        `/db_item/${dataFound.item_id}`,
+      /* The item record itself is about to be deleted, so this is the only
+         place the return stays accounted for. Fire-and-forget by design. */
+      await Promise.allSettled(
+        buildReturnAuditEntries({
+          items: returnable,
+          supplierId: dataFound.supplier_info || null,
+          returnedBy: user?.name,
+          timestamp: returnDate,
+        }).map((entry) => registerStaffActivity(entry))
       );
+
+      // Step 3: Delete items from records.
+      // `POST /api/db_item/:id` reads company_id and item_id from the BODY and
+      // ignores the id in the path — it answers 400/403 without them, and this
+      // call was sending no body at all.
+      await devitrakApi.post(`/db_item/${dataFound.item_id}`, {
+        company_id: user.sqlInfo.company_id,
+        item_id: dataFound.item_id,
+      });
 
       // Step 4: Clear cache memory
       await clearCacheMemory(`providerCompanies_${user.companyData.id}`);
@@ -123,8 +155,15 @@ const ReturningLeasedEquipModal = ({
       invalidatingQueriesForRefresh();
       return navigate("/inventory");
     } catch (error) {
-      message.error({ content: "Failed to process items", key: "processing" });
-      console.error("Error processing items:", error);
+      // "Failed to process items" was the same sentence for every cause, with
+      // the server's reason left in the console.
+      message.error({
+        content:
+          error?.response?.data?.msg ||
+          error?.message ||
+          "Failed to process items",
+        key: "processing",
+      });
     } finally {
       setLoadingStatus(false);
     }

@@ -172,3 +172,95 @@ export function isAddressComplete(address) {
     Boolean(text(address?.[field]))
   );
 }
+
+/**
+ * Whether the address can be accepted as typed.
+ *
+ * Answering is voluntary: the field asks where a device will be kept, and the
+ * honest answer is usually the school's own address, or — for a device going
+ * home with a child — a family's home address that nothing in the product ever
+ * reads back. Holding it because a form insisted is the kind of collection
+ * worth not doing.
+ *
+ * Optional is not unchecked, though. A half-typed address looks like a record
+ * and cannot be delivered to, so it is all four fields or none. And the zip has
+ * to contain a digit: the gate this replaces was satisfied by a single letter
+ * in every field, which is how "F, F, F" got accepted during the review.
+ */
+export function isAddressUsable(address) {
+  const fields = ["street", "city", "state", "zip"];
+  const filled = fields.filter((field) => Boolean(text(address?.[field])));
+  if (filled.length === 0) return true;
+  if (filled.length < fields.length) return false;
+  return /\d/.test(text(address?.zip));
+}
+
+/**
+ * The inventory group that holds a given device, or null.
+ *
+ * Assigning from a device's own page hands the staff flow a serial and expects
+ * its group to be selected already. Category and group alone are not enough to
+ * identify one — the same model sits in several locations — so the location
+ * narrows it. When the device carries no location, category and group are
+ * accepted only if exactly one group matches: picking the wrong one would load
+ * the wrong shelf's serials and quietly hand over a different unit.
+ */
+export function findOptionForDevice(options, device) {
+  const list = Array.isArray(options) ? options : [];
+  if (!device || list.length === 0) return null;
+
+  const category = text(device.category_name);
+  const group = text(device.item_group);
+  const location = text(device.location);
+
+  const sameGroup = list.filter(
+    (option) =>
+      text(option.category_name) === category && text(option.item_group) === group
+  );
+  if (sameGroup.length === 0) return null;
+
+  if (location) {
+    return sameGroup.find((option) => text(option.location) === location) ?? null;
+  }
+  return sameGroup.length === 1 ? sameGroup[0] : null;
+}
+
+/**
+ * Where the lease records the device as being kept.
+ *
+ * The address became optional, but `location` is still required on the wire —
+ * `POST /db_lease/new-lease` answers "Missing required fields: location"
+ * without it. The payload used to build this by interpolating the four address
+ * fields into one template, so a blank address arrived as `"   "`: three
+ * spaces, which is present enough to pass a client check and absent enough for
+ * the server to refuse.
+ *
+ * Joining instead of interpolating is the fix for the whitespace. The fallbacks
+ * are the fix for the emptiness, in the order that loses the least information:
+ * what the operator typed, then the shelf the unit came off, then the company's
+ * own address — which is the answer Fredrik expected people to give anyway.
+ *
+ * @param {object} [address] the four typed fields
+ * @param {string} [deviceLocation] where the unit is currently held
+ * @param {object} [companyAddress] the company record's own address
+ * @returns {string} a location, or "" when nothing at all is known
+ */
+export function formatLeaseLocation({
+  address,
+  deviceLocation,
+  companyAddress,
+} = {}) {
+  const join = (...parts) => parts.map((part) => text(part)).filter(Boolean).join(" ");
+
+  return (
+    join(address?.street, address?.city, address?.state, address?.zip) ||
+    text(deviceLocation) ||
+    join(
+      companyAddress?.street,
+      companyAddress?.city,
+      companyAddress?.state,
+      companyAddress?.postal_code ?? companyAddress?.zip
+    ) ||
+    ""
+  );
+}

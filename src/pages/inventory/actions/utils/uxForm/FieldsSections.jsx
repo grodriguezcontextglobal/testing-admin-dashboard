@@ -1,6 +1,7 @@
 import { Radio } from "antd";
 // import { renderOptional } from "../BulkComponents";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
+import { matchesTypedText } from "../referenceLookup";
 const FieldsSections = ({
   Grid,
   item,
@@ -59,6 +60,10 @@ const FieldsSections = ({
           typeof x === "string" ? { value: x } : x
         )}
         placeholder={item.placeholder}
+        /* antd's AutoComplete does not filter as you type: its `filterOption`
+           defaults to false, unlike Select's. Without this every field here
+           listed its whole option set no matter what was typed into it. */
+        filterOption={matchesTypedText}
         allowClear
       />
     );

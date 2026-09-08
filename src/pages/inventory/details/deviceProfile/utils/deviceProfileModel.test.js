@@ -6,6 +6,8 @@ import {
   parseSubLocations,
   resolveLocation,
   summarizeUtilization,
+  nextAssignLocation,
+  resolvePersonLocation,
 } from "./deviceProfileModel";
 
 const NOW = new Date("2026-08-07T12:00:00");
@@ -332,5 +334,76 @@ describe("buildCustodyTimeline", () => {
     });
     expect(entries[0].date).toBe("2026-07-21");
     expect(entries.at(-1).kind).toBe("created");
+  });
+});
+
+describe("resolvePersonLocation", () => {
+  it("composes a member's address from the four columns", () => {
+    expect(
+      resolvePersonLocation({
+        kind: "member",
+        raw: {
+          address_street: "1 Main St",
+          address_city: "Austin",
+          address_state: "TX",
+          address_zip: "78701",
+        },
+      })
+    ).toBe("1 Main St, Austin, TX, 78701");
+  });
+
+  it("uses the single address string when the record has one", () => {
+    expect(
+      resolvePersonLocation({ kind: "member", raw: { address: "12 Elm Road" } })
+    ).toBe("12 Elm Road");
+  });
+
+  it("is empty for a member with no address on file", () => {
+    expect(resolvePersonLocation({ kind: "member", raw: {} })).toBe("");
+  });
+
+  it("is empty for a staff member, who carries no address", () => {
+    // The company employee record is { user, firstName, lastName, role } — so
+    // reading `raw.address` would have handed the field `undefined`.
+    expect(
+      resolvePersonLocation({ kind: "staff", raw: { user: "a@x.com", firstName: "Ada" } })
+    ).toBe("");
+  });
+
+  it("does not throw on nothing", () => {
+    expect(resolvePersonLocation(undefined)).toBe("");
+    expect(resolvePersonLocation({})).toBe("");
+  });
+});
+
+describe("nextAssignLocation", () => {
+  const member = { kind: "member", raw: { address: "12 Elm Road" } };
+  const staff = { kind: "staff", raw: { user: "a@x.com" } };
+
+  it("offers the member's address", () => {
+    expect(nextAssignLocation({ person: member, current: "Warehouse A" })).toBe(
+      "12 Elm Road"
+    );
+  });
+
+  it("keeps the device's location when the person has no address", () => {
+    // Rather than blanking a field that had a sensible default in it.
+    expect(nextAssignLocation({ person: staff, current: "Warehouse A" })).toBe(
+      "Warehouse A"
+    );
+    expect(
+      nextAssignLocation({ person: { kind: "member", raw: {} }, current: "Warehouse A" })
+    ).toBe("Warehouse A");
+  });
+
+  it("leaves alone what the operator typed", () => {
+    expect(
+      nextAssignLocation({ person: member, current: "Gym, room 2", touched: true })
+    ).toBe("Gym, room 2");
+  });
+
+  it("never returns undefined, which would make the input uncontrolled", () => {
+    expect(nextAssignLocation({ person: staff, current: undefined })).toBe("");
+    expect(nextAssignLocation({})).toBe("");
   });
 });

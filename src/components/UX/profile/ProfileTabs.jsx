@@ -5,9 +5,11 @@ import "./profileShell.css";
 /**
  * Profile section navigation.
  *
- * Items are places, never actions — an item labelled with a verb ("Send email
- * reminder") belongs in the identity card's action rail instead, because a
+ * Items are places, never actions — an item labelled with a verb ("Assign
+ * devices") belongs in the identity card's action rail instead, because a
  * one-shot action in a nav bar makes people believe they've arrived somewhere.
+ * The label is what decides it: a page you can come back to earns a noun and a
+ * tab ("Reminders"), the act of sending one stays a verb and a button.
  *
  * Two modes, one look:
  *   - `to` on an item renders a NavLink (the member profile has real routes)

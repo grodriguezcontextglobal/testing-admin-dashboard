@@ -4,6 +4,7 @@ import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayBut
 import { renderFields } from "../../../utils/BulkItemsFields";
 import FieldGrid from "./FieldGrid";
 import { cardFootStyle, cardHeadStyle, cardStyle } from "./wizardStyles";
+import { useAssignableTargets } from "../../../utils/useAssignableTargets";
 
 const blockStyle = { padding: "20px 24px", borderBottom: "1px solid var(--gray-200, #eaecf0)" };
 
@@ -27,7 +28,9 @@ const OwnershipStep = ({
   goBack,
   goNext,
 }) => {
+  const assignableTargets = useAssignableTargets();
   const allFields = renderFields({
+    assignableTargets,
     retrieveItemOptions: () => [],
     OutlinedInputStyle,
     renderLocationOptions: () => [],
@@ -53,7 +56,7 @@ const OwnershipStep = ({
       <div style={blockStyle}>
         <Typography variant="body1" sx={{ fontWeight: 600 }}>Assignable</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Whether staff and events can check these units out
+          Whether {assignableTargets} can check these units out
         </Typography>
         <FieldGrid
           fields={assignableFields}

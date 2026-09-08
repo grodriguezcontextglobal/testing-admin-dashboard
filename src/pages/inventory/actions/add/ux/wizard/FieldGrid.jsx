@@ -65,7 +65,7 @@ const FieldGrid = ({
           <InputLabel style={{ marginBottom: "1rem", width: "100%", display: imageUploadedValue ? "block" : "none" }}>
             <Tooltip placement="top" title={item.tooltipMessage} style={{ width: "100%" }}>
               <Typography style={stylingComponents({ loadingStatus }).styling}>
-                {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+                {item.label} <span className="form-label__required" aria-hidden="true">*</span> {item.tooltip && <QuestionIcon />}
               </Typography>
             </Tooltip>
             <div>
@@ -90,7 +90,7 @@ const FieldGrid = ({
         <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
           <Tooltip placement="top" title={item.tooltipMessage} style={{ width: "100%" }}>
             <Typography style={stylingComponents({ loadingStatus }).styling}>
-              {item.label} <strong>*</strong> {item.tooltip && <QuestionIcon />}
+              {item.label} <span className="form-label__required" aria-hidden="true">*</span> {item.tooltip && <QuestionIcon />}
             </Typography>
           </Tooltip>
         </InputLabel>
@@ -179,7 +179,7 @@ const FieldGrid = ({
                       <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                         <Tooltip placement="top" title={child.tooltipMessage} style={{ width: "100%" }}>
                           <Typography style={stylingComponents({ loadingStatus }).styling}>
-                            {child.label} <strong>*</strong> {child.tooltip && <QuestionIcon />}
+                            {child.label} <span className="form-label__required" aria-hidden="true">*</span> {child.tooltip && <QuestionIcon />}
                           </Typography>
                         </Tooltip>
                       </InputLabel>
@@ -222,7 +222,7 @@ const FieldGrid = ({
                   <InputLabel style={{ marginBottom: "0.2rem", width: "100%" }}>
                     <Tooltip placement="top" title={child.tooltipMessage} style={{ width: "100%" }}>
                       <Typography style={stylingComponents({ loadingStatus }).styling}>
-                        {child.label} <strong>*</strong> {child.tooltip && <QuestionIcon />}
+                        {child.label} <span className="form-label__required" aria-hidden="true">*</span> {child.tooltip && <QuestionIcon />}
                       </Typography>
                     </Tooltip>
                   </InputLabel>
