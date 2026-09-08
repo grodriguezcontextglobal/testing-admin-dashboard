@@ -1,7 +1,7 @@
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Space, Tag, Tooltip } from "antd";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
 import RefreshButton from "../../../../components/utils/UX/RefreshButton";
@@ -11,6 +11,11 @@ import { Title } from "../../../../styles/global/Title";
 import { CustomerDatabase } from "./table/CustomerDatabase";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import { useSelector } from "react-redux";
+import { devitrakApi } from "../../../../api/devitrakApi";
+import {
+  buildConsumerRows,
+  countConsumersByStatus,
+} from "./utils/consumerRows";
 import {
   CONSUMER_STATUSES,
   toggleStatusFilter,
@@ -29,10 +34,39 @@ const CustomerInformationSection = () => {
      active pill again. */
   const [statusFilter, setStatusFilter] = useState(null);
   const filtering = statusFilter !== null;
+  const search = watch("searchCustomer");
+
+  /* The query used to live inside the table, which is why the legend directly
+     above it could not say how many consumers were in each bucket. It is one
+     request either way, and the table now takes its rows as a prop.
+
+     Keyed by event and company: it was a bare ["checking_new_path_to"], so
+     opening a second event could be served the first event's consumers out of
+     the cache. */
+  const consumersQuery = useQuery({
+    queryKey: ["eventConsumers", event.id, user.companyData.id],
+    queryFn: () =>
+      devitrakApi.get(
+        `/event/all-users-and-transactions-per-event?event_providers=${event.id}&company_providers=${user.companyData.id}`,
+      ),
+  });
+
+  const rows = useMemo(
+    () => buildConsumerRows(consumersQuery.data?.data?.data, { search }),
+    [consumersQuery.data, search],
+  );
+  /* Counted before the status filter, so every pill keeps saying what it would
+     show rather than dropping to 0 the moment another one is active. */
+  const counts = useMemo(() => countConsumersByStatus(rows), [rows]);
 
   const refreshCustomerDatabase = async () => {
     await clearCacheMemory(`event=${event.id}&company=${user.companyData.id}`);
-    return queryClient.resetQueries({ queryKey: ["customerDatabase"] });
+    /* Reset the key this screen actually uses. It reset ["customerDatabase"],
+       which no query was ever registered under, so Refresh cleared the server
+       cache and then re-rendered the same rows. */
+    return queryClient.resetQueries({
+      queryKey: ["eventConsumers", event.id, user.companyData.id],
+    });
   };
   return (
     <>
@@ -91,18 +125,26 @@ const CustomerInformationSection = () => {
           <Space>
             {CONSUMER_STATUSES.map((status) => {
               const selected = statusFilter === status.value;
+              const count = counts[status.value];
+              /* An empty bucket would filter to an empty table, so it is not
+                 offered — unless it is the one already selected, which has to
+                 stay clickable to be switched off. */
+              const empty = !consumersQuery.isLoading && count === 0 && !selected;
               return (
                 <Tooltip
                   key={status.value}
                   title={
                     selected
                       ? "Showing only these consumers. Click to show all again."
-                      : status.description
+                      : empty
+                        ? `${status.description} — nobody here right now`
+                        : status.description
                   }
                 >
                   <button
                     type="button"
                     aria-pressed={selected}
+                    disabled={empty}
                     onClick={() =>
                       setStatusFilter((current) =>
                         toggleStatusFilter(current, status.value),
@@ -112,10 +154,10 @@ const CustomerInformationSection = () => {
                       border: "none",
                       background: "none",
                       padding: 0,
-                      cursor: "pointer",
+                      cursor: empty ? "default" : "pointer",
                       /* Dim the buckets that are being filtered out, so which
                          one is doing it is legible without reading the table. */
-                      opacity: !filtering || selected ? 1 : 0.45,
+                      opacity: empty ? 0.35 : !filtering || selected ? 1 : 0.45,
                     }}
                   >
                     <Tag
@@ -134,7 +176,11 @@ const CustomerInformationSection = () => {
                         boxShadow: selected ? `0 0 0 2px ${status.color}` : "none",
                       }}
                     >
-                      <p style={{ color: status.color }}>{status.label}</p>
+                      <p style={{ color: status.color }}>
+                        {status.label}
+                        &nbsp;·&nbsp;
+                        <span style={{ fontWeight: 700 }}>{count}</span>
+                      </p>
                     </Tag>
                   </button>
                 </Tooltip>
@@ -144,7 +190,8 @@ const CustomerInformationSection = () => {
         </Grid>
         <Grid item xs={12}>
           <CustomerDatabase
-            searchAttendees={watch("searchCustomer")}
+            rows={rows}
+            loading={consumersQuery.isLoading}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
           />

@@ -1,12 +1,11 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Typography } from "@mui/material";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, Table } from "antd";
 import PropTypes from "prop-types";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../../api/devitrakApi";
 import {
   onAddCustomerInfo,
   onAddUsersOfEventList,
@@ -14,7 +13,6 @@ import {
 import { onAddCustomer } from "../../../../../store/slices/stripeSlice";
 import "../../../../../styles/global/ant-table.css";
 import { Subtitle } from "../../../../../styles/global/Subtitle";
-import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
 import {
   CONSUMER_STATUSES,
   consumerStatus,
@@ -25,36 +23,22 @@ import {
 } from "../utils/consumerStatusFilter";
 
 /**
- * `statusFilter` is owned by the legend above the table, and the Status column
- * is controlled by it, so the pills and the column dropdown are one selection
- * instead of two that intersect. `onStatusFilterChange` is how the dropdown
- * hands its own choice back to the pills.
+ * Presentation only: the rows, the search and the status filter are all owned
+ * by CustomerInformationSection, which needs the same data to put counts on
+ * the legend pills.
+ *
+ * The Status column is controlled by `statusFilter`, so the pills and the
+ * column dropdown are one selection instead of two that intersect;
+ * `onStatusFilterChange` is how the dropdown hands its own choice back.
  */
 export const CustomerDatabase = ({
-  searchAttendees,
+  rows = [],
+  loading = false,
   statusFilter = null,
   onStatusFilterChange,
 }) => {
-  const { user } = useSelector((state) => state.admin);
-  const { event } = useSelector((state) => state.event);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const attendeesAndTransactionsEventQuery = useQuery({
-    queryKey: ["checking_new_path_to"],
-    queryFn: () =>
-      devitrakApi.get(
-        `/event/all-users-and-transactions-per-event?event_providers=${event.id}&company_providers=${user.companyData.id}`
-      ),
-    refetchOnMount: false,
-  });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    attendeesAndTransactionsEventQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
   const queryClient = useQueryClient();
   const handleDataDetailUser = (record) => {
     let userFormatData = {
@@ -63,17 +47,15 @@ export const CustomerDatabase = ({
     };
     dispatch(onAddCustomerInfo(userFormatData));
     dispatch(onAddCustomer(userFormatData));
-    queryClient.invalidateQueries([
-      "transactionsList",
-      "listOfDevicesAssigned",
-      "listOfNoOperatingDevices",
-    ]);
+    /* One array is ONE key, and no query is registered under the triple, so
+       this invalidated nothing. Three keys, three calls. */
+    ["transactionsList", "listOfDevicesAssigned", "listOfNoOperatingDevices"].forEach(
+      (queryKey) => queryClient.invalidateQueries({ queryKey: [queryKey] }),
+    );
     navigate(
       `/events/event-attendees/${record.entireData.id}/transactions-details`
     );
   };
-
-  const response = attendeesAndTransactionsEventQuery?.data?.data?.data;
 
   const columns = [
     {
@@ -208,50 +190,19 @@ export const CustomerDatabase = ({
     },
   ];
 
-  const checkEventsPerCompany = () => {
-    const list = checkTypeFetchResponse(response);
-    if (list) {
-      if (searchAttendees?.length > 0) {
-        const check = list?.filter((item) =>
-          JSON.stringify(item)
-            .toLowerCase()
-            .includes(String(searchAttendees).toLowerCase())
-        );
-        return check;
-      }
-      return list;
-    }
-    return [];
-  };
-
-  const getInfoNeededToBeRenderedInTable = () => {
-    let result = [];
-    let mapTemplate = {};
-    for (let data of checkEventsPerCompany()) {
-      mapTemplate = {
-        user: [data.user.name, data.user.lastName],
-        email: data.user.email,
-        status: data.transactions,
-        phone: data.user.phoneNumber,
-        key: data.user.id,
-        entireData: data.user,
-      };
-      result = [...result, mapTemplate];
-    }
-    return result;
-  };
-
+  /* The consumer list is read from Redux by the modals that assign a device,
+     so it keeps being published from here. */
   useEffect(() => {
-    const result = getInfoNeededToBeRenderedInTable();
-    dispatch(onAddUsersOfEventList(result));
-  }, [response, searchAttendees]);
+    dispatch(onAddUsersOfEventList(rows));
+  }, [rows, dispatch]);
 
   return (
     <Table
       sticky
       size="large"
       columns={columns}
-      dataSource={getInfoNeededToBeRenderedInTable()}
+      dataSource={rows}
+      loading={loading}
       pagination={{
         position: ["bottomCenter"],
       }}
@@ -268,7 +219,8 @@ export const CustomerDatabase = ({
 };
 
 CustomerDatabase.propTypes = {
-  searchAttendees: PropTypes.string,
+  rows: PropTypes.arrayOf(PropTypes.object),
+  loading: PropTypes.bool,
   statusFilter: PropTypes.number,
   onStatusFilterChange: PropTypes.func,
 };
