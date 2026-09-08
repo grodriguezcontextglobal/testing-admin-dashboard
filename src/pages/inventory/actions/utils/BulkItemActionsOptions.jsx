@@ -16,6 +16,7 @@ export const bulkItemInsertAlphanumeric = async ({
   user,
   navigate,
   openNotificationWithIcon,
+  openSuccessNotification,
   setLoadingStatus,
   setValue,
   img_url,
@@ -92,7 +93,7 @@ export const bulkItemInsertAlphanumeric = async ({
     setValue("container", "");
     setValue("containerSpotLimit", "0");
     setScannedSerialNumbers([]);
-    openNotificationWithIcon(
+    openSuccessNotification(
       "Your upload was registered and is processing in the background. We'll notify you when it's ready."
     );
     setLoadingStatus(false);
