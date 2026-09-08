@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Switch, message } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import SectionHeader from "../../../components/documents/new_form_components/SectionHeader";
@@ -10,6 +10,7 @@ import Input from "../../../components/UX/inputs/Input";
 import SelectComponent from "../../../components/UX/dropdown/SelectComponent";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { usePermission } from "../../../hooks/usePermission";
+import { onUpdateCompanyData } from "../../../store/slices/adminSlice";
 import {
   brandingFallbacks,
   brandingFromCompany,
@@ -71,6 +72,7 @@ const fileToBase64 = (file) =>
 const EmailBrandingSettings = () => {
   const { user } = useSelector((state) => state.admin);
   const companyData = user?.companyData;
+  const dispatch = useDispatch();
   const { notify, contextHolder } = useStatusNotification();
   const canEdit = usePermission("profile:company_settings");
 
@@ -121,6 +123,13 @@ const EmailBrandingSettings = () => {
         buildBrandingPayload(form)
       ),
     onSuccess: () => {
+      /* The form reads its initial state from the session's companyData, and
+         the session only ever refreshed by logging in again. Without folding
+         the saved branding back in, a reload showed the pre-save values — and
+         saving from that stale form pushed them back to the server, quietly
+         switching branding off again. Same fix as Company info and My details:
+         onUpdateCompanyData, never onLogin. */
+      dispatch(onUpdateCompanyData(buildBrandingPayload(form)));
       setOriginal(form);
       notify("success", "Email branding updated", 3);
       previewQuery.refetch();

@@ -31,6 +31,40 @@ export const persistCompanyHeaders = ({ companyId, companySqlId } = {}) => {
   }
 };
 
+/**
+ * Backfills the company headers from the persisted session when they are not in
+ * localStorage yet, and only then.
+ *
+ * persistCompanyHeaders runs at login and at the multiple-companies switch —
+ * the two moments the active company is chosen. Nothing else wrote these keys,
+ * so a session that was already open when they were introduced (redux-persist
+ * keeps `admin.status` authenticated across restarts, and nothing re-runs the
+ * login flow) kept working while sending every request without them. For
+ * /api/nodemailer that is invisible and expensive: the server resolves
+ * Company.email_branding from x-company-id, so a missing header silently sends
+ * Devitrak-branded mail on the client's behalf.
+ *
+ * Deliberately fills gaps only. An existing value belongs to whoever chose the
+ * active company last, and the switch modal must not be undone by a later boot
+ * reading a stale `companyData` out of the persisted session.
+ *
+ * @param {{ companyData?: { id?: string }, sqlInfo?: { company_id?: number|string } }} user
+ *        the Redux `admin.user`
+ * @returns {boolean} whether anything was written
+ */
+export const ensureCompanyHeaders = (user) => {
+  const missing = {};
+  if (!localStorage.getItem("x-company-id")) {
+    missing.companyId = user?.companyData?.id;
+  }
+  if (!localStorage.getItem("s-company-lq")) {
+    missing.companySqlId = user?.sqlInfo?.company_id;
+  }
+  const before = SESSION_STORAGE_KEYS.map((key) => localStorage.getItem(key)).join("|");
+  persistCompanyHeaders(missing);
+  return SESSION_STORAGE_KEYS.map((key) => localStorage.getItem(key)).join("|") !== before;
+};
+
 /** Removes every session/auth key from localStorage on logout. */
 export const clearSessionStorage = () => {
   SESSION_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));

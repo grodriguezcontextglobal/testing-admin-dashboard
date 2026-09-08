@@ -4,6 +4,7 @@ import {
   buildRequestPath,
   buildRouteScopedHeaders,
   clearSessionStorage,
+  ensureCompanyHeaders,
   persistCompanyHeaders,
 } from "./sessionHeaders";
 
@@ -114,5 +115,43 @@ describe("clearSessionStorage", () => {
       expect(localStorage.getItem(key)).toBeNull(),
     );
     expect(localStorage.getItem("unrelated")).toBe("keep");
+  });
+});
+
+describe("ensureCompanyHeaders", () => {
+  const session = {
+    companyData: { id: "665f0abc" },
+    sqlInfo: { company_id: 42 },
+  };
+
+  it("backfills both headers for a session that predates them", () => {
+    expect(ensureCompanyHeaders(session)).toBe(true);
+    expect(localStorage.getItem("x-company-id")).toBe("665f0abc");
+    expect(localStorage.getItem("s-company-lq")).toBe("42");
+  });
+
+  it("fills only the key that is missing", () => {
+    localStorage.setItem("s-company-lq", "42");
+    expect(ensureCompanyHeaders(session)).toBe(true);
+    expect(localStorage.getItem("x-company-id")).toBe("665f0abc");
+  });
+
+  it("never overwrites a stored value — the company switch owns it", () => {
+    localStorage.setItem("x-company-id", "the-company-just-switched-to");
+    localStorage.setItem("s-company-lq", "99");
+    expect(ensureCompanyHeaders(session)).toBe(false);
+    expect(localStorage.getItem("x-company-id")).toBe("the-company-just-switched-to");
+    expect(localStorage.getItem("s-company-lq")).toBe("99");
+  });
+
+  it("does nothing without a session", () => {
+    expect(ensureCompanyHeaders(null)).toBe(false);
+    expect(localStorage.getItem("x-company-id")).toBeNull();
+  });
+
+  it("does nothing when the session carries no company ids", () => {
+    expect(ensureCompanyHeaders({ companyData: {}, sqlInfo: {} })).toBe(false);
+    expect(localStorage.getItem("x-company-id")).toBeNull();
+    expect(localStorage.getItem("s-company-lq")).toBeNull();
   });
 });

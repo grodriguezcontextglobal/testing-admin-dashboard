@@ -20,7 +20,7 @@ import { onResetStripesInfo } from "./store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
-import { clearSessionStorage } from "./api/sessionHeaders";
+import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 // const InactivityLogout = lazy(() =>
@@ -37,7 +37,7 @@ const OfflineIndicator = lazy(() =>
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
-  const { status } = useSelector((state) => state.admin);
+  const { status, user } = useSelector((state) => state.admin);
   const adminToken = localStorage.getItem("admin-token");
   const dispatch = useDispatch();
   const location = useLocation();
@@ -115,10 +115,19 @@ const App = () => {
   useEffect(() => {
     const controller = new AbortController();
     dispatchActionBasedOnTokenValidation();
+    // A session that was already open when the route-scoped company headers
+    // were introduced never runs the login flow again, so nothing ever wrote
+    // them. Fill the gaps from the persisted session — /api/nodemailer reads
+    // x-company-id to pick the company's email branding, and without it the
+    // client's mail silently goes out wearing Devitrak's. Only ever fills what
+    // is missing, so the company switch stays in charge.
+    if (status === "authenticated" && adminToken && isTokenValid(adminToken)) {
+      ensureCompanyHeaders(user);
+    }
     return () => {
       controller.abort();
     };
-  }, [status, adminToken, location.pathname]);
+  }, [status, adminToken, user, location.pathname]);
 
   return (
     <InstallPromptProvider>
