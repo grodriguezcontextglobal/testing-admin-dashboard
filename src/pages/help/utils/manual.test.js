@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MANUAL_SECTIONS } from "../content";
 import {
   articleForRoute,
   articleToPlainText,
@@ -203,5 +204,38 @@ describe("articleForRoute", () => {
     expect(articleForRoute(SECTIONS, "/staff")).toBeNull();
     expect(articleForRoute(SECTIONS, "/")).toBeNull();
     expect(articleForRoute(SECTIONS, undefined)).toBeNull();
+  });
+});
+
+/* The shipped content, checked rather than trusted. A `related` id that does
+   not resolve is not an error anywhere — findArticle returns null and the
+   chip is filtered out — so a renamed article silently loses its inbound
+   links. This is the test that notices. */
+describe("the shipped manual", () => {
+  it("every related link points at an article that exists", () => {
+    flattenArticles(MANUAL_SECTIONS).forEach((article) => {
+      (article.related ?? []).forEach((id) => {
+        expect(findArticle(MANUAL_SECTIONS, id), `${article.id} → ${id}`).toBeTruthy();
+      });
+    });
+  });
+
+  it("no article links to itself", () => {
+    flattenArticles(MANUAL_SECTIONS).forEach((article) => {
+      expect(article.related ?? []).not.toContain(article.id);
+    });
+  });
+
+  it("article ids are unique across the whole manual", () => {
+    const ids = flattenArticles(MANUAL_SECTIONS).map((article) => article.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("every article says where it lives and what it is", () => {
+    flattenArticles(MANUAL_SECTIONS).forEach((article) => {
+      expect(article.title, article.id).toBeTruthy();
+      expect(article.summary, article.id).toBeTruthy();
+      expect(article.appRoute, article.id).toBeTruthy();
+    });
   });
 });

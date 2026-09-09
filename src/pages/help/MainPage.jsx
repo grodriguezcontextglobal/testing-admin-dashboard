@@ -196,9 +196,9 @@ const HelpMainPage = () => {
         </p>
         <div className="help-page__toolbar">
           <div className="help-page__search">
-            <label className="help-page__label" htmlFor="help-search">
+            {/* <label className="help-page__label" htmlFor="help-search">
               Search the manual
-            </label>
+            </label> */}
             <Input
               id="help-search"
               name="help-search"

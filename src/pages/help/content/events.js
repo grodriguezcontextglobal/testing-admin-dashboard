@@ -140,7 +140,7 @@ export const eventsSection = {
         "Devices returned — everything they were given is back.",
         "The Status column's own dropdown and the pills are the same single filter, so changing one moves the other.",
       ],
-      related: ["events-close", "consumers-assign"],
+      related: ["events-close", "students-events"],
     },
     {
       id: "events-close",
