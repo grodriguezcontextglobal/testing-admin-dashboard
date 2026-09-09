@@ -863,6 +863,7 @@ describe("Scoped roles — ROLE_SCOPE / getRoleScopeDimension", () => {
 
 const SCOPED_BASELINE_ACTIONS = [
   "nav:home",
+  "nav:help",
   "nav:inventory",
   "nav:profile",
   "staff:update_contact",
@@ -1185,5 +1186,29 @@ describe("hasPermission call sites", () => {
         RAW_ROLE_TYPE_ARG,
       ),
     ).toBeNull();
+  });
+});
+
+// ─── nav:help — el manual de uso es para todos los roles ────────────────────
+// Deliberado: cualquiera puede leer cómo funciona la app, y los artículos que
+// describen acciones con permisos elevados lo dicen en lugar de esconderse.
+describe("PERMISSIONS — nav:help (manual de uso)", () => {
+  it("lo tiene cualquier rol, incluidos assistant y los scoped", () => {
+    [
+      "root_admin",
+      "admin",
+      "sale_manager",
+      "event_manager",
+      "inventory_manager",
+      "assistant",
+      "inventory_location_manager",
+      "category_manager",
+    ].forEach((role) => {
+      expect(hasPermission("nav:help", role)).toBe(true);
+    });
+  });
+
+  it("no se lo concede a un roleType que no existe", () => {
+    expect(hasPermission("nav:help", "not_a_role")).toBe(false);
   });
 });

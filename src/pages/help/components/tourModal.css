@@ -1,0 +1,129 @@
+/**
+ * Tour layout: the schematic beside the words on a wide screen, stacked on a
+ * narrow one — with the mock on top when stacked, because the highlight is what
+ * the text is pointing at.
+ *
+ * The scale is redeclared here for the same reason as in dashboardMock.css:
+ * antd renders the modal in a portal, outside the element that scopes the
+ * manual page's variables.
+ */
+
+.help-tour {
+  --help-1: 4px;
+  --help-2: 8px;
+  --help-3: 12px;
+  --help-4: 16px;
+  --help-5: 24px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+  gap: var(--help-5);
+  align-items: start;
+}
+
+@media (max-width: 780px) {
+  .help-tour {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--help-4);
+  }
+}
+
+.help-tour__mock {
+  min-width: 0;
+}
+
+/* A panel of its own rather than text floating beside a diagram: the step is
+   the thing being read, and it needs an edge to sit against. */
+.help-tour__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-3);
+  padding: var(--help-4);
+  background-color: var(--gray-50, #f7f7f4);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+}
+
+.help-tour__counter {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+  margin: 0;
+}
+
+.help-tour__title {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+  margin: 0;
+}
+
+.help-tour__text {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-700, #454944);
+  margin: 0;
+}
+
+.help-tour__article-link {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-link, #155eef);
+}
+
+.help-tour__article-link:hover {
+  text-decoration: underline;
+}
+
+.help-tour__article-link:focus-visible {
+  outline: 2px solid var(--text-link, #155eef);
+  outline-offset: 2px;
+}
+
+/* Controls and progress are one footer block, separated from the prose by a
+   rule so the panel does not read as five stacked paragraphs. */
+.help-tour__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--help-3);
+  flex-wrap: wrap;
+  padding-top: var(--help-3);
+  margin-top: var(--help-1);
+  border-top: 1px solid var(--gray-200, #ddded6);
+}
+
+.help-tour__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--help-2);
+}
+
+.help-tour__dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--help-1);
+}
+
+.help-tour__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--gray-300, #c6c7bb);
+  transition: background-color 140ms ease;
+}
+
+.help-tour__dot--on {
+  background-color: var(--text-link, #155eef);
+}

@@ -1,0 +1,70 @@
+/**
+ * The help button, pinned to the right edge at half the viewport height.
+ *
+ * Half-height keeps it clear of the two things that already claim the corners:
+ * antd's notifications, which come in top-right, and the offline indicator at
+ * bottom-left. It is also reachable without scrolling on a long page, which the
+ * footer-height corner is not.
+ */
+
+.help-launcher {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 44px;
+  padding: 0;
+
+  cursor: pointer;
+  color: var(--gray-600, #5d615a);
+  background-color: var(--base-white, #fff);
+  /* Attached to the edge: rounded on the side that faces the page, square on
+     the side that meets the screen. */
+  border: 1px solid var(--gray-200, #ddded6);
+  border-right: none;
+  border-radius: var(--radius-md, 8px) 0 0 var(--radius-md, 8px);
+  box-shadow: var(--shadow-md);
+
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    width 120ms ease;
+}
+
+.help-launcher:hover,
+.help-launcher:focus-visible {
+  width: 46px;
+  color: var(--text-link, #155eef);
+  background-color: var(--gray-50, #f7f7f4);
+}
+
+.help-launcher:focus-visible {
+  outline: 2px solid var(--text-link, #155eef);
+  outline-offset: 2px;
+}
+
+/* On a phone the rail would sit over the content it is meant to explain, so it
+   shrinks to something that reads as an edge affordance rather than a button. */
+@media (max-width: 600px) {
+  .help-launcher {
+    width: 30px;
+    height: 38px;
+  }
+
+  .help-launcher:hover,
+  .help-launcher:focus-visible {
+    width: 34px;
+  }
+}
+
+@media print {
+  .help-launcher {
+    display: none;
+  }
+}

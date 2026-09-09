@@ -1,0 +1,354 @@
+/**
+ * User manual — two panes: what there is to read, and what you are reading.
+ *
+ * Two things to know before editing.
+ *
+ * The spacing is a scale, not a set of choices. Every gap and padding below is
+ * one of --help-1 through --help-6; the first draft of this file used 2, 6, 10,
+ * 20 and 22px wherever each felt right, and the result read as untidy for
+ * exactly that reason.
+ *
+ * --help-gutter is 20px because that is the horizontal padding of
+ * `.profile-section__head`, and the articles render inside ProfileSection.
+ * That component's `__body` has no padding of its own, so anything placed in it
+ * has to supply the gutter itself or it sits flush against the card border.
+ *
+ * Colours go through the app's tokens so the page follows the theme. Note the
+ * palette is warm (--gray-200 is #ddded6, not #eaecf0) and there is no
+ * --background-primary or --blue-dark-600: surfaces are --base-white and links
+ * are --text-link.
+ */
+
+.help-page {
+  --help-1: 4px;
+  --help-2: 8px;
+  --help-3: 12px;
+  --help-4: 16px;
+  --help-5: 24px;
+  --help-6: 32px;
+  --help-gutter: 20px;
+
+  width: 100%;
+  padding: 0;
+}
+
+/* ────────────────────────────────────────────────────────────────── head ── */
+
+.help-page__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-2);
+  padding-bottom: var(--help-5);
+  margin-bottom: var(--help-5);
+  border-bottom: 1px solid var(--gray-200, #ddded6);
+}
+
+.help-page__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--help-3);
+  flex-wrap: wrap;
+  margin-top: var(--help-2);
+}
+
+/* Both controls are the same height and sit on the same line: the search field
+   carries no floating label (its own label lives above the row), because MUI's
+   shrunk InputLabel adds height the sibling button does not have, and aligning
+   the two then depends on guessing that offset. */
+.help-page__search {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+
+.help-page__label {
+  display: block;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--gray-700, #454944);
+}
+
+.help-page__layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  gap: var(--help-6);
+  align-items: start;
+}
+
+/* One column below the tablet break: the nav becomes a list above the article
+   rather than a rail beside it, because a 240px rail on a phone leaves nothing
+   for the reading column. */
+@media (max-width: 900px) {
+  .help-page__layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--help-5);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────── nav ── */
+
+.help-nav {
+  position: sticky;
+  top: var(--help-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-5);
+  max-height: calc(100dvh - var(--help-6));
+  overflow-y: auto;
+  padding: var(--help-4);
+  background: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-xs);
+}
+
+@media (max-width: 900px) {
+  .help-nav {
+    position: static;
+    max-height: none;
+  }
+}
+
+.help-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-2);
+}
+
+.help-nav__section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+  /* Aligned with the items below it, which carry the same horizontal padding —
+     an uppercase label sitting 10px left of its own list is what made the rail
+     look ragged. */
+  padding: 0 var(--help-2);
+  margin: 0;
+}
+
+.help-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-1);
+}
+
+.help-nav__item {
+  width: 100%;
+  display: block;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: var(--help-2);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-700, #454944);
+  font-family: inherit;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.help-nav__item:hover {
+  background-color: var(--gray-50, #f7f7f4);
+}
+
+.help-nav__item--active {
+  background-color: var(--gray-100, #eeefe9);
+  color: var(--gray-900, #171d1a);
+  font-weight: 600;
+}
+
+.help-nav__item:focus-visible {
+  outline: 2px solid var(--text-link, #155eef);
+  outline-offset: 1px;
+}
+
+.help-nav__empty {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-500, #777b73);
+  margin: 0;
+  padding: 0 var(--help-2);
+}
+
+/* Same left edge as the nav items: a disc list indented by its own marker room
+   would start 18px further in than everything above it. */
+.help-nav__pending-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-1);
+}
+
+.help-nav__pending-list li {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-500, #777b73);
+  padding: var(--help-1) var(--help-2);
+}
+
+/* ─────────────────────────────────────────────────────────────── article ── */
+
+.help-article {
+  display: flex;
+  flex-direction: column;
+  /* The gap between cards; the header's own parts are tighter, and set below. */
+  gap: var(--help-5);
+  min-width: 0;
+}
+
+.help-article__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-1);
+}
+
+.help-article__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-500, #777b73);
+  margin: 0;
+}
+
+.help-article__title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+  margin: 0;
+}
+
+.help-article__summary {
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--gray-700, #454944);
+  margin: 0;
+  max-width: 68ch;
+}
+
+/* The header block is one unit: eyebrow, title, meta row and summary belong
+   together, so they are spaced tightly and the card gap below separates them
+   from the sections. */
+.help-article__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-3);
+}
+
+.help-article__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--help-3);
+  flex-wrap: wrap;
+  /* A row of mixed heights (a text link, a pill, a button) reads as ragged
+     unless it is centred and the button is pushed to its own end. */
+  min-height: 32px;
+}
+
+.help-article__meta-actions {
+  margin-left: auto;
+}
+
+.help-article__where {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-link, #155eef);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.help-article__where:hover {
+  text-decoration: underline;
+}
+
+.help-article__elevated {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--warning-700, #b54708);
+  background-color: var(--warning-50, #fffaeb);
+  border-radius: var(--radius-full, 9999px);
+  padding: 2px var(--help-3);
+}
+
+/* Inside ProfileSection, whose __body carries no padding: the gutter matches
+   the section head's 20px, and the extra left room is the list marker's. */
+.help-article__steps,
+.help-article__bullets {
+  margin: 0;
+  padding: 0 var(--help-gutter) var(--help-4) calc(var(--help-gutter) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-3);
+}
+
+.help-article__steps li,
+.help-article__bullets li {
+  padding-left: var(--help-1);
+}
+
+.help-article__step-text {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-800, #2d302c);
+  margin: 0;
+  max-width: 68ch;
+}
+
+.help-article__step-note {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-500, #777b73);
+  margin: var(--help-1) 0 0;
+  max-width: 68ch;
+}
+
+.help-article__bullets li {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-800, #2d302c);
+  max-width: 68ch;
+}
+
+.help-article__related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--help-2);
+  padding: 0 var(--help-gutter) var(--help-4);
+}
+
+.help-article__related-link {
+  border: 1px solid var(--gray-300, #c6c7bb);
+  background: var(--base-white, #fff);
+  border-radius: var(--radius-full, 9999px);
+  padding: var(--help-1) var(--help-3);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gray-700, #454944);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.help-article__related-link:hover {
+  background-color: var(--gray-50, #f7f7f4);
+  border-color: var(--gray-400, #a2a69b);
+}
+
+.help-article__related-link:focus-visible {
+  outline: 2px solid var(--text-link, #155eef);
+  outline-offset: 2px;
+}

@@ -14,6 +14,7 @@ import NewPost from "../../pages/posts/action/NewPost";
 import EditPost from "../../pages/posts/action/EditPost";
 import DisplayArticle from "../../pages/posts/components/DisplayArticle";
 import HeaderComponent from "../../components/general/HeaderComponent";
+import HelpLauncher from "../../pages/help/HelpLauncher";
 import ViewDocument from "../../pages/Profile/Documents/ViewDocument";
 import EditDocument from "../../pages/Profile/Documents/EditDocument";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
@@ -179,6 +180,9 @@ const DeviceDetail = lazy(() =>
   import("../../pages/events/quickGlance/inventory/DeviceDetail")
 );
 const ConsumersMainPage = lazy(() => import("../../pages/consumers/MainPage"));
+// The user manual is deliberately ungated: every role can read how the app
+// works, and articles about elevated actions say so instead of being hidden.
+const HelpMainPage = lazy(() => import("../../pages/help/MainPage"));
 const ConsumerDetail = lazy(() =>
   import("../../pages/consumers/DetailPerConsumer")
 );
@@ -283,6 +287,8 @@ const AuthRoutes = () => {
               <Route path="/" element={<Home />} />
               <Route path="/events" element={<EventMainPage />} />
               <Route path="/design-lab" element={<DesignLab />} />
+              <Route path="/help" element={<HelpMainPage />} />
+              <Route path="/help/:articleId" element={<HelpMainPage />} />
               <Route
                 path="/events/event-quickglance"
                 element={
@@ -594,6 +600,10 @@ const AuthRoutes = () => {
           </Routes>
         </div>
       </Suspense>
+      {/* Pinned to the right edge at half height, on every page but the manual
+          itself. Not lazy: chrome that appears a chunk-fetch later reads as a
+          layout glitch. */}
+      <HelpLauncher />
       {/* full-bleed footer, pinned to the viewport bottom (flex column + auto margin) */}
       <div style={{ width: "100%", marginTop: "auto" }}>
         <FooterComponent full ref={navbarRef} />

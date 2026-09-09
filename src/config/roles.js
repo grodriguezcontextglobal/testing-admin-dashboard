@@ -276,6 +276,11 @@ export const PERMISSIONS = {
   // without this baseline they'd see an empty app shell (review R6) despite
   // having inventory access; they get NO other nav:* entry.
   "nav:home": [...ALL_ROLES, ...SCOPED_ROLES_ALL],
+  /* The user manual. Everybody reads it, including assistants and the scoped
+     roles: an article about an action you cannot take still tells you what the
+     person who can is going to do, and it says so on the article itself rather
+     than being hidden from the nav. */
+  "nav:help": [...ALL_ROLES, ...SCOPED_ROLES_ALL],
   "nav:inventory": [...INVENTORY_RU, ...SCOPED_ROLES_ALL],
   "nav:events": EVENT_RU,
   "nav:consumers": EVENT_CRU,

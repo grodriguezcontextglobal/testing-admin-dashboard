@@ -1,0 +1,197 @@
+/**
+ * The schematic screen used by the tour.
+ *
+ * Every block is a button so a reader can click the part they have a question
+ * about instead of stepping through to it, which also means the whole mock is
+ * reachable by keyboard without any extra handling.
+ *
+ * Spacing is the same scale the manual page uses, redeclared here because this
+ * component renders inside antd's Modal — a portal outside `.help-page`, so
+ * variables scoped to that element would not reach it.
+ *
+ * The active block is marked twice over: a ring on the button and its own
+ * border taking the link colour. One of the two alone reads as a hover state
+ * rather than as "this is the part we are talking about".
+ */
+
+.help-mock {
+  --help-1: 4px;
+  --help-2: 8px;
+  --help-3: 12px;
+  --help-4: 16px;
+
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-2);
+  min-width: 0;
+}
+
+.help-mock__caption {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--gray-500, #777b73);
+}
+
+.help-mock__screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-2);
+  padding: var(--help-3);
+  border: 1px solid var(--gray-200, #ddded6);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--gray-50, #f7f7f4);
+}
+
+.help-mock__row {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-md, 8px);
+  font-family: inherit;
+  text-align: left;
+  transition:
+    opacity 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.help-mock__row--dimmed {
+  opacity: 0.45;
+}
+
+.help-mock__row--active {
+  box-shadow: 0 0 0 3px var(--action-100, #d1e0ff);
+}
+
+.help-mock__row--active > *,
+.help-mock__row--active .help-mock__cards-cell,
+.help-mock__row--active .help-mock__pills-cell {
+  border-color: var(--text-link, #155eef);
+}
+
+.help-mock__row:focus-visible {
+  outline: 2px solid var(--text-link, #155eef);
+  outline-offset: 2px;
+}
+
+/* ───────────────────────────────────────────────────────── the row kinds ── */
+
+/* One padding for every block, so the left edges of a nav, a header, a bar and
+   a table all line up down the mock. */
+.help-mock__nav,
+.help-mock__header,
+.help-mock__bar,
+.help-mock__block,
+.help-mock__table {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--help-3);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--help-3);
+  background-color: var(--base-white, #fff);
+  border: 1px solid var(--gray-200, #ddded6);
+  transition: border-color 140ms ease;
+}
+
+.help-mock__nav {
+  background-color: var(--gray-100, #eeefe9);
+}
+
+.help-mock__header .help-mock__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900, #171d1a);
+}
+
+.help-mock__block {
+  min-height: 48px;
+}
+
+.help-mock__table {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--help-2);
+}
+
+.help-mock__table-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--help-1);
+}
+
+.help-mock__table-line {
+  height: 6px;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--gray-100, #eeefe9);
+}
+
+/* Ragged ends read as rows of text rather than as three identical bars. */
+.help-mock__table-line:nth-child(2) {
+  width: 85%;
+}
+
+.help-mock__table-line:nth-child(3) {
+  width: 70%;
+}
+
+.help-mock__label {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-700, #454944);
+}
+
+.help-mock__aside {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--gray-500, #777b73);
+  text-align: right;
+}
+
+/* Cells wide enough for the longest label the mocks use ("New transaction ·
+   take payment"), so a card never squeezes its text to two characters a line. */
+.help-mock__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: var(--help-2);
+}
+
+.help-mock__cards-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--gray-200, #ddded6);
+  background-color: var(--base-white, #fff);
+  padding: var(--help-2);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  color: var(--gray-700, #454944);
+  transition: border-color 140ms ease;
+}
+
+.help-mock__pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--help-2);
+  /* Matches the block padding either side, so a pill row does not start
+     further left than the cards above it. */
+  padding: var(--help-2) 0;
+}
+
+.help-mock__pills-cell {
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--gray-200, #ddded6);
+  background-color: var(--base-white, #fff);
+  padding: var(--help-1) var(--help-3);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--gray-700, #454944);
+  transition: border-color 140ms ease;
+}
