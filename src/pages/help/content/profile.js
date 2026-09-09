@@ -188,7 +188,7 @@ export const profileSection = {
       rules: [
         "Neither page is gated by role, so check who you are giving dashboard access to — billing details are visible to any role that can sign in.",
       ],
-      related: ["students-fees", "profile-company-info"],
+      related: ["transactions-deposit", "students-fees", "profile-company-info"],
     },
     {
       id: "profile-documents",

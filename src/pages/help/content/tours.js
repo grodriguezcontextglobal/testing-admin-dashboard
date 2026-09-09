@@ -143,6 +143,63 @@ export const DASHBOARD_MOCKS = [
       },
     ],
   },
+  {
+    id: "homeDashboard",
+    title: "The home dashboard",
+    subtitle: "Company-wide numbers, then the live picture",
+    rows: [
+      {
+        id: "nav",
+        kind: "nav",
+        label: "Home · Inventory · Events · Consumers · Staff",
+        aside: "search",
+      },
+      {
+        id: "kpis",
+        kind: "cards",
+        cells: [
+          "Inventory units",
+          "Devices out",
+          "Team members",
+          "Consumers",
+          "Students",
+          "Live events",
+          "Upcoming events",
+        ],
+      },
+      { id: "live", kind: "block", label: "Live event snapshot", aside: "or none right now" },
+      {
+        id: "charts",
+        kind: "cards",
+        cells: ["Inventory value", "Held by category", "Devices per event"],
+      },
+    ],
+  },
+  {
+    id: "staffProfile",
+    title: "One staff member",
+    subtitle: "Their role, where they work, and what they are holding",
+    rows: [
+      {
+        id: "header",
+        kind: "header",
+        label: "Name · role · access on",
+        aside: "Change role",
+      },
+      {
+        id: "actions",
+        kind: "cards",
+        cells: [
+          "Assign devices",
+          "Assign to an event",
+          "Locations & permissions",
+          "Send password reset",
+        ],
+      },
+      { id: "devices", kind: "table", label: "Equipment this person holds" },
+      { id: "events", kind: "block", label: "Events they are assigned to" },
+    ],
+  },
 ];
 
 export const SECTION_TOURS = [
@@ -333,6 +390,80 @@ export const SECTION_TOURS = [
         title: "One page no role can grant",
         text: "System jobs is gated on an employee-level super-user flag rather than on a role, so changing somebody's role will never open it. If a page stays shut for an administrator, this is why.",
         article: "profile-policies",
+      },
+    ],
+  },
+  {
+    sectionId: "home",
+    mockId: "homeDashboard",
+    title: "Take the tour of the dashboard",
+    steps: [
+      {
+        target: "kpis",
+        title: "Seven numbers, all company-wide",
+        text: "Nothing here is filtered to an event or a location. A tile that looks wrong is usually being read as if it were scoped to something — it never is.",
+        article: "home-dashboard",
+      },
+      {
+        target: "kpis",
+        title: "One label is not fixed",
+        text: "The audience tile follows the industry the company is set up as: a school reads \"Students\" where an events company reads its own word. Same number, named for who is using it.",
+        article: "home-dashboard",
+      },
+      {
+        target: "live",
+        title: "What is happening right now",
+        text: "The live snapshot is the event running today. \"No live event right now\" is an honest empty state, not a failure to load.",
+        article: "home-dashboard",
+      },
+      {
+        target: "charts",
+        title: "Where the value is sitting",
+        text: "The inventory's worth, what is held by category, and devices per event — the three questions that come up when somebody asks whether to buy more.",
+        article: "home-dashboard",
+      },
+      {
+        target: "nav",
+        title: "And the fastest route to one thing",
+        text: "The search bar covers seven kinds at once — devices, consumers, students, staff, events, inventory, posts — grouped by kind. A serial number is the quickest way to find a device, and it is text: leading zeros count.",
+        article: "home-search",
+      },
+    ],
+  },
+  {
+    sectionId: "staff",
+    mockId: "staffProfile",
+    title: "Take the tour of a staff member",
+    steps: [
+      {
+        target: "header",
+        title: "Role, locations and events are three things",
+        text: "The role is what they may do anywhere, locations are where they may do it, events are which jobs they are on. Confusing them is how somebody ends up unable to work a job they were definitely added to.",
+        article: "staff-profile",
+      },
+      {
+        target: "actions",
+        title: "You may not see all of these",
+        text: "Each action has its own permission, so two people looking at the same profile see different buttons. Correcting a phone number and granting more access are deliberately separate acts.",
+        article: "staff-profile",
+      },
+      {
+        target: "events",
+        title: "Event access ends by itself",
+        text: "Closing an event removes staff access to it — nobody has to be un-assigned afterwards. And being on an event is not a role: an assistant on an event still cannot delete it.",
+        article: "staff-events",
+      },
+      {
+        target: "devices",
+        title: "A colleague holding a device is a device that is out",
+        text: "Staff equipment is tracked like anybody else's, and inventory names the staff member as its holder.",
+        article: "staff-devices",
+      },
+      {
+        target: "header",
+        title: "When somebody leaves",
+        text: "Switch access off rather than deleting them: they cannot sign in, and everything they did stays on the record. Return their equipment first — turning access off does not release it.",
+        article: "staff-access",
       },
     ],
   },
