@@ -3,6 +3,20 @@
 **From:** frontend (admin dashboard) · **Date:** 2026-09-08
 **About:** `Company.email_branding`, `nodeMailer/branding.js`, `POST /api/nodemailer/*`
 
+> **Corregido 2026-09-10.** Dos afirmaciones de este documento son falsas y se
+> dejan como estaban para que la conversación se lea entera:
+>
+> - **§1 y §2.1** dicen que el servidor resuelve la marca "desde el header
+>   `x-company-id`". Es impreciso: la resuelve desde `request.verifiedCompanyId`,
+>   que `notificationAuth` pone tras validar el header contra la sesión. El
+>   header crudo no se honra nunca.
+> - **§3.4** afirma que `reset-admin-password` llega con marca desde el detalle
+>   de staff y sin marca desde el login. No es cierto: ese endpoint no lleva
+>   marca en ningún caso. Era una inferencia, no un hallazgo.
+>
+> Ver `BACKEND_email_branding_coverage_REPLY.md` y nuestra respuesta en
+> `FRONTEND_email_branding_coverage_ANSWER.md`.
+
 The requirement from the client side is now stated plainly: **when a company
 configures Email branding, every email Devitrak sends on its behalf must wear
 it — and every event-related email in particular must keep the company's

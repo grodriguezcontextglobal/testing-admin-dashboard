@@ -96,9 +96,12 @@ export const profileSection = {
         "Needs permission to change company settings — the same gate as the rest of the company-wide pages.",
         "The from-address stays noreply@devitrak.com so mail keeps passing its sender checks. The sender *name* is yours; the address is not.",
         "An invalid colour is not saved: the renderer would ignore it, and a stored value the preview refuses to honour reads as a bug.",
+        "Most of what the app sends carries your branding, but not all of it. Account emails are deliberately Devitrak's: a password reset has to look like the platform you have an account with, not like your school, because that is the email a phishing attempt would imitate.",
+        "The preview offers a handful of samples rather than every template. It is there to show the effect, not to list what is covered.",
       ],
       pitfalls: [
         "Filling the fields is not enough — the switch has to be on. Configured-but-off is the usual reason branding \"did not apply\".",
+        "A few notification types do not carry branding yet — the message sent to everyone at an event is the one you are most likely to notice. If a particular email arrives looking like Devitrak while the rest look like you, that is this, not a setting.",
       ],
       related: ["profile-company-info", "profile-notifications"],
     },
