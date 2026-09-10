@@ -92,6 +92,41 @@ const byLastNameThenFirst = (a, b) => {
   return aLast === bLast ? aFirst.localeCompare(bFirst) : aLast.localeCompare(bLast);
 };
 
+/**
+ * Who this is, in a dropdown where the name alone may not say.
+ *
+ * "What if you have two say the same last name? (...) if you have a school and
+ * you have 200 employees, at least two of them is going to have the same last
+ * name. Maybe they're related even." — and the answer in the room was the
+ * email, because it is the one field that cannot repeat.
+ *
+ * Deliberately a plain string rather than a two-line node: `filterOption` in
+ * Header.jsx lowercases `option.label` to match what is typed, so a node would
+ * break the search — and building it this way makes the email searchable for
+ * free, which is how you find the right John Smith when you know his address
+ * and not which one he is.
+ *
+ * The address is read from `email` OR `user`, because the employees array
+ * stores it under `user` (Login.jsx queries `"employees.user"` with an email,
+ * and useInventoryData matches `emp.user === user.email`) while other records
+ * of the same person use `email`. Reading only one of the two would have made
+ * this a no-op against the real payload.
+ *
+ * It has to look like an address to be shown: `user` holds an id in some
+ * records, and printing that next to a name would be worse than printing
+ * nothing. No email recorded leaves the name alone, with no dangling dash.
+ */
+const emailLike = (value) => {
+  const text = String(value ?? "").trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? text : "";
+};
+
+const staffFilterLabel = (staff) => {
+  const name = staffFullName(staff);
+  const email = emailLike(staff?.email) || emailLike(staff?.user);
+  return email ? `${name} — ${email}` : name;
+};
+
 export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => {
   if (!Array.isArray(staffList)) return [];
   return staffList
@@ -104,7 +139,7 @@ export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => 
        key has to be carried on the option and stripped off again. */
     .sort(byLastNameThenFirst)
     .map((staff) => ({
-      label: staffFullName(staff),
+      label: staffFilterLabel(staff),
       value: staffId(staff),
     }));
 };

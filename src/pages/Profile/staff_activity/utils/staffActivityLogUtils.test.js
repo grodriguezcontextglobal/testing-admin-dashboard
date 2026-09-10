@@ -160,8 +160,20 @@ describe("ACTIVITY_LOG_ACTIONS / buildActionFilterOptions", () => {
 describe("buildStaffFilterOptions(staffList, viewerRoleType, viewerId)", () => {
   const staffList = [
     { _id: "s-root", name: "Rita", lastName: "Root", roleType: "root_admin" },
-    { _id: "s-admin", name: "Al", lastName: "Admin", roleType: "admin" },
-    { _id: "s-assist", name: "Ann", lastName: "Assist", roleType: "assistant" },
+    {
+      _id: "s-admin",
+      name: "Al",
+      lastName: "Admin",
+      email: "al@school.org",
+      roleType: "admin",
+    },
+    {
+      _id: "s-assist",
+      name: "Ann",
+      lastName: "Assist",
+      email: "ann@school.org",
+      roleType: "assistant",
+    },
   ];
 
   it("admin ve las opciones de admin y roles inferiores, no root_admin", () => {
@@ -169,9 +181,64 @@ describe("buildStaffFilterOptions(staffList, viewerRoleType, viewerId)", () => {
     expect(options.map((option) => option.value)).toEqual(["s-admin", "s-assist"]);
   });
 
-  it("cada opción tiene label con nombre completo y value con el id del staff", () => {
+  it("cada opción lleva nombre completo Y email, que es lo único único", () => {
     const options = buildStaffFilterOptions(staffList, "admin", "s-admin");
-    expect(options[0]).toEqual({ label: "Al Admin", value: "s-admin" });
+    expect(options[0]).toEqual({
+      label: "Al Admin — al@school.org",
+      value: "s-admin",
+    });
+  });
+
+  /* Fredrik, 56:31 — "what if you have two say the same last name? (...) if you
+     have a school and you have 200 employees, at least two of them is going to
+     have the same last name". El nombre no desempata; el email sí. */
+  it("distingue a dos personas con el mismo nombre completo", () => {
+    const smiths = [
+      { _id: "s-1", name: "John", lastName: "Smith", email: "john.smith@school.org", roleType: "assistant" },
+      { _id: "s-2", name: "John", lastName: "Smith", email: "j.smith@school.org", roleType: "assistant" },
+    ];
+    const labels = buildStaffFilterOptions(smiths, "admin", "s-admin").map((o) => o.label);
+    expect(new Set(labels).size).toBe(2);
+    expect(labels).toContain("John Smith — john.smith@school.org");
+    expect(labels).toContain("John Smith — j.smith@school.org");
+  });
+
+  /* El label es lo que busca `filterOption` en Header.jsx, así que teclear el
+     email tiene que encontrar a la persona. */
+  it("el label es un string, para que buscar por email funcione", () => {
+    const options = buildStaffFilterOptions(staffList, "admin", "s-admin");
+    options.forEach((option) => expect(typeof option.label).toBe("string"));
+    const hit = options.filter((option) =>
+      option.label.toLowerCase().includes("ann@school"),
+    );
+    expect(hit).toHaveLength(1);
+    expect(hit[0].value).toBe("s-assist");
+  });
+
+  /* La lista real de empleados guarda el correo en `user`, no en `email`
+     (Login.jsx filtra por "employees.user" con un email). Leer solo `email`
+     habría dejado esto en no-op contra el payload de producción. */
+  it("lee el correo de `user` cuando no hay `email`", () => {
+    const fromUserField = [
+      { _id: "s-u", name: "Uma", lastName: "User", user: "uma@school.org", roleType: "assistant" },
+    ];
+    expect(buildStaffFilterOptions(fromUserField, "admin", "s-admin")[0].label).toBe(
+      "Uma User — uma@school.org",
+    );
+  });
+
+  it("ignora un `user` que no es un correo, para no imprimir un id junto al nombre", () => {
+    const idInUser = [
+      { _id: "s-i", name: "Ida", lastName: "Idy", user: "665f0abc12de34f567890abc", roleType: "assistant" },
+    ];
+    expect(buildStaffFilterOptions(idInUser, "admin", "s-admin")[0].label).toBe("Ida Idy");
+  });
+
+  it("sin email, el label es el nombre solo — sin separador colgando", () => {
+    const noEmail = [{ _id: "s-x", name: "Nadia", lastName: "Nomail", roleType: "assistant" }];
+    expect(buildStaffFilterOptions(noEmail, "admin", "s-admin")[0].label).toBe(
+      "Nadia Nomail",
+    );
   });
 
   it("incluye siempre la propia entrada del viewer", () => {

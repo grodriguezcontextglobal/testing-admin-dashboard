@@ -162,14 +162,17 @@ export const profileSection = {
     },
     {
       id: "profile-staff-activity",
-      title: "Staff activity — the audit trail",
+      title: "Audit trail",
       appRoute: "/profile/staff-activity",
       summary:
-        "Who did what, and when. It is the record you go to after the fact: who assigned that device, who closed that event, who changed that role.",
+        "Who did what, and when. It is the record you go to after the fact: who assigned that device, who closed that event, who changed that role. The page is called Audit trail because that is what it is — and the word is worth using with a client, since it is the one an auditor recognises.",
       elevated: true,
       rules: [
         "Needs permission to read staff. An assistant does not see it.",
         "It is a record, not a feed to act on — nothing here can be undone from this page.",
+        "People are listed with both names, because a school with two hundred staff will have two of the same surname.",
+        "The people filter shows each person as their full name and their email, since the email is the one field that cannot repeat. Typing an address finds them.",
+        "A device has its own audit trail on its page, covering just that device.",
       ],
       related: ["staff-roles"],
     },
