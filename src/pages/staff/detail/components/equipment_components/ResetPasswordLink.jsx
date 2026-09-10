@@ -31,7 +31,6 @@ import "../../../../../styles/global/actionForm.css";
  */
 const ForgetPasswordLinkFromStaffPage = () => {
   const { profile } = useSelector((state) => state.staffDetail);
-  const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
   const { notify, contextHolder } = useStatusNotification();
   const [notice, setNotice] = useState(null);
@@ -71,6 +70,13 @@ const ForgetPasswordLinkFromStaffPage = () => {
 
   const closeModal = () => navigate(`/staff/${profile.adminUserInfo.id}/main`);
 
+  /* The handler reads `contactInfo` and `linkToResetPassword`, and nothing
+     else (see src/docs/api-payloads.md and the backend's reply of 2026-09-10).
+     This used to also send `company_logo`, which nobody read: account
+     recovery is deliberately Devitrak-branded, because the person opening it
+     needs to recognise the platform their account is on rather than their
+     school — it is the email a phishing attempt would imitate. Sending a logo
+     made the code look like the opposite was true. */
   const sendLink = useMutation({
     mutationFn: () =>
       devitrakApi.post("/nodemailer/reset-admin-password", {
@@ -79,7 +85,6 @@ const ForgetPasswordLinkFromStaffPage = () => {
           account.id
         }&stamp-time=${encodeURI(`${new Date()}`)}`,
         contactInfo: { email: profile.email, company: account.company },
-        company_logo: user.companyData.company_logo,
       }),
     onSuccess: (response) => {
       if (!response.data?.ok) {
