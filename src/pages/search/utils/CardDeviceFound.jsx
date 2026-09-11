@@ -73,14 +73,27 @@ const CardDeviceFound = ({ props, fn, returnFn, loadingStatus, returnLoading }) 
         <p style={FIELD_VALUE}>{props?.serialNumber}</p>
       </div>
 
+      {/* A unit on the shelf has no event, so the row says where it is instead
+          of printing an empty Event field under a heading. */}
       <div style={{ marginBottom: '12px' }}>
-        <p style={FIELD_LABEL}>Event</p>
-        <p style={{ ...FIELD_VALUE, fontSize: '13px' }}>{props?.event}</p>
+        <p style={FIELD_LABEL}>{props.inWarehouse ? 'Location' : 'Event'}</p>
+        <p style={{ ...FIELD_VALUE, fontSize: '13px' }}>
+          {props.inWarehouse ? props?.location || '—' : props?.event}
+        </p>
       </div>
 
-      <BadgeWithDot color={props.active ? 'orange' : 'success'} size="sm">
-        {props.active ? 'In transaction' : "In event's stock"}
-      </BadgeWithDot>
+      {/* Three states, not two: in someone's hands, in an event's pool, or in
+          stock. Labelling a warehouse unit "In event's stock" would be wrong
+          about the one thing the search was asked. */}
+      {props.inWarehouse ? (
+        <BadgeWithDot color="blue" size="sm">
+          In warehouse
+        </BadgeWithDot>
+      ) : (
+        <BadgeWithDot color={props.active ? 'orange' : 'success'} size="sm">
+          {props.active ? 'In transaction' : "In event's stock"}
+        </BadgeWithDot>
+      )}
     </div>
   </ReusableCardWithHeaderAndFooter>
 )

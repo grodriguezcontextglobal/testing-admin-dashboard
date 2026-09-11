@@ -23,6 +23,11 @@ import {
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import CardDeviceFound from "../utils/CardDeviceFound";
+import {
+  dedupeBySerial,
+  splitByWarehouse,
+  warehouseCard,
+} from "../utils/warehouseResults";
 import NoDataFound from "../utils/NoDataFound";
 import ReleaseDeposit from "./ReleaseDeposit";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
@@ -111,7 +116,7 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
             data: value,
             active: false,
           };
-          setFoundDeviceData([template]);
+          setFoundDeviceData((prev) => dedupeBySerial([...prev, template]));
         }
       }
       return null;
@@ -169,18 +174,50 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
       finalResult.add(template);
     }
     setLoadingSearchingResult(false);
-    return setFoundDeviceData([...foundDeviceData, ...Array.from(finalResult)]);
+    return setFoundDeviceData((prev) =>
+      dedupeBySerial([...prev, ...Array.from(finalResult)]),
+    );
   }, []);
 
+  /**
+   * Show what the search actually found, wherever the unit is.
+   *
+   * This used to discard it. If every match was in stock the result was set to
+   * an empty array on purpose, and because the test was `some`, one unit being
+   * out sent the whole list down the event branch — where the ones on the shelf
+   * were never looked at either. Searching a serial answered with nothing for
+   * the most ordinary case there is: the thing is in the warehouse.
+   *
+   * Now the result is split rather than branched on. Shelf rows become cards of
+   * their own, and the event lookup still runs for the units that did leave,
+   * appending to them.
+   */
   const checkingIfItemInWarehouseOrNot = () => {
-    if (searchingQuery.data) {
-      const result = searchingQuery?.data?.data?.result;
-      if (result.some((item) => item.warehouse < 1)) {
-        return checkPoolEventInventory(); //fetchActiveAssignedDevicesPerEvent();
-      }
-      return setFoundDeviceData([]);
+    const rows = searchingQuery?.data?.data?.result;
+    if (!Array.isArray(rows)) return null;
+
+    const { inWarehouse, out } = splitByWarehouse(rows);
+    const images = imagesDeviceFoundData();
+    const shelfCards = inWarehouse.map((row) =>
+      warehouseCard(row, {
+        image: images?.[row.item_group]?.at(-1)?.source,
+      }),
+    );
+
+    if (shelfCards.length > 0) {
+      setFoundDeviceData((prev) => dedupeBySerial([...prev, ...shelfCards]));
     }
+    if (out.length > 0) {
+      checkPoolEventInventory();
+    }
+    setLoadingSearchingResult(false);
+    return null;
   };
+
+  /* A unit in stock has no event to open, so it opens its own inventory record
+     — the same route the inventory table uses. */
+  const openInventoryRecord = (props) =>
+    props?.itemId ? navigate(`/inventory/item?id=${props.itemId}`) : null;
 
   const updatingTrigger = setInterval(() => {
     if (tryingCounting < 3) {
@@ -579,14 +616,23 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
           <Grid container gap={1}>
             {sortAndRenderFoundData()?.length > 0 && tryingCounting < 3
               ? sortAndRenderFoundData()?.map((item) => (
-                  <Grid key={item.id} item xs={12} sm={12} md={4} lg={4}>
+                  <Grid
+                    key={item.serialNumber ?? item.id}
+                    item
+                    xs={12}
+                    sm={12}
+                    md={4}
+                    lg={4}
+                  >
                     <CardDeviceFound
-                      key={item.id}
+                      key={item.serialNumber ?? item.id}
                       props={item}
                       fn={
-                        item.active
-                          ? handleDeviceSearch
-                          : checkItemInEventWhenItIsNotInTransaction
+                        item.inWarehouse
+                          ? openInventoryRecord
+                          : item.active
+                            ? handleDeviceSearch
+                            : checkItemInEventWhenItIsNotInTransaction
                       }
                       returnFn={returningDevice}
                       loadingStatus={loadingStatus}
