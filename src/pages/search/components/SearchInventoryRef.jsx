@@ -2,6 +2,7 @@ import { Pagination } from "antd";
 import { PropTypes } from "prop-types";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import resolveItemRowId from "../../inventory/utils/itemRowId";
 import CardInventoryFound from "../utils/CardInventoryFound";
 import CardInventoryGroupFound from "../utils/CardInventoryGroupFound";
 import SearchSection from "./SearchSection";
@@ -53,6 +54,26 @@ const SearchInventoryRef = ({
       )}`
     );
 
+  /**
+   * A matching unit opens its own item page.
+   *
+   * It used to open the unit's *group*, pre-filtered by serial — which answers
+   * a different question ("what else is in this group") and makes the reader
+   * find their unit again in a list they just came from. Somebody who searched
+   * a serial has already chosen the unit.
+   *
+   * `resolveItemRowId` rather than `record.item_id` because it rejects the
+   * stringified nothings that reach the client as if they were ids; navigating
+   * with one lands on an item page with no item. A row that genuinely carries
+   * no id keeps the old group destination, so the card is never a dead click.
+   */
+  const goToItem = (record) => {
+    const itemId = resolveItemRowId(record);
+    return itemId
+      ? navigate(`/inventory/item?id=${itemId}`)
+      : goToGroup(record?.item_group, record?.serial_number);
+  };
+
   return (
     <SearchSection
       title="Inventory"
@@ -89,9 +110,7 @@ const SearchInventoryRef = ({
               <CardInventoryFound
                 key={item.item_id}
                 props={item}
-                fn={(record) =>
-                  goToGroup(record.item_group, record.serial_number)
-                }
+                fn={goToItem}
               />
             ))}
           </div>

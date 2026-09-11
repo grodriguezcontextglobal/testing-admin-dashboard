@@ -72,7 +72,7 @@ describe("warehouseCard", () => {
       type: "Chromebook",
       brand: "Acer",
       location: "IT office",
-      itemId: 41,
+      itemId: "41",
       inWarehouse: true,
       event: null,
       active: false,
@@ -95,6 +95,14 @@ describe("warehouseCard", () => {
 
   it("never invents a serial", () => {
     expect(warehouseCard({ warehouse: 1 }).serialNumber).toBe("");
+  });
+
+  /* A stringified nothing is not an id — navigating with one lands on an item
+     page with no item, which is how the inventory table's arrow came to look
+     broken. resolveItemRowId is the shared guard against it. */
+  it("refuses an id that is really the word \"undefined\"", () => {
+    expect(warehouseCard({ item_id: "undefined", warehouse: 1 }).itemId).toBeNull();
+    expect(warehouseCard({ item_id: null, warehouse: 1 }).itemId).toBeNull();
   });
 });
 

@@ -23,6 +23,8 @@
  * item rows: snake_case, with `warehouse` as the in-stock flag.
  */
 
+import resolveItemRowId from "../../inventory/utils/itemRowId";
+
 const text = (value) => String(value ?? "").trim();
 
 /**
@@ -61,7 +63,10 @@ export const warehouseCard = (row, { image } = {}) => ({
   brand: text(row?.brand),
   location: text(row?.location ?? row?.warehouse_location),
   status: text(row?.status ?? row?.condition),
-  itemId: row?.item_id ?? row?.itemId ?? null,
+  /* The canonical resolver, not `row.item_id`: it rejects the stringified
+     nothings ("undefined", "null") that would navigate to an item page with no
+     item. Returns a string, which is what the URL wants anyway. */
+  itemId: resolveItemRowId(row),
   image: image ?? false,
   event: null,
   active: false,

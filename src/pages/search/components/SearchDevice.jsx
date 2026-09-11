@@ -215,9 +215,20 @@ const SearchDevice = ({ countingResults, setCountingResult }) => {
   };
 
   /* A unit in stock has no event to open, so it opens its own inventory record
-     — the same route the inventory table uses. */
-  const openInventoryRecord = (props) =>
-    props?.itemId ? navigate(`/inventory/item?id=${props.itemId}`) : null;
+     — the same route the inventory table uses. Without a usable id it falls
+     back to the unit's group, pre-filtered by serial, so the card always goes
+     somewhere. */
+  const openInventoryRecord = (props) => {
+    if (props?.itemId) return navigate(`/inventory/item?id=${props.itemId}`);
+    if (props?.type) {
+      return navigate(
+        `/inventory/group?${encodeURI(props.type)}&search=${encodeURI(
+          props.serialNumber ?? "",
+        )}`,
+      );
+    }
+    return null;
+  };
 
   const updatingTrigger = setInterval(() => {
     if (tryingCounting < 3) {
