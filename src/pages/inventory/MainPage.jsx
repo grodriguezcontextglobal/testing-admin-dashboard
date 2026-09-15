@@ -78,8 +78,10 @@ const MainPage = () => {
     3: [],
     4: [],
     5: [],
-    6: [],
+    // No 6: the Staff member filter was removed. The index stays vacant so the
+    // remaining categories keep the values they have always had.
     7: [],
+    8: [],
   });
   const [shipmentRecordModal, setShipmentRecordModal] = useState(false)
   const [openDetails, setOpenDetails] = useState(false);

@@ -19,13 +19,13 @@ export const inventorySection = {
       title: "Finding a device",
       appRoute: "/inventory",
       summary:
-        "One search box and eight filters. The filters combine, so you can ask narrow questions — this brand, in this location, in this condition — without scrolling a table.",
+        "One search box and seven filters. The filters combine, so you can ask narrow questions — this brand, in this location, in this condition — without scrolling a table.",
       steps: [
         {
           text: "Type in the search bar to match across the inventory, or use the filters for a specific dimension.",
         },
         {
-          text: "Filter by Brand, Group, Serial Number, Location, Ownership, Condition, Staff member or Status.",
+          text: "Filter by Brand, Group, Serial Number, Location, Ownership, Condition or Status.",
         },
         {
           text: "Or open a grouped view: by location, by group, by category, by brand, or by ownership.",

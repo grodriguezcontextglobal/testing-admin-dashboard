@@ -36,3 +36,23 @@ export const FEATURE_MEMBER_FEES =
  */
 export const FEATURE_THEME_SWITCH =
   import.meta.env.VITE_APP_FEATURE_THEME_SWITCH === "true";
+
+/**
+ * Server-side pagination for the /inventory table
+ * (FRONTEND_inventory_pagination_migration_plan.md).
+ *
+ * Default OFF, and it has to stay that way until the backend deploys: the three
+ * endpoints behind it — inventory-page, inventory-facets, serial-suggest —
+ * answer 404 in production today. The flag is what lets the whole migration
+ * land on main, which is where this repo pushes, without the page depending on
+ * a deploy we do not control.
+ *
+ * With the flag off the table keeps loading the full inventory from
+ * /db_item/warehouse-items and filtering, searching, sorting and paging in
+ * memory, exactly as before.
+ *
+ * Set VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION=true in .env.dev to work on
+ * it.
+ */
+export const FEATURE_INVENTORY_SERVER_PAGINATION =
+  import.meta.env.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION === "true";

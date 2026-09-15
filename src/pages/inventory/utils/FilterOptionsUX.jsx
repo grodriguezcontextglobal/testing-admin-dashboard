@@ -65,13 +65,23 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
     [filterOptionsValues?.chosen, setChosen]
   );
 
+  // The categories that still exist, in order. Driven by the dictionary rather
+  // than by a fixed count: index 6 (Staff member) was removed and its index
+  // left empty on purpose, so counting from 0 would render a select with no
+  // label and no options.
+  const categories = useMemo(
+    () => Object.keys(dicSelectedOptions).map(Number),
+    [],
+  );
+
   // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
-    return new Array(8).fill(null).map((_, index) => {
+    const byIndex = {};
+    for (const index of categories) {
       const opts = Array.isArray(filterOptionsValues?.filterOptions[index])
         ? filterOptionsValues?.filterOptions[index]
         : [];
-      return opts.map((item) => {
+      byIndex[index] = opts.map((item) => {
         return {
           value: item,
           label: (
@@ -91,8 +101,9 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
           ),
         };
       });
-    });
-  }, [filterOptionsValues?.filterOptions]);
+    }
+    return byIndex;
+  }, [filterOptionsValues?.filterOptions, categories]);
 
   return (
     // <div style={{ width:"100%", alignSelf:"flex-start", height:"100%"}}>
@@ -104,7 +115,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
         }}
       >
-        {new Array(8).fill(null).map((_, index) => {
+        {categories.map((index) => {
           const currentValue = getCurrentValue(index);
 
           const onChange = (value) => {

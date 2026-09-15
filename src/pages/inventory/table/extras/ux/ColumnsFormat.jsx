@@ -12,12 +12,38 @@ import { Subtitle } from "../../../../../styles/global/Subtitle";
 import { warehouseDicStatus } from "../../../utils/warehouseDicStatus";
 // import { getLogisticStatusColor } from "../../../utils/logisticStatusConfig";
 
+/**
+ * @param {boolean} serverSorted - true once FEATURE_INVENTORY_SERVER_PAGINATION
+ *   is on. Ordering then belongs to MySQL, across the whole filtered set, so
+ *   every comparator here has to go: re-sorting the fifty rows of the current
+ *   page on top of that would leave each page internally tidy and wrong
+ *   relative to its neighbours. antd's `sorter: true` is the way to say "this
+ *   column sorts, but not by me" — it draws the arrows and fires onChange.
+ * @param {string} sortBy - the column the server is currently ordering by.
+ * @param {"asc"|"desc"} sortDir
+ */
 const ColumnsFormat = ({
   dictionary,
   navigate,
   cellStyle,
+  serverSorted = false,
+  sortBy = null,
+  sortDir = "asc",
   // userPreferences,
 }) => {
+  /**
+   * The sorter for a column, in whichever mode is active. `sortOrder` is set
+   * explicitly in server mode so the arrow survives a page change — antd would
+   * otherwise forget which column is sorted as soon as the rows are replaced.
+   */
+  const sortFor = (key, compare) =>
+    serverSorted
+      ? {
+          sorter: true,
+          sortOrder:
+            sortBy === key ? (sortDir === "desc" ? "descend" : "ascend") : null,
+        }
+      : { sorter: { compare } };
   // Helper to check permissions for a specific location and action
   // const checkPermission = (locationName, action) => {
   //   if (!userPreferences?.managerLocation) return false;
@@ -42,10 +68,9 @@ const ColumnsFormat = ({
       dataIndex: "category_name",
       key: "category_name",
       responsive: ["lg"],
-      sorter: {
-        compare: (a, b) =>
-          ("" + a.category_name).localeCompare(b.category_name),
-      },
+      ...sortFor("category_name", (a, b) =>
+        ("" + a.category_name).localeCompare(b.category_name),
+      ),
       render: (category_name, record) => (
         <span style={cellStyle}>
           <Avatar
@@ -86,16 +111,24 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
-      sorter: {
-        compare: (a, b) => ("" + a.item_group).localeCompare(b.item_group),
-      },
+      ...sortFor("item_group", (a, b) =>
+        ("" + a.item_group).localeCompare(b.item_group),
+      ),
       title: "Device name",
     },
     {
-      dataIndex: "warehouse",
-      key: "warehouse",
-      render: (warehouse, record) => {
-        const status = record?.data?.logistic_status;
+      // In server mode this column moves onto the field it actually paints.
+      // It sorted by `warehouse` and displayed `logistic_status`, so clicking
+      // the header reordered by something the user cannot see — and `warehouse`
+      // is an int flag (1 in stock, 0 out), which localeCompare was sorting as
+      // text on top of that.
+      dataIndex: serverSorted ? "logistic_status" : "warehouse",
+      key: serverSorted ? "logistic_status" : "warehouse",
+      render: (_value, record) => {
+        // The server contract drops the duplicated `data: <raw item>` each row
+        // carried, and this was its only reader. The top-level field is present
+        // in both branches, so reading it here is behaviour-identical today.
+        const status = record?.logistic_status;
         // console.log(status, getLogisticStatusColor(status))
         // const backgroundColor = {
         //   allocated: "brand",
@@ -127,9 +160,9 @@ const ColumnsFormat = ({
           </PillUIComponent>
         );
       },
-      sorter: {
-        compare: (a, b) => ("" + a.warehouse).localeCompare(b.warehouse),
-      },
+      ...sortFor(serverSorted ? "logistic_status" : "warehouse", (a, b) =>
+        ("" + a.warehouse).localeCompare(b.warehouse),
+      ),
       title: "Status",
     },
     {
@@ -146,9 +179,9 @@ const ColumnsFormat = ({
           </span>
         </PillUIComponent>
       ),
-      sorter: {
-        compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
-      },
+      ...sortFor("ownership", (a, b) =>
+        ("" + a.ownership).localeCompare(b.ownership),
+      ),
       title: "Ownership",
     },
     {
@@ -162,10 +195,9 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
-      sorter: {
-        compare: (a, b) =>
-          ("" + a.main_warehouse).localeCompare(b.main_warehouse),
-      },
+      ...sortFor("main_warehouse", (a, b) =>
+        ("" + a.main_warehouse).localeCompare(b.main_warehouse),
+      ),
       title: "Taxable address",
     },
     {
@@ -197,9 +229,9 @@ const ColumnsFormat = ({
           </span>
         );
       },
-      sorter: {
-        compare: (a, b) => ("" + a.location).localeCompare(b.location),
-      },
+      ...sortFor("location", (a, b) =>
+        ("" + a.location).localeCompare(b.location),
+      ),
       title: "Location",
     },
     {
@@ -213,7 +245,12 @@ const ColumnsFormat = ({
           </Typography>
         </span>
       ),
-      sorter: (a, b) => a.serial_number - b.serial_number,
+      // Text, not arithmetic: serials carry a trailing counter, so `a - b`
+      // yields NaN for every pair. Server mode orders them as text too, which
+      // is what the localeCompare below matches.
+      ...sortFor("serial_number", (a, b) =>
+        ("" + a.serial_number).localeCompare(b.serial_number),
+      ),
       title: "Main Serial Number",
     },
     {
