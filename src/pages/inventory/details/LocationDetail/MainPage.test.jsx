@@ -82,15 +82,19 @@ describe("the location page settles", () => {
     /* Waiting on the requests rather than on the rendered row: the table is a
        lazy chunk, and how long that takes to resolve says nothing about the
        behaviour under test. Table.test.jsx covers the rendering. */
+    /* 15s was not enough once the suite grew: the page was still on "loading"
+       when the wait gave up, and the count assertion then read 0 instead of 1.
+       Nothing about the behaviour changed — this file competes for the machine
+       with every other, and the mount is heavy. */
     await waitFor(() => expect(countFor("inventory-query")).toBe(1), {
-      timeout: 15000,
+      timeout: 60000,
     });
     await settle(800);
 
     expect(countFor("inventory-query")).toBe(1);
     expect(countFor("/image/images")).toBe(1);
     expect(countFor("inventory-based-on-location")).toBe(1);
-  }, 30000);
+  }, 90000);
 
   it("stops asking when an endpoint keeps failing", async () => {
     // A query that never succeeds must not turn into a request storm — that

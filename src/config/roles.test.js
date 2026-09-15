@@ -1168,7 +1168,12 @@ describe("hasPermission call sites", () => {
     expect(offenders).toEqual([]);
     // Reading every source file over the Docker bind mount is slow on Windows
     // hosts — well past the 5s default. The work is IO, not computation.
-  }, 60000);
+    //
+    // Raised from 60s: ~44s alone, but it shares the machine with every other
+    // test file, and the margin was thin enough that adding three files to the
+    // suite pushed it to 79s. The number is a property of the bind mount, not
+    // of the assertion, so give it room rather than re-tuning on every growth.
+  }, 180000);
 
   it("still flags the shape it is meant to catch", () => {
     // Guards the regex itself: a rewrite that quietly stops matching would
