@@ -5,7 +5,14 @@ import "../../../styles/global/ant-table.css";
 const BaseTable = ({
   columns,
   dataSource,
-  enablePagination = true,
+  // `false`, and it has to stay `false`. The signature said `true` while a
+  // defaultProps block below said `false`, and defaultProps wins — React fills
+  // missing props before the function runs, so the parameter default never
+  // fired. Seven screens render this without passing the prop and have always
+  // got an unpaginated table. Removing defaultProps for the React 18.3
+  // deprecation without moving `false` up here would switch all seven to
+  // paginated at once.
+  enablePagination = false,
   pageSize = 10,
   className,
   style,
@@ -42,11 +49,6 @@ BaseTable.propTypes = {
   pageSize: PropTypes.number,
   className: PropTypes.string,
   style: PropTypes.object,
-};
-
-BaseTable.defaultProps = {
-  enablePagination: false,
-  pageSize: 10,
 };
 
 export default BaseTable;
