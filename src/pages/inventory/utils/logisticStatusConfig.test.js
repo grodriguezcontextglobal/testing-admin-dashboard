@@ -21,20 +21,34 @@ describe("getLogisticStatusLabel", () => {
     }
   });
 
-  // The events module has called this state "At event" all along
-  // (eventStatusHelpers.js, and the stepper legend): the unit has been received
-  // at the event and is sitting there. Inventory is where the word was missing,
-  // so the same unit read "At event" on the event card and nothing at all in
-  // the Status filter.
-  it("calls in-idle what the rest of the app calls it", () => {
-    expect(getLogisticStatusLabel("in-idle")).toBe("At event");
+  // Two fields, two vocabularies. This file is the item's
+  // (`item_inv.logistic_status`), where a unit out at an event is `in-event`.
+  // `received`, `in-idle` and `completed` belong to the event's
+  // `logistic_inventory_status` — a different column, read in CardEventDisplay
+  // and eventStatusHelpers. They were named in allowedTransitions here, which
+  // is how they came to look like item states that someone had forgotten to
+  // define.
+  it("keeps the event's vocabulary out of the item's", () => {
+    expect(logisticStatusConfig["in-idle"]).toBeUndefined();
+    expect(logisticStatusConfig.received).toBeUndefined();
+    expect(logisticStatusConfig.completed).toBeUndefined();
   });
 
-  // `received` is the other status the config names in allowedTransitions
-  // without defining, so a unit can still reach a state the dictionary has no
-  // word for. Showing the token beats showing nothing.
+  // The invariant that would have caught the mix-up: a transition can only
+  // point at a state this file defines.
+  it("only allows transitions into states it defines", () => {
+    for (const [status, { allowedTransitions }] of Object.entries(
+      logisticStatusConfig,
+    )) {
+      for (const next of allowedTransitions) {
+        expect(
+          { status, next, defined: next in logisticStatusConfig },
+        ).toStrictEqual({ status, next, defined: true });
+      }
+    }
+  });
+
   it("makes an unknown status readable instead of blank", () => {
-    expect(getLogisticStatusLabel("received")).toBe("Received");
     expect(getLogisticStatusLabel("quarantined")).toBe("Quarantined");
     expect(getLogisticStatusLabel("under_inspection_v2")).toBe(
       "Under inspection v2",

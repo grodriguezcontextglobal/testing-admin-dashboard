@@ -1,3 +1,16 @@
+/**
+ * Where a unit is, as `item_inv.logistic_status` records it.
+ *
+ * **This is the item's vocabulary, and it is not the event's.** An event
+ * carries its own `logistic_inventory_status` — `no_received_yet`, `received`,
+ * `in-idle`, `completed`, `in-transit` — read in `CardEventDisplay` and
+ * `eventStatusHelpers`. A unit out at an event is `in-event` here; the event
+ * that unit went to may be `in-idle` there. Two columns, two questions.
+ *
+ * Three of the event's words used to appear in `allowedTransitions` below,
+ * which made them look like item states somebody had forgotten to define. A
+ * test now pins that every transition names a state this file declares.
+ */
 export const logisticStatusConfig = {
   allocated: {
     label: "Allocated",
@@ -41,17 +54,6 @@ export const logisticStatusConfig = {
     category: "usage",
     allowedTransitions: ["in-event", "in-use"],
   },
-  // The name the rest of the app already uses for this state: the event card's
-  // stepper and its legend both say "At event" (see eventStatusHelpers.js), and
-  // the event card spells it out as "Received At Event". Inventory was the only
-  // place without the word, so the same unit read "At event" on the event and
-  // rendered a blank option in the Status filter.
-  "in-idle": {
-    label: "At event",
-    description: "Item was received at the event and is sitting there",
-    category: "usage",
-    allowedTransitions: ["in-transit", "in-stock"],
-  },
     "in-reserved": {
     label: "Reserved",
     description: "Item is reserved for an event",
@@ -68,7 +70,9 @@ export const logisticStatusConfig = {
     label: "In Transit",
     description: "Item is moving between locations",
     category: "logistics",
-    allowedTransitions: ["received", "assigned", "in-stock"],
+    // `received` used to sit here. It is a value of the event's
+    // `logistic_inventory_status`, not of an item's — see the note at the top.
+    allowedTransitions: ["in-event", "assigned", "in-stock"],
   },
   "in-use": {
     label: "In Use",
@@ -110,7 +114,10 @@ export const logisticStatusConfig = {
     label: "Shipped",
     description: "Item was shipped to event",
     category: "usage",
-    allowedTransitions: ["in-transit", "received", "in-idle"],
+    // Was ["in-transit", "received", "in-idle"]. The last two are the event's
+    // words for what happens to the shipment; the item's word for arriving at
+    // an event is `in-event`.
+    allowedTransitions: ["in-transit", "in-event", "in-stock"],
   },
   "under-inspection": {
     label: "Under Inspection",
