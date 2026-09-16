@@ -52,16 +52,18 @@ describe("activeFilterSummary", () => {
   });
 
   it("uses the human label for a logistic status, not the raw value", () => {
-    // The select shows "In transit"; the row holds "in-transit". Echoing the
-    // stored value back would name something the user never saw.
+    // The select shows "In Transit"; the row holds "in-transit". Echoing the
+    // stored value back would name something the user never saw. The wording is
+    // logisticStatusConfig's, the same one the table column and the select read
+    // — this used to be a third, shorter dictionary of its own.
     expect(activeFilterSummary([{ category: 7, value: "in-transit" }], "")).toBe(
-      "Status: In transit",
+      "Status: In Transit",
     );
   });
 
-  it("falls back to the raw value when there is no label for it", () => {
+  it("makes a status the config never defined readable anyway", () => {
     expect(activeFilterSummary([{ category: 7, value: "quarantined" }], "")).toBe(
-      "Status: quarantined",
+      "Status: Quarantined",
     );
   });
 

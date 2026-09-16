@@ -126,8 +126,19 @@ const categoryColorMap = {
   usage: "success",
 };
 
+/**
+ * `in-idle` → `In idle`. For a status this file has no entry for — and it has
+ * none for `received` or `in-idle`, both of which it names as allowed
+ * transitions — the token itself is the most honest label available. It is at
+ * least the word the record holds, which a blank row is not.
+ */
+const humanize = (status) => {
+  const words = String(status).replace(/[-_]+/g, " ").trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : "";
+};
+
 export const getLogisticStatusLabel = (status) =>
-  logisticStatusConfig[status]?.label ?? status ?? "";
+  logisticStatusConfig[status]?.label ?? (status ? humanize(status) : "");
 
 export const getLogisticStatusColor = (status) => {
   const category = logisticStatusConfig[status]?.category;

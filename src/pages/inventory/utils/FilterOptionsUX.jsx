@@ -1,19 +1,17 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
+import { getLogisticStatusLabel } from "./logisticStatusConfig";
 import { useMemo, useCallback, memo, useContext } from "react";
 import { FilterOptionsContext } from "../MainPage";
 // import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 // import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-export const dicForLogisticStatus = {
-  "in-transit": "In transit",
-  "in-stock": "In stock",
-  "shipped": "Shipped",
-  "in-event": "In event",
-  "assigned": "Assigned",
-  "in-reserved": "Reserved",
-  "reserved": "Reserved",
-}
+// The Status labels come from logisticStatusConfig, the same twenty entries the
+// table column reads. There used to be a hand-written map of seven here, and a
+// status outside those seven rendered as an option with no text at all — a row
+// the user could pick but not read. Rare while the options were grouped out of
+// the rows already loaded; not rare once the server's facets started returning
+// every status in the company.
 
 const FilterOptionsUX = memo(function FilterOptionsUX({
   // filterOptions = {},
@@ -96,7 +94,7 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
                 justifyContent: "flex-start",
               }}
             >
-              {index === 7 ? dicForLogisticStatus[item] : item}
+              {index === 7 ? getLogisticStatusLabel(item) : item}
             </div>
           ),
         };

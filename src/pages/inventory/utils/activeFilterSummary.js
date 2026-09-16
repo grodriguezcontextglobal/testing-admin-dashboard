@@ -1,5 +1,5 @@
 import { dicSelectedOptions } from "./dicSelectedOptions";
-import { dicForLogisticStatus } from "./FilterOptionsUX";
+import { getLogisticStatusLabel } from "./logisticStatusConfig";
 
 /**
  * Describing what the user asked for, so an empty table can say why it is empty.
@@ -33,11 +33,11 @@ export const activeFilterSummary = (chosenOption, searchTerm) => {
   for (const chosen of Array.isArray(chosenOption) ? chosenOption : []) {
     const label = dicSelectedOptions[chosen?.category];
     if (!label || chosen?.value === undefined || chosen?.value === null) continue;
-    // The Status select shows "In transit" while the row holds "in-transit".
+    // The Status select shows "In Transit" while the row holds "in-transit".
+    // Same dictionary the select reads, so the chip and the dropdown cannot
+    // drift apart — they did, and the chip was the one telling the truth.
     const value =
-      chosen.category === 7
-        ? (dicForLogisticStatus[chosen.value] ?? chosen.value)
-        : chosen.value;
+      chosen.category === 7 ? getLogisticStatusLabel(chosen.value) : chosen.value;
     parts.push(`${label}: ${value}`);
   }
 
