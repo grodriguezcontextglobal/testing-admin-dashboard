@@ -21,11 +21,19 @@ describe("getLogisticStatusLabel", () => {
     }
   });
 
-  // `received` and `in-idle` are named as allowed transitions inside the config
-  // but never defined as entries, so a unit can reach a state the dictionary
-  // has no word for. Showing the token beats showing nothing.
+  // The events module has called this state "At event" all along
+  // (eventStatusHelpers.js, and the stepper legend): the unit has been received
+  // at the event and is sitting there. Inventory is where the word was missing,
+  // so the same unit read "At event" on the event card and nothing at all in
+  // the Status filter.
+  it("calls in-idle what the rest of the app calls it", () => {
+    expect(getLogisticStatusLabel("in-idle")).toBe("At event");
+  });
+
+  // `received` is the other status the config names in allowedTransitions
+  // without defining, so a unit can still reach a state the dictionary has no
+  // word for. Showing the token beats showing nothing.
   it("makes an unknown status readable instead of blank", () => {
-    expect(getLogisticStatusLabel("in-idle")).toBe("In idle");
     expect(getLogisticStatusLabel("received")).toBe("Received");
     expect(getLogisticStatusLabel("quarantined")).toBe("Quarantined");
     expect(getLogisticStatusLabel("under_inspection_v2")).toBe(

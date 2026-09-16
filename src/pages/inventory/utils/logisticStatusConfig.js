@@ -41,6 +41,17 @@ export const logisticStatusConfig = {
     category: "usage",
     allowedTransitions: ["in-event", "in-use"],
   },
+  // The name the rest of the app already uses for this state: the event card's
+  // stepper and its legend both say "At event" (see eventStatusHelpers.js), and
+  // the event card spells it out as "Received At Event". Inventory was the only
+  // place without the word, so the same unit read "At event" on the event and
+  // rendered a blank option in the Status filter.
+  "in-idle": {
+    label: "At event",
+    description: "Item was received at the event and is sitting there",
+    category: "usage",
+    allowedTransitions: ["in-transit", "in-stock"],
+  },
     "in-reserved": {
     label: "Reserved",
     description: "Item is reserved for an event",
