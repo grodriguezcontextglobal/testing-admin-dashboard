@@ -1,15 +1,25 @@
 /**
- * Where a unit is, as `item_inv.logistic_status` records it.
+ * Where one unit of the company's inventory is, as `item_inv.logistic_status`
+ * records it: handed to an event, handed to a staff member or a student,
+ * reserved, out of the warehouse, sitting in the warehouse, or lost. It is a
+ * fact about **the unit**, and it is the question this file answers.
  *
- * **This is the item's vocabulary, and it is not the event's.** An event
- * carries its own `logistic_inventory_status` — `no_received_yet`, `received`,
- * `in-idle`, `completed`, `in-transit` — read in `CardEventDisplay` and
- * `eventStatusHelpers`. A unit out at an event is `in-event` here; the event
- * that unit went to may be `in-idle` there. Two columns, two questions.
+ * **The event asks a different question with a different column.** An event's
+ * `logistic_inventory_status` — `no_received_yet`, `received`, `completed`,
+ * `in-transit`, `in-idle` — says whether **the event** has its inventory yet:
+ * still waiting for it, holding it, or finished and sending it back to the
+ * warehouse. It is read in `CardEventDisplay` and `eventStatusHelpers`, and
+ * none of its words belong here. A unit out at an event is `in-event`; the
+ * event it went to may be `in-idle`.
  *
  * Three of the event's words used to appear in `allowedTransitions` below,
  * which made them look like item states somebody had forgotten to define. A
  * test now pins that every transition names a state this file declares.
+ *
+ * Note that the app writes six of these — `in-stock`, `assigned`, `in-event`,
+ * `in-transit`, `in-reserved`, `lost`. The rest are declared here and written
+ * by nothing in this client, so they reach a filter only if something else put
+ * them in the data.
  */
 export const logisticStatusConfig = {
   allocated: {
