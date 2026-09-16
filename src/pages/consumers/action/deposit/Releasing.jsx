@@ -15,6 +15,7 @@ import ModalUX from "../../../../components/UX/modal/ModalUX";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import { describePaymentError } from "../../../../utils/paymentRequestState";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -92,12 +93,26 @@ const Releasing = ({
 
   const handleEventInfo = async (e) => {
     e.preventDefault();
-    const resp = await devitrakApi.post(
-      `/stripe/payment-intents/${rowRecord?.paymentIntent}/cancel`,
-      {
-        id: rowRecord?.paymentIntent,
-      }
-    );
+    // Only the release itself is guarded: a failure in the email or the cache
+    // invalidation below is not a failure to release the hold.
+    let resp;
+    try {
+      resp = await devitrakApi.post(
+        `/stripe/payment-intents/${rowRecord?.paymentIntent}/cancel`,
+        {
+          id: rowRecord?.paymentIntent,
+        }
+      );
+    } catch (error) {
+      const outcome = describePaymentError(error, {
+        failure: "The deposit was not released. The hold is still in place.",
+        subject: "release",
+      });
+      return openNotificationWithIcon(
+        outcome.inProgress ? "Warning" : "Error",
+        outcome.message
+      );
+    }
 
     if (resp.data.ok) {
       const transactionInfo = transactionQuery?.data?.data?.list.at(-1);

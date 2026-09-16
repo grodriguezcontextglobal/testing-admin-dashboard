@@ -17,6 +17,8 @@ import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import GrayButtonConfirmationComponent from "../../../../components/UX/buttons/GrayButtonConfirmation";
 import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle";
 import sendRefundReceiptEmail from "../../utils/sendRefundReceiptEmail";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import { describePaymentError } from "../../../../utils/paymentRequestState";
 
 const ExpandedLostButton = ({
   record,
@@ -27,6 +29,7 @@ const ExpandedLostButton = ({
 }) => {
   const { user } = useSelector((state) => state.admin);
   const { register, handleSubmit } = useForm();
+  const { notify, contextHolder } = useStatusNotification();
   const [isLoadingState, setIsLoadingState] = useState(false);
   const propsUpdateSingleDevice = {
     ...record,
@@ -98,7 +101,16 @@ const ExpandedLostButton = ({
       checkChargedLostFee.refetch();
       return refetchingQueries();
     } catch (error) {
-      return error;
+      // This branch used to `return error` — the partial refund failed and the
+      // screen said nothing at all.
+      setIsLoadingState(false);
+      const outcome = describePaymentError(error, {
+        failure: "The partial refund failed. Nothing was charged back.",
+        subject: "partial refund",
+      });
+      notify(outcome.inProgress ? "warning" : "error", outcome.message);
+      if (outcome.inProgress) checkChargedLostFee.refetch();
+      return null;
     }
   };
   const handleRefund = async () => {
@@ -140,6 +152,12 @@ const ExpandedLostButton = ({
       return refetchingQueries();
     } catch (error) {
       setIsLoadingState(false);
+      const outcome = describePaymentError(error, {
+        failure: "The refund failed. Nothing was charged back.",
+        subject: "refund",
+      });
+      notify(outcome.inProgress ? "warning" : "error", outcome.message);
+      if (outcome.inProgress) checkChargedLostFee.refetch();
       return null;
     }
   };
@@ -153,6 +171,7 @@ const ExpandedLostButton = ({
 
   return (
     <>
+      {contextHolder}
       <div
         key={record.serial_number}
         style={{ display: "flex", justifyContent: "flex-end", gap: "5px" }}

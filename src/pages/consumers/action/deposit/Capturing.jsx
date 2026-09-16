@@ -18,6 +18,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import { describePaymentError } from "../../../../utils/paymentRequestState";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
@@ -104,13 +105,28 @@ const Capturing = ({
       if (data.amount > parseInt(amountWithNoDecimal)) {
         return alert(`Max amount to capture: $${amountWithNoDecimal}`);
       } else {
-        const resp = await devitrakApi.post(
-          `/stripe/payment-intents/${rowRecord?.paymentIntent}/capture`,
-          {
-            id: rowRecord?.paymentIntent,
-            amount_to_capture: data.amount,
-          }
-        );
+        // Only the capture itself is guarded: a failure in the email or the
+        // cache invalidation below is not a failure to charge, and must not
+        // be reported as one.
+        let resp;
+        try {
+          resp = await devitrakApi.post(
+            `/stripe/payment-intents/${rowRecord?.paymentIntent}/capture`,
+            {
+              id: rowRecord?.paymentIntent,
+              amount_to_capture: data.amount,
+            }
+          );
+        } catch (error) {
+          const outcome = describePaymentError(error, {
+            failure: "The deposit was not captured. Nothing was charged.",
+            subject: "capture",
+          });
+          return openNotificationWithIcon(
+            outcome.inProgress ? "Warning" : "Error",
+            outcome.message
+          );
+        }
         if (resp.data.ok) {
           const transactionInfo = transactionQuery?.data?.data?.list.at(-1);
           const dateString = new Date().toString();

@@ -38,6 +38,7 @@ import {
   useSelectedConsumer,
 } from "./hooks/useConsumerEventActivity";
 import TransactionPanel from "./transaction/TransactionPanel";
+import { describePaymentError } from "../../../../../utils/paymentRequestState";
 
 /**
  * A consumer's transactions at one event, one expandable row each.
@@ -131,7 +132,14 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       transactionsQuery.refetch();
       notify("success", "Refund issued and the consumer was emailed.");
     } catch (error) {
-      notify("error", "The refund failed. Nothing was charged back.");
+      // On a 409 the first refund is still running: the money may well go
+      // back. The old sentence promised the opposite.
+      const outcome = describePaymentError(error, {
+        failure: "The refund failed. Nothing was charged back.",
+        subject: "refund",
+      });
+      notify(outcome.inProgress ? "warning" : "error", outcome.message);
+      if (outcome.inProgress) transactionsQuery.refetch();
     } finally {
       setRefundingKey(null);
     }

@@ -15,6 +15,7 @@ import {
   StatusChip,
 } from "../../../../../../../components/UX/profile";
 import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
+import { describePaymentError } from "../../../../../../../utils/paymentRequestState";
 import "../../../consumerDetail.css";
 import {
   centsToAmount,
@@ -54,6 +55,7 @@ const ACTIONS = {
   capture: {
     verb: "Capture",
     title: "Capture deposit",
+    subject: "capture",
     endpoint: (id) => `/stripe/payment-intents/${id}/capture`,
     email: "/nodemailer/deposit-collected-notification",
     editableAmount: true,
@@ -65,6 +67,7 @@ const ACTIONS = {
   release: {
     verb: "Release",
     title: "Release deposit",
+    subject: "release",
     endpoint: (id) => `/stripe/payment-intents/${id}/cancel`,
     email: "/nodemailer/deposit-return-notification",
     editableAmount: false,
@@ -194,8 +197,20 @@ const DepositActionModal = ({ action, open, setOpen, onSettled }) => {
       notify("success", config.success);
       close();
     } catch (error) {
-      setProblem(config.failure);
-      notify("error", config.failure);
+      // A 409 means the first request is still running, so the deposit's state
+      // is unknown — not untouched. Saying "Nothing was charged" here would be
+      // the one sentence that sends the operator off to capture it twice.
+      const outcome = describePaymentError(error, {
+        failure: config.failure,
+        subject: config.subject,
+      });
+      setProblem(outcome.message);
+      notify(outcome.inProgress ? "warning" : "error", outcome.message);
+      if (outcome.inProgress) {
+        queryClient.invalidateQueries({
+          queryKey: ["stripePaymentIntent", paymentIntent],
+        });
+      }
     } finally {
       setIsRunning(false);
     }
