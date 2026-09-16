@@ -16,6 +16,7 @@ import ViewIcon from "../../../components/icons/ViewIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import { buildLocationPathUpdateBody } from "./locationPathUpdate";
 import "../style/viewtree.css";
 
 const LOW_STOCK_RATIO = 0.25;
@@ -79,12 +80,10 @@ const TreeNode = ({
         duration: 0,
         key: "updateLocationPath",
       });
-      const locationData = {
+      const locationData = buildLocationPathUpdateBody({
         newName: editedName,
-        path: path,
-        currentIndex: path.length - 1,
-        company_id: user.sqlInfo.company_id,
-      };
+        path,
+      });
 
       const response = await devitrakApi.post(
         "/db_inventory/update-location-sub-location",
