@@ -87,15 +87,92 @@ obligatorio antes de cerrar un evento, las píldoras de consumidores, el brandin
 de correos y los arreglos de búsqueda. No es un despliegue silencioso y conviene
 que el equipo lo sepa antes, no después.
 
+### ⚠️ El orden importa, y va al revés de lo que parece
+
+`2b1cbe93` quita `company_id` del cuerpo porque **vuestro servidor endurecido**
+lo saca del contexto verificado. En el servidor que hay **desplegado hoy**, ese
+campo está en la lista de **requeridos** —los que el handler valida y responde
+`400` si faltan—, según vuestro propio contrato generado:
+
+```
+| POST | /api/db_inventory/update-location-sub-location |
+|      | requeridos: company_id · currentIndex · newName | … |
+```
+
+Si publicamos nuestro build **antes** de vuestra tanda 2, el renombrado de
+locaciones responde **400 a todo el mundo**, no solo a quien cambie de compañía.
+Al revés —vuestra tanda 2 primero, con nuestro cliente viejo todavía en
+producción— el 400 solo alcanza a **quien haya cambiado de compañía en esa
+sesión**, que es el caso que el propio informe describe.
+
+**Es una ventana estrecha en los dos sentidos, pero una es mucho más ancha que
+la otra.** De ahí el orden de abajo.
+
+> **Confirmadnos esto de una línea, por favor:** ¿el `update-location-sub-location`
+> que está **desplegado ahora mismo** acepta el cuerpo sin `company_id`? Nuestra
+> evidencia es el contrato generado en `src/docs`, que sabemos que va por detrás
+> de vuestro repositorio. Si ya lo acepta, los dos despliegues son
+> independientes y el orden deja de importar.
+
 ### Orden que proponemos
 
 ```
 1. vosotros  → tanda 1 (94d7076), hoy, sin esperar a nadie
-2. nosotros  → build de producción del dashboard
-3. vosotros  → tanda 2, y nos avisáis el mismo día
+2. vosotros  → tanda 2, avisándonos el mismo día
+3. nosotros  → build de producción del dashboard, a continuación
 4. nosotros  → smoke test de 15 minutos (§2, tanda 2)
 5. vosotros  → respuesta sobre /api/stripe/* → tanda 3
 ```
+
+Entre el paso 2 y el 3 hay una ventana en la que renombrar una locación falla
+**si el operador cambió de compañía en esa sesión**. Cuanto más juntos vayan los
+dos pasos, más corta. Si preferís evitarla del todo, la alternativa es que
+confirméis la pregunta de arriba y publiquemos nosotros primero.
+
+---
+
+## 1.6 Qué puede romperse el día que publiquemos nuestro build
+
+Nada de las dos últimas semanas está en producción todavía, así que este build
+lleva **38 commits de golpe**. Esto es lo que hemos revisado uno por uno.
+
+### Riesgo alto — depende del orden
+
+| Qué | Por qué | Mitigación |
+|---|---|---|
+| **Renombrar locaciones** | `2b1cbe93` quita un campo que el servidor desplegado hoy valida como requerido (§1.5) | desplegar después de vuestra tanda 2, o confirmarnos que ya lo acepta |
+
+### Riesgo medio — cambia lo que alguien ve, y parecerá un fallo
+
+| Qué | Quién lo nota |
+|---|---|
+| **Scope de locación** (`c995425f`) | quien tenga locaciones asignadas **en SQL** y ninguna en el registro antiguo pasa a ver **solo su inventario**, donde antes veía el de toda la empresa. Es el arreglo, pero para esa persona es «ha desaparecido inventario». Conviene avisar a quien administre roles |
+| **Cerrar un evento** (`40701e6d`) | ya no se cierra directo: pide un conteo físico primero. Es un cambio de procedimiento para los operadores, no un fallo |
+| **Búsqueda de inventario** (`e14e0f78`, `49164c06`) | empieza a devolver unidades en almacén que antes no salían, y abre la ficha de la unidad en vez de la del grupo |
+
+### Riesgo bajo — revisado y acotado
+
+- **El manual `/help`**: ruta nueva, no toca ninguna existente.
+- **Tema claro/oscuro y tokens de color**: el tema va detrás de flag; el paso a
+  tokens es un renombrado de variables CSS, sin cambio de valores.
+- **Tablas**: `31f588e1` parecía tocar la paginación de 53 pantallas y **no la
+  toca** — el valor efectivo era `false` antes y sigue siendo `false`; lo que se
+  arregló fue que dos defaults se contradecían.
+- **Pagos**: el texto nuevo solo aparece en la rama de error, y sin reintentos.
+- **Estados de inventario**: cambia el texto de las etiquetas («In transit» →
+  «In Transit»), no el valor guardado.
+- **Conteo de eventos**: el cliente de `event-count/*` está escrito pero **no
+  tiene consumidores**; el modal solo llama a `/receiver/receiver-assigned-list`,
+  que existe. No depende de rutas sin desplegar.
+- **Paginación de inventario**: detrás de flag apagado. Con el flag apagado no
+  se llama a ninguna de las tres rutas nuevas — hay un test que lo fija.
+
+### Lo que se verá a medias hasta que despleguéis
+
+- **Vista previa de plantillas de correo** (Perfil → branding): usa
+  `GET /nodemailer/branding-preview/templates`, que está en vuestra rama y no en
+  el contrato generado. Si aún no está desplegada, el selector de plantillas sale
+  vacío. No rompe el envío de correos, solo la previsualización.
 
 ---
 
