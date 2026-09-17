@@ -105,6 +105,22 @@ export const inventoryServerFacetsKey = (companyId, query = {}) => [
 ];
 
 /**
+ * One entry per prefix asked about, so typing back to a prefix already typed is
+ * a cache hit rather than a round trip. `params` is null below two characters —
+ * the query is off there, and the key stays stable instead of becoming one more
+ * shape to reason about.
+ *
+ * @param {number|string} companyId - user.sqlInfo.company_id
+ * @param {{q: string, limit: number}|null} params - from buildSerialSuggestParams
+ */
+export const inventorySerialSuggestKey = (companyId, params) => [
+  "inventorySerialSuggest",
+  companyId,
+  params?.q ?? null,
+  params?.limit ?? null,
+];
+
+/**
  * Backend response-cache keys the inventory writes clear alongside the client
  * cache. Keyed by the Mongo company id (user.companyData.id), not the SQL one.
  */

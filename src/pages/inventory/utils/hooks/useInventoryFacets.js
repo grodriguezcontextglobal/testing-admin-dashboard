@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { buildInventoryFacetsBody } from "../inventoryPageContract";
@@ -22,6 +23,9 @@ import { inventoryServerFacetsKey } from "../inventoryQueryKeys";
  * @param {{enabled?: boolean, filters?: object, search?: string,
  *   facets?: string[]}} params
  */
+/** One frozen empty object, so "no facets yet" is the same value every time. */
+const EMPTY_FACETS = Object.freeze({});
+
 const useInventoryFacets = ({ enabled = false, filters, search, facets } = {}) => {
   const companyId = useSelector((state) => state.admin.user?.sqlInfo?.company_id);
 
@@ -39,8 +43,20 @@ const useInventoryFacets = ({ enabled = false, filters, search, facets } = {}) =
 
   const body = query.data?.data;
 
+  // Memoised, and it has to be. `body?.facets ?? {}` mints a fresh object on
+  // every render while the query is in flight, and this feeds an effect that
+  // calls setDataFilterOptions on the page — so every render would schedule the
+  // next one. The table already had that loop once, through groupBy; this is
+  // the same shape wearing different clothes.
+  // Named apart from the `facets` parameter, which is the list of facet NAMES
+  // to ask for — a different thing from the values that come back.
+  const facetValues = useMemo(
+    () => body?.facets ?? EMPTY_FACETS,
+    [body?.facets],
+  );
+
   return {
-    facets: body?.facets ?? {},
+    facets: facetValues,
     // null, not 0, until the answer arrives: zero is a real result — "nothing
     // matches" — and showing it while loading tells the user something false.
     matchedTotal: typeof body?.matchedTotal === "number" ? body.matchedTotal : null,

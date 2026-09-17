@@ -61,7 +61,7 @@ const store = configureStore({
   },
 });
 
-const renderTable = (context = {}) => {
+const renderTable = (context = {}, props = {}) => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
@@ -87,6 +87,7 @@ const renderTable = (context = {}) => {
               setOpenDetails={() => {}}
               allowedLocations={null}
               userPreferences={{}}
+              {...props}
             />
           </SearchItemContext.Provider>
         </MemoryRouter>
@@ -104,6 +105,15 @@ beforeEach(() => {
   devitrakApi.post.mockImplementation((url) => {
     if (url === "/db_item/inventory-page") {
       return Promise.resolve(pageWith([row(101, "HSP-6001", "Netgear")]));
+    }
+    if (url === "/db_item/inventory-facets") {
+      return Promise.resolve({
+        data: {
+          ok: true,
+          matchedTotal: 48213,
+          facets: { brand: [{ value: "Dell" }, { value: "Netgear" }] },
+        },
+      });
     }
     return Promise.resolve({ data: { item: [] } });
   });
@@ -171,5 +181,56 @@ describe("the filters ask the server, not the page", () => {
     expect(screen.getByText("Next")).toBeTruthy();
     expect(screen.getByText("Previous")).toBeTruthy();
     expect(document.querySelector(".ant-pagination")).toBeNull();
+  });
+});
+
+describe("the filter options describe the whole inventory", () => {
+  const facetBodies = () =>
+    devitrakApi.post.mock.calls
+      .filter(([url]) => url === "/db_item/inventory-facets")
+      .map(([, body]) => body);
+
+  it("asks for the option lists without the active filters", async () => {
+    // The requirement: choosing Brand must not shrink the Group list, so the
+    // user can keep combining. Asking for the lists with no filters guarantees
+    // that whatever the server decides to do about narrowing its own facets.
+    renderTable({ chosenOption: [{ category: 0, value: "Netgear" }] });
+
+    await waitFor(() => expect(facetBodies().length).toBeGreaterThan(0));
+    expect(facetBodies().some((body) => !body.filters)).toBe(true);
+  });
+
+  it("asks separately, with the filters, for the number on screen", async () => {
+    // matchedTotal has to count the set being shown, so that one call does
+    // carry them. Two questions, two calls — the lists are cached and rarely
+    // change; only this one moves when a filter moves.
+    renderTable({ chosenOption: [{ category: 0, value: "Netgear" }] });
+
+    await waitFor(() =>
+      expect(
+        facetBodies().some(
+          (body) => body.filters && body.filters.brand === "Netgear",
+        ),
+      ).toBe(true),
+    );
+  });
+
+  it("feeds the selects from the server, not from the page", async () => {
+    const setDataFilterOptions = vi.fn();
+    renderTable({}, { setDataFilterOptions });
+
+    await waitFor(() =>
+      expect(
+        setDataFilterOptions.mock.calls.some(([o]) => o?.[0]?.length === 2),
+      ).toBe(true),
+    );
+    const last = setDataFilterOptions.mock.calls.at(-1)[0];
+    expect(last[0]).toEqual(["Dell", "Netgear"]);
+  });
+
+  it("reports the filtered total upward", async () => {
+    const reportMatchedTotal = vi.fn();
+    renderTable({}, { reportMatchedTotal });
+    await waitFor(() => expect(reportMatchedTotal).toHaveBeenCalledWith(48213));
   });
 });

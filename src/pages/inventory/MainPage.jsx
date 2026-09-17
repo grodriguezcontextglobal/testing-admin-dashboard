@@ -176,6 +176,15 @@ const MainPage = () => {
     setFilteredDataCount(filteredData?.length || 0);
   }, []);
 
+  // With the server paginating there is no array to measure — the table holds
+  // one page — so the count arrives on its own channel, from inventory-facets.
+  // Kept separate from the callback above because that one carries the payload
+  // the XLSX export needs, and conflating the two is what made the count a
+  // side effect of the export in the first place.
+  const handleMatchedTotal = useCallback((total) => {
+    setFilteredDataCount(typeof total === "number" ? total : 0);
+  }, []);
+
   // Calculate the total to display based on current state
   const getTotalToDisplay = () => {
     if (params || (Array.isArray(chosenOption) && chosenOption.length > 0)) {
@@ -216,6 +225,7 @@ const MainPage = () => {
         dataFilterOptions={dataFilterOptions}
         date={null}
         downloadDataReport={handleFilteredDataUpdate}
+        reportMatchedTotal={handleMatchedTotal}
         loadingState={setIsLoadingState}
         openAdvanceSearchModal={openAdvanceSearchModal}
         reference={null}

@@ -50,7 +50,7 @@ const groupByOptions = [
   "item_group",
   "brand",
   "ownership",
-  "assignedToStaffMember",
+  // "assignedToStaffMember",
 ];
 
 const groupByFallbackLabels = {

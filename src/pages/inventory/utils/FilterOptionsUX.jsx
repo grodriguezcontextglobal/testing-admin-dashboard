@@ -2,8 +2,10 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
 import { getLogisticStatusLabel } from "./logisticStatusConfig";
-import { useMemo, useCallback, memo, useContext } from "react";
+import { useMemo, useCallback, memo, useContext, useState } from "react";
 import { FilterOptionsContext } from "../MainPage";
+import { FEATURE_INVENTORY_SERVER_PAGINATION } from "../../../config/featureFlags";
+import useSerialSuggest from "./hooks/useSerialSuggest";
 // import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 // import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
 // The Status labels come from logisticStatusConfig, the same twenty entries the
@@ -71,6 +73,35 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
     () => Object.keys(dicSelectedOptions).map(Number),
     [],
   );
+
+  // Serial Number is an autocomplete, not a list: one option per item is not a
+  // dropdown, it is the inventory. The server answers a prefix with at most
+  // twenty, and `enabled` keeps the request unsent until the flag is on —
+  // /db_item/serial-suggest 404s in production until the backend deploys it.
+  const [serialTerm, setSerialTerm] = useState("");
+  const serialSuggest = useSerialSuggest({
+    term: serialTerm,
+    enabled: FEATURE_INVENTORY_SERVER_PAGINATION,
+  });
+
+  const serialAutocompleteProps = useMemo(() => {
+    if (!FEATURE_INVENTORY_SERVER_PAGINATION) return null;
+    return {
+      options: serialSuggest.suggestions.map((serial) => ({
+        value: serial,
+        label: serial,
+      })),
+      onSearch: setSerialTerm,
+      // The server already decided what matches the prefix; filtering its
+      // answer again here would drop rows for no reason.
+      filterOption: false,
+      notFoundContent: serialSuggest.tooShort
+        ? "Type two characters to see matching serials"
+        : serialSuggest.isLoading
+          ? "Looking for serials…"
+          : "No serial starts with that",
+    };
+  }, [serialSuggest.suggestions, serialSuggest.tooShort, serialSuggest.isLoading]);
 
   // Memoize options list for each select
   const selectOptionsByIndex = useMemo(() => {
@@ -165,6 +196,9 @@ const FilterOptionsUX = memo(function FilterOptionsUX({
                   ? null
                   : "Type or scan"
               }
+              {...(index === 2 && serialAutocompleteProps
+                ? serialAutocompleteProps
+                : {})}
             />
           );
         })}

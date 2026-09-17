@@ -38,6 +38,8 @@ import {
   hasActiveCriteria,
 } from "../utils/activeFilterSummary";
 import { dictionary } from "../utils/dicSelectedOptions";
+import { facetsToFilterOptions } from "../utils/facetsToFilterOptions";
+import useInventoryFacets from "../utils/hooks/useInventoryFacets";
 import useInventoryPage from "../utils/hooks/useInventoryPage";
 import { toServerFilters } from "../utils/inventoryPageContract";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
@@ -86,6 +88,7 @@ const ItemTable = ({
   setOpenDetails,
   allowedLocations,
   userPreferences,
+  reportMatchedTotal,
 }) => {
   const searchValues = useContext(SearchItemContext);
   const navigate = useNavigate();
@@ -120,6 +123,33 @@ const ItemTable = ({
     sortBy: serverSort.sortBy,
     sortDir: serverSort.sortDir,
   });
+
+  // Two questions, two calls, and the split is the point.
+  //
+  // The option lists are asked for with NO filters, deliberately: picking a
+  // brand must not shrink the group list, because the user builds a combination
+  // one filter at a time and needs to see what is there to pick next. Asking
+  // unfiltered guarantees that whatever the server decides to do about narrowing
+  // its own facets. They are the company's distinct values, so they move only
+  // when inventory does — cheap to hold.
+  const facetOptionsQuery = useInventoryFacets({
+    enabled: FEATURE_INVENTORY_SERVER_PAGINATION,
+  });
+  // matchedTotal is the other question: how many rows the set on screen holds.
+  // That one does carry the filters, and it is the only one that moves when a
+  // filter moves.
+  const facetTotalQuery = useInventoryFacets({
+    enabled: FEATURE_INVENTORY_SERVER_PAGINATION,
+    filters: serverFilters.filters,
+    search: serverSearch,
+  });
+
+  useEffect(() => {
+    if (!FEATURE_INVENTORY_SERVER_PAGINATION) return;
+    if (typeof reportMatchedTotal !== "function") return;
+    if (facetTotalQuery.matchedTotal === null) return;
+    reportMatchedTotal(facetTotalQuery.matchedTotal);
+  }, [facetTotalQuery.matchedTotal, reportMatchedTotal]);
 
   // antd hands back the clicked column and its direction; `order` is undefined
   // on the third click, which is how a user clears the sort.
@@ -384,8 +414,17 @@ const ItemTable = ({
   //   [dataToDisplayMemo]
   // );
 
+  // With the server paginating, the option lists come from inventory-facets:
+  // grouping the rows in memory could only ever describe the page, and a page
+  // of fifty rows knows fifty brands.
+  useEffect(() => {
+    if (!FEATURE_INVENTORY_SERVER_PAGINATION) return;
+    setDataFilterOptions(facetsToFilterOptions(facetOptionsQuery.facets));
+  }, [facetOptionsQuery.facets, setDataFilterOptions]);
+
   // Update filter options and report download only when inputs change
   useEffect(() => {
+    if (FEATURE_INVENTORY_SERVER_PAGINATION) return;
     setDataFilterOptions({
       0: filterOptionsBasedOnProps("brand"),
       1: filterOptionsBasedOnProps("item_group"),

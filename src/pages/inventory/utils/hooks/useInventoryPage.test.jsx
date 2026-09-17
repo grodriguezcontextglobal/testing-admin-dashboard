@@ -253,3 +253,34 @@ describe("useInventoryFacets", () => {
     expect(devitrakApi.post).not.toHaveBeenCalled();
   });
 });
+
+describe("useInventoryFacets identity", () => {
+  it("hands back the same facets object across renders while loading", async () => {
+    // Not a nicety. The page feeds this into an effect that calls
+    // setDataFilterOptions, so a fresh object every render schedules the next
+    // render forever. The table already had that loop once, through groupBy.
+    devitrakApi.post.mockReturnValue(new Promise(() => {}));
+    const { result, rerender } = renderHook(
+      () => useInventoryFacets({ enabled: true }),
+      { wrapper },
+    );
+    const first = result.current.facets;
+    rerender();
+    rerender();
+    expect(result.current.facets).toBe(first);
+  });
+
+  it("keeps it stable once the answer has arrived", async () => {
+    devitrakApi.post.mockResolvedValue({
+      data: { ok: true, matchedTotal: 3, facets: { brand: [{ value: "Dell" }] } },
+    });
+    const { result, rerender } = renderHook(
+      () => useInventoryFacets({ enabled: true }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.matchedTotal).toBe(3));
+    const settled = result.current.facets;
+    rerender();
+    expect(result.current.facets).toBe(settled);
+  });
+});
