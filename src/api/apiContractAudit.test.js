@@ -53,6 +53,15 @@ const KNOWN_UNMATCHED = [
   // template list to populate its preview selector. Drop this line once
   // api-payloads.json carries the route.
   "GET /api/nodemailer/branding-preview/templates",
+  // One of the three inventory routes of the backend's 94d7076, committed but
+  // not deployed, and therefore newer than the generated artifacts in src/docs.
+  // It only runs behind FEATURE_INVENTORY_SERVER_PAGINATION, which is off in
+  // every deployed environment; ItemTable.test.jsx pins that the flag-off page
+  // never calls it. Its two siblings, inventory-page and inventory-facets, are
+  // POSTs assembled through the contract builders rather than object literals,
+  // so this check does not see them. Drop this line once api-payloads.json
+  // carries the route.
+  "GET /api/db_item/serial-suggest",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */
