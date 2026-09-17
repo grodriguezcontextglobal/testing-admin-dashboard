@@ -61,7 +61,18 @@ export const INVENTORY_FACET_KEYS = Object.freeze([
   "status",
 ]);
 
-export const INVENTORY_PAGE_SIZE_DEFAULT = 50;
+/**
+ * Ten, not the fifty the contract suggests, and the reason is the screen rather
+ * than the endpoint: fifty rows make the table longer than what production
+ * shows today, and that length is what the people using it are used to.
+ *
+ * The cost is round trips — ten rows per request is five times the requests of
+ * fifty for the same scroll — which is affordable because each page is its own
+ * React Query entry: stepping back through cursors already walked is a cache
+ * hit, not a fetch. Raise it here if the traffic ever argues louder than the
+ * layout; the server's own ceiling is the constant below.
+ */
+export const INVENTORY_PAGE_SIZE_DEFAULT = 10;
 export const INVENTORY_PAGE_SIZE_MAX = 500;
 
 /** Shorter terms are ignored server-side; we do not send them at all. */
