@@ -10,14 +10,16 @@
 
 ## 0. La respuesta corta
 
+> **Actualizado el 2026-09-17, tras vuestra confirmación.** Las dos cosas que
+> este documento pedía están resueltas: la tanda 3 está desbloqueada, y el orden
+> de despliegue dejó de importar porque cambiamos el cliente en vez de pediros
+> que fuerais primero (`6dadc128`). **Podéis desplegar las tres tandas cuando
+> queráis, en el orden que queráis.**
+
 **Nuestro código está listo; falta que salga a producción.** No queda ningún
 cambio por escribir de nuestro lado, pero `main` no es producción: el build del
 dashboard es manual, y hasta que se haga, lo que sirve producción es el cliente
-anterior. Eso es una **precondición de la tanda 2** y está en la §1.5.
-
-Los seis commits se pueden desplegar en tres tandas. La primera no espera a
-nadie. Lo único que pedimos antes de la tercera es **una respuesta, no un cambio
-de código**.
+anterior — con dos semanas de trabajo dentro. Está en la §1.5.
 
 | Commit | Qué es | ¿Nos bloquea? |
 |---|---|---|
@@ -87,6 +89,25 @@ obligatorio antes de cerrar un evento, las píldoras de consumidores, el brandin
 de correos y los arreglos de búsqueda. No es un despliegue silencioso y conviene
 que el equipo lo sepa antes, no después.
 
+### ✅ Resuelto: el orden ya no importa (2026-09-17, `6dadc128`)
+
+Confirmasteis que el `update-location-sub-location` desplegado **valida
+`company_id`** —sigue siendo el `updateSubLocation` anónimo—, así que nuestro
+build sin ese campo habría dado 400 a todo el mundo.
+
+**Ya no lo quitamos: lo mandamos desde donde sale la cabecera.** El campo vuelve
+al cuerpo, leído de `s-company-lq` en localStorage en vez de Redux. El servidor
+de hoy recibe el campo que exige; el endurecido recibe un cuerpo que **coincide**
+con la cabecera, que es lo único que pide. El bug de origen nunca fue el campo:
+era leerlo de una segunda fuente que diverge al cambiar de compañía.
+
+**Consecuencia: los dos despliegues son independientes.** Podéis desplegar la
+tanda 2 antes o después de nuestro build, y el renombrado funciona en las cuatro
+combinaciones. Lo que sigue abajo queda como historia de por qué.
+
+<details>
+<summary>El razonamiento del orden, cuando todavía importaba</summary>
+
 ### ⚠️ El orden importa, y va al revés de lo que parece
 
 `2b1cbe93` quita `company_id` del cuerpo porque **vuestro servidor endurecido**
@@ -113,6 +134,8 @@ la otra.** De ahí el orden de abajo.
 > evidencia es el contrato generado en `src/docs`, que sabemos que va por detrás
 > de vuestro repositorio. Si ya lo acepta, los dos despliegues son
 > independientes y el orden deja de importar.
+
+</details>
 
 ### Cómo se despliega esto de verdad
 
@@ -257,7 +280,23 @@ día y no dentro de una semana.
 
 ---
 
-### Tanda 3 — pagos, después de una respuesta
+### Tanda 3 — pagos ✅ desbloqueada
+
+**Contestado el 2026-09-17: sí, el 409 nos llega**, y `21896b77` era el arreglo
+correcto. Además nos hicisteis ver que la mentira del modal **ya ocurre hoy**:
+una captura duplicada llega a Stripe, que la rechaza por PI ya capturado, y la
+pantalla dice que no se cobró cuando la primera sí cobró. Es un bug vivo, no uno
+que traiga vuestro despliegue.
+
+Y tomamos vuestra propuesta del `Idempotency-Key` (`47cb253f`): captura,
+liberación y reembolso completo viajan con `<operación>:<paymentIntent>`, que
+cierra el hueco de la captura con importe editable. **El reembolso parcial va
+sin clave a propósito**: dos dispositivos perdidos de la misma transacción son
+dos reembolsos legítimos y pueden ser del mismo importe; una clave ahí le daría
+al segundo el recibo del primero.
+
+<details>
+<summary>La pregunta que bloqueaba esta tanda, y por qué</summary>
 
 ```
 54dffdb   idempotencia en Redis (el 409)
@@ -283,6 +322,8 @@ cancelación, reembolso y reembolso parcial— pero **bajo `/api/stripe/`**. De
 En ninguno de los dos casos el despliegue empeora nada: si no estamos cubiertos,
 hoy tampoco lo estamos.
 
+</details>
+
 ---
 
 ## 3. Lo que **no** hay que esperar
@@ -302,12 +343,13 @@ Para que no quede en el aire: hay dos cosas abiertas por nuestro lado que
 
 ## 4. Lo que nos gustaría de vuelta, en orden de urgencia
 
-| # | Qué | Cuándo hace falta |
+| # | Qué | Estado |
 |---|---|---|
-| 1 | ¿`/api/stripe/*` = `/api/db_stripe/*`? | antes de la tanda 3 |
-| 2 | ¿Cuáles de las siete rutas poco usadas estaban registradas después del `router.post("/:id")`? | cuanto antes: si alguna lo estaba, esas llamadas **eran borrados**, y eso se revisa en los datos |
-| 3 | Qué hace `inventory-page` con un rol de locación sin filas de scope, y el backfill de `preference.managerLocation` → scope SQL | antes de que encendamos nuestro flag |
+| 1 | ¿`/api/stripe/*` = `/api/db_stripe/*`? | ✅ **contestado** (2026-09-17): sí, el 409 nos llega. La tanda 3 queda desbloqueada y `21896b77` era correcto |
+| 2 | ¿Cuáles de las siete rutas poco usadas estaban registradas después del `router.post("/:id")`? | ⬜ **abierto**: si alguna lo estaba, esas llamadas **eran borrados**, y eso se revisa en los datos |
+| 3 | Qué hace `inventory-page` con un rol de locación sin filas de scope, y el backfill de `preference.managerLocation` → scope SQL | ⬜ **abierto**, y es lo que retiene el encendido de nuestro flag |
 | 4 | Aviso de que la tanda 2 está arriba | el día del despliegue |
+| 5 | `MONGO_SECONDARY_READS` | vuestro, sin decidir desde hace tres turnos. Si acaba encendido, decídnoslo: lecturas desde secundaria pueden hacer que un ítem recién creado no aparezca en la lista siguiente, y eso se ve como un bug del dashboard |
 
 Las tres preguntas están desarrolladas en
 `FRONTEND_backend_asks_2026-09-17.md`.
