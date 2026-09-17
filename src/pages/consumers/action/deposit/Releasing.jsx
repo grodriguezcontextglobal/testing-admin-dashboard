@@ -16,6 +16,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { TextFontSize30LineHeight38 } from "../../../../styles/global/TextFontSize30LineHeight38";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { describePaymentError } from "../../../../utils/paymentRequestState";
+import { paymentIdempotencyHeaders } from "../../../../utils/paymentIdempotency";
 
 const Releasing = ({
   openCancelingDepositModal,
@@ -101,7 +102,8 @@ const Releasing = ({
         `/stripe/payment-intents/${rowRecord?.paymentIntent}/cancel`,
         {
           id: rowRecord?.paymentIntent,
-        }
+        },
+        paymentIdempotencyHeaders("release", rowRecord?.paymentIntent)
       );
     } catch (error) {
       const outcome = describePaymentError(error, {

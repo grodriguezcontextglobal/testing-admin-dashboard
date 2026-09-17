@@ -19,6 +19,7 @@ import { OutlinedInputStyle } from "../../../../styles/global/OutlinedInputStyle
 import sendRefundReceiptEmail from "../../utils/sendRefundReceiptEmail";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { describePaymentError } from "../../../../utils/paymentRequestState";
+import { paymentIdempotencyHeaders } from "../../../../utils/paymentIdempotency";
 
 const ExpandedLostButton = ({
   record,
@@ -128,10 +129,21 @@ const ExpandedLostButton = ({
             cashReportTransactionData
           ).paymentIntent_charge_transaction.includes("cash")
         ) {
-          await devitrakApi.post(`/stripe/refund`, {
-            paymentIntent: checkArray(cashReportTransactionData)
-              .paymentIntent_charge_transaction,
-          });
+          await devitrakApi.post(
+            `/stripe/refund`,
+            {
+              paymentIntent: checkArray(cashReportTransactionData)
+                .paymentIntent_charge_transaction,
+            },
+            // The full refund happens once per transaction, so it can be keyed
+            // on it. The partial refund above cannot: two lost devices are two
+            // legitimate refunds and may be for the same amount.
+            paymentIdempotencyHeaders(
+              "refund",
+              checkArray(cashReportTransactionData)
+                .paymentIntent_charge_transaction
+            )
+          );
         }
         await devitrakApi.post(
           `/cash-report/remove-cash-report/${checkArray(cashReportTransactionData).id

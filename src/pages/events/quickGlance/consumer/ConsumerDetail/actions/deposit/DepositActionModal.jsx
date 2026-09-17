@@ -16,6 +16,7 @@ import {
 } from "../../../../../../../components/UX/profile";
 import { OutlinedInputStyle } from "../../../../../../../styles/global/OutlinedInputStyle";
 import { describePaymentError } from "../../../../../../../utils/paymentRequestState";
+import { paymentIdempotencyHeaders } from "../../../../../../../utils/paymentIdempotency";
 import "../../../consumerDetail.css";
 import {
   centsToAmount,
@@ -56,6 +57,7 @@ const ACTIONS = {
     verb: "Capture",
     title: "Capture deposit",
     subject: "capture",
+    operation: "capture",
     endpoint: (id) => `/stripe/payment-intents/${id}/capture`,
     email: "/nodemailer/deposit-collected-notification",
     editableAmount: true,
@@ -68,6 +70,7 @@ const ACTIONS = {
     verb: "Release",
     title: "Release deposit",
     subject: "release",
+    operation: "release",
     endpoint: (id) => `/stripe/payment-intents/${id}/cancel`,
     email: "/nodemailer/deposit-return-notification",
     editableAmount: false,
@@ -170,7 +173,13 @@ const DepositActionModal = ({ action, open, setOpen, onSettled }) => {
 
     setIsRunning(true);
     try {
-      const response = await devitrakApi.post(config.endpoint(paymentIntent), payload);
+      const response = await devitrakApi.post(
+        config.endpoint(paymentIntent),
+        payload,
+        // Keyed on the deposit, so a second capture of the same deposit for a
+        // different amount collides with the first instead of charging again.
+        paymentIdempotencyHeaders(config.operation, paymentIntent),
+      );
       if (!response.data?.ok) throw new Error("Stripe refused the request");
 
       await deactivateTransactionAndReceivers();

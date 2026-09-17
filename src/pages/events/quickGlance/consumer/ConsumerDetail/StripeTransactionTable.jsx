@@ -38,6 +38,7 @@ import {
   useSelectedConsumer,
 } from "./hooks/useConsumerEventActivity";
 import TransactionPanel from "./transaction/TransactionPanel";
+import { paymentIdempotencyHeaders } from "../../../../../utils/paymentIdempotency";
 import { describePaymentError } from "../../../../../utils/paymentRequestState";
 
 /**
@@ -115,9 +116,15 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
   const handleRefund = async (record) => {
     setRefundingKey(record.key);
     try {
-      await devitrakApi.post("/stripe/refund", {
-        paymentIntent: record.paymentIntent,
-      });
+      await devitrakApi.post(
+        "/stripe/refund",
+        { paymentIntent: record.paymentIntent },
+        // One full refund per transaction, so the deposit is the key. Partial
+        // refunds are left without one on purpose: two lost devices from the
+        // same transaction are two legitimate refunds, and they can be for the
+        // same amount.
+        paymentIdempotencyHeaders("refund", record.paymentIntent),
+      );
       await devitrakApi.patch(`/transaction/update-transaction/${record.id}`, {
         id: record.id,
         active: false,

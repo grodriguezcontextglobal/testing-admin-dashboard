@@ -115,7 +115,11 @@ const Capturing = ({
             {
               id: rowRecord?.paymentIntent,
               amount_to_capture: data.amount,
-            }
+            },
+            // Keyed on the deposit: the amount is editable, so without this a
+            // second capture for a different amount is a different request and
+            // charges again.
+            paymentIdempotencyHeaders("capture", rowRecord?.paymentIntent)
           );
         } catch (error) {
           const outcome = describePaymentError(error, {

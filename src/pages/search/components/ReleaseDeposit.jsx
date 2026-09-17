@@ -17,6 +17,7 @@ import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { describePaymentError } from "../../../utils/paymentRequestState";
+import { paymentIdempotencyHeaders } from "../../../utils/paymentIdempotency";
 
 const ReleaseDeposit = ({
   openCancelingDepositModal,
@@ -109,7 +110,11 @@ const ReleaseDeposit = ({
         `/stripe/payment-intents/${paymentIntentDetailSelected.paymentIntent}/cancel`,
         {
           id: paymentIntentDetailSelected.paymentIntent,
-        }
+        },
+        paymentIdempotencyHeaders(
+          "release",
+          paymentIntentDetailSelected.paymentIntent
+        )
       );
     } catch (error) {
       const outcome = describePaymentError(error, {
