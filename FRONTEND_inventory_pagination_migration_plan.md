@@ -30,9 +30,12 @@
 | **Fases 2, 3 y 5** | ✅ **hechas** (2026-09-15) · 3753 tests en verde, flag OFF |
 | **Fase 4 — filtros y búsqueda al servidor** | ✅ **hecha** (2026-09-17) · 894 tests del árbol de inventario en verde, flag OFF |
 | **R3 — las dos copias del scope de locación** | ⚠️ **lado lectura arreglado** (2026-09-17, `c995425f`); falta el backfill de Mongo→SQL y la respuesta del backend. **Condiciona el encendido del flag** |
-| Fases 6 y 6b | ⬜ pendientes, bloqueadas por el deploy y por el backfill de R3 |
-| Fase 7 — limpieza post-deploy | ⬜ pendiente |
-| `inventory-page`, `inventory-facets`, `serial-suggest`, `inventory-export` | ⚠️ **404 en producción hasta el deploy del backend** |
+| **El export con el flag encendido** | ✅ **resuelto** (2026-09-17, `13dff7b6`): pide `warehouse-items` al pulsar, en vez de leer una tabla de diez filas. Quita la urgencia de la Fase 6b |
+| **Fase 6 — quitar el scope del cliente** | ⬜ pendiente, **bloqueada por el backfill de R3**, no por el deploy |
+| **Fase 6b — export como job de cola** | ⬜ pendiente, bloqueada por el despliegue de `inventory-export` y por que su payload terminal traiga la URL. **Ya no es urgente** |
+| **Fase 7 — limpieza post-deploy** | ⬜ pendiente: quitar el flag y la rama vieja, después de 6 y de un tiempo con el flag encendido en producción |
+| `inventory-page`, `inventory-facets`, `serial-suggest` | ✅ **desplegadas** (tanda 1 del backend, `94d7076`, 2026-09-17) |
+| `inventory-export` | ⚠️ **sin desplegar** — es lo que bloquea la Fase 6b |
 
 La Fase 1 **no depende del deploy**: se apoya solo en `warehouse-items`, que ya
 está en producción y no cambia. Por eso va primero y ya está entregada.
