@@ -29,7 +29,8 @@
 | §1.9 — mensaje de tabla vacía | ✅ **hecho** (2026-09-15), independiente del flag |
 | **Fases 2, 3 y 5** | ✅ **hechas** (2026-09-15) · 3753 tests en verde, flag OFF |
 | **Fase 4 — filtros y búsqueda al servidor** | ✅ **hecha** (2026-09-17) · 894 tests del árbol de inventario en verde, flag OFF |
-| Fases 6 y 6b | ⬜ pendientes, bloqueadas por el deploy |
+| **R3 — las dos copias del scope de locación** | ⚠️ **lado lectura arreglado** (2026-09-17, `c995425f`); falta el backfill de Mongo→SQL y la respuesta del backend. **Condiciona el encendido del flag** |
+| Fases 6 y 6b | ⬜ pendientes, bloqueadas por el deploy y por el backfill de R3 |
 | Fase 7 — limpieza post-deploy | ⬜ pendiente |
 | `inventory-page`, `inventory-facets`, `serial-suggest`, `inventory-export` | ⚠️ **404 en producción hasta el deploy del backend** |
 
@@ -574,6 +575,56 @@ modo servidor ya está bien: `localeCompare`, que es como ordena MySQL.
 Tests: `ColumnsFormat.test.jsx` (8 casos) fija los dos modos, y que ninguna clave
 de columna ordenable caiga fuera de la whitelist del servidor — de ahí saldría
 un 400.
+
+### R3 — Las dos copias del scope de locación, antes de encender ⚠️
+
+**Medio resuelto el 2026-09-17 (`c995425f`). La otra mitad es un backfill y una
+pregunta al backend, y es la que de verdad condiciona el encendido del flag.**
+
+Hay **dos pantallas que asignan locaciones y escriben en sitios distintos**:
+
+| Pantalla | Escribe en | Lo lee |
+|---|---|---|
+| `UpdateRoleInCompany` (scope-assignment, la nueva) | **SQL**, `PUT /db_staff/company-staff/scope` → vuelve en el login dentro de `state.permission.locations` | el servidor, dentro de `inventory-page` |
+| `AssignLocationManager` (la vieja, sigue en la app) | **Mongo**, `employee.preference.managerLocation` | el cliente, vía `useStaffRoleAndLocations` |
+
+Ninguna escribe en las dos.
+
+**La mitad arreglada (lado lectura).** `/inventory` leía solo la copia de Mongo,
+así que un rol asignado con la pantalla nueva llegaba con el array legacy vacío
+—leído como «sin restricciones»— y veía el inventario entero de la compañía.
+`resolveScopedLocationNames` lee **SQL primero** y cae al array legacy para los
+registros que escribió la pantalla vieja. SQL primero porque es lo que el
+servidor aplica: preferir la otra copia dejaría al cliente filtrando por una
+regla mientras el servidor filtra por otra.
+
+**La mitad abierta (lado datos).** Una persona asignada solo con la pantalla
+vieja **no tiene filas en SQL**. Cuando encendamos el flag, el servidor filtra
+por SQL, y hay dos finales posibles y ninguno es bueno:
+
+- el servidor no encuentra scope y **no filtra** → esa persona ve inventario que
+  no le toca;
+- el servidor no encuentra scope y **filtra a cero** → tabla vacía sin
+  explicación.
+
+**Lo que hay que conseguir antes de encender, en este orden:**
+
+1. **Preguntar al backend** qué hace `inventory-page` con un rol de locación que
+   no tiene ninguna fila de scope en SQL. Es la pregunta que decide si esto es
+   urgente o solo pendiente.
+2. **Backfill** de `preference.managerLocation` → scope SQL para los registros
+   existentes. Es del backend: los datos están en Mongo y el destino es su
+   tabla, y hacerlo desde el cliente sería reasignar roles uno a uno desde un
+   navegador.
+3. **Mientras tanto, el filtro de cliente se queda** — precisamente porque ahora
+   lee SQL con respaldo en Mongo, es la red que cubre a quien solo esté en
+   Mongo. Por eso la Fase 6 va **después** del backfill, no antes.
+
+Lo que este cliente ya no hace es **crear** divergencia nueva: la pantalla nueva
+escribe SQL y la página lo lee. El resto de pantallas que leen locaciones
+(flujos de asignación en eventos, consumidores y staff) siguen leyendo solo
+Mongo a través de `useStaffRoleAndLocations`; no las toca este cambio porque su
+forma incluye `assign` y `transfer`, banderas que el scope SQL no trae.
 
 ### Fase 6 — Quitar el scope del cliente ⬜
 
