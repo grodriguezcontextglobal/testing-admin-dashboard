@@ -114,20 +114,32 @@ la otra.** De ahí el orden de abajo.
 > de vuestro repositorio. Si ya lo acepta, los dos despliegues son
 > independientes y el orden deja de importar.
 
+### Cómo se despliega esto de verdad
+
+Las dos mitades se prueban **juntas en local** —servidor y dashboard, con los
+cambios de los dos repositorios— y solo cuando todo corre sin problema se
+empujan los dos repositorios y cada VM despliega el suyo. Eso cambia dos cosas
+respecto a lo que decía este documento antes:
+
+1. **La pregunta de arriba se contesta en local**, no por correo: con el servidor
+   endurecido levantado, renombrar una locación desde el dashboard nuevo la
+   responde en un minuto. La §1.7 lo pone como primer punto de la lista.
+2. **La ventana de desajuste es el hueco entre el despliegue de una VM y el de la
+   otra**, no días. Sigue existiendo, así que dentro de esa ventana:
+   **primero la VM del servidor, después la del dashboard.** En ese sentido el
+   fallo alcanza solo a quien cambie de compañía en esa sesión; al revés
+   alcanzaría a cualquiera que renombre una locación.
+
 ### Orden que proponemos
 
 ```
 1. vosotros  → tanda 1 (94d7076), hoy, sin esperar a nadie
-2. vosotros  → tanda 2, avisándonos el mismo día
-3. nosotros  → build de producción del dashboard, a continuación
-4. nosotros  → smoke test de 15 minutos (§2, tanda 2)
-5. vosotros  → respuesta sobre /api/stripe/* → tanda 3
+2. los dos   → verificación local conjunta (§1.7)
+3. vosotros  → VM del servidor: tanda 2
+4. nosotros  → VM del dashboard, a continuación
+5. nosotros  → smoke test de 15 minutos (§2, tanda 2)
+6. vosotros  → respuesta sobre /api/stripe/* → tanda 3
 ```
-
-Entre el paso 2 y el 3 hay una ventana en la que renombrar una locación falla
-**si el operador cambió de compañía en esa sesión**. Cuanto más juntos vayan los
-dos pasos, más corta. Si preferís evitarla del todo, la alternativa es que
-confirméis la pregunta de arriba y publiquemos nosotros primero.
 
 ---
 
@@ -173,6 +185,32 @@ lleva **38 commits de golpe**. Esto es lo que hemos revisado uno por uno.
   `GET /nodemailer/branding-preview/templates`, que está en vuestra rama y no en
   el contrato generado. Si aún no está desplegada, el selector de plantillas sale
   vacío. No rompe el envío de correos, solo la previsualización.
+
+---
+
+## 1.7 Verificación local, antes de empujar nada
+
+Con las dos mitades levantadas en local, esto se comprueba mirando, no
+preguntando. Seis puntos, y cada uno cierra un riesgo de la §1.6 o una pregunta
+abierta de los informes anteriores.
+
+| # | Qué hacer | Qué confirma |
+|---|---|---|
+| 1 | **Renombrar una locación** desde el dashboard nuevo contra el servidor endurecido | que el cuerpo sin `company_id` es aceptado. Es la pregunta de la §1.5 y la que decide si el orden de las VM importa |
+| 2 | Renombrar **después de cambiar de compañía** en la misma sesión | que el 400 por divergencia cabecera/cuerpo ya no ocurre — era la ACCIÓN 01 |
+| 3 | **Escribir dos caracteres en el filtro de Serial Number** y mirar la petición | que `serial-suggest` acepta solo cabecera, sin `company_id` en la query. Es el único cabo suelto del preflight §1.1 |
+| 4 | Entrar con un usuario **con locaciones asignadas en SQL** | que ve solo su inventario, y que es el inventario correcto. Es el cambio de la §1.6 que más se parecerá a un fallo |
+| 5 | Lanzar **dos capturas seguidas del mismo depósito** | si el servidor responde 409 en `/api/stripe/*`, contesta la pregunta 1 de `FRONTEND_backend_asks` sin necesidad de mensaje. Si responde otra cosa, también |
+| 6 | **Cerrar un evento** con el conteo | que el modal de conteo funciona contra el servidor real, no solo contra los tests |
+
+Los puntos 1, 3 y 5 son **respuestas a preguntas abiertas**: si salen bien, tres
+de los cuatro asuntos pendientes de este documento se cierran sin esperar a
+nadie.
+
+Un aviso sobre el punto 3 y el flag: `.env.dev` entra por `env_file` en
+`docker-compose`, así que editarlo no basta — hay que recrear el contenedor
+(`docker compose up -d --force-recreate`). Vite incrusta `import.meta.env` al
+arrancar el servidor de desarrollo, que arranca con el contenedor.
 
 ---
 
