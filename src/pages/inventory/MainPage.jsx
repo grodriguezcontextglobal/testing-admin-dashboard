@@ -42,6 +42,7 @@ import {
   inventoryPageQueryKeys,
 } from "./utils/inventoryQueryKeys";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
+import { resolveScopedLocationNames } from "../../utils/scopedLocations";
 import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 import { ShipmentRecord } from "./actions/ShipmentRecord";
@@ -93,6 +94,10 @@ const MainPage = () => {
   const [downloadDataReport, setDownloadDataReport] = useState(null);
   const [renderingData, setRenderingData] = useState(true);
   const { user } = useSelector((state) => state.admin);
+  // The SQL scope, written by the scope-assignment screen and mirrored into the
+  // permission slice at login. The category dimension has been read from here
+  // since Phase C; the location dimension had not caught up.
+  const scopedLocations = useSelector((state) => state.permission?.locations);
   const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
   const [currentTab, setCurrentTab] = useState(0);
   const [activeView, setActiveView] = useState("1");
@@ -111,11 +116,22 @@ const MainPage = () => {
       ?.preference;
   }, [user]);
 
+  // Which locations this person is scoped to, from whichever store holds the
+  // answer: SQL first — the scope-assignment screen writes there and the server
+  // enforces from there — with the legacy Mongo preference as the fallback for
+  // records the older screen wrote. See resolveScopedLocationNames: this is R3,
+  // and until now the page read only the legacy half, so a role scoped through
+  // the new screen was shown the whole company's inventory.
+  const scopedLocationNames = resolveScopedLocationNames({
+    sqlLocations: scopedLocations,
+    legacyLocationNames: locationsViewPermission,
+  });
+
   // null = no filter (see all). [] = explicitly restricted to zero locations.
-  // Users with no managerLocation assignments have no location-based restrictions,
-  // so they also get null (same as admin) rather than an empty array that hides everything.
-  const hasAssignedLocations = (userPreferences?.managerLocation?.length ?? 0) > 0;
-  const allowedInventoryLocations = (isAdmin || !hasAssignedLocations) ? null : locationsViewPermission;
+  // Someone with no assignment in either store keeps the old behaviour and gets
+  // null rather than an empty array that would hide everything.
+  const allowedInventoryLocations =
+    isAdmin || scopedLocationNames.length === 0 ? null : scopedLocationNames;
 
   const companyHasInventoryQuery = useQuery({
     queryKey: ["companyHasInventoryQuery", user.sqlInfo.company_id],
