@@ -24,11 +24,12 @@
 | Preflight §1.1 / §1.3 / §1.4 | ✅ cerrados por la §8 del backend (2026-09-15) |
 | Preflight §1.2 | ✅ **resuelto** (2026-09-15): `usage` no existe en la fila → **filtro Staff member eliminado de la UI** |
 | Preflight §1.5 | ⬜ **diagnosticado y aparcado** — no bloquea la Fase 4; dos funciones hermanas con dos ideas erróneas de «hay filtro activo» |
-| Preflight §1.7 | ⚠️ **nuevo**: `image_url` llega vacío; pregunta abierta al backend |
-| Preflight §1.8 | ⚠️ **nuevo**: las facetas no deben acotar las opciones entre sí; choca con §3 del contrato |
+| Preflight §1.7 | ✅ **resuelto** (2026-09-15): el servidor resuelve `image_url`; `/image/images` sale de la ruta crítica |
+| Preflight §1.8 | ✅ **cerrado** (2026-09-17): las opciones se piden **sin filtros**, así que elegir uno no acota los demás. Verificado en navegador con el flag encendido |
 | §1.9 — mensaje de tabla vacía | ✅ **hecho** (2026-09-15), independiente del flag |
 | **Fases 2, 3 y 5** | ✅ **hechas** (2026-09-15) · 3753 tests en verde, flag OFF |
-| Fases 4, 6 y 6b | ⬜ pendientes, bloqueadas por §1.6 y por el deploy |
+| **Fase 4 — filtros y búsqueda al servidor** | ✅ **hecha** (2026-09-17) · 894 tests del árbol de inventario en verde, flag OFF |
+| Fases 6 y 6b | ⬜ pendientes, bloqueadas por el deploy |
 | Fase 7 — limpieza post-deploy | ⬜ pendiente |
 | `inventory-page`, `inventory-facets`, `serial-suggest`, `inventory-export` | ⚠️ **404 en producción hasta el deploy del backend** |
 
@@ -201,8 +202,23 @@ alimentarlas con `inventory-facets`, como avisa el contrato §6.3.
 
 ### 1.6 Lo que queda del vistazo en navegador
 
-El paso 2 de abajo ya se hizo y cerró §1.2. Queda el paso 3, que es el único
-manual que sigue vivo y **bloquea la Fase 4**:
+**Vistazo hecho el 2026-09-17 con el flag encendido.** Resultado: todos los
+desplegables traen opciones salvo Serial Number, que está vacío **por diseño**
+—es un autocompletado, y la Fase 4 lo cableó—, y elegir un filtro **no** acota
+las opciones de los demás, que cierra §1.8.
+
+Destapó además un bug que no era del flag: el desplegable de Status leía un
+diccionario propio de siete estados escrito dentro de `FilterOptionsUX`,
+mientras `logisticStatusConfig` tiene veinte, así que cualquier estado fuera de
+esos siete salía como una opción **sin texto**. Era raro mientras las opciones
+se agrupaban del dataset en memoria y dejó de serlo cuando las facetas
+empezaron a devolver todos los estados de la compañía. Arreglado en `2d6aa61f`
+y `5c2774e3`: un solo diccionario, y el vocabulario del evento
+(`logistic_inventory_status`: `received`, `in-idle`, `completed`) separado del
+vocabulario del ítem (`item_inv.logistic_status`), que es donde no tenía que
+haber estado nunca.
+
+Queda el paso 3, que **ya no bloquea nada** — cierra §1.5, que está aparcado:
 
 1. ~~Abrir `/inventory` con el devtools en la pestaña de red.~~ hecho
 2. ~~En la respuesta de `POST /db_item/warehouse-items`, mirar si las filas traen
@@ -210,7 +226,7 @@ manual que sigue vivo y **bloquea la Fase 4**:
 3. Aplicar un filtro cualquiera del selector (por ejemplo Brand) y mirar si las
    tarjetas de Categories / Groups / Brands se quedan vacías → cierra §1.5.
 
-### 1.7 Nuevo — `image_url` llega vacío, y el contrato asume que no ⚠️
+### 1.7 `image_url` — **resuelto: el servidor sí lo resuelve** ✅ (2026-09-15, respuesta real)
 
 La fila real trae `image_url: ""`. No es un caso raro: el cliente tiene una
 cadena de respaldo justo para esto (`ItemTable.jsx`, dentro de
@@ -233,10 +249,22 @@ columna tal cual, devolverá `""`**, y como habremos quitado esa query, la tabla
 se queda sin imágenes en todas las filas cuyo ítem no tenga imagen propia — que
 por lo visto son muchas.
 
-**Lo que hay que preguntar al backend:** ¿`image_url` en `inventory-page` aplica
-el respaldo por `item_group`, o copia la columna? Si copia la columna, o lo
-aplica el servidor, o mantenemos `/image/images` viva y el ahorro de esa query
-no existe. Mejor saberlo antes de la Fase 4 que después.
+**Respondido por el propio endpoint.** Una respuesta real de `inventory-page`
+trae, en las filas de un grupo con imagen, la URL del **grupo** ya resuelta —
+`…/<companyMongoId>_Laptop_Group%20Test%201.png`, idéntica en las 20 filas de ese
+grupo—, y `""` en las de un grupo que no tiene imagen. Es decir: el servidor
+aplica el respaldo, y el vacío solo aparece cuando no hay ninguna imagen que
+poner, que es exactamente lo que pasaría hoy con `/image/images`.
+
+**`POST /image/images` sale de la ruta crítica de la tabla**, como decía el
+contrato. Sigue viva para otras pantallas.
+
+Otras dos cosas que confirma la misma respuesta:
+
+- Las **13 columnas exactas** del contrato, ni una más.
+- El cursor viene como **`{ id }`** —sin `v`— cuando no hay `sortBy`, porque el
+  orden por defecto es `item_id ASC`. Nuestro cliente lo devuelve tal cual, así
+  que encaja sin cambios.
 
 ### 1.8 Nuevo — las opciones de filtro **no** deben estrecharse entre sí ⚠️
 
@@ -460,7 +488,37 @@ nueva, así que el efecto volvía a dispararse: **bucle de render sin salida**. 
 test de montaje se colgaba indefinidamente; memoizado, tarda 1,1 s. Lo cubre
 `ItemTable.test.jsx › settles instead of re-rendering forever`.
 
-### Fase 4 — Filtros y búsqueda al servidor ⬜
+### Fase 4 — Filtros y búsqueda al servidor ✅ *hecha, detrás del flag*
+
+Lo entregado, punto por punto de lo que pedía esta fase:
+
+- **Opciones desde `inventory-facets`**, con **dos llamadas y no una**: una sin
+  filtros para las listas de los desplegables y otra con los filtros activos
+  para `matchedTotal`. La separación es el §1.8: si las opciones viajaran con
+  los filtros puestos, elegir Brand acotaría la lista de Group y cambiaríamos
+  en silencio un comportamiento deliberado.
+- **`facetsToFilterOptions`** traduce el bloque `facets` a las claves que leen
+  los selects. El índice 2 queda vacío a propósito.
+- **Serial Number es ahora un autocompletado** contra `serial-suggest`, en
+  `useSerialSuggest`: mínimo dos caracteres —el endpoint responde 400 por
+  debajo— y debounce de 250 ms, porque un serial escaneado llega como ocho
+  pulsaciones en unos milisegundos y sin eso son ocho peticiones para una
+  respuesta que solo la última necesita.
+- **`matchedTotal` alimenta `filteredDataCount`** por un callback propio
+  (`reportMatchedTotal`), separado del que acarrea el payload del export. Con el
+  servidor paginando no hay array que medir: la tabla tiene una página.
+- **La búsqueda va al servidor** y hay que decirlo en el equipo: deja de mirar
+  dentro del objeto crudo, y buscar un trozo de serial que no empiece por el
+  principio deja de encontrar. Si hace falta, la conversación es FULLTEXT, no
+  LIKE.
+
+Pendiente menor heredado del §1.1: `serial-suggest` es un `GET` y el contrato lo
+enseña con `company_id` en la query. Mandamos solo cabecera, como el resto, y el
+backend dice que `resolveCompanyContext` lee la cabecera primero. Se verá en el
+primer vistazo con el endpoint desplegado.
+
+<details>
+<summary>Lo que pedía la fase, tal como se escribió</summary>
 
 - `FilterOptionsUX`: opciones desde `inventory-facets`. **Ojo con §1.8**: las
   listas no pueden venir acotadas por los otros filtros activos, o cambiamos un
@@ -475,6 +533,8 @@ test de montaje se colgaba indefinidamente; memoizado, tarda 1,1 s. Lo cubre
   de mirar dentro del objeto crudo, y buscar un trozo de serial que no empiece
   por el principio deja de encontrar. Si hace falta, la conversación es
   FULLTEXT, no LIKE.
+
+</details>
 
 ### Fase 5 — Columnas ✅ *hecha, detrás del flag*
 
