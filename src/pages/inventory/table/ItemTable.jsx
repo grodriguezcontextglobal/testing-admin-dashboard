@@ -531,11 +531,15 @@ const ItemTable = ({
                     // is nothing behind it, so an un-flagged load reads as
                     // "this company has no inventory" until the response
                     // lands. Say "loading" instead of showing an empty table.
-                    loading={
-                      FEATURE_INVENTORY_SERVER_PAGINATION
+                    // The branded animation rather than antd's Spin: this is the
+                    // wait people see most in the product, and the small variant
+                    // is the one built for sitting inside a table.
+                    loading={{
+                      spinning: FEATURE_INVENTORY_SERVER_PAGINATION
                         ? serverPage.isFetching
-                        : refactoredListInventoryCompany.isLoading
-                    }
+                        : refactoredListInventoryCompany.isLoading,
+                      indicator: <DevitrakLoading size="small" label="Loading inventory…" />,
+                    }}
                     style={{ width: "100%" }}
                     columns={ColumnsFormat({
                       dictionary,
