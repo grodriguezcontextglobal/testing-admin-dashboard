@@ -8,6 +8,32 @@
 
 ---
 
+## Cierre del día — 2026-09-17
+
+Lo que ha cambiado desde vuestra confirmación, por si empezáis mañana por aquí:
+
+| Commit | Qué cierra |
+|---|---|
+| `6dadc128` | **El orden de despliegue deja de importar.** `company_id` vuelve al cuerpo, leído de `s-company-lq` —la misma fuente de la cabecera— en vez de Redux. El servidor de hoy recibe el campo que valida; el endurecido, un cuerpo que coincide con la cabecera |
+| `47cb253f` | **Vuestro `Idempotency-Key`, tomado.** Captura, liberación y reembolso completo viajan con `<operación>:<paymentIntent>`. El reembolso parcial va sin clave a propósito: dos dispositivos perdidos de una misma transacción son dos reembolsos legítimos y pueden ser del mismo importe |
+| `13dff7b6` | **El export deja de depender de la tabla.** Con el flag encendido la tabla tiene diez filas, así que el XLSX salía vacío; ahora pide `warehouse-items` al pulsar. No recorre `inventory-page` porque sus 13 columnas no traen `cost`, `descript_item`, `extra_serial_number` ni `return_date`, y esas cuatro están en la hoja |
+
+**Podéis desplegar las tres tandas cuando queráis, en el orden que queráis.** No
+queda ninguna precondición nuestra salvo publicar nuestro build, que ya no
+condiciona el vuestro.
+
+Lo que seguimos esperando, por orden de urgencia para vosotros:
+
+1. **Las siete rutas bajo el `router.post("/:id")`** — si alguna estaba por
+   debajo, esas llamadas nuestras eran borrados, y eso se mira en los datos.
+2. **El backfill `preference.managerLocation` → scope SQL**, que es lo único que
+   retiene el encendido de nuestro flag de inventario.
+3. **`MONGO_SECONDARY_READS`**: si acaba encendido, decídnoslo. Lecturas desde
+   secundaria hacen que un ítem recién creado no aparezca en la lista siguiente,
+   y eso nos llega como «el dashboard no guarda».
+
+---
+
 ## 0. La respuesta corta
 
 > **Actualizado el 2026-09-17, tras vuestra confirmación.** Las dos cosas que
