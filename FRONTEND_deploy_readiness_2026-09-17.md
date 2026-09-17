@@ -10,9 +10,14 @@
 
 ## 0. La respuesta corta
 
-**Por nuestra parte no queda nada que bloquee el despliegue.** Los seis commits
-se pueden desplegar en tres tandas. Lo único que pedimos antes de la tercera es
-**una respuesta, no un cambio de código**.
+**Nuestro código está listo; falta que salga a producción.** No queda ningún
+cambio por escribir de nuestro lado, pero `main` no es producción: el build del
+dashboard es manual, y hasta que se haga, lo que sirve producción es el cliente
+anterior. Eso es una **precondición de la tanda 2** y está en la §1.5.
+
+Los seis commits se pueden desplegar en tres tandas. La primera no espera a
+nadie. Lo único que pedimos antes de la tercera es **una respuesta, no un cambio
+de código**.
 
 | Commit | Qué es | ¿Nos bloquea? |
 |---|---|---|
@@ -47,6 +52,53 @@ ninguna de vuestras rutas endurecidas puede estar expulsando usuarios hoy.
 
 ---
 
+## 1.5 Nuestras precondiciones — un build de producción
+
+Esto no estaba en ninguno de los dos informes anteriores y es lo único nuestro
+que de verdad condiciona una de vuestras tandas.
+
+**`main` no es producción.** En este repositorio el único CI que hay construye
+la imagen de desarrollo; el build de producción se hace **a mano** desde la
+máquina de despliegue (`git pull`, `npm install`, `npm run build`, e IIS sirve
+el `dist/`). Mientras ese build no se haga, producción sigue sirviendo el
+cliente anterior — el que manda `company_id` en el cuerpo.
+
+### Qué tiene que estar en ese build
+
+| Commit | Antes de | Qué pasa si falta |
+|---|---|---|
+| `2b1cbe93` | **tanda 2** | **400** al renombrar una locación después de cambiar de compañía. Es el caso exacto de vuestro §2.3, y lo cobran usuarios reales |
+| `21896b77` | **tanda 3** | una captura duplicada dice «no se ha cobrado nada» mientras la primera petición sigue viva y probablemente cobra |
+
+### Una comprobación al construir
+
+Que el entorno de esa máquina **no** defina
+`VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION`. Vite incrusta las variables en
+tiempo de build: si saliera en `true`, el cliente de producción llamaría a las
+tres rutas de vuestro `94d7076` — que es justo lo que el flag existe para
+evitar hasta que estén desplegadas. Ausente o cualquier valor distinto de
+`"true"` deja el flag apagado, que es lo que queremos.
+
+### Lo que ese build arrastra, dicho a propósito
+
+No es solo el arreglo del 400: ese build lleva **dos semanas de trabajo**, y
+parte se ve el primer día — el manual de usuario en `/help`, el conteo
+obligatorio antes de cerrar un evento, las píldoras de consumidores, el branding
+de correos y los arreglos de búsqueda. No es un despliegue silencioso y conviene
+que el equipo lo sepa antes, no después.
+
+### Orden que proponemos
+
+```
+1. vosotros  → tanda 1 (94d7076), hoy, sin esperar a nadie
+2. nosotros  → build de producción del dashboard
+3. vosotros  → tanda 2, y nos avisáis el mismo día
+4. nosotros  → smoke test de 15 minutos (§2, tanda 2)
+5. vosotros  → respuesta sobre /api/stripe/* → tanda 3
+```
+
+---
+
 ## 2. Las tres tandas
 
 ### Tanda 1 — ahora mismo, sin coordinar
@@ -64,14 +116,18 @@ encendamos el flag en local.
 
 ---
 
-### Tanda 2 — los de ruptura, cuando queráis
+### Tanda 2 — los de ruptura, en cuanto nuestro build esté arriba
 
 ```
 2ff47d1   6ff962c   ca3611e   56bf876
 ```
 
-Nuestra parte está cerrada. Lo único que haremos es un **smoke test de quince
-minutos** justo después, sobre lo que vuestro cambio toca de verdad:
+**Precondición nuestra, la de la §1.5:** el build de producción del dashboard
+con `2b1cbe93`. El código está en `main`; lo que falta es publicarlo. Os
+avisamos el día que esté, y a partir de ahí desplegad cuando queráis.
+
+Lo único que haremos después es un **smoke test de quince minutos**, sobre lo
+que vuestro cambio toca de verdad:
 
 1. Renombrar una locación y una sub-locación en `/inventory` → 200, no 400.
 2. Repetir **después de cambiar de compañía** — ese era exactamente el caso que
@@ -140,6 +196,15 @@ Para que no quede en el aire: hay dos cosas abiertas por nuestro lado que
 
 Las tres preguntas están desarrolladas en
 `FRONTEND_backend_asks_2026-09-17.md`.
+
+Y lo que os debemos nosotros, para que la lista esté completa por los dos lados:
+
+| # | Qué | Cuándo |
+|---|---|---|
+| 1 | El build de producción del dashboard con `2b1cbe93` (§1.5) | antes de la tanda 2 |
+| 2 | Aviso de que ese build está arriba | el mismo día |
+| 3 | El smoke test de quince minutos | el día de la tanda 2 |
+| 4 | El build con `21896b77` | antes de la tanda 3 — el mismo build sirve si no se parte |
 
 ---
 
