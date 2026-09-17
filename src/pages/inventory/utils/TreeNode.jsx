@@ -83,6 +83,10 @@ const TreeNode = ({
       const locationData = buildLocationPathUpdateBody({
         newName: editedName,
         path,
+        // The header's own value, not Redux's copy of it. Both servers accept
+        // this: the one in production requires the field, the hardened one
+        // requires it to agree with the header.
+        companyId: localStorage.getItem("s-company-lq"),
       });
 
       const response = await devitrakApi.post(
