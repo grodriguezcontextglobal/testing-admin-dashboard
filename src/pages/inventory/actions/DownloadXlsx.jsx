@@ -4,7 +4,14 @@ import { saveAs } from "file-saver";
 import { XLSXIcon } from "../../../components/icons/XLSXIcon";
 import TextLink from "../../../components/UX/buttons/TextLink";
 
-const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
+/**
+ * @param {{props?: Array, fetchRows?: () => Promise<Array>}} params
+ *   `props` is the dataset the page already holds. `fetchRows` is for the
+ *   screens that no longer hold one: with the server paginating, the inventory
+ *   table has ten rows, so the export asks for the whole inventory here, on the
+ *   click, rather than exporting the page that happens to be on screen.
+ */
+const DownloadingXlsxFileExcelJS = ({ props = [], fetchRows }) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -25,12 +32,17 @@ const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
 
   const generateExcelFile = useCallback(async () => {
     try {
-      if (!Array.isArray(props) || props.length === 0) {
+      setIsExporting(true);
+
+      // The fetch comes first so the button can say it is working while the
+      // whole inventory is on its way. A screen that already holds its rows
+      // passes none and nothing is fetched.
+      const rows = fetchRows ? await fetchRows() : props;
+
+      if (!Array.isArray(rows) || rows.length === 0) {
         messageApi.open({ type: "warning", content: "No data to export." });
         return;
       }
-
-      setIsExporting(true);
 
       // Dynamic import to reduce initial bundle cost
       const ExcelJS = (await import("exceljs")).default;
@@ -77,7 +89,7 @@ const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
       };
 
       // Add rows first (text data)
-      props.forEach((item) => {
+      rows.forEach((item) => {
         const serial = item?.serial_number ?? "";
         const isInStock = item?.warehouse === 1;
 
@@ -128,7 +140,7 @@ const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
 
       messageApi.open({
         type: "success",
-        content: "Excel file generated successfully.",
+        content: `Excel file generated with ${rows.length} records.`,
       });
     } catch (err) {
       console.error(err);
@@ -139,7 +151,7 @@ const DownloadingXlsxFileExcelJS = ({ props = [] }) => {
     } finally {
       setIsExporting(false);
     }
-  }, [props, messageApi]);
+  }, [props, fetchRows, messageApi]);
 
   return (
     <>

@@ -41,6 +41,10 @@ import { dictionary } from "../utils/dicSelectedOptions";
 import { facetsToFilterOptions } from "../utils/facetsToFilterOptions";
 import useInventoryFacets from "../utils/hooks/useInventoryFacets";
 import useInventoryPage from "../utils/hooks/useInventoryPage";
+import {
+  buildInventoryExportBody,
+  fetchInventoryForExport,
+} from "../utils/inventoryExport";
 import { toServerFilters } from "../utils/inventoryPageContract";
 import ColumnsFormat from "./extras/ux/ColumnsFormat";
 import CursorPager from "./extras/ux/CursorPager";
@@ -381,6 +385,27 @@ const ItemTable = ({
     ? serverPage.items
     : dataToDisplayMemo;
 
+  // With the server paginating there are ten rows on screen, so the export has
+  // nothing to export. It asks for the whole inventory here — one request, on
+  // the click, from warehouse-items, which still returns the full row.
+  // inventory-page would not do: its thirteen columns leave out cost,
+  // description, extra info and the return date, all of which are in the sheet.
+  // Undefined with the flag off, so that path keeps exporting its own dataset.
+  const exportRows = FEATURE_INVENTORY_SERVER_PAGINATION
+    ? () =>
+        fetchInventoryForExport(
+          devitrakApi,
+          buildInventoryExportBody({
+            companyId: user.sqlInfo.company_id,
+            role: user.role,
+            locations: userPreferences?.managerLocation?.map(
+              (item) => item.location,
+            ),
+            fallbackPreference: user.preference,
+          }),
+        )
+    : undefined;
+
   // Two empty tables that look identical and mean opposite things: this company
   // has no inventory, and the combination you built matches none of it. The
   // filters are AND — Brand Dell *and* Group Laptop — so asking for a group
@@ -517,7 +542,10 @@ const ItemTable = ({
                 <Grid container>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", padding:"14px 0px" }}>
                     <RefreshButton propsFn={searchValues?.refreshFn} />
-                    <DownloadingXlslFile props={dataToDisplayMemo} />
+                    <DownloadingXlslFile
+                      props={dataToDisplayMemo}
+                      fetchRows={exportRows}
+                    />
                   </div>
                   <BaseTable
                     // antd's pager needs a total and a page count; keyset
