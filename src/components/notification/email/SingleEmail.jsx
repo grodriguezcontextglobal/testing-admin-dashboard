@@ -89,11 +89,11 @@ const SingleEmailNotification = ({
         buildSingleEmailPayload({ customer, event, subject, message })
       );
       if (!response.data?.ok) {
-        setFailure("The email was not queued. Nothing was sent — try again.");
+        setFailure("The email was not sent. Nothing went out — try again.");
         setSending(false);
         return;
       }
-      notify("success", "Email queued", "It will be sent shortly.");
+      notify("success", "Email sent", "It is on its way to the consumer.");
       setSending(false);
       return closeModal();
     } catch (error) {
@@ -175,7 +175,7 @@ const SingleEmailNotification = ({
 
       <div className="action-form__footer">
         <p className="action-form__consequence">
-          The email is queued as soon as you send it, and cannot be recalled.
+          The email goes out as soon as you send it, and cannot be recalled.
         </p>
         <GrayButtonComponent
           title="Cancel"

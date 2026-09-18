@@ -93,7 +93,7 @@ const EmailReturnRentalItems = async ({
       );
       if (response.data) {
         return message.success(
-          "Items returned. Summary notification queued (file too large for attachment)."
+          "Items returned. Summary notification sent (the file was too large to attach)."
         );
       }
     } else {
@@ -131,7 +131,7 @@ const EmailReturnRentalItems = async ({
 
       if (response.data) {
         return message.success(
-          "Items returned. Notification with XLSX attachment queued."
+          "Items returned. Notification sent with the XLSX attached."
         );
       }
     }
@@ -139,7 +139,7 @@ const EmailReturnRentalItems = async ({
     console.error("Error in email notification:", error);
     if (error.response?.status === 413) {
       message.error(
-        "Email attachment too large. Summary notification queued instead."
+        "Email attachment too large. Sending a summary instead."
       );
       // Fallback to summary email without attachment
       try {
@@ -158,7 +158,7 @@ const EmailReturnRentalItems = async ({
             returnDate: new Date().toISOString().split("T")[0],
           }
         );
-        message.success("Summary notification queued successfully.");
+        message.success("Summary notification sent.");
       } catch (summaryError) {
         console.error("Failed to send summary notification:", summaryError);
         message.error("Failed to send any notification.");

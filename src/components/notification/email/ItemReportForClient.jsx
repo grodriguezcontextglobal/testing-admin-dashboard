@@ -34,7 +34,7 @@ const itemReportForClient = async ({
     );
     if (response.data.ok) {
       return message.success(
-        `Device report has been queued and will be sent shortly to ${customerInfo.email}`
+        `Device report sent to ${customerInfo.email}`
       );
     }
   } catch (error) {

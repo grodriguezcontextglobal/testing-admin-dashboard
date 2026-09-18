@@ -77,7 +77,7 @@ describe("SingleEmailNotification — layout", () => {
   it("says the email cannot be recalled before it is sent", () => {
     wrap();
     expect(
-      screen.getByText("The email is queued as soon as you send it, and cannot be recalled.")
+      screen.getByText("The email goes out as soon as you send it, and cannot be recalled.")
     ).toBeInTheDocument();
   });
 
@@ -176,7 +176,7 @@ describe("SingleEmailNotification — sending", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText("The email was not queued. Nothing was sent — try again.")
+        screen.getByText("The email was not sent. Nothing went out — try again.")
       ).toBeInTheDocument()
     );
     expect(setOpen).not.toHaveBeenCalledWith(false);

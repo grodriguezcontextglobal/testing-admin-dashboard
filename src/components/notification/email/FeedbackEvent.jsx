@@ -19,7 +19,7 @@ const FeedbackEvent = ({ setFeedbackEventModal }) => {
         emailNotificationProfile
       );
       if (resp.data.ok) {
-        message.success("Email queued — it will be sent shortly");
+        message.success("Feedback email sent");
         return setFeedbackEventModal(false);
       }
     } catch (error) {
