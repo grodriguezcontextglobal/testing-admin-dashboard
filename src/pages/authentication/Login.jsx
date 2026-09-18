@@ -501,9 +501,15 @@ const Login = () => {
         email: staffEmail,
       });
 
+      /* Not "queued, and will be sent shortly". Whether we hold the mail in a
+         queue is our problem, not the visitor's, and saying it here reads as
+         "we'll get to you when we're ready" to someone who is standing at a
+         login they cannot pass. The queue itself does not change — only what
+         this promises, which is the action we took, not an inbox we cannot
+         see. */
       openNotificationWithIcon(
         "success",
-        "An email to revoke the active session is queued and will be sent shortly."
+        "We've sent you an email to revoke the active session. Check your inbox."
       );
       setForceLogin(false); // Close the modal
     } catch (error) {

@@ -24,7 +24,7 @@
 
 | # | Item | Where | Priority |
 |---|---|---|---|
-| 1 | Session-revoke email must send immediately, not queue | P1 `2:13`–`3:26` | **P1** |
+| 1 | Stop showing "queued" on the session-revoke modal | P1 `2:13`–`3:26` | **done** |
 | 2 | Make MFA mandatory — remove the opt-out | P1 `6:14`–`6:48` | **P1** |
 | 3 | Drop the password re-entry on session revoke | P1 `5:15`–`6:48` | **P1** (needs #2) |
 | 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | P2 |
@@ -68,7 +68,7 @@ learn from it too, and it helps me being able to present the system."*
 These are the only items outside the wizard, and they are the ones with security
 weight. They also came first in the session, before he had even logged in.
 
-### 1. The session-revoke email must be sent immediately
+### 1. Stop telling the visitor the email is queued — DECIDED 2026-09-18
 
 He hit "active session already exists", asked for the revoke email, and got
 *"is queued and will be sent out shortly"*.
@@ -80,16 +80,43 @@ He hit "active session already exists", asked for the revoke email, and got
 > sign in… So queuing that e-mail is not what you want to do because you're
 > basically saying, sorry, we don't have time to work with you."
 
-Gustavo's answer (`2:28`) was that the queue is deliberate — the job-queue design
-treats email as not needing an instant reply. Fredrik's point is that **this
-particular** email is a blocking step in a login, not a notification.
+**Decision taken 2026-09-18: the queue stays; the copy changes.** Taking this
+one email off the queue was the original plan and would have needed backend
+work. It was dropped in favour of the cheap half, because Fredrik's objection
+has two halves and only one of them is about latency:
 
-**Task:** take the revoke-session email off the queue and send it synchronously,
-or keep the queue but hold the response until it is actually dispatched. This is
-a **backend** change (the queue is theirs); the frontend side is only the copy,
-which must stop promising "shortly".
+1. *Do not expose our queue to the visitor.* Whether we hold mail in a queue is
+   our problem. **This half is now fixed** — `src/pages/authentication/Login.jsx`
+   no longer says "queued and will be sent shortly"; it says *"We've sent you an
+   email to revoke the active session. Check your inbox."*
+2. *Send it faster.* Still true, still backend, **not scheduled**.
 
-Agreed at `3:09`: *"we can just move this e-mail to be like an instant reply."*
+**Why the new wording stops where it does.** It claims the action we took, not
+an inbox we cannot see. "Sent" plus "check your inbox" is true the moment the
+request is accepted; "delivered", or any promise of a time, would not be — and
+this is the worst possible place to be caught in one, because the visitor is
+standing at a login they cannot pass and will go looking immediately. Replacing
+an honest "queued" with a false "it's already there" would be a step backwards.
+
+**The honest upgrade, if the queue turns out to lag.** The endpoint already
+answers `202 { jobId }` — `handleSendForceLogoutEmail` currently discards the
+response. Capturing the `jobId` and polling `GET /jobs/owned/:jobId` until
+`done` would let the modal say "Sent" as a fact rather than an intention, with
+no backend change at all; `DocumentUpload.jsx` has the local-poller pattern for
+exactly this. It costs a spinner for however long the queue takes, which is the
+honest trade: the visitor waits either way, and this way the screen does not lie
+about it. **Not done** — worth doing only if someone measures the latency and it
+is bad.
+
+> **Open question this raises.** Six other screens say "queued" to the user:
+> `EventLinkNotification.jsx`, `FeedbackEvent.jsx`, `ItemReportForClient.jsx`,
+> `SingleEmail.jsx` and `EmailReturnRentalItems.jsx` (×3). That copy was written
+> deliberately when the backend moved ~37 endpoints to `202 + jobId`
+> (`FRONTEND_task_queue_changes.md` §2), so it is not an oversight. But if
+> "queued" is the wrong word to show a visitor here, it is worth asking whether
+> it is the right word anywhere. **Left alone on purpose** — none of those block
+> anyone the way a login does, and reversing a deliberate decision across six
+> screens needs its own conversation, not a drive-by.
 
 ### 2. Make MFA mandatory
 
