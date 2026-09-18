@@ -19,6 +19,7 @@ import {
 import { buildAssignmentRollbackPayload } from "../../../../conditionalPage/utils/leaseReturnUtils";
 import useAssignmentConsentGate from "../hooks/useAssignmentConsentGate";
 import {
+  buildStaffHandoffDevice,
   clean,
   nextAssignLocation,
   resolveLocation,
@@ -176,15 +177,11 @@ const AssignDeviceDrawer = ({ open, onClose, item, onAssigned }) => {
       /* The notice above promises the device comes along. It did not: the staff
          form opened empty and the operator re-picked the unit they were
          standing over. */
+      /* buildStaffHandoffDevice, not resolveLocation: the staff form matches
+         this against the bare `location` column the warehouse endpoint groups
+         by, and the display string carries the sub-locations too. */
       navigate(`/staff/${adminUser.id}/assignment`, {
-        state: {
-          device: {
-            serial_number: item.serial_number,
-            item_group: item.item_group,
-            category_name: item.category_name,
-            location: resolveLocation(item),
-          },
-        },
+        state: { device: buildStaffHandoffDevice(item) },
       });
     } catch (error) {
       notify("error", error.message, "");

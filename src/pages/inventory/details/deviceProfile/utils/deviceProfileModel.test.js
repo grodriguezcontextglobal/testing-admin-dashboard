@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCustodyTimeline,
+  buildStaffHandoffDevice,
   deriveDeviceState,
   parseAssignmentEventName,
   parseSubLocations,
@@ -405,5 +406,80 @@ describe("nextAssignLocation", () => {
   it("never returns undefined, which would make the input uncontrolled", () => {
     expect(nextAssignLocation({ person: staff, current: undefined })).toBe("");
     expect(nextAssignLocation({})).toBe("");
+  });
+});
+
+describe("buildStaffHandoffDevice", () => {
+  /* The staff form matches this payload against the options built from
+     /db_event/retrieve-item-group-location-quantity, whose third level is the
+     bare `location` column — "Washington, DC", never "Washington, DC · Shelf A".
+     Handing it resolveLocation()'s display string made the match fail and the
+     operator re-picked the unit they were standing over. */
+  it("carries the raw location column, not the display string with sub-locations", () => {
+    expect(
+      buildStaffHandoffDevice({
+        serial_number: "DVT-0042",
+        item_group: "Chromebook",
+        category_name: "Laptops",
+        warehouse: 1,
+        location: "Central Warehouse",
+        sub_location: '["Shelf A","Bin 3"]',
+      })
+    ).toEqual({
+      serial_number: "DVT-0042",
+      item_group: "Chromebook",
+      category_name: "Laptops",
+      location: "Central Warehouse",
+    });
+  });
+
+  it("keeps the bare location when no sub-location is recorded", () => {
+    expect(
+      buildStaffHandoffDevice({
+        serial_number: "DVT-0043",
+        item_group: "iPad",
+        category_name: "Tablets",
+        warehouse: 1,
+        location: "IT office",
+      }).location
+    ).toBe("IT office");
+  });
+
+  it("never sends a postal address as the location", () => {
+    /* An assigned unit resolves to its event address for display. That string
+       matches no warehouse option, so the group would silently fail to match
+       instead of falling back to the single-group rule. */
+    expect(
+      buildStaffHandoffDevice({
+        serial_number: "DVT-0044",
+        item_group: "Camera",
+        category_name: "Video",
+        warehouse: 0,
+        location: "Las Vegas, NV",
+        street_address: "700 S 3rd St",
+        city_address: "Las Vegas",
+        state_address: "NV",
+        zip_address: "89101",
+      }).location
+    ).toBe("Las Vegas, NV");
+  });
+
+  it("returns an empty location when none is recorded, so the caller can fall back", () => {
+    expect(
+      buildStaffHandoffDevice({
+        serial_number: "DVT-0045",
+        item_group: "Receiver",
+        category_name: "Audio",
+      }).location
+    ).toBe("");
+  });
+
+  it("tolerates a missing row without throwing", () => {
+    expect(buildStaffHandoffDevice()).toEqual({
+      serial_number: "",
+      item_group: "",
+      category_name: "",
+      location: "",
+    });
   });
 });

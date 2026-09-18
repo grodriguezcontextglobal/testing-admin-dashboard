@@ -243,6 +243,21 @@ describe("findOptionForDevice", () => {
       findOptionForDevice(options, { category_name: "Phones", item_group: "Pixel" })
     ).toBeNull();
     expect(findOptionForDevice(options, null)).toBeNull();
+  });
+
+  /* Guard for the regression fixed on 2026-09-18: the device page used to hand
+     over resolveLocation()'s display string, which appends the sub-locations.
+     The right fix was to send the bare column (buildStaffHandoffDevice), NOT to
+     loosen the match here — a prefix or fuzzy match would happily select a
+     different shelf and hand over the wrong unit of the same model. */
+  it("refuses a location that carries sub-locations rather than guessing the shelf", () => {
+    expect(
+      findOptionForDevice(options, {
+        category_name: "Laptops",
+        item_group: "Chromebook",
+        location: "Main office · Shelf A",
+      })
+    ).toBeNull();
     expect(findOptionForDevice(null, { category_name: "Laptops" })).toBeNull();
   });
 });

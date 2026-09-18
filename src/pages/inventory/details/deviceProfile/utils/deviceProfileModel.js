@@ -105,6 +105,34 @@ export function resolveLocation(row = {}) {
 }
 
 /**
+ * What the staff assignment flow needs to preselect the unit you are standing
+ * over, when you hand a device off from its own page.
+ *
+ * Deliberately **not** `resolveLocation`. That builds a string for a person to
+ * read — the warehouse plus its sub-locations joined with " · ", or the event
+ * address when the unit is out on assignment. The staff form matches this
+ * payload against the options built from
+ * `/db_event/retrieve-item-group-location-quantity`, whose third level is the
+ * bare `location` column: "Washington, DC", never "Washington, DC · Shelf A".
+ * Handing it the display string matched no option, and `findOptionForDevice`
+ * fails closed rather than load the wrong shelf — so the form opened empty and
+ * the operator re-picked the unit by hand, which is the whole thing this
+ * handoff exists to avoid.
+ *
+ * An empty location is deliberate too: `findOptionForDevice` then falls back to
+ * accepting the group when exactly one matches, which is better than sending a
+ * value that can only fail.
+ */
+export function buildStaffHandoffDevice(row = {}) {
+  return {
+    serial_number: clean(row?.serial_number),
+    item_group: clean(row?.item_group),
+    category_name: clean(row?.category_name),
+    location: clean(row?.location),
+  };
+}
+
+/**
  * Assignments made through the staff path don't reference a person — they
  * fabricate an event whose name *is* the person:
  *   "Marcus Webb / marcus@school.org / 7/21/2026 / reference: 1690000000"
