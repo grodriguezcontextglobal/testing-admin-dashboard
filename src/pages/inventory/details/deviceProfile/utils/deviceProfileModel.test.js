@@ -9,6 +9,7 @@ import {
   summarizeUtilization,
   nextAssignLocation,
   resolvePersonLocation,
+  resolveStaffLabel,
 } from "./deviceProfileModel";
 
 const NOW = new Date("2026-08-07T12:00:00");
@@ -481,5 +482,75 @@ describe("buildStaffHandoffDevice", () => {
       category_name: "",
       location: "",
     });
+  });
+});
+
+describe("resolveStaffLabel", () => {
+  const employees = [
+    { user: "marcus@school.org", firstName: "Marcus", lastName: "Webb" },
+    { user: "ana@school.org", firstName: "Ana", lastName: "" },
+    { user: "noname@school.org" },
+  ];
+
+  it("names the person by joining the SQL record's email to the company roster", () => {
+    expect(
+      resolveStaffLabel({
+        personId: 207,
+        staffRecord: { staff_id: 207, email: "marcus@school.org" },
+        employees,
+      })
+    ).toBe("Marcus Webb");
+  });
+
+  it("matches the email case-insensitively, since the two stores disagree on case", () => {
+    expect(
+      resolveStaffLabel({
+        personId: 207,
+        staffRecord: { staff_id: 207, email: "Marcus@School.org" },
+        employees,
+      })
+    ).toBe("Marcus Webb");
+  });
+
+  it("accepts a first name alone rather than falling through to the id", () => {
+    expect(
+      resolveStaffLabel({
+        personId: 12,
+        staffRecord: { email: "ana@school.org" },
+        employees,
+      })
+    ).toBe("Ana");
+  });
+
+  /* The email identifies a person; "#207" does not. Anything that names the
+     human beats the id, which is what made the assignment unreadable. */
+  it("falls back to the email when the roster has no name for it", () => {
+    expect(
+      resolveStaffLabel({
+        personId: 12,
+        staffRecord: { email: "noname@school.org" },
+        employees,
+      })
+    ).toBe("noname@school.org");
+  });
+
+  it("falls back to the email when the person is not in the roster at all", () => {
+    expect(
+      resolveStaffLabel({
+        personId: 88,
+        staffRecord: { email: "contractor@elsewhere.com" },
+        employees,
+      })
+    ).toBe("contractor@elsewhere.com");
+  });
+
+  it("keeps the id as the last resort while the lookup is still in flight", () => {
+    expect(resolveStaffLabel({ personId: 207, staffRecord: null, employees })).toBe(
+      "Staff member #207"
+    );
+  });
+
+  it("says something honest when there is no id either", () => {
+    expect(resolveStaffLabel({})).toBe("a staff member");
   });
 });

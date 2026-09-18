@@ -154,6 +154,41 @@ export function parseAssignmentEventName(eventName) {
   return { label, email, isPerson: true };
 }
 
+/**
+ * Who a staff loan is for, in words a person can act on.
+ *
+ * `lease_info` stores a `staff_id` and nothing else, so this used to render
+ * "Staff member #207" — which identifies a row, not a colleague, and made a
+ * device's history unreadable at a glance.
+ *
+ * The two stores meet at the email: the SQL staff record carries it, and the
+ * company's Mongo `employees[]` carries the name against `user`. Case differs
+ * between them often enough to fold it.
+ *
+ * The order is deliberate: a name, then the email — which still names a human —
+ * and only then the id, which is what we are trying to stop showing. The id is
+ * kept for the window where the lookup is still in flight, because an empty
+ * holder tile reads as "nobody has this".
+ */
+export function resolveStaffLabel({ personId, staffRecord, employees } = {}) {
+  const email = clean(staffRecord?.email);
+
+  if (email) {
+    const needle = email.toLowerCase();
+    const match = (Array.isArray(employees) ? employees : []).find(
+      (entry) => clean(entry?.user).toLowerCase() === needle
+    );
+    const name = [clean(match?.firstName), clean(match?.lastName)]
+      .filter(Boolean)
+      .join(" ");
+    if (name) return name;
+    return email;
+  }
+
+  const id = clean(personId);
+  return id ? `Staff member #${id}` : "a staff member";
+}
+
 /** A member lease is open until it's explicitly marked returned. */
 export const isMemberLeaseOpen = (lease) =>
   Number(lease?.returned) !== 1 && !clean(lease?.returned_date);

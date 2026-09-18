@@ -1,11 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { checkArray } from "../../../../../components/utils/checkArray";
 import {
   buildCustodyTimeline,
   clean,
   deriveDeviceState,
+  resolveStaffLabel,
   summarizeUtilization,
 } from "../utils/deviceProfileModel";
 
@@ -24,6 +26,7 @@ export const deviceProfileKeys = {
   memberLeases: (itemId) => ["deviceMemberLeases", String(itemId ?? "")],
   staffLeases: (itemId) => ["deviceStaffLeases", String(itemId ?? "")],
   roster: (companyId) => ["companyMemberRoster", String(companyId ?? "")],
+  staffRecord: (staffId) => ["staffRecordById", String(staffId ?? "")],
   fleet: (companyId, group) => [
     "deviceFleetContext",
     String(companyId ?? ""),
@@ -129,6 +132,51 @@ export function useDeviceProfile(itemId) {
     return index;
   }, [rosterQuery.data]);
 
+  /* lease_info stores a staff_id and nothing else. The SQL staff record is what
+     carries the email, and the company's Mongo employees[] carries the name
+     against it — so one lookup per distinct holder turns "Staff member #207"
+     into a colleague. A device has one open staff loan and a short history, so
+     this is a handful of cached requests, not a roster fetch. */
+  const staffIds = useMemo(() => {
+    const seen = new Set();
+    staffLeases.forEach((lease) => {
+      const id = lease?.staff_member_id;
+      if (id !== undefined && id !== null && String(id).trim()) {
+        seen.add(String(id));
+      }
+    });
+    return [...seen];
+  }, [staffLeases]);
+
+  const staffRecordQueries = useQueries({
+    queries: staffIds.map((staffId) => ({
+      queryKey: deviceProfileKeys.staffRecord(staffId),
+      queryFn: () =>
+        devitrakApi.post("/db_staff/consulting-member", { staff_id: staffId }),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const staffRecords = staffRecordQueries.map(
+    (query) => checkArray(query?.data?.data?.member) ?? null
+  );
+  // useQueries returns a fresh array every render, so the memo has to key on
+  // what actually changes — the emails these records resolve to.
+  const staffSignature = staffRecords.map((record) => record?.email ?? "").join("|");
+
+  const staffById = useMemo(() => {
+    const index = new Map();
+    staffIds.forEach((staffId, position) => {
+      const record = staffRecords[position];
+      if (record) index.set(staffId, record);
+    });
+    return index;
+    // staffSignature stands in for staffRecords, which is rebuilt every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffIds, staffSignature]);
+
+  const employees = user?.companyData?.employees;
+
   const resolvePersonLabel = useMemo(
     () => (lease) => {
       if (lease?.kind === "member") {
@@ -137,11 +185,13 @@ export function useDeviceProfile(itemId) {
         if (name) return name;
         return lease.personId ? `Member #${lease.personId}` : "a member";
       }
-      // lease_info stores a staff_id with no name-resolving endpoint of its
-      // own, so staff loans read generically until one exists.
-      return lease?.personId ? `Staff member #${lease.personId}` : "a staff member";
+      return resolveStaffLabel({
+        personId: lease?.personId,
+        staffRecord: staffById.get(String(lease?.personId)),
+        employees,
+      });
     },
-    [membersById]
+    [membersById, staffById, employees]
   );
 
   const state = useMemo(
