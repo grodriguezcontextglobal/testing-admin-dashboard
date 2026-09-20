@@ -214,8 +214,8 @@ const Return = ({
       if (response.data && response.data.ok) {
         return message.success(
           recipient.isGuardian
-            ? `Device saved. A ${noun} was queued to the guardian (${recipient.email}).`
-            : `Device saved. A ${noun} was queued to ${recipient.email}.`
+            ? `Device saved. A ${noun} was sent to the guardian (${recipient.email}).`
+            : `Device saved. A ${noun} was sent to ${recipient.email}.`
         );
       }
       return message.warning(

@@ -132,18 +132,18 @@ const Reminders = () => {
 
       // Was `if (resp.data.ok)` with nothing on the other side.
       if (!response.data?.ok) {
-        return setNotice("The email was not queued. Nothing was sent.");
+        return setNotice("The email was not sent. Nothing went out.");
       }
 
       queryClient.invalidateQueries({ queryKey: ["memberAssignedDevices"] });
       notify(
         "success",
-        "Reminder queued.",
-        `${recipients.join(" and ")} will receive it shortly.`
+        "Reminder sent.",
+        `It is on its way to ${recipients.join(" and ")}.`
       );
       return goBack();
     } catch {
-      setNotice("The email was not queued. Nothing was sent.");
+      setNotice("The email was not sent. Nothing went out.");
     } finally {
       setIsSending(false);
     }

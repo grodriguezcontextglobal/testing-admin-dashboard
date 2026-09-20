@@ -71,12 +71,12 @@ const OverdueDevicesTable = () => {
       await sendReminder(row);
       notify(
         "success",
-        "Reminder queued",
+        "Reminder sent",
         `${row.first_name} ${row.last_name}${row.minor === 1 && row.parent_guardian_email ? " (guardian CC'd)" : ""
         }`,
       );
     } catch {
-      message.error("Failed to queue the reminder email.");
+      message.error("The reminder email was not sent.");
     }
   };
 
@@ -95,8 +95,8 @@ const OverdueDevicesTable = () => {
     setWorking(false);
     notify(
       "success",
-      "Reminders queued",
-      `${sent} of ${rows.length} reminder emails queued (guardians CC'd for minors).`,
+      "Reminders sent",
+      `${sent} of ${rows.length} reminder emails sent (guardians CC'd for minors).`,
     );
   };
 

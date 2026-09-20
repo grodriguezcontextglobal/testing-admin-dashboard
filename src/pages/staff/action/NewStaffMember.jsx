@@ -244,7 +244,7 @@ export const NewStaffMember = ({ modalState, setModalState }) => {
       // notification would unmount with it before it could be read.
       notifyStatus(
         "success",
-        `Invitation queued for ${data.name} ${data.lastName}.`.trim()
+        `Invitation sent to ${data.name} ${data.lastName}.`.trim()
       );
       setModalState(false);
     } catch {

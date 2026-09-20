@@ -88,16 +88,16 @@ const ForgetPasswordLinkFromStaffPage = () => {
       }),
     onSuccess: (response) => {
       if (!response.data?.ok) {
-        return setNotice("The email was not queued. Try again in a moment.");
+        return setNotice("The email was not sent. Try again in a moment.");
       }
       notify(
         "success",
-        "Reset link queued.",
-        `${profile.email} will receive it shortly.`
+        "Reset link sent.",
+        `It is on its way to ${profile.email}.`
       );
       closeModal();
     },
-    onError: () => setNotice("The email was not queued. Try again in a moment."),
+    onError: () => setNotice("The email was not sent. Try again in a moment."),
   });
 
   const body = (
