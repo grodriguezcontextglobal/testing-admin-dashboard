@@ -1,5 +1,13 @@
 # Bulk inventory import — the payload loses what the spreadsheet said
 
+> **Superseded 2026-09-21 by `FRONTEND_inventory_import_endpoint_2026-09-21.md`.**
+> This asked for per-serial fields on the existing endpoint. That was tried and
+> it is not enough: even with the maps read, one request per device name is
+> still one request per *group*, and the fallback while they are not read needs
+> 499 requests for a 500-row file against a 300-per-15-minutes limit. The
+> measurements below still hold and are the evidence for the new ask; the
+> proposal in §"What we are asking for" is the one that was outgrown.
+
 **To:** backend
 **From:** frontend
 **Date:** 2026-09-21

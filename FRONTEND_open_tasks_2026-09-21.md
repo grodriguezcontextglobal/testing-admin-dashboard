@@ -192,6 +192,13 @@ Three ways to close it:
 These were not asked for. They are here so they are not re-discovered from
 scratch.
 
+- **The spreadsheet import needs an endpoint of its own, and is blocked until
+  it exists.** Tried three shapes on `bulk-item-alphanumeric` today; the last
+  one works and needs 499 requests for a 500-row file, against a limiter of 300
+  per 15 minutes. Gustavo hit it on a real upload: only the devices whose units
+  were identical got in. Spec in
+  `FRONTEND_inventory_import_endpoint_2026-09-21.md`. **This is the most
+  blocking item on the list, and it is not on Fredrik's.**
 - **The inventory importer was overwriting per-unit values.** Measured against a
   500-row file: 482 of 500 units would have been written with another row's
   cost, 394 with another row's location. Fixed on the client; the payload change
