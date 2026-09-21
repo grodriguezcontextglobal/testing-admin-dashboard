@@ -158,6 +158,16 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             return message.warning("Nothing to import. Please select a valid file.");
         }
 
+        /* The endpoint answers "Company ID and Location Name are required" for a
+           missing company exactly as it does for a missing location, so without
+           this the same 400 has two very different causes and the screen has to
+           guess which. */
+        if (!user?.sqlInfo?.company_id) {
+            return message.error(
+                "Your session has no company on it. Sign out and back in, then try again."
+            );
+        }
+
         setLoadingState(true);
         try {
             /* 1. Locations, once each. This used to run per group, so five
@@ -205,16 +215,16 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 requests,
                 CONCURRENT_REQUESTS,
                 async ({ group, batch }) => {
-                    const { body, perSerialFields } = buildGroupRequest({
-                        group,
-                        batch,
-                        company: user.sqlInfo.company_name,
-                        companyId: user.sqlInfo.company_id,
-                        imageUrlByMediaPath: urlByMediaPath,
-                        timestamp,
-                    });
+                    const send = async (sendGroup, sendBatch) => {
+                        const { body } = buildGroupRequest({
+                            group: sendGroup,
+                            batch: sendBatch,
+                            company: user.sqlInfo.company_name,
+                            companyId: user.sqlInfo.company_id,
+                            imageUrlByMediaPath: urlByMediaPath,
+                            timestamp,
+                        });
 
-                    try {
                         const { data: response } =
                             await alphaNumericInsertItemMutation.mutateAsync({
                                 template: body,
@@ -225,8 +235,8 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                             onTrackBackgroundJob({
                                 jobId: response.jobId,
                                 type: "bulk-inventory-insert",
-                                successMessage: `"${group.item_group}" — ${batch.length} unit(s) added to inventory.`,
-                                failureMessage: `The import of "${group.item_group}" failed.`,
+                                successMessage: `"${sendGroup.item_group}" — ${sendBatch.length} unit(s) added to inventory.`,
+                                failureMessage: `The import of "${sendGroup.item_group}" failed.`,
                                 invalidateKeys: inventoryPageQueryKeys(
                                     user.sqlInfo.company_id
                                 ),
@@ -235,26 +245,70 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                 }),
                             })
                         );
+                    };
+
+                    const { perSerialFields } = buildGroupRequest({
+                        group,
+                        batch,
+                        company: user.sqlInfo.company_name,
+                        companyId: user.sqlInfo.company_id,
+                        imageUrlByMediaPath: urlByMediaPath,
+                        timestamp,
+                    });
+
+                    try {
+                        await send(group, batch);
                         return { ok: true, units: batch.length };
                     } catch (error) {
                         console.error("bulk-item-alphanumeric", group.item_group, error);
-                        /* A request carrying per-unit values that the server
-                           does not read yet comes back complaining about the
-                           scalar it did not find. Repeating that to the person
-                           importing a spreadsheet explains nothing — they did
-                           nothing wrong and there is nothing for them to fix in
-                           the file. */
-                        const serverMessage =
-                            error?.response?.data?.msg ?? error.message ?? "Request failed";
+
+                        /* A 400 on a request whose per-unit values travelled as
+                           serial maps is what a server that does not read them
+                           yet looks like: the scalar it wanted was deliberately
+                           absent, so it answers "Location Name is required".
+
+                           Rather than fail the import, send this batch the only
+                           other honest way — one request per distinct set of
+                           values — and carry on. More requests, same data. The
+                           day the maps are read the first attempt succeeds and
+                           none of this runs. */
+                        if (perSerialFields.length > 0 && error?.response?.status === 400) {
+                            try {
+                                const fallback = buildImportPlan(batch, {
+                                    mode: IMPORT_MODES.COMPATIBLE,
+                                });
+                                for (const splitGroup of fallback.groups) {
+                                    for (const splitBatch of splitGroup.batches) {
+                                        await send(splitGroup, splitBatch);
+                                    }
+                                }
+                                return {
+                                    ok: true,
+                                    units: batch.length,
+                                    split: fallback.stats.requests,
+                                };
+                            } catch (splitError) {
+                                console.error("split retry", group.item_group, splitError);
+                                return {
+                                    ok: false,
+                                    group: group.item_group,
+                                    units: batch.length,
+                                    reason:
+                                        splitError?.response?.data?.msg ??
+                                        splitError.message ??
+                                        "Request failed",
+                                };
+                            }
+                        }
+
                         return {
                             ok: false,
                             group: group.item_group,
                             units: batch.length,
                             reason:
-                                perSerialFields.length > 0 &&
-                                error?.response?.status === 400
-                                    ? "This file needs a server update that isn't live yet."
-                                    : serverMessage,
+                                error?.response?.data?.msg ??
+                                error.message ??
+                                "Request failed",
                         };
                     } finally {
                         unitsSent += batch.length;
@@ -281,6 +335,15 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 message.success(
                     `${unitsAccepted} unit(s) queued for import. You'll be notified as they are added.`
                 );
+                /* Worth one line in the console rather than on the screen: it
+                   changes nothing about what was imported, and the person who
+                   needs to know is whoever is waiting on the server change. */
+                const splitCount = outcomes.filter((outcome) => outcome.split).length;
+                if (splitCount > 0) {
+                    console.warn(
+                        `${splitCount} group(s) were sent one value-set at a time — the server does not read per-unit fields yet. See FRONTEND_inventory_import_per_serial_2026-09-21.md`
+                    );
+                }
                 clearStateAndClose();
                 if (typeof closeModal === "function") closeModal();
             }
