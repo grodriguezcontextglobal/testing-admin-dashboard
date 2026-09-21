@@ -25,8 +25,8 @@
 | # | Item | Where | Priority |
 |---|---|---|---|
 | 1 | Stop showing "queued" on the session-revoke modal | P1 `2:13`–`3:26` | **done** |
-| 2 | Make MFA mandatory — remove the opt-out | P1 `6:14`–`6:48` | **P1** |
-| 3 | Drop the password re-entry on session revoke | P1 `5:15`–`6:48` | **P1** (needs #2) |
+| 2 | Make MFA mandatory — remove the opt-out | P1 `6:14`–`6:48` | **done (client)** |
+| 3 | Drop the password re-entry on session revoke | P1 `5:15`–`6:48` | **done (client)** — needs a token in the link |
 | 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | P2 |
 | 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | P2 |
 | 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
@@ -43,7 +43,7 @@
 | 17 | "Sub Locations" description — drop "outermost first" | P2 `5:58`–`7:49` | P3 |
 | 18 | Delete every "Default: empty" | P2 `7:49`–`8:32` | P3 |
 | 19 | Extra identifiers — approved, minor trim only | P2 `8:34`–`9:34` | P3 |
-| 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **P1** |
+| 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **done** |
 | 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
 | 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | P2 |
 | 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | P3 |
@@ -133,6 +133,54 @@ nobody made in the room.
 Agreed at `6:38`: *"let's force that you have to have the multi-factor
 authentication activated."*
 
+#### Decided and shipped on the client 2026-09-21
+
+**The decision the room did not make:** forced enrolment on the next sign-in.
+An account with MFA off is not locked out and is not emailed — it is stopped at
+the point where it would have received a session, and enrols there.
+
+**Why the check could not be a status code.** `loginUser` challenges for a code
+only when the account *already* has `mfaEnabled` (`controller/admin.js`). An
+account that never enrolled authenticates on a password alone and the server
+says nothing about it. So the client reads `entire.mfaEnabled` off the login
+response and refuses to build the session without it — a missing flag counts as
+not enrolled, because accounts predating the field are exactly the ones this
+rule exists for.
+
+Three places, one component (`authentication/mfa/MfaEnrollmentModal.jsx`):
+
+1. **The login gate.** `Login.jsx` stops between "credentials accepted" and
+   everything that follows. Nothing is written to localStorage and nowhere is
+   navigated. On success the flow *resumes* at `continueAfterAuthentication`
+   with the token already in hand — it does not ask for the password again —
+   and then goes on to the company picker or the single company exactly as
+   before. Cancelling returns to the sign-in form with no session.
+2. **Registration.** `/registration/new` answers with a JWT the app had been
+   discarding; `/api/admin/mfa/*` only wants a valid JWT, so that token is what
+   authenticates enrolment at the end of sign-up, before the account is ever
+   used. Deferring there is allowed and says so — the login gate asks again and
+   cannot be walked past. The existing-user path
+   (`/registration/add-company`) returns no token and is covered by the gate.
+3. **The opt-out is gone.** Profile → MFA Setup no longer offers "Disable MFA".
+   `POST /mfa/disable` is left in place and unused: with login refusing a
+   session to an account without MFA, that switch could only strand someone
+   outside the app.
+
+**One detail worth keeping in mind.** The login response is captured *before*
+`/mfa/verify` runs, and it is what `onLogin` copies into the admin slice
+(`state.mfaEnabled = payload.data?.mfaEnabled`). Handing it over unpatched
+would tell the profile page MFA is off on the very session that turned it on —
+hence `markEnrolled` in `utils/mfaEnrollment.js`.
+
+**Still open, and it is the backend's half.** The server will still issue a
+token to an account with MFA off; only the client declines to use it. A
+determined caller can skip the gate entirely by posting to `/api/admin/login`
+itself. Making this a real rule means refusing the session server-side — the
+natural shape is a 403 carrying an enrolment token instead of a session token.
+Until then this is a strong front-door lock on a door the back of which is
+still open, and it should be said that way to Fredrik rather than reported as
+"MFA is now mandatory".
+
 ### 3. Drop the password step when revoking a session
 
 Today the emailed revoke link still asks for the password. Fredrik's argument:
@@ -153,6 +201,35 @@ exactly the trade Fredrik proposed and Gustavo accepted:
 
 **Task:** after MFA is mandatory, reduce the revoke flow to a single click from
 the email. **Do not ship this before #2** — on its own it weakens the flow.
+
+#### Client done 2026-09-21, waiting on one thing from the backend
+
+Fredrik is right about the part he described: `loginUser` runs the MFA check
+**before** it raises the 409 session conflict, so anyone who sees "an active
+session already exists" has already passed both factors. A third password prompt
+proves nothing new.
+
+**But the password was doing a second job.** The emailed link is
+`/force-logout?email=<address>&timestamp=<ms>` and carries no secret; the page
+is public and `POST /staff/force-logout` has no `validateJWT`. Deleting the
+field with the link unchanged turns the flow into "know an email address, end
+that person's session, repeatedly". So the proof has to move from something the
+visitor *knows* to something only the recipient of the mail *has*.
+
+`ForceLogout.jsx` now reads a `token` from the link. **With one, no password is
+asked** — a sentence and a button. Without one, the password field is exactly as
+it was, which is what every link already in an inbox needs. The token is
+stripped from the URL on arrival, like `cred` is.
+
+It is inert until `forceLogoutNotificationHtmlTemplate` starts appending
+`&token=`. The ask, with the suggested Redis shape and the back-compat rule, is
+in `FRONTEND_force_logout_token_2026-09-21.md`. **No further client release is
+needed** — the password step disappears the day the token shows up.
+
+Found next door and written up in the same document:
+`POST /nodemailer/forcing-revoking-active-session` takes `{ email }` and is
+unauthenticated, so anyone can make us send that mail to any address they can
+name. It grants them nothing, but it is an open relay for one of our templates.
 
 ---
 
