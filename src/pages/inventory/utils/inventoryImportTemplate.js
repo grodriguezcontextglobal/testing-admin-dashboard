@@ -55,7 +55,11 @@ export const RECOMMENDED_IMPORT_FIELDS = [
 /**
  * Header normalization, matching what the parser does to each key it finds in
  * the sheet: forgive surrounding space, a trailing mandatory asterisk, and
- * casing. Anything beyond that has to be a declared alias.
+ * casing. Nothing beyond that.
+ *
+ * This is tolerance for Excel, not an alias. A header that arrives as
+ * `" Serial Number* "` is the same column; one that arrives as `"Serial No"`
+ * is not, and saying so is the whole point of the change.
  */
 export const normalizeHeader = (value) =>
   String(value ?? "")
@@ -68,8 +72,23 @@ export const normalizeHeader = (value) =>
  * the way someone fills one in: what the device is, what it costs, where it
  * lives, how it may be handed out, then the optional extras.
  *
- * `aliases` is what the parser accepts for that column. The header itself is
- * always among them, so a template that round-trips through Excel still parses.
+ * `header` is the only spelling the parser accepts. It used to carry an
+ * `aliases` list — `item_group` answered to "Device Name", "device name",
+ * "device_name" and "Group" — and that is gone:
+ *
+ * > P2 `5:22` — "just accept the columns for what they are. This is the way you
+ * > have to put it in. And the only thing we need to do is to describe what the
+ * > column is and then tell them do not change the column names."
+ * >
+ * > P2 `5:51` — "delete for every single column here, also accepted as, all
+ * > that, take it away."
+ *
+ * `defaultNote` is gone for the same kind of reason — the asterisk already says
+ * which columns cannot be blank:
+ *
+ * > P2 `7:49` — "you don't have to say default empty… The ones that cannot be
+ * > left empty are the one that you have the asterisk next by. Everybody
+ * > understands that."
  */
 export const INVENTORY_IMPORT_COLUMNS = [
   {
@@ -77,7 +96,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "category_name",
     required: true,
     width: 150,
-    aliases: ["Category", "category_name", "category"],
     notes: ["The family the device belongs to, e.g. 'Audio', 'Interpretation'."],
     samples: ["Audio", "Interpretation", "Fitness"],
   },
@@ -86,7 +104,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "item_group",
     required: true,
     width: 180,
-    aliases: ["Device Name", "device name", "item_group", "device_name", "Group"],
     notes: [
       "The group name every unit of this model shares, e.g. 'PL6 RF Receiver'.",
       "Rows sharing a Category and a Device Name are imported as one group.",
@@ -98,7 +115,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "serial_number",
     required: true,
     width: 150,
-    aliases: ["Serial Number", "serial number", "serial_number"],
     notes: ["Unique per unit. One row per physical device."],
     samples: ["100001", "100002", "100003"],
   },
@@ -107,7 +123,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "cost",
     required: true,
     width: 100,
-    aliases: ["Cost", "cost"],
     notes: ["Replacement cost, as a number. Both 45.5 and 45,5 are accepted."],
     samples: ["45.5", "99.0", "25.75"],
   },
@@ -116,7 +131,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "brand",
     required: true,
     width: 120,
-    aliases: ["Brand", "brand"],
     notes: ["Manufacturer, e.g. 'Sony', 'Apple'."],
     samples: ["Sony", "Congress Audio", "Cellucor"],
   },
@@ -125,10 +139,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "descript_item",
     required: false,
     width: 200,
-    aliases: ["Description", "description", "descript_item"],
     notes: ["Free text."],
-    defaultNote:
-      "Left blank, one is composed from category, device name, brand and location.",
     samples: [
       "Audio Device 1 used for events and rentals",
       "Receiver used for interpretation events 70-75 MHz",
@@ -140,7 +151,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "ownership",
     required: true,
     width: 120,
-    aliases: ["Ownership", "ownership"],
     notes: [
       "Stored as one of: Permanent, Rent, Sale.",
       "Common synonyms are mapped for you — Owned, Purchased and Donated become Permanent; Rental, Leased and Loaned become Rent; Sold and Consignment become Sale.",
@@ -152,7 +162,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "main_warehouse",
     required: true,
     width: 160,
-    aliases: ["Main Warehouse", "main warehouse", "main_warehouse", "Taxable Location"],
     notes: ["Where the device is deductible for taxes, e.g. 'Miami, FL'."],
     samples: ["Miami, FL", "Fort Lauderdale, FL", "Miami, FL"],
   },
@@ -171,7 +180,6 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "location",
     required: true,
     width: 150,
-    aliases: ["Location", "location"],
     notes: [
       "Where the unit physically sits, e.g. 'Miami, FL'.",
       "A location that does not exist yet is created during the import.",
@@ -183,12 +191,10 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "sub_location",
     recommended: true,
     width: 180,
-    aliases: ["Sub Locations", "sub locations", "sub_location"],
     notes: [
       "Comma-separated path inside the location, outermost first.",
       "e.g. 'Section A, Locker A105'.",
     ],
-    defaultNote: "Default: empty",
     samples: ["Section A, Locker A105", "Section B, Locker B203", ""],
   },
   // {
@@ -249,20 +255,11 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "extra_serial_number",
     recommended: true,
     width: 200,
-    aliases: [
-      "Extra Info",
-      "extra info",
-      // Kept: this misspelling shipped as an accepted alias, and spreadsheets
-      // built against it are still out there.
-      "exra info",
-      "extra_serial_number",
-    ],
     notes: [
       "Extra identifiers for this unit, as key=value pairs separated by semicolons.",
       "e.g. 'Material=Silicon;MAC=00:1B:44:11:3A:B7'.",
       "A value without an '=' is discarded.",
     ],
-    defaultNote: "Default: empty",
     samples: ["Material=Silicon;Voltage=110V", "Frequency=72MHz", ""],
   },
   {
@@ -270,13 +267,11 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "image_url",
     recommended: true,
     width: 150,
-    aliases: ["Image", "image", "image_url"],
     notes: [
       "Place the picture inside the cell — Insert > Picture > Place in Cell.",
       "The picture travels inside the file, so nothing has to be hosted anywhere first.",
       "One picture per device name is enough; it is read from whichever rows carry it.",
     ],
-    defaultNote: "Default: empty",
     samples: ["", "", ""],
   },
   // {
@@ -308,12 +303,41 @@ const COLUMNS_BY_FIELD = new Map(
   INVENTORY_IMPORT_COLUMNS.map((column) => [column.field, column]),
 );
 
+const COLUMNS_BY_NORMALIZED_HEADER = new Map(
+  INVENTORY_IMPORT_COLUMNS.map((column) => [normalizeHeader(column.header), column]),
+);
+
 /**
- * Header spellings the parser accepts for a field. Returns an empty list for an
- * unknown field so a caller that reads a stale name degrades to "no alias"
- * rather than throwing mid-import.
+ * The column a header in the uploaded file refers to, or `undefined`.
+ *
+ * Exact on the header, forgiving only of case, surrounding space and the
+ * asterisk. A misspelling is not a column.
  */
-export const aliasesFor = (field) => COLUMNS_BY_FIELD.get(field)?.aliases ?? [];
+export const columnForHeader = (header) =>
+  COLUMNS_BY_NORMALIZED_HEADER.get(normalizeHeader(header));
+
+/**
+ * The mandatory columns a file does not have.
+ *
+ * Without this, strictness reads as silence: rename "Category" to "Type" and
+ * every row is missing a mandatory value, so all 500 are skipped one by one and
+ * nobody is told the actual reason. Checking the header row once lets the
+ * import say the true thing — this column is not here, and its name is not
+ * yours to change.
+ *
+ * @param {string[]} headers - the keys of the file's first row.
+ * @returns {string[]} the headers that should be there and are not.
+ */
+export const missingRequiredColumns = (headers = []) => {
+  const present = new Set(headers.map(normalizeHeader));
+  return REQUIRED_IMPORT_FIELDS.map((field) => COLUMNS_BY_FIELD.get(field))
+    .filter((column) => column && !present.has(normalizeHeader(column.header)))
+    .map((column) => column.header);
+};
+
+/** Headers in the file that no column claims. */
+export const unknownColumns = (headers = []) =>
+  headers.filter((header) => String(header ?? "").trim() && !columnForHeader(header));
 
 /**
  * The column's display name, for messages that list required/recommended

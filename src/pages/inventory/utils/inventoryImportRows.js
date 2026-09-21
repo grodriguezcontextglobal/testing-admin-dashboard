@@ -19,11 +19,12 @@
 
 import { normalizeOwnership } from "../actions/utils/ownershipUtils";
 import {
-  aliasesFor,
+  columnForHeader,
   headerFor,
   isBlankImportValue,
+  missingRequiredColumns,
   missingRequiredFields,
-  normalizeHeader,
+  unknownColumns,
   REQUIRED_IMPORT_FIELDS,
 } from "./inventoryImportTemplate";
 
@@ -32,18 +33,17 @@ export const FIRST_DATA_ROW = 2;
 
 /**
  * Reads one field out of a row object keyed by whatever headers the file used.
- * Exact alias first, then a normalized comparison, which is what forgives
- * casing, surrounding space and the mandatory asterisk.
+ *
+ * The header has to be the documented one. Case, surrounding space and the
+ * mandatory asterisk are forgiven — that is Excel, not a rename — and nothing
+ * else is. A column called "Serial No" is not the Serial Number column, and
+ * treating it as one is the mis-mapping this was asked to stop.
  */
 export const readField = (row, field) => {
-  for (const alias of aliasesFor(field)) {
-    if (row[alias] !== undefined) return row[alias];
-    const matched = Object.keys(row).find(
-      (key) => normalizeHeader(key) === normalizeHeader(alias)
-    );
-    if (matched) return row[matched];
-  }
-  return "";
+  const matched = Object.keys(row).find(
+    (key) => columnForHeader(key)?.field === field
+  );
+  return matched === undefined ? "" : row[matched];
 };
 
 /** "45,5" and "45.5" both mean 45.5. A cell that is not a number means 0. */
@@ -66,7 +66,8 @@ export const parseSubLocation = (value) =>
  * @param {Array<object>} rows - `sheet_to_json` output, keyed by header.
  * @param {{imagesByRow?: Map<number, {mediaPath: string, alt: string}>}} [options]
  * @returns {{units: Array<object>, skipped: Array<{rowNumber: number, missing: string[]}>,
- *   ignoredImageValues: Array<{rowNumber: number, value: string}>}}
+ *   ignoredImageValues: Array<{rowNumber: number, value: string}>,
+ *   missingColumns: string[], unrecognizedColumns: string[]}}
  */
 export const parseInventoryImportRows = (rows = [], options = {}) => {
   const imagesByRow = options.imagesByRow ?? new Map();
@@ -76,6 +77,17 @@ export const parseInventoryImportRows = (rows = [], options = {}) => {
      picture has to be in the cell — but dropping it without a word would be
      the same silent loss this whole rewrite exists to stop. */
   const ignoredImageValues = [];
+
+  /* Read once off the header row, before any row is judged. A renamed column
+     makes every row fail its mandatory check, so without this a 500-row file
+     reports 500 skipped rows and never says that "Category" was renamed to
+     "Type". */
+  /* A file with no rows has no header row either, and answering "all eight
+     mandatory columns are missing" describes nothing the person can fix. The
+     caller already says the file is empty. */
+  const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const missingColumns = rows.length > 0 ? missingRequiredColumns(headers) : [];
+  const unrecognizedColumns = unknownColumns(headers);
 
   rows.forEach((row, index) => {
     const rowNumber = index + FIRST_DATA_ROW;
@@ -128,7 +140,13 @@ export const parseInventoryImportRows = (rows = [], options = {}) => {
     });
   });
 
-  return { units, skipped, ignoredImageValues };
+  return {
+    units,
+    skipped,
+    ignoredImageValues,
+    missingColumns,
+    unrecognizedColumns,
+  };
 };
 
 export default parseInventoryImportRows;

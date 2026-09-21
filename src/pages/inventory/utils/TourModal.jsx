@@ -64,12 +64,6 @@ const TourModal = ({ open, setOpen }) => {
         {column.notes?.map((note) => (
           <Text key={note}>{note}</Text>
         ))}
-        {column.defaultNote && (
-          <Text type="secondary">{column.defaultNote}</Text>
-        )}
-        <Text type="secondary">
-          Also accepted as: {column.aliases.join(", ")}
-        </Text>
       </Space>
     ),
     target: () => headerRef(column.field).current,
@@ -104,10 +98,11 @@ const TourModal = ({ open, setOpen }) => {
         <>
           This tour guides you through the expected structure of your Excel
           (.xlsx) file. <Text type="danger">Red headers</Text> are the only
-          mandatory ones — a row missing any of them is skipped. Every other
-          column is optional and falls back to the default shown in its step.
-          Follow the tour for accepted column names (aliases). Company is not a
-          column: it is taken from your session at import time.
+          mandatory ones — a row missing any of them is skipped.{" "}
+          <Text strong>Do not change the column names.</Text> They are the only
+          spellings the import recognises, so a renamed or misspelled column is
+          not read at all. Download the template and type into it. Company is
+          not a column: it is taken from your session at import time.
         </>
       }
       columns={columns}

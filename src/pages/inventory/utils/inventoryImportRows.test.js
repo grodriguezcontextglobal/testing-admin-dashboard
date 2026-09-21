@@ -119,6 +119,56 @@ describe("reading the rows", () => {
   });
 });
 
+/* Fredrik, part 2 `5:35`: "if they change the column names, let's say they
+   misspell something… the system doesn't recognize it. No, they need to stick
+   to what they are." Not recognising it is the easy half; saying so is the
+   half that decides whether anyone can act on it. */
+describe("a file whose columns were renamed", () => {
+  it("names the mandatory column that is missing, once, off the header row", () => {
+    const renamed = sheetRow();
+    renamed.Type = renamed.Category;
+    delete renamed.Category;
+
+    const { missingColumns, unrecognizedColumns } = parseInventoryImportRows([
+      renamed,
+    ]);
+
+    expect(missingColumns).toEqual(["Category"]);
+    expect(unrecognizedColumns).toEqual(["Type"]);
+  });
+
+  it("says nothing about a file built from the template", () => {
+    const { missingColumns, unrecognizedColumns } = parseInventoryImportRows([
+      sheetRow(),
+    ]);
+
+    expect(missingColumns).toEqual([]);
+    expect(unrecognizedColumns).toEqual([]);
+  });
+
+  /* The renamed column also fails every row, which is what used to be the only
+     symptom: 500 rows skipped and no clue why. Both are reported now. */
+  it("still skips the rows, so the two readings agree", () => {
+    const renamed = sheetRow();
+    renamed.Type = renamed.Category;
+    delete renamed.Category;
+
+    const { units, skipped } = parseInventoryImportRows([renamed]);
+
+    expect(units).toHaveLength(0);
+    expect(skipped[0].missing).toContain("Category");
+  });
+
+  it("reads nothing from a name the template never documented", () => {
+    expect(readField({ "Device Name": "PL6" }, "item_group")).toBe("");
+    expect(readField({ "Serial No": "SN-1" }, "serial_number")).toBe("");
+  });
+
+  it("survives an empty file without inventing columns", () => {
+    expect(parseInventoryImportRows([]).missingColumns).toEqual([]);
+  });
+});
+
 describe("the picture in the Image cell", () => {
   it("attaches the file the cell pointed at to that row's unit", () => {
     const imagesByRow = new Map([

@@ -12,7 +12,7 @@
 
 ## 0. Where it stands
 
-**6 of 28 closed. 22 open.** Three of the six were closed this week; three were
+**8 of 28 closed. 20 open.** Five of the eight were closed this week; three were
 already true in the code when the list was written.
 
 Two of the closed ones are only closed **on the client**. They are marked so,
@@ -20,10 +20,10 @@ and each names the one thing the backend still has to do.
 
 | | |
 |---|---|
-| Closed | 1, 2*, 3*, 20, plus the three in §4 of the source list |
-| Open, P1 | 15, 21 |
+| Closed | 1, 2*, 3*, 15, 18, 20, plus the three in §4 of the source list |
+| Open, P1 | 21 |
 | Open, P2 | 4, 5, 6, 7, 8, 9, 10, 11, 14, 22, 25, 26, 27 |
-| Open, P3 | 12, 13, 16, 17, 18, 19, 23, 24, 28 |
+| Open, P3 | 12, 13, 16, 17, 19, 23, 24, 28 |
 
 `*` client done, waiting on the backend.
 
@@ -59,6 +59,19 @@ no further client release. The same document flags that
 `POST /nodemailer/forcing-revoking-active-session` is unauthenticated, so anyone
 can make us mail that template to any address they can name.
 
+### 15 and 18 — strict column names, no defaults
+> P2 `5:51` — "delete for every single column here, also accepted as, all that,
+> take it away."
+
+Decided strict. `aliases` and `defaultNote` are gone from every column; matching
+is the documented header, forgiving only case, space and the asterisk. The tour
+lost both sections and gained **"Do not change the column names."**
+
+The half that was not just deletion: a renamed column used to fail every row
+individually, so a 500-row file reported 500 skipped rows and never named the
+column. The header row is now checked once and the preview says which column is
+missing and which unrecognised one took its place.
+
 ### 20 — the Image column no longer accepts a public URL
 > P2 `9:38` — "absolutely no link outside Devitrak."
 
@@ -71,19 +84,6 @@ reported in the preview rather than used.
 ---
 
 ## 2. Open and blocking — P1
-
-### 15 — delete every "also accepted as"; make column names strict
-> P2 `2:23`–`5:58`
-
-**Unchanged, and still the one item on the list that changes behaviour rather
-than wording.** Dropping the aliases breaks spreadsheets that import correctly
-today, so it needs a decision before anyone writes code. The aliases live in
-`INVENTORY_IMPORT_COLUMNS` in `src/pages/inventory/utils/inventoryImportTemplate.js`,
-one list per column, and the parser matches through `aliasesFor`.
-
-Worth deciding together with **14** (rename "Group" to "Item Name"), because
-that rename is only safe *because* the old spelling survives as an alias — which
-is exactly what 15 proposes to remove.
 
 ### 21 — import 10 units on ABC Interpreting and report back
 > P2 `13:13`–`13:35`
@@ -129,17 +129,16 @@ time.
 
 | # | Item | Where | Note |
 |---|---|---|---|
-| 14 | Rename "Group" to "Item Name" | `1:02`–`2:47` | Change `header`, keep `field`; safe only while the old spelling stays an alias — see 15 |
+| 14 | Rename "Group" to "Item Name" | `1:02`–`2:47` | **Now a breaking rename.** Aliases are gone, so every customer holding a spreadsheet with a Group column must download the template again. A release note, not a copy edit |
 | 16 | "Taxable Location" description | `2:54`–`3:58` | |
 | 17 | "Sub Locations" — drop "outermost first" | `5:58`–`7:49` | |
-| 18 | Delete every "Default: empty" | `7:49`–`8:32` | |
 | 19 | Extra identifiers — approved, minor trim | `8:34`–`9:34` | |
 
-All five are edits to `header`, `notes` and `defaultNote` in one file,
+16, 17 and 19 are edits to `header` and `notes` in one file,
 `src/pages/inventory/utils/inventoryImportTemplate.js`, and that file has a test
-that pins the guide, the downloadable template and the parser's aliases to each
-other. They are an hour's work as a batch and a week of drift if done one at a
-time.
+pinning the guide, the downloadable template and the parser's headers to each
+other. They are an hour's work as a batch and a week of drift one at a time.
+14 is the one to keep separate now that it breaks existing spreadsheets.
 
 ---
 
@@ -193,11 +192,12 @@ He asked for a faster cadence (P2 `25:31`) — *"I'd rather keep going like more
 more, more now, because I learn from it too."* So the next session is worth
 arriving at with the cheap batches already done.
 
-1. **Decide 15**, because 14 and the whole template batch hang off it.
-2. **The template batch — 14, 16, 17, 18, 19** — one file, one test, one pass.
-3. **The Review screen — 26 first, then 24, 25, 27.**
-4. **The wizard copy — 9, 10, 11, 12, 13**, folding in the "Scan labels"
+1. **The template batch — 16, 17, 19** — one file, one test, one pass. Then
+   **14** on its own, because it now breaks every spreadsheet in the wild and
+   deserves to be announced rather than slipped in.
+2. **The Review screen — 26 first, then 24, 25, 27.**
+3. **The wizard copy — 9, 10, 11, 12, 13**, folding in the "Scan labels"
    mismatch.
-5. **21**, as the thing that proves the import rewrite in a browser.
-6. **8 and 22 last**, together, extracting the pre-fill helper instead of
+4. **21**, as the thing that proves the import rewrite in a browser.
+5. **8 and 22 last**, together, extracting the pre-fill helper instead of
    writing it a third time.

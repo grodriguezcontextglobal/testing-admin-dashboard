@@ -104,16 +104,21 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
         const rows = utils.sheet_to_json(worksheet, { defval: "" });
 
         const { byRow, media } = await readWorkbookCellImages(arrayBuffer);
-        const { units, skipped, ignoredImageValues } = parseInventoryImportRows(
-            rows,
-            { imagesByRow: byRow }
-        );
+        const {
+            units,
+            skipped,
+            ignoredImageValues,
+            missingColumns,
+            unrecognizedColumns,
+        } = parseInventoryImportRows(rows, { imagesByRow: byRow });
 
         return {
             rowCount: rows.length,
             units,
             skipped,
             ignoredImageValues,
+            missingColumns,
+            unrecognizedColumns,
             media,
             /* One request per device name, with each unit's own cost, location
                and the rest travelling per serial number. How the file is cut
@@ -377,6 +382,24 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                 )}
                             </div>
 
+                            {preview.missingColumns?.length > 0 && (
+                                <div style={{ color: "var(--danger-600, #b42318)" }}>
+                                    This file has no{" "}
+                                    <strong>{preview.missingColumns.join(", ")}</strong>{" "}
+                                    column
+                                    {preview.unrecognizedColumns?.length > 0 && (
+                                        <>
+                                            , but it does have{" "}
+                                            <strong>
+                                                {preview.unrecognizedColumns.join(", ")}
+                                            </strong>
+                                        </>
+                                    )}
+                                    . Column names cannot be changed — download the template
+                                    and type into it.
+                                </div>
+                            )}
+
                             {preview.skipped.length > 0 && (
                                 <div style={{ color: "var(--danger-600, #b42318)" }}>
                                     <strong>{preview.skipped.length}</strong> row(s) skipped for
@@ -432,10 +455,12 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                         says which rows those are. We recommend filling in{" "}
                         <strong>{joinWithAnd(recommendedHeaders)}</strong> too: the row is
                         imported without them, but you will have to correct device by device.
-                        For the Image column, place the picture <em>inside</em> the cell
-                        (Insert &gt; Picture &gt; Place in Cell) — it travels with the file,
-                        so nothing has to be hosted anywhere first. See the &ldquo;Inventory
-                        Import Template Guide&ldquo; for aliases, accepted values and defaults.
+                        <strong> Do not change the column names</strong> — they are the only
+                        spellings the import recognises. For the Image column, place the
+                        picture <em>inside</em> the cell (Insert &gt; Picture &gt; Place in
+                        Cell) — it travels with the file, so nothing has to be hosted
+                        anywhere first. See the &ldquo;Inventory Import Template Guide&ldquo;
+                        for what each column means.
                     </div>
 
                     <div

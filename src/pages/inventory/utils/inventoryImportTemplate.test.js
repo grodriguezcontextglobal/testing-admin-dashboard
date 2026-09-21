@@ -3,7 +3,9 @@ import {
   INVENTORY_IMPORT_COLUMNS,
   RECOMMENDED_IMPORT_FIELDS,
   REQUIRED_IMPORT_FIELDS,
-  aliasesFor,
+  columnForHeader,
+  missingRequiredColumns,
+  unknownColumns,
   buildGuideRow,
   buildTemplateRows,
   headerFor,
@@ -88,46 +90,15 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
 
   // A column that is both "you must fill this in" and "here is what we put when
   // you don't" cannot be read as anything coherent.
-  it("never claims a default for a mandatory column", () => {
-    for (const column of INVENTORY_IMPORT_COLUMNS.filter((c) => c.required)) {
-      expect(column.defaultNote).toBeUndefined();
-    }
-  });
 
-  it("says what happens when a recommended column is left blank", () => {
-    for (const column of INVENTORY_IMPORT_COLUMNS.filter((c) => c.recommended)) {
-      expect(column.defaultNote).toBeTruthy();
-    }
-  });
 
   it("uses unique headers and unique fields", () => {
     expect(new Set(headers()).size).toBe(headers().length);
     expect(new Set(fields()).size).toBe(fields().length);
   });
 
-  it("accepts its own header as an alias, so the downloaded template parses back", () => {
-    for (const column of INVENTORY_IMPORT_COLUMNS) {
-      const normalized = column.aliases.map(normalizeHeader);
-      expect(normalized).toContain(normalizeHeader(column.header));
-    }
-  });
 
-  it("keeps the snake_case field name as an alias", () => {
-    for (const column of INVENTORY_IMPORT_COLUMNS) {
-      expect(column.aliases).toContain(column.field);
-    }
-  });
 
-  it("never lets one column's alias swallow another column's header", () => {
-    for (const column of INVENTORY_IMPORT_COLUMNS) {
-      const others = INVENTORY_IMPORT_COLUMNS.filter((c) => c !== column);
-      for (const other of others) {
-        expect(column.aliases.map(normalizeHeader)).not.toContain(
-          normalizeHeader(other.header),
-        );
-      }
-    }
-  });
 
   // These four were added once so a spreadsheet could set them at all, and then
   // removed again: five yes/no questions per row confused more customers than
@@ -148,13 +119,54 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
   });
 });
 
-describe("aliasesFor", () => {
-  it("returns the alias list for a known field", () => {
-    expect(aliasesFor("category_name")).toContain("Category");
+/* Fredrik, part 2 `5:51`: "delete for every single column here, also accepted
+   as, all that, take it away." The header is the only spelling there is. */
+describe("columnForHeader", () => {
+  it("matches the documented header", () => {
+    expect(columnForHeader("Serial Number")?.field).toBe("serial_number");
   });
 
-  it("returns an empty list for an unknown field rather than throwing", () => {
-    expect(aliasesFor("not_a_field")).toEqual([]);
+  it("forgives what Excel does to a header, and nothing else", () => {
+    expect(columnForHeader("  serial number*  ")?.field).toBe("serial_number");
+    expect(columnForHeader("SERIAL NUMBER")?.field).toBe("serial_number");
+  });
+
+  it("does not answer to a name nobody documented", () => {
+    expect(columnForHeader("Serial No")).toBeUndefined();
+    expect(columnForHeader("serial_number")).toBeUndefined();
+    expect(columnForHeader("Device Name")).toBeUndefined();
+    expect(columnForHeader("")).toBeUndefined();
+  });
+});
+
+describe("telling someone their columns are wrong", () => {
+  const everyHeader = () => INVENTORY_IMPORT_COLUMNS.map((column) => column.header);
+
+  it("finds nothing missing in a file built from the template", () => {
+    expect(missingRequiredColumns(everyHeader())).toEqual([]);
+    expect(unknownColumns(everyHeader())).toEqual([]);
+  });
+
+  /* The reason this exists: without it, a renamed column makes every row fail
+     its mandatory check, so a 500-row file reports 500 skipped rows and never
+     says which column was renamed. */
+  it("names the mandatory column a renamed header left missing", () => {
+    const headers = everyHeader().map((header) =>
+      header === "Category" ? "Type" : header
+    );
+
+    expect(missingRequiredColumns(headers)).toEqual(["Category"]);
+    expect(unknownColumns(headers)).toEqual(["Type"]);
+  });
+
+  it("does not complain about a missing optional column", () => {
+    expect(
+      missingRequiredColumns(everyHeader().filter((h) => h !== "Description"))
+    ).toEqual([]);
+  });
+
+  it("ignores a blank trailing header, which Excel adds on its own", () => {
+    expect(unknownColumns([...everyHeader(), "", "   "])).toEqual([]);
   });
 });
 

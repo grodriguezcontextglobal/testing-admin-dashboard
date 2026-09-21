@@ -38,10 +38,10 @@
 | 12 | Align the paste placeholder's example columns | P1 `20:50`–`21:32` | P3 |
 | 13 | Delete the redundant scanner instructions | P1 `27:07`–`27:38` | P3 |
 | 14 | XLSX template: rename "Group" to "Item Name" | P2 `1:02`–`2:47` | P2 |
-| 15 | Delete every "also accepted as"; make column names strict | P2 `2:23`–`5:58` | **P1** |
+| 15 | Delete every "also accepted as"; make column names strict | P2 `2:23`–`5:58` | **done** |
 | 16 | "Taxable Location" description | P2 `2:54`–`3:58` | P3 |
 | 17 | "Sub Locations" description — drop "outermost first" | P2 `5:58`–`7:49` | P3 |
-| 18 | Delete every "Default: empty" | P2 `7:49`–`8:32` | P3 |
+| 18 | Delete every "Default: empty" | P2 `7:49`–`8:32` | **done** |
 | 19 | Extra identifiers — approved, minor trim only | P2 `8:34`–`9:34` | P3 |
 | 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **done** |
 | 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
@@ -495,6 +495,33 @@ that. No, that's fine."* (P2 `5:49`).
 > *"the column X is not recognised — download the template and do not rename its
 > columns"* beats a silent skip. Recommendation: keep case-insensitive matching on
 > the **exact** header name. That is not an alias, it is tolerance for Excel.
+
+#### Decided and done 2026-09-21 — both halves
+
+Gustavo took the decision: strict. The `aliases` array is gone from every
+column, and so is `defaultNote` (item 18, same pass — the asterisk already
+carries it).
+
+Matching is now the documented `header` and nothing else, forgiving only case,
+surrounding space and the mandatory asterisk. That is tolerance for Excel, not
+an alias: `" serial number* "` is the Serial Number column, `"Serial No"` is
+not.
+
+**The error message was the other half of the work.** Strictness on its own
+reads as silence: rename Category to Type and every row fails its mandatory
+check, so a 500-row file reports 500 skipped rows and never says which column
+was renamed. The header row is now read once, before any row is judged, and the
+preview says *"This file has no **Category** column, but it does have **Type**.
+Column names cannot be changed — download the template and type into it."*
+
+The tour lost the "Also accepted as" and "Default:" lines and gained the
+instruction he asked for in so many words: **Do not change the column names.**
+
+**What this does to item 14.** Renaming "Group" to "Item Name" was safe only
+because the old spelling survived as an alias. It no longer does, so 14 is now
+a breaking rename: every customer holding a spreadsheet with a Group column has
+to download the template again. Still worth doing — he is right that "group" is
+confusing — but it is a release note, not a copy edit.
 
 ### 16. "Taxable Location" description
 
