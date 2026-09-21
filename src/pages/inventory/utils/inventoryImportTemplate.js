@@ -271,7 +271,11 @@ export const INVENTORY_IMPORT_COLUMNS = [
     recommended: true,
     width: 150,
     aliases: ["Image", "image", "image_url"],
-    notes: ["A public URL to a picture of the device."],
+    notes: [
+      "Place the picture inside the cell — Insert > Picture > Place in Cell.",
+      "The picture travels inside the file, so nothing has to be hosted anywhere first.",
+      "One picture per device name is enough; it is read from whichever rows carry it.",
+    ],
     defaultNote: "Default: empty",
     samples: ["", "", ""],
   },

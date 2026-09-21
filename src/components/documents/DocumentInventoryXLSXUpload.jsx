@@ -1,4 +1,4 @@
-import { message, Modal } from "antd";
+import { message, Modal, Radio } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { read, utils } from "xlsx";
@@ -6,18 +6,13 @@ import { Subtitle } from "../../styles/global/Subtitle";
 import BlueButtonComponent from "../UX/buttons/BlueButton";
 import GrayButtonComponent from "../UX/buttons/GrayButton";
 import { devitrakApi } from "../../api/devitrakApi";
-import { groupBy } from "lodash";
 import { verifyAndCreateLocation } from "../../pages/inventory/actions/utils/verifyLocationBeforeCreateNewInventory";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { onTrackBackgroundJob } from "../../store/slices/backgroundJobsSlice";
 import generateIdempotencyKey from "../../utils/actions/generateIdempotencyKey";
 import { formatDate } from "../../pages/inventory/utils/dateFormat";
-import { normalizeOwnership } from "../../pages/inventory/actions/utils/ownershipUtils";
 import {
-    aliasesFor,
     headerFor,
-    missingRequiredFields,
-    normalizeHeader,
     RECOMMENDED_IMPORT_FIELDS,
     REQUIRED_IMPORT_FIELDS,
 } from "../../pages/inventory/utils/inventoryImportTemplate";
@@ -25,7 +20,14 @@ import {
     inventoryCacheKeys,
     inventoryPageQueryKeys,
 } from "../../pages/inventory/utils/inventoryQueryKeys";
-import { encodeExtraIdentifiers } from "../../pages/inventory/utils/extraIdentifiers";
+import { parseInventoryImportRows } from "../../pages/inventory/utils/inventoryImportRows";
+import { readWorkbookCellImages } from "../../pages/inventory/utils/readWorkbookCellImages";
+import {
+    IMPORT_MODES,
+    buildImportPlan,
+} from "../../pages/inventory/utils/inventoryImportPlan";
+import { buildGroupRequest } from "../../pages/inventory/utils/inventoryImportPayload";
+import { uploadImportImages } from "../../pages/inventory/utils/uploadImportImages";
 
 /** "A, B and C" — reads the required/recommended field notes from the same
  * two arrays the parser enforces, so the message can't drift from them again. */
@@ -38,13 +40,44 @@ const joinWithAnd = (items) => {
 const requiredHeaders = REQUIRED_IMPORT_FIELDS.map(headerFor);
 const recommendedHeaders = RECOMMENDED_IMPORT_FIELDS.map(headerFor);
 
+/** Requests in flight at once. The queue takes them all either way; this keeps
+ * one import from crowding out everything else the tab is doing. */
+const CONCURRENT_REQUESTS = 4;
+
+/** Runs `task` over `items`, `limit` at a time, in order of completion. */
+const runWithLimit = async (items, limit, task) => {
+    const results = [];
+    let cursor = 0;
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+        while (cursor < items.length) {
+            const index = cursor++;
+            results[index] = await task(items[index], index);
+        }
+    });
+    await Promise.all(workers);
+    return results;
+};
+
+const panelStyle = {
+    background: "var(--gray-50, #f7f7f4)",
+    border: "1px solid var(--gray-200, #ddded6)",
+    color: "var(--gray-600, #5d615a)",
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 13,
+};
+
 const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     const { user } = useSelector((state) => state.admin);
     const dispatch = useDispatch();
     const [openModal, setOpenModal] = useState(false);
     const [fileName, setFileName] = useState("");
     const [loadingState, setLoadingState] = useState(false);
-    const [processedRows, setProcessedRows] = useState([]);
+    const [progress, setProgress] = useState("");
+    /* What the file turned out to contain. Held as one object so the preview
+       and the dispatch always read the same reading of the file. */
+    const [preview, setPreview] = useState(null);
+    const [mode, setMode] = useState(IMPORT_MODES.COMPATIBLE);
     const queryClient = useQueryClient();
     const alphaNumericInsertItemMutation = useMutation({
         mutationFn: ({ template, idempotencyKey }) =>
@@ -53,235 +86,199 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             }),
     });
 
+    /**
+     * Reads the file twice: SheetJS for the grid, and the archive itself for
+     * the pictures placed inside cells, which SheetJS and ExcelJS both miss.
+     */
     const processFile = async (originalFile) => {
-        try {
-            const arrayBuffer = await originalFile.arrayBuffer();
-            const workbook = read(arrayBuffer, { type: "array" });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = utils.sheet_to_json(worksheet, { defval: "" });
+        const arrayBuffer = await originalFile.arrayBuffer();
+        const workbook = read(arrayBuffer, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = utils.sheet_to_json(worksheet, { defval: "" });
 
-            const processedData = jsonData.map(row => {
-                // Header spellings live in inventoryImportTemplate.js, next to the
-                // guide and the downloadable template. They were inlined here, which
-                // is how the guide came to document columns this parser never read
-                // and to omit four it did.
-                const val = (field) => {
-                    for (const alias of aliasesFor(field)) {
-                        if (row[alias] !== undefined) return row[alias];
-                        const foundKey = Object.keys(row).find(
-                            (k) => normalizeHeader(k) === normalizeHeader(alias)
-                        );
-                        if (foundKey) return row[foundKey];
-                    }
-                    return "";
-                };
+        const { byRow, media } = await readWorkbookCellImages(arrayBuffer);
+        const { units, skipped, ignoredImageValues } = parseInventoryImportRows(
+            rows,
+            { imagesByRow: byRow }
+        );
 
-                const requiredValues = REQUIRED_IMPORT_FIELDS.reduce((acc, field) => {
-                    acc[field] = val(field);
-                    return acc;
-                }, {});
-
-                if (missingRequiredFields(requiredValues).length > 0) {
-                    return null;
-                }
-
-                const { category_name, item_group, serial_number, brand, location, main_warehouse } = requiredValues;
-                const ownership = normalizeOwnership(requiredValues.ownership);
-                const costRaw = requiredValues.cost;
-                const descriptionFromFile = val("descript_item");
-                const subLocationRaw = val("sub_location");
-                // eslint-disable-next-line no-useless-escape
-                const subLocationArray = typeof subLocationRaw === "string" ? String(subLocationRaw).replace(/[\\\[\\\]\\\"]/g, '').split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'null') : [];
-
-                return {
-                    category_name,
-                    item_group,
-                    serial_number,
-                    cost: parseFloat(String(costRaw).replace(",", ".")) || 0,
-                    brand,
-                    descript_item: descriptionFromFile || `${category_name} ${item_group} ${brand} ${ownership === "Rent" ? "for rent" : ""} ${location}`,
-                    ownership,
-                    main_warehouse,
-                    // Warehouse, Assignable, Container, Container Capacity and
-                    // "Stored in container?" are no longer columns: asking the
-                    // customer to answer five yes/no questions per row confused
-                    // more people than it served, and the answer was the same
-                    // almost every time. They are fixed here at that answer —
-                    // in stock, handout-enabled, not a container — and a unit
-                    // that needs otherwise is changed from the item page.
-                    warehouse: 1,
-                    location,
-                    current_location: location,
-                    extra_serial_number: val("extra_serial_number"),
-                    return_date: val("return_date") || null,
-                    container: 0,
-                    containerSpotLimit: null,
-                    image_url: val("image_url"),
-                    enableAssignFeature: 1,
-                    isItInContainer: 0,
-                    containerId: JSON.stringify([]),
-                    display_item: 1,
-                    returnedRentedInfo: "",
-                    sub_location: subLocationArray,
-                    supplier_info: val("supplier_info"),
-                    company: user.sqlInfo.company_name,
-                    company_id: user.sqlInfo.company_id,
-                };
-            }).filter(Boolean);
-
-            if (processedData.length > 0) {
-                message.success(
-                    `${processedData.length} items processed and ready for import.`
-                );
-            } else {
-                message.warning("No valid items could be processed from the file.");
-            }
-            return processedData;
-        } catch (error) {
-            console.error("Error processing file:", error);
-            message.error("Failed to process file. Please check headers and data format.");
-            return [];
-        }
+        return {
+            rowCount: rows.length,
+            units,
+            skipped,
+            ignoredImageValues,
+            media,
+            plans: {
+                [IMPORT_MODES.COMPATIBLE]: buildImportPlan(units, {
+                    mode: IMPORT_MODES.COMPATIBLE,
+                }),
+                [IMPORT_MODES.PER_SERIAL]: buildImportPlan(units, {
+                    mode: IMPORT_MODES.PER_SERIAL,
+                }),
+            },
+        };
     };
 
-    // Not memoized: this goes straight onto an <input onChange>, and a DOM
-    // element gains nothing from a stable handler identity. The useCallback that
-    // used to be here declared [user.sqlInfo] while calling processFile, which
-    // is recreated every render and reads user.sqlInfo itself — so the array was
-    // both pointless and wrong, and a stale company could have been baked into
-    // the handler.
     const handleFileChange = async (e) => {
         const originalFile = e.target.files?.[0];
         if (!originalFile) return;
         setFileName(originalFile.name);
         setLoadingState(true);
-        const processed = await processFile(originalFile);
-        setProcessedRows(processed);
-        setLoadingState(false);
+        setProgress("Reading the file…");
+        try {
+            const result = await processFile(originalFile);
+            setPreview(result);
+            if (result.units.length === 0) {
+                message.warning("No valid rows could be read from this file.");
+            }
+        } catch (error) {
+            console.error("Error processing file:", error);
+            setPreview(null);
+            message.error(
+                "Failed to read the file. Please check the headers against the template."
+            );
+        } finally {
+            setProgress("");
+            setLoadingState(false);
+        }
     };
 
     const handleUpload = async () => {
-        if (processedRows.length === 0)
-            return message.warning("No item groups to import. Please select a valid file.");
+        const plan = preview?.plans?.[mode];
+        if (!plan || plan.groups.length === 0) {
+            return message.warning("Nothing to import. Please select a valid file.");
+        }
+
         setLoadingState(true);
         try {
-            const groupedByCategory = groupBy(processedRows, "category_name");
-            const templatesForApi = [];
+            /* 1. Locations, once each. This used to run per group, so five
+                  locations spread over eighteen groups meant eighteen calls. */
+            setProgress(`Checking ${plan.stats.locations.length} location(s)…`);
+            for (const locationName of plan.stats.locations) {
+                await verifyAndCreateLocation({
+                    locationName,
+                    companyId: user.sqlInfo.company_id,
+                    queryClient,
+                    user,
+                });
+            }
 
-            for (const categoryName in groupedByCategory) {
-                const itemsInCategory = groupedByCategory[categoryName];
-                const groupedByItemGroup = groupBy(itemsInCategory, "item_group");
-
-                for (const itemGroupName in groupedByItemGroup) {
-                    const itemList = groupedByItemGroup[itemGroupName];
-                    const firstItem = itemList[0];
-
-                    const serialNumbers = itemList.map(item => `${item.serial_number}`);
-
-                    // Keyed by serial, then encoded through the shared codec.
-                    // This used to JSON.stringify the object as-is, which is a
-                    // shape no other writer produces and the item edit modal
-                    // could not read — imported identifiers were invisible
-                    // there, and then overwritten on the next edit.
-                    const moreInfo = new Map();
-                    itemList.forEach(item => {
-                        if (item.extra_serial_number) {
-                            const extraInfoArray = String(item.extra_serial_number).split(';').map(pair => {
-                                const [key, value] = pair.split('=');
-                                return { keyObject: (key || "").trim(), valueObject: (value || "").trim() };
-                            }).filter(p => p.keyObject && p.keyObject !== '[]');
-                            if (extraInfoArray.length > 0) {
-                                moreInfo.set(item.serial_number, extraInfoArray);
-                            }
-                        }
-                    });
-
-                    await verifyAndCreateLocation({
-                        locationName: firstItem.location,
-                        companyId: user.sqlInfo.company_id,
-                        queryClient,
-                        user,
-                    });
-                    const template = {
-                        category_name: categoryName,
-                        item_group: itemGroupName,
-                        cost: firstItem.cost,
-                        brand: firstItem.brand,
-                        descript_item: firstItem.descript_item,
-                        ownership: firstItem.ownership,
-                        list: serialNumbers,
-                        warehouse: (String(firstItem.warehouse).toLocaleLowerCase() === "yes" || String(firstItem.warehouse).toLocaleLowerCase() === "true"|| firstItem.warehouse === 1) ? 1 : 0,
-                        main_warehouse: firstItem.main_warehouse,
-                        company: firstItem.company,
-                        location: firstItem.location,
-                        current_location: firstItem.current_location,
-                        sub_location: JSON.stringify(firstItem.sub_location),
-                        extra_serial_number: encodeExtraIdentifiers(moreInfo),
-                        company_id: firstItem.company_id,
-                        return_date: firstItem.return_date,
-                        returnedRentedInfo: firstItem.returnedRentedInfo,
-                        container: firstItem.container,
-                        containerSpotLimit: firstItem.containerSpotLimit,
-                        isItInContainer: firstItem.isItInContainer,
-                        containerId: firstItem.containerId,
-                        display_item: 1,
-                        enableAssignFeature: firstItem.enableAssignFeature,
-                        image_url: firstItem.image_url,
-                        supplier_info: firstItem.supplier_info,
-                        created_at: formatDate(new Date()),
-                        update_at: formatDate(new Date()),
-                    };
-                    const idempotencyKey = generateIdempotencyKey();
-                    const { data: response } = await alphaNumericInsertItemMutation.mutateAsync({
-                        template,
-                        idempotencyKey,
-                    });
-                    dispatch(
-                        onTrackBackgroundJob({
-                            jobId: response.jobId,
-                            type: "bulk-inventory-insert",
-                            successMessage: `"${itemGroupName}" was successfully created in inventory.`,
-                            failureMessage: `The import of "${itemGroupName}" failed.`,
-                            invalidateKeys: inventoryPageQueryKeys(
-                                user.sqlInfo.company_id
-                            ),
-                            clearCacheKeys: inventoryCacheKeys({
-                                companyMongoId: user.companyData.id,
-                            }),
-                        })
+            /* 2. Pictures, once per distinct file. */
+            let urlByMediaPath = new Map();
+            if (preview.media.size > 0) {
+                setProgress(`Uploading ${preview.media.size} image(s)…`);
+                const uploaded = await uploadImportImages({
+                    media: preview.media,
+                    groups: plan.groups,
+                    user,
+                    onProgress: (done, total) =>
+                        setProgress(`Uploading images ${done}/${total}…`),
+                });
+                urlByMediaPath = uploaded.urlByMediaPath;
+                if (uploaded.failed.length > 0) {
+                    message.warning(
+                        `${uploaded.failed.length} image(s) could not be uploaded. Those units are imported without a picture.`
                     );
-                    templatesForApi.push(template);
                 }
             }
 
-            if (templatesForApi.length > 0) {
-                message.warning(
-                    `${templatesForApi.length} item group(s) queued for import. You'll be notified as each one completes.`
+            /* 3. One request per batch. */
+            const timestamp = formatDate(new Date());
+            const requests = plan.groups.flatMap((group) =>
+                group.batches.map((batch) => ({ group, batch }))
+            );
+
+            let sent = 0;
+            const outcomes = await runWithLimit(
+                requests,
+                CONCURRENT_REQUESTS,
+                async ({ group, batch }) => {
+                    const { body } = buildGroupRequest({
+                        group,
+                        batch,
+                        company: user.sqlInfo.company_name,
+                        companyId: user.sqlInfo.company_id,
+                        imageUrlByMediaPath: urlByMediaPath,
+                        timestamp,
+                    });
+
+                    try {
+                        const { data: response } =
+                            await alphaNumericInsertItemMutation.mutateAsync({
+                                template: body,
+                                idempotencyKey: generateIdempotencyKey(),
+                            });
+
+                        dispatch(
+                            onTrackBackgroundJob({
+                                jobId: response.jobId,
+                                type: "bulk-inventory-insert",
+                                successMessage: `"${group.item_group}" — ${batch.length} unit(s) added to inventory.`,
+                                failureMessage: `The import of "${group.item_group}" failed.`,
+                                invalidateKeys: inventoryPageQueryKeys(
+                                    user.sqlInfo.company_id
+                                ),
+                                clearCacheKeys: inventoryCacheKeys({
+                                    companyMongoId: user.companyData.id,
+                                }),
+                            })
+                        );
+                        return { ok: true };
+                    } catch (error) {
+                        console.error("bulk-item-alphanumeric", group.item_group, error);
+                        return {
+                            ok: false,
+                            group: group.item_group,
+                            reason:
+                                error?.response?.data?.msg ??
+                                error.message ??
+                                "Request failed",
+                        };
+                    } finally {
+                        sent += 1;
+                        setProgress(`Sending ${sent}/${requests.length}…`);
+                    }
+                }
+            );
+
+            const rejected = outcomes.filter((outcome) => !outcome.ok);
+            if (rejected.length > 0) {
+                message.error(
+                    `${rejected.length} of ${requests.length} request(s) were rejected: ${rejected[0].reason}`
+                );
+            }
+            if (rejected.length < requests.length) {
+                message.success(
+                    `${requests.length - rejected.length} request(s) queued for ${plan.stats.units} unit(s). You'll be notified as each one completes.`
                 );
                 clearStateAndClose();
                 if (typeof closeModal === "function") closeModal();
-                return;
-            } else {
-                message.warning("No item groups could be formed from the processed items.");
             }
         } catch (error) {
             console.error(error);
-            message.error(`Upload failed: ${error.response?.data?.message || error.message}`);
+            message.error(
+                `Upload failed: ${error.response?.data?.message || error.message}`
+            );
         } finally {
+            setProgress("");
             setLoadingState(false);
         }
     };
 
     const clearStateAndClose = () => {
         setFileName("");
-        setProcessedRows([]);
+        setPreview(null);
+        setProgress("");
         const fileInput = document.getElementById("xlsx-importer");
         if (fileInput) {
             fileInput.value = "";
         }
         setOpenModal(false);
     };
+
+    const compatible = preview?.plans?.[IMPORT_MODES.COMPATIBLE]?.stats;
+    const perSerial = preview?.plans?.[IMPORT_MODES.PER_SERIAL]?.stats;
+    const active = preview?.plans?.[mode]?.stats;
 
     return (
         <>
@@ -318,8 +315,9 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                 title="Clear"
                                 func={() => {
                                     setFileName("");
-                                    setProcessedRows([]);
-                                    const fileInput = document.getElementById("xlsx-importer");
+                                    setPreview(null);
+                                    const fileInput =
+                                        document.getElementById("xlsx-importer");
                                     if (fileInput) fileInput.value = "";
                                 }}
                                 /* `width: fit-content` was dead here until the
@@ -337,41 +335,129 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                         )}
                     </div>
 
-                    <div
-                        style={{
-                            background: "var(--gray-50, #f7f7f4)",
-                            border: "1px solid var(--gray-200, #ddded6)",
-                            color: "var(--gray-600, #5d615a)",
-                            padding: 12,
-                            borderRadius: 8,
-                            fontSize: 13,
-                        }}
-                    >
+                    {/* What the file actually contains, before anything is sent.
+                        A 500-row import used to start with one click and no
+                        number in front of the person clicking it. */}
+                    {preview && (
+                        <div style={{ ...panelStyle, display: "flex", flexDirection: "column", gap: 10 }}>
+                            <div>
+                                <strong>{preview.units.length}</strong> unit(s) read from{" "}
+                                <strong>{preview.rowCount}</strong> row(s).
+                                {preview.media.size > 0 && (
+                                    <>
+                                        {" "}
+                                        <strong>{preview.media.size}</strong> image(s) found
+                                        inside cells, used by{" "}
+                                        {preview.units.filter((u) => u.imageMediaPath).length}{" "}
+                                        unit(s).
+                                    </>
+                                )}
+                            </div>
+
+                            {preview.skipped.length > 0 && (
+                                <div style={{ color: "var(--danger-600, #b42318)" }}>
+                                    <strong>{preview.skipped.length}</strong> row(s) skipped for
+                                    missing mandatory columns — first is row{" "}
+                                    {preview.skipped[0].rowNumber} (
+                                    {preview.skipped[0].missing.join(", ")}).
+                                </div>
+                            )}
+
+                            {preview.ignoredImageValues?.length > 0 && (
+                                <div>
+                                    <strong>{preview.ignoredImageValues.length}</strong> row(s)
+                                    have text typed in the Image column — it is not used. Place
+                                    the picture inside the cell instead (Insert &gt; Picture &gt;
+                                    Place in Cell). First is row{" "}
+                                    {preview.ignoredImageValues[0].rowNumber}.
+                                </div>
+                            )}
+
+                            {active?.duplicateSerials.length > 0 && (
+                                <div style={{ color: "var(--danger-600, #b42318)" }}>
+                                    <strong>{active.duplicateSerials.length}</strong> serial
+                                    number(s) appear more than once — e.g.{" "}
+                                    {active.duplicateSerials[0].serial_number} on rows{" "}
+                                    {active.duplicateSerials[0].rows.join(", ")}.
+                                </div>
+                            )}
+
+                            {active?.conflicts.length > 0 && (
+                                <div>
+                                    {active.conflicts.length} group(s) disagree on a field that
+                                    is shared across the group — e.g. {active.conflicts[0].field}{" "}
+                                    in &ldquo;{active.conflicts[0].item_group}&rdquo;, where{" "}
+                                    {JSON.stringify(active.conflicts[0].chosen)} is used.
+                                </div>
+                            )}
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                <strong>How should this be sent?</strong>
+                                <Radio.Group
+                                    value={mode}
+                                    onChange={(event) => setMode(event.target.value)}
+                                >
+                                    <Radio value={IMPORT_MODES.COMPATIBLE}>
+                                        One request per identical set of values —{" "}
+                                        <strong>{compatible?.requests}</strong> request(s)
+                                    </Radio>
+                                    <Radio value={IMPORT_MODES.PER_SERIAL}>
+                                        One request per device name —{" "}
+                                        <strong>{perSerial?.requests}</strong> request(s), with
+                                        per-unit values sent per serial number
+                                    </Radio>
+                                </Radio.Group>
+                                <span>
+                                    Both send the same {active?.units} unit(s) with the same
+                                    values. They differ in how many requests that takes, and the
+                                    second one needs the server to read the per-serial fields.
+                                </span>
+                            </div>
+
+                            <div>
+                                {active?.locations.length} location(s) will be checked and
+                                created if missing: {active?.locations.join(", ")}.
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={panelStyle}>
                         <strong>Note:</strong> <strong>{joinWithAnd(requiredHeaders)}</strong> are
-                        mandatory — a row missing any of them is skipped, not imported with a
-                        hole in it. We recommend filling in{" "}
+                        mandatory — a row missing any of them is skipped, and the preview above
+                        says which rows those are. We recommend filling in{" "}
                         <strong>{joinWithAnd(recommendedHeaders)}</strong> too: the row is
                         imported without them, but you will have to correct device by device.
-                        Every other column is optional and falls back to a default. See the
-                        &ldquo;Inventory Import Template Guide&ldquo; for aliases, accepted values and
-                        defaults.
+                        For the Image column, place the picture <em>inside</em> the cell
+                        (Insert &gt; Picture &gt; Place in Cell) — it travels with the file,
+                        so nothing has to be hosted anywhere first. See the &ldquo;Inventory
+                        Import Template Guide&ldquo; for aliases, accepted values and defaults.
                     </div>
 
                     <div
                         style={{
                             display: "flex",
-                            justifyContent: "flex-end",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                             gap: 10,
                             marginTop: 10,
                         }}
                     >
-                        <GrayButtonComponent title="Cancel" func={clearStateAndClose} />
-                        <BlueButtonComponent
-                            title="Import Items"
-                            func={handleUpload}
-                            loadingState={loadingState}
-                            disabled={!processedRows.length || loadingState}
-                        />
+                        <span style={{ ...Subtitle, color: "var(--gray-600, #5d615a)" }}>
+                            {progress}
+                        </span>
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <GrayButtonComponent title="Cancel" func={clearStateAndClose} />
+                            <BlueButtonComponent
+                                title={
+                                    active
+                                        ? `Import ${active.units} unit(s) in ${active.requests} request(s)`
+                                        : "Import Items"
+                                }
+                                func={handleUpload}
+                                loadingState={loadingState}
+                                disabled={!preview?.units.length || loadingState}
+                            />
+                        </div>
                     </div>
                 </div>
             </Modal>
