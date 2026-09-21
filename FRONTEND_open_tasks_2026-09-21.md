@@ -159,7 +159,35 @@ the app cannot guarantee.
 
 ---
 
-## 6. Not on his list, found while working
+## 6. Waiting on a decision, not on work
+
+### The paste panel says `serial_number` is mandatory. The parser does not.
+
+The instructions now read *"Your spreadsheet needs a serial_number column."*
+`parsePastedInventoryRows.js:140` disagrees: with no such column it takes the
+first one and carries on
+(`const primaryIndex = namedPrimary >= 0 ? namedPrimary : 0`).
+
+Left as it is on purpose — there is a decision of his underneath it. He pushed
+against the fallback at `22:47` (*"No, I think we need to have a serial
+number"*) and accepted it at `23:47` once it was explained. And a paste with no
+header row has no column names at all, so a blanket requirement would break that
+path outright.
+
+Three ways to close it:
+
+1. **Require it only when the paste has a header row.** A paste with column
+   names and no `serial_number` is refused, with the reason. The no-header path
+   keeps using the first column. Makes the sentence true without breaking
+   anything. *Recommended.*
+2. **Keep the fallback and soften the sentence** — "uses a serial_number
+   column" rather than "needs one".
+3. **Leave both as they are.** Not recommended: it is the class of mismatch this
+   week has otherwise been spent removing.
+
+---
+
+## 7. Not on his list, found while working
 
 These were not asked for. They are here so they are not re-discovered from
 scratch.
@@ -184,7 +212,7 @@ scratch.
 
 ---
 
-## 7. Suggested order for the next session
+## 8. Suggested order for the next session
 
 He asked for a faster cadence (P2 `25:31`) — *"I'd rather keep going like more,
 more, more now, because I learn from it too."* So the next session is worth
