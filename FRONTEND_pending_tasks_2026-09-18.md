@@ -32,11 +32,11 @@
 | 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
 | 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | **done** |
 | 8 | Pre-fill location in step 2 from the copied group | P1 `13:55`–`14:55` | **done** |
-| 9 | Rewrite the "One at a time" instructions | P1 `16:17`–`19:21` | P2 |
-| 10 | Rename the three unit-entry options | P1 `18:25`–`19:21` | P2 |
-| 11 | Rewrite the paste-a-list instructions | P1 `19:26`–`26:30` | P2 |
+| 9 | Rewrite the "One at a time" instructions | P1 `16:17`–`19:21` | **done** |
+| 10 | Rename the three unit-entry options | P1 `18:25`–`19:21` | **done** |
+| 11 | Rewrite the paste-a-list instructions | P1 `19:26`–`26:30` | **done** |
 | 12 | Align the paste placeholder's example columns | P1 `20:50`–`21:32` | **done** |
-| 13 | Delete the redundant scanner instructions | P1 `27:07`–`27:38` | P3 |
+| 13 | Delete the redundant scanner instructions | P1 `27:07`–`27:38` | **done** |
 | 14 | XLSX template: rename "Group" to "Item Name" | P2 `1:02`–`2:47` | **done** |
 | 15 | Delete every "also accepted as"; make column names strict | P2 `2:23`–`5:58` | **done** |
 | 16 | "Taxable Location" description | P2 `2:54`–`3:58` | P3 |
@@ -473,6 +473,38 @@ inline. Line them up as columns. He explicitly called this low priority.
 > recorded… You can take this away, because that's understood."
 
 Remove that paragraph from the scan panel.
+
+---
+
+#### 9, 10, 11 and 13 done 2026-09-21
+
+Written to one standard, set by Gustavo: it has to be readable by a ten-year
+old. Which is what `25:06` was already asking for — *"You need to be able to
+articulate this in a way that it makes sense to people."*
+
+**The three options say what they are for.** "Enter one at a time" for units
+whose extra details differ; scanner for serial numbers and nothing else; paste
+for many units with many details, out of a spreadsheet.
+
+**The "Scan labels" reference is gone, not corrected.** It named a control that
+has never existed under that name (§5). The three radios sit right above the
+text and now each says what it does, so the cross-reference had nothing left to
+do — and one fewer reference is one fewer thing that can drift.
+
+**Two of his dictated phrases were not used verbatim**, and this is worth
+raising with him rather than burying:
+
+- `22:38` "will be used as the primary key and labeled serial number in the
+  system" → *"becomes each unit's serial number — the one the system uses to
+  tell your units apart."* "Primary key" is developer language; the replacement
+  says what it does.
+- `26:30` "run the operation again" → *"paste the rest afterwards."* Same
+  instruction, fewer abstractions.
+
+Everything else follows his wording closely, including **ONLY** in caps, which
+he asked for in those words.
+
+**"Paste a list" was left unrenamed.** He said explicitly it stays (`19:26`).
 
 ---
 

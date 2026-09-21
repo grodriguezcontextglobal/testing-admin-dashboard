@@ -61,11 +61,12 @@ const ScanUnitsPanel = ({ existingSerials, onScan }) => {
         color="text.secondary"
         sx={{ width: "100%", textAlign: "left", mb: 2 }}
       >
-        Point the scanner at each label and pull the trigger. Every read is
-        recorded and the field clears itself, ready for the next one. Units
-        added this way carry a serial number only. Use{" "}
-        <strong>&quot;One at a time&quot;</strong> if a unit needs additional
-        identifiers.
+        {/* "point the scanner at each label, pull a trigger. Every grid is
+            recorded… You can take this away, because that's understood."
+            — P1 `27:07`. What is left is the part that is not obvious: this
+            path records nothing but the serial number. */}
+        Units added here have a serial number and nothing else. Use{" "}
+        <strong>Enter one at a time</strong> if a unit needs extra details.
       </Typography>
 
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>

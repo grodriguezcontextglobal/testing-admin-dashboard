@@ -15,29 +15,35 @@ const renderPanel = () =>
   render(<ScanUnitsPanel existingSerials={[]} onScan={vi.fn()} />);
 
 describe("ScanUnitsPanel copy", () => {
-  it("tells the operator what to do without telling them what they need not do", () => {
+  /* The two sentences this used to open with — point the scanner at a label,
+     pull the trigger, the field clears itself — were deleted on his say-so:
+     "You can take this away, because that's understood" (P1 `27:07`). Pinned
+     so they do not creep back the next time someone feels the panel looks
+     empty. */
+  it("does not explain how to use a barcode scanner", () => {
     const { container } = renderPanel();
-    expect(container.textContent).toContain(
-      "Point the scanner at each label and pull the trigger."
-    );
-    expect(container.textContent).not.toMatch(/never have to/i);
-    expect(container.textContent).not.toMatch(/no mouse|do not have to/i);
+
+    expect(container.textContent).not.toMatch(/point the scanner/i);
+    expect(container.textContent).not.toMatch(/pull the trigger/i);
+    expect(container.textContent).not.toMatch(/clears itself/i);
   });
 
-  it("ends the sentence at what the units carry", () => {
+  /* What is left is the one thing that is not obvious from looking at it. */
+  it("says the one thing a scan does not record", () => {
     const { container } = renderPanel();
+
     expect(container.textContent).toContain(
-      "Units added this way carry a serial number only."
+      "Units added here have a serial number and nothing else."
     );
-    expect(container.textContent).not.toContain("and nothing else");
   });
 
-  it("quotes the menu item it is pointing at, and asks for additional identifiers", () => {
+  /* And sends them to the option that does, by the name that option now
+     actually has — it used to quote "One at a time", which is no longer what
+     the radio says. */
+  it("points at the other option by its real name", () => {
     const { container } = renderPanel();
-    expect(container.textContent).toContain('Use "One at a time"');
-    expect(container.textContent).toContain(
-      "if a unit needs additional identifiers"
-    );
-    expect(container.textContent).not.toContain("extra identifiers");
+
+    expect(container.textContent).toContain("Enter one at a time");
+    expect(container.textContent).toContain("if a unit needs extra details");
   });
 });

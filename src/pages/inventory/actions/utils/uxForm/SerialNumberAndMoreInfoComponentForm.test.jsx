@@ -47,3 +47,39 @@ describe("SerialNumberAndMoreInfoComponentForm — remount after Review", () => 
     expect(screen.queryByText("SN-1")).not.toBeInTheDocument();
   });
 });
+
+/* P1 `17:28` — "This whole thing here is not good… I don't even understand what
+   this means at all." The three ways of entering units, and what each is for,
+   are pinned here because that is the whole of what was wrong with them. */
+describe("the three ways of adding units", () => {
+  it("names each option by what it does", () => {
+    setup();
+
+    expect(screen.getByRole("radio", { name: "Enter one at a time" })).toBeInTheDocument();
+    /* Capitalised on his instruction — `19:13`, "put only in caps" — because it
+       is the answer to "can the scanner carry extra identifiers?". */
+    expect(
+      screen.getByRole("radio", { name: "Use scanner to scan serial numbers ONLY" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Paste a list" })).toBeInTheDocument();
+  });
+
+  it("says when to enter units one at a time, in one sentence", () => {
+    setup();
+
+    expect(document.body.textContent).toContain(
+      "Use this when your units carry different details from each other"
+    );
+  });
+
+  /* The old block sent the reader to "Scan labels", a control that has never
+     existed under that name — the radio next to it said something else. */
+  it("does not point at a control that is not there", () => {
+    setup();
+
+    expect(document.body.textContent).not.toMatch(/scan labels/i);
+    expect(document.body.textContent).not.toMatch(
+      /For serial numbers alone, in volume/i
+    );
+  });
+});

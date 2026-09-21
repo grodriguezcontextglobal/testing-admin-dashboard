@@ -198,8 +198,12 @@ const SerialNumberAndMoreInfoComponentForm = ({
           onChange={(event) => setMode(event.target.value)}
           style={{ margin: "0.5rem 0 1rem" }}
         >
-          <Radio value="one">One at a time</Radio>
-          <Radio value="scan">Scan Serial Numbers</Radio>
+          {/* "ONLY" is capitalised because he asked for it in those words —
+              P1 `19:13`, "use scanner to scan serial numbers only and put only
+              in caps" — to answer the objection that the scanner path cannot
+              carry extra identifiers. */}
+          <Radio value="one">Enter one at a time</Radio>
+          <Radio value="scan">Use scanner to scan serial numbers ONLY</Radio>
           <Radio value="paste">Paste a list</Radio>
         </Radio.Group>
 
@@ -224,12 +228,24 @@ const SerialNumberAndMoreInfoComponentForm = ({
               color="text.secondary"
               sx={{ width: "100%", textAlign: "left", mb: 2 }}
             >
-              For a handful of units, or one that carries identifiers the others
-              do not. Tick the identifier that holds the serial number; the first
-              one is used if you tick none. For serial numbers alone, in volume,
-              use <strong>Scan labels</strong>. A scanner works here too — it
-              types the
-              code and presses Enter, which adds the unit.
+              {/* He read the old first sentence aloud three times and could
+                  not parse it (P1 `16:59`, `17:01`, `17:28`). What it meant,
+                  in Gustavo's words at `17:04`: different units carry different
+                  identifiers, so each one has to be entered on its own.
+
+                  It also pointed at <strong>Scan labels</strong>, a control
+                  that does not exist — the radio above says something else.
+                  The cross-reference is gone rather than corrected: the three
+                  options are right there and each now says what it is for. */}
+              Use this when your units carry different details from each other —
+              one has a MAC address, the next has an asset tag. You add one unit
+              at a time, and each can have its own details.
+              <br />
+              Tick the box next to the detail that is the serial number. If you
+              tick none, the first one is used.
+              <br />
+              A scanner works here too: it types the code and presses Enter,
+              which adds the unit.
             </Typography>
 
             <Grid container>

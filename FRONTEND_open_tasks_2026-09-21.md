@@ -12,18 +12,18 @@
 
 ## 0. Where it stands
 
-**13 of 28 closed. 15 open.** Ten of the thirteen were closed this week; three
-were already true in the code when the list was written.
+**17 of 28 closed. 11 open.** Fourteen of the seventeen were closed this week;
+three were already true in the code when the list was written.
 
 Two of the closed ones are only closed **on the client**. They are marked so,
 and each names the one thing the backend still has to do.
 
 | | |
 |---|---|
-| Closed | 1, 2*, 3*, 4, 7, 8, 12, 14, 15, 18, 20, plus the three in §4 of the source list |
+| Closed | 1, 2*, 3*, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 20, plus the three in §4 |
 | Open, P1 | 21 |
-| Open, P2 | 5, 6, 9, 10, 11, 22, 25, 26, 27 |
-| Open, P3 | 13, 16, 17, 19, 23, 24, 28 |
+| Open, P2 | 5, 6, 22, 25, 26, 27 |
+| Open, P3 | 16, 17, 19, 23, 24, 28 |
 
 `*` client done, waiting on the backend.
 
@@ -108,22 +108,15 @@ values end to end. Nothing in the new path has been through a browser yet.
 
 ## 3. Open — the add-inventory wizard (P2/P3)
 
-Items 4 to 13, less the two closed. None of these started.
+What is left of items 4 to 13: two, both unstarted.
 
 | # | Item | Where |
 |---|---|---|
 | 5 | Step-1 notice must name step 5 explicitly | `10:16`–`10:30` |
 | 6 | Validation error is too easy to miss | `13:27`–`13:55` |
-| 9 | Rewrite the "One at a time" instructions | `16:17`–`19:21` |
-| 10 | Rename the three unit-entry options | `18:25`–`19:21` |
-| 11 | Rewrite the paste-a-list instructions | `19:26`–`26:30` |
-| 13 | Delete the redundant scanner instructions | `27:07`–`27:38` |
 
-**Two of these are cheaper than they look if done together.** 9 and 10 are the
-same block of copy, and §5 of the source list found a real defect inside it: the
-body text says *"use **Scan labels**"* while the control is labelled **"Scan
-Serial Numbers"** (`SerialNumberAndMoreInfoComponentForm.jsx:230` vs `:202`).
-That is a bug, not a preference, and it should not be left to ride along.
+The §5 defect that lived in this block — body text pointing at a **"Scan
+labels"** control that does not exist — went with the rewrite of 9.
 
 **The pre-fill pattern is now one helper.** `agreedValue(items, field)` in
 `updateInventoryMatchSummary.js` — pre-fill only when the group agrees, leave it

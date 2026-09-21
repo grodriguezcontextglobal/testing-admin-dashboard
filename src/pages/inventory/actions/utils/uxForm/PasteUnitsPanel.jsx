@@ -23,11 +23,18 @@ import parsePastedInventoryRows, {
  * inventory, and a wrong serial number is not something the next screen can
  * detect.
  */
-const PLACEHOLDER = [
-  "Serial Number\tIMEI\tDevice ID",
-  "sdffaf1\tkdhfhk\td654f64",
-  "sdffaf2\toirl\t65u3rtet6",
-].join("\n");
+// const PLACEHOLDER = [
+//   "Serial Number\tIMEI\tDevice ID",
+//   "sdffaf1\tkdhfhk\td654f64",
+//   "sdffaf2\toirl\t65u3rtet6",
+// ].join("\n");
+
+const PLACEHOLDER = `serial_nummber	Device ID	IMEI	Second ID	Factory ID
+YT-005250	IKJ5216DS	88S5D58	55-YT-OI-5519	65S554DE5D71DWE1B16DV8V
+YT-005251	IKJ5216DT		55-YT-OI-5520	984JH84H6J651RT651F61J65K
+YT-005252	IKJ5216DE	88S5D60	55-YT-OI-5521	
+YT-005253	IKJ5216DH		55-YT-OI-5522	
+`
 
 const PasteUnitsPanel = ({ existingSerials, onAdd }) => {
   const [text, setText] = useState("");
@@ -79,12 +86,24 @@ const PasteUnitsPanel = ({ existingSerials, onAdd }) => {
         color="text.secondary"
         sx={{ width: "100%", textAlign: "left", mb: 1 }}
       >
-        Copy the rows straight out of your spreadsheet and paste them here. The
-        column named <strong>serial_number</strong> is used as each unit&apos;s
-        serial; if there is no such column, the first one is used. Every other
-        column becomes an extra identifier, and units do not have to carry the
-        same ones. Up to {MAX_PASTED_LINES.toLocaleString()} lines per paste,
-        header row included — paste again for the next batch.
+        {/* Dictated almost line by line at P1 `22:38`–`26:30`. Two changes to
+            his exact words, both to keep it readable: "primary key" is said as
+            what it does, and the fallback sentence is spelled out — he rejected
+            the old one-liner (`22:47`) and accepted the behaviour once it was
+            explained (`23:47`), so it is the explaining that was missing. */}
+        Copy the rows from your spreadsheet and paste them here.
+        <br />
+        The column named <strong>serial_number</strong> becomes each unit&apos;s
+        serial number — the one the system uses to tell your units apart. If
+        there is no <strong>serial_number</strong> column, the first column is
+        used instead, and it keeps its own name as an extra detail.
+        <br />
+        Every other column becomes an extra detail for that unit. Your units do
+        not all need the same ones.
+        <br />
+        You can only paste up to {MAX_PASTED_LINES.toLocaleString()} lines,
+        counting the row of column names. If you have more, paste the rest
+        afterwards.
       </Typography>
 
       <TextArea
