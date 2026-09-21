@@ -9,7 +9,7 @@ import {
 
 const sheetRow = (overrides = {}) => ({
   category_name: "Audio",
-  item_group: "Wireless Microphone",
+  device_name: "Wireless Microphone",
   serial_number: "AUD-2026-000001",
   cost: 258.42,
   brand: "Shure",

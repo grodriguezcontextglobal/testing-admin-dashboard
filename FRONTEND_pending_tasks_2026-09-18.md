@@ -37,7 +37,7 @@
 | 11 | Rewrite the paste-a-list instructions | P1 `19:26`–`26:30` | P2 |
 | 12 | Align the paste placeholder's example columns | P1 `20:50`–`21:32` | P3 |
 | 13 | Delete the redundant scanner instructions | P1 `27:07`–`27:38` | P3 |
-| 14 | XLSX template: rename "Group" to "Item Name" | P2 `1:02`–`2:47` | P2 |
+| 14 | XLSX template: rename "Group" to "Item Name" | P2 `1:02`–`2:47` | **done** |
 | 15 | Delete every "also accepted as"; make column names strict | P2 `2:23`–`5:58` | **done** |
 | 16 | "Taxable Location" description | P2 `2:54`–`3:58` | P3 |
 | 17 | "Sub Locations" description — drop "outermost first" | P2 `5:58`–`7:49` | P3 |

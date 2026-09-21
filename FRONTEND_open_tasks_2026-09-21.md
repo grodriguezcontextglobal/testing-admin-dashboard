@@ -12,7 +12,7 @@
 
 ## 0. Where it stands
 
-**8 of 28 closed. 20 open.** Five of the eight were closed this week; three were
+**9 of 28 closed. 19 open.** Six of the nine were closed this week; three were
 already true in the code when the list was written.
 
 Two of the closed ones are only closed **on the client**. They are marked so,
@@ -20,9 +20,9 @@ and each names the one thing the backend still has to do.
 
 | | |
 |---|---|
-| Closed | 1, 2*, 3*, 15, 18, 20, plus the three in §4 of the source list |
+| Closed | 1, 2*, 3*, 14, 15, 18, 20, plus the three in §4 of the source list |
 | Open, P1 | 21 |
-| Open, P2 | 4, 5, 6, 7, 8, 9, 10, 11, 14, 22, 25, 26, 27 |
+| Open, P2 | 4, 5, 6, 7, 8, 9, 10, 11, 22, 25, 26, 27 |
 | Open, P3 | 12, 13, 16, 17, 19, 23, 24, 28 |
 
 `*` client done, waiting on the backend.
@@ -71,6 +71,17 @@ The half that was not just deletion: a renamed column used to fail every row
 individually, so a 500-row file reported 500 skipped rows and never named the
 column. The header row is now checked once and the preview says which column is
 missing and which unrecognised one took its place.
+
+### 14 — the column is `device_name`
+> P2 `1:43` — "when I say group, I can think about group of the devices… The
+> word group is confusing. So let's just call it for what it is, item name."
+
+Done as a column rename only. The header is `device_name`; the field it carries,
+and what the request sends, is still `item_group` — renaming that reaches
+`item_inv` and every writer of it, which is a migration and not a copy edit.
+
+It is the one column whose name is not its field. Everywhere else the two are
+the same string, which is what removed the translation table in the first place.
 
 ### 20 — the Image column no longer accepts a public URL
 > P2 `9:38` — "absolutely no link outside Devitrak."
@@ -129,40 +140,14 @@ time.
 
 | # | Item | Where | Note |
 |---|---|---|---|
-| 14 | Rename "Group" to "Item Name" | `1:02`–`2:47` | **In conflict with the naming decision — see below** |
 | 16 | "Taxable Location" description | `2:54`–`3:58` | |
 | 17 | "Sub Locations" — drop "outermost first" | `5:58`–`7:49` | |
 | 19 | Extra identifiers — approved, minor trim | `8:34`–`9:34` | |
 
-### 14 pulls against the decision that columns are field names
-
-> P2 `1:43` — "when I say group, I can think about group of the devices… The word
-> group is confusing. So let's just call it for what it is, item name."
-
-He is right about the word. But the columns are now named after the fields the
-request carries — the column *is* `item_group`, the same string the server
-reads — and that identity is the point: no table of translations for anyone to
-get wrong. Renaming the column to "Item Name" puts the translation back.
-
-Three ways out, and the choice is a product one:
-
-1. **Leave the column `item_group` and answer the confusion in its description**
-   — the tour step is where "what this column means" belongs, and it can say
-   plainly that this is the device's name, not a grouping of devices. Cheapest,
-   keeps the identity, and addresses what actually confused him.
-2. **Rename the field everywhere**, front and back, so the column can read
-   `item_name` and still be the wire name. Honest but expensive, and it touches
-   `item_inv` and every writer of it.
-3. **Break the identity for this one column.** Not recommended: one exception is
-   how the alias table grew the first time.
-
-Recommendation: (1), and close 14 as answered rather than done.
-
-16, 17 and 19 are edits to `header` and `notes` in one file,
+All three are edits to `notes` in one file,
 `src/pages/inventory/utils/inventoryImportTemplate.js`, and that file has a test
 pinning the guide, the downloadable template and the parser's headers to each
-other. They are an hour's work as a batch and a week of drift one at a time.
-14 is the one to keep separate now that it breaks existing spreadsheets.
+other. An hour as a batch, a week of drift one at a time.
 
 ---
 
@@ -216,9 +201,7 @@ He asked for a faster cadence (P2 `25:31`) — *"I'd rather keep going like more
 more, more now, because I learn from it too."* So the next session is worth
 arriving at with the cheap batches already done.
 
-1. **The template batch — 16, 17, 19** — one file, one test, one pass. Then
-   **14** on its own, because it now breaks every spreadsheet in the wild and
-   deserves to be announced rather than slipped in.
+1. **The template batch — 16, 17, 19** — one file, one test, one pass.
 2. **The Review screen — 26 first, then 24, 25, 27.**
 3. **The wizard copy — 9, 10, 11, 12, 13**, folding in the "Scan labels"
    mismatch.

@@ -74,8 +74,11 @@ export const normalizeHeader = (value) =>
  *
  * **`header` is the field name the request carries.** Not "Category" but
  * `category_name`, not "Taxable Location" but `main_warehouse`. A column and a
- * field are now the same thing, so there is no table of translations for anyone
- * to get wrong — not the customer filling the sheet in, not us reading it.
+ * field are the same thing, so there is no table of translations for anyone to
+ * get wrong — not the customer filling the sheet in, not us reading it.
+ *
+ * One column breaks that on purpose: `device_name`, which carries `item_group`.
+ * Its own entry says why.
  *
  * `BulkItemsFields.jsx` is the manual "Add new item" form and its `name` values
  * were the reference for this. They agree on eleven of the twelve. The
@@ -113,13 +116,26 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Audio", "Interpretation", "Fitness"],
   },
   {
-    header: "item_group",
+    /* The one column whose name is not the field it carries. `item_group` is
+       what the request sends and what `item_inv` stores, and renaming that is a
+       migration; `device_name` is what the column is called, because "group"
+       was read as "a group of devices" rather than "the name of this device":
+
+       > P2 `1:43` — "when I say group, I can think about group of the devices,
+       > which is kind of maybe interpretation receivers is a group of devices.
+       > So it's open up for confusion… let's just call it for what it is, item
+       > name."
+
+       Kept to this one column on purpose. `header` and `field` being the same
+       string everywhere else is what removed the translation table; a second
+       exception would start rebuilding it. */
+    header: "device_name",
     field: "item_group",
     required: true,
     width: 180,
     notes: [
       "The group name every unit of this model shares, e.g. 'PL6 RF Receiver'.",
-      "Rows sharing a category_name and an item_group are imported as one group.",
+      "Rows sharing a category_name and a device_name are imported as one group.",
     ],
     samples: ["Audio Device 1", "PL6 RF Receiver", "C4 Pre Workout"],
   },

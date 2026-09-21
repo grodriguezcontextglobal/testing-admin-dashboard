@@ -122,6 +122,13 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
 /* Fredrik, part 2 `5:51`: "delete for every single column here, also accepted
    as, all that, take it away." The header is the only spelling there is. */
 describe("columnForHeader", () => {
+  /* The one column named differently from the field it carries. */
+  it("maps device_name onto item_group", () => {
+    expect(columnForHeader("device_name")?.field).toBe("item_group");
+    expect(headerFor("item_group")).toBe("device_name");
+    expect(columnForHeader("item_group")).toBeUndefined();
+  });
+
   it("matches the documented header", () => {
     expect(columnForHeader("serial_number")?.field).toBe("serial_number");
   });
