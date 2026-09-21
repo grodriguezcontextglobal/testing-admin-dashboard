@@ -11,7 +11,6 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApiAdmin } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
-import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { onUpdateMfaStatus } from "../../../store/slices/adminSlice";
@@ -77,24 +76,13 @@ const MfaSetup = () => {
     }
   };
 
-  const handleDisableMfa = async () => {
-    try {
-      setLoading(true);
-      await devitrakApiAdmin.post("/mfa/disable");
-      dispatch(onUpdateMfaStatus(false));
-      message.success("MFA has been disabled");
-      notify(
-        "info",
-        "MFA Disabled",
-        "Multi-Factor Authentication has been disabled for your account.",
-      );
-    } catch (error) {
-      console.error("Error disabling MFA:", error);
-      message.error("Failed to disable MFA");
-    } finally {
-      setLoading(false);
-    }
-  };
+  /* There is no "disable" here any more, and the endpoint it called is left
+     unused. MFA became a condition of access, not a preference: login refuses
+     to hand out a session to an account without it, so a switch that turned it
+     off would only strand the account outside the app until it enrolled again.
+
+     > "let's force that you have to have the multi-factor authentication
+     > activated" — beta testing 2026-09-18, part 1 `6:38`. */
 
   useEffect(() => {
     !mfaEnabled && handleGenerateMfa();
@@ -218,17 +206,10 @@ const MfaSetup = () => {
                 MFA is Active
               </Typography>
               <Typography sx={{ ...bodyTextStyle, mb: 2 }}>
-                Your account is now secured with Multi-Factor Authentication.
+                Your account is secured with Multi-Factor Authentication.
+                Devitrak requires it on every account, so it cannot be turned
+                off. To move it to a different phone, contact support.
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item>
-                  <DangerButtonComponent
-                    title="Disable MFA"
-                    func={handleDisableMfa}
-                    loadingState={loading}
-                  />
-                </Grid>
-              </Grid>
             </Grid>
           )}
         </Grid>

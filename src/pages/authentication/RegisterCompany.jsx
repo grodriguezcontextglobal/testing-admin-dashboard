@@ -19,6 +19,7 @@ import DevitrakTermsAndConditions, {
   agreedAgreement,
 } from "./actions/DevitrakTermsAndConditions";
 import CompanyRegistration from "./ux/CompanyRegistration";
+import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
@@ -47,6 +48,10 @@ const RegisterCompany = () => {
   const [locationList, setLocationList] = useState([]);
   const [newlocation, setNewlocation] = useState("");
   const [triggerModal, setTriggerModal] = useState(false);
+  /* The JWT POST /registration/new answers with. The app never stores it — the
+     new account still has to sign in — but it is what authenticates the MFA
+     enrolment that finishes the sign-up. */
+  const [enrollmentToken, setEnrollmentToken] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -266,6 +271,20 @@ const RegisterCompany = () => {
       queryClient.clear();
       setLoadingStatus(false);
       api.destroy();
+
+      /* Two-step verification is set up here, before the account is ever used,
+         because this is the one moment in sign-up where a token exists:
+         /registration/new issues one, and /api/admin/mfa/* only asks for a
+         valid JWT. The existing-user path (/registration/add-company) returns
+         no token — that account already exists and the login gate catches it.
+
+         > "let's force that you have to have the multi-factor authentication
+         > activated" — beta testing 2026-09-18, part 1 `6:38`. */
+      if (apiResponse.token) {
+        openNotificationWithIcon("success", "Account created.", "One last step: secure it with two-step verification.", 4);
+        return setEnrollmentToken(apiResponse.token);
+      }
+
       openNotificationWithIcon("success", "Account created.", "Your new account was created. Please log in.", 3);
       navigate("/register/connected-account");
     } catch (error) {
@@ -275,9 +294,41 @@ const RegisterCompany = () => {
       setLoadingStatus(false);
     }
   };
+  /**
+   * Leaving enrolment unfinished does not leave the account unprotected: the
+   * login gate asks again, and it cannot be walked past. Saying so here is
+   * fairer than a modal that pretends there is no way forward, on a page where
+   * the account has already been created.
+   */
+  const handleEnrollmentClosed = () => {
+    setEnrollmentToken("");
+    navigate("/register/connected-account");
+  };
+
+  const handleEnrolled = () => {
+    openNotificationWithIcon(
+      "success",
+      "Two-step verification is on.",
+      "Your authenticator app will give you a code every time you sign in.",
+      4,
+    );
+    handleEnrollmentClosed();
+  };
+
   return (
     <>
       {contextHolder}
+      {enrollmentToken && (
+        <MfaEnrollmentModal
+          open={Boolean(enrollmentToken)}
+          authToken={enrollmentToken}
+          email={user.email}
+          onEnrolled={handleEnrolled}
+          onDismiss={handleEnrollmentClosed}
+          dismissLabel="Set this up at first sign-in"
+          dismissHint="Devitrak requires two-step verification, so signing in will ask for this before letting you through."
+        />
+      )}
       <DevitrakTermsAndConditions
         open={triggerModal}
         setOpen={() => setTriggerModal(false)}

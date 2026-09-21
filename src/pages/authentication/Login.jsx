@@ -64,8 +64,10 @@ import {
   buildLoginPayload,
   fieldsToClearFor,
 } from "./utils/loginPayload";
+import { markEnrolled, needsMfaEnrollment } from "./utils/mfaEnrollment";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
+const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
 
 const Login = () => {
   const { register, handleSubmit, setValue } = useForm();
@@ -78,6 +80,7 @@ const Login = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [forceLogin, setForceLogin] = useState(false);
   const [currentStep, setCurrentStep] = useState("email"); // "email" or "password"
+  const [mfaEnrollmentOpen, setMfaEnrollmentOpen] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const dispatch = useDispatch();
@@ -111,6 +114,11 @@ const Login = () => {
   );
 
   const dataPassed = useRef(null);
+
+  /* An authenticated login held open while the account enrols in MFA. A ref,
+     not state: nothing renders from it except the token handed to the modal,
+     and `setMfaEnrollmentOpen` is the render that reads it. */
+  const pendingLogin = useRef(null);
 
   const addingEventState = useCallback(async (props) => {
     const sqpFetchInfo = await devitrakApi.post(
@@ -340,137 +348,245 @@ const Login = () => {
         throw new Error("Email not found in any company");
       }
 
+      /* Mandatory MFA. The server only challenges for a code when the account
+         already has one, so an account that never enrolled has just
+         authenticated on a password alone and is, at this line, one step from a
+         session. This is where it stops: the credentials were right, but
+         nothing is stored and nowhere is navigated until MFA is on.
 
-      const tokenHeaders = {
-        headers: {
-          "x-token": loginResponse.data.token,
-          "Cache-Control": "no-cache",
-          "Pragma": "no-cache",
-        },
-      };
+         Enrolment resumes at `continueAfterAuthentication` rather than at a
+         second login — the token in hand is the one the rest of the flow uses,
+         and asking for the password again would buy nothing.
 
-      // 1. Get staff_id first — this endpoint does NOT need sqlStaffId
-      const staffMemberResponse = await devitrakApi.post(
-        "/db_staff/consulting-member",
-        { email: loginData.email });
-      const staffId = extractStaffId(staffMemberResponse.data);
-      if (staffId) localStorage.setItem("s-token-lq", String(staffId));
+         > "let's force that you have to have the multi-factor authentication
+         > activated" — beta testing 2026-09-18, part 1 `6:38`. */
+      if (needsMfaEnrollment(loginResponse.data)) {
+        pendingLogin.current = {
+          loginData,
+          loginResponse,
+          mongoCompanyResponse,
+        };
+        setMfaEnrollmentOpen(true);
+        return;
+      }
 
-      // 2. Now call companies with sqlStaffId available
-      const sqlCompaniesResponse = await devitrakApi.get("/db_staff/companies", {
-        headers: {
-          ...tokenHeaders.headers,
-          ...(staffId ? { sqlStaffId: String(staffId) } : {}),
-        },
+      await continueAfterAuthentication({
+        loginData,
+        loginResponse,
+        mongoCompanyResponse,
       });
-
-      const activeCompanies = buildActiveCompaniesFromSQL(
-        sqlCompaniesResponse.data.companies ?? [],
-      );
-
-      if (activeCompanies.length > 1) {
-        await handleMulitpleCompanyLogin({
-          ...loginData,
-          companyInfo: activeCompanies,
-          company_data: mongoCompanyResponse.data.company,
-          sqlMemberInfo: checkArray(staffMemberResponse.data.member),
-          respo: loginResponse.data,
-        });
-      } else if (activeCompanies.length === 1) {
-        await loginIntoOneCompanyAccount({
-          props: {
-            email: loginData.email,
-            password: loginData.password,
-            company_name: activeCompanies[0].company,
-            role: activeCompanies[0].role,
-            roleType: activeCompanies[0].roleType,
-            locations: activeCompanies[0].locations,
-            categories: activeCompanies[0].categories,
-            company_data: mongoCompanyResponse.data.company,
-            sqlMemberInfo: checkArray(staffMemberResponse.data.member),
-            respo: loginResponse.data,
-          },
-        });
-      } else {
-        openNotificationWithIcon(
-          "error",
-          "No active company assignments found.",
-        );
-      }
     } catch (error) {
-      // Check for MFA requirement with flexible property naming and status codes
-      const responseData = error.response?.data;
-      const isMfaRequired =
-        responseData?.mfaRequired ||
-        responseData?.mfa_required ||
-        responseData?.error === "mfa_required" ||
-        responseData?.msg === "mfa_required";
-
-      // 401 on the companies endpoint means the token lacks sqlStaffId (legacy token).
-      // Skip this handler if it's an MFA-required 401 from the login endpoint itself.
-      if (error.response?.status === 401 && !isMfaRequired) {
-        clearSessionStorage();
-        dispatch(onLogout());
-        goToStep(LOGIN_STEPS.EMAIL);
-        openNotificationWithIcon(
-          "error",
-          "Session expired or token is outdated. Please log in again.",
-        );
-        return;
-      }
-
-      if (
-        (error.response?.status === 403 || error.response?.status === 401) &&
-        isMfaRequired
-      ) {
-        if (currentStep === "mfa") {
-          openNotificationWithIcon(
-            "error",
-            responseData?.msg || "Invalid MFA Code",
-          );
-        } else {
-          goToStep(LOGIN_STEPS.MFA);
-          dispatch(clearErrorMessage());
-        }
-        return;
-      }
-
-      const message = () => {
-        switch (error.response?.data?.msg) {
-          case "User is not found":
-            return "You have entered an invalid username or password";
-          case "Incorrect password":
-            return "You have entered an invalid username or password";
-          case "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session.":
-            return forceEndActiveSession(error.response?.data?.msg);
-          default:
-            return error.response?.data?.msg || "An error occurred";
-        }
-      };
-      openNotificationWithIcon("error", message());
-
-      // If we are in MFA step and the error is not a session conflict, allow retry
-      if (
-        currentStep === "mfa" &&
-        error.response?.data?.msg !==
-        "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session."
-      ) {
-        setValue("mfaCode", ""); // Clear invalid code
-        return; // Stay on MFA step
-      }
-
-      clearSessionStorage();
-      dispatch(onLogout("Incorrect credentials"));
-      dispatch(onAddErrorMessage(error?.response?.data?.msg));
-
-      // Reset form and go back to email step on error
-      goToStep(LOGIN_STEPS.EMAIL);
-      // setUserEmail("");
-      setValue("email", "");
+      handleLoginFailure(error);
     } finally {
       setIsLoading(false);
       dispatch(clearErrorMessage());
     }
+  };
+
+  /**
+   * Everything that happens once the credentials are accepted: the staff id,
+   * the company list, and then either the company picker or the single company
+   * the account belongs to.
+   *
+   * Split out of `onSubmitLogin` because the MFA gate suspends the login
+   * exactly between the two. When enrolment finishes there is nothing left to
+   * authenticate — the login response is still in hand — so the resumed flow
+   * re-enters here instead of sending the password a second time.
+   */
+  const continueAfterAuthentication = async ({
+    loginData,
+    loginResponse,
+    mongoCompanyResponse,
+  }) => {
+    const tokenHeaders = {
+      headers: {
+        "x-token": loginResponse.data.token,
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+      },
+    };
+
+    // 1. Get staff_id first — this endpoint does NOT need sqlStaffId
+    const staffMemberResponse = await devitrakApi.post(
+      "/db_staff/consulting-member",
+      { email: loginData.email });
+    const staffId = extractStaffId(staffMemberResponse.data);
+    if (staffId) localStorage.setItem("s-token-lq", String(staffId));
+
+    // 2. Now call companies with sqlStaffId available
+    const sqlCompaniesResponse = await devitrakApi.get("/db_staff/companies", {
+      headers: {
+        ...tokenHeaders.headers,
+        ...(staffId ? { sqlStaffId: String(staffId) } : {}),
+      },
+    });
+
+    const activeCompanies = buildActiveCompaniesFromSQL(
+      sqlCompaniesResponse.data.companies ?? [],
+    );
+
+    if (activeCompanies.length > 1) {
+      await handleMulitpleCompanyLogin({
+        ...loginData,
+        companyInfo: activeCompanies,
+        company_data: mongoCompanyResponse.data.company,
+        sqlMemberInfo: checkArray(staffMemberResponse.data.member),
+        respo: loginResponse.data,
+      });
+    } else if (activeCompanies.length === 1) {
+      await loginIntoOneCompanyAccount({
+        props: {
+          email: loginData.email,
+          password: loginData.password,
+          company_name: activeCompanies[0].company,
+          role: activeCompanies[0].role,
+          roleType: activeCompanies[0].roleType,
+          locations: activeCompanies[0].locations,
+          categories: activeCompanies[0].categories,
+          company_data: mongoCompanyResponse.data.company,
+          sqlMemberInfo: checkArray(staffMemberResponse.data.member),
+          respo: loginResponse.data,
+        },
+      });
+    } else {
+      openNotificationWithIcon(
+        "error",
+        "No active company assignments found.",
+      );
+    }
+  };
+
+  /**
+   * What a failed attempt does. Unchanged in substance — lifted out of the
+   * catch block so the login resumed after enrolment lands in the same handling
+   * instead of a second copy of it.
+   */
+  const handleLoginFailure = (error) => {
+    // Check for MFA requirement with flexible property naming and status codes
+    const responseData = error.response?.data;
+    const isMfaRequired =
+      responseData?.mfaRequired ||
+      responseData?.mfa_required ||
+      responseData?.error === "mfa_required" ||
+      responseData?.msg === "mfa_required";
+
+    // 401 on the companies endpoint means the token lacks sqlStaffId (legacy token).
+    // Skip this handler if it's an MFA-required 401 from the login endpoint itself.
+    if (error.response?.status === 401 && !isMfaRequired) {
+      clearSessionStorage();
+      dispatch(onLogout());
+      goToStep(LOGIN_STEPS.EMAIL);
+      openNotificationWithIcon(
+        "error",
+        "Session expired or token is outdated. Please log in again.",
+      );
+      return;
+    }
+
+    if (
+      (error.response?.status === 403 || error.response?.status === 401) &&
+      isMfaRequired
+    ) {
+      if (currentStep === "mfa") {
+        openNotificationWithIcon(
+          "error",
+          responseData?.msg || "Invalid MFA Code",
+        );
+      } else {
+        goToStep(LOGIN_STEPS.MFA);
+        dispatch(clearErrorMessage());
+      }
+      return;
+    }
+
+    const message = () => {
+      switch (error.response?.data?.msg) {
+        case "User is not found":
+          return "You have entered an invalid username or password";
+        case "Incorrect password":
+          return "You have entered an invalid username or password";
+        case "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session.":
+          return forceEndActiveSession(error.response?.data?.msg);
+        default:
+          return error.response?.data?.msg || "An error occurred";
+      }
+    };
+    openNotificationWithIcon("error", message());
+
+    // If we are in MFA step and the error is not a session conflict, allow retry
+    if (
+      currentStep === "mfa" &&
+      error.response?.data?.msg !==
+      "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session."
+    ) {
+      setValue("mfaCode", ""); // Clear invalid code
+      return; // Stay on MFA step
+    }
+
+    clearSessionStorage();
+    dispatch(onLogout("Incorrect credentials"));
+    dispatch(onAddErrorMessage(error?.response?.data?.msg));
+
+    // Reset form and go back to email step on error
+    goToStep(LOGIN_STEPS.EMAIL);
+    // setUserEmail("");
+    setValue("email", "");
+  };
+
+  /**
+   * Enrolment finished: the account that could not have MFA a moment ago has it
+   * now, so the login picks up where the gate stopped it.
+   *
+   * The stashed response still reads `mfaEnabled: false` — it was captured
+   * before `/mfa/verify` ran — and it is what `onLogin` copies into the admin
+   * slice. Handing it over unpatched would tell the profile page MFA is off on
+   * the very session that turned it on.
+   */
+  const handleMfaEnrolled = async () => {
+    const pending = pendingLogin.current;
+    setMfaEnrollmentOpen(false);
+    pendingLogin.current = null;
+    if (!pending) return;
+
+    openNotificationWithIcon(
+      "success",
+      "Two-step verification is on for your account.",
+    );
+
+    try {
+      setIsLoading(true);
+      dispatch(onChecking());
+      await continueAfterAuthentication({
+        ...pending,
+        loginResponse: {
+          ...pending.loginResponse,
+          data: markEnrolled(pending.loginResponse.data),
+        },
+      });
+    } catch (error) {
+      handleLoginFailure(error);
+    } finally {
+      setIsLoading(false);
+      dispatch(clearErrorMessage());
+    }
+  };
+
+  /**
+   * Leaving the gate without enrolling. The password was right, but nothing was
+   * stored and nothing was navigated, so there is no session to tear down —
+   * `clearSessionStorage` here is only insurance against a stale key from an
+   * earlier attempt. The visitor lands back on the form, not inside the app.
+   */
+  const handleMfaEnrollmentDismissed = () => {
+    setMfaEnrollmentOpen(false);
+    pendingLogin.current = null;
+    clearSessionStorage();
+    dispatch(onLogout());
+    goToStep(LOGIN_STEPS.EMAIL);
+    openNotificationWithIcon(
+      "info",
+      "Two-step verification is required to sign in. Come back when you have your authenticator app to hand.",
+    );
   };
 
   // Function to go back to email step
@@ -719,6 +835,17 @@ const Login = () => {
         <ForgotPassword
           open={updatePasswordModalState}
           close={setUpdatePasswordModalState}
+        />
+      )}
+      {mfaEnrollmentOpen && (
+        <MfaEnrollmentModal
+          open={mfaEnrollmentOpen}
+          authToken={pendingLogin.current?.loginResponse?.data?.token}
+          email={userEmail}
+          onEnrolled={handleMfaEnrolled}
+          onDismiss={handleMfaEnrollmentDismissed}
+          dismissLabel="Cancel and return to sign in"
+          dismissHint="Leaving does not sign you in — two-step verification is required on every Devitrak account."
         />
       )}
     </Suspense>
