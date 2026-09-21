@@ -123,10 +123,21 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
    as, all that, take it away." The header is the only spelling there is. */
 describe("columnForHeader", () => {
   /* The one column named differently from the field it carries. */
-  it("maps device_name onto item_group", () => {
+  it("maps the three reader-facing names onto their fields", () => {
     expect(columnForHeader("device_name")?.field).toBe("item_group");
+    expect(columnForHeader("taxable_location")?.field).toBe("main_warehouse");
+    expect(columnForHeader("extra_info")?.field).toBe("extra_serial_number");
+
     expect(headerFor("item_group")).toBe("device_name");
+    expect(headerFor("main_warehouse")).toBe("taxable_location");
+    expect(headerFor("extra_serial_number")).toBe("extra_info");
+  });
+
+  /* And the field names those three replace are not columns. */
+  it("does not answer to the storage name of a renamed column", () => {
     expect(columnForHeader("item_group")).toBeUndefined();
+    expect(columnForHeader("main_warehouse")).toBeUndefined();
+    expect(columnForHeader("extra_serial_number")).toBeUndefined();
   });
 
   it("matches the documented header", () => {
@@ -203,7 +214,7 @@ describe("buildTemplateRows", () => {
 
   it("uses the key=value;key=value shape the parser expects for Extra Info", () => {
     const filled = rows
-      .map((row) => row["extra_serial_number"])
+      .map((row) => row["extra_info"])
       .filter((value) => String(value).trim() !== "");
     expect(filled.length).toBeGreaterThan(0);
     for (const value of filled) {
@@ -231,8 +242,8 @@ describe("headerFor", () => {
        on the manual form and translates it on the way out
        (`main_warehouse: data.tax_location`); what reaches the server, and so
        what the column is called, is `main_warehouse`. */
-    expect(headerFor("main_warehouse")).toBe("main_warehouse");
     expect(headerFor("category_name")).toBe("category_name");
+    expect(headerFor("main_warehouse")).toBe("taxable_location");
   });
 
   it("falls back to the raw field name for one it does not recognize", () => {

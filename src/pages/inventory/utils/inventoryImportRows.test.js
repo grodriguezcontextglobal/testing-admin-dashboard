@@ -15,10 +15,10 @@ const sheetRow = (overrides = {}) => ({
   brand: "Shure",
   descript_item: "Wireless handheld microphone for event audio",
   ownership: "Permanent",
-  main_warehouse: "Miami, FL",
+  taxable_location: "Miami, FL",
   location: "Miami, FL",
   sub_location: "Section A, Locker A110",
-  extra_serial_number: "Band=G50;Type=Handheld",
+  extra_info: "Band=G50;Type=Handheld",
   image_url: "",
   ...overrides,
 });

@@ -77,8 +77,18 @@ export const normalizeHeader = (value) =>
  * field are the same thing, so there is no table of translations for anyone to
  * get wrong — not the customer filling the sheet in, not us reading it.
  *
- * One column breaks that on purpose: `device_name`, which carries `item_group`.
- * Its own entry says why.
+ * Three columns are named differently from the field they carry, because the
+ * field name is a storage decision and the column name is read by whoever fills
+ * the sheet in:
+ *
+ *     device_name      -> item_group
+ *     taxable_location -> main_warehouse
+ *     extra_info       -> extra_serial_number
+ *
+ * Each says why in its own entry. Renaming the fields instead would reach
+ * `item_inv` and every writer of it, which is a migration. The other nine are
+ * the same string on both sides, and a column should only be given its own name
+ * when the field's name would actively mislead — not to make it prettier.
  *
  * `BulkItemsFields.jsx` is the manual "Add new item" form and its `name` values
  * were the reference for this. They agree on eleven of the twelve. The
@@ -126,9 +136,8 @@ export const INVENTORY_IMPORT_COLUMNS = [
        > So it's open up for confusion… let's just call it for what it is, item
        > name."
 
-       Kept to this one column on purpose. `header` and `field` being the same
-       string everywhere else is what removed the translation table; a second
-       exception would start rebuilding it. */
+       One of the three columns named for the reader rather than the column
+       it lands in; see the note above the list. */
     header: "device_name",
     field: "item_group",
     required: true,
@@ -187,7 +196,10 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Rent", "Permanent", "Rent"],
   },
   {
-    header: "main_warehouse",
+    /* Named for what it is, not for where it is stored: `main_warehouse` is a
+       warehouse only in the column of a table, and the thing it holds is the
+       address the equipment is deducted at. */
+    header: "taxable_location",
     field: "main_warehouse",
     required: true,
     width: 160,
@@ -280,7 +292,10 @@ export const INVENTORY_IMPORT_COLUMNS = [
   //   samples: ["No", "No", "Yes"],
   // },
   {
-    header: "extra_serial_number",
+    /* `extra_serial_number` is the column in `item_inv`, but what goes in it is
+       any extra identifier — MAC, IMEI, asset tag — and calling the sheet's
+       column "extra serial number" made people put a second serial in it. */
+    header: "extra_info",
     field: "extra_serial_number",
     recommended: true,
     width: 200,
