@@ -33,7 +33,7 @@ const isFilled = (value) =>
  * shown as "Yes"/"No" everywhere in the wizard instead of the raw digit. */
 const BOOLEAN_FIELDS = new Set(["container", "enableAssignFeature"]);
 
-const isTruthyBoolean = (value) =>
+export const isTruthyBoolean = (value) =>
   value === true ||
   value === 1 ||
   value === "1" ||
@@ -77,6 +77,65 @@ export const formatTrackedFieldValue = (field, value) => {
 const distinctValues = (items, field) => {
   const values = items.map((item) => item?.[field]).filter(isFilled);
   return [...new Set(values.map((value) => String(value)))];
+};
+
+/**
+ * The one value a group agrees on for a field, or `null` when it does not.
+ *
+ * This is the rule the wizard keeps rediscovering — pre-fill only when there is
+ * exactly one candidate, otherwise leave the field to the operator — written
+ * once. A blank counts as "not recorded", not as a second variant, so a group
+ * where half the units have a location and half have none still agrees on it.
+ * (`findReferenceMatches` applies the same rule to `image_url` in
+ * referenceLookup.js, three lines of its own; the two say the same thing.)
+ *
+ * A group of one agrees with itself, which is why "only one item to copy from"
+ * needs no special case.
+ */
+export const agreedValue = (items, field) => {
+  const list = Array.isArray(items) ? items : [];
+  if (distinctValues(list, field).length !== 1) return null;
+  return list.find((item) => isFilled(item?.[field]))?.[field] ?? null;
+};
+
+/**
+ * Fields the add-inventory form can be pre-filled with from a copied group.
+ *
+ * `main_warehouse` is the item's field; the form calls it `tax_location`. The
+ * caller does that mapping — this module describes inventory, not a form.
+ */
+/** A tracked field's name for a person, read off the one list that has them. */
+export const trackedFieldLabel = (field) =>
+  TRACKED_FIELDS.find((tracked) => tracked.field === field)?.label ?? field;
+
+export const PREFILLABLE_FIELDS = [
+  "location",
+  "main_warehouse",
+  "sub_location",
+  "enableAssignFeature",
+  "container",
+  "containerSpotLimit",
+];
+
+/**
+ * @param {Array<object>} matches - items returned by findReferenceMatches().
+ * @param {string[]} [fields]
+ * @returns {{agreed: Record<string, *>, mixed: string[]}} what can be filled in
+ *   safely, and which fields were left alone because the group disagrees.
+ */
+export const agreedFieldValues = (matches, fields = PREFILLABLE_FIELDS) => {
+  const list = Array.isArray(matches) ? matches : [];
+  const agreed = {};
+  const mixed = [];
+
+  for (const field of fields) {
+    if (list.length === 0) continue;
+    const value = agreedValue(list, field);
+    if (value !== null) agreed[field] = value;
+    else if (distinctValues(list, field).length > 1) mixed.push(field);
+  }
+
+  return { agreed, mixed };
 };
 
 const EMPTY_SUMMARY = {

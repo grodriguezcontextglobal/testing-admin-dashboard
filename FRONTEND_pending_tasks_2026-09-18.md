@@ -31,11 +31,11 @@
 | 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | P2 |
 | 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
 | 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | P2 |
-| 8 | Pre-fill location in step 2 from the copied group | P1 `13:55`–`14:55` | P2 |
+| 8 | Pre-fill location in step 2 from the copied group | P1 `13:55`–`14:55` | **done** |
 | 9 | Rewrite the "One at a time" instructions | P1 `16:17`–`19:21` | P2 |
 | 10 | Rename the three unit-entry options | P1 `18:25`–`19:21` | P2 |
 | 11 | Rewrite the paste-a-list instructions | P1 `19:26`–`26:30` | P2 |
-| 12 | Align the paste placeholder's example columns | P1 `20:50`–`21:32` | P3 |
+| 12 | Align the paste placeholder's example columns | P1 `20:50`–`21:32` | **done** |
 | 13 | Delete the redundant scanner instructions | P1 `27:07`–`27:38` | P3 |
 | 14 | XLSX template: rename "Group" to "Item Name" | P2 `1:02`–`2:47` | **done** |
 | 15 | Delete every "also accepted as"; make column names strict | P2 `2:23`–`5:58` | **done** |
@@ -303,6 +303,38 @@ editable; Gustavo's framing at `14:30` was "if the staff member wants that".
 > Note: this is the same shape as the bug fixed today in `655f58a4` — pre-fill
 > only when exactly one candidate matches, otherwise leave it to the operator.
 > `findOptionForDevice` already implements that rule and is worth reusing.
+
+#### Done 2026-09-21, wider than asked
+
+He asked for the location. The copy was skipping **five** fields for the same
+reason — `location`, `sub_location`, `enableAssignFeature`, `container` and,
+through a name mismatch, the taxable location — all of them because they came
+from `matches[0]`, and one unit's location is not the group's. So they were left
+blank and retyped every time, including for a group that sits in exactly one
+place. All five are now filled from what the group agrees on.
+
+**The rule was already written twice.** `summarizeInventoryMatches` computes
+`{value, mixed, distinctCount}` per field for the bulk-update wizard, and
+`findReferenceMatches` has its own three lines of it for the image. The
+primitive is now extracted as `agreedValue(items, field)` and both the new
+pre-fill and the summary read it. (The image's copy is left as it is —
+three tested lines — with a pointer in each direction. That is the one
+duplication still standing.)
+
+Two details that fall out of the rule rather than being special cases:
+
+- **A group of one agrees with itself**, so "copy from a single unit" fills
+  everything without a branch for it.
+- **A blank is "not recorded", not a second variant** — a group where half the
+  units have no sub-location still agrees on the one the others have. Same rule
+  the image already followed.
+
+The taxable location was not a policy decision, it was a bug: the item's field
+is `main_warehouse` and the form's is `tax_location`, so `setValue` was writing
+a key no field reads and the column was silently never filled.
+
+When the group does disagree, the field is left alone and the panel says which
+ones and why, instead of leaving unexplained blanks.
 
 ---
 

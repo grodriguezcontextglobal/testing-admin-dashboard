@@ -38,6 +38,28 @@ export const retrieveExistingSubLocationsForCompanyInventory = (props, selectedL
  * picked/typed but not explicitly "added" as a chip is still saved. Skips a
  * field value that is already the last chip to avoid duplicating it.
  */
+/**
+ * The inverse of `buildSubLocationPath`: a stored sub-location back into the
+ * chips the form shows.
+ *
+ * `item_inv` holds it as a JSON-stringified array; some endpoints hand it back
+ * already parsed, and an older row can be a plain string. All three read as a
+ * list of path segments here, so pre-filling from an existing device does not
+ * have to know which shape it came from.
+ */
+export const parseSubLocationPath = (value) => {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  const text = String(value ?? "").trim();
+  if (!text) return [];
+  try {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    // Not JSON — an older row holding one plain segment.
+  }
+  return [text];
+};
+
 export const buildSubLocationPath = (subLocationsSubmitted, data) => {
   const chips = Array.isArray(subLocationsSubmitted) ? subLocationsSubmitted : [];
   const fieldValue =

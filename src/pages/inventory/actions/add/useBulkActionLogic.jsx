@@ -26,6 +26,13 @@ import {
   findReferenceMatches,
   hasReferenceCriteria,
 } from "../utils/referenceLookup";
+import {
+  agreedFieldValues,
+  isTruthyBoolean,
+  PREFILLABLE_FIELDS,
+  trackedFieldLabel,
+} from "../utils/updateInventoryMatchSummary";
+import { parseSubLocationPath } from "../utils/SubLocationRenderer";
 
 const useBulkActionLogic = () => {
   const {
@@ -536,12 +543,10 @@ const useBulkActionLogic = () => {
 
       Object.entries(dataToRetrieve).forEach(([key, value]) => {
         if (
-          key === "enableAssignFeature" ||
-          key === "container" ||
-          key === "sub_location" ||
-          key === "location" ||
+          PREFILLABLE_FIELDS.includes(key) ||
           key === "image_url" // Don't overwrite the image we just set
         ) {
+          // Filled below, and only where the whole group agrees.
           return;
         }
         if (locationInApp.pathname === "/create-event-page/device-detail") {
@@ -550,6 +555,50 @@ const useBulkActionLogic = () => {
         setValue("quantity", 0);
         setValue(key, value);
       });
+
+      /* Where the units live and how they may be handed out used to be skipped
+         entirely — they came from `matches[0]`, and one unit's location is not
+         the group's. So they were left blank and retyped every time, including
+         for a group that sits in exactly one place.
+
+         > P1 `13:55` — "Why can't we, if I selected a group there that only had
+         > one location in step one, it can pre-fill it here."
+
+         Now they are filled from what the group agrees on, and left alone when
+         it does not: the single-value condition is the whole safeguard. A group
+         of one agrees with itself, so copying from a single unit fills
+         everything. */
+      const { agreed, mixed } = agreedFieldValues(filteredItems);
+
+      if ("location" in agreed) setValue("location", agreed.location);
+      // The item's `main_warehouse` is this form's `tax_location`.
+      if ("main_warehouse" in agreed) setValue("tax_location", agreed.main_warehouse);
+      if ("enableAssignFeature" in agreed) {
+        setValue(
+          "enableAssignFeature",
+          isTruthyBoolean(agreed.enableAssignFeature) ? "YES" : "NO",
+        );
+      }
+      if ("container" in agreed) {
+        setValue("container", isTruthyBoolean(agreed.container) ? "Yes" : "No");
+      }
+      if ("containerSpotLimit" in agreed) {
+        setValue("containerSpotLimit", String(agreed.containerSpotLimit));
+      }
+      /* Sub-locations are chips, not a text field: the form builds the stored
+         path from this list plus whatever is typed after it. */
+      if ("sub_location" in agreed) {
+        setSubLocationsSubmitted(parseSubLocationPath(agreed.sub_location));
+      }
+
+      if (mixed.length > 0) {
+        notify(
+          "info",
+          `Those devices differ on ${mixed
+            .map(trackedFieldLabel)
+            .join(", ")}, so ${mixed.length === 1 ? "it was" : "they were"} left for you to set.`,
+        );
+      }
 
       const grouping = groupBy(inventoryItems, "item_group");
       const itemGroup = dataToRetrieve.item_group;

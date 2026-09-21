@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  TRACKED_FIELDS,
+  agreedFieldValues,
+  agreedValue,
   formatTrackedFieldValue,
   summarizeInventoryMatches,
-  TRACKED_FIELDS,
 } from "./updateInventoryMatchSummary";
+import {
+  buildSubLocationPath,
+  parseSubLocationPath,
+} from "./SubLocationRenderer";
 
 const item = (overrides = {}) => ({
   serial_number: "SN-1",
@@ -159,5 +165,149 @@ describe("formatTrackedFieldValue", () => {
   it("leaves every other tracked field as plain text", () => {
     expect(formatTrackedFieldValue("brand", "Apple")).toBe("Apple");
     expect(formatTrackedFieldValue("location", "Miami, FL")).toBe("Miami, FL");
+  });
+});
+
+/* Fredrik, part 1 `13:55`: "Why can't we, if I selected a group there that only
+   had one location in step one, it can pre-fill it here." The single-value
+   condition is the whole safeguard — with two, guessing files stock in the
+   wrong place. */
+describe("agreedValue", () => {
+  const items = [
+    { location: "Miami, FL", container: 0 },
+    { location: "Miami, FL", container: 0 },
+  ];
+
+  it("gives the value when the whole group says the same thing", () => {
+    expect(agreedValue(items, "location")).toBe("Miami, FL");
+  });
+
+  it("refuses to choose when the group disagrees", () => {
+    expect(
+      agreedValue([...items, { location: "Orlando, FL" }], "location")
+    ).toBeNull();
+  });
+
+  /* A group of one agrees with itself, so "only one item to copy from" is not
+     a special case anywhere. */
+  it("reads a single item as agreement", () => {
+    expect(agreedValue([{ location: "Miami, FL" }], "location")).toBe("Miami, FL");
+  });
+
+  /* Same rule the image already followed: a blank is "not recorded", not a
+     second variant. */
+  it("does not let a blank count as a competing value", () => {
+    expect(
+      agreedValue(
+        [{ location: "Miami, FL" }, { location: "" }, { location: null }],
+        "location"
+      )
+    ).toBe("Miami, FL");
+  });
+
+  it("returns null when nobody recorded one, and survives no items at all", () => {
+    expect(agreedValue([{ location: "" }], "location")).toBeNull();
+    expect(agreedValue([], "location")).toBeNull();
+    expect(agreedValue(undefined, "location")).toBeNull();
+  });
+
+  /* 0 is a value — "not a container" is an answer, and `isFilled` must not
+     read it as a blank. */
+  it("treats a tinyint 0 as an answer", () => {
+    expect(agreedValue(items, "container")).toBe(0);
+  });
+});
+
+describe("agreedFieldValues", () => {
+  const group = [
+    {
+      location: "Miami, FL",
+      main_warehouse: "Miami, FL",
+      sub_location: '["Section A","Locker A110"]',
+      enableAssignFeature: 1,
+      container: 0,
+      containerSpotLimit: null,
+    },
+    {
+      location: "Miami, FL",
+      main_warehouse: "Miami, FL",
+      sub_location: '["Section A","Locker A110"]',
+      enableAssignFeature: 1,
+      container: 0,
+      containerSpotLimit: null,
+    },
+  ];
+
+  it("hands back everything a uniform group agrees on", () => {
+    const { agreed, mixed } = agreedFieldValues(group);
+
+    expect(agreed.location).toBe("Miami, FL");
+    expect(agreed.main_warehouse).toBe("Miami, FL");
+    expect(agreed.sub_location).toBe('["Section A","Locker A110"]');
+    expect(agreed.enableAssignFeature).toBe(1);
+    expect(agreed.container).toBe(0);
+    expect(mixed).toEqual([]);
+  });
+
+  /* The field that disagrees is named, so the form can say why it was left
+     empty instead of leaving a hole with no explanation. */
+  it("names the fields it refused to fill, and still fills the rest", () => {
+    const { agreed, mixed } = agreedFieldValues([
+      ...group,
+      { ...group[0], location: "Orlando, FL", enableAssignFeature: 0 },
+    ]);
+
+    expect(agreed.location).toBeUndefined();
+    expect(agreed.enableAssignFeature).toBeUndefined();
+    expect(mixed).toEqual(["location", "enableAssignFeature"]);
+    expect(agreed.main_warehouse).toBe("Miami, FL");
+  });
+
+  it("says nothing about a field nobody recorded", () => {
+    const { agreed, mixed } = agreedFieldValues(group);
+
+    expect(agreed).not.toHaveProperty("containerSpotLimit");
+    expect(mixed).not.toContain("containerSpotLimit");
+  });
+
+  it("returns nothing for no matches", () => {
+    expect(agreedFieldValues([])).toEqual({ agreed: {}, mixed: [] });
+  });
+});
+
+describe("parseSubLocationPath", () => {
+  it("reads the JSON array item_inv stores", () => {
+    expect(parseSubLocationPath('["Section A","Locker A110"]')).toEqual([
+      "Section A",
+      "Locker A110",
+    ]);
+  });
+
+  it("takes an array that arrived already parsed", () => {
+    expect(parseSubLocationPath(["Section A", "Locker A110"])).toEqual([
+      "Section A",
+      "Locker A110",
+    ]);
+  });
+
+  /* An older row can hold one plain segment rather than JSON. */
+  it("reads a bare string as a single segment", () => {
+    expect(parseSubLocationPath("Equipment Cage A")).toEqual(["Equipment Cage A"]);
+  });
+
+  it("reads nothing as no chips", () => {
+    expect(parseSubLocationPath("")).toEqual([]);
+    expect(parseSubLocationPath(null)).toEqual([]);
+    expect(parseSubLocationPath("[]")).toEqual([]);
+  });
+
+  /* It has to round-trip with its inverse, or a copied sub-location comes back
+     one level deeper every time it is copied. */
+  it("round-trips through buildSubLocationPath", () => {
+    const chips = ["Section A", "Locker A110"];
+
+    expect(parseSubLocationPath(JSON.stringify(buildSubLocationPath(chips, {})))).toEqual(
+      chips
+    );
   });
 });
