@@ -86,24 +86,17 @@ const PasteUnitsPanel = ({ existingSerials, onAdd }) => {
         color="text.secondary"
         sx={{ width: "100%", textAlign: "left", mb: 1 }}
       >
-        {/* Dictated almost line by line at P1 `22:38`–`26:30`. Two changes to
-            his exact words, both to keep it readable: "primary key" is said as
-            what it does, and the fallback sentence is spelled out — he rejected
-            the old one-liner (`22:47`) and accepted the behaviour once it was
-            explained (`23:47`), so it is the explaining that was missing. */}
-        Copy the rows from your spreadsheet and paste them here.
+        {/* Third version of this paragraph. The first was rejected as
+            unreadable (P1 `17:28`), the second still explained more than anyone
+            needed: what a primary key is, and what happens when the column is
+            missing. Neither is what a person about to paste a spreadsheet is
+            asking. What they need is which column has to be there, what the
+            others are, and how many rows fit. */}
+        Your spreadsheet needs a <strong>serial_number</strong> column. Every
+        other column is extra information about that unit.
         <br />
-        The column named <strong>serial_number</strong> becomes each unit&apos;s
-        serial number — the one the system uses to tell your units apart. If
-        there is no <strong>serial_number</strong> column, the first column is
-        used instead, and it keeps its own name as an extra detail.
-        <br />
-        Every other column becomes an extra detail for that unit. Your units do
-        not all need the same ones.
-        <br />
-        You can only paste up to {MAX_PASTED_LINES.toLocaleString()} lines,
-        counting the row of column names. If you have more, paste the rest
-        afterwards.
+        You can paste up to {MAX_PASTED_LINES.toLocaleString()} rows, counting
+        the row of column names. If you have more, repeat the process.
       </Typography>
 
       <TextArea

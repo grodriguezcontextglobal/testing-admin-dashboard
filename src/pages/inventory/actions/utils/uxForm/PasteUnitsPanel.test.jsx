@@ -11,41 +11,36 @@ const renderPanel = () =>
   render(<PasteUnitsPanel existingSerials={[]} onAdd={vi.fn()} />);
 
 describe("PasteUnitsPanel copy", () => {
-  it("says what the serial_number column becomes, and why it matters", () => {
+  /* Third version. The first was unreadable, the second explained the fallback
+     and what a primary key is — neither is what someone about to paste a
+     spreadsheet is asking. */
+  it("names the one column that has to be there, and what the others are", () => {
     const { container } = renderPanel();
 
     expect(container.textContent).toContain(
-      "becomes each unit's serial number — the one the system uses to tell your units apart"
+      "Your spreadsheet needs a serial_number column."
+    );
+    expect(container.textContent).toContain(
+      "Every other column is extra information about that unit."
     );
   });
 
-  /* He rejected the old one-liner about the fallback (`22:47`) and accepted the
-     behaviour once it was explained (`23:47`) — so the sentence has to explain
-     it, not just state it. */
-  it("spells out what happens when there is no serial_number column", () => {
+  /* The number comes from the parser's own limit, so the sentence cannot
+     promise a different one than the code enforces. */
+  it("gives the real row limit and what to do about it", () => {
     const { container } = renderPanel();
 
     expect(container.textContent).toContain(
-      "the first column is used instead, and it keeps its own name as an extra detail"
+      "You can paste up to 2,000 rows, counting the row of column names."
     );
+    expect(container.textContent).toContain("If you have more, repeat the process.");
   });
 
-  it("says every other column is an extra detail, and they need not match", () => {
+  it("stops explaining things nobody asked", () => {
     const { container } = renderPanel();
 
-    expect(container.textContent).toContain(
-      "Every other column becomes an extra detail for that unit."
-    );
-    expect(container.textContent).toContain("do not all need the same ones");
-  });
-
-  /* `26:30` — "You can only paste up to 2000 lines. If you have more, run the
-     operation again." The number is read from the parser's own limit, so the
-     sentence cannot promise a different one than the code enforces. */
-  it("gives the real line limit and what to do about it", () => {
-    const { container } = renderPanel();
-
-    expect(container.textContent).toContain("You can only paste up to 2,000 lines");
-    expect(container.textContent).toContain("If you have more, paste the rest");
+    expect(container.textContent).not.toMatch(/primary key/i);
+    expect(container.textContent).not.toMatch(/tell your units apart/i);
+    expect(container.textContent).not.toMatch(/the first column is used instead/i);
   });
 });
