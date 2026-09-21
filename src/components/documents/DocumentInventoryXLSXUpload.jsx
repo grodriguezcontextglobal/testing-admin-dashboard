@@ -1,4 +1,4 @@
-import { message, Modal, Radio } from "antd";
+import { message, Modal } from "antd";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { read, utils } from "xlsx";
@@ -44,6 +44,14 @@ const recommendedHeaders = RECOMMENDED_IMPORT_FIELDS.map(headerFor);
  * one import from crowding out everything else the tab is doing. */
 const CONCURRENT_REQUESTS = 4;
 
+/** The columns a device shares across all its units, named as the file names
+ * them — `imageMediaPath` is our word for it, not the customer's. */
+const SHARED_FIELD_LABELS = {
+    brand: "Brand",
+    descript_item: "Description",
+    imageMediaPath: "picture",
+};
+
 /** Runs `task` over `items`, `limit` at a time, in order of completion. */
 const runWithLimit = async (items, limit, task) => {
     const results = [];
@@ -77,7 +85,6 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     /* What the file turned out to contain. Held as one object so the preview
        and the dispatch always read the same reading of the file. */
     const [preview, setPreview] = useState(null);
-    const [mode, setMode] = useState(IMPORT_MODES.COMPATIBLE);
     const queryClient = useQueryClient();
     const alphaNumericInsertItemMutation = useMutation({
         mutationFn: ({ template, idempotencyKey }) =>
@@ -108,14 +115,11 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             skipped,
             ignoredImageValues,
             media,
-            plans: {
-                [IMPORT_MODES.COMPATIBLE]: buildImportPlan(units, {
-                    mode: IMPORT_MODES.COMPATIBLE,
-                }),
-                [IMPORT_MODES.PER_SERIAL]: buildImportPlan(units, {
-                    mode: IMPORT_MODES.PER_SERIAL,
-                }),
-            },
+            /* One request per device name, with each unit's own cost, location
+               and the rest travelling per serial number. How the file is cut
+               into requests is our problem, not something to ask the person
+               importing it about — see the note on IMPORT_MODES. */
+            plan: buildImportPlan(units, { mode: IMPORT_MODES.PER_SERIAL }),
         };
     };
 
@@ -144,7 +148,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     };
 
     const handleUpload = async () => {
-        const plan = preview?.plans?.[mode];
+        const plan = preview?.plan;
         if (!plan || plan.groups.length === 0) {
             return message.warning("Nothing to import. Please select a valid file.");
         }
@@ -188,12 +192,15 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 group.batches.map((batch) => ({ group, batch }))
             );
 
-            let sent = 0;
+            /* Counted in units, not in requests. How many requests it takes is
+               an implementation detail; how many of their devices are in is
+               not. */
+            let unitsSent = 0;
             const outcomes = await runWithLimit(
                 requests,
                 CONCURRENT_REQUESTS,
                 async ({ group, batch }) => {
-                    const { body } = buildGroupRequest({
+                    const { body, perSerialFields } = buildGroupRequest({
                         group,
                         batch,
                         company: user.sqlInfo.company_name,
@@ -223,33 +230,51 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                 }),
                             })
                         );
-                        return { ok: true };
+                        return { ok: true, units: batch.length };
                     } catch (error) {
                         console.error("bulk-item-alphanumeric", group.item_group, error);
+                        /* A request carrying per-unit values that the server
+                           does not read yet comes back complaining about the
+                           scalar it did not find. Repeating that to the person
+                           importing a spreadsheet explains nothing — they did
+                           nothing wrong and there is nothing for them to fix in
+                           the file. */
+                        const serverMessage =
+                            error?.response?.data?.msg ?? error.message ?? "Request failed";
                         return {
                             ok: false,
                             group: group.item_group,
+                            units: batch.length,
                             reason:
-                                error?.response?.data?.msg ??
-                                error.message ??
-                                "Request failed",
+                                perSerialFields.length > 0 &&
+                                error?.response?.status === 400
+                                    ? "This file needs a server update that isn't live yet."
+                                    : serverMessage,
                         };
                     } finally {
-                        sent += 1;
-                        setProgress(`Sending ${sent}/${requests.length}…`);
+                        unitsSent += batch.length;
+                        setProgress(
+                            `Importing ${unitsSent} of ${plan.stats.units} unit(s)…`
+                        );
                     }
                 }
             );
 
             const rejected = outcomes.filter((outcome) => !outcome.ok);
+            const unitsRejected = rejected.reduce(
+                (total, outcome) => total + outcome.units,
+                0
+            );
+            const unitsAccepted = plan.stats.units - unitsRejected;
+
             if (rejected.length > 0) {
                 message.error(
-                    `${rejected.length} of ${requests.length} request(s) were rejected: ${rejected[0].reason}`
+                    `${unitsRejected} unit(s) could not be imported. ${rejected[0].reason}`
                 );
             }
-            if (rejected.length < requests.length) {
+            if (unitsAccepted > 0) {
                 message.success(
-                    `${requests.length - rejected.length} request(s) queued for ${plan.stats.units} unit(s). You'll be notified as each one completes.`
+                    `${unitsAccepted} unit(s) queued for import. You'll be notified as they are added.`
                 );
                 clearStateAndClose();
                 if (typeof closeModal === "function") closeModal();
@@ -276,9 +301,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
         setOpenModal(false);
     };
 
-    const compatible = preview?.plans?.[IMPORT_MODES.COMPATIBLE]?.stats;
-    const perSerial = preview?.plans?.[IMPORT_MODES.PER_SERIAL]?.stats;
-    const active = preview?.plans?.[mode]?.stats;
+    const active = preview?.plan?.stats;
 
     return (
         <>
@@ -384,35 +407,17 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
 
                             {active?.conflicts.length > 0 && (
                                 <div>
-                                    {active.conflicts.length} group(s) disagree on a field that
-                                    is shared across the group — e.g. {active.conflicts[0].field}{" "}
-                                    in &ldquo;{active.conflicts[0].item_group}&rdquo;, where{" "}
-                                    {JSON.stringify(active.conflicts[0].chosen)} is used.
+                                    &ldquo;{active.conflicts[0].item_group}&rdquo; has more than
+                                    one {SHARED_FIELD_LABELS[active.conflicts[0].field] ??
+                                        active.conflicts[0].field}{" "}
+                                    in this file
+                                    {active.conflicts.length > 1
+                                        ? `, and so do ${active.conflicts.length - 1} other device(s)`
+                                        : ""}
+                                    . Every unit of a device shares one, so the most common is
+                                    used.
                                 </div>
                             )}
-
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                <strong>How should this be sent?</strong>
-                                <Radio.Group
-                                    value={mode}
-                                    onChange={(event) => setMode(event.target.value)}
-                                >
-                                    <Radio value={IMPORT_MODES.COMPATIBLE}>
-                                        One request per identical set of values —{" "}
-                                        <strong>{compatible?.requests}</strong> request(s)
-                                    </Radio>
-                                    <Radio value={IMPORT_MODES.PER_SERIAL}>
-                                        One request per device name —{" "}
-                                        <strong>{perSerial?.requests}</strong> request(s), with
-                                        per-unit values sent per serial number
-                                    </Radio>
-                                </Radio.Group>
-                                <span>
-                                    Both send the same {active?.units} unit(s) with the same
-                                    values. They differ in how many requests that takes, and the
-                                    second one needs the server to read the per-serial fields.
-                                </span>
-                            </div>
 
                             <div>
                                 {active?.locations.length} location(s) will be checked and
@@ -450,7 +455,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                             <BlueButtonComponent
                                 title={
                                     active
-                                        ? `Import ${active.units} unit(s) in ${active.requests} request(s)`
+                                        ? `Import ${active.units} unit(s)`
                                         : "Import Items"
                                 }
                                 func={handleUpload}

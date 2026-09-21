@@ -146,17 +146,36 @@ Shipped 2026-09-21, no server change required:
 - **Nothing is flattened silently.** Where a batch disagrees, the scalar is
   omitted and the map is sent.
 - **A preview before anything is sent**: units read, rows skipped and why,
-  duplicate serials, locations to be created, images found, and the number of
-  requests each mode would take. A 500-row import no longer starts with one
-  click and no number in front of it.
+  duplicate serials, locations to be created, images found. It says nothing
+  about requests, batches or modes — how we cut the file up is ours to decide,
+  not theirs to understand.
 - **Locations are ensured once each**, not once per group.
 - Requests go out four at a time, each with its own `Idempotency-Key`, each
   tracked as a background job.
 
-Until the maps are read, the client defaults to the mode that works today: it
-splits until every request carries a single value per flattened field. For the
-measured file that is **499 requests** for 500 units. That is the cost of the
-current shape, and it is why we are asking.
+### This is now blocking, not a nice-to-have
+
+**Decided 2026-09-21: the client always sends one request per device name, with
+the maps.** The alternative — splitting until every request carries a single
+value per field — is 499 requests for 500 units, and it asked the person
+importing a spreadsheet to choose between two shapes of our own API. That is not
+a question a customer should be shown, so the choice is gone.
+
+The consequence is direct: **until `bulk-item-alphanumeric` reads the
+`_by_serial` fields, an import of a file like this one fails.** It fails cleanly
+— the scalar is absent, the endpoint answers 400, nothing is written, and the
+screen says *"This file needs a server update that isn't live yet"* rather than
+repeating a message about a missing location that the customer cannot act on.
+No partial or wrong data either way.
+
+A file whose units genuinely are identical within a device group still imports
+today, because then the batch agrees and only scalars are sent. It is the
+realistic files — different purchase prices, units spread across cities — that
+need this.
+
+The 499-request shape stays implemented and tested (`IMPORT_MODES.COMPATIBLE`),
+so if you decide against the maps we can switch back in one line. We would
+rather not.
 
 ## Numbers to check us against
 
