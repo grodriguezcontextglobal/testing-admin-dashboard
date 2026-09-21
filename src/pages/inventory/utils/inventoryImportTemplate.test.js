@@ -123,17 +123,20 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
    as, all that, take it away." The header is the only spelling there is. */
 describe("columnForHeader", () => {
   it("matches the documented header", () => {
-    expect(columnForHeader("Serial Number")?.field).toBe("serial_number");
+    expect(columnForHeader("serial_number")?.field).toBe("serial_number");
   });
 
   it("forgives what Excel does to a header, and nothing else", () => {
-    expect(columnForHeader("  serial number*  ")?.field).toBe("serial_number");
-    expect(columnForHeader("SERIAL NUMBER")?.field).toBe("serial_number");
+    expect(columnForHeader("  serial_number*  ")?.field).toBe("serial_number");
+    expect(columnForHeader("SERIAL_NUMBER")?.field).toBe("serial_number");
   });
 
   it("does not answer to a name nobody documented", () => {
     expect(columnForHeader("Serial No")).toBeUndefined();
-    expect(columnForHeader("serial_number")).toBeUndefined();
+    /* The pretty names the template used to carry are not columns any more —
+       a column is the field the request sends, and nothing else. */
+    expect(columnForHeader("Serial Number")).toBeUndefined();
+    expect(columnForHeader("Taxable Location")).toBeUndefined();
     expect(columnForHeader("Device Name")).toBeUndefined();
     expect(columnForHeader("")).toBeUndefined();
   });
@@ -152,16 +155,16 @@ describe("telling someone their columns are wrong", () => {
      says which column was renamed. */
   it("names the mandatory column a renamed header left missing", () => {
     const headers = everyHeader().map((header) =>
-      header === "Category" ? "Type" : header
+      header === "category_name" ? "Type" : header
     );
 
-    expect(missingRequiredColumns(headers)).toEqual(["Category"]);
+    expect(missingRequiredColumns(headers)).toEqual(["category_name"]);
     expect(unknownColumns(headers)).toEqual(["Type"]);
   });
 
   it("does not complain about a missing optional column", () => {
     expect(
-      missingRequiredColumns(everyHeader().filter((h) => h !== "Description"))
+      missingRequiredColumns(everyHeader().filter((h) => h !== "descript_item"))
     ).toEqual([]);
   });
 
@@ -193,7 +196,7 @@ describe("buildTemplateRows", () => {
 
   it("uses the key=value;key=value shape the parser expects for Extra Info", () => {
     const filled = rows
-      .map((row) => row["Extra Info"])
+      .map((row) => row["extra_serial_number"])
       .filter((value) => String(value).trim() !== "");
     expect(filled.length).toBeGreaterThan(0);
     for (const value of filled) {
@@ -216,8 +219,13 @@ describe("buildGuideRow", () => {
 
 describe("headerFor", () => {
   it("reads a field's display name from its column definition", () => {
-    expect(headerFor("main_warehouse")).toBe("Taxable Location");
-    expect(headerFor("category_name")).toBe("Category");
+    /* A column is named after the field it carries, so the two are the same
+       string. `BulkItemsFields.jsx` calls the taxable location `tax_location`
+       on the manual form and translates it on the way out
+       (`main_warehouse: data.tax_location`); what reaches the server, and so
+       what the column is called, is `main_warehouse`. */
+    expect(headerFor("main_warehouse")).toBe("main_warehouse");
+    expect(headerFor("category_name")).toBe("category_name");
   });
 
   it("falls back to the raw field name for one it does not recognize", () => {

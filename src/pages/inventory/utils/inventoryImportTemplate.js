@@ -72,7 +72,20 @@ export const normalizeHeader = (value) =>
  * the way someone fills one in: what the device is, what it costs, where it
  * lives, how it may be handed out, then the optional extras.
  *
- * `header` is the only spelling the parser accepts. It used to carry an
+ * **`header` is the field name the request carries.** Not "Category" but
+ * `category_name`, not "Taxable Location" but `main_warehouse`. A column and a
+ * field are now the same thing, so there is no table of translations for anyone
+ * to get wrong — not the customer filling the sheet in, not us reading it.
+ *
+ * `BulkItemsFields.jsx` is the manual "Add new item" form and its `name` values
+ * were the reference for this. They agree on eleven of the twelve. The
+ * exception is the taxable location: that form calls it `tax_location` and
+ * translates it on the way out —
+ * `BulkRentedItemsActions.jsx:118`, `main_warehouse: data.tax_location` — so
+ * the name that reaches the server, and therefore the column here, is
+ * `main_warehouse`.
+ *
+ * `header` is also the only spelling the parser accepts. It used to carry an
  * `aliases` list — `item_group` answered to "Device Name", "device name",
  * "device_name" and "Group" — and that is gone:
  *
@@ -92,7 +105,7 @@ export const normalizeHeader = (value) =>
  */
 export const INVENTORY_IMPORT_COLUMNS = [
   {
-    header: "Category",
+    header: "category_name",
     field: "category_name",
     required: true,
     width: 150,
@@ -100,18 +113,18 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Audio", "Interpretation", "Fitness"],
   },
   {
-    header: "Group",
+    header: "item_group",
     field: "item_group",
     required: true,
     width: 180,
     notes: [
       "The group name every unit of this model shares, e.g. 'PL6 RF Receiver'.",
-      "Rows sharing a Category and a Device Name are imported as one group.",
+      "Rows sharing a category_name and an item_group are imported as one group.",
     ],
     samples: ["Audio Device 1", "PL6 RF Receiver", "C4 Pre Workout"],
   },
   {
-    header: "Serial Number",
+    header: "serial_number",
     field: "serial_number",
     required: true,
     width: 150,
@@ -119,7 +132,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["100001", "100002", "100003"],
   },
   {
-    header: "Cost",
+    header: "cost",
     field: "cost",
     required: true,
     width: 100,
@@ -127,7 +140,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["45.5", "99.0", "25.75"],
   },
   {
-    header: "Brand",
+    header: "brand",
     field: "brand",
     required: true,
     width: 120,
@@ -135,7 +148,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Sony", "Congress Audio", "Cellucor"],
   },
   {
-    header: "Description",
+    header: "descript_item",
     field: "descript_item",
     required: false,
     width: 200,
@@ -147,7 +160,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     ],
   },
   {
-    header: "Ownership",
+    header: "ownership",
     field: "ownership",
     required: true,
     width: 120,
@@ -158,7 +171,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Rent", "Permanent", "Rent"],
   },
   {
-    header: "Taxable Location",
+    header: "main_warehouse",
     field: "main_warehouse",
     required: true,
     width: 160,
@@ -176,7 +189,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   //   samples: ["Yes", "No", "Yes"],
   // },
   {
-    header: "Location",
+    header: "location",
     field: "location",
     required: true,
     width: 150,
@@ -187,7 +200,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Miami, FL", "Orlando, FL", "Miami, FL"],
   },
   {
-    header: "Sub Locations",
+    header: "sub_location",
     field: "sub_location",
     recommended: true,
     width: 180,
@@ -251,7 +264,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
   //   samples: ["No", "No", "Yes"],
   // },
   {
-    header: "Extra Info",
+    header: "extra_serial_number",
     field: "extra_serial_number",
     recommended: true,
     width: 200,
@@ -263,7 +276,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Material=Silicon;Voltage=110V", "Frequency=72MHz", ""],
   },
   {
-    header: "Image",
+    header: "image_url",
     field: "image_url",
     recommended: true,
     width: 150,

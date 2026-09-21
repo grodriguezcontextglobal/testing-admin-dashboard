@@ -129,10 +129,34 @@ time.
 
 | # | Item | Where | Note |
 |---|---|---|---|
-| 14 | Rename "Group" to "Item Name" | `1:02`–`2:47` | **Now a breaking rename.** Aliases are gone, so every customer holding a spreadsheet with a Group column must download the template again. A release note, not a copy edit |
+| 14 | Rename "Group" to "Item Name" | `1:02`–`2:47` | **In conflict with the naming decision — see below** |
 | 16 | "Taxable Location" description | `2:54`–`3:58` | |
 | 17 | "Sub Locations" — drop "outermost first" | `5:58`–`7:49` | |
 | 19 | Extra identifiers — approved, minor trim | `8:34`–`9:34` | |
+
+### 14 pulls against the decision that columns are field names
+
+> P2 `1:43` — "when I say group, I can think about group of the devices… The word
+> group is confusing. So let's just call it for what it is, item name."
+
+He is right about the word. But the columns are now named after the fields the
+request carries — the column *is* `item_group`, the same string the server
+reads — and that identity is the point: no table of translations for anyone to
+get wrong. Renaming the column to "Item Name" puts the translation back.
+
+Three ways out, and the choice is a product one:
+
+1. **Leave the column `item_group` and answer the confusion in its description**
+   — the tour step is where "what this column means" belongs, and it can say
+   plainly that this is the device's name, not a grouping of devices. Cheapest,
+   keeps the identity, and addresses what actually confused him.
+2. **Rename the field everywhere**, front and back, so the column can read
+   `item_name` and still be the wire name. Honest but expensive, and it touches
+   `item_inv` and every writer of it.
+3. **Break the identity for this one column.** Not recommended: one exception is
+   how the alias table grew the first time.
+
+Recommendation: (1), and close 14 as answered rather than done.
 
 16, 17 and 19 are edits to `header` and `notes` in one file,
 `src/pages/inventory/utils/inventoryImportTemplate.js`, and that file has a test

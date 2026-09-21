@@ -8,18 +8,18 @@ import {
 } from "./inventoryImportRows";
 
 const sheetRow = (overrides = {}) => ({
-  Category: "Audio",
-  Group: "Wireless Microphone",
-  "Serial Number": "AUD-2026-000001",
-  Cost: 258.42,
-  Brand: "Shure",
-  Description: "Wireless handheld microphone for event audio",
-  Ownership: "Permanent",
-  "Taxable Location": "Miami, FL",
-  Location: "Miami, FL",
-  "Sub Locations": "Section A, Locker A110",
-  "Extra Info": "Band=G50;Type=Handheld",
-  Image: "",
+  category_name: "Audio",
+  item_group: "Wireless Microphone",
+  serial_number: "AUD-2026-000001",
+  cost: 258.42,
+  brand: "Shure",
+  descript_item: "Wireless handheld microphone for event audio",
+  ownership: "Permanent",
+  main_warehouse: "Miami, FL",
+  location: "Miami, FL",
+  sub_location: "Section A, Locker A110",
+  extra_serial_number: "Band=G50;Type=Handheld",
+  image_url: "",
   ...overrides,
 });
 
@@ -29,7 +29,7 @@ describe("reading a field through its aliases", () => {
   });
 
   it("forgives casing, space and the mandatory asterisk", () => {
-    expect(readField({ "  serial number* ": "SN-1" }, "serial_number")).toBe("SN-1");
+    expect(readField({ "  SERIAL_NUMBER* ": "SN-1" }, "serial_number")).toBe("SN-1");
   });
 
   it("returns blank rather than undefined for a column that is not there", () => {
@@ -78,15 +78,15 @@ describe("reading the rows", () => {
   });
 
   it("maps a synonym onto one of the three ownership values", () => {
-    const { units } = parseInventoryImportRows([sheetRow({ Ownership: "Lease" })]);
+    const { units } = parseInventoryImportRows([sheetRow({ ownership: "Lease" })]);
 
     expect(units[0].ownership).toBe("Rent");
   });
 
   it("composes a description only when the column is blank", () => {
     const { units } = parseInventoryImportRows([
-      sheetRow({ Description: "" }),
-      sheetRow({ "Serial Number": "AUD-2", Description: "Written by hand" }),
+      sheetRow({ descript_item: "" }),
+      sheetRow({ serial_number: "AUD-2", descript_item: "Written by hand" }),
     ]);
 
     expect(units[0].descript_item).toBe(
@@ -100,19 +100,19 @@ describe("reading the rows", () => {
   it("reports a skipped row and what it was missing", () => {
     const { units, skipped } = parseInventoryImportRows([
       sheetRow(),
-      sheetRow({ "Serial Number": "", Cost: "" }),
+      sheetRow({ serial_number: "", cost: "" }),
     ]);
 
     expect(units).toHaveLength(1);
     expect(skipped).toEqual([
-      { rowNumber: 3, missing: ["Serial Number", "Cost"] },
+      { rowNumber: 3, missing: ["serial_number", "cost"] },
     ]);
   });
 
   it("numbers rows the way the spreadsheet does, so a message can point at one", () => {
     const { units } = parseInventoryImportRows([
       sheetRow(),
-      sheetRow({ "Serial Number": "AUD-2" }),
+      sheetRow({ serial_number: "AUD-2" }),
     ]);
 
     expect(units.map((unit) => unit.rowNumber)).toEqual([2, 3]);
@@ -126,14 +126,14 @@ describe("reading the rows", () => {
 describe("a file whose columns were renamed", () => {
   it("names the mandatory column that is missing, once, off the header row", () => {
     const renamed = sheetRow();
-    renamed.Type = renamed.Category;
-    delete renamed.Category;
+    renamed.Type = renamed.category_name;
+    delete renamed.category_name;
 
     const { missingColumns, unrecognizedColumns } = parseInventoryImportRows([
       renamed,
     ]);
 
-    expect(missingColumns).toEqual(["Category"]);
+    expect(missingColumns).toEqual(["category_name"]);
     expect(unrecognizedColumns).toEqual(["Type"]);
   });
 
@@ -150,18 +150,19 @@ describe("a file whose columns were renamed", () => {
      symptom: 500 rows skipped and no clue why. Both are reported now. */
   it("still skips the rows, so the two readings agree", () => {
     const renamed = sheetRow();
-    renamed.Type = renamed.Category;
-    delete renamed.Category;
+    renamed.Type = renamed.category_name;
+    delete renamed.category_name;
 
     const { units, skipped } = parseInventoryImportRows([renamed]);
 
     expect(units).toHaveLength(0);
-    expect(skipped[0].missing).toContain("Category");
+    expect(skipped[0].missing).toContain("category_name");
   });
 
   it("reads nothing from a name the template never documented", () => {
     expect(readField({ "Device Name": "PL6" }, "item_group")).toBe("");
     expect(readField({ "Serial No": "SN-1" }, "serial_number")).toBe("");
+    expect(readField({ "Serial Number": "SN-1" }, "serial_number")).toBe("");
   });
 
   it("survives an empty file without inventing columns", () => {
@@ -176,7 +177,7 @@ describe("the picture in the Image cell", () => {
     ]);
 
     const { units } = parseInventoryImportRows(
-      [sheetRow(), sheetRow({ "Serial Number": "AUD-2" })],
+      [sheetRow(), sheetRow({ serial_number: "AUD-2" })],
       { imagesByRow }
     );
 
@@ -191,8 +192,8 @@ describe("the picture in the Image cell", () => {
      stop, so it comes back as something the preview can say out loud. */
   it("reports a URL typed into the Image column instead of ignoring it", () => {
     const { units, ignoredImageValues } = parseInventoryImportRows([
-      sheetRow({ Image: "https://example.com/mic.jpg" }),
-      sheetRow({ "Serial Number": "AUD-2" }),
+      sheetRow({ image_url: "https://example.com/mic.jpg" }),
+      sheetRow({ serial_number: "AUD-2" }),
     ]);
 
     expect(units[0].imageMediaPath).toBeNull();
@@ -214,8 +215,8 @@ describe("the picture in the Image cell", () => {
     const { units } = parseInventoryImportRows(
       [
         sheetRow(),
-        sheetRow({ "Serial Number": "" }),
-        sheetRow({ "Serial Number": "AUD-3" }),
+        sheetRow({ serial_number: "" }),
+        sheetRow({ serial_number: "AUD-3" }),
       ],
       { imagesByRow }
     );
