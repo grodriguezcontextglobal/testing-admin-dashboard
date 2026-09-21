@@ -23,11 +23,35 @@ import { useStatusNotification } from "../../components/notification/alerts/useS
  * because links sent before that change are sitting in inboxes and should keep
  * working — but it is stripped out of the URL the moment it is read, so it does
  * not survive in history or leak onward from this page.
+ *
+ * ## The passwordless path
+ *
+ * With MFA mandatory, a visitor who reaches the "a session is already open"
+ * message has already proved their password *and* their authenticator code —
+ * `loginUser` runs the MFA check before it raises the session conflict. Asking
+ * for the password again here proves nothing new, which is what Fredrik argued
+ * at part 1 `5:15`.
+ *
+ * What it does still stand in for is *possession of the link*. Today the link
+ * is `/force-logout?email=<address>&timestamp=<ms>` and carries no secret, so
+ * anyone able to type an email address could reach this page; the password is
+ * the only thing between that URL and ending someone's session. Dropping it
+ * without replacing it would turn the flow into "type an address, kick that
+ * person out".
+ *
+ * So the page reads a `token` from the link. When one is there it asks for
+ * nothing and posts the token; when it is not, it falls back to the password,
+ * which is what every link in an inbox today needs. The token is stripped from
+ * the URL the moment it is read, for the same reason `cred` is.
+ * See FRONTEND_force_logout_token_2026-09-21.md.
  */
 const ForceLogout = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const [email, setEmail] = useState(null);
+    /* Held in state rather than read from the URL at submit time: it is removed
+       from the URL as soon as it arrives. */
+    const [revokeToken, setRevokeToken] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { notify, contextHolder } = useStatusNotification();
@@ -63,13 +87,19 @@ const ForceLogout = () => {
         setEmail(userEmail);
         setValue("email", userEmail);
 
-        if (legacyPassword) {
-            setValue("password", legacyPassword);
-            // Replace, not push: the URL carrying the password should not be
-            // something the back button can return to.
+        const token = searchParams.get("x_token") || searchParams.get("token");
+        if (token) setRevokeToken(token);
+
+        if (legacyPassword || token) {
+            if (legacyPassword) setValue("password", legacyPassword);
+            // Replace, not push: a URL carrying a secret — the old password or
+            // the single-use token — should not be something the back button
+            // can return to, or a Referer can carry onward.
             const scrubbed = new URLSearchParams(searchParams);
             scrubbed.delete("cred");
             scrubbed.delete("x_cred");
+            scrubbed.delete("token");
+            scrubbed.delete("x_token");
             setSearchParams(scrubbed, { replace: true });
         }
     }, [searchParams, setSearchParams, navigate, setValue, openNotificationWithIcon]);
@@ -77,7 +107,12 @@ const ForceLogout = () => {
     const onSubmit = async (data) => {
         setIsLoading(true);
         try {
-            await devitrakApi.post("/staff/force-logout", data);
+            /* With a token there is nothing to type: the link is the proof.
+               Without one the password is, which is every link already sent. */
+            await devitrakApi.post(
+                "/staff/force-logout",
+                revokeToken ? { email, token: revokeToken } : data,
+            );
             openNotificationWithIcon(
                 "success",
                 "Your previous session has been revoked. You can now log in."
@@ -125,10 +160,22 @@ const ForceLogout = () => {
                     Revoke Active Session
                 </Typography>
                 <Typography align="center" sx={{ mt: 2 }}>
-                    Confirm your password to end your other active session for <strong>{email}</strong>.
+                    {revokeToken ? (
+                        <>
+                            End the other active session for <strong>{email}</strong> and
+                            sign in on this device.
+                        </>
+                    ) : (
+                        <>
+                            Confirm your password to end your other active session for{" "}
+                            <strong>{email}</strong>.
+                        </>
+                    )}
                 </Typography>
                 <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 3, width: '100%' }}>
                     <input type="hidden" {...register("email")} />
+                    {!revokeToken && (
+                      <>
                     <FormLabel htmlFor="force-logout-password" style={{ marginBottom: "0.9rem" }}>
                         Password
                     </FormLabel>
@@ -166,6 +213,8 @@ const ForceLogout = () => {
                         }
                         fullWidth
                     />
+                      </>
+                    )}
                     <BlueButtonComponent
                         loadingState={isLoading}
                         buttonType="submit"

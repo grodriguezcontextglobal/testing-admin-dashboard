@@ -155,6 +155,80 @@ describe("ForceLogout", () => {
     );
   });
 
+  /* With MFA mandatory, the password proves nothing the login did not already
+     prove — but it is also the only thing standing between a guessable URL and
+     ending someone's session. A link that carries its own secret replaces it;
+     one that does not still needs it. */
+  describe("a link that carries a revoke token", () => {
+    it("asks for nothing and posts the token", async () => {
+      renderAt("?email=ana%40bridgespcs.org&token=one-time-secret");
+
+      await screen.findByText("Revoke Active Session");
+      expect(passwordField()).toBeNull();
+
+      submitForm();
+
+      await waitFor(() =>
+        expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
+          email: "ana@bridgespcs.org",
+          token: "one-time-secret",
+        })
+      );
+    });
+
+    it("says what the button will do, without mentioning a password", async () => {
+      renderAt("?email=ana%40bridgespcs.org&token=one-time-secret");
+
+      expect(
+        await screen.findByText(/End the other active session for/)
+      ).toBeTruthy();
+      expect(screen.queryByText(/Confirm your password/)).toBeNull();
+    });
+
+    /* Same rule as the legacy password: a secret that arrived in the address
+       bar must not stay there. */
+    it("scrubs the token out of the URL as soon as it is read", async () => {
+      renderAt("?email=ana%40bridgespcs.org&token=one-time-secret&timestamp=1");
+
+      await screen.findByText("Revoke Active Session");
+      await waitFor(() => {
+        const current = screen.getByTestId("location-search").textContent;
+        expect(current).not.toContain("one-time-secret");
+        expect(current).not.toContain("token");
+      });
+      expect(screen.getByTestId("location-search").textContent).toContain(
+        "email=ana%40bridgespcs.org"
+      );
+    });
+
+    it("still posts the scrubbed token, not an empty one", async () => {
+      renderAt("?x_email=ana%40bridgespcs.org&x_token=one-time-secret");
+
+      await screen.findByText("Revoke Active Session");
+      await waitFor(() =>
+        expect(screen.getByTestId("location-search").textContent).not.toContain(
+          "one-time-secret"
+        )
+      );
+
+      submitForm();
+
+      await waitFor(() =>
+        expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
+          email: "ana@bridgespcs.org",
+          token: "one-time-secret",
+        })
+      );
+    });
+
+    it("keeps asking for the password when the link has no token", async () => {
+      renderAt("?email=ana%40bridgespcs.org");
+
+      await screen.findByText("Revoke Active Session");
+      expect(passwordField()).toBeTruthy();
+    });
+  });
+
   it("surfaces the server's rejection and stays put so the password can be retyped", async () => {
     devitrakApi.post.mockRejectedValue({ response: { data: { msg: "Invalid credentials." } } });
     renderAt("?email=ana%40bridgespcs.org");
