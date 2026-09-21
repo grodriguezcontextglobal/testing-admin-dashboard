@@ -1,4 +1,5 @@
 import { Typography } from "@mui/material";
+import { continueLabel } from "../../wizardSteps";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { renderFields } from "../../../utils/BulkItemsFields";
@@ -115,7 +116,7 @@ const LocationStep = ({
       </div>
       <div style={cardFootStyle}>
         <GrayButtonComponent title="Back" buttonType="button" func={goBack} />
-        <BlueButtonComponent title="Continue to ownership" buttonType="button" func={goNext} />
+        <BlueButtonComponent title={continueLabel("location")} buttonType="button" func={goNext} />
       </div>
     </div>
   );

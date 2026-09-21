@@ -1,7 +1,11 @@
 import { useState } from "react";
 import useBulkActionLogic from "./useBulkActionLogic";
 
-export const STEPS = ["details", "location", "ownership", "units", "review"];
+import { STEPS } from "./wizardSteps";
+
+/* Re-exported so the hook stays the one import a caller needs; the data itself
+   lives in wizardSteps.js, which has no imports of its own. */
+export { STEPS, stepNumber, continueLabel } from "./wizardSteps";
 
 const DETAILS_FIELDS = ["category_name", "item_group", "brand", "cost", "container", "containerSpotLimit"];
 const LOCATION_FIELDS = ["location", "tax_location"];

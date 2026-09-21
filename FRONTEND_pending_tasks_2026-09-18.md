@@ -27,7 +27,7 @@
 | 1 | Stop showing "queued" on the session-revoke modal | P1 `2:13`–`3:26` | **done** |
 | 2 | Make MFA mandatory — remove the opt-out | P1 `6:14`–`6:48` | **done (client)** |
 | 3 | Drop the password re-entry on session revoke | P1 `5:15`–`6:48` | **done (client)** — needs a token in the link |
-| 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | P2 |
+| 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | **done** |
 | 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | P2 |
 | 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
 | 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | **done** |
@@ -250,6 +250,24 @@ name. It grants them nothing, but it is an open relay for one of our templates.
 | `src/pages/inventory/actions/add/ux/wizard/OwnershipStep.jsx` | 97 | `Continue to units` | `Continue to step 4` |
 
 The step-4 button is already right — see §4.
+
+#### Done 2026-09-21
+
+The number is read off `STEPS` rather than typed into each button:
+`continueLabel("details")` returns "Continue to step 2". That is the only way
+this label can go wrong — insert or reorder a step and three buttons start
+counting something else, silently — and it is the same drift that put a Company
+column in the import template.
+
+`STEPS`, `stepNumber` and `continueLabel` moved to `wizardSteps.js`, a module
+with no imports. Reading the label out of `useCreateGroupWizard` would have
+dragged `useBulkActionLogic` — the API clients, the queries, all of it — into
+three components that only wanted a string. The hook re-exports them, so
+nothing else had to change.
+
+**Step 4 left alone**, as §4 says: it reads "Review {n} units", which he
+approved at `29:26`. Numbering it "Continue to step 5" would replace a label
+that says what happens with one that says where you land.
 
 ### 5. The step-1 notice must name the last step
 

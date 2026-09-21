@@ -1,4 +1,5 @@
 import { Typography } from "@mui/material";
+import { continueLabel } from "../../wizardSteps";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import { renderFields } from "../../../utils/BulkItemsFields";
 import CopyFromExistingDevicePanel from "../../../utils/uxForm/CopyFromExistingDevicePanel";
@@ -80,7 +81,7 @@ const DetailsStep = ({
         </div>
         <div style={cardFootStyle}>
           <span />
-          <BlueButtonComponent title="Continue to location" buttonType="button" func={goNext} />
+          <BlueButtonComponent title={continueLabel("details")} buttonType="button" func={goNext} />
         </div>
       </div>
     </div>
