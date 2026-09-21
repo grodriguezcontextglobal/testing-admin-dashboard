@@ -41,20 +41,106 @@ export const REFERENCE_FIELDS = [
     label: "Category",
     placeholder: "Any category",
     optionsKey: "category_name",
+    criteriaKey: "category",
   },
   {
     name: "reference_item_group",
     label: "Group",
     placeholder: "Any device",
     optionsKey: "item_group",
+    criteriaKey: "itemGroup",
   },
   {
     name: "reference_brand",
     label: "Brand",
     placeholder: "Any brand",
     optionsKey: "brand",
+    criteriaKey: "brand",
   },
 ];
+
+/**
+ * Whether one unit satisfies a set of criteria. A blank criterion is not a
+ * constraint, which is what lets any single filter be used on its own.
+ *
+ * Extracted because the search and the option lists have to agree on what
+ * "matches" means: if they drift, the dropdowns offer a combination the search
+ * then finds nothing for.
+ */
+export const matchesReferenceCriteria = (item, criteria = {}) => {
+  const { category, itemGroup, brand } = criteria;
+  return (
+    (!isFilled(category) || item?.category_name === category) &&
+    (!isFilled(itemGroup) || item?.item_group === itemGroup) &&
+    (!isFilled(brand) || item?.brand === brand)
+  );
+};
+
+const distinctFieldValues = (items, field) => [
+  ...new Set(items.map((item) => item?.[field]).filter(isFilled)),
+];
+
+/**
+ * The options each criterion should offer, given what the others are set to.
+ *
+ * > P2 `11:04` — "if I put laptops here, I should not be able to do
+ * > disinfectant wipes."
+ *
+ * The three filters were built independent so any one could be used alone, and
+ * that is worth keeping — but independent also meant category "Laptops" happily
+ * offered group "disinfectant wipes" and brand "Ticonderoga", a combination no
+ * unit in the company can satisfy.
+ *
+ * Each list is narrowed by **the other** criteria, never by its own value. That
+ * is the whole trick: filter a field by itself and picking Dell collapses the
+ * brand list to Dell alone, so you cannot switch to HP without clearing it
+ * first. Excluding itself also keeps "use one filter alone" working — set only
+ * the brand and its own list still shows every brand.
+ *
+ * Narrowing is mutual, not a one-way cascade: choosing a brand narrows category
+ * and group, and choosing a category narrows group and brand. Order of picking
+ * does not change what is offered.
+ *
+ * A value already chosen that the others have since made impossible is left
+ * where it is. It will simply not be among the options any more, and the search
+ * says no device matches — clearing what someone typed would be its own
+ * surprise.
+ *
+ * @param {Array} inventoryItems
+ * @param {{category?: string, itemGroup?: string, brand?: string}} criteria
+ * @returns {Array<string[]>} one list per REFERENCE_FIELDS entry, in order.
+ */
+export const narrowReferenceOptions = (inventoryItems, criteria = {}) => {
+  const items = Array.isArray(inventoryItems) ? inventoryItems : [];
+
+  return REFERENCE_FIELDS.map((field) => {
+    const others = { ...criteria, [field.criteriaKey]: "" };
+    return distinctFieldValues(
+      items.filter((item) => matchesReferenceCriteria(item, others)),
+      field.optionsKey,
+    );
+  });
+};
+
+/**
+ * The distinct values a field takes across the company's units, optionally
+ * narrowed to the units matching some criteria.
+ *
+ * This body existed four times, byte for byte — in useInventoryData,
+ * useBulkActionLogic, AddNewItem and edit/useLogic — so the cascade would have
+ * had to be added four times too.
+ *
+ * It also drops blanks. The old copies used `groupBy` and read back
+ * `Object.keys`, which turns a missing field into the *string* "undefined" and
+ * offered it in the dropdown as though it were a category.
+ */
+export const itemOptionsFrom = (inventoryItems, field, narrowBy) => {
+  const items = Array.isArray(inventoryItems) ? inventoryItems : [];
+  const scoped = narrowBy
+    ? items.filter((item) => matchesReferenceCriteria(item, narrowBy))
+    : items;
+  return distinctFieldValues(scoped, field);
+};
 
 export const toOptions = (options) =>
   (options ?? []).map((option) =>
@@ -90,12 +176,8 @@ export const findReferenceMatches = (inventoryItems, criteria = {}) => {
     return nothing;
   }
 
-  const { category, itemGroup, brand } = criteria;
-  const matches = inventoryItems.filter(
-    (item) =>
-      (!isFilled(category) || item?.category_name === category) &&
-      (!isFilled(itemGroup) || item?.item_group === itemGroup) &&
-      (!isFilled(brand) || item?.brand === brand),
+  const matches = inventoryItems.filter((item) =>
+    matchesReferenceCriteria(item, criteria),
   );
 
   if (matches.length === 0) return nothing;

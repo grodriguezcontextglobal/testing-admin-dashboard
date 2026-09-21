@@ -99,3 +99,98 @@ describe("CopyFromExistingDevicePanel", () => {
     });
   });
 });
+
+/* El panel es el único sitio donde se ve si el filtrado llega a la UI: la regla
+   está probada en referenceLookup, esto comprueba que el panel la usa y que le
+   pasa los criterios correctos — los otros dos, nunca el propio. */
+describe("los tres filtros se angostan entre sí", () => {
+  const INVENTORY = [
+    { category_name: "Laptops", item_group: "XPS 15", brand: "Dell" },
+    { category_name: "Cleaning", item_group: "Disinfectant wipes", brand: "Ticonderoga" },
+  ];
+
+  /** `retrieveItemOptions` tal como lo dan los hooks reales, sobre un inventario
+   *  de dos unidades que no comparten nada. */
+  const retrieve = vi.fn((field, narrowBy) => {
+    const scoped = !narrowBy
+      ? INVENTORY
+      : INVENTORY.filter(
+          (item) =>
+            (!narrowBy.category || item.category_name === narrowBy.category) &&
+            (!narrowBy.itemGroup || item.item_group === narrowBy.itemGroup) &&
+            (!narrowBy.brand || item.brand === narrowBy.brand),
+        );
+    return [...new Set(scoped.map((item) => item[field]))];
+  });
+
+  const renderOpen = (defaults) => {
+    retrieve.mockClear();
+    const Open = () => {
+      const { control } = useForm({
+        defaultValues: {
+          reference_category_name: "",
+          reference_item_group: "",
+          reference_brand: "",
+          ...defaults,
+        },
+      });
+      return (
+        <CopyFromExistingDevicePanel
+          control={control}
+          retrieveItemOptions={retrieve}
+          onSearch={vi.fn()}
+          onClear={vi.fn()}
+          copiedFrom={null}
+        />
+      );
+    };
+    render(<Open />);
+    fireEvent.click(trigger());
+  };
+
+  const criteriaFor = (field) =>
+    retrieve.mock.calls.find((call) => call[0] === field)?.[1];
+
+  it("pide cada lista con los otros dos criterios, nunca con el propio", () => {
+    renderOpen({ reference_brand: "Dell" });
+
+    expect(criteriaFor("category_name")).toEqual({
+      category: "",
+      itemGroup: "",
+      brand: "Dell",
+    });
+    expect(criteriaFor("item_group")).toEqual({
+      category: "",
+      itemGroup: "",
+      brand: "Dell",
+    });
+    /* La propia marca va en blanco: si se filtrara por sí misma, Dell sería la
+       única opción y no habría forma de cambiarla. */
+    expect(criteriaFor("brand")).toEqual({
+      category: "",
+      itemGroup: "",
+      brand: "",
+    });
+  });
+
+  it("deja de ofrecer la combinación que Fredrik señaló", () => {
+    renderOpen({ reference_category_name: "Laptops" });
+
+    const groups = retrieve.mock.results.find(
+      (result, index) => retrieve.mock.calls[index][0] === "item_group",
+    )?.value;
+
+    expect(groups).toEqual(["XPS 15"]);
+    expect(groups).not.toContain("Disinfectant wipes");
+  });
+
+  it("sin nada elegido pide las listas completas", () => {
+    renderOpen({});
+
+    expect(criteriaFor("brand")).toEqual({
+      category: "",
+      itemGroup: "",
+      brand: "",
+    });
+  });
+});

@@ -38,6 +38,14 @@ import {
  * 3. "Copy details" is disabled until at least one criterion is set, with the
  *    reason next to it, instead of accepting the click and answering with a
  *    warning notification.
+ *
+ * The three criteria narrow each other: choosing a brand cuts the category and
+ * group lists down to that brand's, and choosing a category cuts group and
+ * brand. It is mutual rather than a one-way cascade, so the order they are
+ * picked in does not change what is offered, and no list is ever narrowed by
+ * its own value — that would make a chosen value the only one on offer.
+ * Using one filter on its own still works, which was the reason the lists were
+ * independent in the first place.
  */
 
 const panelStyle = {
@@ -80,16 +88,28 @@ const CopyFromExistingDevicePanel = ({
     if (copiedFrom) setOpen(true);
   }, [copiedFrom]);
 
-  const optionsByField = useMemo(
-    () => REFERENCE_FIELDS.map((field) => toOptions(retrieveItemOptions(field.optionsKey))),
-    [retrieveItemOptions],
-  );
-
   const [category, itemGroup, brand] = useWatch({
     control,
     name: REFERENCE_FIELDS.map((field) => field.name),
   });
   const canCopy = hasReferenceCriteria({ category, itemGroup, brand });
+
+  /* Each list is narrowed by the other two, so category "Laptops" stops
+     offering group "disinfectant wipes" — and never by its own value, or
+     picking a brand would collapse the brand list to that one brand and leave
+     no way to change it. `narrowReferenceOptions` has the full rule. */
+  const optionsByField = useMemo(
+    () =>
+      REFERENCE_FIELDS.map((field) =>
+        toOptions(
+          retrieveItemOptions(field.optionsKey, {
+            ...{ category, itemGroup, brand },
+            [field.criteriaKey]: "",
+          }),
+        ),
+      ),
+    [retrieveItemOptions, category, itemGroup, brand],
+  );
 
   if (!hasReferenceOptions(optionsByField)) return null;
 

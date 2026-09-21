@@ -1,4 +1,5 @@
 import { Grid } from "@mui/material";
+import { itemOptionsFrom } from "./utils/referenceLookup";
 import { useQuery } from "@tanstack/react-query";
 import { message } from "antd";
 import { groupBy } from "lodash";
@@ -120,17 +121,10 @@ const AddNewItem = () => {
     invalidateInventoryQueries(queryClient, {
       companyId: user.sqlInfo.company_id,
     });
-  const retrieveItemOptions = (props) => {
-    const result = new Set();
-    if (itemsInInventoryQuery.data) {
-      const itemsOptions = itemsInInventoryQuery.data.data.items;
-      const groupingBy = groupBy(itemsOptions, `${props}`);
-      for (let data of Object.keys(groupingBy)) {
-        result.add(data);
-      }
-    }
-    return Array.from(result);
-  };
+  /* `narrowBy` is what makes the copy-details filters cascade: the panel asks
+     for one field's options given what the other two are set to. */
+  const retrieveItemOptions = (field, narrowBy) =>
+    itemOptionsFrom(itemsInInventoryQuery.data?.data?.items, field, narrowBy);
   const renderLocationOptions = () => {
     if (!companyLocationsListQuery?.data?.data?.data) {
       return [];

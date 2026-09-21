@@ -12,7 +12,7 @@
 
 ## 0. Where it stands
 
-**11 of 28 closed. 17 open.** Eight of the eleven were closed this week; three
+**12 of 28 closed. 16 open.** Nine of the twelve were closed this week; three
 were already true in the code when the list was written.
 
 Two of the closed ones are only closed **on the client**. They are marked so,
@@ -20,9 +20,9 @@ and each names the one thing the backend still has to do.
 
 | | |
 |---|---|
-| Closed | 1, 2*, 3*, 8, 12, 14, 15, 18, 20, plus the three in §4 of the source list |
+| Closed | 1, 2*, 3*, 7, 8, 12, 14, 15, 18, 20, plus the three in §4 of the source list |
 | Open, P1 | 21 |
-| Open, P2 | 4, 5, 6, 7, 9, 10, 11, 22, 25, 26, 27 |
+| Open, P2 | 4, 5, 6, 9, 10, 11, 22, 25, 26, 27 |
 | Open, P3 | 13, 16, 17, 19, 23, 24, 28 |
 
 `*` client done, waiting on the backend.
@@ -115,7 +115,6 @@ Items 4 to 13, less the two closed. None of these started.
 | 4 | Wizard buttons: "Continue to step N", not "Continue to location" | `12:50`, `29:11` |
 | 5 | Step-1 notice must name step 5 explicitly | `10:16`–`10:30` |
 | 6 | Validation error is too easy to miss | `13:27`–`13:55` |
-| 7 | Copy-details filters must cascade | `10:33`–`12:46` |
 | 9 | Rewrite the "One at a time" instructions | `16:17`–`19:21` |
 | 10 | Rename the three unit-entry options | `18:25`–`19:21` |
 | 11 | Rewrite the paste-a-list instructions | `19:26`–`26:30` |

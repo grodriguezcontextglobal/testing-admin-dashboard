@@ -30,7 +30,7 @@
 | 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | P2 |
 | 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | P2 |
 | 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
-| 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | P2 |
+| 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | **done** |
 | 8 | Pre-fill location in step 2 from the copied group | P1 `13:55`–`14:55` | **done** |
 | 9 | Rewrite the "One at a time" instructions | P1 `16:17`–`19:21` | P2 |
 | 10 | Rename the three unit-entry options | P1 `18:25`–`19:21` | P2 |
@@ -286,6 +286,37 @@ next, and Gustavo agreed at `12:46` (*"Yeah, I'll do that"*).
 **Task:** in `CopyFromExistingDevicePanel.jsx`, make each filter narrow the
 options of the ones after it. Keep "use any single filter alone" working — that
 was the reason the current behaviour exists, and it should not be lost.
+
+#### Done 2026-09-21 — mutual, not a one-way cascade
+
+"Narrow the ones after it" would have made the order of picking matter: choose
+the brand first and the category list follows, choose it last and nothing
+happens. Each list is narrowed by **the other two** instead, so picking Dell
+cuts category and group down to Dell's, picking Laptops cuts group and brand,
+and the order is irrelevant.
+
+**No list is narrowed by its own value.** That is what keeps the panel usable:
+filter the brand field by the chosen brand and Dell becomes the only brand on
+offer, with no way to switch to HP without clearing it first. Excluding itself
+is also what keeps "use one filter alone" working, which was the reason the
+lists were independent in the first place.
+
+`narrowReferenceOptions(items, criteria)` holds the rule, and
+`matchesReferenceCriteria` is now shared with `findReferenceMatches` — the
+dropdowns and the search have to agree on what "matches" means, or the options
+offer a combination the search then finds nothing for.
+
+**A combination with nothing in it shows an empty list**, and a value that the
+other filters have since made impossible is left where it is rather than
+cleared. Silently deleting what someone typed is its own surprise; the search
+already says no device matches.
+
+**Found on the way:** `retrieveItemOptions` existed four times, byte for byte —
+`useInventoryData`, `useBulkActionLogic`, `AddNewItem`, `edit/useLogic` — so the
+cascade would have had to be written four times. It is now one function,
+`itemOptionsFrom`. The old copies read their values back out of `groupBy` keys,
+which turns a unit with no category into the string `"undefined"` and offered it
+in the dropdown as though it were one; that is gone with them.
 
 ### 8. Pre-fill the location in step 2
 
