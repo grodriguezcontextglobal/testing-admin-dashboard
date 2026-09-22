@@ -1,4 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
+import { renderFieldError } from "../../../../../../../inventory/actions/utils/fieldError";
 import { AutoComplete, Breadcrumb, Button, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { CheckIcon } from "../../../../../../../../components/icons/CheckIcon";
@@ -69,20 +70,6 @@ const SingleItemForm = ({
 }) => {
   const assignableTargets = useAssignableTargets();
 
-  const renderingErrorMessage = (error) => {
-    if (error) {
-      return (
-        <Typography
-          variant="body2"
-          color="error"
-          style={{ textAlign: "left", marginTop: "1rem" }}
-        >
-          {error.message}
-        </Typography>
-      );
-    }
-    return null;
-  };
   return (
     <form onSubmit={handleSubmit(savingNewItem)} className="form">
       <Grid container spacing={1}>
@@ -360,7 +347,7 @@ const SingleItemForm = ({
                             placeholder={item?.placeholder}
                             allowClear
                           />
-                          {renderingErrorMessage(errors[item?.name])}
+                          {renderFieldError(errors[item?.name])}
                           {renderingOptionsButtons({
                             watch,
                             manuallyAddingSerialNumbers,

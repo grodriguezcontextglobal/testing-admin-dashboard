@@ -1,4 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
+import { renderFieldError } from "../../../../../inventory/actions/utils/fieldError";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { renderFields } from "../../../../../inventory/actions/utils/BulkItemsFields";
@@ -59,20 +60,6 @@ const BulkRentedItems = ({
 }) => {
   const assignableTargets = useAssignableTargets();
 
-  const renderingErrorMessage = (error) => {
-    if (error) {
-      return (
-        <Typography
-          variant="body2"
-          color="error"
-          style={{ textAlign: "left", marginTop: "1rem" }}
-        >
-          {error.message}
-        </Typography>
-      );
-    }
-    return null;
-  };
 
   return (
     <form onSubmit={handleSubmit(savingNewItem)}>
@@ -263,7 +250,7 @@ const BulkRentedItems = ({
                             AutoComplete={AutoComplete}
                             AntSelectorStyle={AntSelectorStyle}
                             errors={errors}
-                            renderingErrorMessage={renderingErrorMessage}
+                            renderFieldError={renderFieldError}
                             renderingOptionsButtons={renderingOptionsButtons}
                             watch={watch}
                             setOpenScanningModal={setOpenScanningModal}

@@ -1,4 +1,6 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
+import { scrollToFirstFieldError } from "../../../utils/scrollToFirstFieldError";
+import { renderFieldError } from "../../../utils/fieldError";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { groupBy } from "lodash";
 import { Controller } from "react-hook-form";
@@ -73,14 +75,6 @@ const EditFieldsStep = ({
   goBack,
   goNext,
 }) => {
-  const renderingErrorMessage = (error) => {
-    if (!error) return null;
-    return (
-      <Typography variant="body2" color="error" style={{ textAlign: "left", marginTop: "1rem" }}>
-        {error.message}
-      </Typography>
-    );
-  };
 
   const assignableTargets = useAssignableTargets();
 
@@ -191,7 +185,7 @@ const EditFieldsStep = ({
                 AutoComplete={AutoComplete}
                 AntSelectorStyle={AntSelectorStyle}
                 errors={errors}
-                renderingErrorMessage={renderingErrorMessage}
+                renderFieldError={renderFieldError}
                 renderingOptionsButtons={renderingOptionsButtons}
                 watch={watch}
                 setOpenScanningModal={setOpenScanningModal}
@@ -257,7 +251,7 @@ const EditFieldsStep = ({
                         AutoComplete={AutoComplete}
                         AntSelectorStyle={AntSelectorStyle}
                         errors={errors}
-                        renderingErrorMessage={renderingErrorMessage}
+                        renderFieldError={renderFieldError}
                         watch={watch}
                         value={value}
                         onChange={onChange}
@@ -304,7 +298,7 @@ const EditFieldsStep = ({
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px" }}>
         <GrayButtonComponent title="Back" buttonType="button" func={goBack} />
-        <BlueButtonComponent title="Review changes" buttonType="button" func={handleSubmit(goNext)} />
+        <BlueButtonComponent title="Review changes" buttonType="button" func={handleSubmit(goNext, () => scrollToFirstFieldError())} />
       </div>
     </div>
   );

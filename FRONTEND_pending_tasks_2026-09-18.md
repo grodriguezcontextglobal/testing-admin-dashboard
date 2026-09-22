@@ -29,7 +29,7 @@
 | 3 | Drop the password re-entry on session revoke | P1 `5:15`–`6:48` | **done (client)** — needs a token in the link |
 | 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | **done** |
 | 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | **done** |
-| 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
+| 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | **done** |
 | 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | **done** |
 | 8 | Pre-fill location in step 2 from the copied group | P1 `13:55`–`14:55` | **done** |
 | 9 | Rewrite the "One at a time" instructions | P1 `16:17`–`19:21` | **done** |
@@ -309,6 +309,29 @@ screen, above the fold he was looking at.
 **Task:** make the step's validation error unmissable — weight and size at
 minimum, and scroll it into view when continue is blocked. A stakeholder
 reporting a working button as broken is the strongest possible evidence here.
+
+#### Done 2026-09-22
+
+**Weight and size**, as he asked: `body2` at normal weight became `body1` at
+600, a size up. Plus `role="alert"` — someone who cannot see the form at all had
+even less to go on than he did.
+
+**And the page goes to the error.** That is the half that fixes the symptom: a
+bold message nobody can see is still a dead button. `scrollToFirstFieldError`
+takes the first error **in DOM order** — which is the first one on the page,
+whatever order the form declares its fields in — and centres it. Wired into all
+three blocking steps of the add wizard and the edit wizard's field step, where
+`handleSubmit` was swallowing the block silently for want of a second argument.
+
+It runs on the next frame: the errors are rendered by the same state update that
+decides the step is blocked, so looking in the same tick finds the previous
+render's or nothing.
+
+**`renderingErrorMessage` existed six times, byte for byte** — both inventory
+wizards, both standalone forms, the event flow and the staff assignment form.
+Fixing only the screen he was looking at would have left five with the small
+text and no scroll, and the defect is the component's, not the screen's. One
+copy now, so "more visible" happened in all six at once.
 
 ### 7. Copy-details filters must cascade
 

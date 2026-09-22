@@ -1,4 +1,5 @@
 import { Grid, InputLabel, Typography } from "@mui/material";
+import { renderFieldError } from "../../../utils/fieldError";
 import { AutoComplete, Breadcrumb, Divider, Tooltip } from "antd";
 import { Controller } from "react-hook-form";
 import { QuestionIcon } from "../../../../../../components/icons/QuestionIcon";
@@ -14,14 +15,6 @@ import {
 import FieldsSections from "../../../utils/uxForm/FieldsSections";
 import ImageUploaderComponent from "../../../utils/uxForm/ImageUploaderComponent";
 
-const renderingErrorMessage = (error) => {
-  if (!error) return null;
-  return (
-    <Typography variant="body2" color="error" style={{ textAlign: "left", marginTop: "1rem" }}>
-      {error.message}
-    </Typography>
-  );
-};
 
 /**
  * Renders one section's worth of fields (from BulkItemsFields.jsx, grouped
@@ -107,7 +100,7 @@ const FieldGrid = ({
                   AutoComplete={AutoComplete}
                   AntSelectorStyle={AntSelectorStyle}
                   errors={errors}
-                  renderingErrorMessage={renderingErrorMessage}
+                  renderFieldError={renderFieldError}
                   renderingOptionsButtons={renderingOptionsButtons}
                   watch={watch}
                   setOpenScanningModal={setOpenScanningModal}
@@ -195,7 +188,7 @@ const FieldGrid = ({
                               AutoComplete={AutoComplete}
                               AntSelectorStyle={AntSelectorStyle}
                               errors={errors}
-                              renderingErrorMessage={renderingErrorMessage}
+                              renderFieldError={renderFieldError}
                               watch={watch}
                               value={value}
                               onChange={onChange}
@@ -238,7 +231,7 @@ const FieldGrid = ({
                           AutoComplete={AutoComplete}
                           AntSelectorStyle={AntSelectorStyle}
                           errors={errors}
-                          renderingErrorMessage={renderingErrorMessage}
+                          renderFieldError={renderFieldError}
                           watch={watch}
                           value={value}
                           onChange={onChange}
