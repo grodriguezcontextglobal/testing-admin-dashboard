@@ -32,7 +32,7 @@ const options = [
   { value: "Select an option" },
   { value: "Permanent" },
   { value: "Rent" },
-  { value: "Sale" },
+  { value: "Resale" },
 ];
 
 const AssignemntNewDeviceInInventory = ({ closeModal }) => {

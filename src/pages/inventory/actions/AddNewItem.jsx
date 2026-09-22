@@ -1,4 +1,5 @@
 import { Grid } from "@mui/material";
+import { OWNERSHIP_VALUES } from "./utils/ownershipUtils";
 import { itemOptionsFrom } from "./utils/referenceLookup";
 import { useQuery } from "@tanstack/react-query";
 import { message } from "antd";
@@ -30,7 +31,7 @@ import validatingInputFields from "./utils/validatingInputFields";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
-const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Sale" }];
+const options = OWNERSHIP_VALUES.map((value) => ({ value }));
 const AddNewItem = () => {
   const {
     supplierList,

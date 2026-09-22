@@ -61,12 +61,10 @@ export const dataToDisplay = (dataStructuringFormat, searchItem) => {
   return [];
 };
 
-export const dictionary = {
-  Permanent: "Permanent",
-  Rent: "Leased",
-  Sale: "For sale",
-  Resale: "For sale",
-};
+/* One dictionary for the whole app, in ownershipUtils. This one said "For
+   sale" while the filters said "For resale" and the export said "For Resale" —
+   three names for one value on three screens. */
+export { OWNERSHIP_LABELS as dictionary } from "../../actions/utils/ownershipUtils";
 export const cellStyle = {
   display: "flex",
   justifyContent: "flex-start",

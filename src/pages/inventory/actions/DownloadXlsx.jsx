@@ -1,4 +1,5 @@
 import { message } from "antd";
+import { OWNERSHIP_LABELS } from "./utils/ownershipUtils";
 import { useCallback, useState } from "react";
 import { saveAs } from "file-saver";
 import { XLSXIcon } from "../../../components/icons/XLSXIcon";
@@ -15,12 +16,6 @@ const DownloadingXlsxFileExcelJS = ({ props = [], fetchRows }) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [isExporting, setIsExporting] = useState(false);
 
-  const dictionaryOwnership = {
-    Permanent: "Permanent",
-    Rent: "Rented",
-    Sale: "For Resale",
-    Resale: "For Resale",
-  };
 
   const formatExtraInfo = (extra) => {
     if (!Array.isArray(extra) || extra.length === 0) return "";
@@ -101,7 +96,7 @@ const DownloadingXlsxFileExcelJS = ({ props = [], fetchRows }) => {
           ? (item?.location ?? "")
           : (item?.event_name ?? "");
         const ownershipLabel =
-          dictionaryOwnership[item?.ownership] ?? item?.ownership ?? "";
+          OWNERSHIP_LABELS[item?.ownership] ?? item?.ownership ?? "";
         const assignableLabel =
           item?.enableAssignFeature === 1 ? "Assignable" : "No Assignable";
         const rentedReturnDate =

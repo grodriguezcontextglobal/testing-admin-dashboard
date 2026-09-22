@@ -38,7 +38,7 @@ const DeviceDescriptionTags = ({ dataFound }) => {
       color: "#ef6820",
     },
     Resale: {
-      label: "For resale",
+      label: "Resale",
       color: "#ef6820",
     },
   };

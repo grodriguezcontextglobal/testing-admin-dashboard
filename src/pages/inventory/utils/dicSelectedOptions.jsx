@@ -27,9 +27,4 @@ export const dicSelectedOptions = {
   8: "Category",
 };
 
-export const dictionary = {
-  Permanent: "Permanent",
-  Rent: "Leased",
-  Sale: "For resale",
-  Resale: "For resale",
-};
+export { OWNERSHIP_LABELS as dictionary } from "../actions/utils/ownershipUtils";

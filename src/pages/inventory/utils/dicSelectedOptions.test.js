@@ -44,8 +44,19 @@ describe("dicSelectedOptions", () => {
     expect(dicSelectedOptions[7]).toBe("Status");
   });
 
+  /* The dictionary is no longer this file's: it lives in ownershipUtils, one
+     copy for the five screens that each had their own and disagreed — the main
+     table said "For sale" here, the filters "For resale", the export
+     "For Resale". */
   it("still translates the ownership values the table paints", () => {
     expect(dictionary.Rent).toBe("Leased");
-    expect(dictionary.Sale).toBe("For resale");
+    expect(dictionary.Resale).toBe("Resale");
+  });
+
+  /* "Sale" is still a key because rows written before the two spellings were
+     reconciled are still in the database, and they have to read as what they
+     are rather than as a blank cell. */
+  it("keeps reading rows that were stored under the old spelling", () => {
+    expect(dictionary.Sale).toBe("Resale");
   });
 });

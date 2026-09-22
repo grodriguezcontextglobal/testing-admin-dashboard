@@ -1,3 +1,5 @@
+import { OWNERSHIP_VALUES } from "./ownershipUtils";
+
 export const renderFields = ({
   displayPreviewImage,
   displaySublocationFields,
@@ -205,7 +207,7 @@ export const renderFields = ({
       htmlElement: "",
       style: OutlinedInputStyle,
       required: true,
-      options: normalizeOptions(["Permanent", "Rent", "Sale"]),
+      options: normalizeOptions(OWNERSHIP_VALUES),
       htmlOption: 0,
       tooltip: true,
       tooltipMessage: "Date when the leased equipment will be returned.",

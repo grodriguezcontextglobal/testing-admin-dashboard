@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { normalizeOwnership } from "../actions/utils/ownershipUtils";
 import { Typography } from "@mui/material";
 import { Avatar } from "antd";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
@@ -152,16 +153,18 @@ const columnsTableMain = ({
           text: "Permanent",
           value: "Permanent",
         },
-        {
-          text: "Sale",
-          value: "Sale",
-        },
+        /* One option, not two. "Sale" and "Resale" are the same thing written
+           by different halves of the app, and offering both meant choosing
+           either one hid every row the other half had written. */
         {
           text: "Resale",
           value: "Resale",
         },
       ],
-      onFilter: (value, record) => record.ownership === value,
+      /* Compared through the normalizer so a row stored as "Sale" answers to
+         the Resale filter. */
+      onFilter: (value, record) =>
+        normalizeOwnership(record.ownership) === normalizeOwnership(value),
       sorter: {
         compare: (a, b) => ("" + a.ownership).localeCompare(b.ownership),
       },
