@@ -87,6 +87,21 @@ describe("the body", () => {
     expect(body.units[1].image_url).toBe("");
   });
 
+  it("tells the server which row each unit came from", () => {
+    const { body } = build([
+      unit({ rowNumber: 2 }),
+      unit({ serial_number: "AUD-2", rowNumber: 8 }),
+    ]);
+
+    expect(body.units.map((u) => u.row)).toEqual([2, 8]);
+  });
+
+  /* Not a column of `item_inv`, so the server ignores it. An import never puts
+     a unit inside a container, so the value was always "no" anyway. */
+  it("does not send isItInContainer", () => {
+    expect(build([unit()]).body.defaults).not.toHaveProperty("isItInContainer");
+  });
+
   it("sends the company and the fixed defaults", () => {
     const { body } = build([unit()]);
 
@@ -106,6 +121,17 @@ describe("the body", () => {
    line, which is all it can see. A file with a skipped row in the middle makes
    that a different row from the one the person is looking at. */
 describe("pointing at the row someone has to fix", () => {
+  /* The deployed server echoes our own `row` back, so there is nothing to
+     translate — and translating it again would move it. */
+  it("leaves a row the server echoed back alone", () => {
+    const rowByIndex = [2, 8, 9];
+
+    expect(spreadsheetRowFor(8, rowByIndex)).toBe(8);
+    expect(spreadsheetRowFor(9, rowByIndex)).toBe(9);
+  });
+
+  /* Until it is deployed, the older version derives the row from the unit's
+     place in the array and is wrong the moment a row is skipped. */
   it("translates the reported position back to the spreadsheet row", () => {
     // Row 7 was skipped, so unit 2 of the array is really row 8.
     const rowByIndex = [2, 8, 9];

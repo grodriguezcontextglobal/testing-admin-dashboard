@@ -67,6 +67,10 @@ Tres tolerancias que os ahorran limpiar la hoja antes de mandarla:
 - **`location`** acepta la cadena o `{ name }`.
 - **`main_warehouse`**, si falta, cae a la locación de la unidad.
 
+`row` es opcional pero **mandadlo**: es de dónde salió la unidad en la hoja, y se
+devuelve tal cual en cualquier error. `isItInContainer` se ignora — no es una
+columna de `item_inv` (ver §8).
+
 `defaults` es opcional **y tiene respaldo en el servidor**: si no mandáis
 `display_item`, vale 1. Un import no puede depender de que el cliente se acuerde
 de mandarlo — sin él la unidad se da de alta invisible.
@@ -95,8 +99,12 @@ en el resultado del job, para que tengáis **una sola lista** que enseñar.
   "limit": 10000 }
 ```
 
-**`row` es el número de fila de Excel**, contando la cabecera — no el índice del
-array. La persona que arregla el fichero ve filas.
+**`row` es el vuestro, devuelto tal cual.** Mandad `row` en cada unidad y
+aparece igual en `errors[]` y en `failed[]`; el servidor no lo recalcula
+(corregido el 22-sep a petición vuestra — ver
+`FRONTEND_inventory_import_row_2026-09-22.md`). Si una unidad viene sin `row`,
+el respaldo es su posición en el array + 2, que es **la posición en el array y no
+la fila del fichero** — con el array comprimido no coinciden.
 
 Se devuelven como mucho **25** errores: más que eso no ayuda a nadie a arreglar
 una hoja.
@@ -225,7 +233,15 @@ sola petición**: hoy responde 404.
 - `IMPORT_MODES.COMPATIBLE` y el troceo en 499 peticiones se pueden borrar **en
   cuanto os confirmemos el despliegue**, no antes.
 
-## 8. Un detalle que veréis en los datos
+## 8. `isItInContainer` no se guarda en ningún sitio
+
+Está en vuestra lista de `defaults`, pero **no es una columna de `item_inv`**: la
+tabla tiene `container`, `containerSpotLimit` y `container_id`, y el bulk viejo
+tampoco lo escribe. Se ignora sin error. Si esperabais que se guardara, hay que
+decidir dónde antes, porque hoy no hay dónde. `containerId` sí se guarda, en
+`container_id`.
+
+## 9. Un detalle que veréis en los datos
 
 Cada unidad se da de alta con `current_location` = su locación. Deja de
 reflejarla en cuanto la unidad se asigna a un evento, y de eso ya se encarga esa

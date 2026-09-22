@@ -22,14 +22,21 @@ import { parseExtraInfoCell } from "./inventoryImportPayload";
  */
 export const MAX_IMPORT_UNITS = 10000;
 
-/** Fixed for every unit of a spreadsheet import, as they have always been. */
+/**
+ * Fixed for every unit of a spreadsheet import, as they have always been.
+ *
+ * `isItInContainer` is not here any more. It is not a column of `item_inv` —
+ * the table has `container`, `containerSpotLimit` and `container_id` — so the
+ * server ignored it and the older bulk endpoint never wrote it either. Nothing
+ * is lost: an import never places a unit inside a container, so the value it
+ * was sending was always "no".
+ */
 export const IMPORT_DEFAULTS = {
   warehouse: 1,
   display_item: 1,
   enableAssignFeature: 1,
   container: 0,
   containerSpotLimit: null,
-  isItInContainer: 0,
   containerId: "[]",
   returnedRentedInfo: "",
   return_date: null,
@@ -53,6 +60,10 @@ export const buildSpreadsheetImportRequest = ({
     company,
     defaults: { ...IMPORT_DEFAULTS },
     units: units.map((unit) => ({
+      /* Where this unit came from in the sheet. The server echoes it back on
+         every error, so a message points at the row the person is looking at
+         rather than at a position in an array they cannot see. */
+      row: unit.rowNumber,
       serial_number: String(unit.serial_number),
       category_name: unit.category_name,
       item_group: unit.item_group,
@@ -79,20 +90,24 @@ export const buildSpreadsheetImportRequest = ({
 /**
  * The spreadsheet row an error refers to.
  *
- * The server reports `row` as the position in `units` plus the header line,
- * because that is all it can see. It is not the row the person is looking at:
- * a file whose row 7 was skipped for a missing serial number has every later
- * unit one place earlier in the array than it is in Excel.
+ * The server now echoes back the `row` each unit was sent with, so this is a
+ * passthrough — `spreadsheetRowFor(4, …)` is 4. It survives only for the
+ * version that is deployed today, which still derives the row from a position
+ * in the array and gets it wrong as soon as one row is skipped.
  *
- * Translating here keeps the message pointing at the row they have to fix. The
- * server has been asked to accept and echo an explicit `row` instead, at which
- * point this becomes a passthrough.
+ * **Delete this, and the `rowByIndex` that feeds it, when the new endpoint is
+ * live.** It is listed in the reply as one of the four things to remove.
  */
 export const spreadsheetRowFor = (reportedRow, rowByIndex = []) => {
-  const index = Number(reportedRow) - 2;
-  if (!Number.isInteger(index) || index < 0 || index >= rowByIndex.length) {
-    return Number(reportedRow) || null;
-  }
+  const row = Number(reportedRow);
+  if (!Number.isInteger(row)) return null;
+
+  /* Already one of the rows we sent: the server echoed ours back, and there is
+     nothing to translate. */
+  if (rowByIndex.includes(row)) return row;
+
+  const index = row - 2;
+  if (index < 0 || index >= rowByIndex.length) return row;
   return rowByIndex[index];
 };
 

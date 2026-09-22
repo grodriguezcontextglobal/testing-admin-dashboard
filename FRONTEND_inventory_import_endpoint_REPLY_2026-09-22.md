@@ -98,7 +98,22 @@ Y gracias por el respaldo de `defaults` en el servidor. Los mandamos igual, pero
 teníais razón: un import no puede depender de que nos acordemos de
 `display_item`.
 
-## 5. Cuando confirméis el despliegue
+## 5. Cerrado tras vuestro `FRONTEND_inventory_import_row_2026-09-22.md`
+
+- **`row`**: ya va en cada unidad. Gracias por aceptarlo en vez de defender la
+  derivación.
+- **`isItInContainer`**: no lo esperábamos guardado, y lo hemos quitado del
+  cuerpo. Un import nunca mete una unidad dentro de un contenedor, así que el
+  valor que mandábamos era siempre "no". No hay nada que decidir.
+- **Un `202` sin worker**: entendido. No lo detectamos desde el cliente, como
+  decís. Si vemos un job encolado que no avanza en unos minutos os lo decimos en
+  vez de esperar.
+
+`spreadsheetRowFor` se queda hasta el despliegue, porque hoy sigue contestando
+404 el endpoint y el 400 que llega es el de la versión vieja. Entra en la lista
+de abajo.
+
+## 6. Cuando confirméis el despliegue
 
 Borramos, en este orden:
 
@@ -106,6 +121,8 @@ Borramos, en este orden:
 2. `IMPORT_MODES.COMPATIBLE` y el troceo, en `inventoryImportPlan.js`.
 3. Nuestro bucle de `verifyAndCreateLocation` — ya sólo vive en ese fallback.
 4. `inventoryImportPayload.js` entero, que es el constructor del payload viejo.
+5. `spreadsheetRowFor` y el `rowByIndex` que lo alimenta: con vuestro `row`
+   devuelto tal cual, traducir deja de tener sentido.
 
 Avisadnos y lo hacemos el mismo día. Mientras tanto no estorba: sólo corre
 cuando el endpoint nuevo contesta 404.
