@@ -58,8 +58,13 @@ const ReviewStep = ({
           {count}
         </span>
         <div>
+          {/* "will be updated", not "will change" — P2 `17:49`, said twice.
+              The count stays here on his instruction (`23:19`, "it's nice to
+              have 12 items will change at the top… keep that for now") and the
+              line under it is what keeps it honest: counted a moment ago, not
+              promised. */}
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            item{count === 1 ? "" : "s"} will change
+            item{count === 1 ? "" : "s"} will be updated
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {updateAll
@@ -72,7 +77,12 @@ const ReviewStep = ({
       <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--gray-200, #eaecf0)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
           <Typography variant="body1" sx={{ fontWeight: 600 }}>
-            {diff.length === 0 ? "No fields were changed" : `The ${diff.length} field${diff.length === 1 ? "" : "s"} that change`}
+            {/* P2 `19:00` — "I think it's really good what you're having here.
+                But you should say these are the changes that will be made."
+                The panel he liked is unchanged; only its heading. */}
+            {diff.length === 0
+              ? "No fields were changed"
+              : "These are the changes that will be made"}
           </Typography>
           <BadgeWithDot color="gray">{TRACKED_FIELDS.length - diff.length} other fields keep today&rsquo;s value</BadgeWithDot>
         </div>
@@ -176,7 +186,13 @@ const ReviewStep = ({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--gray-200, #eaecf0)", background: "var(--gray-50, #f9fafb)", borderRadius: "0 0 12px 12px" }}>
         <GrayButtonComponent title="Back to fields" buttonType="button" func={goBack} />
         <BlueButtonComponent
-          title={`Apply to ${count} item${count === 1 ? "" : "s"}`}
+          /* Just "Apply". P2 `22:27` — "don't say apply to 12 items because
+             that may not be true. If somebody added more items, then there will
+             be more items." The count stays in the heading above, and the
+             difference is the point: a heading describes what was found, a
+             button promises what it will do, and only the second one can still
+             be wrong by the time it is clicked. */
+          title="Apply"
           buttonType="button"
           size="lg"
           func={handleSubmit(updateGroupItems)}

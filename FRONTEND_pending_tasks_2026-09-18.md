@@ -47,10 +47,10 @@
 | 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
 | 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | **done** |
 | 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | P3 |
-| 24 | Review: "12 items **will be** updated" | P2 `17:49`–`18:41` | P3 |
-| 25 | Review: "These are the changes that will be made" | P2 `18:41`–`19:46` | P2 |
+| 24 | Review: "12 items **will be** updated" | P2 `17:49`–`18:41` | **done** |
+| 25 | Review: "These are the changes that will be made" | P2 `18:41`–`19:46` | **done** |
 | 26 | Review: explain the mid-wizard race properly | P2 `19:46`–`23:14` | **done** |
-| 27 | Apply button must not promise a count | P2 `22:27`–`23:19` | P2 |
+| 27 | Apply button must not promise a count | P2 `22:27`–`23:19` | **done** |
 | 28 | Rewrite the no-bulk-undo sentence | P2 `24:48`–`25:31` | P3 |
 
 Items 1-13 come from part 1, 14-28 from part 2.
@@ -891,6 +891,23 @@ So: the **button** becomes plain **Apply**; the **heading** keeps its count. The
 distinction is the point — a heading describes what was found, a button promises
 what it will do, and only the second one can still be wrong by the time it is
 clicked.
+
+#### 24, 25 and 27 done 2026-09-22
+
+| | Before | After |
+|---|---|---|
+| 24 | `2000` items will **change** | `2000` items **will be updated** |
+| 25 | The 3 fields that change | **These are the changes that will be made** |
+| 27 | `Apply to 2000 items` | **`Apply`** |
+
+Raised separately, but one idea, and doing them together is what made that
+visible. With 26 above them the screen now says the same thing three times
+instead of contradicting itself: the count was taken a moment ago, the set is
+decided when the update runs, and the button promises no number.
+
+**The empty-diff heading still reads "No fields were changed"** — past tense on a
+screen about pending changes. Not raised, not changed, noted here because it is
+three words away from matching the rest.
 
 ### 28. Rewrite the no-bulk-undo sentence
 

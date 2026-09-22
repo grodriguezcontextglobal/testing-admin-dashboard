@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import ReviewStep from "./ReviewStep";
@@ -86,5 +86,51 @@ describe("the frozen list scope", () => {
       "This list is frozen — items added to the group after now are not touched."
     );
     expect(document.body.textContent).not.toMatch(/is updated too/i);
+  });
+});
+
+/* Three sentences on one screen that all promised a number in a tense the app
+   cannot keep. They were raised separately and they are one idea: say what was
+   found, do not promise what will happen. */
+describe("what the screen promises", () => {
+  it("says the items will be updated, in his words", () => {
+    setup();
+
+    expect(document.body.textContent).toContain("items will be updated");
+    expect(document.body.textContent).not.toMatch(/items will change/);
+  });
+
+  /* `23:19` — "it's nice to have 12 items will change at the top. We may change
+     that later on, but keep that for now." The count stays; the line under it
+     is what keeps it honest. */
+  it("keeps the count in the heading, with what it is worth", () => {
+    setup();
+
+    expect(document.body.textContent).toContain("2000");
+    expect(document.body.textContent).toContain("counted a moment ago");
+  });
+
+  /* `19:00` — "you should say these are the changes that will be made." */
+  it("heads the diff with what it is", () => {
+    setup({
+      watch: () => ({ cost: "99" }),
+      scopeSummary: { matchCount: 2000, fields: { cost: { value: "50" } } },
+    });
+
+    expect(document.body.textContent).toContain(
+      "These are the changes that will be made"
+    );
+    expect(document.body.textContent).not.toMatch(/fields? that change/);
+  });
+
+  /* `22:27` — "don't say apply to 12 items because that may not be true… You
+     will just say apply at the bottom." A heading describes what was found; a
+     button promises what it will do, and only the button can still be wrong by
+     the time it is clicked. */
+  it("promises nothing on the button", () => {
+    setup();
+
+    expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/apply to \d+ item/i);
   });
 });
