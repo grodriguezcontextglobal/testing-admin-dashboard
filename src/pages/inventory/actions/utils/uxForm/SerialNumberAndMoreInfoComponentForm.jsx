@@ -243,9 +243,9 @@ const SerialNumberAndMoreInfoComponentForm = ({
               <br />
               Tick the box next to the detail that is the serial number. If you
               tick none, the first one is used.
-              <br />
+              {/* <br />
               A scanner works here too: it types the code and presses Enter,
-              which adds the unit.
+              which adds the unit. */}
             </Typography>
 
             <Grid container>
