@@ -45,7 +45,7 @@
 | 19 | Extra identifiers — approved, minor trim only | P2 `8:34`–`9:34` | **done** |
 | 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **done** |
 | 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
-| 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | P2 |
+| 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | **done** |
 | 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | P3 |
 | 24 | Review: "12 items **will be** updated" | P2 `17:49`–`18:41` | P3 |
 | 25 | Review: "These are the changes that will be made" | P2 `18:41`–`19:46` | P2 |
@@ -764,6 +764,36 @@ it empty — Fredrik was explicit: *"Then you have to leave it"* (P2 `16:01`).
 > already implements "pre-fill only when exactly one candidate matches, otherwise
 > leave it to the operator". Worth lifting into one shared helper rather than
 > writing it a third time.
+
+#### Done 2026-09-22 — and it was already done
+
+The note above turned out to be the whole answer. Item 8 extracted the rule as
+`agreedValue`, and the edit wizard's `confirmTarget` calls the same
+`handleSearchByReference` the add wizard does, so **the location has been
+pre-filling since item 8 shipped**. Verified before writing anything; no new
+code for 22 itself. Writing it a third time was the thing to avoid, and not
+noticing it was already done would have been how.
+
+A group of one agrees with itself, so "only one item selected" needs no branch.
+
+**What did need doing was making the two wizards behave alike**, which is what
+the update wizard was missing:
+
+- **The three search filters now narrow each other**, as the create wizard's
+  copy panel has since item 7. Same three fields, same job, two screens — one of
+  them offering combinations that match nothing was the odd part.
+- **The buttons count.** "Continue with 12 items" and "Continue with all 2,000
+  items" became "Continue to step 2" and "Continue to step 3". The count is on
+  the screen either way; the step number was not. Step 3 keeps **"Review
+  changes"** for the same reason step 4 of the create wizard keeps "Review {n}
+  units" — it says what happens, which he approved at `29:26`.
+- **The four numbering functions were about to exist twice.** They live in
+  `wizardStepList.js` as a factory now: each wizard passes its own list and gets
+  `STEPS`, `stepNumber`, `continueLabel` and `reviewStepNotice`. Five steps in
+  one and four in the other, and the same sentence says "step 5" or "step 4"
+  without either number being typed.
+- `EditGroup.jsx`'s own copy of the step list, flagged when item 5 shipped, is
+  gone with it.
 
 ### 23. The Location step's hint is wrong
 

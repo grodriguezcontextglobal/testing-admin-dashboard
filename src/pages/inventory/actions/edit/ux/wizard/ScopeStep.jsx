@@ -1,4 +1,5 @@
 import { Typography } from "@mui/material";
+import { continueLabel } from "../../editWizardSteps";
 import { useState } from "react";
 import BadgeWithDot from "../../../../../../components/base/badges/badges";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
@@ -275,7 +276,7 @@ const ScopeStep = ({
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--gray-200, #eaecf0)", background: "var(--gray-50, #f9fafb)", borderRadius: "0 0 12px 12px" }}>
         <GrayButtonComponent title="Back" buttonType="button" func={goBack} />
         <BlueButtonComponent
-          title={updateAll ? `Continue with all ${scopeSummary.matchCount} items` : `Continue with ${scannedSerialNumbers.length} items`}
+          title={continueLabel("scope")}
           buttonType="button"
           func={goNext}
           disabled={!canContinue}

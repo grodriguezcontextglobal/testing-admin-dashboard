@@ -1,6 +1,8 @@
 import { Typography } from "@mui/material";
+import { useMemo } from "react";
+import { continueLabel } from "../../editWizardSteps";
 import { AutoComplete } from "antd";
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import BadgeWithDot from "../../../../../../components/base/badges/badges";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
@@ -38,8 +40,34 @@ const TargetSearchStep = ({
   setValue,
 }) => {
   const clearBrand = () => setValue("reference_brand", "");
-  const optionsByField = REFERENCE_FIELDS.map((field) =>
-    toOptions(retrieveItemOptions(field.optionsKey)),
+
+  const [category, itemGroup, brand] = useWatch({
+    control,
+    name: REFERENCE_FIELDS.map((field) => field.name),
+  });
+
+  /* Each list narrowed by the other two, the same as the create wizard's copy
+     panel since item 7 — pick a brand and the category and device lists follow
+     it, so a combination no unit satisfies is never offered:
+
+     > P2 `11:04` — "if I put laptops here, I should not be able to do
+     > disinfectant wipes."
+
+     Never by its own value, or choosing a brand would leave that brand as the
+     only one on offer and no way back. `narrowReferenceOptions` has the rule;
+     this step and the copy panel now behave identically, which matters because
+     they are the same three fields doing the same job on two screens. */
+  const optionsByField = useMemo(
+    () =>
+      REFERENCE_FIELDS.map((field) =>
+        toOptions(
+          retrieveItemOptions(field.optionsKey, {
+            ...{ category, itemGroup, brand },
+            [field.criteriaKey]: "",
+          }),
+        ),
+      ),
+    [retrieveItemOptions, category, itemGroup, brand],
   );
 
   if (!hasReferenceOptions(optionsByField)) {
@@ -243,7 +271,7 @@ const TargetSearchStep = ({
         <BlueButtonComponent
           title={
             searched && matchSummary.matchCount > 0
-              ? `Continue with ${matchSummary.matchCount} item${matchSummary.matchCount === 1 ? "" : "s"}`
+              ? continueLabel("target")
               : "Continue"
           }
           buttonType="button"

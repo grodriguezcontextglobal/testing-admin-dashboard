@@ -5,8 +5,9 @@ import {
   hasReferenceCriteria,
 } from "../utils/referenceLookup";
 import { summarizeInventoryMatches } from "../utils/updateInventoryMatchSummary";
+import { STEPS } from "./editWizardSteps";
 
-export const STEPS = ["target", "scope", "fields", "review"];
+export { STEPS };
 
 /**
  * Wraps useBulkActionLogic() — shared with the create flow — with the
