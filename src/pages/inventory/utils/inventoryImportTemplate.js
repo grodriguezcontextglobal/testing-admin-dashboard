@@ -203,7 +203,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "main_warehouse",
     required: true,
     width: 160,
-    notes: ["Where the device is deductible for taxes, e.g. 'Miami, FL'."],
+    notes: ["Where the device is located for tax purposes."],
     samples: ["Miami, FL", "Fort Lauderdale, FL", "Miami, FL"],
   },
   // {
@@ -233,10 +233,14 @@ export const INVENTORY_IMPORT_COLUMNS = [
     recommended: true,
     width: 180,
     notes: [
-      "Comma-separated path inside the location, outermost first.",
-      "e.g. 'Section A, Locker A105'.",
+      "A comma-separated path inside the location.",
+      "e.g. 'Warehouse 2, Room 65, Shelf 42'.",
     ],
-    samples: ["Section A, Locker A105", "Section B, Locker B203", ""],
+    /* Three levels in the first sample, not two: he read a two-part example and
+       it did not make "path" obvious — `7:28`, "you can just say warehouse 2
+       and then room 65 and then shelf 42". The second shows a shorter path and
+       the third that the column may be left alone. */
+    samples: ["Warehouse 2, Room 65, Shelf 42", "Warehouse 1, Room 12", ""],
   },
   // {
   //   header: "Assignable",

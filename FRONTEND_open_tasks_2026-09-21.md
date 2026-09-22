@@ -12,7 +12,7 @@
 
 ## 0. Where it stands
 
-**16 of 28 closed. 12 open.**
+**20 of 28 closed. 8 open.**
 
 > Corrected 2026-09-22. Earlier versions of this line counted the three items of
 > §4 of the source list — the ones already true in the code when the list was
@@ -24,10 +24,10 @@ and each names the one thing the backend still has to do.
 
 | | |
 |---|---|
-| Closed (16) | 1, 2*, 3*, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 20 |
+| Closed (20) | 1, 2*, 3*, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 26 |
 | Open, P1 | 21 |
-| Open, P2 (5) | 6, 22, 25, 26, 27 |
-| Open, P3 (6) | 16, 17, 19, 23, 24, 28 |
+| Open, P2 (4) | 6, 22, 25, 27 |
+| Open, P3 (3) | 23, 24, 28 |
 
 `*` client done, waiting on the backend.
 

@@ -39,17 +39,17 @@
 | 13 | Delete the redundant scanner instructions | P1 `27:07`–`27:38` | **done** |
 | 14 | XLSX template: rename "Group" to "Item Name" | P2 `1:02`–`2:47` | **done** |
 | 15 | Delete every "also accepted as"; make column names strict | P2 `2:23`–`5:58` | **done** |
-| 16 | "Taxable Location" description | P2 `2:54`–`3:58` | P3 |
-| 17 | "Sub Locations" description — drop "outermost first" | P2 `5:58`–`7:49` | P3 |
+| 16 | "Taxable Location" description | P2 `2:54`–`3:58` | **done** |
+| 17 | "Sub Locations" description — drop "outermost first" | P2 `5:58`–`7:49` | **done** |
 | 18 | Delete every "Default: empty" | P2 `7:49`–`8:32` | **done** |
-| 19 | Extra identifiers — approved, minor trim only | P2 `8:34`–`9:34` | P3 |
+| 19 | Extra identifiers — approved, minor trim only | P2 `8:34`–`9:34` | **done** |
 | 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **done** |
 | 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
 | 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | P2 |
 | 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | P3 |
 | 24 | Review: "12 items **will be** updated" | P2 `17:49`–`18:41` | P3 |
 | 25 | Review: "These are the changes that will be made" | P2 `18:41`–`19:46` | P2 |
-| 26 | Review: explain the mid-wizard race properly | P2 `19:46`–`23:14` | P2 |
+| 26 | Review: explain the mid-wizard race properly | P2 `19:46`–`23:14` | **done** |
 | 27 | Apply button must not promise a count | P2 `22:27`–`23:19` | P2 |
 | 28 | Rewrite the no-bulk-undo sentence | P2 `24:48`–`25:31` | P3 |
 
@@ -818,6 +818,28 @@ The behaviour is correct and stays. The sentence has to say it outright:
 > P2 `22:49` — "if items were added during this process and those items match the
 > initial search criteria, all those items will also be updated per this request."
 
+#### Done 2026-09-22
+
+> Every item with the same category, device name and brand, whatever its serial
+> number. There were 2,000 when you started.
+>
+> If someone adds an item matching those three while this is running, it is
+> updated too. Items added after it finishes are not.
+
+Two sentences instead of one, because the race was a subclause — *"if one was
+added since, it is included too"* — at the end of a sentence about counting.
+
+**It names the three criteria rather than saying "what you searched for".**
+Verified against the handler before writing it: the job runs
+`UPDATE item_inv SET … WHERE company_id = ? AND category_name = ? AND
+item_group = ? AND brand = ?` when it executes, and `ALLOWED_REFERENCE_KEYS` is
+exactly those three. So the sentence names the WHERE clause, which is also why
+his boundary at `22:20` falls where it does: the update catches whatever matches
+at the moment it runs, and nothing after.
+
+Pinned in `ReviewStep.test.jsx`, along with the other branch — the frozen serial
+list, which says the opposite and was already right. The two sentences are only
+useful while they stay different.
 ### 27. The Apply button must not promise a count
 
 `ReviewStep.jsx:154` — currently `Apply to {count} item{s}`

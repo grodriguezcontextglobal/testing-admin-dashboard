@@ -302,3 +302,48 @@ describe("missingRequiredFields", () => {
     expect(missingRequiredFields(row, ["category_name"])).toEqual(["category_name"]);
   });
 });
+
+/* Three column descriptions he went through line by line. Pinned because the
+   whole point of the batch was that they said the wrong thing, and a note is
+   the easiest thing in this file to reword back. */
+describe("the column descriptions he rewrote", () => {
+  const notesFor = (field) =>
+    INVENTORY_IMPORT_COLUMNS.find((column) => column.field === field).notes.join(" ");
+
+  /* `2:54` — "you would say here where the device is located for tax purposes."
+     `3:50` — "leave out talking about jurisdiction, Miami, Florida, etc." */
+  it("says what the taxable location is for, without an example", () => {
+    expect(notesFor("main_warehouse")).toBe(
+      "Where the device is located for tax purposes."
+    );
+    expect(notesFor("main_warehouse")).not.toMatch(/deductible|Miami/);
+  });
+
+  /* `7:03` — "Delete the outermost first because outermost, what does that
+     mean?" And the example he dictated has three levels, because two did not
+     make "path" obvious. */
+  it("describes the sub-location as a path, and shows three levels", () => {
+    expect(notesFor("sub_location")).toContain(
+      "A comma-separated path inside the location."
+    );
+    expect(notesFor("sub_location")).not.toMatch(/outermost/i);
+    expect(notesFor("sub_location")).toContain("Warehouse 2, Room 65, Shelf 42");
+  });
+
+  it("puts that three-level path in the downloaded template too", () => {
+    expect(buildTemplateRows()[0].sub_location).toBe(
+      "Warehouse 2, Room 65, Shelf 42"
+    );
+  });
+
+  /* `8:34` — "I think this is good… key equals value pair separated by
+     semicolons." Approved as written, so this pins that it stays written. */
+  it("leaves the extra identifiers note as he approved it", () => {
+    expect(notesFor("extra_serial_number")).toContain(
+      "key=value pairs separated by semicolons"
+    );
+    expect(notesFor("extra_serial_number")).toContain(
+      "A value without an '=' is discarded."
+    );
+  });
+});

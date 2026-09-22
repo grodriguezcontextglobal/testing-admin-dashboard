@@ -107,8 +107,33 @@ const ReviewStep = ({
         {updateAll ? (
           <div>
             <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>The whole group</Typography>
+            {/* He spent three minutes on this sentence (P2 `19:46`–`21:41`),
+                built the worst case himself — an accountant updating 2,000
+                Chromebooks across 50 warehouses while managers keep adding
+                stock — and had it confirmed twice that the new units are swept
+                in. The old wording buried that in a subclause: "if one was
+                added since, it is included too".
+
+                > P2 `22:49` — "if items were added during this process and
+                > those items match the initial search criteria, all those items
+                > will also be updated per this request."
+
+                It names the three criteria rather than saying "what you
+                searched for", because those three are literally the WHERE
+                clause: the job runs `UPDATE item_inv SET … WHERE company_id = ?
+                AND category_name = ? AND item_group = ? AND brand = ?` when it
+                executes, not against the list on this screen. That is also why
+                the boundary he set at `22:20` is where it is — the update
+                catches whatever matches at the moment it runs, and nothing
+                after. */}
             <Typography variant="body2" color="text.secondary">
-              Every item in this group, whatever its serial number. There were {scopeSummary.matchCount} when you started this wizard — if one was added since, it is included too.
+              Every item with the same category, device name and brand, whatever
+              its serial number. There were {scopeSummary.matchCount} when you
+              started.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              If someone adds an item matching those three while this is
+              running, it is updated too. Items added after it finishes are not.
             </Typography>
           </div>
         ) : (
