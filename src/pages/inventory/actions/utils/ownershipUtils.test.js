@@ -75,10 +75,20 @@ describe("the two spellings that were one value all along", () => {
     expect(normalizeOwnership("Sale")).toBe("Resale");
   });
 
-  it("reads both as the same thing on screen", () => {
-    expect(ownershipLabel("Sale")).toBe("Resale");
-    expect(ownershipLabel("Resale")).toBe("Resale");
-    expect(ownershipLabel("for resale")).toBe("Resale");
+  /* The stored value is "Resale"; what it reads as is "For Resale". Two jobs,
+     and conflating them was the mistake in the first pass at this. */
+  it("reads them all as the words a person expects", () => {
+    expect(ownershipLabel("Resale")).toBe("For Resale");
+    expect(ownershipLabel("Sale")).toBe("For Resale");
+    expect(ownershipLabel("for resale")).toBe("For Resale");
+  });
+
+  /* The reported bug. The old import let "For Resale" through unchanged, so
+     rows hold it — and the two inventory tables looked the dictionary up raw,
+     so anything that was not exactly a key rendered an empty cell. */
+  it("reads a row stored as 'For Resale' instead of showing nothing", () => {
+    expect(ownershipLabel("For Resale")).toBe("For Resale");
+    expect(ownershipLabel("FOR RESALE")).toBe("For Resale");
   });
 
   it("keeps the other two reading as they always did", () => {

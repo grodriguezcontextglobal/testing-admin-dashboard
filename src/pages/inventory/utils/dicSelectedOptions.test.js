@@ -50,13 +50,13 @@ describe("dicSelectedOptions", () => {
      "For Resale". */
   it("still translates the ownership values the table paints", () => {
     expect(dictionary.Rent).toBe("Leased");
-    expect(dictionary.Resale).toBe("Resale");
+    expect(dictionary.Resale).toBe("For Resale");
   });
 
   /* "Sale" is still a key because rows written before the two spellings were
      reconciled are still in the database, and they have to read as what they
      are rather than as a blank cell. */
   it("keeps reading rows that were stored under the old spelling", () => {
-    expect(dictionary.Sale).toBe("Resale");
+    expect(dictionary.Sale).toBe("For Resale");
   });
 });

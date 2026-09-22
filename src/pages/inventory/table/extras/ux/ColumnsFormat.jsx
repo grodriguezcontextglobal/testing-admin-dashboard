@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { ownershipLabel } from "../../../actions/utils/ownershipUtils";
 import {
   // Space, 
   Tooltip,
@@ -23,7 +24,6 @@ import { warehouseDicStatus } from "../../../utils/warehouseDicStatus";
  * @param {"asc"|"desc"} sortDir
  */
 const ColumnsFormat = ({
-  dictionary,
   navigate,
   cellStyle,
   serverSorted = false,
@@ -175,7 +175,7 @@ const ColumnsFormat = ({
         >
           <Icon icon="tabler:point-filled" rotate={3} />
           <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
-            {dictionary[ownership]}
+            {ownershipLabel(ownership)}
           </span>
         </PillUIComponent>
       ),

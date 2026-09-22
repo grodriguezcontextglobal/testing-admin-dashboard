@@ -55,18 +55,30 @@ export const OWNERSHIP_VALUES = ["Permanent", "Rent", "Resale"];
 /**
  * How each value reads to a person.
  *
- * One dictionary instead of the five that had drifted apart. "Sale" is still a
- * key: rows written before the values were reconciled are still in the
- * database, and they read as what they are.
+ * One dictionary instead of the five that had drifted apart. The stored value
+ * is `Resale`; what it reads as is **"For Resale"** — the two are different
+ * jobs and conflating them was the mistake in the first pass at this.
+ *
+ * "Sale" is still a key, and so are the spellings the old import let through
+ * unchanged: rows written before the values were reconciled are in the
+ * database, and they have to read as what they are.
  */
 export const OWNERSHIP_LABELS = {
   Permanent: "Permanent",
   Rent: "Leased",
-  Resale: "Resale",
-  Sale: "Resale",
+  Resale: "For Resale",
+  Sale: "For Resale",
 };
 
-/** What to show for a stored value, falling back to the value itself. */
+/**
+ * What to show for a stored value.
+ *
+ * Normalizes first, so a row holding `"For Resale"` — written by the import
+ * before `for resale` was a recognized synonym — resolves like any other. Then
+ * falls back to the value itself, because a cell showing an unexpected word is
+ * information and an empty cell is not: the two inventory tables looked this up
+ * raw, and every value that was not exactly a key rendered blank.
+ */
 export const ownershipLabel = (value) =>
   OWNERSHIP_LABELS[normalizeOwnership(value)] ??
   OWNERSHIP_LABELS[value] ??

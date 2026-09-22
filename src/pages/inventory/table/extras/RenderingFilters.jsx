@@ -1,5 +1,4 @@
 import { Grid, OutlinedInput } from "@mui/material";
-import { OWNERSHIP_LABELS as dictionary } from "../../actions/utils/ownershipUtils";
 import { usePermission } from "../../../../hooks/usePermission";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Switch } from "antd";
@@ -1403,7 +1402,6 @@ const RenderingFilters = ({
                       id={"rendering-more-than-treeview-elements"}
                       key={item.key}
                       item={item}
-                      dictionary={dictionary}
                       searchItem={searchItem}
                     />
                   ))}{" "}

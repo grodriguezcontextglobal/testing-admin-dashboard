@@ -1,12 +1,15 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { normalizeOwnership } from "../actions/utils/ownershipUtils";
+import {
+  normalizeOwnership,
+  ownershipLabel,
+} from "../actions/utils/ownershipUtils";
 import { Typography } from "@mui/material";
 import { Avatar } from "antd";
 import { GeneralDeviceIcon } from "../../../components/icons/GeneralDeviceIcon";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import "../../../styles/global/ant-table.css";
-import { cellStyle, dictionary } from "../details/utils/dataStructuringFormat";
+import { cellStyle } from "../details/utils/dataStructuringFormat";
 import FilterIconSVG from "../../../components/icons/filter.svg";
 import { resolveItemRowId } from "./itemRowId";
 import PillUIComponent from "../../../components/UX/Chip/PillUIComponent";
@@ -176,7 +179,7 @@ const columnsTableMain = ({
         >
           <Icon icon="tabler:point-filled" rotate={3} />
           <span style={{ textTransform: "capitalize", marginLeft: "2px" }}>
-            {dictionary[ownership]}
+            {ownershipLabel(ownership)}
           </span>
         </PillUIComponent>
       ),
