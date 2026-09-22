@@ -28,7 +28,7 @@
 | 2 | Make MFA mandatory — remove the opt-out | P1 `6:14`–`6:48` | **done (client)** |
 | 3 | Drop the password re-entry on session revoke | P1 `5:15`–`6:48` | **done (client)** — needs a token in the link |
 | 4 | Wizard buttons: "Continue to step N", not "Continue to location" | P1 `12:50`, `29:11` | **done** |
-| 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | P2 |
+| 5 | Step-1 notice must name step 5 explicitly | P1 `10:16`–`10:30` | **done** |
 | 6 | Validation error is too easy to miss | P1 `13:27`–`13:55` | P2 |
 | 7 | Copy-details filters must cascade | P1 `10:33`–`12:46` | **done** |
 | 8 | Pre-fill location in step 2 from the copied group | P1 `13:55`–`14:55` | **done** |
@@ -275,6 +275,27 @@ that says what happens with one that says where you land.
 > review in step 5. That's what we probably should be saying."
 
 Current copy stops at "until you have completed the last step". Name step 5.
+
+#### Done 2026-09-22
+
+> *Nothing is created until you finish the review in step 5.*
+
+The number is read off the step list, not written into the sentence — the same
+rule the Continue buttons follow since item 4. Add a step and the sentence moves
+with it.
+
+**The two lists this needed are now one.** `NewBulkItems` kept its own `STEPS`,
+with keys and labels for the progress bar, beside the hook's list of keys for
+the navigation: the same five steps maintained in order by hand. `WIZARD_STEPS`
+carries both and `STEPS` is derived from it, so the bar cannot come to show a
+different order from the one the wizard walks — which is precisely how a
+sentence that counts would have started lying.
+
+**The edit wizard said the same vague thing** one folder away, and it has four
+steps rather than five. Fixed with it: *"Nothing is saved until you finish the
+review in step 4."* Leaving it would have meant one screen counting and the
+other guessing. Its own two step lists were **not** merged — that is the same
+change again and it is not item 5.
 
 ### 6. The validation error is too easy to miss
 

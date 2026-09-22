@@ -7,7 +7,23 @@
  * component that only wanted a string.
  */
 
-export const STEPS = ["details", "location", "ownership", "units", "review"];
+/**
+ * The steps, in order, with what the progress bar calls each one.
+ *
+ * `NewBulkItems` kept its own copy of this — the same five keys with labels
+ * beside them — so the bar and the navigation were two lists that had to be
+ * kept in step by hand. They are one list now.
+ */
+export const WIZARD_STEPS = [
+  { key: "details", label: "Details" },
+  { key: "location", label: "Location" },
+  { key: "ownership", label: "Ownership" },
+  { key: "units", label: "Units" },
+  { key: "review", label: "Review" },
+];
+
+/** Just the keys, which is what the navigation works in. */
+export const STEPS = WIZARD_STEPS.map((step) => step.key);
 
 /**
  * Which step this is, counting from 1 the way the progress bar does.
@@ -41,3 +57,18 @@ export const continueLabel = (step) => {
   if (current === null || current >= STEPS.length) return "Continue";
   return `Continue to step ${current + 1}`;
 };
+
+/**
+ * Where the work actually happens, said with the number on the progress bar.
+ *
+ * > P1 `10:16` — "nothing will be added or completed until you have finished
+ * > the review in step 5. That's what we probably should be saying."
+ *
+ * It used to say "until the last step", which is true and tells nobody which
+ * one that is — the bar above it counts, so the sentence may as well count too.
+ * The number comes from the list, so adding a step moves the sentence with it.
+ *
+ * @param {string} verb - what does not happen yet: "created", "saved".
+ */
+export const reviewStepNotice = (verb) =>
+  `Nothing is ${verb} until you finish the review in step ${stepNumber("review")}.`;

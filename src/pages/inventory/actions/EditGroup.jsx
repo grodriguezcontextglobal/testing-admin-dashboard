@@ -19,12 +19,17 @@ const options = [
   { value: "Resale" },
 ];
 
+/* Four steps here, five in the add wizard, so the sentence below counts its
+   own — the same defect one folder away from item 5, and a number written by
+   hand would be wrong in one of the two. */
 const STEPS = [
   { key: "target", label: "Find the items" },
   { key: "scope", label: "Choose scope" },
   { key: "fields", label: "Edit fields" },
   { key: "review", label: "Review" },
 ];
+
+const REVIEW_STEP_NUMBER = STEPS.findIndex((step) => step.key === "review") + 1;
 
 const EditGroup = () => {
   const wizard = useUpdateInventoryWizard();
@@ -58,7 +63,8 @@ const EditGroup = () => {
         Update inventory
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Change details on items you already own. Nothing is saved until the last step.
+        Change details on items you already own. Nothing is saved until you
+        finish the review in step {REVIEW_STEP_NUMBER}.
       </Typography>
 
       <WizardStepper steps={STEPS} stepIndex={stepIndex} onSelectStep={goToStep} />

@@ -1,4 +1,8 @@
 import { Typography } from "@mui/material";
+import {
+  WIZARD_STEPS,
+  reviewStepNotice,
+} from "./add/wizardSteps";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../../styles/global/ant-select.css";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
@@ -18,14 +22,6 @@ const options = [
   { value: "Permanent" },
   { value: "Rent" },
   { value: "Resale" },
-];
-
-const STEPS = [
-  { key: "details", label: "Details" },
-  { key: "location", label: "Location" },
-  { key: "ownership", label: "Ownership" },
-  { key: "units", label: "Units" },
-  { key: "review", label: "Review" },
 ];
 
 const AddNewBulkItems = () => {
@@ -58,10 +54,11 @@ const AddNewBulkItems = () => {
         Add new inventory
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Create a new group of items, then add the units that make it up. Nothing is created until the last step.
+        Create a new group of items, then add the units that make it up.{" "}
+        {reviewStepNotice("created")}
       </Typography>
 
-      <WizardStepper steps={STEPS} stepIndex={stepIndex} onSelectStep={goToStep} />
+      <WizardStepper steps={WIZARD_STEPS} stepIndex={stepIndex} onSelectStep={goToStep} />
 
       {currentStep === "details" && (
         <DetailsStep
