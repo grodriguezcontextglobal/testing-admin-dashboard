@@ -12,18 +12,22 @@
 
 ## 0. Where it stands
 
-**17 of 28 closed. 11 open.** Fourteen of the seventeen were closed this week;
-three were already true in the code when the list was written.
+**15 of 28 closed. 13 open.**
+
+> Corrected 2026-09-22. Earlier versions of this line counted the three items of
+> §4 of the source list — the ones already true in the code when the list was
+> written — inside the 28. They are not among them, so the closed figure was two
+> too high. Those three remain done and remain outside the count.
 
 Two of the closed ones are only closed **on the client**. They are marked so,
 and each names the one thing the backend still has to do.
 
 | | |
 |---|---|
-| Closed | 1, 2*, 3*, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 20, plus the three in §4 |
+| Closed (15) | 1, 2*, 3*, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 20 |
 | Open, P1 | 21 |
-| Open, P2 | 5, 6, 22, 25, 26, 27 |
-| Open, P3 | 16, 17, 19, 23, 24, 28 |
+| Open, P2 (6) | 5, 6, 22, 25, 26, 27 |
+| Open, P3 (6) | 16, 17, 19, 23, 24, 28 |
 
 `*` client done, waiting on the backend.
 
