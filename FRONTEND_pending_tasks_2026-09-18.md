@@ -46,12 +46,12 @@
 | 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **done** |
 | 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
 | 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | **done** |
-| 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | P3 |
+| 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | **done** |
 | 24 | Review: "12 items **will be** updated" | P2 `17:49`–`18:41` | **done** |
 | 25 | Review: "These are the changes that will be made" | P2 `18:41`–`19:46` | **done** |
 | 26 | Review: explain the mid-wizard race properly | P2 `19:46`–`23:14` | **done** |
 | 27 | Apply button must not promise a count | P2 `22:27`–`23:19` | **done** |
-| 28 | Rewrite the no-bulk-undo sentence | P2 `24:48`–`25:31` | P3 |
+| 28 | Rewrite the no-bulk-undo sentence | P2 `24:48`–`25:31` | **done** |
 
 Items 1-13 come from part 1, 14-28 from part 2.
 
@@ -808,6 +808,10 @@ Currently: *"Where the units live and where they are taxed"*
 Becomes: **"Where units are located."** Note he also cut the tax half of the
 sentence — taxable location is its own field.
 
+**Done 2026-09-22.** Both of his corrections, and the cut: the taxable location
+is a field inside that section and does not need announcing in the heading of
+it.
+
 ### 24. "12 items will be updated"
 
 > P2 `17:49` — "12 items will… **be updated**, you should say. Will be, will be
@@ -920,3 +924,11 @@ the old values."*
 > run another update.**"
 >
 > P2 `25:31` — "Yeah, that's better."
+
+**Done 2026-09-22**, in his words.
+
+Worth saying why it is better, because it is not only style: the old sentence
+sent people to re-run the update *with the old values*. That only works if they
+still know what those were, and the app does not hand them back — it was a
+recipe for a revert it cannot help with. The new one says the same thing without
+pretending otherwise.

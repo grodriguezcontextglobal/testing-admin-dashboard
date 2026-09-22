@@ -24,7 +24,11 @@ import { useAssignableTargets } from "../../../utils/useAssignableTargets";
 const SECTIONS = [
   { key: "identity", title: "Identity", hint: "What the item is called across the app" },
   { key: "commercial", title: "Commercial", hint: "Cost, ownership and where the units came from" },
-  { key: "location", title: "Location", hint: "Where the units live and where they are taxed" },
+  /* "they don't live, but where the units are located" — P2 `16:48`, and
+     `17:09`, "Where units are located, period." He cut the tax half himself:
+     the taxable location is its own field in this section and does not need
+     announcing in the heading of it. */
+  { key: "location", title: "Location", hint: "Where units are located." },
   { key: "handling", title: "Handling", hint: "How the units can be packed and handed out" },
   { key: "photo", title: "Photo", hint: "Shared by every unit in the group" },
 ];

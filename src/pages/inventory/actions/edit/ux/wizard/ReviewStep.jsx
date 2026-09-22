@@ -177,7 +177,16 @@ const ReviewStep = ({
               I understand this changes {diff.length} field{diff.length === 1 ? "" : "s"} on {count} item{count === 1 ? "" : "s"}.
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              There is no bulk undo. Reverting means running this update again with the old values.
+              {/* His wording, `24:48`: "There is no bulk undo. If additional
+                  changes are needed, please run another update." — and `25:31`,
+                  "Yeah, that's better."
+
+                  What it replaces told people to re-run the update *with the
+                  old values*, which is a recipe for undoing and only works if
+                  they still know what those were. This says the same thing
+                  without pretending the app can hand them back. */}
+              There is no bulk undo. If additional changes are needed, please run
+              another update.
             </Typography>
           </div>
         </div>

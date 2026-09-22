@@ -134,3 +134,25 @@ describe("what the screen promises", () => {
     expect(document.body.textContent).not.toMatch(/apply to \d+ item/i);
   });
 });
+
+/* `24:48` — "There is no bulk undo. If additional changes are needed, please
+   run another update." And `25:31`: "Yeah, that's better." */
+describe("what it says about undoing", () => {
+  it("tells them what to do instead, without promising a revert", () => {
+    setup();
+
+    expect(document.body.textContent).toContain(
+      "There is no bulk undo. If additional changes are needed, please run another update."
+    );
+  });
+
+  /* The old sentence sent them to re-run the update "with the old values",
+     which only works if they still know what those were — and the app does not
+     hand them back. */
+  it("no longer describes a revert it cannot help with", () => {
+    setup();
+
+    expect(document.body.textContent).not.toMatch(/with the old values/i);
+    expect(document.body.textContent).not.toMatch(/Reverting means/i);
+  });
+});
