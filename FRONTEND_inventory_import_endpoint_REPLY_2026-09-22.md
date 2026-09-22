@@ -113,16 +113,35 @@ teníais razón: un import no puede depender de que nos acordemos de
 404 el endpoint y el 400 que llega es el de la versión vieja. Entra en la lista
 de abajo.
 
-## 6. Cuando confirméis el despliegue
+## 6. Hecho — desplegasteis y lo borramos el mismo día
 
-Borramos, en este orden:
+Los cinco, en el orden que dijimos:
 
 1. El fallback de una petición por grupo en `DocumentInventoryXLSXUpload`.
 2. `IMPORT_MODES.COMPATIBLE` y el troceo, en `inventoryImportPlan.js`.
 3. Nuestro bucle de `verifyAndCreateLocation` — ya sólo vive en ese fallback.
 4. `inventoryImportPayload.js` entero, que es el constructor del payload viejo.
-5. `spreadsheetRowFor` y el `rowByIndex` que lo alimenta: con vuestro `row`
-   devuelto tal cual, traducir deja de tener sentido.
+5. `spreadsheetRowFor` — **este se queda**, y es el único. Reconoce las dos
+   formas: si el número ya es una de las filas que mandamos, lo deja en paz.
+   Cuesta cinco líneas y cubre cualquier entorno que todavía no tenga vuestro
+   cambio. Lo quitamos cuando no quede ninguno.
 
-Avisadnos y lo hacemos el mismo día. Mientras tanto no estorba: sólo corre
-cuando el endpoint nuevo contesta 404.
+928 líneas fuera, 93 dentro.
+
+Dos cosas que vuestro despliegue volvió innecesarias, y que no estaban en la
+lista porque no las habíamos visto:
+
+- **El aviso de conflictos del preview.** Decía que un modelo tenía más de una
+  marca en el fichero y que se usaría la más común. Eso sólo tenía sentido
+  mientras la marca fuera un valor de grupo y hubiera que elegir una. Ahora cada
+  unidad lleva la suya, así que dos marcas distintas en el mismo modelo no son
+  un conflicto: son lo que el fichero dice.
+- **La subida de imágenes ya no habla de grupos.** Necesita saber categoría y
+  modelo para nombrar la imagen en Cloudinary; lo sacaba del plan y ahora lo
+  saca de la primera unidad que lleva esa foto. Misma información, sin
+  intermediario.
+
+Y un cambio de comportamiento que conviene que sepáis: **un 404 ya no cae a
+ningún sitio**. Antes significaba "todavía no está desplegado"; ahora significa
+"este entorno no está actualizado" y lo dice con esas palabras. Si alguien de
+soporte ve ese mensaje, es el entorno, no el import.

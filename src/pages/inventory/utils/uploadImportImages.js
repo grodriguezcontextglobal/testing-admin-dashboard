@@ -24,7 +24,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 /**
  * @param {{
  *   media: Map<string, {mediaPath: string, dataUrl: string}>,
- *   groups: Array<{category_name: string, item_group: string, imageMediaPath: string|null}>,
+ *   units: Array<{category_name: string, item_group: string, imageMediaPath: string|null}>,
  *   user: object,
  *   onProgress?: (done: number, total: number) => void,
  * }} input
@@ -32,7 +32,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
  */
 export const uploadImportImages = async ({
   media,
-  groups = [],
+  units = [],
   user,
   onProgress,
 }) => {
@@ -41,12 +41,13 @@ export const uploadImportImages = async ({
 
   if (!media || media.size === 0) return { urlByMediaPath, failed };
 
-  /* Which device group each file belongs to — it names the image in Cloudinary
-     and is what the gallery searches on. */
-  const groupByMediaPath = new Map();
-  for (const group of groups) {
-    if (group.imageMediaPath && !groupByMediaPath.has(group.imageMediaPath)) {
-      groupByMediaPath.set(group.imageMediaPath, group);
+  /* Which device each file belongs to — it names the image in Cloudinary and is
+     what the gallery searches on. The first unit carrying a picture decides;
+     the file this was built against never had two devices share one. */
+  const unitByMediaPath = new Map();
+  for (const unit of units) {
+    if (unit.imageMediaPath && !unitByMediaPath.has(unit.imageMediaPath)) {
+      unitByMediaPath.set(unit.imageMediaPath, unit);
     }
   }
 
@@ -55,9 +56,9 @@ export const uploadImportImages = async ({
   let done = 0;
 
   for (const file of files) {
-    const group = groupByMediaPath.get(file.mediaPath);
-    const categoryName = group?.category_name ?? "";
-    const itemGroup = group?.item_group ?? "";
+    const owner = unitByMediaPath.get(file.mediaPath);
+    const categoryName = owner?.category_name ?? "";
+    const itemGroup = owner?.item_group ?? "";
 
     try {
       const response = await devitrakApi.post("/cloudinary/upload-image", {

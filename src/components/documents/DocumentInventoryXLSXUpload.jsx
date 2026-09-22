@@ -6,11 +6,8 @@ import { Subtitle } from "../../styles/global/Subtitle";
 import BlueButtonComponent from "../UX/buttons/BlueButton";
 import GrayButtonComponent from "../UX/buttons/GrayButton";
 import { devitrakApi } from "../../api/devitrakApi";
-import { verifyAndCreateLocation } from "../../pages/inventory/actions/utils/verifyLocationBeforeCreateNewInventory";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { onTrackBackgroundJob } from "../../store/slices/backgroundJobsSlice";
 import generateIdempotencyKey from "../../utils/actions/generateIdempotencyKey";
-import { formatDate } from "../../pages/inventory/utils/dateFormat";
 import {
     headerFor,
     RECOMMENDED_IMPORT_FIELDS,
@@ -22,16 +19,12 @@ import {
 } from "../../pages/inventory/utils/inventoryQueryKeys";
 import { parseInventoryImportRows } from "../../pages/inventory/utils/inventoryImportRows";
 import { readWorkbookCellImages } from "../../pages/inventory/utils/readWorkbookCellImages";
-import {
-    IMPORT_MODES,
-    buildImportPlan,
-} from "../../pages/inventory/utils/inventoryImportPlan";
-import { buildGroupRequest } from "../../pages/inventory/utils/inventoryImportPayload";
 import { uploadImportImages } from "../../pages/inventory/utils/uploadImportImages";
 import {
     MAX_IMPORT_UNITS,
     buildSpreadsheetImportRequest,
     describeImportRejection,
+    summarizeImportUnits,
 } from "../../pages/inventory/utils/spreadsheetImportRequest";
 
 /** "A, B and C" — reads the required/recommended field notes from the same
@@ -44,32 +37,6 @@ const joinWithAnd = (items) => {
 
 const requiredHeaders = REQUIRED_IMPORT_FIELDS.map(headerFor);
 const recommendedHeaders = RECOMMENDED_IMPORT_FIELDS.map(headerFor);
-
-/** Requests in flight at once. The queue takes them all either way; this keeps
- * one import from crowding out everything else the tab is doing. */
-const CONCURRENT_REQUESTS = 4;
-
-/** The columns a device shares across all its units, named as the file names
- * them — `imageMediaPath` is our word for it, not the customer's. */
-const SHARED_FIELD_LABELS = {
-    brand: "Brand",
-    descript_item: "Description",
-    imageMediaPath: "picture",
-};
-
-/** Runs `task` over `items`, `limit` at a time, in order of completion. */
-const runWithLimit = async (items, limit, task) => {
-    const results = [];
-    let cursor = 0;
-    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-        while (cursor < items.length) {
-            const index = cursor++;
-            results[index] = await task(items[index], index);
-        }
-    });
-    await Promise.all(workers);
-    return results;
-};
 
 const panelStyle = {
     background: "var(--gray-50, #f7f7f4)",
@@ -90,13 +57,6 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     /* What the file turned out to contain. Held as one object so the preview
        and the dispatch always read the same reading of the file. */
     const [preview, setPreview] = useState(null);
-    const queryClient = useQueryClient();
-    const alphaNumericInsertItemMutation = useMutation({
-        mutationFn: ({ template, idempotencyKey }) =>
-            devitrakApi.post("/db_item/bulk-item-alphanumeric", template, {
-                headers: { "Idempotency-Key": idempotencyKey },
-            }),
-    });
 
     /**
      * Reads the file twice: SheetJS for the grid, and the archive itself for
@@ -125,11 +85,9 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             missingColumns,
             unrecognizedColumns,
             media,
-            /* One request per device name, with each unit's own cost, location
-               and the rest travelling per serial number. How the file is cut
-               into requests is our problem, not something to ask the person
-               importing it about — see the note on IMPORT_MODES. */
-            plan: buildImportPlan(units, { mode: IMPORT_MODES.PER_SERIAL }),
+            /* The file goes in one request, so there is nothing to plan — only
+               the two things worth saying before it is sent. */
+            summary: summarizeImportUnits(units),
         };
     };
 
@@ -158,8 +116,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
     };
 
     const handleUpload = async () => {
-        const plan = preview?.plan;
-        if (!plan || plan.groups.length === 0) {
+        if (!preview?.units.length) {
             return message.warning("Nothing to import. Please select a valid file.");
         }
 
@@ -191,7 +148,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 setProgress(`Uploading ${preview.media.size} image(s)…`);
                 const uploaded = await uploadImportImages({
                     media: preview.media,
-                    groups: plan.groups,
+                    units: preview.units,
                     user,
                     onProgress: (done, total) =>
                         setProgress(`Uploading images ${done}/${total}…`),
@@ -275,169 +232,17 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                         "This import is already running. Wait for it to finish before starting another."
                     );
                 }
-                if (status !== 404) throw error;
-
-                console.info(
-                    "bulk-item-from-spreadsheet is not deployed yet; falling back to per-group requests"
-                );
-            }
-
-            /* 3. Fallback: one request per group, and the locations this file
-                  needs — the one-request endpoint creates them itself. */
-            setProgress(`Checking ${plan.stats.locations.length} location(s)…`);
-            for (const locationName of plan.stats.locations) {
-                await verifyAndCreateLocation({
-                    locationName,
-                    companyId: user.sqlInfo.company_id,
-                    queryClient,
-                    user,
-                });
-            }
-
-            const timestamp = formatDate(new Date());
-            const requests = plan.groups.flatMap((group) =>
-                group.batches.map((batch) => ({ group, batch }))
-            );
-
-            /* Counted in units, not in requests. How many requests it takes is
-               an implementation detail; how many of their devices are in is
-               not. */
-            let unitsSent = 0;
-            const outcomes = await runWithLimit(
-                requests,
-                CONCURRENT_REQUESTS,
-                async ({ group, batch }) => {
-                    const send = async (sendGroup, sendBatch) => {
-                        const { body } = buildGroupRequest({
-                            group: sendGroup,
-                            batch: sendBatch,
-                            company: user.sqlInfo.company_name,
-                            companyId: user.sqlInfo.company_id,
-                            imageUrlByMediaPath: urlByMediaPath,
-                            timestamp,
-                        });
-
-                        const { data: response } =
-                            await alphaNumericInsertItemMutation.mutateAsync({
-                                template: body,
-                                idempotencyKey: generateIdempotencyKey(),
-                            });
-
-                        dispatch(
-                            onTrackBackgroundJob({
-                                jobId: response.jobId,
-                                type: "bulk-inventory-insert",
-                                successMessage: `"${sendGroup.item_group}" — ${sendBatch.length} unit(s) added to inventory.`,
-                                failureMessage: `The import of "${sendGroup.item_group}" failed.`,
-                                invalidateKeys: inventoryPageQueryKeys(
-                                    user.sqlInfo.company_id
-                                ),
-                                clearCacheKeys: inventoryCacheKeys({
-                                    companyMongoId: user.companyData.id,
-                                }),
-                            })
-                        );
-                    };
-
-                    const { perSerialFields } = buildGroupRequest({
-                        group,
-                        batch,
-                        company: user.sqlInfo.company_name,
-                        companyId: user.sqlInfo.company_id,
-                        imageUrlByMediaPath: urlByMediaPath,
-                        timestamp,
-                    });
-
-                    try {
-                        await send(group, batch);
-                        return { ok: true, units: batch.length };
-                    } catch (error) {
-                        console.error("bulk-item-alphanumeric", group.item_group, error);
-
-                        /* A 400 on a request whose per-unit values travelled as
-                           serial maps is what a server that does not read them
-                           yet looks like: the scalar it wanted was deliberately
-                           absent, so it answers "Location Name is required".
-
-                           Rather than fail the import, send this batch the only
-                           other honest way — one request per distinct set of
-                           values — and carry on. More requests, same data. The
-                           day the maps are read the first attempt succeeds and
-                           none of this runs. */
-                        if (perSerialFields.length > 0 && error?.response?.status === 400) {
-                            try {
-                                const fallback = buildImportPlan(batch, {
-                                    mode: IMPORT_MODES.COMPATIBLE,
-                                });
-                                for (const splitGroup of fallback.groups) {
-                                    for (const splitBatch of splitGroup.batches) {
-                                        await send(splitGroup, splitBatch);
-                                    }
-                                }
-                                return {
-                                    ok: true,
-                                    units: batch.length,
-                                    split: fallback.stats.requests,
-                                };
-                            } catch (splitError) {
-                                console.error("split retry", group.item_group, splitError);
-                                return {
-                                    ok: false,
-                                    group: group.item_group,
-                                    units: batch.length,
-                                    reason:
-                                        splitError?.response?.data?.msg ??
-                                        splitError.message ??
-                                        "Request failed",
-                                };
-                            }
-                        }
-
-                        return {
-                            ok: false,
-                            group: group.item_group,
-                            units: batch.length,
-                            reason:
-                                error?.response?.data?.msg ??
-                                error.message ??
-                                "Request failed",
-                        };
-                    } finally {
-                        unitsSent += batch.length;
-                        setProgress(
-                            `Importing ${unitsSent} of ${plan.stats.units} unit(s)…`
-                        );
-                    }
-                }
-            );
-
-            const rejected = outcomes.filter((outcome) => !outcome.ok);
-            const unitsRejected = rejected.reduce(
-                (total, outcome) => total + outcome.units,
-                0
-            );
-            const unitsAccepted = plan.stats.units - unitsRejected;
-
-            if (rejected.length > 0) {
-                message.error(
-                    `${unitsRejected} unit(s) could not be imported. ${rejected[0].reason}`
-                );
-            }
-            if (unitsAccepted > 0) {
-                message.success(
-                    `${unitsAccepted} unit(s) queued for import. You'll be notified as they are added.`
-                );
-                /* Worth one line in the console rather than on the screen: it
-                   changes nothing about what was imported, and the person who
-                   needs to know is whoever is waiting on the server change. */
-                const splitCount = outcomes.filter((outcome) => outcome.split).length;
-                if (splitCount > 0) {
-                    console.warn(
-                        `${splitCount} group(s) were sent one value-set at a time — the server does not read per-unit fields yet. See FRONTEND_inventory_import_per_serial_2026-09-21.md`
+                /* Deployed 2026-09-22. A 404 now means the environment this
+                   tab is pointed at has not been updated, not that the feature
+                   is unfinished — and there is no longer a slower path to fall
+                   back to, because it could never import a realistic file
+                   inside the rate limit. */
+                if (status === 404) {
+                    return message.error(
+                        "This server does not have the spreadsheet import yet. Check you are pointed at an updated environment."
                     );
                 }
-                clearStateAndClose();
-                if (typeof closeModal === "function") closeModal();
+                throw error;
             }
         } catch (error) {
             console.error(error);
@@ -461,7 +266,7 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
         setOpenModal(false);
     };
 
-    const active = preview?.plan?.stats;
+    const active = preview?.summary;
 
     return (
         <>
@@ -580,20 +385,6 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                     number(s) appear more than once — e.g.{" "}
                                     {active.duplicateSerials[0].serial_number} on rows{" "}
                                     {active.duplicateSerials[0].rows.join(", ")}.
-                                </div>
-                            )}
-
-                            {active?.conflicts.length > 0 && (
-                                <div>
-                                    &ldquo;{active.conflicts[0].item_group}&rdquo; has more than
-                                    one {SHARED_FIELD_LABELS[active.conflicts[0].field] ??
-                                        active.conflicts[0].field}{" "}
-                                    in this file
-                                    {active.conflicts.length > 1
-                                        ? `, and so do ${active.conflicts.length - 1} other device(s)`
-                                        : ""}
-                                    . Every unit of a device shares one, so the most common is
-                                    used.
                                 </div>
                             )}
 

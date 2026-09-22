@@ -11,8 +11,61 @@
  * agreement to compute, because there is nothing left to flatten.
  */
 
-import { encodeExtraIdentifiers } from "./extraIdentifiers";
-import { parseExtraInfoCell } from "./inventoryImportPayload";
+/**
+ * `"Band=G50;Type=Handheld"` -> the identifier entries `item_inv` stores.
+ *
+ * A pair with no `=` is dropped, which is what the template says. Moved here
+ * from the old per-group payload builder when that was deleted; this is now its
+ * only caller.
+ */
+export const parseExtraInfoCell = (value) =>
+  String(value ?? "")
+    .split(";")
+    .map((pair) => {
+      const [key, ...valueParts] = pair.split("=");
+      return {
+        keyObject: (key ?? "").trim(),
+        valueObject: valueParts.join("=").trim(),
+        hasSeparator: valueParts.length > 0,
+      };
+    })
+    .filter(
+      (entry) => entry.keyObject && entry.keyObject !== "[]" && entry.hasSeparator,
+    )
+    .map(({ keyObject, valueObject }) => ({ keyObject, valueObject }));
+
+const distinct = (values) => [
+  ...new Set(values.filter((value) => value !== "" && value != null)),
+];
+
+/**
+ * What the preview says about a file, now that nothing is grouped.
+ *
+ * The import used to be planned — units bundled into requests, and the bundling
+ * decided what could be said about them. With one request per file there is no
+ * plan, and the two things worth telling someone before they upload survive on
+ * their own:
+ *
+ * - **the locations it touches**, because ones that do not exist are created
+ *   (or refused, for a role that cannot create them);
+ * - **serial numbers repeated inside the file**, because the server keeps the
+ *   first row and skips the rest, and it is better to know before than after.
+ */
+export const summarizeImportUnits = (units = []) => {
+  const rowsBySerial = new Map();
+  for (const unit of units) {
+    const serial = String(unit.serial_number);
+    rowsBySerial.set(serial, [...(rowsBySerial.get(serial) ?? []), unit.rowNumber]);
+  }
+
+  return {
+    units: units.length,
+    locations: distinct(units.map((unit) => unit.location)),
+    duplicateSerials: [...rowsBySerial]
+      .filter(([, rows]) => rows.length > 1)
+      .map(([serial_number, rows]) => ({ serial_number, rows })),
+  };
+};
 
 /**
  * The server's ceiling, `INVENTORY_IMPORT_MAX_UNITS`. Enforced here as well so
@@ -153,6 +206,3 @@ export const describeImportResult = (result, rowByIndex = []) => {
   }
   return `${parts.join(", ")}.`;
 };
-
-/** Re-exported so a caller does not have to know which module encodes what. */
-export { encodeExtraIdentifiers };

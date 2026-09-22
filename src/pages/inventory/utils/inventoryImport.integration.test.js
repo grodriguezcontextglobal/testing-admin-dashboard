@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { read, utils } from "xlsx";
 
-import { IMPORT_MODES, buildImportPlan } from "./inventoryImportPlan";
+import { summarizeImportUnits } from "./spreadsheetImportRequest";
 import { parseInventoryImportRows } from "./inventoryImportRows";
 import { readWorkbookCellImages } from "./readWorkbookCellImages";
 
@@ -59,61 +59,26 @@ describe.skipIf(!existsSync(MOCK))("the 500-row workbook, end to end", () => {
     expect(new Set(microphones.map((unit) => unit.cost)).size).toBe(33);
   });
 
-  it("sends one request per device name", async () => {
+  /* The file goes in one request now, so there is nothing to count here but
+     what the preview tells someone before they upload it. The numbers this test
+     used to pin — 18 requests grouped by device name, 499 grouped by every
+     flattened field, against a limiter of 300 — were the evidence for asking
+     for the endpoint. It exists; they are history. */
+  it("names the five locations the file touches", async () => {
     const { units } = await load();
 
-    const { groups, stats } = buildImportPlan(units, {
-      mode: IMPORT_MODES.PER_SERIAL,
-    });
-
-    expect(stats.groups).toBe(18);
-    expect(stats.requests).toBe(18);
-    expect(groups.reduce((total, group) => total + group.units.length, 0)).toBe(500);
-  });
-
-  /* What the same file costs on the payload as it stands today. The gap
-     between 18 and 499 is the whole argument for the per-serial maps. */
-  it("would need 499 requests to say the same thing with today's payload", async () => {
-    const { units } = await load();
-
-    expect(
-      buildImportPlan(units, { mode: IMPORT_MODES.COMPATIBLE }).stats.requests
-    ).toBe(499);
-  });
-
-  /* Measured across all 500 rows: brand, description and picture never
-     disagree inside a device group, which is what makes them group-level. */
-  it("finds no group whose group-level fields disagree", async () => {
-    const { units } = await load();
-
-    expect(
-      buildImportPlan(units, { mode: IMPORT_MODES.PER_SERIAL }).stats.conflicts
-    ).toEqual([]);
-  });
-
-  it("reports the five locations and the absence of duplicate serials", async () => {
-    const { units } = await load();
-
-    const { stats } = buildImportPlan(units, { mode: IMPORT_MODES.PER_SERIAL });
-
-    expect(stats.locations.sort()).toEqual([
+    expect(summarizeImportUnits(units).locations.sort()).toEqual([
       "Fort Lauderdale, FL",
       "Miami, FL",
       "New York, NY",
       "Orlando, FL",
       "Washington, DC",
     ]);
-    expect(stats.duplicateSerials).toEqual([]);
   });
 
-  /* Every device group is stocked in more than one city, so grouping by device
-     name alone means a request whose units do not share one location_id — the
-     value the endpoint resolves once per request for its scope check. */
-  it("shows that every group spans several locations", async () => {
+  it("finds no serial number repeated inside the file", async () => {
     const { units } = await load();
 
-    const { groups } = buildImportPlan(units, { mode: IMPORT_MODES.PER_SERIAL });
-
-    expect(groups.every((group) => group.spansSeveralLocations)).toBe(true);
+    expect(summarizeImportUnits(units).duplicateSerials).toEqual([]);
   });
 });
