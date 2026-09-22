@@ -28,6 +28,11 @@ import {
 } from "../../pages/inventory/utils/inventoryImportPlan";
 import { buildGroupRequest } from "../../pages/inventory/utils/inventoryImportPayload";
 import { uploadImportImages } from "../../pages/inventory/utils/uploadImportImages";
+import {
+    MAX_IMPORT_UNITS,
+    buildSpreadsheetImportRequest,
+    describeImportRejection,
+} from "../../pages/inventory/utils/spreadsheetImportRequest";
 
 /** "A, B and C" — reads the required/recommended field notes from the same
  * two arrays the parser enforces, so the message can't drift from them again. */
@@ -168,21 +173,19 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             );
         }
 
+        /* The server's own ceiling, enforced before the upload rather than
+           after it. A 400 carries the real number in `limit`; this constant is
+           only for refusing early. */
+        if (preview.units.length > MAX_IMPORT_UNITS) {
+            return message.error(
+                `This file has ${preview.units.length} units and the limit is ${MAX_IMPORT_UNITS.toLocaleString()}. Split it and import the parts.`
+            );
+        }
+
         setLoadingState(true);
         try {
-            /* 1. Locations, once each. This used to run per group, so five
-                  locations spread over eighteen groups meant eighteen calls. */
-            setProgress(`Checking ${plan.stats.locations.length} location(s)…`);
-            for (const locationName of plan.stats.locations) {
-                await verifyAndCreateLocation({
-                    locationName,
-                    companyId: user.sqlInfo.company_id,
-                    queryClient,
-                    user,
-                });
-            }
-
-            /* 2. Pictures, once per distinct file. */
+            /* 1. Pictures, once per distinct file. Ours either way — the server
+                  does not download anything. */
             let urlByMediaPath = new Map();
             if (preview.media.size > 0) {
                 setProgress(`Uploading ${preview.media.size} image(s)…`);
@@ -201,7 +204,96 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                 }
             }
 
-            /* 3. One request per batch. */
+            /* 2. The whole file, in one request.
+
+                  Tried first, every time. It answers 404 until the server that
+                  implements it is deployed, and on that 404 the old
+                  one-request-per-group path below runs instead — so the day it
+                  goes live nothing has to be released here. Everything after
+                  this block is that older path, and deleting it is the first
+                  thing to do once the endpoint is confirmed live. */
+            const whole = buildSpreadsheetImportRequest({
+                units: preview.units,
+                company: user.sqlInfo.company_name,
+                companyId: user.sqlInfo.company_id,
+                imageUrlByMediaPath: urlByMediaPath,
+            });
+
+            try {
+                setProgress(`Importing ${preview.units.length} unit(s)…`);
+                const { data: response } = await devitrakApi.post(
+                    "/db_item/bulk-item-from-spreadsheet",
+                    whole.body,
+                    { headers: { "Idempotency-Key": generateIdempotencyKey() } }
+                );
+
+                dispatch(
+                    onTrackBackgroundJob({
+                        jobId: response.jobId,
+                        type: "spreadsheet-inventory-import",
+                        successMessage: `${preview.units.length} unit(s) imported from ${fileName}.`,
+                        failureMessage: `The import of ${fileName} failed.`,
+                        invalidateKeys: inventoryPageQueryKeys(user.sqlInfo.company_id),
+                        clearCacheKeys: inventoryCacheKeys({
+                            companyMongoId: user.companyData.id,
+                        }),
+                    })
+                );
+
+                if (response.skipped > 0) {
+                    message.warning(
+                        `${response.skipped} row(s) repeat a serial number that is already in the file and were left out.`
+                    );
+                }
+                message.success(
+                    `${response.units} unit(s) queued for import. You'll be notified when it finishes.`
+                );
+                clearStateAndClose();
+                if (typeof closeModal === "function") closeModal();
+                return;
+            } catch (error) {
+                const status = error?.response?.status;
+
+                if (status === 400) {
+                    return message.error(
+                        describeImportRejection(error.response.data, whole.rowByIndex)
+                    );
+                }
+                /* 403 names the location or category that is outside the role's
+                   scope, and a scoped role cannot create a location it does not
+                   already have. Both are things the person can act on, so the
+                   server's sentence is better than ours. */
+                if (status === 403) {
+                    return message.error(
+                        error.response.data?.msg ?? "You cannot import into that location."
+                    );
+                }
+                /* The reservation is SET NX, so the same key while the first
+                   attempt is still in flight answers 409 rather than 202. */
+                if (status === 409) {
+                    return message.warning(
+                        "This import is already running. Wait for it to finish before starting another."
+                    );
+                }
+                if (status !== 404) throw error;
+
+                console.info(
+                    "bulk-item-from-spreadsheet is not deployed yet; falling back to per-group requests"
+                );
+            }
+
+            /* 3. Fallback: one request per group, and the locations this file
+                  needs — the one-request endpoint creates them itself. */
+            setProgress(`Checking ${plan.stats.locations.length} location(s)…`);
+            for (const locationName of plan.stats.locations) {
+                await verifyAndCreateLocation({
+                    locationName,
+                    companyId: user.sqlInfo.company_id,
+                    queryClient,
+                    user,
+                });
+            }
+
             const timestamp = formatDate(new Date());
             const requests = plan.groups.flatMap((group) =>
                 group.batches.map((batch) => ({ group, batch }))
@@ -505,9 +597,16 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                 </div>
                             )}
 
+                            {/* Not "will be created": a role scoped to certain
+                                locations cannot create one it does not already
+                                have — creating it and then writing to it would
+                                widen its own permission — and gets a 403 naming
+                                the location instead. Promising the creation
+                                would make that refusal look like a fault. */}
                             <div>
-                                {active?.locations.length} location(s) will be checked and
-                                created if missing: {active?.locations.join(", ")}.
+                                This file uses {active?.locations.length} location(s):{" "}
+                                {active?.locations.join(", ")}. Any that do not exist yet are
+                                created during the import, if your role can create them.
                             </div>
                         </div>
                     )}
