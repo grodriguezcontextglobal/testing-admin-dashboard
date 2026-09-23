@@ -18,11 +18,14 @@ vi.mock("../../components/animation/DevitrakLoading", () => ({
 }));
 
 /**
- * The force-logout email used to embed a `<form method="GET">` with a password
- * field, so the plaintext password travelled in the URL. The email now links
- * here with the account email only and the password is typed on this page.
- * These tests hold that line, and hold the back-compat path for links that
- * were already in inboxes when it changed.
+ * The page asks for nothing: a valid email in the link is the whole trigger.
+ *
+ * With MFA mandatory the password proved nothing the sign-in had not already
+ * proved, so it is gone. What it also stood in for — possession of the link —
+ * is the `token`, which this page posts when the link carries one. Both halves
+ * are held here, along with the rule that outlived the redesign: a secret that
+ * arrived in the address bar never stays there, and the legacy `cred` is read
+ * only to be thrown away.
  */
 // MemoryRouter keeps the URL in memory, so window.location never reflects it.
 // Asserting on window.location here would pass no matter what the component
@@ -44,11 +47,11 @@ function renderAt(search) {
   );
 }
 
-const passwordField = () => document.querySelector('input[name="password"]');
-// antd wraps the submit button in spans, and a click on those does not reach
-// jsdom's implicit form submission; submitting the form is what the button
-// does anyway, and it still runs react-hook-form's validation.
-const submitForm = () => fireEvent.submit(document.querySelector("form"));
+// A request that never settles, so the page stays on screen and an assertion
+// about what it shows cannot pass by accident after it has navigated away.
+const inFlight = () => new Promise(() => {});
+
+const searchNow = () => screen.getByTestId("location-search").textContent;
 
 describe("ForceLogout", () => {
   beforeEach(() => {
@@ -56,117 +59,119 @@ describe("ForceLogout", () => {
     devitrakApi.post.mockResolvedValue({ data: { ok: true } });
   });
 
-  it("renders from an email-only link — no password in the URL", async () => {
+  it("revokes as soon as the link opens, with nothing to type and nothing to click", async () => {
     renderAt("?email=ana%40bridgespcs.org&timestamp=1788220265821");
 
-    expect(await screen.findByText("Revoke Active Session")).toBeTruthy();
-    expect(screen.getByText("ana@bridgespcs.org")).toBeTruthy();
-    // The field the user types into has to actually exist and be empty.
-    const field = passwordField();
-    expect(field).toBeTruthy();
-    expect(field.type).toBe("password");
-    expect(field.value).toBe("");
-  });
-
-  it("posts the typed password to /staff/force-logout", async () => {
-    renderAt("?email=ana%40bridgespcs.org&timestamp=1");
-
-    await screen.findByText("Revoke Active Session");
-    fireEvent.change(passwordField(), { target: { value: "s3cret-typed" } });
-    submitForm();
-
     await waitFor(() =>
       expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
         email: "ana@bridgespcs.org",
-        password: "s3cret-typed",
       })
+    );
+    expect(await screen.findByTestId("login-page")).toBeTruthy();
+    expect(notify).toHaveBeenCalledWith(
+      "success",
+      "Your previous session has been revoked. You can now log in."
     );
   });
 
-  it("does not submit an empty password", async () => {
+  it("never renders a password field", async () => {
+    devitrakApi.post.mockReturnValue(inFlight());
     renderAt("?email=ana%40bridgespcs.org");
 
-    await screen.findByText("Revoke Active Session");
-    submitForm();
-
-    await waitFor(() => expect(screen.getByText("Revoke Active Session")).toBeTruthy());
-    expect(devitrakApi.post).not.toHaveBeenCalled();
+    await waitFor(() => expect(devitrakApi.post).toHaveBeenCalled());
+    expect(document.querySelector('input[type="password"]')).toBeNull();
+    expect(document.querySelector('input[name="password"]')).toBeNull();
   });
 
-  it("still honours a legacy ?cred= link, so mail already sent keeps working", async () => {
+  it("says whose session it is ending while it does it", async () => {
+    devitrakApi.post.mockReturnValue(inFlight());
+    renderAt("?email=ana%40bridgespcs.org");
+
+    expect(await screen.findByText("ana@bridgespcs.org")).toBeTruthy();
+    expect(screen.getByTestId("loading")).toBeTruthy();
+  });
+
+  /* Links written before the redesign still carry the password in the query
+     string. It is read only so it can be removed — it is not a credential this
+     page sends any more. */
+  it("never sends a legacy ?cred= password, even when the link still carries one", async () => {
     renderAt("?email=ana%40bridgespcs.org&cred=legacy-pass&timestamp=1");
 
-    await screen.findByText("Revoke Active Session");
-    expect(passwordField().value).toBe("legacy-pass");
-
-    submitForm();
-    await waitFor(() =>
-      expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
-        email: "ana@bridgespcs.org",
-        password: "legacy-pass",
-      })
-    );
+    await waitFor(() => expect(devitrakApi.post).toHaveBeenCalled());
+    expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
+      email: "ana@bridgespcs.org",
+    });
   });
 
   it("scrubs a legacy password out of the URL as soon as it is read", async () => {
     // It reached the browser in the link, but it must not survive on this page —
     // not in the address bar, not in a Referer, not behind the back button.
+    devitrakApi.post.mockReturnValue(inFlight());
     renderAt("?email=ana%40bridgespcs.org&cred=legacy-pass&timestamp=1");
 
-    await screen.findByText("Revoke Active Session");
     // Sanity: the probe really does see the query string, so a later
     // "does not contain cred" cannot pass by reading an empty string.
-    expect(screen.getByTestId("location-search").textContent).toContain("email=");
-
+    await waitFor(() => expect(searchNow()).toContain("email="));
     await waitFor(() => {
-      const current = screen.getByTestId("location-search").textContent;
-      expect(current).not.toContain("cred");
-      expect(current).not.toContain("legacy-pass");
+      expect(searchNow()).not.toContain("cred");
+      expect(searchNow()).not.toContain("legacy-pass");
     });
     // The email and timestamp are still there — only the secret was removed.
-    const finalSearch = screen.getByTestId("location-search").textContent;
-    expect(finalSearch).toContain("email=ana%40bridgespcs.org");
-    expect(finalSearch).toContain("timestamp=1");
-    // And the value the user submits is unaffected by the scrub.
-    expect(passwordField().value).toBe("legacy-pass");
+    expect(searchNow()).toContain("email=ana%40bridgespcs.org");
+    expect(searchNow()).toContain("timestamp=1");
   });
 
   it("scrubs the x_cred spelling too", async () => {
+    devitrakApi.post.mockReturnValue(inFlight());
     renderAt("?x_email=ana%40bridgespcs.org&x_cred=legacy-pass");
 
-    await screen.findByText("Revoke Active Session");
-    await waitFor(() =>
-      expect(screen.getByTestId("location-search").textContent).not.toContain("legacy-pass")
-    );
-    expect(passwordField().value).toBe("legacy-pass");
+    await waitFor(() => expect(searchNow()).not.toContain("legacy-pass"));
   });
 
-  it("accepts the x_ prefixed parameter spellings", async () => {
-    renderAt("?x_email=ana%40bridgespcs.org");
-    expect(await screen.findByText("ana@bridgespcs.org")).toBeTruthy();
-  });
-
-  it("sends a link with no email back to login rather than showing a dead form", async () => {
+  it("sends a link with no email back to login rather than calling the API", async () => {
     renderAt("?timestamp=1788220265821");
+
     expect(await screen.findByTestId("login-page")).toBeTruthy();
     expect(notify).toHaveBeenCalledWith(
       "error",
       "Invalid link. Please click the link from your email again."
     );
+    expect(devitrakApi.post).not.toHaveBeenCalled();
   });
 
-  /* With MFA mandatory, the password proves nothing the login did not already
-     prove — but it is also the only thing standing between a guessable URL and
-     ending someone's session. A link that carries its own secret replaces it;
-     one that does not still needs it. */
+  /* A mangled link is a broken link, and saying so beats posting a string that
+     cannot be an address and relaying whatever the API makes of it. */
+  it("sends a link whose email is not an address back to login", async () => {
+    renderAt("?email=ana%40bridgespcs");
+
+    expect(await screen.findByTestId("login-page")).toBeTruthy();
+    expect(devitrakApi.post).not.toHaveBeenCalled();
+  });
+
+  it("reads the x_ prefixed parameter spellings", async () => {
+    renderAt("?x_email=ana%40bridgespcs.org");
+
+    await waitFor(() =>
+      expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
+        email: "ana@bridgespcs.org",
+      })
+    );
+  });
+
+  /* Removing the token from the URL feeds a new searchParams straight back into
+     the effect that fired the request. Without the guard that is a second
+     revoke, caused by the page tidying up after itself. */
+  it("revokes once, although scrubbing the URL re-runs the effect", async () => {
+    devitrakApi.post.mockReturnValue(inFlight());
+    renderAt("?email=ana%40bridgespcs.org&token=one-time-secret&timestamp=1");
+
+    await waitFor(() => expect(searchNow()).not.toContain("one-time-secret"));
+    expect(devitrakApi.post).toHaveBeenCalledTimes(1);
+  });
+
   describe("a link that carries a revoke token", () => {
-    it("asks for nothing and posts the token", async () => {
+    it("posts the token alongside the email", async () => {
       renderAt("?email=ana%40bridgespcs.org&token=one-time-secret");
-
-      await screen.findByText("Revoke Active Session");
-      expect(passwordField()).toBeNull();
-
-      submitForm();
 
       await waitFor(() =>
         expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
@@ -174,44 +179,23 @@ describe("ForceLogout", () => {
           token: "one-time-secret",
         })
       );
-    });
-
-    it("says what the button will do, without mentioning a password", async () => {
-      renderAt("?email=ana%40bridgespcs.org&token=one-time-secret");
-
-      expect(
-        await screen.findByText(/End the other active session for/)
-      ).toBeTruthy();
-      expect(screen.queryByText(/Confirm your password/)).toBeNull();
     });
 
     /* Same rule as the legacy password: a secret that arrived in the address
        bar must not stay there. */
     it("scrubs the token out of the URL as soon as it is read", async () => {
+      devitrakApi.post.mockReturnValue(inFlight());
       renderAt("?email=ana%40bridgespcs.org&token=one-time-secret&timestamp=1");
 
-      await screen.findByText("Revoke Active Session");
       await waitFor(() => {
-        const current = screen.getByTestId("location-search").textContent;
-        expect(current).not.toContain("one-time-secret");
-        expect(current).not.toContain("token");
+        expect(searchNow()).not.toContain("one-time-secret");
+        expect(searchNow()).not.toContain("token");
       });
-      expect(screen.getByTestId("location-search").textContent).toContain(
-        "email=ana%40bridgespcs.org"
-      );
+      expect(searchNow()).toContain("email=ana%40bridgespcs.org");
     });
 
-    it("still posts the scrubbed token, not an empty one", async () => {
+    it("posts the token it read, not the one the URL no longer has", async () => {
       renderAt("?x_email=ana%40bridgespcs.org&x_token=one-time-secret");
-
-      await screen.findByText("Revoke Active Session");
-      await waitFor(() =>
-        expect(screen.getByTestId("location-search").textContent).not.toContain(
-          "one-time-secret"
-        )
-      );
-
-      submitForm();
 
       await waitFor(() =>
         expect(devitrakApi.post).toHaveBeenCalledWith("/staff/force-logout", {
@@ -220,24 +204,43 @@ describe("ForceLogout", () => {
         })
       );
     });
-
-    it("keeps asking for the password when the link has no token", async () => {
-      renderAt("?email=ana%40bridgespcs.org");
-
-      await screen.findByText("Revoke Active Session");
-      expect(passwordField()).toBeTruthy();
-    });
   });
 
-  it("surfaces the server's rejection and stays put so the password can be retyped", async () => {
-    devitrakApi.post.mockRejectedValue({ response: { data: { msg: "Invalid credentials." } } });
-    renderAt("?email=ana%40bridgespcs.org");
+  describe("when the revoke fails", () => {
+    it("shows the server's own reason instead of a dead loading screen", async () => {
+      devitrakApi.post.mockRejectedValue({
+        response: { data: { msg: "No active session found." } },
+      });
+      renderAt("?email=ana%40bridgespcs.org");
 
-    await screen.findByText("Revoke Active Session");
-    fireEvent.change(passwordField(), { target: { value: "wrong" } });
-    submitForm();
+      expect(await screen.findByText("No active session found.")).toBeTruthy();
+      expect(notify).toHaveBeenCalledWith("error", "No active session found.");
+      expect(screen.queryByTestId("login-page")).toBeNull();
+    });
 
-    await waitFor(() => expect(notify).toHaveBeenCalledWith("error", "Invalid credentials."));
-    expect(screen.getByText("Revoke Active Session")).toBeTruthy();
+    it("offers a retry that sends the same request again, token and all", async () => {
+      devitrakApi.post.mockRejectedValueOnce({
+        response: { data: { msg: "No active session found." } },
+      });
+      renderAt("?email=ana%40bridgespcs.org&token=one-time-secret");
+
+      await screen.findByText("No active session found.");
+      fireEvent.click(screen.getByRole("button", { name: /Try again/i }));
+
+      await waitFor(() => expect(devitrakApi.post).toHaveBeenCalledTimes(2));
+      expect(devitrakApi.post).toHaveBeenLastCalledWith("/staff/force-logout", {
+        email: "ana@bridgespcs.org",
+        token: "one-time-secret",
+      });
+    });
+
+    it("falls back to its own wording when the server sends none", async () => {
+      devitrakApi.post.mockRejectedValue(new Error("Network Error"));
+      renderAt("?email=ana%40bridgespcs.org");
+
+      expect(
+        await screen.findByText("Failed to revoke session. Please try again.")
+      ).toBeTruthy();
+    });
   });
 });

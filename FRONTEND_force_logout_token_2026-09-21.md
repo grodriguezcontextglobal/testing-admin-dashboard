@@ -1,11 +1,28 @@
-# Revoke-session link needs its own secret before the password can go
+# The revoke page no longer asks for a password. The link needs its own secret
 
 **To:** backend
 **From:** frontend
 **Date:** 2026-09-21
 **Endpoints:** `POST /api/staff/force-logout`, `POST /api/nodemailer/forcing-revoking-active-session`
+**Updated:** 2026-09-23 — the client changed and §3 is resolved; §1 and §2 stand
 
 ---
+
+## Update, 2026-09-23 — read this first
+
+The password field is **gone from the page**, not gated behind a token. A valid
+email in the link is the whole trigger: `ForceLogout.jsx` posts the revoke as it
+opens and never sends a password, not even one a legacy `?cred=` link hands it.
+
+**§3 is resolved.** `forceEndSession` accepts `{ email }` on its own — confirmed
+by the backend the same day — so the page works against the controller as
+deployed. Nothing below asks for a password to keep working, because nothing we
+send carries one.
+
+**§1 and §2 still stand.** The link is still `?email=<address>` with no secret
+in it, and the token is what ties a revoke to the inbox that received the mail
+rather than to an address anyone can type. The page already posts a `token` when
+the link carries one, so shipping it needs no release from us.
 
 ## What was asked for
 
@@ -24,7 +41,7 @@ He is right about the part he is describing. `loginUser` runs the MFA check
 session already exists" has already passed both factors. A third password prompt
 proves nothing new.
 
-## Why we did not just delete the field
+## Why we did not delete the field in the first pass
 
 The password is doing a second job nobody designed for it. The link in the email
 is:
@@ -77,28 +94,31 @@ email has**.
    does not match the email, an error the page can show as-is — we render
    `msg` verbatim.
 
-3. **Keep `{ email, password }` working** until the links already sitting in
-   inboxes have expired. `forceEndSession` currently 400s on a missing password;
-   after this it should accept either one and reject a request carrying neither.
+3. ~~**Accept `{ email }` on its own.**~~ **Done, 2026-09-23.** The controller
+   takes `{ email }` with no password. The client sends `{ email }` or
+   `{ email, token }` and never anything else.
 
-## What the client already does
+## What the client does now
 
-Shipped 2026-09-21, and inert until you send a token:
+Shipped 2026-09-23, and it does not wait for you:
 
-- `ForceLogout.jsx` reads `token` / `x_token`. **When the link carries one, no
-  password is asked for** — the page is a sentence and a button, which is the
-  single click Fredrik asked for. When it does not, the password field is
-  exactly as it is today.
-- The token is stripped out of the URL the moment it is read, with `replace`, so
-  it does not survive in history, behind the back button, or in a `Referer` —
-  the same treatment the legacy `cred` parameter gets.
-- The submitted body is `{ email, token }` or `{ email, password }`, never both.
+- **No password field, no button to press.** The page reads `email` / `x_email`,
+  checks it looks like an address, and posts the revoke as it opens. A link
+  whose email is missing or mangled goes back to `/login` with a message
+  instead of posting anything.
+- **`token` / `x_token` is posted when the link carries one**, so the body is
+  `{ email, token }`; otherwise `{ email }`. Never a password.
+- **A legacy `?cred=` password is read only to be deleted.** It is stripped from
+  the URL with `replace` — no history entry, no back button, no `Referer` — and
+  it is not sent. Same treatment the token gets once it has been read.
+- **A failure shows your `msg` verbatim** with a Try again button, rather than
+  spinning. That is what a revoke link hits today, on every click.
+- The revoke fires **once**, not once per render: scrubbing the URL feeds a new
+  `searchParams` back into the effect that fired it.
 
-So the day `forceLogoutNotificationHtmlTemplate` starts appending `&token=`, the
-password step disappears on its own. No further client release.
-
-`src/pages/authentication/ForceLogout.test.jsx` pins both paths, including that
-a tokenless link still asks for the password.
+`src/pages/authentication/ForceLogout.test.jsx` pins all of it — 16 tests,
+including that no password leaves the page and that the token survives being
+scrubbed out of the address bar.
 
 ## One more thing worth a look, separately
 
