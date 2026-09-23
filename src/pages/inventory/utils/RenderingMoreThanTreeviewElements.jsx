@@ -1,12 +1,18 @@
 // import { Grid } from "@mui/material";
 import CardLocations from "./CardLocations";
 import { Space } from "antd";
+import { ownershipLabel } from "../actions/utils/ownershipUtils";
 
-const RenderingMoreThanTreeviewElements = ({
-  item,
-  dictionary,
-  searchItem,
-}) => {
+/**
+ * Every filter section renders its cards through here, not just the ownership
+ * one, so the label can only be translated for the section where the stored
+ * value and the word a person reads are different things. A category called
+ * "Rent" is a category.
+ */
+const cardTitle = (sectionKey, value) =>
+  sectionKey === "ownership" ? ownershipLabel(value) : value;
+
+const RenderingMoreThanTreeviewElements = ({ item, searchItem }) => {
   const elemId = item.key;
   const r = () => item.data; //ensureThreeItems(item.data);
   return (
@@ -25,7 +31,7 @@ const RenderingMoreThanTreeviewElements = ({
                 searchItem || ""
                   }`
             }
-            title={dictionary[opt?.key] ?? opt?.key}
+            title={cardTitle(item.key, opt?.key)}
             props={`${opt?.value} total devices`}
             total={typeof opt?.value === "number" ? opt.value : null}
             available={
