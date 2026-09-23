@@ -3,7 +3,7 @@
 > **Source list:** `FRONTEND_pending_tasks_2026-09-18.md` — 28 items, each with
 > the timestamp where it was raised. That file stays the record of *what was
 > asked for*; this one is the shorter question of *what is left*, as of
-> **2026-09-21**.
+> **2026-09-23**.
 >
 > Written in English for the same reason the source list is: everything quoted
 > is a UI string.
@@ -12,24 +12,23 @@
 
 ## 0. Where it stands
 
-**27 of 28 closed. 1 open.**
+**28 of 28 closed. Nothing on his list is open.**
 
 > Corrected 2026-09-22. Earlier versions of this line counted the three items of
 > §4 of the source list — the ones already true in the code when the list was
 > written — inside the 28. They are not among them, so the closed figure was two
 > too high. Those three remain done and remain outside the count.
+>
+> Closed 2026-09-23 with item 21, which was run several times on 09-22.
 
-Two of the closed ones are only closed **on the client**. They are marked so,
-and each names the one thing the backend still has to do.
+What is left is not on his list. Three kinds, and none of them blocks him:
 
 | | |
 |---|---|
-| Closed (27) | everything except 21 |
-| Open, P1 | 21 |
-| Open, P2 | — |
-| Open, P3 | — |
-
-`*` client done, waiting on the backend.
+| Closed (28) | all of them |
+| Client done, backend owes something (§2) | 2, 3 |
+| Waiting on a decision of his, not on work (§3) | the `serial_number` fallback |
+| Found while working, never asked for (§4) | two, one of them a browser pass |
 
 ---
 
@@ -46,22 +45,14 @@ registration, and the "Disable MFA" opt-out removed from the profile. The gate
 sits between "credentials accepted" and the session, and the login resumes where
 it stopped rather than asking for the password again.
 
-**Still open on the backend:** the server will still issue a token to an account
-with MFA off — only the client declines to use it. A caller posting straight to
-`/api/admin/login` skips the gate. Making this a rule means refusing the session
-server-side. Until then it should be described to Fredrik as a strong front
-door, not as "MFA is now mandatory".
+**The backend has not made this a rule yet** — see §2.
 
-### 3 — the revoke page no longer needs a password *(client)*
-`ForceLogout.jsx` reads a `token` from the link: with one it asks for nothing,
-without one the password stays, which is what every link already in an inbox
-needs.
+### 3 — the revoke page no longer asks for a password *(client)*
+`ForceLogout.jsx` posts the revoke as it opens, on nothing but a valid email in
+the link. It sends `{ email }`, or `{ email, token }` when the link carries a
+token; a legacy `?cred=` password is read only to be stripped out of the URL.
 
-**Still open on the backend:** the link has to carry that token —
-`FRONTEND_force_logout_token_2026-09-21.md`. It is inert until then, and needs
-no further client release. The same document flags that
-`POST /nodemailer/forcing-revoking-active-session` is unauthenticated, so anyone
-can make us mail that template to any address they can name.
+**The link does not carry that token yet** — see §2.
 
 ### 15 and 18 — strict column names, no defaults
 > P2 `5:51` — "delete for every single column here, also accepted as, all that,
@@ -96,77 +87,94 @@ neither SheetJS nor ExcelJS does, so those pictures were being dropped in
 silence — uploads each distinct file once, and a URL typed into that column is
 reported in the preview rather than used.
 
----
+### 21 — the ABC Interpreting import, run and reported
+> P2 `13:13` — "You should try it yourself to import. If you use that on ABC
+> interpreting, put like 10 units or something, and try the images and all that,
+> and then come back and then we can review it."
 
-## 2. Open and blocking — P1
+Run on **2026-09-22**, several times, and the client and the server were both
+adjusted between runs rather than after them. That is the half of the item that
+matters: it was not a pass/fail check at the end, it was the loop that found the
+last defects.
 
-### 21 — import 10 units on ABC Interpreting and report back
-> P2 `13:13`–`13:35`
+Two of them are in yesterday's commits, and neither was on his list nor
+reachable from a test:
 
-Gustavo's, not the code's. Worth doing now rather than before: the importer it
-would have tested has been rewritten since the session, and this is the first
-run that would exercise the new preview, the in-cell pictures and the per-unit
-values end to end. Nothing in the new path has been through a browser yet.
+- **`Sale` and `Resale` were the same value written by two halves of the app**
+  (`fda62fdd`). Six writers split between the two spellings, five dictionaries
+  mapping both to the same text and hiding it, and underneath that a real
+  filter bug: the table offered them as two options compared by exact equality,
+  so filtering by one hid every row the other half had written. `Resale` is now
+  canonical and the rows already stored as `Sale` still read.
+- **An unknown ownership value rendered as an empty cell** (`ee980b60`). The
+  two tables looked the value up in a dictionary with no fallback, so anything
+  unexpected in that column disappeared silently. They go through
+  `ownershipLabel` now, which normalises first and otherwise prints the value
+  as it is. A cell with an odd word in it is information; an empty cell is not.
 
----
+**What is left of 21 is his half:** reviewing the result with him. That is the
+next session, not a task.
 
-## 3. Open — the add-inventory wizard (P2/P3)
+### 4 to 13, 16, 17, 19, 22 to 28 — closed 09-21 and 09-22
 
-What is left of items 4 to 13: two, both unstarted.
+The add-inventory wizard copy, the XLSX template notes, the bulk-update Review
+screen and the two pre-fill items. This document listed them as open until
+2026-09-23; that was the body lagging behind its own count, not work
+outstanding. The commits are between `f99a721a` and `80fe3c36`.
 
-| # | Item | Where |
-|---|---|---|
-| 6 | Validation error is too easy to miss | `13:27`–`13:55` |
+Two of them are worth remembering as patterns rather than as items:
 
-The §5 defect that lived in this block — body text pointing at a **"Scan
-labels"** control that does not exist — went with the rewrite of 9.
-
-**The pre-fill pattern is now one helper.** `agreedValue(items, field)` in
-`updateInventoryMatchSummary.js` — pre-fill only when the group agrees, leave it
-alone when it does not. 8 uses it; **22 should be rewritten on top of it rather
-than implemented again**, which is most of what 22 is.
-
----
-
-## 4. Open — the XLSX template (P2/P3)
-
-| # | Item | Where | Note |
-|---|---|---|---|
-| 16 | "Taxable Location" description | `2:54`–`3:58` | |
-| 17 | "Sub Locations" — drop "outermost first" | `5:58`–`7:49` | |
-| 19 | Extra identifiers — approved, minor trim | `8:34`–`9:34` | |
-
-All three are edits to `notes` in one file,
-`src/pages/inventory/utils/inventoryImportTemplate.js`, and that file has a test
-pinning the guide, the downloadable template and the parser's headers to each
-other. An hour as a batch, a week of drift one at a time.
-
----
-
-## 5. Open — the bulk-update wizard (P2/P3)
-
-| # | Item | Where |
-|---|---|---|
-| 22 | Pre-fill location when all items share one | `13:35`–`16:45` |
-| 23 | Location hint is wrong | `16:48`–`17:17` |
-| 24 | Review: "12 items **will be** updated" | `17:49`–`18:41` |
-| 25 | Review: "These are the changes that will be made" | `18:41`–`19:46` |
-| 26 | Review: explain the mid-wizard race properly | `19:46`–`23:14` |
-| 27 | Apply button must not promise a count | `22:27`–`23:19` |
-| 28 | Rewrite the no-bulk-undo sentence | `24:48`–`25:31` |
-
-24, 25, 26 and 27 are all the same Review screen. 26 is the only one with any
-thinking in it — the others follow from getting 26 right, because once the race
-is described honestly the other three sentences have to stop promising a number
-the app cannot guarantee.
+- **The pre-fill rule is one helper.** `agreedValue(items, field)` in
+  `updateInventoryMatchSummary.js` — pre-fill only when the group agrees, leave
+  it alone when it does not. Both 8 and 22 are built on it, which is what kept
+  22 from being a second implementation of the same idea.
+- **The validation error was not a missing error, it was an invisible one**
+  (`80fe3c36`). The button was not broken; the reason it refused was drawn
+  where nobody looks.
 
 ---
 
-## 6. Waiting on a decision, not on work
+## 2. What the backend still owes
+
+Both are closed on the client and neither needs another release from us.
+
+### 2 — MFA is mandatory, on the client only
+
+Forced enrolment at the next sign-in, a matching step at the end of
+registration, and the "Disable MFA" opt-out removed from the profile.
+
+**The server will still issue a token to an account with MFA off** — only the
+client declines to use it. A caller posting straight to `/api/admin/login`
+skips the gate. Making this a rule means refusing the session server-side.
+Until then it should be described to Fredrik as a strong front door, not as
+"MFA is now mandatory".
+
+### 3 — the revoke link has to carry a token
+
+**The password is gone from the page entirely** (2026-09-23, at Fredrik's
+reading of his own point: MFA is mandatory, so the sign-in already proved both
+factors). A valid email in the link is the whole trigger — `ForceLogout.jsx`
+posts the revoke as it opens, and a legacy `?cred=` is read only to be stripped
+out of the URL. The controller now accepts `{ email }` with no password, so the
+flow works end to end.
+
+**What is still open is hardening, not the feature.** The link is
+`?email=<address>` with no secret in it, so possession of the mail is not what
+authorises the revoke — an address anyone can type is. A single-use token
+closes that: `FRONTEND_force_logout_token_2026-09-21.md` §1 and §2. The page
+already posts one when the link carries it, so it needs no release from us.
+
+The same document flags that `POST /nodemailer/forcing-revoking-active-session`
+is unauthenticated, so anyone can make us mail that template to any address
+they can name. That one is worth raising again on its own.
+
+---
+
+## 3. Waiting on a decision, not on work
 
 ### The paste panel says `serial_number` is mandatory. The parser does not.
 
-The instructions now read *"Your spreadsheet needs a serial_number column."*
+The instructions read *"Your spreadsheet needs a serial_number column."*
 `parsePastedInventoryRows.js:140` disagrees: with no such column it takes the
 first one and carries on
 (`const primaryIndex = namedPrimary >= 0 ? namedPrimary : 0`).
@@ -190,48 +198,48 @@ Three ways to close it:
 
 ---
 
-## 7. Not on his list, found while working
+## 4. Not on his list, found while working
 
-These were not asked for. They are here so they are not re-discovered from
-scratch.
-
-- **The spreadsheet import needs an endpoint of its own, and is blocked until
-  it exists.** Tried three shapes on `bulk-item-alphanumeric` today; the last
-  one works and needs 499 requests for a 500-row file, against a limiter of 300
-  per 15 minutes. Gustavo hit it on a real upload: only the devices whose units
-  were identical got in. Spec in
-  `FRONTEND_inventory_import_endpoint_2026-09-21.md`. **This is the most
-  blocking item on the list, and it is not on Fredrik's.**
-- **The inventory importer was overwriting per-unit values.** Measured against a
-  500-row file: 482 of 500 units would have been written with another row's
-  cost, 394 with another row's location. Fixed on the client; the payload change
-  that makes it cheap is asked for in
-  `FRONTEND_inventory_import_per_serial_2026-09-21.md`. Until that lands, a file
-  like that one costs 499 requests instead of 18, and the preview says so before
-  anything is sent.
 - **`Input` draws its label across the field's border.** `label={label}` is
   commented out on the `OutlinedInput` inside
-  `src/components/UX/inputs/Input.jsx`, so the outlined variant never cuts the
-  gap the floating label needs and the text sits on the line. Every caller that
-  passes `label` has it — at least eight files. Uncommenting that one line is
-  the fix, and it changes the look of all of them at once, so it wants a browser
-  pass rather than a drive-by.
-- **Nothing shipped this week has been through a browser.** The MFA enrolment
-  flow, the revoke page and the whole import path are covered by tests and by
-  nothing else. Item 21 would exercise the third of those.
+  `src/components/UX/inputs/Input.jsx:91`, so the outlined variant never cuts
+  the gap the floating label needs and the text sits on the line. Every caller
+  that passes `label` has it — at least eight files. Uncommenting that one line
+  is the fix, and it changes the look of all of them at once, so it wants a
+  browser pass rather than a drive-by.
+- **The MFA enrolment flow and the revoke page have never been through a
+  browser.** They are covered by tests and by nothing else. The import path was
+  the third of these and item 21 settled it; these two are what is left of that
+  worry, and the revoke page cannot be exercised end to end until the backend
+  puts the token in the link.
+
+### Closed since the last revision of this section
+
+- **The spreadsheet import endpoint.** `bulk-item-from-spreadsheet` was
+  specified, implemented, deployed, and the client migrated the same day: the
+  one-request-per-group fallback, `IMPORT_MODES.COMPATIBLE`, the 499-request
+  chunking, our `verifyAndCreateLocation` loop and `inventoryImportPayload.js`
+  are gone — 928 lines out, 93 in. `spreadsheetRowFor` stays on purpose, for
+  environments that are not updated yet.
+- **The importer was overwriting per-unit values.** Measured against a 500-row
+  file: 482 of 500 units would have been written with another row's cost, 394
+  with another row's location. Fixed on the client, and the payload now carries
+  the per-serial fields.
 
 ---
 
-## 8. Suggested order for the next session
+## 5. The next session
 
 He asked for a faster cadence (P2 `25:31`) — *"I'd rather keep going like more,
-more, more now, because I learn from it too."* So the next session is worth
-arriving at with the cheap batches already done.
+more, more now, because I learn from it too."* His list is empty, so the session
+is his to fill. What we owe it:
 
-1. **The template batch — 16, 17, 19** — one file, one test, one pass.
-2. **The Review screen — 26 first, then 24, 25, 27.**
-3. **The wizard copy — 9, 10, 11, 12, 13**, folding in the "Scan labels"
-   mismatch.
-4. **21**, as the thing that proves the import rewrite in a browser.
-5. **8 and 22 last**, together, extracting the pre-fill helper instead of
-   writing it a third time.
+1. **The result of the ABC Interpreting import**, which is the half of 21 that
+   is his — with the two defects it surfaced, because those are the argument for
+   running it that way again.
+2. **The `serial_number` decision** (§3). One question, three options, a
+   recommendation.
+3. **An honest sentence about MFA** (§2): strong front door, not a rule, and
+   what it would take to make it one.
+4. Before any of that, **the browser pass on MFA enrolment** (§4), so what we
+   describe to him is something we have seen work.

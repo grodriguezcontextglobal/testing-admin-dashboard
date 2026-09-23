@@ -44,7 +44,7 @@
 | 18 | Delete every "Default: empty" | P2 `7:49`–`8:32` | **done** |
 | 19 | Extra identifiers — approved, minor trim only | P2 `8:34`–`9:34` | **done** |
 | 20 | **Image column must not accept public URLs** | P2 `9:38`–`12:18` | **done** |
-| 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **P1** |
+| 21 | Gustavo imports 10 units on ABC Interpreting and reports back | P2 `13:13`–`13:35` | **done** — run 09-22, review with him pending |
 | 22 | Bulk update: pre-fill location when all items share one | P2 `13:35`–`16:45` | **done** |
 | 23 | Bulk update: Location hint is wrong | P2 `16:48`–`17:17` | **done** |
 | 24 | Review: "12 items **will be** updated" | P2 `17:49`–`18:41` | **done** |
@@ -754,7 +754,7 @@ everything else is rejected.
 > product-wide policy, not a rule for one column, and it is worth auditing
 > anywhere else the app renders or fetches a user-supplied URL.
 
-### 21. Import 10 units on ABC Interpreting and report back — P1
+### 21. Import 10 units on ABC Interpreting and report back — done
 
 Not a code task; an action item he assigned directly.
 
@@ -763,7 +763,13 @@ Not a code task; an action item he assigned directly.
 > interpreting, put like 10 units or something, and try the images and all that,
 > and then come back and then we can review it."
 
-Gustavo accepted at P2 `13:31`. This gates the next session.
+Gustavo accepted at P2 `13:31`.
+
+Run on 2026-09-22, several times, with the client and the server adjusted
+between runs rather than after them. It found two defects no test would have:
+the `Sale`/`Resale` split behind the ownership filter (`fda62fdd`) and the
+empty cell any unrecognised ownership value produced (`ee980b60`). The half
+that is left is his — reviewing the result together, which is the next session.
 
 ---
 
