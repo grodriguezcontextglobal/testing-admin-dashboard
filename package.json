@@ -92,7 +92,7 @@
     "@vite-pwa/assets-generator": "^0.2.6",
     "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.4.23",
-    "cypress": "^13.13.3",
+    "cypress": "^15.21.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
