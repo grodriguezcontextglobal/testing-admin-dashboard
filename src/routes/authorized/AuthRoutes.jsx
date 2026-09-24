@@ -1,6 +1,6 @@
 import { Suspense, useRef } from "react";
 import { lazyWithRetry } from "../lazyWithRetry";
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
 import IndustryTabGuard from "./IndustryTabGuard";
@@ -254,6 +254,7 @@ const AssignmentDeviceMembers = lazyWithRetry(() =>
 );
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
+  const location = useLocation();
   return (
     <div
       style={{
@@ -267,7 +268,18 @@ const AuthRoutes = () => {
       <InstallAppBanner />
       <HeaderComponent ref={navbarRef} />
       <GlobalCommandMenu />
+      {/* Keyed on the path so a navigation gets the spinner back.
+          react-router 7 wraps navigation in startTransition, and a transition
+          deliberately keeps the CURRENT screen on display while the next one
+          loads rather than falling back to this boundary. On a fast chunk that
+          is an improvement — no flash. On a slow one it reads as a click that
+          did nothing: the URL moves and the page sits there. Cold route
+          modules on this dev setup take seconds, so that is most of them.
+          A changing key makes it a new boundary, which suspends and shows the
+          fallback. An already-loaded route renders straight through and never
+          flashes it. */}
       <Suspense
+        key={location.pathname}
         fallback={
           <div style={{ ...CenteringGrid, minHeight: "60dvh" }}>
             <DevitrakLoading />
