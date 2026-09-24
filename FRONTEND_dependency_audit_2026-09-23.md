@@ -14,22 +14,24 @@
 
 ## 0. Dónde va esto
 
+**128 → 17.** Todo lo que queda pide un cambio de major.
+
 | Tanda | Estado | Advisories | Commit |
 |---|---|---|---|
 | 1a — directos del navegador, en rango | **hecha** | 55 | `fd6a95ed` |
 | 1b — `postcss`, `vitest`, `@vitest/coverage-v8` | **hecha** | 6 | `a1cb0e62` |
-| 1b — los 13 transitivos que faltan | **bloqueada**, ver §2 | 49 | |
-| 2 — `xlsx` + `react-quill-new` | pendiente, **ahora va primero** | 2 | |
-| 3 — `override` de `uuid` | pendiente | 1 | |
-| 4 — las majors | pendiente | 15 | |
+| 2 — `xlsx` 0.20.1 → 0.20.3 | **hecha** | 1 | `3007ec7d` |
+| 1b (resto) — los 13 transitivos, que xlsx desbloqueó | **hecha** | 50 | |
+| 3 — `override` de `uuid` en `exceljs` | pendiente | 1 | |
+| 4 — las majors | pendiente | 16 | |
 
-Las dos hechas se verificaron contra una línea base tomada antes de tocar
-nada: 207 ficheros, 4036 tests, build en 4m34s con 8273 KiB de precache.
-Después: los mismos 4036 en verde y el build en pie.
+Cada tanda se verificó contra una línea base tomada **antes** de tocar nada:
+207 ficheros, 4036 tests, build en 4m34s con 8273 KiB de precache. Después de
+cada una: los mismos 4036 en verde y el build en pie.
 
-Lo que sigue abierto y llega al navegador son 6 advisories: 2 de
-`react-router` que solo cierra la v7, 1 de `xlsx`, 1 de `quill`, 1 de `uuid`
-y 1 de `echarts`.
+De los 17 que quedan, **solo 5 llegan al navegador**: 2 de `react-router` (pide
+la v7), 1 de `quill`, 1 de `uuid` vía `exceljs`, 1 de `echarts`. Los otros 12
+son `vite`, `cypress` y la cadena de PWA — la máquina que compila.
 
 ## 1. No son 125 cosas. Son 41
 
@@ -51,38 +53,37 @@ Dos paquetes explican casi la mitad del número: **axios (28 advisories)** y
 
 ---
 
-## 2. El obstáculo, y por qué reordena el plan
+## 2. El obstáculo: era un tarball concreto, no las URLs
 
-**`npm update` y `npm audit fix` no corren en este repositorio.**
+Durante dos días, `npm update` y `npm audit fix` se caían igual:
 
 ```
 npm error Cannot read properties of null (reading 'edgesOut')
 ```
 
-Comprobado 2026-09-24, y ya no es una hipótesis. Quitando del manifiesto la
-única entrada rara:
+**Primera conclusión, y era demasiado amplia.** Quitando del manifiesto la única
+entrada rara —`xlsx`, servido como tarball por URL desde el CDN de SheetJS— el
+comando funcionaba, así que se dio por culpable la *forma* de la dependencia. Eso
+planteaba una disyuntiva fea: seguir con el CDN oficial y renunciar a
+`npm update`, o irse a `@e965/xlsx`, que es la misma librería republicada en npm
+**por una sola persona** (`e965`, repo `sheetjs-npm-publisher`). Cambiar el canal
+del proveedor por la republicación de un tercero para contentar a un escáner de
+supply chain es exactamente el trueque equivocado.
 
-```json
-"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
+**No hace falta.** Subiendo la URL de `0.20.1` a `0.20.3` —el mismo CDN, la
+misma forma de dependencia— `npm update` vuelve a funcionar:
+
+```
+added 95 packages, and changed 5 packages in 5s
 ```
 
-el mismo comando funciona:
+El problema era ese tarball, no el mecanismo. La conclusión de ayer se apoyaba en
+un solo experimento (quitar la línea) que tenía dos explicaciones posibles, y se
+eligió la más general sin distinguirlas.
 
-```
-change minimatch 3.1.2 => 3.1.5
-added 104 packages, removed 1 package, and changed 8 packages in 5s
-```
-
-Con el tarball por URL, npm no sabe resolver el árbol. Sin él, sí.
-
-`npm install` **no** está afectado, que es como se hicieron las dos tandas ya
-cerradas. Lo que queda bloqueado son los transitivos: no se pueden subir con un
-`install` sin convertirlos en dependencias directas, y la alternativa es llenar
-`package.json` de `overrides`.
-
-**Consecuencia para el plan:** `xlsx` estaba en la tanda 2 por su propio ReDoS.
-Resulta que además es la llave de los 49 advisories que quedan en rango. **Pasa
-a ir primero.**
+Un mismo cambio de una línea cierra por tanto dos cosas: el ReDoS de SheetJS
+(`GHSA-5pgg-2g8v-p4x9`, afecta a `<0.20.2`) y el bloqueo de los 49 advisories
+transitivos que seguían en rango.
 
 ## 3. Lo que llega al navegador y lo que no
 
@@ -272,17 +273,22 @@ la próxima vez el número de GitHub querrá decir algo.
 
 ---
 
-## 7. Resumen en una tabla
+## 7. Lo que queda
 
-| Tanda | Qué | Advisories | Riesgo del cambio |
-|---|---|---|---|
-| 1a | Bumps directos dentro de rango | 57 | bajo |
-| 1b | `npm update` de transitivos | 55 | bajo, mucho lockfile |
-| 2 | `xlsx` (CDN) + `react-quill-new` | 2 | medio, toca código |
-| 3 | `override` de `uuid` en `exceljs` | 1 | bajo, verificar export |
-| 4 | `vite`, `cypress`, `echarts`, PWA | 13 | alto, pero no lo ve un usuario |
+| | Advisories | Por qué no se ha hecho |
+|---|---|---|
+| `react-router` → v7 | 2 | 197 ficheros detrás; es una migración, no un bump |
+| `react-quill` → `react-quill-new` | 1 | dos ficheros, pero Quill 2 cambia clases del tema `snow` |
+| `exceljs` → `uuid` | 1 | `exceljs@4.4.0` es la última; hace falta un `override` |
+| `echarts` 5 → 6 | 1 | 9 ficheros, revisar la API de series |
+| `vite` 5 → 8 | 4 | arrastra `esbuild` y rollup; el más capaz de tumbar el build |
+| `cypress` 13 → 15 | 6 | solo E2E; se lleva `extract-zip` y `qs` |
+| `vite-plugin-pwa` → 1.x | 2 | acoplada a vite, y con ella `sharp` |
 
-**128 de 128.** Y lo que un usuario del dashboard puede alcanzar se cierra en la
-1a y la 2 — 59 advisories, ningún cambio de major, un día de trabajo. Las 68 que
-quedan son de la máquina que compila y prueba, y ese es el orden correcto aunque
-el contador de GitHub sugiera lo contrario.
+Ninguna es un número que subir sin mirar. Las cuatro primeras se pueden hacer
+sueltas; las tres últimas son la cadena de build y conviene hacerlas juntas,
+con la suite y un `npm run build` delante.
+
+**Y antes de nada, al desplegar:** `node_modules` vive en un volumen anónimo,
+así que la imagen de Docker hay que reconstruirla para que el equipo tenga
+estas versiones. El lockfile por sí solo no basta.
