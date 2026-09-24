@@ -1,5 +1,6 @@
 import { jwtDecode } from "jwt-decode";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { lazyWithRetry } from "./routes/lazyWithRetry";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import "./App.css";
@@ -23,15 +24,15 @@ import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
-// const InactivityLogout = lazy(() =>
+// const InactivityLogout = lazyWithRetry(() =>
 //   import("./utils/CheckingInactivityAndTakeAction")
 // );
-const AuthRoutes = lazy(() => import("./routes/authorized/AuthRoutes"));
-const NoAuthRoutes = lazy(() => import("./routes/no-authorized/NoAuthRoutes"));
-const BackgroundJobsTracker = lazy(() =>
+const AuthRoutes = lazyWithRetry(() => import("./routes/authorized/AuthRoutes"));
+const NoAuthRoutes = lazyWithRetry(() => import("./routes/no-authorized/NoAuthRoutes"));
+const BackgroundJobsTracker = lazyWithRetry(() =>
   import("./components/backgroundJobs/BackgroundJobsTracker")
 );
-const OfflineIndicator = lazy(() =>
+const OfflineIndicator = lazyWithRetry(() =>
   import("./components/offlineStatus/OfflineIndicator")
 );
 

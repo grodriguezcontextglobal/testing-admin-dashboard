@@ -1,4 +1,5 @@
-import { lazy, Suspense, useRef } from "react";
+import { Suspense, useRef } from "react";
+import { lazyWithRetry } from "../lazyWithRetry";
 import { Navigate, Route, Routes } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
@@ -24,229 +25,229 @@ import MfaSetup from "../../pages/Profile/mfa/MfaSetup";
 import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
 import AttendanceConfirmationLanding from "../../pages/authentication/AttendanceConfirmationLanding";
 
-const FooterComponent = lazy(() =>
+const FooterComponent = lazyWithRetry(() =>
   import("../../components/general/FooterComponent")
 );
-// const UpperBanner = lazy(() => import("../../components/general/UpperBanner"));
-// const NavigationBarMain = lazy(() =>
+// const UpperBanner = lazyWithRetry(() => import("../../components/general/UpperBanner"));
+// const NavigationBarMain = lazyWithRetry(() =>
 //   import("../../components/navbar/NavigationBarMain")
 // );
-const FormEventDetail = lazy(() =>
+const FormEventDetail = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/eventDetails/Form")
 );
-const FormDeviceDetail = lazy(() =>
+const FormDeviceDetail = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/inventory/Form")
 );
-const ReviewAndSubmitEvent = lazy(() =>
+const ReviewAndSubmitEvent = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/review/ReviewAndSubmitPage")
 );
-const FormStaffDetail = lazy(() =>
+const FormStaffDetail = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/staff/Form")
 );
-const FormDocumentDetail = lazy(() =>
+const FormDocumentDetail = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/documents/Form")
 );
-const TransactionsDetails = lazy(() =>
+const TransactionsDetails = lazyWithRetry(() =>
   import(
     "../../pages/events/quickGlance/consumer/ConsumerDetail/details/TransactionsDetails"
   )
 );
-const ConsumerDocumentsDetails = lazy(() =>
+const ConsumerDocumentsDetails = lazyWithRetry(() =>
   import(
     "../../pages/events/quickGlance/consumer/ConsumerDetail/details/DocumentsDetails"
   )
 );
-const Cash = lazy(() =>
+const Cash = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/consumer/lostFee/actions/Cash")
 );
-const CreditCard = lazy(() =>
+const CreditCard = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/consumer/lostFee/actions/CreditCard")
 );
-const AddNewItem = lazy(() =>
+const AddNewItem = lazyWithRetry(() =>
   import("../../pages/inventory/actions/AddNewItem")
 );
-const EditGroup = lazy(() => import("../../pages/inventory/actions/EditGroup"));
-const AddNewBulkItems = lazy(() =>
+const EditGroup = lazyWithRetry(() => import("../../pages/inventory/actions/EditGroup"));
+const AddNewBulkItems = lazyWithRetry(() =>
   import("../../pages/inventory/actions/NewBulkItems")
 );
-const MainPageGrouping = lazy(() =>
+const MainPageGrouping = lazyWithRetry(() =>
   import("../../pages/inventory/details/GroupDetail/MainPage")
 );
-const MainPageBrand = lazy(() =>
+const MainPageBrand = lazyWithRetry(() =>
   import("../../pages/inventory/details/BrandDetail/MainPage")
 );
-const MainPageCategory = lazy(() =>
+const MainPageCategory = lazyWithRetry(() =>
   import("../../pages/inventory/details/categoryDetail/MainPage")
 );
-const MainPage = lazy(() =>
+const MainPage = lazyWithRetry(() =>
   import("../../pages/inventory/details/LocationDetail/MainPage")
 );
-const InventoryInUsePage = lazy(() =>
+const InventoryInUsePage = lazyWithRetry(() =>
   import("../../pages/inventory/InventoryInUse/MainPage")
 );
-const ParentRenderingChildrenPage = lazy(() =>
+const ParentRenderingChildrenPage = lazyWithRetry(() =>
   import("../../pages/ParentRenderingChildrenPage")
 );
-const Confirmation = lazy(() => import("../../pages/payment/Confirmation"));
-const BillingMainPage = lazy(() =>
+const Confirmation = lazyWithRetry(() => import("../../pages/payment/Confirmation"));
+const BillingMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/billing/BillingMainPage")
 );
-const MyDetailsMainPage = lazy(() =>
+const MyDetailsMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/my_details/MyDetailsMainPage")
 );
-const PasswordMainPage = lazy(() =>
+const PasswordMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/my_password/PasswordMainPage")
 );
-const NotificationsMainPage = lazy(() =>
+const NotificationsMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/notifications/NotificationsMainPage")
 );
-const StaffActivityMainPage = lazy(() =>
+const StaffActivityMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/staff_activity/StaffActivityMainPage")
 );
-const Assignment = lazy(() =>
+const Assignment = lazyWithRetry(() =>
   import("../../pages/staff/detail/components/equipment_components/Assignment")
 );
-const UpdateContactInfo = lazy(() =>
+const UpdateContactInfo = lazyWithRetry(() =>
   import(
     "../../pages/staff/detail/components/equipment_components/UpdateContactInfo"
   )
 );
-const StaffDetail = lazy(() => import("../../pages/staff/detail/StaffDetail"));
-const ForgetPasswordLinkFromStaffPage = lazy(() =>
+const StaffDetail = lazyWithRetry(() => import("../../pages/staff/detail/StaffDetail"));
+const ForgetPasswordLinkFromStaffPage = lazyWithRetry(() =>
   import(
     "../../pages/staff/detail/components/equipment_components/ResetPasswordLink"
   )
 );
-const UpdateRoleInCompany = lazy(() =>
+const UpdateRoleInCompany = lazyWithRetry(() =>
   import(
     "../../pages/staff/detail/components/equipment_components/UpdateRoleInCompany"
   )
 );
-const AssignStaffMemberToEvent = lazy(() =>
+const AssignStaffMemberToEvent = lazyWithRetry(() =>
   import("../../pages/staff/detail/components/AssignStaffMemberToEvent")
 );
-const AssignLocationManager = lazy(() =>
+const AssignLocationManager = lazyWithRetry(() =>
   import(
     "../../pages/staff/detail/components/equipment_components/assingmentComponents/AssignLocationManager"
   )
 );
-const ConsumerDeviceLostFeeCash = lazy(() =>
+const ConsumerDeviceLostFeeCash = lazyWithRetry(() =>
   import("../../pages/consumers/components/markedLostOption/Cash")
 );
-const RedirectionPage = lazy(() =>
+const RedirectionPage = lazyWithRetry(() =>
   import("../../components/utils/RedirectionPage")
 );
-const ConsumerDeviceLostFeeCreditCard = lazy(() =>
+const ConsumerDeviceLostFeeCreditCard = lazyWithRetry(() =>
   import("../../pages/consumers/components/markedLostOption/CreditCard")
 );
 // Target of the receipt QR. Also registered in NoAuthRoutes — whoever scans may
 // or may not have a session, and this tree's catch-all is the error page.
-const ReceiptPage = lazy(() => import("../../pages/payment/ReceiptPage"));
+const ReceiptPage = lazyWithRetry(() => import("../../pages/payment/ReceiptPage"));
 // Public page, registered here too: a customer who is already signed in
 // should reach /status without being bounced, same as ReceiptPage.
-const ServiceStatusPage = lazy(() => import("../../pages/status/ServiceStatusPage"));
-const CompanyInfo = lazy(() =>
+const ServiceStatusPage = lazyWithRetry(() => import("../../pages/status/ServiceStatusPage"));
+const CompanyInfo = lazyWithRetry(() =>
   import("../../pages/Profile/company_info/MainPage")
 );
-const EmailBrandingSettings = lazy(() =>
+const EmailBrandingSettings = lazyWithRetry(() =>
   import("../../pages/Profile/email_branding/EmailBrandingSettings")
 );
-const SchoolComplianceSettings = lazy(() =>
+const SchoolComplianceSettings = lazyWithRetry(() =>
   import("../../pages/Profile/school_compliance/SchoolComplianceSettings")
 );
-const RolesManagementMainPage = lazy(() =>
+const RolesManagementMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/roles_management/RolesManagementMainPage")
 );
-const ConfirmSubscription = lazy(() =>
+const ConfirmSubscription = lazyWithRetry(() =>
   import("../../components/stripe/payment/ConfirmSubscription")
 );
-const MainPageOwnership = lazy(() =>
+const MainPageOwnership = lazyWithRetry(() =>
   import("../../pages/inventory/details/OwnershipDetail/MainPage")
 );
-const SystemJobsMainPage = lazy(() =>
+const SystemJobsMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/system_jobs/SystemJobsMainPage")
 );
 
-const Home = lazy(() => import("../../pages/home/MainPage"));
-const SearchResultPage = lazy(() => import("../../pages/search/MainPage"));
-const EventMainPage = lazy(() => import("../../pages/events/MainPage"));
-const EventQuickGlanceMainPage = lazy(() =>
+const Home = lazyWithRetry(() => import("../../pages/home/MainPage"));
+const SearchResultPage = lazyWithRetry(() => import("../../pages/search/MainPage"));
+const EventMainPage = lazyWithRetry(() => import("../../pages/events/MainPage"));
+const EventQuickGlanceMainPage = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/MainPageQuickGlance")
 );
-const CustomerDetailInEvent = lazy(() =>
+const CustomerDetailInEvent = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/consumer/CustomerDetail")
 );
-const NewEventSubscription = lazy(() =>
+const NewEventSubscription = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/subscription/Main")
 );
-const DeviceDetail = lazy(() =>
+const DeviceDetail = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/inventory/DeviceDetail")
 );
-const ConsumersMainPage = lazy(() => import("../../pages/consumers/MainPage"));
+const ConsumersMainPage = lazyWithRetry(() => import("../../pages/consumers/MainPage"));
 // The user manual is deliberately ungated: every role can read how the app
 // works, and articles about elevated actions say so instead of being hidden.
-const HelpMainPage = lazy(() => import("../../pages/help/MainPage"));
-const ConsumerDetail = lazy(() =>
+const HelpMainPage = lazyWithRetry(() => import("../../pages/help/MainPage"));
+const ConsumerDetail = lazyWithRetry(() =>
   import("../../pages/consumers/DetailPerConsumer")
 );
-const Inventory = lazy(() => import("../../pages/inventory/MainPage"));
-const InventoryDetail = lazy(() =>
+const Inventory = lazyWithRetry(() => import("../../pages/inventory/MainPage"));
+const InventoryDetail = lazyWithRetry(() =>
   import("../../pages/inventory/details/MainPage")
 );
-const InventoryEvent = lazy(() =>
+const InventoryEvent = lazyWithRetry(() =>
   import("../../pages/inventory/details/deep_details_event_selected/MainPage")
 );
-const Staff = lazy(() => import("../../pages/staff/MainPage"));
-const MainPageEventCreation = lazy(() =>
+const Staff = lazyWithRetry(() => import("../../pages/staff/MainPage"));
+const MainPageEventCreation = lazyWithRetry(() =>
   import("../../pages/events/newEventProcess/MainPage")
 );
-const MainProfileSetting = lazy(() =>
+const MainProfileSetting = lazyWithRetry(() =>
   import("../../pages/Profile/MainProfileSettings")
 );
-const ServicePaymentConfirmation = lazy(() =>
+const ServicePaymentConfirmation = lazyWithRetry(() =>
   import("../../pages/payment/ServicePaymentConfirmation")
 );
-const ErrorPage = lazy(() => import("../../pages/error/ErrorLandingPage"));
-const Dashboard = lazy(() =>
+const ErrorPage = lazyWithRetry(() => import("../../pages/error/ErrorLandingPage"));
+const Dashboard = lazyWithRetry(() =>
   import("../../pages/Profile/stripe_connected_account/Dashboard")
 );
-const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazy(() =>
+const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = lazyWithRetry(() =>
   import(
     "../../pages/Profile/stripe_connected_account/UpdatingCompanyInfoAfterStripeConnectedAccountCreated"
   )
 );
-const Providers = lazy(() => import("../../pages/Profile/providers/Main"));
-const MainPagePosts = lazy(() => import("../../pages/posts/MainPage"));
-const DesignLab = lazy(() => import("../../pages/designLab/DesignLab"));
+const Providers = lazyWithRetry(() => import("../../pages/Profile/providers/Main"));
+const MainPagePosts = lazyWithRetry(() => import("../../pages/posts/MainPage"));
+const DesignLab = lazyWithRetry(() => import("../../pages/designLab/DesignLab"));
 import GlobalCommandMenu from "../../components/UX/commandMenu/GlobalCommandMenu";
 import InstallAppBanner from "../../components/installPrompt/InstallAppBanner";
-const Documents = lazy(() => import("../../pages/Profile/Documents/Documents"));
-const ConditionalMainPage = lazy(() =>
+const Documents = lazyWithRetry(() => import("../../pages/Profile/Documents/Documents"));
+const ConditionalMainPage = lazyWithRetry(() =>
   import("../../pages/conditionalPage/MainPage")
 );
 
-const MemberDetailsMainPage = lazy(() =>
+const MemberDetailsMainPage = lazyWithRetry(() =>
   import(
     "../../pages/conditionalPage/components/memberDetailsDashboard/MainPage"
   )
 );
-const DetailMemberInfo = lazy(() =>
+const DetailMemberInfo = lazyWithRetry(() =>
   import("../../pages/conditionalPage/tables/DetailMemberInfo")
 );
 
-const UpdateMemberInformation = lazy(() =>
+const UpdateMemberInformation = lazyWithRetry(() =>
   import(
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/UpdateMemberInformation"
   )
 );
 
-const Reminders = lazy(() =>
+const Reminders = lazyWithRetry(() =>
   import(
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/Reminders"
   )
 );
 
-const AssignmentDeviceMembers = lazy(() =>
+const AssignmentDeviceMembers = lazyWithRetry(() =>
   import(
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/assignment/AssignmentDevicesToMember"
   )
@@ -284,7 +285,14 @@ const AuthRoutes = () => {
             minHeight: "100dvh",
           }}
         >
-          <Routes>
+          {/* A chunk that will not load has to say so. With
+              v7_startTransition the old screen stays up while the next one
+              loads, so without a boundary here a rejected import is a click
+              that silently did nothing — the URL moves and the page does
+              not. lazyWithRetry absorbs a blip; this is for the ones that
+              are real. */}
+          <ErrorBoundary>
+            <Routes>
             <Route path="/" element={<ParentRenderingChildrenPage />}>
               <Route path="/" element={<Home />} />
               <Route path="/" element={<Home />} />
@@ -601,7 +609,8 @@ const AuthRoutes = () => {
               <Route path="/status" element={<ServiceStatusPage />} />
               <Route path="/*" element={<ErrorPage />} />
             </Route>
-          </Routes>
+            </Routes>
+          </ErrorBoundary>
         </div>
       </Suspense>
       {/* Pinned to the right edge at half height, on every page but the manual
