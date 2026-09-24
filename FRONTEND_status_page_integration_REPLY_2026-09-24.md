@@ -182,3 +182,52 @@ build en pie — la página sale como su propio chunk de 8,21 kB (3,08 gzip).
 
 **Lo único que sigue abierto es §3**, que es lo que cambia lo que se ve en
 pantalla y no se puede decidir desde aquí.
+
+---
+
+## 6. Una pregunta sobre quién vigila al vigilante
+
+Añadido tras entender cómo se alimenta esto: el Worker de Cloudflare sondea el
+servidor desde fuera y avisa por Teams si cae; Uptime Kuma, en la VM, vigila por
+dentro workers, colas y schedulers, avisa por Teams también, y además empuja su
+estado a `status.json`.
+
+Son dos observadores independientes, y eso está bien pensado: el de fuera
+sobrevive a la caída del de dentro. **El hueco no es ninguno de los dos, es el
+punto ciego entre ellos.**
+
+Si un monitor concreto de Kuma deja de reportar, Kuma lo tumba solo — un push
+que no llega dentro de su heartbeat es un monitor caído, y eso sí llega. Pero
+**si se cae Kuma, o la VM entera**, nadie empuja nada y el Worker sigue
+componiendo la respuesta con normalidad: `generatedAt` sale fresco, porque lo
+genera él, mientras `core_services` y `background_jobs` se quedan congelados en
+lo último que se empujó. Que probablemente era verde.
+
+Desde el cliente **eso no se puede distinguir**. El documento no trae por
+componente ninguna marca de última señal: `since` es «desde cuándo está en este
+estado», así que un componente sano lleva semanas con la misma fecha y es
+indistinguible de uno que enmudeció hace semanas. Y un umbral sobre
+`generatedAt` no serviría, porque ese campo lo escribe el Worker, que está vivo.
+
+Barajamos poner un guardia de caducidad en el cliente y **lo descartamos**: no
+detectaría el único caso que importa, y a cambio arriesga pintar gris un
+servicio sano delante de un cliente potencial. Equivocarse en esa dirección
+también cuesta.
+
+**Nuestra propuesta: que Cloudflare vigile también a Kuma.** Ya sondea el
+servidor; añadir la propia instancia de Kuma como objetivo convierte «la VM está
+muda» en un estado detectado en lugar de un silencio, y lo resuelve donde están
+los datos en vez de repartir la lógica entre dos sitios.
+
+Si preferís la otra vía, nos vale igual: que el Worker marque `unknown` todo
+componente del que no haya recibido nada en N minutos. Es lo que vuestro §2 ya
+promete cuando dice que `unknown` significa que el dato caducó. **La página ya
+pinta gris y nunca verde ante un `unknown`, así que el día que eso llegue
+funciona sin release nuestro.**
+
+### Y esto deja sin objeto vuestra pregunta 2
+
+Preguntabais si hace falta un aviso activo cuando `overall` cambia con la
+pestaña abierta. No. Quien tiene que actuar ya recibe la alerta en Teams, por
+las dos vías. Nadie que pueda arreglar nada está mirando esta página: quien la
+mira es un cliente, y para él el aviso es la página.
