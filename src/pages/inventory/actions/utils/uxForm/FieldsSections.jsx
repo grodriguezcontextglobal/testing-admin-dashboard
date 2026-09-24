@@ -2,13 +2,26 @@ import { Radio } from "antd";
 // import { renderOptional } from "../BulkComponents";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import { matchesTypedText } from "../referenceLookup";
+import { renderFieldError } from "../fieldError";
+
+/**
+ * The error renderer is imported, not received.
+ *
+ * It used to arrive as a prop under a name no caller has ever passed, and was
+ * called unguarded — all four callers pass `renderFieldError`, the shared
+ * helper this now imports. So every render of this component threw. Step 3 of
+ * the edit-inventory wizard is where it was caught.
+ *
+ * Renaming the prop would have fixed that instance. Importing the function
+ * removes the shape of the bug: a module-level export threaded through props
+ * has a name that can stop matching, and nothing says so until it renders.
+ */
 const FieldsSections = ({
   Grid,
   item,
   AutoComplete,
   AntSelectorStyle,
   errors,
-  renderingErrorMessage,
   renderingOptionsButtons,
   watch,
   setOpenScanningModal,
@@ -83,7 +96,7 @@ const FieldsSections = ({
     >
       <Grid item xs={12} sm={12} md={12} lg={12}>
         {renderComponent()}
-        {renderingErrorMessage(errors[item.name])}
+        {renderFieldError(errors[item.name])}
         {!isChild &&
           renderingOptionsButtons({
             // Conditionally render buttons
