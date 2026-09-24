@@ -46,7 +46,16 @@ if (container && !container._reactRootContainer) {
   root.render(
     <Provider store={store}>
       <React.StrictMode>
-        <BrowserRouter basename="/">
+        {/* The two v7 defaults, turned on a release early. They are the only
+            ones that apply here: the rest of react-router's future flags
+            (fetcherPersist, partialHydration, skipActionErrorRevalidation)
+            belong to the data router, and this app mounts <Routes>, not
+            createBrowserRouter. Turning them on separately means that if a
+            navigation wobbles, it is this change and not the major bump. */}
+        <BrowserRouter
+          basename="/"
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
           <PersistGate persistor={persistor}>
             <QueryClientProvider client={queryClient}>
               <ThemeShell renderEmpty={renderEmpty}>
