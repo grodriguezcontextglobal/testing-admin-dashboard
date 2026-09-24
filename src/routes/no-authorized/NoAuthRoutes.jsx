@@ -16,6 +16,10 @@ import GuardianConsentResponsePage from "../../pages/schoolConsent/GuardianConse
 // Also registered in AuthRoutes — a receipt QR may be scanned with or without a
 // session, and this tree's catch-all redirects to /login.
 import ReceiptPage from "../../pages/payment/ReceiptPage";
+// Also registered in AuthRoutes, for the same reason ReceiptPage is: /status
+// is a public page shown to customers and prospects, and this tree's
+// catch-all would send a signed-in visitor to /login instead.
+import ServiceStatusPage from "../../pages/status/ServiceStatusPage";
 
 const NoAuthRoutes = () => {
   return (
@@ -37,6 +41,7 @@ const NoAuthRoutes = () => {
         <Route path="/attendance-confirmation" element={<AttendanceConfirmationLanding />} />
         <Route path="/school/consent/respond" element={<GuardianConsentResponsePage />} />
         <Route path="/receipt" element={<ReceiptPage />} />
+        <Route path="/status" element={<ServiceStatusPage />} />
         <Route path="/*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>
