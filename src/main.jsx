@@ -46,16 +46,12 @@ if (container && !container._reactRootContainer) {
   root.render(
     <Provider store={store}>
       <React.StrictMode>
-        {/* The two v7 defaults, turned on a release early. They are the only
-            ones that apply here: the rest of react-router's future flags
-            (fetcherPersist, partialHydration, skipActionErrorRevalidation)
-            belong to the data router, and this app mounts <Routes>, not
-            createBrowserRouter. Turning them on separately means that if a
-            navigation wobbles, it is this change and not the major bump. */}
-        <BrowserRouter
-          basename="/"
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
+        {/* startTransition-wrapped navigation and the splat-relative path
+            resolution are the v7 defaults now. They were turned on as v6
+            future flags in b9c7f55c so the behaviour change could be
+            deployed and watched on its own; this bump is what made them
+            redundant. */}
+        <BrowserRouter basename="/">
           <PersistGate persistor={persistor}>
             <QueryClientProvider client={queryClient}>
               <ThemeShell renderEmpty={renderEmpty}>
