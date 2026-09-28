@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import million from "million/compiler";
 import { VitePWA } from "vite-plugin-pwa";
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -34,7 +33,6 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [
-      million.vite({ auto: true }),
       react(),
       // Registered unconditionally, on purpose. This used to be wrapped in
       // `apiOriginPattern ? [...] : []`, so an environment without

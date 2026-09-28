@@ -81,8 +81,6 @@ const getHomeRoute = (roleType) => {
   return "/";
 };
 
-// million-ignore — Million's block compiler broke event handlers in this
-// component (search button onClick silently dead); keep it un-optimized.
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // eslint-disable-next-line no-unused-vars
   // const [{ x, y }, scrollTo] = useWindowScroll();

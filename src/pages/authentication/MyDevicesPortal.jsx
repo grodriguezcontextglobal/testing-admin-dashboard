@@ -63,8 +63,6 @@ const statusChip = (lease) => {
 
 const fmt = (d) => (d ? new Date(d).toLocaleDateString() : "—");
 
-// million-ignore — Million's block compiler breaks controlled-input onChange
-// handlers in this component (same issue as NavigationBarMain's search button).
 const MyDevicesPortal = () => {
   const [email, setEmail] = useState("");
   const [studentId, setStudentId] = useState("");
