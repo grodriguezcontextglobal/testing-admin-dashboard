@@ -9,7 +9,9 @@
 > **Método:** cada ítem se comprobó contra el código de hoy, no contra lo que
 > decía su documento. Donde el código no puede responder, lo dice.
 >
-> Se conserva `FRONTEND_pending_tasks_2026-09-18.md`: no es un tracker, es el
+> Las actas de reunión viven aparte y no caducan:
+> `FRONTEND_pending_tasks_2026-09-18.md` y `FRONTEND_meeting_2026-09-25.md`.
+> Sobre la primera: no es un tracker, es el
 > acta con la cita y el minuto de cada petición de Fredrik, y eso no caduca.
 
 ---
@@ -25,9 +27,9 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| Abierto | **17** |
+| Abierto | **22** |
 | Cerrado desde que se escribió su lista | 16 |
-| De lo abierto, que bloquea a alguien hoy | 2 |
+| De lo abierto, que bloquea a alguien hoy | 3 |
 
 ---
 
@@ -48,6 +50,27 @@ Al diseñarlo hay que cerrar una pregunta: `trigger_action` es un valor único, 
 sea que un documento pertenece a un único camino. Si alguna vez necesita servir
 a dos, eso es un cambio de backend y conviene saberlo antes de construir encima
 del supuesto.
+
+### El aviso de "Update available" no se cierra al pulsar Refresh
+`src/components/serviceWorker/ServiceWorkerUpdateNotifier.jsx:22-33`
+
+Reunión 2026-09-25 `0:15`, y fue lo primero que le pasó a Fredrik: *"I clicked
+on refresh, but it didn't disappear or nothing happened."*
+
+Dos defectos en el mismo sitio:
+
+- La notificación va con `duration: 0` y **el botón no la cierra**. Si la
+  recarga ocurre desaparece con la página; si no ocurre, se queda.
+- `updateServiceWorker(true)` solo recarga si hay un worker **en espera** al que
+  mandarle `SKIP_WAITING`. Si no lo hay, no pasa nada y no hay ni error ni
+  señal.
+
+Hace falta cerrar la notificación al pulsar, un estado de "aplicando", y un
+respaldo con `window.location.reload()` si el controlador no cambia. Sin el
+respaldo, el botón sigue sin hacer nada en el caso que él pisó.
+
+Está aquí y no en producto porque es la primera impresión de cada despliegue, y
+porque un botón que no responde enseña a no pulsarlo.
 
 ### El servidor todavía no exige MFA
 `FRONTEND_force_logout_token_2026-09-21.md`
@@ -103,6 +126,80 @@ concepto de cómo llama cada compañía a la gente de su módulo. Pero queda al
 menos una etiqueta a mano: `mainPageUtils.test.js` fija `"Add new member"`. La
 fontanería está; falta enchufar ese botón.
 
+### Merchant service ofrecido sin cuenta de Stripe detrás
+
+Pedido 2026-09-25. Hoy se puede marcar que un evento **sí** necesita merchant
+service aunque la compañía nunca haya creado su cuenta de Stripe. El evento
+queda con `merchant: true`, y el cobro solo falla más tarde, cuando alguien
+intenta cobrar de verdad.
+
+**Dónde se elige:**
+
+```
+newEventProcess/eventDetails/ux/merchant/MainMerchantSection.jsx   el Sí/No
+  └ ux/buttons/Yes.jsx · No.jsx
+newEventProcess/inventory/components/MerchantService.jsx           la rama del alta
+  └ NoMerchantService.jsx · MainBody.jsx
+quickGlance/updateEvent/UpdateEventInfo.jsx:88                     al editar, lo arrastra
+```
+
+**Dónde se consume al asignar dispositivos:**
+
+```
+quickGlance/consumer/ConsumerDetail/ConsumerActionRail.jsx:36
+quickGlance/consumer/ConsumerDetail/AssigningDevice/AddingDevicesToPaymentIntent.jsx
+```
+
+**La señal ya existe y ya se consulta.** `POST /stripe/company-account-stripe`
+con `{ company }` devuelve `companyAccountStripeFound`, y
+`events/MainPage.jsx:45` ya lo pide (lo usa en `:166` y `:202`). No hace falta
+endpoint nuevo ni nada del backend.
+
+**Y el patrón de UI también existe.** `quickGlance/consumer/lostFee/Choice.jsx:82`
+ya resuelve el caso hermano —evento sin merchant— deshabilitando la opción y
+diciendo por qué en vez de esconderla:
+
+> *"Unavailable — no merchant account on this event."*
+
+Conviene copiar esa forma: deshabilitado **con motivo**, no oculto. Una opción
+que desaparece se lee como un fallo; una deshabilitada que explica que falta la
+cuenta de Stripe lleva a la acción, y hay página para ello
+(`RegisterStripeConnectedAccount`).
+
+Quedan dos cosas por decidir al hacerlo: qué pasa con los eventos que ya están
+en `merchant: true` sin cuenta detrás, y si el aviso enlaza al alta de Stripe o
+solo la nombra.
+
+### Textos de la plantilla de import — cuatro de la reunión del 25-09
+
+Todo en `src/pages/inventory/utils/inventoryImportTemplate.js`. Van juntos: un
+fichero, un test que fija guía, plantilla y cabeceras del parser entre sí, y una
+pasada.
+
+- **`serial_number:156`** — "One row per physical device" confunde, porque en
+  una hoja de cálculo "row" ya significa otra cosa (`3:26`–`5:18`). Su
+  redacción: *"unique for this unit and this row"*.
+- **`ownership:192-194`** — fuera la frase de los sinónimos, que se queda en el
+  código pero no hace falta contarla (`5:40`). **Y de paso**: esa nota dice
+  `Sale` y el valor canónico pasó a ser `Resale` en `fda62fdd`. Los dos se
+  aceptan, así que nadie lo ha notado, pero la plantilla enseña a escribir el
+  valor que dejamos de usar.
+- **`location:224`** — *"Where the unit is physically."* Pulido de lo que ya
+  dice (`6:27`).
+- **La columna de imagen** (`:52` y `:314`) sigue llamándose **`image_url`**
+  aunque desde el 18-09 no acepta enlaces: la imagen se pega en la celda
+  (`7:26`–`8:05`). **Esto no es solo copy** — renombrar la cabecera toca
+  plantilla, parser y guía a la vez, y rompe las hojas que la gente ya tenga
+  guardadas. Hay que decidir si se renombra la columna o solo su descripción.
+
+### Dashboard de gestión de Devitrak
+
+Pedido el 2026-09-25 `20:25`: alta de compañías, datos de Stripe, suscripciones,
+uso por cuenta. **Es un producto aparte**, no una pantalla de este dashboard.
+
+Sin alcance ni fecha, y él mismo lo puso por detrás de FedRAMP en la frase
+siguiente. Queda como intención registrada, no como tarea lista para coger.
+
 ### R3 — la reconciliación de alcance por ubicación
 `saveScopedRole` escribe el alcance en SQL pero no toca el `preference.managerLocation`
 de Mongo, que es lo que lee el filtro de inventario del servidor.
@@ -120,19 +217,51 @@ de renombrado por compañía. Sin fecha.
 
 ## 3. Abierto — de esta semana, fuera de toda lista
 
-### Paso 4 de dependencias — en standby por decisión
-7 advisories: `vite` 5→8, `sharp`, `esbuild`, PWA. Antes hay que decidir qué
-pasa con **`million`**, que corre sobre todos los componentes y lleva parado
-desde 2024-06 mientras Vite 8 cambia de Rollup/esbuild a Rolldown/Oxc.
+### Paso 4 de dependencias — desbloqueado, en standby por decisión
+7 advisories: `vite` 5→8, `sharp`, `esbuild`, PWA.
+
+**`million` ya no es el obstáculo: se quitó el 2026-09-25.** Y al analizarlo
+apareció que el riesgo era menor de lo que parecía — `vitest@4` se trajo su
+propio `vite@8.3.1` (su rango de peers no acepta la 5), así que **las 4054
+pruebas ya corren sobre Rolldown/Oxc**. Lo que queda por validar es la
+configuración del build, no el código fuente.
+
+El único bloqueo real es `vite-plugin-pwa@0.20.5`, que declara `vite ^5`. La
+1.3.0 acepta `^3 … ^8` y se puede subir sola, antes que Vite.
 
 ### `quill` 2.0.3
 Advisory low sin parche publicado. Camino no alcanzable: no usamos
 `getSemanticHTML` ni el clipboard, y la vista sanea con DOMPurify.
 
-### 193 `console.*` en el bundle de producción
+### 192 `console.*` en el bundle de producción
 `vite.config.js` pone `terserOptions.compress.drop_console` pero no
 `minify: "terser"`, y el minificador por defecto de Vite ignora `terserOptions`.
 Una línea, y no depende de ninguna major.
+
+### `condition` deja de ser un duplicado de `status`, y tenemos respaldos que lo dan por hecho
+
+Aparecido 2026-09-25 revisando el arreglo del cierre de eventos. El backend
+descubrió que la columna `condition` **nunca ha tenido valor propio**: 75.000 de
+75.000 filas la tienen idéntica a `status`, porque un parser incompleto escribía
+el estado en las dos. Ya está arreglado de su lado, sin desplegar.
+
+El día que despliegue, estas dos líneas empiezan a mentir:
+
+```js
+condition: item?.status ?? item?.condition ?? ""   // DownloadXlsx.jsx:114
+status:    item.status  ?? item.condition ?? ""    // ShippingInventoryModal.jsx:308
+```
+
+Son correctas mientras los dos campos sean el mismo valor. Después, la primera
+unidad que cierre como `Damaged` se seguirá leyendo `Operational`.
+
+Y hay seis sitios que pintan «Condition» como campo propio y llevan todo este
+tiempo enseñando el estado con otra etiqueta: `DeviceSpecs`, `DeviceSidebar`,
+`DeviceDatabase`, `TableIssuesPerDevice`, `TableDetailPerDevice` y la columna del
+XLSX.
+
+**Hay que hacerlo antes o a la vez que su despliegue**, no después. Se les pidió
+aviso previo por esto.
 
 ### `Input.jsx:91` — el label se dibuja sobre el borde
 `label={label}` comentado en el `OutlinedInput`. Ocho llamadores lo pasan;
@@ -192,14 +321,31 @@ Los ocho ítems del walkthrough que su propio documento ya daba por cerrados
 
 ## 6. Orden sugerido
 
-1. **D1 + D2**, que es lo único que bloquea trabajo de producto y es un solo
-   diseño para los dos.
-2. **E2**, que es un bug con una pista concreta y se cierra en una tarde.
-3. **Las tres de una línea**: `drop_console`, tests de `/status`, CSP de IIS.
-4. **S1 y D3**, que son pantallas sueltas y ya no dependen de nada.
-5. **R3 e Issue #1** cuando haya respuesta del backend: los dos están esperando
-   un dato, no esfuerzo nuestro.
-6. **C1** cuando se decida que toca. Es el único que no cabe en una semana.
+Fredrik fijó la prioridad general el 2026-09-25 `21:10`, y pesa más que esta
+lista: **FedRAMP por delante.** Lo dijo justo después de pedir el dashboard de
+gestión, y para ponerlo por detrás. Es un cambio respecto al 31-08, donde
+FedRAMP era "un día para entender las especificaciones".
 
-`million` y el paso 4 de dependencias van cuando tú digas: hoy no molestan a
-nadie, y el día que se toquen conviene que no haya otra cosa abierta.
+Dentro de lo que sí es esta lista:
+
+1. **El aviso de actualización** (§1). Es la primera impresión de cada
+   despliegue y ya falló delante de él.
+2. **D1 + D2**, lo único que bloquea trabajo de producto, y es un solo diseño
+   para los dos.
+3. **La tanda de textos de la plantilla**, que es un fichero y una pasada — con
+   la decisión del `image_url` resuelta antes de empezar.
+4. **E2**, un bug con una pista concreta que se cierra en una tarde.
+5. **Las tres de una línea**: `drop_console`, tests de `/status`, CSP de IIS.
+6. **`condition` antes de que el backend despliegue**, no después.
+7. **S1 y D3**, pantallas sueltas que ya no dependen de nada.
+8. **R3 e Issue #1** cuando haya respuesta del backend: esperan un dato, no
+   esfuerzo nuestro.
+9. **C1** y el **dashboard de gestión** cuando se decida. Ninguno cabe en una
+   semana, y el segundo ni siquiera tiene alcance todavía.
+
+`vite-plugin-pwa` y el paso 4 van cuando tú digas: hoy no molestan a nadie, y el
+día que se toquen conviene que no haya otra cosa abierta.
+
+**Y una que no está en la lista porque no es nuestra:** Fredrik iba a probar el
+flujo de colegios durante el fin de semana del 26-27 y mandar lo que encuentre.
+Conviene dejar hueco para eso antes de empezar nada largo.

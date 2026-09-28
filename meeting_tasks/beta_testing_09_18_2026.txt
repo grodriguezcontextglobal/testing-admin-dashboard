@@ -1,0 +1,655 @@
+Devitrak Beta Testing-20260918_110839-Meeting Recording
+September 18, 2026, 3:08PM
+31m 5s
+
+Gustavo Rodriguez started transcription
+
+Gustavo Rodriguez   0:04
+Yeah, it's recording now, yeah.
+
+Fredrik Starmark   0:07
+That's weird. I didn't get a notice notification. They should have notified me. It was like, say, hey, you're being recorded.
+
+Gustavo Rodriguez   0:12
+Yeah, yeah, it's supposed to, yeah.
+
+Fredrik Starmark   0:15
+Yeah.
+Alright.
+So.
+Just do this.
+And to cater.
+Active session already existed, please.
+What?
+
+Gustavo Rodriguez   1:15
+Yeah, you should have an active section, yes. So you can just click, they're going to send you an e-mail to terminate the one that you have activated, and then you'll be able to log in again.
+
+Fredrik Starmark   1:15
+You see this?
+What does that mean actually?
+
+Gustavo Rodriguez   1:31
+That's when you have more than one.
+see some activated. So let's say that you have this one in this browser, but you have the same one in another browser and you try to log in for multiple times. They just stop using say, hey, you need to.
+
+Fredrik Starmark   1:46
+Okay.
+Send an e-mail to revoke the active session is queued and will be sent out shortly. Okay, so...
+
+Gustavo Rodriguez   1:52
+Finish.
+
+Fredrik Starmark   2:13
+That's not something that should be said. It should be sent out. I mean, there's no reason why an e-mail cannot be sent out right away.
+
+Gustavo Rodriguez   2:21
+Okay.
+
+Fredrik Starmark   2:23
+Right? I mean, I've never...
+
+Gustavo Rodriguez   2:24
+So, instead, instead of queue the the e-mail.
+
+Fredrik Starmark   2:27
+Yeah, I mean, yeah, exactly. Because why are you having people waiting? Imagine if this is an important person who is our client.
+
+Gustavo Rodriguez   2:28
+We send it right after we click.
+Okay, yeah, no, because I have designed already signing the system. This is one of the things that is more Q, the e-mail, because it's not like a, they don't need an instant reply. That's why we use Q for a, so we have an instant or worker that only for them.
+
+Fredrik Starmark   3:01
+Okay, but if somebody does this, they are sitting here because they want to sign in, right? And they want to get started with whatever it is, work that it's. So queuing that e-mail is not what you want to do because you're basically saying, sorry, we don't have time to work with you. You're going to just have to wait until we're ready to send the e-mail to you. That's what this is.
+
+Gustavo Rodriguez   3:09
+No.
+Okay, yeah, we can just move this e-mail to be like an instant reply. So once we instant response.
+
+Fredrik Starmark   3:26
+Okay.
+All right, so what do we do now?
+
+Gustavo Rodriguez   3:31
+Uh, did you get the e-mail?
+
+Fredrik Starmark   3:33
+No.
+Well, let me see, and...
+
+Gustavo Rodriguez   3:35
+even in span or...
+
+Fredrik Starmark   3:37
+Yeah, it could be.
+Yes, I got it.
+
+Gustavo Rodriguez   3:41
+Yeah, you need to add your uh, your passport.
+And then click, and they're gonna use repo the the current.
+A session that you have.
+No, no, but you, you have to, you, you receive the e-mail right?
+
+Fredrik Starmark   4:08
+Ohh.
+Yeah.
+
+Gustavo Rodriguez   4:13
+Yeah, yeah, go to the e-mail and they gonna just do this is for a vote to have multiple sessions, so you you will be able to only have one.
+
+Fredrik Starmark   4:22
+Yeah, OK.
+Understood.
+
+Gustavo Rodriguez   4:25
+So, in your, yeah, in your e-mail, you have instructions.
+
+Fredrik Starmark   4:26
+But so here, OK, so here.
+This is the e-mail that comes, right? I have to revoke the active session. And then when I click this, then I get to this screen.
+
+Gustavo Rodriguez   4:35
+Yeah, yeah, revolt.
+Mhm.
+
+Fredrik Starmark   4:45
+And then, but why is it that I have to, why do we have to go through this?
+
+Gustavo Rodriguez   4:52
+Because that's to verify that is that the account is yours. So let's say that you have your account activated, you're working, and I know your e-mail and I try to log in with your e-mail. So that would be the e-mail sent.
+
+Fredrik Starmark   5:05
+Okay.
+But the e-mail will be not sent to this person; it will be sent to, you know, the person to me.
+
+Gustavo Rodriguez   5:13
+To the, to the, yes, correct, correct, but let's say that you have.
+
+Fredrik Starmark   5:15
+So there you have a level of verification already. The only thing you're asking is to revoke a session. They get an e-mail and then they can click revoke it.
+
+Gustavo Rodriguez   5:25
+Yeah, but if you have access to that e-mail, so let's say we work in the same company.
+
+Fredrik Starmark   5:29
+Okay, okay.
+
+Gustavo Rodriguez   5:32
+But we can remove that. We can only just click the button and revoke the session.
+
+Fredrik Starmark   5:32
+I see.
+Yeah.
+Yeah, I think so because you are at the end of the day, you know, I'm logging in here with my credentials and I wouldn't get this e-mail here, active session e-mail, had I not provided the right MFA authentication code. So I have already logged in.
+Use my password and use the authentication, and now it's saying I have...
+
+Gustavo Rodriguez   6:02
+if you have it activated.
+
+Fredrik Starmark   6:04
+What?
+
+Gustavo Rodriguez   6:05
+Because if you have the multi-factor authentication activated, because you have the option to don't have it.
+
+Fredrik Starmark   6:14
+Okay, we should actually not allow that. I think it is important that we have MFA as a rule because it's so much problems going on and we need to have a very high level of verification for access to Devitrak because it is people's inventory and one misstep.
+
+Gustavo Rodriguez   6:18
+Okay.
+
+Fredrik Starmark   6:34
+With with security, and you're gonna have a big problem.
+
+Gustavo Rodriguez   6:38
+Yeah.
+Yes, correct. So let's force that you have to have the multi-factor authentication activated. And with that, we don't need to provide the password again for both the active session. OK, I'll do that.
+
+Fredrik Starmark   6:48
+Yes.
+All right, so I will go to ABC interpreting here.
+
+Gustavo Rodriguez   7:02
+Well, we can do the same like the previous that was with the school, the bridge.
+
+Fredrik Starmark   7:10
+Okay.
+
+Gustavo Rodriguez   7:12
+The school.
+
+Fredrik Starmark   7:18
+Okay.
+All looks nice.
+
+Gustavo Rodriguez   7:23
+Perfect.
+
+Fredrik Starmark   7:27
+Yeah.
+
+Gustavo Rodriguez   7:58
+Thank you.
+
+Fredrik Starmark   8:20
+Hi.
+
+Gustavo Rodriguez   8:25
+I.
+
+Fredrik Starmark   8:37
+All right, let's see here.
+Okay, so where do we want to start? Where do you want to start?
+
+Gustavo Rodriguez   9:11
+You said yesterday that you wanna continue with the inventory, so...
+
+Fredrik Starmark   9:18
+Yeah, so maybe we should do that.
+
+Gustavo Rodriguez   9:27
+And later we can test if you have the scanner with you. We can test out inventory.
+
+Fredrik Starmark   9:32
+Oh, I did not bring the scanner today. Sorry.
+
+Gustavo Rodriguez   9:35
+That's okay, that's okay.
+So, because we can just start adding in that inventory to Conti Global account.
+
+Fredrik Starmark   9:44
+Okay, so inventory, we have inventory here. We should go to just a quick one, add inventory. Let's try to do this really quick. So here we have details, create a group of items, then add the units to make it up. Nothing is created.
+Here are the lasts. Okay, so nothing is, nothing will, here you have to say nothing will be added or changed until you have completed the last step.
+
+Gustavo Rodriguez   10:16
+OK.
+
+Fredrik Starmark   10:16
+So, nothing will be added or completed until you have you have finished the review in step in step 5. That's what we probably should be saying.
+
+Gustavo Rodriguez   10:30
+Okay.
+
+Fredrik Starmark   10:33
+Yeah, alright, uh, copy details from a device you already have.
+Okay, so we're doing that. We're doing laptops and we're going to do...
+Okay, so laptops, that's, oh, so it's all, so if I go here and I do category laptops, why in the, so groups here, I can still see select disinfectant wipes.
+
+Gustavo Rodriguez   10:59
+Mhm, yeah.
+Yeah, but they gonna...
+
+Fredrik Starmark   11:04
+And the brand out Ticonderoga.
+
+Gustavo Rodriguez   11:09
+Yeah, but it's, yeah, I know it's supposed to filter, but like, no, they say you don't have any any device that match with the parameters.
+
+Fredrik Starmark   11:11
+What happens if I clicked it?
+Okay.
+So this is supposed to filter for the next one, right? Or if I put laptops here, I should not be able to do disinfectant wipes.
+
+Gustavo Rodriguez   11:25
+Del.
+We can do that because if you want to use all of them, but in this section, you can use only one filter if you want. So only lactose or in a group, they're going to bring the information. So that does, combined is not necessary.
+
+Fredrik Starmark   11:37
+Okay.
+Yeah.
+Yeah.
+Okay, so combining them, so copy details. All right.
+Ten matching devices.
+Okay.
+Details copied from what is this?
+
+Gustavo Rodriguez   12:11
+That's the seal number of one of the devices that match with that.
+That group and that categories.
+
+Fredrik Starmark   12:18
+Okay.
+Okay, so if I go in here...
+What do the Chromebooks actually? Copy details. Oh, I can go in again. Okay, yeah, that's the one I wanted. Okay, not bad. So the only thing you kind of like, I guess, need to, if you put in the kick, you just have to filter to the next, you know.
+
+Gustavo Rodriguez   12:33
+Mhm.
+Okay.
+
+Fredrik Starmark   12:44
+Item.
+
+Gustavo Rodriguez   12:46
+Yeah, I'll do that.
+
+Fredrik Starmark   12:50
+Okay.
+Right, so we have that here, continue to location. What does that mean? Why do I continue to location?
+What does that mean?
+
+Gustavo Rodriguez   13:03
+Show you the show your arrow, so you see.
+
+Fredrik Starmark   13:05
+Oh, continue.
+I would just say, continue here or continue to step two. That's what I would do.
+
+Gustavo Rodriguez   13:08
+If you go...
+Okay, continue to step two, okay.
+
+Fredrik Starmark   13:15
+Continue to step 2, to continue to location, that's like I didn't pay attention to this, whatever it said here, so I got confused. So I would say continue to step 2.
+
+Gustavo Rodriguez   13:26
+Okay.
+
+Fredrik Starmark   13:27
+Alright, however, it doesn't continue to step 2 when I click it.
+
+Gustavo Rodriguez   13:30
+Yeah, if you see, show your arrow, if you scroll a little bit, it'll be up.
+
+Fredrik Starmark   13:34
+Error what?
+
+Gustavo Rodriguez   13:36
+A error, because you still need to select, see?
+
+Fredrik Starmark   13:40
+Oh, okay. This is a container. No.
+Can we make this bold or somehow a little bit bigger because I missed it, that it was there.
+
+Gustavo Rodriguez   13:51
+Okay.
+Okay, I'll do it.
+
+Fredrik Starmark   13:55
+Alright, continue to location, should continue to step 2, and...
+This is good, but now I want to see. It was like, which location was it from the items that I copied? Because I'm just going to put in that additional stuff. Why can't we, if I selected a group there that only had one location in step one, it can pre-fill it here. Wouldn't you think that would be a good idea?
+
+Gustavo Rodriguez   14:25
+Yeah, yeah, that would be a good idea just to have all confusion, yeah, and just keep this in this allocation if the staff member wants that.
+
+Fredrik Starmark   14:30
+Yeah.
+Yeah.
+Yeah.
+
+Gustavo Rodriguez   14:37
+Okay, yeah, yeah, that's a really good idea.
+
+Fredrik Starmark   14:39
+So I don't know, yeah, so let's do...
+
+Gustavo Rodriguez   14:41
+Because now it's like open, like the staff can just select any location they want.
+
+Fredrik Starmark   14:47
+Yeah.
+
+Gustavo Rodriguez   14:48
+But that would be good just to pre-fill.
+
+Fredrik Starmark   14:51
+Yeah, pre-fill, you know, where it was.
+
+Gustavo Rodriguez   14:55
+Okay.
+
+Fredrik Starmark   15:32
+And I don't know if this was the location of it.
+
+Gustavo Rodriguez   15:36
+Yeah, that was the IT office. I remember that. That's the one that we used today.
+
+Fredrik Starmark   15:38
+Okay.
+
+Gustavo Rodriguez   15:42
+For com.
+
+Fredrik Starmark   15:42
+Yeah, yeah, continue to ownership.
+Is this whether staff events students can check these units out? Yes. Ownership, permanent, good. Like this, this is really nice.
+This is good.
+
+Gustavo Rodriguez   16:01
+Exactly.
+
+Fredrik Starmark   16:02
+And then we have not asked how many it was.
+So, and I can't scan, so I'm just going to add 1 or serial number, okay.
+
+Gustavo Rodriguez   16:13
+Okay.
+
+Fredrik Starmark   16:17
+Value.
+Cue this item for creation.
+Add new identifier.
+So, for a handful, for a handful of units, or one that carries identifiers, the others do not.
+For A handful of units, or one that carries identifiers, the others do not. That's not a good sentence. I don't know what it means.
+
+Gustavo Rodriguez   16:59
+Okay.
+
+Fredrik Starmark   17:01
+Take the ad, yeah.
+
+Gustavo Rodriguez   17:04
+No, basically is that you can use this option if you want to add multiple identifiers for one item and the second one doesn't have the same identifier.
+To have a different identifiers, and that's this is the option, so you have to add it one by one. That's what I tried to say.
+
+Fredrik Starmark   17:26
+Yeah.
+
+Gustavo Rodriguez   17:28
+So that they don't have the same in antifiers.
+
+Fredrik Starmark   17:28
+For a hand.
+For A handful of units, or one that carries identifiers, the others do not. OK, so...
+Pick the identifier that holds serial number.
+The first one is used if you take that one.
+For serial numbers alone.
+You need to, you need to, honestly, you need to...
+This whole thing here is not good. You need to, if you are going to do instructions like this, run it through Claudia and make sure it's done correctly. Because I don't even understand what this means at all. And I don't know what exactly it is that you want to say in the most succinct manner.
+
+Gustavo Rodriguez   18:16
+Okay.
+
+Fredrik Starmark   18:25
+possible, meaning amongst most clear manner possible.
+I think that...
+So, serial number identifiers, the first one which is clicked should say enter one at a time.
+Second one should choose use scanner to scan serial number.
+
+Gustavo Rodriguez   19:04
+But that would be only serial number. So you won't be able to add extra identifiers for that.
+for that serial number.
+
+Fredrik Starmark   19:13
+Then use scanner to scan serial numbers only and put only in caps.
+
+Gustavo Rodriguez   19:21
+Okay.
+
+Fredrik Starmark   19:26
+I don't know what paste the list means.
+Okay.
+Copy the RAM straight out of your spreadsheet and paste on here the column name, serial number.
+Is used as each unit.
+Cereal.
+Alright.
+So a couple of copy rows straight out of your spreadsheet and paste them here. That's good. The column named serial number, there's an under score for serial number. Is that what it is in the spreadsheet? Okay, if that is in the spreadsheet, if that's in the spreadsheet, you should say,
+
+Gustavo Rodriguez   20:30
+Yeah, yeah, yes, that's why we need.
+
+Fredrik Starmark   20:36
+You know, like in the box it says serial number, and then you have serial number on it, you have IMEI and then device ID. So it should say serial under score number, so you follow the same convention as you do in the spreadsheet for that. And also, I don't know if you can, I'm assuming the serial number, SDFFAF1 is the serial number, and IMEI is KDHF1.
+
+Gustavo Rodriguez   20:50
+Okay, yeah.
+
+Fredrik Starmark   21:01
+HK, is that what it is? If possible, if they can be underneath each other, but you know, maybe that's not possible.
+
+Gustavo Rodriguez   21:12
+Yeah, I want to try to just align all of them with the with Paul.
+
+Fredrik Starmark   21:14
+If you can format it a little bit there, just, I mean, they're not going to use that, but it is just so that it's somehow, you know, it's not a big deal. It's not important that much, but it kind of gives you, or the person that is working, an idea of what this is.
+
+Gustavo Rodriguez   21:24
+Because.
+
+Fredrik Starmark   21:32
+So copy the rows straight out of your spreadsheet and paste them here. Okay, the column name serial number is used.
+The column named serial number.
+is used as each serial number. Well, that's self-explanatory.
+The serial number column, you know, the...
+Why are we saying this?
+
+Gustavo Rodriguez   22:06
+In case that you don't use the serial number, let's say that you want to use the device ID.
+And instead of just rename the device ID in the expiration, they just copy as they are, and we're going to use the device ID as our serial number in our system. So that would be the primary key.
+
+Fredrik Starmark   22:17
+Okay.
+Mhm.
+I see.
+Okay, the column named serial number will be used as the primary key.
+
+Gustavo Rodriguez   22:38
+Okay.
+
+Fredrik Starmark   22:38
+and labeled serial number in the system. That's what you're saying, right?
+
+Gustavo Rodriguez   22:43
+Right, OK.
+
+Fredrik Starmark   22:47
+If there is no such column, the first one is used. What?
+Ohh.
+No, I think we need to have a serial number. Your device needs to have a serial number, and you can define that however you want.
+You know.
+
+Gustavo Rodriguez   23:08
+Well, but this thing is going to take, so the first column is always going to be for our system, the serial number, and the name that you have in the column is going to be put as extra information. But we want to use that number as a primary key. Even if you say that it's a device ID or any other name that a column has,
+We're going to grab it, put it as a serial number, because that's our primary key. That's the way we identify all the items in our system. And we're going to reutilize all that information as extra information.
+Okay.
+
+Fredrik Starmark   23:47
+Yeah.
+Okay.
+
+Gustavo Rodriguez   24:07
+This auction, it's phenomenal for me because it's...
+The same as one at a time option, the only thing is you have all the spreadsheet information, you just copy and paste it. So you don't have to add identifiers. So the identifier is going to be the name of the column with that information.
+
+Fredrik Starmark   24:28
+Yeah.
+Okay.
+Alright.
+
+Gustavo Rodriguez   24:33
+And even if you don't have that information in that column for the item, it's going to...
+
+Fredrik Starmark   24:36
+Okay, you need to be able to articulate this in a way that it makes sense to people. So, you know, the column name, serial number,
+I told you what I needed to have there. And then if you are not using serial number, then what happens then?
+Um...
+And every other column become, yeah.
+
+Gustavo Rodriguez   25:06
+If you don't use...
+If you don't use it, so we we're gonna take that information as serial number.
+
+Fredrik Starmark   25:14
+Yeah.
+
+Gustavo Rodriguez   25:18
+So it's like we're going to store that information twice, as a serial number for us, and the name that you have in the column as a extra information.
+
+Fredrik Starmark   25:29
+Yeah.
+Okay.
+Every other column becomes an extra identifier, and units do not have to carry the same ones up to 200.
+Okay, alright.
+You say every every.
+Every other column.
+Every column in addition to serial number, say that instead, every column in addition to serial number becomes an extra identifier for that.
+
+Gustavo Rodriguez   26:13
+Okay.
+
+Fredrik Starmark   26:23
+Item.
+
+Gustavo Rodriguez   26:26
+Okay.
+
+Fredrik Starmark   26:27
+Yeah.
+
+Gustavo Rodriguez   26:28
+Okay, perfect.
+
+Fredrik Starmark   26:30
+And that's it. And then you will say also.
+Up okay.
+You can only paste up to 2000 lines.
+Period. If you have more.
+Run the operation again, or run another batch.
+
+Gustavo Rodriguez   26:56
+Okay.
+
+Fredrik Starmark   27:05
+Okay.
+
+Gustavo Rodriguez   27:07
+Perfect.
+
+Fredrik Starmark   27:07
+And then point the scanner, each label, pull a trigger. Every grid is recorded and...
+You can take this away, because that's, you know, understood.
+
+Gustavo Rodriguez   27:33
+Okay, from every recorded until next one. Remove all the line.
+
+Fredrik Starmark   27:38
+Okay, so say I scan something, you know what I mean?
+And then if I click add...
+Oh, so the ad is not needed if I'm scanning, correct?
+
+Gustavo Rodriguez   27:49
+Yes, if you have the scanner, you don't need to click add.
+
+Fredrik Starmark   27:57
+OK.
+All right.
+Yeah, leave the ad as is there, because it's obviously clear that if you scan, you will see how it adds itself, you know.
+
+Gustavo Rodriguez   28:05
+Okay.
+Okay.
+
+Fredrik Starmark   28:21
+Let's scan something else.
+OK.
+All right, both perfect.
+Okay.
+And if I go over here, it remembers that there was that.
+And here, so what happens now if I have scanned here and I have one here and I click add, what happens then?
+
+Gustavo Rodriguez   28:43
+No, you gonna have two, so you gonna have two different.
+
+Fredrik Starmark   28:45
+Add both? Okay.
+Alright, I'm gonna remove that, OK?
+So I'm just going to add the serial number.
+OK, so now it becomes the same thing as if I used, if I had used the scanner. OK, review one unit, so no.
+
+Gustavo Rodriguez   29:07
+Correct.
+
+Fredrik Starmark   29:11
+So, continue to...
+Step 5, you can say, you know, you have to have some same that continues step one, step two, step three-step 4, step 5.
+
+Gustavo Rodriguez   29:16
+To review, okay.
+
+Fredrik Starmark   29:26
+Well, you can hear at the last one, you can just click review here at the bottom. Review.
+
+Gustavo Rodriguez   29:33
+Okay.
+
+Fredrik Starmark   29:36
+You don't have to have one unit there, but it's just a review. Okay, so that's good. It's that last step.
+
+Gustavo Rodriguez   29:43
+OK.
+
+Fredrik Starmark   29:45
+Let's see what it says down here.
+Okay.
+
+Gustavo Rodriguez   30:15
+Mhm.
+
+Fredrik Starmark   30:18
+All right, great.
+Perfect. Perfect.
+Okay, can we pause for a second? I actually need to go to the bathroom. It will take me a few minutes. So let me, do you want to keep the meeting active? You can stop recording now.
+
+Gustavo Rodriguez   30:54
+Yeah, yeah, of course, recorded.
+
+Gustavo Rodriguez stopped transcription

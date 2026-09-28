@@ -1,0 +1,1623 @@
+WEBVTT
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/5-0
+00:00:03.062 --> 00:00:03.182
+<v Gustavo Rodriguez>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/6-0
+00:00:06.862 --> 00:00:07.822
+<v Gustavo Rodriguez>OK, now.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/7-0
+00:00:09.262 --> 00:00:10.062
+<v Gustavo Rodriguez>Thanks for recording.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/8-0
+00:00:10.782 --> 00:00:14.683
+<v Fredrik Starmark>Okay, all right,
+so we did the inventory here.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/8-1
+00:00:14.683 --> 00:00:17.422
+<v Fredrik Starmark>Let's go to the spreadsheet here.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/9-0
+00:00:19.822 --> 00:00:20.782
+<v Fredrik Starmark>Templates.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/10-0
+00:00:28.942 --> 00:00:32.142
+<v Fredrik Starmark>Okay, so here we have category.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/12-0
+00:00:33.262 --> 00:00:38.222
+<v Fredrik Starmark>The family the device belongs to, EEG,
+audio interpretation.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/13-0
+00:00:41.662 --> 00:00:47.662
+<v Fredrik Starmark>Also accepted as category,
+category under name, category what was...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/14-0
+00:00:49.902 --> 00:00:51.102
+<v Fredrik Starmark>But what does this mean?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/15-0
+00:00:52.462 --> 00:00:57.398
+<v Gustavo Rodriguez>So in case that you already have the
+names in your columns that you need to</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/15-1
+00:00:57.398 --> 00:01:00.062
+<v Gustavo Rodriguez>modify, is that match with those options?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/16-0
+00:01:02.062 --> 00:01:02.542
+<v Fredrik Starmark>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/17-0
+00:01:03.742 --> 00:01:10.339
+<v Fredrik Starmark>All right, next group, this group name,
+the group name,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/17-1
+00:01:10.339 --> 00:01:14.462
+<v Fredrik Starmark>every unit of its model shares, AE.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/20-0
+00:01:28.862 --> 00:01:32.382
+<v Fredrik Starmark>Hey, I think you need to rephrase this.
+What does this actually mean, group?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/22-0
+00:01:33.822 --> 00:01:36.702
+<v Fredrik Starmark>That is the device name, right?
+Isn't that what it is?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/21-0
+00:01:34.222 --> 00:01:34.862
+<v Gustavo Rodriguez>A group.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/23-0
+00:01:37.742 --> 00:01:41.232
+<v Gustavo Rodriguez>Yes, but uh,
+it's also we take like a group,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/23-1
+00:01:41.232 --> 00:01:45.342
+<v Gustavo Rodriguez>so because you have many devices with the
+same name.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/24-0
+00:01:43.742 --> 00:01:48.487
+<v Fredrik Starmark>I understand. Yes, yes, yes. But you know,
+when I say group,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/24-1
+00:01:48.487 --> 00:01:54.554
+<v Fredrik Starmark>I can think about group of the devices,
+which is kind of maybe interpretation</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/24-2
+00:01:54.554 --> 00:01:59.532
+<v Fredrik Starmark>receivers is a group of devices.
+So it's open up for confusion.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/24-3
+00:01:59.532 --> 00:02:03.422
+<v Fredrik Starmark>So I think it is better to call this
+device name.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/25-0
+00:02:03.582 --> 00:02:05.182
+<v Fredrik Starmark>or item name.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/26-0
+00:02:06.542 --> 00:02:08.782
+<v Gustavo Rodriguez>Okay, yeah, we can just rename that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/28-0
+00:02:07.662 --> 00:02:13.916
+<v Fredrik Starmark>Just call it the item name because you
+can have many items and then they become</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/28-1
+00:02:13.916 --> 00:02:17.591
+<v Fredrik Starmark>a group of items.
+The word group is confusing.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/28-2
+00:02:17.591 --> 00:02:21.422
+<v Fredrik Starmark>So let's just call it for what it is,
+item name.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/27-0
+00:02:22.302 --> 00:02:22.862
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/29-0
+00:02:23.902 --> 00:02:29.960
+<v Fredrik Starmark>And the only reason why I understood that
+was because it says also accept as device</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/29-1
+00:02:29.960 --> 00:02:35.153
+<v Fredrik Starmark>name, device name, item group, etc.
+So you don't need to have that also</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/29-2
+00:02:35.153 --> 00:02:37.822
+<v Fredrik Starmark>accepted as. It just confuses people.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/30-0
+00:02:39.822 --> 00:02:43.200
+<v Gustavo Rodriguez>Okay, yeah,
+we can just add like a last name,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/31-0
+00:02:39.822 --> 00:02:44.702
+<v Fredrik Starmark>Just, just say this is the item name,
+name of the item, yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/30-1
+00:02:43.200 --> 00:02:44.302
+<v Gustavo Rodriguez>the item, okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/32-0
+00:02:47.102 --> 00:02:51.110
+<v Fredrik Starmark>Or here you can say, in this field,
+the name of the device or item.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/32-1
+00:02:51.110 --> 00:02:52.702
+<v Fredrik Starmark>That's all you need to say.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/33-0
+00:02:54.062 --> 00:02:54.462
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/34-0
+00:02:54.982 --> 00:03:00.622
+<v Fredrik Starmark>Serial number unique per unit,
+one row per physical device.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/35-0
+00:03:03.662 --> 00:03:04.382
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/36-0
+00:03:06.622 --> 00:03:09.502
+<v Fredrik Starmark>Cost, replacements cost as a number.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/37-0
+00:03:13.502 --> 00:03:15.022
+<v Fredrik Starmark>Brand, yep.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/38-0
+00:03:16.182 --> 00:03:18.942
+<v Fredrik Starmark>Description left blank.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/39-0
+00:03:22.702 --> 00:03:23.662
+<v Fredrik Starmark>Yeah, okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/40-0
+00:03:25.262 --> 00:03:25.982
+<v Fredrik Starmark>Ownership.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/41-0
+00:03:30.382 --> 00:03:33.022
+<v Fredrik Starmark>Okay, taxable location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/42-0
+00:03:37.742 --> 00:03:41.637
+<v Fredrik Starmark>No,
+you would say here where the device is</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/42-1
+00:03:41.637 --> 00:03:43.902
+<v Fredrik Starmark>located for tax purposes.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/43-0
+00:03:44.942 --> 00:03:45.502
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/44-0
+00:03:50.862 --> 00:03:55.236
+<v Fredrik Starmark>And leave out talking about jurisdiction,
+Miami, Florida, etc.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/44-1
+00:03:55.236 --> 00:03:56.902
+<v Fredrik Starmark>Just leave it like that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/45-0
+00:03:58.222 --> 00:03:58.622
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/46-0
+00:04:05.022 --> 00:04:06.302
+<v Fredrik Starmark>Location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/47-0
+00:04:07.182 --> 00:04:10.542
+<v Fredrik Starmark>where the unit physically sits. Yep.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/48-0
+00:04:13.662 --> 00:04:19.342
+<v Fredrik Starmark>And I don't know why is it that we're
+communicating this also accepted as?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/50-0
+00:04:21.662 --> 00:04:23.262
+<v Fredrik Starmark>Do we need to communicate that?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/49-0
+00:04:21.822 --> 00:04:22.782
+<v Gustavo Rodriguez>I said, like...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/52-0
+00:04:24.782 --> 00:04:26.782
+<v Fredrik Starmark>What's the purpose of communicating that?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/51-0
+00:04:24.862 --> 00:04:26.382
+<v Gustavo Rodriguez>Because we don't know how.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/53-0
+00:04:27.502 --> 00:04:32.343
+<v Gustavo Rodriguez>how they name that columns in their
+original spreadsheet.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/53-1
+00:04:32.343 --> 00:04:37.102
+<v Gustavo Rodriguez>It's less worthy if they have to rename
+all the columns.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/54-0
+00:04:38.222 --> 00:04:43.703
+<v Gustavo Rodriguez>from the arena spreadsheet. So okay,
+you already have location or we said that</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/54-1
+00:04:43.703 --> 00:04:45.022
+<v Gustavo Rodriguez>name with location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/55-0
+00:04:46.102 --> 00:04:46.462
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/57-0
+00:04:48.542 --> 00:04:53.712
+<v Gustavo Rodriguez>because that's how many options that we
+accepted and the system is going to just</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/57-1
+00:04:53.712 --> 00:04:57.351
+<v Gustavo Rodriguez>map to see, okay,
+if your column is named like this one,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/57-2
+00:04:57.351 --> 00:05:00.862
+<v Gustavo Rodriguez>I accept it like this.
+So you don't need to change it.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/56-0
+00:05:02.302 --> 00:05:02.702
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/58-0
+00:05:04.982 --> 00:05:06.862
+<v Fredrik Starmark>All right, well, um...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/59-0
+00:05:08.942 --> 00:05:12.542
+<v Fredrik Starmark>But why would we do people really need
+that?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/60-0
+00:05:13.902 --> 00:05:16.331
+<v Fredrik Starmark>Because you're also going to have
+somebody who comes in and say,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/60-1
+00:05:16.331 --> 00:05:18.462
+<v Fredrik Starmark>but I want to call it this and then
+that's not accepted.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/62-0
+00:05:20.302 --> 00:05:22.851
+<v Fredrik Starmark>Or do they, why do we have to say that?
+I mean,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/61-0
+00:05:20.422 --> 00:05:21.022
+<v Gustavo Rodriguez>No, but...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/62-1
+00:05:22.851 --> 00:05:27.207
+<v Fredrik Starmark>just accept the columns for what they are.
+This is the way you have to put it in.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/62-2
+00:05:27.207 --> 00:05:31.510
+<v Fredrik Starmark>And the only thing we need to do is to
+describe what the column is and then tell</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/62-3
+00:05:31.510 --> 00:05:33.422
+<v Fredrik Starmark>them do not change the column names.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/63-0
+00:05:35.022 --> 00:05:37.462
+<v Gustavo Rodriguez>Okay, yeah, we can do it mandatory.
+I just...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/64-0
+00:05:35.902 --> 00:05:38.495
+<v Fredrik Starmark>Because we do not want them to change the
+column names,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/64-1
+00:05:38.495 --> 00:05:42.013
+<v Fredrik Starmark>because if they change the column names,
+let's say they misspell something,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/64-2
+00:05:42.013 --> 00:05:45.301
+<v Fredrik Starmark>something get misspelled and then the
+system doesn't recognize it. No,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/64-3
+00:05:45.301 --> 00:05:48.542
+<v Fredrik Starmark>they need to stick to what they are,
+you know, having here, you know.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/65-0
+00:05:49.182 --> 00:05:52.222
+<v Gustavo Rodriguez>Okay, yeah, we are more strict with that.
+No, that's fine.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/66-0
+00:05:51.502 --> 00:05:54.199
+<v Fredrik Starmark>Exactly.
+Do not change the column names and delete</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/66-1
+00:05:54.199 --> 00:05:57.902
+<v Fredrik Starmark>for every single column here,
+also accept it, all that, take it away.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/68-0
+00:05:58.862 --> 00:06:00.862
+<v Gustavo Rodriguez>OK, yeah, it has to be as it is, OK.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/67-0
+00:05:58.982 --> 00:06:00.142
+<v Fredrik Starmark>Just delete it, yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/69-0
+00:06:03.102 --> 00:06:05.742
+<v Fredrik Starmark>Sub locations, comma, set a path.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/70-0
+00:06:08.462 --> 00:06:09.102
+<v Fredrik Starmark>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/71-0
+00:06:14.142 --> 00:06:19.463
+<v Fredrik Starmark>Okay, yeah,
+so just a comma separated path inside the</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/71-1
+00:06:19.463 --> 00:06:25.672
+<v Fredrik Starmark>location, outermost first.
+So there you can say, I don't know,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/71-2
+00:06:25.672 --> 00:06:31.782
+<v Fredrik Starmark>like the first location, you can say,
+for example, warehouse.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/72-0
+00:06:32.622 --> 00:06:37.822
+<v Fredrik Starmark>warehouse, Florida warehouse, and then...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/73-0
+00:06:40.102 --> 00:06:41.582
+<v Fredrik Starmark>What is it called? Karma.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/74-0
+00:06:44.942 --> 00:06:49.742
+<v Fredrik Starmark>Area 52, room 6, you know.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/75-0
+00:06:51.102 --> 00:06:51.662
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/76-0
+00:06:54.622 --> 00:07:01.608
+<v Gustavo Rodriguez>Well, do you want we add the location?
+So let's say like we add the pattern for</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/76-1
+00:07:01.608 --> 00:07:05.102
+<v Gustavo Rodriguez>the example, so say like Miami, Florida.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/77-0
+00:07:03.982 --> 00:07:06.530
+<v Fredrik Starmark>But that is the pattern,
+what I just said here.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/77-1
+00:07:06.530 --> 00:07:09.662
+<v Fredrik Starmark>A comma separated inside the location out
+most first or...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/78-0
+00:07:12.542 --> 00:07:16.302
+<v Fredrik Starmark>A comma separated path inside the
+location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/81-0
+00:07:17.462 --> 00:07:23.404
+<v Fredrik Starmark>Delete the outmost first because outmost,
+what does that mean? Outmost out,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/81-1
+00:07:23.404 --> 00:07:28.877
+<v Fredrik Starmark>you know, far the farthest away.
+That's kind of like what that can be</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/79-0
+00:07:25.982 --> 00:07:26.462
+<v Gustavo Rodriguez>All right.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/80-0
+00:07:27.582 --> 00:07:28.102
+<v Gustavo Rodriguez>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/81-2
+00:07:28.877 --> 00:07:34.585
+<v Fredrik Starmark>interpreted as. So this delete that.
+And then say, for example, is this,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/81-3
+00:07:34.585 --> 00:07:36.462
+<v Fredrik Starmark>so we have the location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/82-0
+00:07:38.062 --> 00:07:46.054
+<v Fredrik Starmark>And you can just say warehouse 2 and then
+colon room 65 and then comma shelf 42,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/82-1
+00:07:46.054 --> 00:07:46.942
+<v Fredrik Starmark>you know.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/83-0
+00:07:48.302 --> 00:07:49.742
+<v Gustavo Rodriguez>Okay, yeah, it's uh...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/85-0
+00:07:49.342 --> 00:07:54.404
+<v Fredrik Starmark>Just put that so people kind of
+understand the point that is the path.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/85-1
+00:07:54.404 --> 00:07:58.183
+<v Fredrik Starmark>And then no defaults. Well, default empty.
+You know,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/85-2
+00:07:58.183 --> 00:08:02.818
+<v Fredrik Starmark>you don't have to say default empty and
+delete also accepted as.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/85-3
+00:08:02.818 --> 00:08:08.451
+<v Fredrik Starmark>The ones that cannot be left empty are
+the one that you have the asterisk next</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/85-4
+00:08:08.451 --> 00:08:10.662
+<v Fredrik Starmark>by. Everybody understands that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/84-0
+00:08:11.662 --> 00:08:12.062
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/86-0
+00:08:12.382 --> 00:08:17.070
+<v Fredrik Starmark>And that is something, let's see,
+this gives you guys your through expected</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/86-1
+00:08:17.070 --> 00:08:21.449
+<v Fredrik Starmark>structure of your Excel file.
+Red headers are the only mandatory ones.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/86-2
+00:08:21.449 --> 00:08:24.225
+<v Fredrik Starmark>Perfect.
+You have that communicator already.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/86-3
+00:08:24.225 --> 00:08:29.036
+<v Fredrik Starmark>So we don't need to say the default empty
+here. It's like, this is, you know,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/86-4
+00:08:29.036 --> 00:08:30.702
+<v Fredrik Starmark>you can fill it out or not.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/88-0
+00:08:32.782 --> 00:08:35.142
+<v Gustavo Rodriguez>Gotcha, perfect. Yeah, I'll do it.
+I'll do it that way.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/87-0
+00:08:34.102 --> 00:08:34.382
+<v Fredrik Starmark>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/89-0
+00:08:35.662 --> 00:08:42.901
+<v Fredrik Starmark>All right, same here, extra identifiers,
+extra identifiers for this unit as key</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/89-1
+00:08:42.901 --> 00:08:46.702
+<v Fredrik Starmark>equals value pair separated by semicolons.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/90-0
+00:08:57.662 --> 00:08:58.462
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/91-0
+00:09:04.382 --> 00:09:10.111
+<v Fredrik Starmark>Okay, I think this is good.
+So extra identifiers for each unit, colon,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/91-1
+00:09:10.111 --> 00:09:15.678
+<v Fredrik Starmark>and then key equals value pair separated
+by semicolons. For example,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/91-2
+00:09:15.678 --> 00:09:22.214
+<v Fredrik Starmark>materials equals silicon or Mac equals
+this. You know, I think that that's good.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/91-3
+00:09:22.214 --> 00:09:23.102
+<v Fredrik Starmark>And then...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/92-0
+00:09:24.422 --> 00:09:29.022
+<v Fredrik Starmark>A value without an equal sign is this is
+not accepted.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/93-0
+00:09:30.862 --> 00:09:31.262
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/95-0
+00:09:32.262 --> 00:09:34.782
+<v Fredrik Starmark>And then delete the default empty and all
+that as well.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/94-0
+00:09:34.222 --> 00:09:34.542
+<v Gustavo Rodriguez>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/96-0
+00:09:38.142 --> 00:09:43.031
+<v Fredrik Starmark>OK,
+and then recommended public URL or image</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/96-1
+00:09:43.031 --> 00:09:45.422
+<v Fredrik Starmark>public URL to picture.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/97-0
+00:09:47.342 --> 00:09:51.036
+<v Fredrik Starmark>So here is,
+we should not do any public URLs that</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/97-1
+00:09:51.036 --> 00:09:55.544
+<v Fredrik Starmark>they can put in here.
+We don't want to have the system query</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/97-2
+00:09:55.544 --> 00:09:57.022
+<v Fredrik Starmark>outside of Devitrak.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/98-0
+00:09:59.422 --> 00:09:59.902
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/99-0
+00:09:59.742 --> 00:10:03.990
+<v Fredrik Starmark>So you have to have an image or it's not
+accepted.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/99-1
+00:10:03.990 --> 00:10:09.822
+<v Fredrik Starmark>And there should be only three image
+available, JPEGs, GIFs, or PNGs.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/100-0
+00:10:12.062 --> 00:10:12.542
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/101-0
+00:10:12.062 --> 00:10:17.109
+<v Fredrik Starmark>All others should not be accepted.
+Absolutely no links to anything outside</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/101-1
+00:10:17.109 --> 00:10:20.541
+<v Fredrik Starmark>of Devitrak within Devitrak.
+That goes everywhere.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/101-2
+00:10:20.541 --> 00:10:23.906
+<v Fredrik Starmark>Be careful with that because, you know,
+a hacker,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/101-3
+00:10:23.906 --> 00:10:28.886
+<v Fredrik Starmark>this is a great way of exploiting it.
+You know, I'll put a thing in here,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/101-4
+00:10:28.886 --> 00:10:31.982
+<v Fredrik Starmark>you know,
+a dormant link to a Russian server.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/102-0
+00:10:32.702 --> 00:10:37.422
+<v Fredrik Starmark>that runs some type of commands and or
+whatever, you know, you don't want that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/103-0
+00:10:37.982 --> 00:10:42.264
+<v Gustavo Rodriguez>Yeah. No, in case of that,
+we can just remove that column and if</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/103-1
+00:10:42.264 --> 00:10:46.415
+<v Gustavo Rodriguez>they want to add image,
+they have to just go through the other</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/103-2
+00:10:46.415 --> 00:10:49.182
+<v Gustavo Rodriguez>process. So from the add inventory button.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/106-0
+00:10:48.622 --> 00:10:53.400
+<v Fredrik Starmark>Yeah, yeah, yeah, yeah, yes, yes.
+And then you can say that in the</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/104-0
+00:10:52.942 --> 00:10:54.142
+<v Gustavo Rodriguez>Okay, yeah, I did that one.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/106-1
+00:10:53.400 --> 00:10:58.892
+<v Fredrik Starmark>description. If you need an image,
+that would have to be added in the system</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/106-2
+00:10:58.892 --> 00:11:02.601
+<v Fredrik Starmark>separately.
+Which sucks because you want to be able</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/105-0
+00:11:01.902 --> 00:11:02.422
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/106-3
+00:11:02.601 --> 00:11:08.093
+<v Fredrik Starmark>to do it. Actually, you know what?
+The whole purpose of having a spreadsheet</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/106-4
+00:11:08.093 --> 00:11:09.662
+<v Fredrik Starmark>is that you can add...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/109-0
+00:11:09.822 --> 00:11:16.675
+<v Fredrik Starmark>many items, you know. So, yeah,
+so you should still have the image here,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/107-0
+00:11:12.862 --> 00:11:14.222
+<v Gustavo Rodriguez>Right, yeah, that's it.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/109-1
+00:11:16.675 --> 00:11:21.182
+<v Fredrik Starmark>but you should mandate it's only those
+formats.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/110-0
+00:11:23.822 --> 00:11:24.222
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/111-0
+00:11:26.462 --> 00:11:29.751
+<v Fredrik Starmark>or figure it out,
+but it has to be provided at the time of</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/111-1
+00:11:29.751 --> 00:11:30.142
+<v Fredrik Starmark>import.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/112-0
+00:11:34.462 --> 00:11:34.782
+<v Gustavo Rodriguez>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/113-0
+00:11:36.302 --> 00:11:38.382
+<v Fredrik Starmark>and limited to those images.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/114-0
+00:11:36.542 --> 00:11:40.029
+<v Gustavo Rodriguez>Yeah, I think, no,
+I think it's I think it's better just</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/114-1
+00:11:40.029 --> 00:11:44.189
+<v Gustavo Rodriguez>remove that in that that column and force
+them to, if they want it,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/114-2
+00:11:44.189 --> 00:11:47.982
+<v Gustavo Rodriguez>they have to go inside the system,
+but don't don't have that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/115-0
+00:11:46.702 --> 00:11:49.110
+<v Fredrik Starmark>Yes,
+but if you have 1000 devices in a</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/115-1
+00:11:49.110 --> 00:11:53.866
+<v Fredrik Starmark>spreadsheet, you want to import a lot,
+are you going to sit there and put in</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/115-2
+00:11:53.866 --> 00:11:58.622
+<v Fredrik Starmark>thousand of the same images then? No.
+You have to come up with a workaround.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/116-0
+00:12:01.662 --> 00:12:02.062
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/118-0
+00:12:04.382 --> 00:12:09.375
+<v Gustavo Rodriguez>They have to be filed,
+and we just turn to the 64 base,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/118-1
+00:12:09.375 --> 00:12:16.062
+<v Gustavo Rodriguez>and then we just add it to our system.
+But we don't accept the public URL.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/117-0
+00:12:17.022 --> 00:12:17.502
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/119-0
+00:12:18.182 --> 00:12:18.582
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/121-0
+00:12:32.062 --> 00:12:32.502
+<v Fredrik Starmark>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/122-0
+00:12:34.702 --> 00:12:42.062
+<v Fredrik Starmark>All right, sounds good.
+Download the template, take a look at it.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/123-0
+00:12:45.982 --> 00:12:48.142
+<v Fredrik Starmark>Okay. Whoa.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/125-0
+00:12:50.062 --> 00:12:54.302
+<v Gustavo Rodriguez>Yeah,
+that's examples just to show how we'll...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/124-0
+00:12:50.462 --> 00:12:50.862
+<v Fredrik Starmark>Gore.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/126-0
+00:12:55.182 --> 00:12:55.662
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/127-0
+00:13:01.742 --> 00:13:02.542
+<v Fredrik Starmark>No, that's good.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/128-0
+00:13:09.022 --> 00:13:12.222
+<v Fredrik Starmark>Okay, have you tested this yourself?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/129-0
+00:13:11.982 --> 00:13:12.542
+<v Gustavo Rodriguez>Yeah, yes.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/130-0
+00:13:13.302 --> 00:13:16.204
+<v Fredrik Starmark>Okay. All right.
+I would encourage you to work on that,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/130-1
+00:13:16.204 --> 00:13:20.195
+<v Fredrik Starmark>particularly on the image column here,
+and then we can look at that further.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/130-2
+00:13:20.195 --> 00:13:24.082
+<v Fredrik Starmark>You should try it yourself to import.
+If you use that on ABC interpreting,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/130-3
+00:13:24.082 --> 00:13:27.918
+<v Fredrik Starmark>put like 10 units or something, sort in,
+and try the images and all that,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/130-4
+00:13:27.918 --> 00:13:30.302
+<v Fredrik Starmark>and then come back and then we can review
+it.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/131-0
+00:13:31.502 --> 00:13:34.862
+<v Gustavo Rodriguez>OK, yeah, I'll do it. I'm putting my task.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/132-0
+00:13:35.142 --> 00:13:39.182
+<v Fredrik Starmark>All right, more options. Update inventory.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/133-0
+00:13:41.142 --> 00:13:46.462
+<v Fredrik Starmark>Find items, laptops, Chromebooks.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/136-0
+00:13:58.382 --> 00:13:59.822
+<v Fredrik Starmark>Italian Warehouse.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/137-0
+00:14:03.742 --> 00:14:06.942
+<v Fredrik Starmark>Continue, I like this.
+Continue with 12 items.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/138-0
+00:14:13.542 --> 00:14:18.212
+<v Fredrik Starmark>Update the group, we're gonna,
+they are a little more expensive,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/138-1
+00:14:18.212 --> 00:14:20.942
+<v Fredrik Starmark>so we're gonna do 300 bucks from flat.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/142-0
+00:14:34.862 --> 00:14:41.525
+<v Fredrik Starmark>So here, so I'm just going to update this.
+If I were to kind of put this in right</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/142-1
+00:14:41.525 --> 00:14:45.182
+<v Fredrik Starmark>now,
+what would happen to the location here?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/144-0
+00:14:46.862 --> 00:14:48.382
+<v Fredrik Starmark>If I don't put stuff in here.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/143-0
+00:14:47.582 --> 00:14:47.902
+<v Gustavo Rodriguez>Del.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/145-0
+00:14:49.662 --> 00:14:52.222
+<v Gustavo Rodriguez>No,
+they're gonna force you to put a location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/146-0
+00:14:53.982 --> 00:14:54.462
+<v Fredrik Starmark>Oh.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/147-0
+00:14:58.142 --> 00:15:05.377
+<v Fredrik Starmark>Yeah, but could you please, if we do that,
+since I'm going into an existing group</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/147-1
+00:15:05.377 --> 00:15:09.172
+<v Fredrik Starmark>here,
+because I wanted to continue this 12</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/147-2
+00:15:09.172 --> 00:15:13.231
+<v Fredrik Starmark>items,
+if I do continue those 12 items and it</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/147-3
+00:15:13.231 --> 00:15:18.702
+<v Fredrik Starmark>said here, ouch, okay, sorry,
+more options, update inventory.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/148-0
+00:15:19.182 --> 00:15:24.382
+<v Fredrik Starmark>So I'm going back here in here, laptops,
+we're doing the Chromebooks.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/149-0
+00:15:26.542 --> 00:15:31.856
+<v Fredrik Starmark>So here 12 items. This is all good.
+Why the ownership type? You know,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/149-1
+00:15:31.856 --> 00:15:37.551
+<v Fredrik Starmark>it's one location since it is one
+location and I continue with those items</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/149-2
+00:15:37.551 --> 00:15:43.777
+<v Fredrik Starmark>and I want to work with a whole group and
+I only wanted to update the replacement</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/149-3
+00:15:43.777 --> 00:15:46.662
+<v Fredrik Starmark>cost. I don't see why. Why is it that?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/150-0
+00:15:46.782 --> 00:15:49.342
+<v Fredrik Starmark>You know,
+we can't have this pre-populated.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/153-0
+00:15:50.302 --> 00:15:54.051
+<v Gustavo Rodriguez>Okay, yeah. So in case that we have more,
+well, in this case,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/153-1
+00:15:54.051 --> 00:15:58.526
+<v Gustavo Rodriguez>we have only one location that we can
+definitely we can just pre-fill the</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/151-0
+00:15:57.662 --> 00:15:58.702
+<v Fredrik Starmark>Correct.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/153-2
+00:15:58.526 --> 00:16:03.062
+<v Gustavo Rodriguez>section. We will have more than one.
+Sometimes we have multiple locations.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/152-0
+00:16:01.742 --> 00:16:04.142
+<v Fredrik Starmark>Then you have to leave it, you know.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/154-0
+00:16:04.302 --> 00:16:06.911
+<v Gustavo Rodriguez>OK, OK,
+so we will leave it like we have right</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/154-1
+00:16:06.911 --> 00:16:09.242
+<v Gustavo Rodriguez>now,
+so that they have to just select the</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/154-2
+00:16:09.242 --> 00:16:09.742
+<v Gustavo Rodriguez>location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/155-0
+00:16:11.822 --> 00:16:12.222
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/156-0
+00:16:22.942 --> 00:16:28.161
+<v Fredrik Starmark>Because like here you have the images
+still perfect, the images doesn't change.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/156-1
+00:16:28.161 --> 00:16:31.227
+<v Fredrik Starmark>I'm happy with that. No,
+it's not a container.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/156-2
+00:16:31.227 --> 00:16:36.445
+<v Fredrik Starmark>Is this device assignable to staff? Yes.
+And I remember it is in the IT closet.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/156-3
+00:16:36.445 --> 00:16:40.099
+<v Fredrik Starmark>This is where it should be. You know,
+this is all good,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/156-4
+00:16:40.099 --> 00:16:42.382
+<v Fredrik Starmark>but if all of them have the same...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/157-0
+00:16:42.942 --> 00:16:44.702
+<v Fredrik Starmark>location and pre-populate.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/158-0
+00:16:45.502 --> 00:16:45.902
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/159-0
+00:16:48.622 --> 00:16:53.022
+<v Fredrik Starmark>And you can also say here location.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/160-0
+00:16:54.782 --> 00:17:00.488
+<v Fredrik Starmark>where the units live and where they are
+taxed. They don't live,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/160-1
+00:17:00.488 --> 00:17:03.342
+<v Fredrik Starmark>but where the units are located.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/161-0
+00:17:06.142 --> 00:17:06.542
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/162-0
+00:17:09.942 --> 00:17:12.902
+<v Fredrik Starmark>where the units are located.
+That's the only thing you can say.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/162-1
+00:17:12.902 --> 00:17:14.382
+<v Fredrik Starmark>Where units are located, period.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/163-0
+00:17:17.262 --> 00:17:17.742
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/164-0
+00:17:22.942 --> 00:17:28.981
+<v Fredrik Starmark>And,
+and also say that this will be updated</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/164-1
+00:17:28.981 --> 00:17:35.569
+<v Fredrik Starmark>for all,
+this will be updated for all the items</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/164-2
+00:17:35.569 --> 00:17:36.942
+<v Fredrik Starmark>upon upon.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/165-0
+00:17:39.662 --> 00:17:40.222
+<v Fredrik Starmark>I don't know.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/168-0
+00:17:40.062 --> 00:17:46.455
+<v Gustavo Rodriguez>Yeah, but we say in the previous step,
+so if you want to update the entire group</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/166-0
+00:17:44.862 --> 00:17:45.422
+<v Fredrik Starmark>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/168-1
+00:17:46.455 --> 00:17:48.902
+<v Gustavo Rodriguez>or only one items of the group.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/167-0
+00:17:49.502 --> 00:17:50.062
+<v Fredrik Starmark>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/169-0
+00:17:52.022 --> 00:17:52.382
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/173-0
+00:18:17.702 --> 00:18:18.382
+<v Fredrik Starmark>All right.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/174-0
+00:18:21.022 --> 00:18:23.902
+<v Fredrik Starmark>Okay, so I'll continue to review changes.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/175-0
+00:18:25.422 --> 00:18:28.702
+<v Fredrik Starmark>All right, 12 items will...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/176-0
+00:18:31.982 --> 00:18:33.742
+<v Fredrik Starmark>Be updated, you should say.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/178-0
+00:18:35.102 --> 00:18:37.262
+<v Fredrik Starmark>Will be will be updated.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/177-0
+00:18:35.262 --> 00:18:35.582
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/179-0
+00:18:41.502 --> 00:18:43.342
+<v Fredrik Starmark>One field that change.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/181-0
+00:18:47.982 --> 00:18:51.587
+<v Fredrik Starmark>So this is different. This is,
+you have to, Gustavo,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/181-1
+00:18:51.587 --> 00:18:54.784
+<v Fredrik Starmark>I know the English is not your first
+language,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/181-2
+00:18:54.784 --> 00:19:00.362
+<v Fredrik Starmark>but you have to run every piece through
+Claudia because you cannot just say this.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/180-0
+00:18:57.742 --> 00:19:01.742
+<v Gustavo Rodriguez>Yeah, that's what I no,
+but that's what I'm doing.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/181-3
+00:19:00.362 --> 00:19:00.702
+<v Fredrik Starmark>Yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/182-0
+00:19:02.222 --> 00:19:06.542
+<v Fredrik Starmark>Okay, good. This one field, that change.
+So...</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/183-0
+00:19:09.982 --> 00:19:15.014
+<v Fredrik Starmark>So here, so this particular box here,
+like this white box here that is,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/183-1
+00:19:15.014 --> 00:19:19.138
+<v Fredrik Starmark>you know, you know,
+it says the one field that will change</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/183-2
+00:19:19.138 --> 00:19:22.213
+<v Fredrik Starmark>and 10 hour field that keeps today's
+value.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/183-3
+00:19:22.213 --> 00:19:25.708
+<v Fredrik Starmark>I think it's really good what you're
+having here.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/183-4
+00:19:25.708 --> 00:19:29.902
+<v Fredrik Starmark>But you should say these are the changes
+that will be made.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/184-0
+00:19:32.302 --> 00:19:32.782
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/185-0
+00:19:32.382 --> 00:19:32.862
+<v Fredrik Starmark>Hello.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/186-0
+00:19:34.782 --> 00:19:37.991
+<v Fredrik Starmark>And then you present that here.
+What is it that is being changed?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/186-1
+00:19:37.991 --> 00:19:40.179
+<v Fredrik Starmark>Just like you have it.
+But just say to that,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/186-2
+00:19:40.179 --> 00:19:42.222
+<v Fredrik Starmark>these are the fields that will be changed.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/187-0
+00:19:44.942 --> 00:19:45.342
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/188-0
+00:19:46.862 --> 00:19:51.327
+<v Fredrik Starmark>Okay, so then it says the whole group,
+every item in this group,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/188-1
+00:19:51.327 --> 00:19:53.182
+<v Fredrik Starmark>whatever its serial number.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/189-0
+00:19:54.702 --> 00:19:55.662
+<v Fredrik Starmark>There.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/190-0
+00:19:56.942 --> 00:20:03.822
+<v Fredrik Starmark>There were 12 when you started this
+wizard. If one was added since.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/191-0
+00:20:04.862 --> 00:20:05.982
+<v Fredrik Starmark>It is included, too.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/192-0
+00:20:07.342 --> 00:20:11.420
+<v Fredrik Starmark>Oh,
+so if what you're saying here is every</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/192-1
+00:20:11.420 --> 00:20:13.222
+<v Fredrik Starmark>item is this group.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/193-0
+00:20:16.342 --> 00:20:20.006
+<v Fredrik Starmark>Will be changed,
+and let's say that somebody else added</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/193-1
+00:20:20.006 --> 00:20:25.502
+<v Fredrik Starmark>another Chromebook that that matches the
+search criteria that will also be changed.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/194-0
+00:20:26.982 --> 00:20:27.862
+<v Fredrik Starmark>Is that what you're saying?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/195-0
+00:20:29.062 --> 00:20:29.942
+<v Gustavo Rodriguez>Okay, yep.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/197-0
+00:20:29.542 --> 00:20:34.635
+<v Fredrik Starmark>So let's, no, no, no. So if you have,
+let's say you have a really large</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/197-1
+00:20:34.635 --> 00:20:40.294
+<v Fredrik Starmark>operation, you have 50 warehouse managers.
+And there is an accountant here who,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/197-2
+00:20:40.294 --> 00:20:45.812
+<v Fredrik Starmark>because of all the 2000 Chromebooks that
+are sitting in different warehouses,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/197-3
+00:20:45.812 --> 00:20:50.976
+<v Fredrik Starmark>they want to update, you know,
+the cost per unit of those because it has</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/197-4
+00:20:50.976 --> 00:20:51.542
+<v Fredrik Starmark>gone up.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/199-0
+00:20:53.382 --> 00:20:57.153
+<v Fredrik Starmark>But in the meantime,
+let's say a few Veriz managers have added</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/199-1
+00:20:57.153 --> 00:21:00.625
+<v Fredrik Starmark>a few Chromebooks since they started this
+update process.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/199-2
+00:21:00.625 --> 00:21:04.935
+<v Fredrik Starmark>What you're saying is that those
+Chromebooks that they have added after</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/199-3
+00:21:04.935 --> 00:21:09.784
+<v Fredrik Starmark>the fact that we started this process of
+the 12 items here will also be changed.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/199-4
+00:21:09.784 --> 00:21:10.742
+<v Fredrik Starmark>Is that correct?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/198-0
+00:21:12.102 --> 00:21:12.902
+<v Gustavo Rodriguez>It is right, yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/200-0
+00:21:13.542 --> 00:21:17.575
+<v Fredrik Starmark>Okay, so every item,
+even if it is more than 12,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/200-1
+00:21:17.575 --> 00:21:24.325
+<v Fredrik Starmark>let's say that warehouse manager Gustavo
+Rodriguez added another 1000 Chromebooks</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/200-2
+00:21:24.325 --> 00:21:30.334
+<v Fredrik Starmark>that matches the search criteria that we
+had here when we started the 12</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/200-3
+00:21:30.334 --> 00:21:34.696
+<v Fredrik Starmark>Chromebooks. They will also be changed.
+So the 1000,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/200-4
+00:21:34.696 --> 00:21:37.742
+<v Fredrik Starmark>now 1012 Chromebooks will be changed.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/201-0
+00:21:38.582 --> 00:21:40.422
+<v Fredrik Starmark>the cost per unit. Is that correct?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/202-0
+00:21:41.142 --> 00:21:41.862
+<v Gustavo Rodriguez>Is that correct?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/203-0
+00:21:42.422 --> 00:21:52.830
+<v Fredrik Starmark>Okay, all right. Okay, that's good.
+So then say, instead of the whole group,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/203-1
+00:21:52.830 --> 00:21:58.102
+<v Fredrik Starmark>you say, if any other items were added,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/204-0
+00:22:01.782 --> 00:22:12.742
+<v Fredrik Starmark>That that matches the search that matches
+the criteria for this update was added.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/205-0
+00:22:14.982 --> 00:22:19.462
+<v Fredrik Starmark>They will also be updated,
+something like that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/206-0
+00:22:20.022 --> 00:22:23.382
+<v Gustavo Rodriguez>But I know after,
+so if they add it after these changes.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/209-0
+00:22:24.022 --> 00:22:27.561
+<v Fredrik Starmark>Yeah, no,
+after then they will not be added.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/207-0
+00:22:24.422 --> 00:22:25.222
+<v Gustavo Rodriguez>They shall be.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/208-0
+00:22:26.302 --> 00:22:28.262
+<v Gustavo Rodriguez>Outside, OK, OK, just to clear that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/209-1
+00:22:27.561 --> 00:22:31.966
+<v Fredrik Starmark>But you know,
+when you can say when you click apply to,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/209-2
+00:22:31.966 --> 00:22:37.629
+<v Fredrik Starmark>just actually don't say apply to 12 items
+because that may not be true.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/209-3
+00:22:37.629 --> 00:22:42.742
+<v Fredrik Starmark>If somebody added more items,
+then there will be more items. So.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/210-0
+00:22:43.462 --> 00:22:46.102
+<v Fredrik Starmark>You know,
+you will just say apply at the bottom.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/211-0
+00:22:47.862 --> 00:22:48.262
+<v Gustavo Rodriguez>OK.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/212-0
+00:22:49.702 --> 00:22:53.702
+<v Fredrik Starmark>Because we cannot confirm it is 12 items,
+because it could be more or less.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/213-0
+00:22:56.182 --> 00:22:59.142
+<v Fredrik Starmark>So, but you will say that.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/214-0
+00:22:59.942 --> 00:23:04.056
+<v Fredrik Starmark>you know,
+if items were added during this process</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/214-1
+00:23:04.056 --> 00:23:08.417
+<v Fredrik Starmark>and those items matches the initial
+search criteria,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/214-2
+00:23:08.417 --> 00:23:11.462
+<v Fredrik Starmark>all those items will also be updated.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/215-0
+00:23:12.622 --> 00:23:13.702
+<v Fredrik Starmark>per this request.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/217-0
+00:23:14.902 --> 00:23:19.414
+<v Gustavo Rodriguez>OK, yeah, I wanna add that, remove the 12,
+the number, actually,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/217-1
+00:23:19.414 --> 00:23:23.302
+<v Gustavo Rodriguez>when I remove person,
+gonna just leave the apply label.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/216-0
+00:23:19.542 --> 00:23:20.982
+<v Fredrik Starmark>Yeah, yeah, yeah.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/218-0
+00:23:30.142 --> 00:23:33.841
+<v Fredrik Starmark>But then it's kind of like,
+but it's nice to have 12 items will</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/218-1
+00:23:33.841 --> 00:23:36.616
+<v Fredrik Starmark>change at the top.
+We may change that later on,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/218-2
+00:23:36.616 --> 00:23:40.085
+<v Fredrik Starmark>but keep that for now.
+I think it's kind of nice because we</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/218-3
+00:23:40.085 --> 00:23:44.536
+<v Fredrik Starmark>assume that it's going to be kind of
+smaller businesses that will be used or</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/218-4
+00:23:44.536 --> 00:23:47.542
+<v Fredrik Starmark>smaller groups will be using this in the
+beginning.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/219-0
+00:23:50.502 --> 00:23:50.982
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/230-0
+00:24:37.102 --> 00:24:41.862
+<v Fredrik Starmark>Okay, cool. And I love this. I love this.
+I understand this.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/229-0
+00:24:38.742 --> 00:24:39.222
+<v Gustavo Rodriguez>Mhm.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/231-0
+00:24:48.182 --> 00:24:51.622
+<v Fredrik Starmark>I understand this changes one field.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/232-0
+00:24:52.582 --> 00:24:55.062
+<v Fredrik Starmark>for 12 items.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/233-0
+00:24:56.342 --> 00:25:03.462
+<v Fredrik Starmark>There is no bulk undo.
+Reverting means running this update again.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/234-0
+00:25:04.342 --> 00:25:15.208
+<v Fredrik Starmark>with the old values. No,
+if changes need to be made and there is</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/234-1
+00:25:15.208 --> 00:25:17.382
+<v Fredrik Starmark>no bulk undo.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/235-0
+00:25:21.462 --> 00:25:24.662
+<v Fredrik Starmark>If additional changes are needed.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/236-0
+00:25:25.582 --> 00:25:27.222
+<v Fredrik Starmark>Please run another update.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/237-0
+00:25:30.182 --> 00:25:30.902
+<v Gustavo Rodriguez>Okay.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/238-0
+00:25:31.502 --> 00:25:32.822
+<v Fredrik Starmark>Yeah, that's better.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/239-0
+00:25:35.022 --> 00:25:38.262
+<v Fredrik Starmark>Okay, applies to Charles's 12 changes.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/241-0
+00:25:39.422 --> 00:25:45.445
+<v Fredrik Starmark>I think it's good that we're recording
+this because I don't remember what I'm</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/241-1
+00:25:45.445 --> 00:25:49.461
+<v Fredrik Starmark>saying. All right. Okay.
+I think that's it for now.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/241-2
+00:25:49.461 --> 00:25:54.789
+<v Fredrik Starmark>Do these updates and then we'll do
+another run. When can we do that?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/241-3
+00:25:54.789 --> 00:25:58.342
+<v Fredrik Starmark>Like Tuesday, Wednesday next week,
+you think?</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/240-0
+00:25:58.502 --> 00:26:00.022
+<v Gustavo Rodriguez>Yeah, yeah, I think.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/242-0
+00:25:59.422 --> 00:26:05.033
+<v Fredrik Starmark>This is not too much, you know,
+and I'd rather keep going like more, more,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/242-1
+00:26:05.033 --> 00:26:09.223
+<v Fredrik Starmark>more, more now,
+because I learn from it too, and I can,</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/242-2
+00:26:09.223 --> 00:26:13.338
+<v Fredrik Starmark>I can, you know,
+it helps me being able to present the</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/242-3
+00:26:13.338 --> 00:26:13.862
+<v Fredrik Starmark>system.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/243-0
+00:26:14.782 --> 00:26:16.502
+<v Gustavo Rodriguez>Yeah, that's that's good,
+and that's the idea.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/244-0
+00:26:17.862 --> 00:26:18.262
+<v Fredrik Starmark>L.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/246-0
+00:26:19.382 --> 00:26:21.222
+<v Gustavo Rodriguez>Yeah, I understand the process fully.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/245-0
+00:26:19.542 --> 00:26:19.942
+<v Fredrik Starmark>All right.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/247-0
+00:26:23.862 --> 00:26:24.422
+<v Fredrik Starmark>Alright.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/248-0
+00:26:26.342 --> 00:26:29.862
+<v Fredrik Starmark>So let's call it a day for now,
+so I have to eat something also.</v>
+
+86160f0f-8401-43ae-96ad-fb8b4a05d9e1/249-0
+00:26:29.222 --> 00:26:32.582
+<v Gustavo Rodriguez>Excellent, so let me just stop recording.</v>
