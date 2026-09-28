@@ -27,9 +27,17 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| Abierto | **22** |
+| **Abierto, total** | **30** |
+| — bloquea (§1) | 3 |
+| — trabajo de producto (§2) | 14 |
+| — surgido esta semana (§3) | 7 |
+| — no es código (§4) | 6 |
 | Cerrado desde que se escribió su lista | 16 |
-| De lo abierto, que bloquea a alguien hoy | 3 |
+
+> Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
+> porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
+> el cuerpo. Un tracker cuyo total no coincide con su contenido es el problema
+> que este documento vino a resolver, así que el número sale de contar.
 
 ---
 
