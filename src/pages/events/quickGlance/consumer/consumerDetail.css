@@ -706,3 +706,20 @@
   color: var(--gray-600, #5d615a);
   text-align: left;
 }
+
+/* The serial is typed but not on the list yet. It sits between the field and
+   the chips because that is where the eye already is, and it carries the
+   button so nobody has to know about Enter. */
+.scan__pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border: 1px solid var(--warning-200, #FEDF89);
+  background: var(--warning-25, #FFFCF5);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: var(--gray-700, #344054);
+}

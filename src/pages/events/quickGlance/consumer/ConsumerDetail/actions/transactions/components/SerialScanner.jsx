@@ -2,6 +2,7 @@ import { OutlinedInput } from "@mui/material";
 import { AlertTriangle, Check } from "lucide-react";
 import PropTypes from "prop-types";
 import { useRef, useState } from "react";
+import BlueButtonComponent from "../../../../../../../../components/UX/buttons/BlueButton";
 import Chip from "../../../../../../../../components/UX/Chip/Chip";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { describeScan, summarizeSelection } from "../../../../utils/deviceScan";
@@ -20,6 +21,19 @@ import "../../../../consumerDetail.css";
  * reason for a rejection is shown under the input where it happened rather than
  * as a toast in the corner. The field keeps focus and clears itself, so a
  * barcode gun can fire straight down a stack of devices.
+ *
+ * ## Typing is not scanning
+ *
+ * A gun ends every read with Enter, so the scanning path was always fine. A
+ * person typing is not on that path: reported from a real assignment, the
+ * serial was typed, the rest of the form filled in, and the transaction
+ * refused because nothing had been added.
+ *
+ * The instruction existed — in the placeholder, which disappears the moment
+ * you type. It was gone exactly when it was needed. So leaving the field now
+ * commits what is in it, and while something is typed and not yet on the list
+ * that state is on screen with a button, instead of resting on a hint that
+ * vanished.
  */
 const SerialScanner = ({
   pool,
@@ -51,6 +65,13 @@ const SerialScanner = ({
     inputRef.current?.focus();
   };
 
+  /* Leaving the field is as clear an intent as pressing Enter, and it is the
+     path a person takes: type the serial, move to the next question. */
+  const commitPending = () => {
+    if (disabled || progress.isComplete || !draft.trim()) return;
+    commit(draft);
+  };
+
   const remove = (serial) => {
     onChange(picked.filter((entry) => entry !== serial));
     setFeedback(null);
@@ -70,10 +91,13 @@ const SerialScanner = ({
         placeholder={
           progress.isComplete
             ? "All devices scanned"
-            : "Scan or type a serial number, then press Enter"
+            : "Scan or type a serial number"
         }
-        aria-label="Serial number to add to this transaction"
+        // On <OutlinedInput> this lands on the wrapper div, not on the field,
+        // so a screen reader never announces it where it is needed.
+        inputProps={{ "aria-label": "Serial number to add to this transaction" }}
         onChange={(event) => setDraft(event.target.value)}
+        onBlur={commitPending}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
           // A scanner emits Enter; without this the modal's form would submit
@@ -82,6 +106,25 @@ const SerialScanner = ({
           commit(draft);
         }}
       />
+
+      {draft.trim() && !progress.isComplete && (
+        <div className="scan__pending">
+          <span>
+            <strong>Not added yet.</strong> Press Enter, or use Add.
+          </span>
+          {/* preventDefault on mousedown so the click is not eaten by the
+              blur it would otherwise trigger first. */}
+          <span onMouseDown={(event) => event.preventDefault()}>
+            <BlueButtonComponent
+              title="Add"
+              size="sm"
+              buttonType="button"
+              func={() => commit(draft)}
+              styles={{ width: "fit-content" }}
+            />
+          </span>
+        </div>
+      )}
 
       {picked.length > 0 && (
         <div className="scan__picked">
