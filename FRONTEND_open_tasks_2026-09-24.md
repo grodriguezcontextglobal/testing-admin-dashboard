@@ -27,12 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **30** |
-| — bloquea (§1) | 3 |
-| — trabajo de producto (§2) | 14 |
+| **Abierto, total** | **42** |
+| — bloquea (§1) | 2 |
+| — trabajo de producto (§2) | 15 |
+| — reunión del 29-09 (§2b) | 11 |
 | — surgido esta semana (§3) | 7 |
-| — no es código (§4) | 6 |
-| Cerrado desde que se escribió su lista | 16 |
+| — no es código (§4) | 7 |
+| Cerrado desde que se escribió su lista | 17 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -58,27 +59,6 @@ Al diseñarlo hay que cerrar una pregunta: `trigger_action` es un valor único, 
 sea que un documento pertenece a un único camino. Si alguna vez necesita servir
 a dos, eso es un cambio de backend y conviene saberlo antes de construir encima
 del supuesto.
-
-### El aviso de "Update available" no se cierra al pulsar Refresh
-`src/components/serviceWorker/ServiceWorkerUpdateNotifier.jsx:22-33`
-
-Reunión 2026-09-25 `0:15`, y fue lo primero que le pasó a Fredrik: *"I clicked
-on refresh, but it didn't disappear or nothing happened."*
-
-Dos defectos en el mismo sitio:
-
-- La notificación va con `duration: 0` y **el botón no la cierra**. Si la
-  recarga ocurre desaparece con la página; si no ocurre, se queda.
-- `updateServiceWorker(true)` solo recarga si hay un worker **en espera** al que
-  mandarle `SKIP_WAITING`. Si no lo hay, no pasa nada y no hay ni error ni
-  señal.
-
-Hace falta cerrar la notificación al pulsar, un estado de "aplicando", y un
-respaldo con `window.location.reload()` si el controlador no cambia. Sin el
-respaldo, el botón sigue sin hacer nada en el caso que él pisó.
-
-Está aquí y no en producto porque es la primera impresión de cada despliegue, y
-porque un botón que no responde enseña a no pulsarlo.
 
 ### El servidor todavía no exige MFA
 `FRONTEND_force_logout_token_2026-09-21.md`
@@ -199,6 +179,44 @@ pasada.
   (`7:26`–`8:05`). **Esto no es solo copy** — renombrar la cabecera toca
   plantilla, parser y guía a la vez, y rompe las hojas que la gente ya tenga
   guardadas. Hay que decidir si se renombra la columna o solo su descripción.
+  **Hecho 2026-09-29 en `b037a10b`:** se renombró la columna a `image`, en
+  plantilla, parser y tests. El payload al API sigue enviando `image_url`.
+
+### Eventos a medio crear — etiqueta Draft y volver a terminarlos
+
+Pedido en reunión, anotado 2026-09-29. Si alguien empieza a crear un evento y
+sale de la página a mitad, en la sección de eventos ese evento debería
+aparecer con una etiqueta **Draft**, y desde ahí se debería poder retomar el
+proceso donde quedó.
+
+Reunión 2026-09-29 `38:42`–`40:16`: hoy ese evento aparece como
+**closed/ended**, y Fredrik dijo que eso está mal porque *"it was never done"*.
+Si un borrador llega a su fecha de fin sin terminarse, pasa a **inactive**, no
+a ended.
+
+**El evento ya existe en el servidor desde el paso 1.** Lo que queda sin
+terminar es la configuración:
+
+```
+newEventProcess/eventDetails/Form.jsx:101          POST /event/create-event, active: false
+newEventProcess/review/ReviewAndSubmitPage.jsx:141 PATCH active: true, configuration: "completed"
+  └ :136                                           POST /db_event/update-event → configuration: "completed"
+```
+
+**La señal de Draft ya se escribe, pero nadie la lee.** `configuration:
+"completed"` se guarda en Mongo y en SQL al terminar, y ningún otro sitio del
+código lo consulta. Ojo: `active: false` no sirve como señal, porque un evento
+terminado y luego cerrado también queda así.
+
+**Retomar tiene que partir del servidor, no de Redux.** Todo el store va
+persistido (`Store.js:33`, sin whitelist), así que en el mismo navegador el
+borrador puede seguir ahí. Pero no llega a otro dispositivo, y hay que
+confirmar si `clearSessionStorage` lo borra al cerrar sesión. Hace falta
+rehidratar el proceso a partir del evento guardado y saber en qué paso quedó.
+
+Queda por confirmar con backend qué valor tiene `configuration` antes de
+completar el alta, y si los eventos viejos lo tienen puesto. Si no lo tienen,
+cualquier evento anterior a este campo se leería como Draft.
 
 ### Dashboard de gestión de Devitrak
 
@@ -220,6 +238,130 @@ saca del doble escritura) o escribimos los dos sitios?
 ### Seguimientos de etiquetas de rol
 `useRoleLabel` existe y se consume. Quedan los ítems de UI en cola de la función
 de renombrado por compañía. Sin fecha.
+
+---
+
+## 2b. Abierto — reunión del 29-09, en orden de trabajo
+
+> Acta con las citas y los minutos: `FRONTEND_meeting_2026-09-29.md`. Los
+> números entre corchetes remiten a su tabla. El orden es el de trabajo: lo que
+> el colegio va a tocar primero va arriba, y lo que depende de backend o de una
+> decisión va al final. Los ficheros se localizaron por el texto visible y no
+> se han abierto todavía.
+
+### 2b.1 — Import de estudiantes [1–5]
+`pages/conditionalPage/utils/xlsxImportUtils.js` (+ su test)
+
+Va primero porque es por donde entra un colegio, y Fredrik manda el correo al
+colegio esta semana: *"this needs to work… They're not going to sit and do it
+manually."*
+
+- **Fecha de nacimiento:** si Excel cambia el formato de la celda, la fila
+  queda *blocked*. El parser tiene que aceptar el número de serie de fecha de
+  Excel y las formas habituales, porque la gente va a pegar desde sus propias
+  hojas. Fredrik propuso bajar la plantilla en CSV. Eso no resuelve el
+  copy-paste.
+- **Contacto:** el email pasa a opcional. Regla a cerrar: al menos un medio de
+  contacto (email, teléfono o dirección), y si es menor, el del tutor.
+- **Instrucciones** por columna, como en `inventoryImportTemplate.js`.
+- **Imagen pegada en la celda, sin enlaces:** reusar `inventoryImportImages.js`
+  y el aviso de URL escrita a mano de `inventoryImportRows.js`.
+- **Código postal:** validar solo cuando el país sea US.
+
+### 2b.2 — Alta de inventario: cuatro retoques [8–11]
+`pages/inventory/actions/utils/uxForm/SerialNumberAndMoreInfoComponentForm.jsx`,
+`pages/inventory/actions/add/ux/wizard/ReviewStep.jsx`, `hooks/useSubLocations.jsx`
+
+- **Sublocación escrita y no añadida:** hoy se pierde en silencio. Hay que
+  resolverlo igual que `SerialScanner` en `18d7da99`: aviso visible con botón,
+  y Continue deshabilitado mientras haya texto sin añadir.
+- **"Add new identifier" → "Add additional identifier"**, con el `+`, y pasa a
+  secundario. **"Queue this item for creation"** pasa a primario, y los dos
+  botones van a la derecha, con los de Remove.
+- **Quitar el badge "Built for you"** (`ReviewStep.jsx:118`). Nadie en la
+  reunión supo qué era.
+- **Texto del duplicado** (`ReviewStep.jsx:141`) → *"If a serial number
+  already exists, it will be rejected, and you will be notified."*
+
+### 2b.3 — Documentos en el alta de evento: el arrastre [12, 13]
+`pages/events/newEventProcess/documents/Form.jsx`
+
+- La zona "Drop here" parece aceptar archivos del escritorio. Hay que decir que
+  se arrastran documentos ya subidos, de *available* a *assigned*.
+- El documento arrastrado se dibuja **detrás** del panel. Hace falta z-index o
+  un portal para el overlay.
+
+### 2b.4 — Correo de recordatorio de vencidos [6, 7]
+`pages/conditionalPage/tables/OverdueDevicesTable.jsx`,
+`memberDetailsDashboard/innerComponents/Reminders.jsx`
+
+- El nombre del dispositivo ("Chromebook"), en lugar de lo que sale ahora.
+- Quitar el nombre del colegio del cuerpo, o bajarlo al pie.
+- "Powered by Devitrak" al pie, y arriba solo el logo del colegio.
+- Sobre fondo oscuro, la versión blanca del logo.
+
+Antes de tocar nada, ver qué cubre ya el módulo de plantillas de correo por
+compañía. El branding se resuelve en el servidor desde `x-company-id`, así que
+parte de esto puede ser del backend.
+
+### 2b.5 — Tiles del inventario del evento: 3 por fila [19]
+`pages/events/quickGlance/components/AllInventoryEventForCustomerOnly.jsx`
+
+### 2b.6 — Historial del dispositivo: orden, hora y un `FFF` [20, 23]
+
+- Sale *added → returned → assigned* cuando lo que pasó fue *assigned → returned*.
+  Todo tiene la misma fecha y no hay hora, así que no se ve el orden.
+- Lo más nuevo arriba, con hora, minutos y segundos.
+- Una línea muestra un `FFF` que parece ser la dirección con la que se asignó.
+
+Es el primer paso de 2b.7 y se puede hacer antes: ordenar por timestamp y
+enseñarlo no necesita backend nuevo, siempre que el timestamp exista.
+
+### 2b.7 — Audit trail con usuario, empezando por el dispositivo [22]
+
+Quién hizo qué y cuándo, en cada acción, con un formato común para todos los
+audit trails de la app. La referencia es el audit history de QuickBooks.
+Fredrik lo separó de los roles personalizados (C1): *"They just need to be
+logged."*
+
+**Probablemente necesita backend:** que cada evento del historial guarde su
+autor. Preguntarlo antes de diseñar. Relacionado con el log de actividad de
+staff (B2) y con el registro de consentimientos (2b.9).
+
+### 2b.8 — Documentos vencidos [14]
+`components/documents/DocumentUpload.jsx`, `pages/Profile/Documents/Documents.jsx`
+
+- Etiqueta **Expired** en todas las vistas donde aparezca.
+- No se pueden asignar ni usar en ningún sitio, incluido el alta de eventos.
+- En la sección de documentos del admin se pueden editar, cambiar la fecha,
+  reactivar o borrar.
+
+Va junto a D1 + D2 (§1), porque es el mismo fichero y la misma pasada por la
+navegación. El "no asignable" lo tiene que aplicar también el servidor.
+
+### 2b.9 — Registrar estudiantes sin consentimiento, o con registro [16, 17]
+`pages/conditionalPage/components/modals/RegisterMembersToEvent.jsx`,
+`innerComponents/StudentConsentPanel.jsx`
+
+Dos opciones: **añadir directamente**, para quien ya firmó un waiver a
+principio de semestre, o **pedir consentimiento**. Si se pide, hay que
+registrar cada respuesta del tutor con su hora. Eso usa el mismo audit trail
+de 2b.7.
+
+### 2b.10 — Devolver un dispositivo encontrado desde Edit [21]
+
+El estado de Edit está fijo en "out with someone in event". Hay que poder
+pasarlo al almacén. Tiene que ir por la lógica de devolución de verdad, no
+cambiando un campo suelto, o el evento lo seguiría contando como fuera.
+**Pendiente de decidir quién puede hacerlo.**
+
+### 2b.11 — "Device health" → "Condition" [18]
+`pages/events/quickGlance/components/DeviceHealthBar.jsx:57`
+
+**No hacerlo suelto.** Choca con la tarea de `condition`/`status` (§3). Hoy
+Condition y status son el mismo valor, y el backend los va a separar. Hay que
+ver qué campo cuenta esta barra y renombrarlo en la misma pasada que los otros
+seis sitios que dicen "Condition".
 
 ---
 
@@ -302,6 +444,9 @@ Si el host sirve `Content-Security-Policy` con `connect-src`, hay que añadir
   tenerlas en cuenta al construir, no una certificación.
 - **B11 — el asterisco de campo obligatorio.** No se pudo confirmar por grep si
   la inconsistencia sigue. Pide mirar un formulario.
+- **Etiquetas físicas para inventario** (reunión 29-09 `1:18:10`): si un
+  cliente quiere etiquetar sus equipos, hace falta una solución, y hoy no la
+  hay. Fredrik lo investiga.
 
 ---
 
@@ -309,6 +454,7 @@ Si el host sirve `Content-Security-Policy` con `connect-src`, hay que añadir
 
 | Ítem | Evidencia |
 |---|---|
+| **El aviso de "Update available" no se cerraba** (§1) | `62cd1a53`. Falta ver en el navegador, tras el próximo despliegue, que Refresh recarga y el aviso no vuelve |
 | **A1** — la guarda de escritura fallida no llegaba a la ruta de member | Está en `AssignmentDevicesToMember.jsx:545` **y** en la de staff. Era «lo más prioritario de la lista» |
 | **A2** — logo de la compañía en el recibo | Cadena de fallback desde la sesión en `ReceiptPage.jsx:134` |
 | **B1** — copia del panel de escaneo | El texto que citaba el documento ya no existe |
@@ -334,21 +480,29 @@ lista: **FedRAMP por delante.** Lo dijo justo después de pedir el dashboard de
 gestión, y para ponerlo por detrás. Es un cambio respecto al 31-08, donde
 FedRAMP era "un día para entender las especificaciones".
 
-Dentro de lo que sí es esta lista:
+Dentro de lo que sí es esta lista (reordenada el 2026-09-29):
 
-1. **El aviso de actualización** (§1). Es la primera impresión de cada
-   despliegue y ya falló delante de él.
-2. **D1 + D2**, lo único que bloquea trabajo de producto, y es un solo diseño
-   para los dos.
-3. **La tanda de textos de la plantilla**, que es un fichero y una pasada — con
-   la decisión del `image_url` resuelta antes de empezar.
-4. **E2**, un bug con una pista concreta que se cierra en una tarde.
-5. **Las tres de una línea**: `drop_console`, tests de `/status`, CSP de IIS.
-6. **`condition` antes de que el backend despliegue**, no después.
-7. **S1 y D3**, pantallas sueltas que ya no dependen de nada.
-8. **R3 e Issue #1** cuando haya respuesta del backend: esperan un dato, no
+1. ~~El aviso de actualización~~, hecho en `62cd1a53`. Queda verlo en el navegador tras el despliegue.
+2. **Import de estudiantes** (2b.1). Fredrik manda el correo al colegio esta
+   semana, y este import es por donde van a entrar.
+3. **Eventos en Draft** (§2). Tú lo dejaste como prioridad al cerrar la
+   reunión del 29-09.
+4. **La tanda corta de la reunión del 29-09**: 2b.2 a 2b.6, pantalla por
+   pantalla. Fredrik pidió revisar lo cambiado en la próxima reunión, y esto es
+   lo que más se ve por poco esfuerzo.
+5. **D1 + D2 junto con documentos vencidos** (2b.8). Es un solo diseño de la
+   navegación de documentos.
+6. **La tanda de textos de la plantilla de inventario.** La decisión del
+   `image_url` ya está hecha en `b037a10b`.
+7. **Audit trail** (2b.7), en cuanto backend confirme si guarda el autor de
+   cada acción. Después, los consentimientos (2b.9), que lo usan.
+8. **E2**, un bug con una pista concreta que se cierra en una tarde.
+9. **Las tres de una línea**: `drop_console`, tests de `/status`, CSP de IIS.
+10. **`condition` antes de que el backend despliegue**, no después, y con él "Device health" (2b.11).
+11. **S1 y D3**, pantallas sueltas que ya no dependen de nada.
+12. **R3 e Issue #1** cuando haya respuesta del backend, y **devolver un dispositivo encontrado** (2b.10) cuando se decida quién puede hacerlo: esperan un dato o una decisión, no
    esfuerzo nuestro.
-9. **C1** y el **dashboard de gestión** cuando se decida. Ninguno cabe en una
+13. **C1** y el **dashboard de gestión** cuando se decida. Ninguno cabe en una
    semana, y el segundo ni siquiera tiene alcance todavía.
 
 `vite-plugin-pwa` y el paso 4 van cuando tú digas: hoy no molestan a nadie, y el

@@ -1,0 +1,1410 @@
+Devitrak beta test -20260929_110338-Meeting Recording
+September 29, 2026, 3:03PM
+1h 18m 55s
+
+Fredrik Starmark   0:03
+Excuse me.
+All right, so we have the new version there again, so I'll click refresh.
+And it's still not disappearing, Gustavo, the same problem as before. I'm not sure if it's actually, it's refreshing or...
+
+Gustavo Rodriguez   0:17
+Yeah, I have to check because it happened, it happened to me and it's refreshed, but it's it's I don't know, I have to just check because it's it refreshed in my case, it refreshed, but it's I have to see why.
+
+Fredrik Starmark   0:26
+Out.
+Okay.
+Alright, cool.
+See here, what we got?
+Okay, so I'll just go with...
+Actually, let's do bridges.
+Okay, cool. So what do we have here? We have the inventory units, devices out, team members, students, no events, upcoming events, device value, categories, cleaning supplies, electronics, laptops, stationery.
+Okay, so if I had more here, when does it become two pages? Like 10 or something?
+
+Gustavo Rodriguez   2:02
+Yeah, 10. That's the default. 10 rows. And then you're going to get the pagination.
+
+Fredrik Starmark   2:05
+Got it.
+So, if I click here on cleaning supplies, the locks mop kit. OK, alright, that's good.
+Okay.
+Um...
+So there are no rented cleaning supplies or no rented items in general, okay?
+Back to homepage.
+Let's look at the laptops.
+So I have some students here.
+Register students to an event.
+If you wanted to add students here, manage students, I guess, add students.
+Add new students.
+Advanced grades, okay.
+Export students. So what does that mean? Export students?
+So, I got a...
+Okay, get a spreadsheet over the students. Okay.
+Admin students.
+Okay, so import as a spreadsheet.
+One at a time, import as a spreadsheet, no file selected, download templates. Okay.
+Okay.
+Let's do 2 here.
+We can do John Doe here, that's fine, who cares really.
+And.
+He doesn't have an e-mail because he's a minor, no phone number, external ID.
+Date of birth.
+Yeah.
+Wait, so the formatting needs to be...
+Does the formatting need to add dashes or do I have, can I do like this? Because most people are just going to enter it like this.
+
+Gustavo Rodriguez   5:03
+No, I think it's gonna have to be dashes.
+
+Fredrik Starmark   5:06
+K.
+
+Gustavo Rodriguez   5:06
+But we can try it. Let's try that. Let's see if it's broken.
+
+Fredrik Starmark   5:08
+Okay.
+So what happens if I enter an incorrect zip code and misses arrow?
+
+Gustavo Rodriguez   5:57
+No, it's going to take it because it's a string.
+
+Fredrik Starmark   6:01
+Okay.
+So you probably want to have some type of check there and all that.
+But let's enter the wrong one, and now we can go in and add it.
+
+Gustavo Rodriguez   6:11
+But it's.
+OK, but is the pen is a US or or a different?
+Different country, right? Because they have a different format.
+
+Fredrik Starmark   6:26
+Okay.
+And guardian, what does that mean?
+Parent garden, parent garden.
+What exactly?
+e-mail, okay.
+Stir.
+And Garner's phone number is that what I have here or?
+Okay, hold on then.
+Okay, so we attach this spreadsheet really quick, remember.
+Oh, nice, so this kind of pulls it up.
+Status blocked.
+
+Gustavo Rodriguez   7:51
+Okay, yeah, watch.
+
+Fredrik Starmark   7:53
+Wonder why? Oh, because of the zip code.
+
+Gustavo Rodriguez   7:56
+Yeah, because it's not following the right format.
+
+Fredrik Starmark   8:00
+A.
+So, back to the spreadsheet then.
+
+Gustavo Rodriguez   8:37
+No, no, because the error here is not the seat code, is the is the date.
+Doesn't have the the day doesn't have the the format.
+
+Fredrik Starmark   8:43
+The what?
+Ah, okay. Okay.
+And you can do that format because of the file path issue or what?
+
+Gustavo Rodriguez   8:56
+Yes, you guys supposed to fall on a format, but I see you have to look to just like I give like an instruction.
+
+Fredrik Starmark   9:00
+Okay.
+So, let's go back to the zip code.
+And then that's just to.
+What?
+
+Gustavo Rodriguez   9:18
+No, but that's the Excel, that's the spreadsheet that is turned to that format.
+
+Fredrik Starmark   9:25
+What do you mean? OK, so...
+So how do we address that?
+
+Gustavo Rodriguez   9:42
+No, that's the, yeah, not to just change the format.
+
+Fredrik Starmark   9:47
+No, I realized that. Okay.
+
+Gustavo Rodriguez   9:47
+In the cell.
+Yeah, did the setting.
+
+Fredrik Starmark   9:53
+Okay, but then...
+
+Gustavo Rodriguez   9:59
+Change.
+
+Fredrik Starmark   10:00
+It would be great if we could.
+What do you want to have here? Is it general or?
+
+Gustavo Rodriguez   10:08
+Yeah, you know, that would be, you can try with that, you know.
+
+Fredrik Starmark   10:16
+Space.
+
+Gustavo Rodriguez   10:26
+Leave it like that, and...
+Let's see.
+
+Fredrik Starmark   10:31
+Yeah, so I was wondering, maybe we can just do, because this is export as an XLS file, XLSX file, maybe we should do just a CSV without any formatting. Maybe that will fix the problem.
+
+Gustavo Rodriguez   10:42
+Okay.
+Okay.
+
+Fredrik Starmark   10:47
+I don't know how to change that here. I know how to... Anyway.
+Because, you know, somebody's going to enter here a whole bunch of them, or maybe they have an existing spreadsheet and they copy and paste in, you know, these things.
+
+Gustavo Rodriguez   11:06
+Yes, and they're going to just turn to that format. They're supposed to be predefined in the...
+
+Fredrik Starmark   11:08
+Yeah, and you need to maintain, you need to maintain the formatting, or they have to.
+Get the formatting done right there.
+
+Gustavo Rodriguez   11:20
+Okay, or let's...
+
+Fredrik Starmark   11:23
+So, anyways, you can work on that.
+
+Gustavo Rodriguez   11:24
+List.
+Yeah.
+
+Fredrik Starmark   11:27
+But this needs to work because that's how they're going to install the students. They're not going to sit and do it manually. Maybe one or twice, you know. So.
+
+Gustavo Rodriguez   11:36
+Also, add the e-mail address to the minor. Use the e-mail address of the pattern. Let's see if they allow you to continue with the import.
+
+Fredrik Starmark   11:49
+Oh.
+Yeah.
+So it wasn't that the date of birth is exactly.
+
+Gustavo Rodriguez   12:36
+Yes, yeah, it was. It was correct. The only thing they they was asking for, uh...
+
+Fredrik Starmark   12:43
+An e-mail. I get that. But you, that is something that we have to think about because some kids don't have an e-mail address. And what do you do then?
+
+Gustavo Rodriguez   12:43
+For the e-mail, yeah.
+Yeah.
+Yeah, I need to.
+change the settings and just allow it to create members or student without e-mail. Or if they have a pattern, just use the pattern emails.
+
+Fredrik Starmark   13:06
+Yes.
+
+Cesar A. Caminero (Web Designer)   13:08
+Filip.
+
+Gustavo Rodriguez   13:12
+Once I started inserting information.
+
+Fredrik Starmark   13:15
+Yeah, yes, I I would do, I would do that.
+
+Cesar A. Caminero (Web Designer)   13:17
+Do we always want?
+Do we always want a way to contact them though? So maybe this could be an optional.
+
+Gustavo Rodriguez   13:25
+Say it again.
+
+Cesar A. Caminero (Web Designer)   13:25
+Like, do we always want to have some type of way to contact them or the representative? Like maybe if there's no e-mail, maybe I have like the option to enter an address or...
+Like a physical address or.
+Phone number, like, you know, have the...
+You know what I mean?
+
+Gustavo Rodriguez   13:53
+Yeah, we can make that like an optional instead of, because right now they are mandatory, like we need to all the information. But instead of have that fields as mandatory, so we can just turn to optional and just leave it empty. And in the case that we have, like I said, the padding e-mail, we can use.
+
+Cesar A. Caminero (Web Designer)   14:01
+Oh, got it.
+
+Gustavo Rodriguez   14:12
+Use it.
+Uh, for for the students.
+
+Cesar A. Caminero (Web Designer)   14:17
+Okay, and maybe we should specify that if the student is under age, we do want the representative's e-mail or the representative's point of contact.
+
+Gustavo Rodriguez   14:33
+Yes, yes, that's one thing we can do, and I see that I need to add more instruction because...
+It's confusing a little bit.
+
+Cesar A. Caminero (Web Designer)   14:44
+Yeah.
+
+Fredrik Starmark   14:45
+Yeah.
+
+Gustavo Rodriguez   14:46
+Yeah, the same that we have in the inventory, uh, import of function.
+
+Fredrik Starmark   14:51
+Yes.
+
+Gustavo Rodriguez   14:52
+have more instructions just to guide the person the way we need to.
+
+Fredrik Starmark   14:56
+Yeah, also, you know, you also have to, the image, I saw there was an image file there as well. So you have to, you have to apply the same thing as we did on the inventory. You can copy an image, but absolutely no hyperlinks and be able to link to external contact.
+
+Gustavo Rodriguez   15:13
+Correct, yes.
+
+Fredrik Starmark   15:16
+So...
+
+Gustavo Rodriguez   15:16
+Yes, I can just reuse the module that we have in the inventory.
+
+Fredrik Starmark   15:20
+Yes.
+Okay.
+Uh, import.
+All right, so something is overdue. See overdue items.
+Send a reminder.
+Okay.
+
+Gustavo Rodriguez   15:48
+Hey, Carl Filip needs to pay for that, needs to pay $2000 for the light.
+
+Fredrik Starmark   15:54
+Okay.
+All right.
+Did I receive anything? Yes, I did.
+So, here's how that looks like: Message from Beaver Bridge Public School. That's great. So, you have the name of that. These emails are sent from Beaver Bridge Public School. I could show that device.
+I would say here, I would change that to the name of the device that the Chromebook.
+
+Gustavo Rodriguez   16:38
+Okay, yeah.
+
+Fredrik Starmark   16:43
+And then, with inventory number prints assigned to you, let's do it back.
+And it's now 16 days. Please return as soon as possible.
+You don't have to say British Public Charter School there. Or if you do it, then you have to do put it down a little bit so that there is a, you know, a line break and then, you know, at the bottom. You follow me?
+
+Gustavo Rodriguez   17:11
+Yes.
+
+Fredrik Starmark   17:17
+Um...
+
+Cesar A. Caminero (Web Designer)   17:19
+Also, Gustavo, in those banners or anything that has a dark background, let's make sure to use the white version or the, you know, the one that you see here on the navigation of the logo.
+
+Gustavo Rodriguez   17:31
+Okay, yeah.
+
+Fredrik Starmark   17:34
+Yeah.
+You can say this here, this is unmonitor, you can say powered by DeviTrak at the bottom here. If you are going to have any logo up here, it should be the Bridges Public Auto School logo.
+Do you follow me?
+
+Gustavo Rodriguez   17:54
+Yeah, well, actually, we have a module that the company be able to customize the template for the emails.
+
+Fredrik Starmark   17:55
+Sweet.
+Okay, alright, good. Perfect.
+Okay, cool. All right, and then, yeah, I think that's it for students.
+And then back to inventory, and then...
+Let's add inventory.
+And we tried out importing lots of inventory last time, so let's not do it this time. Just going to do another Chromebook.
+
+Gustavo Rodriguez   18:39
+Okay.
+
+Fredrik Starmark   18:40
+Actually, disinfectant wipes.
+Spice Band.
+I don't know, I saw, maybe that's what it is.
+Placement costs a dollar, or I don't know, $5 per expensive ones, nope.
+I'm not gonna do that picture location.
+I don't know where the cleaning supplies are stored. Actually, let's go back to that and do the copy from we already have cleaning supplies, disinfectant wipes, Lysol copy details.
+And then, oh, it's just Washington DC, I see. Okay, so that's what you had for the location.
+Actually, we're going to add a sublocation.
+Spiral.
+So what would happen if I put supply room here and I didn't click add sublocation?
+
+Gustavo Rodriguez   20:25
+No, I wouldn't take it.
+
+Fredrik Starmark   20:26
+It wouldn't.
+
+Gustavo Rodriguez   20:28
+Correct.
+
+Fredrik Starmark   20:29
+Okay, so we have some type of reminder there. So if that, if anybody typed anything in that field, that, you know, they say something, you know.
+
+Gustavo Rodriguez   20:39
+Okay, yeah, yeah, I can disable the button, continue, and just like a message.
+
+Fredrik Starmark   20:40
+Because...
+Yeah, exactly. Or erase it. If it's either blank is okay. Or if it is something in there, then obviously it needs to be added and then you can continue to the next step.
+
+Gustavo Rodriguez   20:57
+Okay.
+
+Fredrik Starmark   21:03
+All right, how can this unit be used? Assignable? No.
+Ownership, yeah.
+OK, like Jesus, OK, um, that's the number of the wipes, right? Um.
+Just one wipe here.
+No identifiers here, let me see, I...
+Silveira number.
+A new identifier? No, I don't want to do that. Queue this item for creation. Okay, so why is this blue and the other one is white? Is there any reason for that? The bar, the click buttons?
+
+Gustavo Rodriguez   22:04
+No idea, to be honest. That's more...
+
+Fredrik Starmark   22:07
+Don't you guys have a convention for that as to what is blue?
+Or no?
+
+Gustavo Rodriguez   22:13
+No, we have a blue, like a prime primary key, like a the primary key in the gray for a second second key, but this one is more like a just the action.
+
+Cesar A. Caminero (Web Designer)   22:13
+Yeah.
+Yeah.
+
+Fredrik Starmark   22:23
+Okay.
+
+Gustavo Rodriguez   22:28
+That this stuff can can do immediately.
+
+Fredrik Starmark   22:31
+Yeah, for this one, add new identifier, I would like to change that wording to add additional identifier.
+
+Cesar A. Caminero (Web Designer)   22:33
+Ohh.
+
+Gustavo Rodriguez   22:40
+Okay.
+
+Fredrik Starmark   22:41
+Because add new identifier, add new, then you kind of like feel like, okay, you confuse that with a button, the gray button here, cue this item for creation. You know, but if you add additional identifier, then you know, that's not, you're not going to think that.
+
+Gustavo Rodriguez   23:00
+Yeah, yeah, you're gonna feel that it's actually this attached to the same, the same item that you are including right now, yeah.
+
+Fredrik Starmark   23:04
+Yeah.
+And this one here, yeah, go ahead, sorry.
+
+Cesar A. Caminero (Web Designer)   23:07
+Also.
+Yeah, I was going to mention, go ahead because I was going to talk about that queue this item for creation button, but go ahead.
+
+Fredrik Starmark   23:15
+That's exactly what I was going to talk about too, so you go.
+
+Cesar A. Caminero (Web Designer)   23:18
+So yeah, the label is also pretty long and the positioning of it at the bottom there hanging looks kind of weird. So what exactly does this button do again?
+
+Fredrik Starmark   23:33
+It adds, it adds it here, so like unit is ready to create. It puts it from here to this area here where I can remove it. So you have to add it there.
+
+Gustavo Rodriguez   23:33
+Yeah, De.
+
+Fredrik Starmark   23:45
+And then, you know, then it's ready to be added, so to say.
+
+Cesar A. Caminero (Web Designer)   23:50
+So, essentially, yeah, okay, got it. This would...
+
+Fredrik Starmark   23:56
+So if I look at this, so if I took take another item here like this, I click add a new identifier, I don't want to do that, but that should be add additional identifier, but then I queue it and boom, now it shows up to two of them here already to be created here.
+
+Cesar A. Caminero (Web Designer)   24:00
+Yeah.
+Yeah, so a couple of things. The add new identifier should be the secondary style button, so like the outlined one. And the queue this item for creation should be the blue primary button. Because, yeah, there will be most, it will be.
+
+Gustavo Rodriguez   24:27
+Okay.
+
+Cesar A. Caminero (Web Designer)   24:32
+It's a primary action essentially.
+the, you know, like the user needs to complete to continue. Like adding a new identifier will probably not always be like a thing that most people will do or many people will do, but they definitely need to queue this item.
+for creation, so that's the primary action. So that you basically just got to swap out the styles of the buttons.
+
+Fredrik Starmark   25:03
+And then also said, add additional identifier on the button instead, and keep the plus there.
+
+Cesar A. Caminero (Web Designer)   25:07
+Yeah, and I would...
+And I would align the queue this item for creation button to the center of the...
+
+Fredrik Starmark   25:15
+That's true, too, yeah.
+
+Cesar A. Caminero (Web Designer)   25:17
+Yeah, and the the to remove.
+
+Gustavo Rodriguez   25:19
+Fill all all the week or no?
+
+Fredrik Starmark   25:21
+No, right here between the two here in the middle, you know, centered.
+
+Cesar A. Caminero (Web Designer)   25:26
+Yes, entered in the road right there.
+
+Gustavo Rodriguez   25:27
+Okay.
+
+Cesar A. Caminero (Web Designer)   25:31
+Either there or we can maybe explore with having it all the way on the right. Yeah, because that way all the actions are on the right. And that would also go towards the remove buttons. Those should be all the way to the right.
+
+Fredrik Starmark   25:35
+Having it out to the to the right, yeah.
+
+Gustavo Rodriguez   25:48
+Okay, yeah, yeah, you're right.
+
+Fredrik Starmark   25:57
+Okay, cool. All right, so we're adding this to them.
+Review.
+Um...
+Okay, so we have them here. Training supplies disinfected with ISO box and built for you. What's that?
+
+Gustavo Rodriguez   26:09
+Okay.
+No, that's essentially taking all the all the fields.
+
+Fredrik Starmark   26:20
+What's this?
+
+Gustavo Rodriguez   26:25
+And just put in a sentence, that's more for indexing and for searching.
+
+Fredrik Starmark   26:29
+I know the description is, but here, this thing here that says built for you, what is that?
+
+Gustavo Rodriguez   26:36
+Does take the the value of the column that you selected?
+
+Fredrik Starmark   26:44
+So, um...
+Value of the column that I selected, which value?
+
+Gustavo Rodriguez   26:49
+Yeah, all the selection that you choose, so that's going there.
+But I see this is making confusion.
+Is it there for you?
+
+Fredrik Starmark   27:00
+Cesar, do you know what this is?
+
+Cesar A. Caminero (Web Designer)   27:04
+No, I haven't seen the.
+
+Fredrik Starmark   27:06
+Okay, yeah, I think we don't know what that is. So...
+I think you can remove that.
+
+Gustavo Rodriguez   27:15
+Yes, I think so.
+
+Fredrik Starmark   27:15
+Or?
+Alright, serial number already exists in your inventory is rejected by the server, not silently merge. You get told which one.
+What? Hold on. A serial number that already exists in your inventory is rejected by the server. Does this mean that one of those have been rejected or?
+What does this mean?
+
+Gustavo Rodriguez   27:43
+No, it's telling you that it's uh, it's someone is already in the inventory, it's gonna be rejected.
+
+Fredrik Starmark   27:50
+Ah, okay. Then you would say if a serial number is already...
+If A serial number already exists.
+It will be rejected, and you will be notified.
+All right, what happens after you add queued processing done? Okay, I understand that this adds 2 new items to the inventory. This operation cannot be undone if you need to remove them after adding them.
+
+Gustavo Rodriguez   28:14
+What?
+
+Fredrik Starmark   28:33
+You have to do that one at a time. Okay.
+All right, very good. Boom.
+Nice.
+Okay.
+All right, good. Now...
+Ship out inventory. Okay, so let's ship out to inventory somewhere. Oh, we don't have any events. Okay. So let's just do an event then. Add a new event, test event.
+Test, and then I, I mean, sorry, no, BBQ.
+Event phone number.
+We can add the number of days before the event starts. Five, no.
+Round starts on Thursday, and it ends on...
+Okay.
+Ace after three, get that there, oops.
+Oops, I mistakenly clicked here. Okay, so we have to go back. Test event.
+So it doesn't cache what I write here, right?
+I see.
+
+Gustavo Rodriguez   30:13
+Back and forth, and when I catch.
+
+Fredrik Starmark   30:13
+Mhm.
+Um...
+Street, I don't know.
+That's no St. we're just gonna put it.
+Oops.
+All Street.
+I don't even know what that street is, but anyway, let's just go over to Sys.
+What's happening here?
+Hey, employee.
+Already assigned, what does that mean?
+Am I assigned to this event or why is this? Or I am assigned to this event.
+
+Gustavo Rodriguez   32:09
+Yes.
+Yeah, the person that is creating the event is already assigned to the event.
+
+Fredrik Starmark   32:18
+Um, I wonder if that should be that way, you know?
+Because if you have an event creator, is that person going to go to the event? Actually, you know what? Maybe it's good that they are on the event as well.
+
+Gustavo Rodriguez   32:36
+Okay, so I leave it, leave it like it is right now. Okay.
+
+Fredrik Starmark   32:37
+Yeah, yes, yes, yes.
+Hey, continue.
+
+Cesar A. Caminero (Web Designer)   32:45
+Can I see that drop-down again when it said that?
+Okay, it's already grayed out, already assigned. Okay.
+
+Fredrik Starmark   33:01
+Documents.
+See if I have one second.
+Just one couple of documents.
+Still, I don't have a wave of a forum here.
+Ohh.
+Just going to take our...
+Just going to drag and drop here. No, I cannot drag and drop.
+Drop here an assign.
+Okay, well I put the this is what I wanted to put in there.
+me out.
+
+Gustavo Rodriguez   34:14
+I have that.
+
+Fredrik Starmark   34:16
+No, so I took a PDF here and I took it over here to this nothing here yet. Here, drag and drop.
+
+Gustavo Rodriguez   34:17
+Oh, I forgot.
+Oh no, no, because that's for the existing document.
+
+Fredrik Starmark   34:31
+Oh. Sys.
+
+Gustavo Rodriguez   34:31
+So you have to create the document and you want to get the list for available documents and then so you'll be able to drag and doc those documents, not outside of the of the dashboard.
+
+Fredrik Starmark   34:41
+Ah.
+So you kind of need to say that somewhere. Available documents, drag, assigned documents. So here, you know, people would think that they can drag and drop something to that, you know.
+
+Cesar A. Caminero (Web Designer)   34:54
+Yeah, yeah, that's a good point.
+
+Gustavo Rodriguez   34:54
+Okay.
+
+Fredrik Starmark   35:04
+So let's go then to our documents here.
+Upload a document.
+Yeah.
+This is just say waiver form. It's not, but it can be.
+Used for.
+Event.
+But, you know, it could also be used for.
+Okay, that is fine. Oops.
+And.
+Language: English.
+That's expires on.
+Yeah, 12, 12, 2026. So what happens when it expires? Will it be deleted then?
+
+Gustavo Rodriguez   36:35
+Not yet, so I'm thinking about if we can use RT or we can delete it or how we can approach to that section.
+
+Fredrik Starmark   36:45
+Yes, because you have an expiration, you know, it needs to be not available and it needs to be labeled as expired. So let's just look here, add document.
+
+Gustavo Rodriguez   37:11
+Okay.
+
+Fredrik Starmark   37:12
+There we go, waiver documents, documents. So here in this, like all sections, you would have to have some type of label on it when it's expired.
+
+Gustavo Rodriguez   37:24
+Yeah, but after it expires, so that that would be disabled, we can delete it, or so how we can decline manage the expired documents, so...
+
+Fredrik Starmark   37:36
+Yeah, an expired document should not, you should not be able to be able to use it anywhere. I mean, but here it should be like an expired document. It should be labeled as expired. It should be available here and you can go in and change it or change it back to active if that's what you want to do.
+
+Gustavo Rodriguez   37:49
+Okay, yeah, yeah, that's my question.
+Yeah, okay.
+
+Fredrik Starmark   37:56
+You know.
+
+Gustavo Rodriguez   37:57
+Yeah, you still have the document, but they are not available to assign, be assigned or be used, but it's still here, so they still have the option to change it, to modify, to change expiration date, reuse it. OK, so I want to leave it like...
+
+Fredrik Starmark   37:58
+Or delete it.
+Mhm.
+Yeah.
+Proaño.
+
+Gustavo Rodriguez   38:17
+When I leave it here.
+
+Fredrik Starmark   38:18
+Yeah.
+So here you can manipulate with whatever you want because this is an administer area or whatever, administrator area. So they should be able to do that. But not here at the events. This is our field trip event.
+
+Gustavo Rodriguez   38:33
+Okay.
+
+Fredrik Starmark   38:42
+Oh.
+So now I'm going back to that. No, that's what's in air and space. Oh, so our event is now gone. I have to go back and create a new one.
+
+Gustavo Rodriguez   38:52
+Yes.
+
+Fredrik Starmark   38:54
+Oh no, here it is, closed, it says.
+This was the event that I was working on, actually.
+
+Gustavo Rodriguez   39:06
+Yeah, but you didn't finish, right?
+Yeah, they they just mark as a...
+As I close.
+
+Fredrik Starmark   39:12
+Ended.
+
+Gustavo Rodriguez   39:13
+At the end, Jess.
+
+Fredrik Starmark   39:16
+Okay.
+We should not do that because it's not ended. It hasn't ended. It was never done, actually, if you're going to do it that way. But you should be able to go back to it because here somebody needs to do something else really quick and then go back to the events. How would we do that?
+
+Gustavo Rodriguez   39:36
+Yeah.
+Let's see, I have one of the configuration that I have for the bin. It's the progress, if it's progress and if ended or it's finished. So I can reuse that value to.
+
+Fredrik Starmark   39:50
+Or you add a new one that is called draft.
+Everybody knows what that means.
+
+Gustavo Rodriguez   39:53
+Okay, okay.
+
+Fredrik Starmark   40:00
+So it's a draft event, it's in draft, it's not active, it hasn't been active and it can move and if it stays in draft and then event ended, then the event hasn't ended, you would just say move it to inactive.
+
+Gustavo Rodriguez   40:16
+Okay, yeah, yeah, yeah, you're right. So I can use that. So staff can just finish the process and reuse the information they already have.
+OK.
+
+Fredrik Starmark   40:43
+Um...
+So back to events then, let's just add a new event. Test events.
+Test event and BBQ.
+Okay, now we're going to use our waiver form here.
+Oh, so here I can drag it, but I cannot click it, but I drag it to here. Do you see how it comes behind the thing instead of in front of it? You see that? Oops.
+
+Gustavo Rodriguez   42:16
+Oh yeah.
+
+Fredrik Starmark   42:18
+So that's, you want to have it on top.
+K.
+So I have to add this new document here? Or what?
+
+Gustavo Rodriguez   42:32
+No, no, no, that's a new document, so if you want to create a new one.
+So, that's already in the system, so in the in the event.
+
+Fredrik Starmark   42:37
+House.
+Oh, so here I could have added a document here for this event only.
+
+Gustavo Rodriguez   42:46
+Correct.
+
+Fredrik Starmark   42:47
+Okay.
+You probably want to make this more a higher level administrator. Now I am an administrator, so they should be here, add a document, because I clicked out of this, I clicked out of this section here, thinking that I had to add the document as A.
+Actually, you know what? Maybe not an administrator. We can just wait and see about that, because maybe they want to put something in there just as a very flyer or something, you know.
+
+Gustavo Rodriguez   43:21
+Okay, so I just leave it for any role. So for the role that is great in the event, of course.
+
+Fredrik Starmark   43:23
+Lee, yeah, yeah.
+Yeah, yeah, yeah.
+All right, view.
+Alright.
+Next.
+Select existing inventory. We're going to do some cleaning supplies, mop kit. We're going to have one mop kit with us. And then take some laptops with us. We'll take two laptops.
+And that's it. We don't have to take anything more. Next up.
+Review the information, point of contact, location of the event, merchant service, no, we have forms, staff, devices added, services added, we're not doing that.
+Great.
+Okay.
+All right, so now we're here.
+So it's gonna be in two days.
+Um...
+You have an details.
+Add new consumer.
+
+Gustavo Rodriguez   44:56
+You know, you have the function here to send invitation to the students that you want to have here in this event.
+
+Fredrik Starmark   45:06
+Oh, I do.
+
+Gustavo Rodriguez   45:07
+Yeah, so you go to a student, you're gonna have a button that said, "Invite to event, register student to event."
+
+Fredrik Starmark   45:23
+Okay. Oh, that's good.
+So, let's register the speak to the event.
+Send 3 invitations.
+Yes.
+What does that mean exactly?
+
+Gustavo Rodriguez   45:47
+So, you are sending a...
+a request to the parents to let the minor go or not. So if they say no, so they won't be registered in the event. If they say yes, you will see the student in the event as a consumer.
+
+Fredrik Starmark   46:06
+Yeah, see, here is a tricky thing, though. They may have a waiver on the beginning of the semester that allows them to join any events, you know.
+
+Gustavo Rodriguez   46:18
+Okay.
+
+Fredrik Starmark   46:19
+So you should be able to add them to the event here without that invitation thing.
+
+Gustavo Rodriguez   46:26
+OK.
+
+Fredrik Starmark   46:28
+Yeah.
+
+Gustavo Rodriguez   46:31
+Okay, well I can just skip that part and once you instead of say that send invitations, you can just register to that.
+
+Fredrik Starmark   46:39
+Right.
+
+Gustavo Rodriguez   46:40
+And they want to be erased right after you click the button.
+
+Fredrik Starmark   46:43
+Yes.
+
+Gustavo Rodriguez   46:45
+Okay.
+
+Fredrik Starmark   46:54
+All right, so let's just see what I got from that invitation.
+Uhh...
+Let's see.
+Did not receive a notification there, but...
+Because it doesn't matter.
+And.
+Student to events to the BBQ.
+So, we'll do this one. Ohh, so I should have received it in my Gmail, not my regular e-mail. OK.
+Yes, please confirm attendance to them. You know, it's good to have this, you know, opportunity to be able to do this.
+I actually like that. So if it is possible to do, let's see here, let's see if this.
+Oh, the student has been attended. So let's see what happened here. I said yes to the stuff. Oh, see, now that student came in there. I like that consent thing. So maybe you can have the option of adding them or ask for consent. But if you ask for consent, you need to log everything, like when the parent clicked and all that kind of stuff.
+
+Gustavo Rodriguez   48:52
+Okay.
+
+Fredrik Starmark   48:59
+So that audit trail is available for that.
+
+Gustavo Rodriguez   49:02
+Okay.
+Yeah, also this one have the idea to just have like a lot, okay, so have a trace of all the notification where the parents are agreed to send this student to the event. So all of this lot.
+
+Fredrik Starmark   49:17
+Mhm.
+Yeah.
+
+Gustavo Rodriguez   49:25
+Boy, I, I just change instead of have like a mandatory, I will change like an optional.
+
+Fredrik Starmark   49:30
+Yes.
+Okay, and then the Lux Mop Kit is for internal use. Chromebooks is not for internal use. I want to allocate those items and enter the serial numbers. Oh crap, we don't even have those serial numbers.
+Um...
+So, we need to figure out whether the inventory is to see what this inventory.
+Stationary, OK.
+Home.
+Ohh.
+So, one, two, three, 4, 5, 6, 7, 8, 9, A, and C.
+Okay, now reserved it says. I wonder what reserved means.
+What does reserve there means?
+
+Gustavo Rodriguez   50:40
+So, that still wants the system reserved for the event. If you scroll up, you're going to see...
+ship our inventory. If you click there, you will see.
+The units that the system reserved for that event.
+
+Fredrik Starmark   50:59
+Okay, so ship out inventory, where is that?
+
+Gustavo Rodriguez   51:03
+Uh, it's just about to the search inventory.
+
+Fredrik Starmark   51:05
+Oh, there, ship out inventory, okay.
+Oh, okay.
+Um...
+
+Gustavo Rodriguez   51:19
+This is just to track which items.
+Are out.
+
+Fredrik Starmark   51:24
+Ohh.
+
+Gustavo Rodriguez   51:25
+And where are they going?
+
+Fredrik Starmark   51:26
+Okay, so but I want to ship out today.
+
+Gustavo Rodriguez   51:29
+Mmh.
+
+Fredrik Starmark   51:32
+Okay.
+Okay, so when is this on grade here? What do I need to do to get it on grade? Because...
+
+Gustavo Rodriguez   51:42
+You have to add information for carrier tracking, authorize, and who's receiving that e-mail.
+
+Fredrik Starmark   51:49
+Okay, so courier, there's no courier. Personnel delivery.
+Market number.
+It's good that you put that in there. It should be mandatory like you did.
+
+Gustavo Rodriguez   52:18
+Okay.
+
+Fredrik Starmark   52:19
+I think that's good.
+Okay, events.
+Okay, to the event.
+Um, there are the like, OK, allocate items.
+Ohh.
+
+Gustavo Rodriguez   52:38
+No, now you need to scan those because, so we register that those items are out. Now we have to register who is receiver and once they are scanned, the system is going to recognize, okay, they are now in the event.
+
+Fredrik Starmark   52:48
+Mhm.
+OK.
+Good, alright.
+All right, and now we want to allocate a computer here really quick to this particular student. Signed, allocate items. This inventory assigned to event for consumer uses. One total.
+Mop kit. Oh, I thought the... Oh, so the devices were not...
+
+Gustavo Rodriguez   53:42
+No, but you can just assign devices to the for a consumer use, just click the toggle.
+
+Fredrik Starmark   53:42
+Yeah.
+What?
+
+Gustavo Rodriguez   53:52
+You say internal use, just click the toggle and then it's going to turn on available.
+
+Fredrik Starmark   53:53
+Oh, okay, alright, okay. Yeah, it was the mop kit that was supposed to be internal.
+Books perfect, allocate items.
+
+Gustavo Rodriguez   54:05
+You can click reload.
+
+Fredrik Starmark   54:06
+Ohh, what did you mean? Hello?
+
+Gustavo Rodriguez   54:08
+reload table and you'll be able to see the items.
+
+Fredrik Starmark   54:19
+Oh, okay, great.
+Okay.
+So I wanted to assign this to somebody.
+On.
+Device.
+Of.
+Health, can you talk about health in terms of a computer?
+Device status, maybe? Device condition, condition is the way to say it.
+
+Gustavo Rodriguez   54:52
+Yeah.
+
+Fredrik Starmark   55:07
+Mm.
+OK, so I want him to add, so Carl here, he wants a computer, so how can I add that to him here?
+New transaction, no charge. Okay.
+Chromebooks one, scan the devices.
+Create transaction.
+Okay.
+Scan at least one serial number. Well, I did.
+
+Gustavo Rodriguez   55:46
+Ohh, you don't, you don't have to, no, no, that's have to click enter, but I already update that, so you have the so click enter because supposed to display a button where it said added.
+
+Fredrik Starmark   55:57
+Ah.
+Okay.
+
+Gustavo Rodriguez   56:01
+Yeah, I was doing that today.
+
+Fredrik Starmark   56:04
+Got it.
+Hey.
+All right.
+Okay.
+Hey.
+So going to the event here, 102 checked out. Looks good. Looks good. OK, the other one we're not checking it out. OK, perfect.
+Good.
+I don't know if aesthetically here, I think those are important. One or two are checked out. Cash receipts are all cash. I think this is good, the way it's displayed.
+
+Gustavo Rodriguez   56:46
+Yeah, excellent.
+
+Fredrik Starmark   56:46
+Inventory assigned to event for consumer users.
+Two in event pool. What's the difference here? Oh, Chromebooks. All right, gotcha. So if you had more, you would have more pieces here. But what if you had like 65? What would happen then?
+
+Gustavo Rodriguez   56:59
+Yes, correct.
+No, they're going to tell you so how many you have and how many you set for the beginning of the event. So he said set for the event was 2 at the beginning, but you still have the option to add more if you need.
+
+Fredrik Starmark   57:23
+Got it. Okay.
+Sounds good. Can I, can we take like a two-minute break? I just need to go to the bathroom. All right.
+
+Gustavo Rodriguez   57:31
+Yeah, me too. Okay.
+
+Cesar A. Caminero (Web Designer)   57:34
+Yeah.
+
+Fredrik Starmark   57:35
+Alright, okay. I'll be right back.
+Hello.
+
+Gustavo Rodriguez   1:01:53
+Yep.
+
+Fredrik Starmark   1:01:56
+All right.
+Yeah, so this looks good.
+Yeah, so I asked here if you have multiple, so I assume that this is a kind of tile here that you have, you know, for one. I wonder how it looks if you have more. Let's actually just do the dust maps here too.
+
+Gustavo Rodriguez   1:02:10
+Okay.
+
+Fredrik Starmark   1:02:18
+Uh, and see what happens.
+Um...
+Oh shoot, I don't even know. It's the number of the desktop. Anyway, alright.
+
+Gustavo Rodriguez   1:02:30
+This.
+
+Fredrik Starmark   1:02:38
+Okay, so where did that space go? That disappeared now.
+
+Gustavo Rodriguez   1:02:45
+Which one?
+
+Fredrik Starmark   1:02:47
+So this one here, inventory assigned for consumer uses. So now I'm adding the dust mop here. Okay, so they...
+The Lux DOS mod kits event pool. Okay, so here.
+Phone books. Oh, so it becomes another P tile. Okay, so there are two tiles now instead of 1. And what I saw before when I took this here, it was just one here. Okay. So let's say you have many here. Let's say you have 20 of them. Would some of them go on the next line or would there be an overflow?
+
+Gustavo Rodriguez   1:03:24
+No, it's gonna be down.
+
+Fredrik Starmark   1:03:26
+Okay.
+
+Gustavo Rodriguez   1:03:26
+Turn down.
+
+Fredrik Starmark   1:03:28
+So, how many can you have in each row?
+Or 2 only.
+
+Gustavo Rodriguez   1:03:35
+Super right, yeah, we can just shrink three, 4.
+
+Fredrik Starmark   1:03:39
+Three, I think. Three you can do.
+
+Gustavo Rodriguez   1:03:42
+I think, I think 4 is is gonna be two things.
+
+Fredrik Starmark   1:03:46
+Yeah, but three you could do.
+
+Gustavo Rodriguez   1:03:49
+Mhm.
+
+Fredrik Starmark   1:03:53
+Okay, looks good. I'm not going to close out the event. It's really nice.
+Sport record.
+Stop.
+Oh yeah, Chromebooks. Okay, cool.
+All right.
+I think that's it. What else do we want to do here? So we have talked about, we did the inventory, we added to inventory. Let's work a little bit on inventory here again. So we have a...
+I found a laptop here.
+in the event, but it was never taken to the event. I found it laying in the corridor. And now, what do I do with that?
+I want to see here what's going on with it assigned to call Filip Starmark.
+Returned, okay.
+Add it to inventory.
+So, it was returned.
+And now I find the corridor, so okay.
+
+Gustavo Rodriguez   1:05:18
+Yeah, the order is no.
+Oh, incorrectly.
+
+Fredrik Starmark   1:05:23
+What?
+
+Gustavo Rodriguez   1:05:25
+Yeah, the order.
+It's not, it's not right, so it have to be added and then assigned and then returned.
+
+Fredrik Starmark   1:05:35
+Okay.
+Yeah, but this was a month ago. Oh, okay, yeah, yeah, yeah, yeah. Yes, I think that the question here is like, where do you want to have the newest stuff? Should it be at the bottom or at the top?
+
+Gustavo Rodriguez   1:05:54
+No, I think the new stuff is supposed to be at the top, and we just push down the oldest.
+
+Fredrik Starmark   1:05:59
+Okay, okay. So then it is the right order, isn't it?
+
+Gustavo Rodriguez   1:06:05
+I don't think so because it was added and they said return then assigned, but it actually was assigned then returned.
+
+Fredrik Starmark   1:06:05
+No, it is not.
+You may want to put a time stamp on it too, and not only the date.
+
+Gustavo Rodriguez   1:06:16
+Okay.
+
+Fredrik Starmark   1:06:19
+Because now you it's not clear as to what happens 1st and what happens second and so on and so forth because all of them happen the same date.
+
+Gustavo Rodriguez   1:06:28
+Yeah.
+Yeah, right.
+
+Fredrik Starmark   1:06:35
+Okay, so let's do that.
+All right, but I've still found this on the floor.
+So now, uh, what happened to it? I found it on the floor. Okay, edit.
+They right from now.
+I don't want to do that, but let's say that you know a device is not where it's supposed to be and somebody else find it. You look it up here and it's just like, okay, well this is, I'm assuming, is the topic one that says assigned to call Filip Starmark. So he has obviously dropped it somewhere.
+So I'm just going to contact him, not do anything more with it.
+But, uh, somewhere, um...
+If I wanted to change this, how would I do that?
+Like, return it to inventory, for example.
+
+Gustavo Rodriguez   1:07:26
+Okay, well that option, I think we don't have it yet. So...
+
+Fredrik Starmark   1:07:31
+Ah, okay.
+
+Gustavo Rodriguez   1:07:32
+Because if you go to edit option, you will see they say it's out with someone.
+
+Fredrik Starmark   1:07:45
+And.
+
+Gustavo Rodriguez   1:07:45
+Well, it actually said in event, tell someone in event.
+
+Fredrik Starmark   1:07:48
+Yes, it is an event actually.
+Out with someone in a vent.
+
+Gustavo Rodriguez   1:07:55
+You instead of have it like this, I can just have like a drop down and we can select like, okay, now this actually in the warehouse, you know, it's returning.
+
+Fredrik Starmark   1:07:55
+Okay.
+Yeah.
+
+Gustavo Rodriguez   1:08:06
+Yeah, that that will be that will be an option.
+
+Fredrik Starmark   1:08:09
+Yeah, an administrative option actually, or it shouldn't be, well, it's, I don't know.
+Yeah, whoever is working on this should be able to do it. It's tricky as to how we, who should be able to do what.
+
+Gustavo Rodriguez   1:08:22
+Okay.
+Yes.
+
+Fredrik Starmark   1:08:32
+Another thing is like an audit trail too, like what user was it that made what change?
+
+Gustavo Rodriguez   1:08:42
+Yeah, we have the role of description that has the permission, yeah, but that's I think that's up to to the client.
+No, we still, we still.
+We are not yet to the role system that you show that they can just customize.
+
+Fredrik Starmark   1:09:02
+Aha.
+
+Gustavo Rodriguez   1:09:06
+That's the goal, but now it's not as easy as it looks, so because we need to define the role, the actual the function, each function, and create.
+
+Fredrik Starmark   1:09:06
+Yeah.
+Yeah, yeah.
+But you know what? You can do that. An audit trail you can do independently of that because it's obviously every transaction was done by somebody. It doesn't really matter if they have the authority or not. They just need to be logged, you know?
+
+Gustavo Rodriguez   1:09:34
+Yes, that's right, yeah.
+
+Fredrik Starmark   1:09:36
+So, so let me just see here something really quick. I see if I can. I want to show you an audit trail here in QuickBooks, which I actually really like. Move that out. Hold on a second.
+Just take me a little time because I have to check in one second.
+All right.
+One second.
+So here is an invoice that we have with in QuickBooks. And so you have a few things here you can do with your invoice. You have like more actions, you know, blah, blah, blah. There you have audit history that sets a printer download. But anyway, audit history.
+So you can see here for this particular invoice.
+You can see here, like, who did what and when.
+
+Gustavo Rodriguez   1:11:25
+Okay.
+
+Fredrik Starmark   1:11:25
+It's only Candace that has been working on it quite extensively, obviously. It was added, it was created, you know. Then the system did something to the invoice, whatever, what have you. And she continued working, she edited and...
+Blah blah blah blah blah blah.
+Hello.
+
+Gustavo Rodriguez   1:11:46
+Yeah.
+We have something like, uh, it's not similar, but we have that idea, but I see that I need to add more actions.
+
+Fredrik Starmark   1:11:50
+So, there you have it.
+Uh-huh.
+Yeah.
+I see something else, if I can find something else that has a good audit trail.
+I can't think of anything right now.
+Um...
+See.
+Um...
+Anyway, they have multiple audit trails for various types of transactions in QuickBooks. Obviously, that's a pretty big software company. So they have a few more people working on it, probably. But yeah, well, you'd be surprised. Actually, they have fewer than you think. I got a view into their team once. They were trying out a new thing, and it was only two guys that were working on it.
+
+Gustavo Rodriguez   1:12:56
+Yeah, a lot, a lot more.
+The.
+
+Fredrik Starmark   1:13:09
+Because, but they wanted to talk to me about a feature, yeah, so it was interesting.
+
+Gustavo Rodriguez   1:13:12
+That's nice.
+
+Fredrik Starmark   1:13:18
+But I was surprised by how, well, he was looking for feedback. He was looking for actually what we do here, like what is intuitive and what is not. Like, what, where, how should it look like, basically?
+So it was interesting. But anyway, yeah, so we do need to have some type of audit trail. And I would say that the first audit trail you should be working on is actually for in a particular inventory item.
+
+Gustavo Rodriguez   1:13:45
+Okay.
+
+Fredrik Starmark   1:13:47
+Because you have the audit trail here, actually. So you can actually work on that. But it just say here it was returned by, you know, this person. I would timestamp it like hour and, you know, hour, minute, second type of thing, precisely when it took place.
+But I will also include a user here, whomever was the user, in this case me, sitting here doing stuff.
+
+Gustavo Rodriguez   1:14:16
+Okay.
+
+Fredrik Starmark   1:14:18
+You know, or what you can go ahead, you can either do it as a column item here to the right, because you have a space, or you can just do it as a line here, do back. This is good. I don't know why the is this hexes hex stuff FFF there for some reason.
+
+Gustavo Rodriguez   1:14:19
+Yeah, because I was, I mentioned.
+I think that was the address that was used to assign the device.
+
+Fredrik Starmark   1:14:43
+Ohh, okay.
+Okay. Address. Okay. Anyway, but you can put that or you could do a third line here. User, you know, who was the user, meaning me.
+or however you want to do it, but I add the time and add the user and I think that's it, you know. And then if you can somehow standardize the audit trail so you can use the formatting for other audit trails too, so that whenever people look on an audit trail within DeviTrak, they are familiar with it, you know.
+
+Gustavo Rodriguez   1:15:01
+Yeah.
+Yeah.
+OK, yeah, no, yeah, right, so I can just add the third line with the the assigner, the person who will assign who.
+
+Fredrik Starmark   1:15:23
+Yeah.
+
+Gustavo Rodriguez   1:15:24
+Run the action.
+
+Fredrik Starmark   1:15:25
+Yes, exactly.
+All right.
+Sounds good.
+I think this is actually pretty good. Now, am I missing something here? So anything you want me to run through here?
+
+Gustavo Rodriguez   1:15:52
+No, I don't have anything else in mind. Because we're working from the inventory, events, staff, and students.
+
+Fredrik Starmark   1:15:55
+Okay.
+Yeah.
+Okay, so let's end this here then and then, you know, work on that. I'm going to send out the e-mail. I think we're good. Let's just do this and hopefully it goes well. And once they come back, I'm going to do a mock presentation.
+
+Gustavo Rodriguez   1:16:15
+I think so, yeah.
+
+Fredrik Starmark   1:16:19
+Two or two, so...
+Yeah.
+
+Gustavo Rodriguez   1:16:23
+Yeah, when I work in the feature that I didn't catch it, once you be able to display the events that haven't finished in the process as a draft, and then just be able to continue and finish the process.
+
+Fredrik Starmark   1:16:24
+Yeah.
+Uh-huh.
+Yeah, yeah.
+
+Gustavo Rodriguez   1:16:42
+That will be good.
+
+Fredrik Starmark   1:16:44
+Okay.
+Sounds good.
+All right, so that's it then, so...
+I guess have a good afternoon and then let's set up another meeting. Probably we can look at the items that you have changed. You know.
+
+Cesar A. Caminero (Web Designer)   1:16:56
+Bled.
+
+Gustavo Rodriguez   1:17:01
+Yep, definitely, yeah. Yeah, that will be a priority.
+
+Fredrik Starmark   1:17:05
+Yeah.
+
+Cesar A. Caminero (Web Designer)   1:17:06
+Yeah.
+
+Fredrik Starmark   1:17:06
+So I will, I will, and I also say, Cesar, same for your items that we talked about yesterday. I know you have a lot of them, so whatever you have to present, you know, let me know. I'm going to send the e-mail out this week here to, well, we'll start with the school and then...
+
+Cesar A. Caminero (Web Designer)   1:17:08
+But.
+
+Fredrik Starmark   1:17:26
+Maybe talk to the LSP as well. See what we can get going with.
+
+Gustavo Rodriguez   1:17:30
+Do you think this course is gonna be easy than the the Company in Atlanta?
+
+Cesar A. Caminero (Web Designer)   1:17:31
+Awesome, sounds.
+
+Fredrik Starmark   1:17:31
+One thing.
+You know, it's impossible to say.
+Yeah.
+I don't know. I think the school is not going to do it like very, you know, they want to try it out a little bit and feel it out, have a demo. It's going to go slow. But, you know, I think that that's
+
+Gustavo Rodriguez   1:17:43
+Yeah.
+Yeah.
+I mentioned because the company Atlanta was very, very interested in us and they actually saw how we work and how the system works. That's why they were so excited.
+
+Fredrik Starmark   1:18:10
+Yes. So I think that I'm going to start with the school, send it out here, but I'm going to talk to them too now. The other item that is going to come up here is labels. Where do we get labels from? Like if they want to start labeling stuff, we have to have a solution for that, and I don't. So that's something that...
+
+Cesar A. Caminero (Web Designer)   1:18:17
+But...
+
+Gustavo Rodriguez   1:18:23
+Yeah.
+
+Fredrik Starmark   1:18:29
+I had to research.
+
+Gustavo Rodriguez   1:18:33
+Yeah, yeah, you're right.
+
+Fredrik Starmark   1:18:39
+All right, sounds good. So I guess we'll do another meeting soon again. So just let me know, either one of you, when you want to have the next one.
+
+Gustavo Rodriguez   1:18:45
+OK.
+Okay, perfect.
+
+Fredrik Starmark   1:18:49
+All right, talk to you later. Thank you. Bye.
+
+Cesar A. Caminero (Web Designer)   1:18:51
+All right, thank you all. Have a good week. Bye.
+
+Gustavo Rodriguez   1:18:52
+Have a good day.
+
+Cesar A. Caminero (Web Designer) stopped transcription
