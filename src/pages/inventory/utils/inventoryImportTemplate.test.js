@@ -39,7 +39,7 @@ describe("INVENTORY_IMPORT_COLUMNS", () => {
         "cost",
         "descript_item",
         "extra_serial_number",
-        "image_url",
+        "image",
         "item_group",
         "location",
         "main_warehouse",

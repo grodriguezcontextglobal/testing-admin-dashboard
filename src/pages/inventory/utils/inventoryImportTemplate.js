@@ -49,7 +49,7 @@ export const REQUIRED_IMPORT_FIELDS = [
 export const RECOMMENDED_IMPORT_FIELDS = [
   "sub_location",
   "extra_serial_number",
-  "image_url",
+  "image",
 ];
 
 /**
@@ -311,8 +311,8 @@ export const INVENTORY_IMPORT_COLUMNS = [
     samples: ["Material=Silicon;Voltage=110V", "Frequency=72MHz", ""],
   },
   {
-    header: "image_url",
-    field: "image_url",
+    header: "image",
+    field: "image",
     recommended: true,
     width: 150,
     notes: [

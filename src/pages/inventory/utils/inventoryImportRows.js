@@ -110,7 +110,7 @@ export const parseInventoryImportRows = (rows = [], options = {}) => {
     /* A cell holding a picture reads as blank here — the value lives in the
        workbook's rich data, not the grid — so anything with text in it was
        typed, and a typed URL is exactly what part 2 `9:38` ruled out. */
-    const typedInImageCell = String(readField(row, "image_url") ?? "").trim();
+    const typedInImageCell = String(readField(row, "image") ?? "").trim();
     if (typedInImageCell) {
       ignoredImageValues.push({ rowNumber, value: typedInImageCell });
     }

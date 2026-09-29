@@ -19,7 +19,7 @@ const sheetRow = (overrides = {}) => ({
   location: "Miami, FL",
   sub_location: "Section A, Locker A110",
   extra_info: "Band=G50;Type=Handheld",
-  image_url: "",
+  image: "",
   ...overrides,
 });
 
@@ -192,7 +192,7 @@ describe("the picture in the Image cell", () => {
      stop, so it comes back as something the preview can say out loud. */
   it("reports a URL typed into the Image column instead of ignoring it", () => {
     const { units, ignoredImageValues } = parseInventoryImportRows([
-      sheetRow({ image_url: "https://example.com/mic.jpg" }),
+      sheetRow({ image: "https://example.com/mic.jpg" }),
       sheetRow({ serial_number: "AUD-2" }),
     ]);
 
