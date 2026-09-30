@@ -274,7 +274,7 @@ de renombrado por compañía. Sin fecha.
 > decisión va al final. Los ficheros se localizaron por el texto visible y no
 > se han abierto todavía.
 
-### 2b.1 — Import de estudiantes [1–5]
+### ~~2b.1 — Import de estudiantes [1–5]~~ — hecho 2026-09-30
 `pages/conditionalPage/utils/xlsxImportUtils.js` (+ su test)
 
 Va primero porque es por donde entra un colegio, y Fredrik manda el correo al
