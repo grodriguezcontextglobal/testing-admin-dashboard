@@ -309,8 +309,10 @@ evento: el consumidor sale de `member.email`. Eso es de backend.
 - ~~"Built for you"~~, quitado.
 - ~~Texto del duplicado~~, con su redacción.
 
-Solo el wizard de **alta**. El de edición de grupo no tiene este campo de
-sublocación.
+Solo el wizard de **alta**. **El de edición de grupo tiene el mismo campo**
+(`edit/useLogic.jsx:346`, `edit/ux/wizard/EditFieldsStep.jsx`) y
+probablemente el mismo hueco. Sin comprobar ni tocar: se reusan
+`PendingSubLocationNotice` y `pendingSubLocation` si hace falta.
 
 ### 2b.3 — Documentos en el alta de evento: el arrastre [12, 13]
 `pages/events/newEventProcess/documents/Form.jsx`
