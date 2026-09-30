@@ -275,9 +275,19 @@ manually."*
 - ~~Imagen pegada en la celda~~: se lee con `readWorkbookCellImages`, el
   mismo lector de inventario, y la columna pasa a llamarse `image` (el nombre
   `image_url` se sigue leyendo). Un enlace escrito ya no se guarda: se avisa.
-  La subida es propia (`memberImportImages.js`), con un id por import, para
-  que un import no pise en Cloudinary las fotos del anterior. Si una foto
-  falla, ese miembro entra sin ella y el import sigue.
+  La subida es propia (`memberImportImages.js`). Pensada para hojas de 2000+
+  filas con una foto cada una:
+  - una subida por foto **distinta por contenido**, aunque Excel guarde la
+    misma foto como dos archivos;
+  - el id en Cloudinary es el hash de la foto (`member_<empresa>_<hash>`):
+    reimportar sobrescribe en vez de duplicar, y dos fotos distintas nunca
+    comparten id;
+  - cada foto se reduce a 512 px en el navegador antes de subirla;
+  - se muestra el progreso de la subida.
+
+  Cloudinary no limita por hora la Upload API, solo la Admin API, así que el
+  techo real es el tiempo y el almacenamiento. Si una foto falla, ese miembro
+  entra sin ella y el import sigue.
 
 **Sin verificar: si el backend acepta `email: ""`** en `/db_member/bulk-members`
 y en `/db_member/new-member`. Si la columna es NOT NULL o única, el primer menor

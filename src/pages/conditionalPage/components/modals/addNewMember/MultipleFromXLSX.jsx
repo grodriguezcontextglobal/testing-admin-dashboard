@@ -62,6 +62,9 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
   const [fileName, setFileName] = useState("");
   const [parsed, setParsed] = useState(null);
   const [importing, setImporting] = useState(false);
+  // "Uploading photos 40/300…" — a large import spends minutes here, and a
+  // spinner alone reads as frozen.
+  const [progress, setProgress] = useState("");
 
   const rows = useMemo(
     () => annotateImportRows(parsed?.rows, parsed?.errors, parsed?.warnings),
@@ -138,7 +141,10 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
       const { urlByMediaPath, failed } = await uploadMemberImportImages({
         media: parsed.media,
         companyId: user?.sqlInfo?.company_id,
+        onProgress: (done, total) =>
+          setProgress(`Uploading photos ${done}/${total}…`),
       });
+      setProgress("Creating members…");
       if (failed.length > 0) {
         notify(
           "warning",
@@ -188,6 +194,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
       );
     } finally {
       setImporting(false);
+      setProgress("");
     }
   };
 
@@ -391,7 +398,9 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
 
       <div className="action-form__footer">
         <p className="action-form__consequence">
-          {counts.blocked > 0
+          {importing && progress
+            ? progress
+            : counts.blocked > 0
             ? `${counts.blocked} row${
                 counts.blocked === 1 ? "" : "s"
               } must be fixed in the file before any of it can be imported.`

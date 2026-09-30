@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   buildBulkMembersList,
+  contentHash,
+  fitWithin,
   uploadMemberImportImages,
 } from "./memberImportImages";
 
@@ -8,16 +10,27 @@ import {
  * Pictures placed inside the cells of the member spreadsheet (meeting
  * 2026-09-29 `14:56`, "the same thing as we did on the inventory").
  *
- * The workbook reader is the inventory one. What differs is the upload: a
- * member picture is named after the member in Cloudinary, and during an import
- * no member exists yet. So each import gets its own id prefix — a fixed name
- * like `<company>_image1` would let the next import overwrite the pictures of
- * every member created by the last one.
+ * A sheet can carry 2000+ rows with a photo on each, so the upload does the
+ * least it can (2026-09-30):
+ *
+ * - one upload per distinct picture, told apart by CONTENT, not by the file
+ *   Excel stored it in — the same photo pasted twice can be two files;
+ * - the Cloudinary id is that content hash, so re-importing a sheet overwrites
+ *   its photos instead of piling up copies, and two different photos can never
+ *   share an id;
+ * - each photo is shrunk in the browser first (`prepare`), which is the time
+ *   and storage a 2000-row import actually spends.
  */
 
-const media = new Map([
-  ["xl/media/image1.png", { mediaPath: "xl/media/image1.png", dataUrl: "data:image/png;base64,AAA" }],
-  ["xl/media/image2.jpeg", { mediaPath: "xl/media/image2.jpeg", dataUrl: "data:image/jpeg;base64,BBB" }],
+const IMAGE_A = "data:image/png;base64,AAAA";
+const IMAGE_B = "data:image/jpeg;base64,BBBB";
+
+const mediaOf = (entries) =>
+  new Map(entries.map(([mediaPath, dataUrl]) => [mediaPath, { mediaPath, dataUrl }]));
+
+const media = mediaOf([
+  ["xl/media/image1.png", IMAGE_A],
+  ["xl/media/image2.jpeg", IMAGE_B],
 ]);
 
 const okPost = () =>
@@ -25,43 +38,119 @@ const okPost = () =>
     data: { imageUploaded: { secure_url: `https://cdn/${body.imageID}` } },
   }));
 
-describe("uploadMemberImportImages", () => {
-  it("uploads each distinct file once", async () => {
+const identity = async (dataUrl) => dataUrl;
+
+const upload = (overrides = {}) =>
+  uploadMemberImportImages({
+    media,
+    companyId: 62,
+    post: okPost(),
+    prepare: identity,
+    now: () => 5,
+    ...overrides,
+  });
+
+describe("uploadMemberImportImages — what gets uploaded", () => {
+  it("uploads each distinct picture once", async () => {
     const post = okPost();
-    const { urlByMediaPath, failed } = await uploadMemberImportImages({
-      media,
-      companyId: 62,
-      post,
-      now: () => 1700000000000,
-    });
+    const { urlByMediaPath, failed } = await upload({ post });
     expect(post).toHaveBeenCalledTimes(2);
     expect(failed).toEqual([]);
-    expect(urlByMediaPath.get("xl/media/image1.png")).toBe(
-      "https://cdn/member_import_62_1700000000000_image1"
+    expect(urlByMediaPath.size).toBe(2);
+  });
+
+  it("uploads the same picture once even when Excel stored it as two files", async () => {
+    const post = okPost();
+    const { urlByMediaPath } = await upload({
+      post,
+      media: mediaOf([
+        ["xl/media/image1.png", IMAGE_A],
+        ["xl/media/image7.png", IMAGE_A],
+      ]),
+    });
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(urlByMediaPath.get("xl/media/image7.png")).toBe(
+      urlByMediaPath.get("xl/media/image1.png")
     );
   });
 
-  it("sends the member-photo shape to the same endpoint as a manual upload", async () => {
+  it("does nothing for a workbook without pictures", async () => {
     const post = okPost();
-    await uploadMemberImportImages({ media, companyId: 62, post, now: () => 5 });
-    const [url, body] = post.mock.calls[0];
-    expect(url).toBe("/cloudinary/upload-image");
-    expect(body).toMatchObject({
-      imageFile: "data:image/png;base64,AAA",
-      imageID: "member_import_62_5_image1",
-      tags: ["member_import", 62],
-    });
-    expect(body.context).toMatch(/^company_sql_id:62\|created_at:5\|updated_at:5$/);
+    const result = await upload({ post, media: new Map() });
+    expect(post).not.toHaveBeenCalled();
+    expect(result.urlByMediaPath.size).toBe(0);
+  });
+});
+
+describe("uploadMemberImportImages — the Cloudinary id", () => {
+  it("names the picture after its content", async () => {
+    const post = okPost();
+    await upload({ post });
+    const hash = await contentHash(IMAGE_A);
+    expect(post.mock.calls[0][1].imageID).toBe(`member_62_${hash}`);
   });
 
-  it("gives two imports different names, so one cannot overwrite the other", async () => {
+  /* The same sheet imported twice must not leave two copies of every photo. */
+  it("gives the same picture the same id on the next import", async () => {
     const first = okPost();
     const second = okPost();
-    await uploadMemberImportImages({ media, companyId: 62, post: first, now: () => 1 });
-    await uploadMemberImportImages({ media, companyId: 62, post: second, now: () => 2 });
-    expect(first.mock.calls[0][1].imageID).not.toBe(second.mock.calls[0][1].imageID);
+    await upload({ post: first, now: () => 1 });
+    await upload({ post: second, now: () => 2 });
+    expect(first.mock.calls[0][1].imageID).toBe(second.mock.calls[0][1].imageID);
   });
 
+  /* And a new photo can never overwrite a different member's. */
+  it("gives different pictures different ids", async () => {
+    const post = okPost();
+    await upload({ post });
+    expect(post.mock.calls[0][1].imageID).not.toBe(post.mock.calls[1][1].imageID);
+  });
+
+  it("keeps companies apart", async () => {
+    const a = okPost();
+    const b = okPost();
+    await upload({ post: a, companyId: 1 });
+    await upload({ post: b, companyId: 2 });
+    expect(a.mock.calls[0][1].imageID).not.toBe(b.mock.calls[0][1].imageID);
+  });
+
+  it("sends the member-photo shape to the endpoint a manual upload uses", async () => {
+    const post = okPost();
+    await upload({ post });
+    const [url, body] = post.mock.calls[0];
+    expect(url).toBe("/cloudinary/upload-image");
+    expect(body.tags).toEqual(["member_import", 62]);
+    expect(body.context).toBe("company_sql_id:62|created_at:5|updated_at:5");
+  });
+});
+
+describe("uploadMemberImportImages — shrinking first", () => {
+  it("uploads the prepared picture, not the original", async () => {
+    const post = okPost();
+    await upload({ post, prepare: async () => "data:image/jpeg;base64,SMALL" });
+    expect(post.mock.calls[0][1].imageFile).toBe("data:image/jpeg;base64,SMALL");
+  });
+
+  it("names the picture after the ORIGINAL, so the id does not depend on the browser", async () => {
+    const post = okPost();
+    await upload({ post, prepare: async () => "data:image/jpeg;base64,SMALL" });
+    expect(post.mock.calls[0][1].imageID).toBe(`member_62_${await contentHash(IMAGE_A)}`);
+  });
+
+  it("prepares each distinct picture once", async () => {
+    const prepare = vi.fn(identity);
+    await upload({
+      prepare,
+      media: mediaOf([
+        ["xl/media/image1.png", IMAGE_A],
+        ["xl/media/image7.png", IMAGE_A],
+      ]),
+    });
+    expect(prepare).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("uploadMemberImportImages — failures", () => {
   /* A member without a photo is still a member. Failing the import over one
      picture would make a school re-enter 300 students for it. */
   it("reports a failed upload instead of failing the import", async () => {
@@ -69,40 +158,74 @@ describe("uploadMemberImportImages", () => {
       .fn()
       .mockRejectedValueOnce({ response: { data: { msg: "Too large" } } })
       .mockResolvedValueOnce({ data: { imageUploaded: { secure_url: "https://cdn/2" } } });
-    const { urlByMediaPath, failed } = await uploadMemberImportImages({
-      media,
-      companyId: 62,
-      post,
-      now: () => 1,
-    });
+    const { urlByMediaPath, failed } = await upload({ post });
     expect(failed).toEqual([{ mediaPath: "xl/media/image1.png", reason: "Too large" }]);
     expect(urlByMediaPath.get("xl/media/image2.jpeg")).toBe("https://cdn/2");
   });
 
-  it("counts an answer with no URL as a failure", async () => {
-    const post = vi.fn(async () => ({ data: {} }));
-    const { failed } = await uploadMemberImportImages({
-      media: new Map([...media].slice(0, 1)),
-      companyId: 62,
+  it("reports every file behind a failed picture", async () => {
+    const post = vi.fn().mockRejectedValue(new Error("down"));
+    const { failed } = await upload({
       post,
+      media: mediaOf([
+        ["xl/media/image1.png", IMAGE_A],
+        ["xl/media/image7.png", IMAGE_A],
+      ]),
     });
-    expect(failed).toHaveLength(1);
+    expect(failed.map((f) => f.mediaPath)).toEqual([
+      "xl/media/image1.png",
+      "xl/media/image7.png",
+    ]);
   });
 
-  it("does nothing for a workbook without pictures", async () => {
-    const post = okPost();
-    const result = await uploadMemberImportImages({ media: new Map(), companyId: 62, post });
-    expect(post).not.toHaveBeenCalled();
-    expect(result.urlByMediaPath.size).toBe(0);
+  it("counts an answer with no URL as a failure", async () => {
+    const { failed } = await upload({ post: vi.fn(async () => ({ data: {} })) });
+    expect(failed).toHaveLength(2);
   });
 
-  it("reports progress file by file", async () => {
+  it("reports progress per distinct picture", async () => {
     const onProgress = vi.fn();
-    await uploadMemberImportImages({ media, companyId: 62, post: okPost(), onProgress });
+    await upload({ onProgress });
     expect(onProgress.mock.calls).toEqual([
       [1, 2],
       [2, 2],
     ]);
+  });
+});
+
+describe("contentHash", () => {
+  it("is stable and tells different content apart", async () => {
+    expect(await contentHash(IMAGE_A)).toBe(await contentHash(IMAGE_A));
+    expect(await contentHash(IMAGE_A)).not.toBe(await contentHash(IMAGE_B));
+  });
+
+  it("is short enough for an id and made of hex", async () => {
+    expect(await contentHash(IMAGE_A)).toMatch(/^[0-9a-f]{20}$/);
+  });
+
+  /* crypto.subtle only exists in a secure context. Opened over plain http, the
+     import must still work rather than die on its first picture. */
+  it("still hashes where crypto.subtle is missing", async () => {
+    vi.stubGlobal("crypto", {});
+    try {
+      const a = await contentHash(IMAGE_A);
+      expect(a).toMatch(/^[0-9a-f]{20}$/);
+      expect(a).toBe(await contentHash(IMAGE_A));
+      expect(a).not.toBe(await contentHash(IMAGE_B));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("fitWithin — the size a photo is shrunk to", () => {
+  it("scales the longer side down to the limit, keeping the proportion", () => {
+    expect(fitWithin(4000, 3000, 512)).toEqual({ width: 512, height: 384 });
+    expect(fitWithin(3000, 4000, 512)).toEqual({ width: 384, height: 512 });
+  });
+
+  it("never enlarges a photo that is already small", () => {
+    expect(fitWithin(300, 200, 512)).toEqual({ width: 300, height: 200 });
   });
 });
 
