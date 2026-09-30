@@ -311,3 +311,40 @@ describe("parseSubLocationPath", () => {
     );
   });
 });
+
+/* Reported 2026-09-30: copying a group whose units have no sub-location showed
+   "Washington, DC / null / null / null", and adding one made it
+   "… / null / null / Supply room". Stored rows can hold [null, null, null] —
+   String(null) is "null", which is truthy, so it survived filter(Boolean). A
+   segment that says nothing is not a segment: only the location shows. */
+describe("sub-location segments that say nothing", () => {
+  it("drops null and blank segments from a parsed array", () => {
+    expect(parseSubLocationPath([null, null, null])).toEqual([]);
+    expect(parseSubLocationPath([null, "Supply room", undefined, "  "])).toEqual([
+      "Supply room",
+    ]);
+  });
+
+  it("drops them from the JSON item_inv stores", () => {
+    expect(parseSubLocationPath("[null,null,null]")).toEqual([]);
+    expect(parseSubLocationPath('["null","undefined","Shelf 2"]')).toEqual(["Shelf 2"]);
+  });
+
+  it("reads a bare 'null' string as nothing, not as a place called null", () => {
+    expect(parseSubLocationPath("null")).toEqual([]);
+    expect(parseSubLocationPath("undefined")).toEqual([]);
+  });
+
+  it("trims what it keeps", () => {
+    expect(parseSubLocationPath(["  Section A "])).toEqual(["Section A"]);
+  });
+
+  /* And never writes one back: a chip list that already carries "null" must
+     not be stored as a sub-location of the new group. */
+  it("does not save 'null' segments into the new group", () => {
+    expect(buildSubLocationPath(["null", null, "Section A"], { sub_location: "Supply room" })).toEqual([
+      "Section A",
+      "Supply room",
+    ]);
+  });
+});

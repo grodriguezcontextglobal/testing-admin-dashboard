@@ -48,20 +48,33 @@ export const retrieveExistingSubLocationsForCompanyInventory = (props, selectedL
  * have to know which shape it came from.
  */
 export const parseSubLocationPath = (value) => {
-  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (Array.isArray(value)) return meaningfulSegments(value);
   const text = String(value ?? "").trim();
-  if (!text) return [];
   try {
     const parsed = JSON.parse(text);
-    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    if (Array.isArray(parsed)) return meaningfulSegments(parsed);
   } catch {
     // Not JSON — an older row holding one plain segment.
   }
-  return [text];
+  return meaningfulSegments([text]);
 };
 
+/**
+ * The segments that name a place. Stored rows can hold [null, null, null], and
+ * String(null) is "null" — truthy, so `.map(String).filter(Boolean)` kept it
+ * and a copied group showed "Washington, DC / null / null / null" (reported
+ * 2026-09-30). A segment that says nothing is dropped, in either direction.
+ */
+const meaningfulSegments = (segments) =>
+  segments
+    .filter((segment) => segment !== null && segment !== undefined)
+    .map((segment) => String(segment).trim())
+    .filter((segment) => segment && segment !== "null" && segment !== "undefined");
+
 export const buildSubLocationPath = (subLocationsSubmitted, data) => {
-  const chips = Array.isArray(subLocationsSubmitted) ? subLocationsSubmitted : [];
+  const chips = Array.isArray(subLocationsSubmitted)
+    ? meaningfulSegments(subLocationsSubmitted)
+    : [];
   const fieldValue =
     data && typeof data.sub_location === "string" ? data.sub_location.trim() : "";
   if (fieldValue && chips[chips.length - 1] !== fieldValue) {

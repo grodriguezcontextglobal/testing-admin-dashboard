@@ -298,7 +298,12 @@ evento: el consumidor sale de `member.email`. Eso es de backend.
 ### ~~2b.2 — Alta de inventario: cuatro retoques [8–11]~~ — hecho 2026-09-30
 
 - ~~Sublocación escrita y no añadida~~: aviso con *Add sub-location* y
-  *Clear*, y Continue deshabilitado mientras haya texto
+  *Clear*, y Continue deshabilitado mientras haya texto. **Corrección
+  2026-09-30:** el texto no se perdía. `buildSubLocationPath` lo agrega al
+  guardar. Lo que fallaba es que la revisión solo mostraba los chips, y
+  parecía perdido. En la reunión se dijo que "no la toma", y `56523b5c` lo
+  repitió sin comprobarlo. El bloqueo se queda porque es lo que pidió Fredrik
+  (añadir o borrar antes de seguir)
   (`PendingSubLocationNotice.jsx`, `utils/pendingSubLocation.js`). "Remove all
   sub location" ahora también limpia el campo, para que no quede un pendiente
   oculto.
