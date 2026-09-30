@@ -5,7 +5,10 @@
  *   upcoming  → blue    ("Upcoming · starts in 30 days")
  *   pastEnd   → amber   (active but end date passed — matches the reminder banner)
  *   ended     → gray
+ *   draft     → gray   (setup never finished — see eventDraft.js)
  */
+import { isDraftEvent } from "./eventDraft";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const relativeDays = (fromMs, toMs) => {
@@ -24,6 +27,9 @@ export const getEventStatus = (event) => {
   const begin = new Date(event?.eventInfoDetail?.dateBegin).getTime();
   const end = new Date(event?.eventInfoDetail?.dateEnd).getTime();
 
+  // Before `active`: a draft is inactive too, and it has not ended — it never
+  // started (meeting 2026-09-29 `39:16`).
+  if (isDraftEvent(event)) return { key: "draft", label: "Draft", color: "default" };
   if (!event?.active) return { key: "ended", label: "Ended", color: "default" };
   if (Number.isFinite(begin) && now < begin) {
     const rel = relativeDays(now, begin);

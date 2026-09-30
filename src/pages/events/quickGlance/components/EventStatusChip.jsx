@@ -12,6 +12,7 @@ const DOT_COLORS = {
   upcoming: "var(--brand-400)",
   pastEnd: "var(--warning-500)",
   ended: "var(--gray-500)",
+  draft: "var(--gray-400)",
 };
 
 const EventStatusChip = ({ event }) => {

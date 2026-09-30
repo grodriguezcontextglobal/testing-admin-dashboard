@@ -17,9 +17,11 @@ import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20He
 import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30LineHeight38";
 import { isNotAssistant } from "../../config/roles";
 import { useEventHook } from "./hook/useEventHook";
+import useDraftEventActions from "./hook/useDraftEventActions";
 import PageSpinner from "../../components/utils/PageSpinner";
 const CardEventDisplay = lazy(() => import("./components/CardEventDisplay"));
 const PastEventsTable = lazy(() => import("./components/PastEventsTable"));
+const DraftEventsTable = lazy(() => import("./components/DraftEventsTable"));
 const BannerMsg = lazy(() => import("./utils/BannerMsg"));
 const BannerNoEventStaffOnly = lazy(() =>
   import("../../components/utils/BannerNoEventStaffOnly")
@@ -55,11 +57,13 @@ const MainPage = () => {
     dataToBeRenderedInLiveSection,
     dataToBeRenderedInUpcomingSection,
     renderingDataBasedOnStaffAndActiveEvent,
-    checkActiveEventsToRemoveDuplicates
+    checkActiveEventsToRemoveDuplicates,
+    draftEvents,
   } = useEventHook({
     eventList,
     searchValue: searchEvent,
   });
+  const draftActions = useDraftEventActions();
   if (isLoading) {
     return <PageSpinner />;
   }
@@ -71,6 +75,7 @@ const MainPage = () => {
   const showLive = statusFilter === "all" || statusFilter === "live";
   const showUpcoming = statusFilter === "all" || statusFilter === "upcoming";
   const showPast = statusFilter === "all" || statusFilter === "past";
+  const showDrafts = statusFilter === "all" || statusFilter === "draft";
   const noActiveEvents = liveEvents.length === 0 && upcomingEvents.length === 0;
 
   const statusFilters = [
@@ -78,6 +83,7 @@ const MainPage = () => {
     { key: "live", label: "Live" },
     { key: "upcoming", label: "Upcoming" },
     { key: "past", label: "Past" },
+    { key: "draft", label: "Drafts" },
   ];
   const pillStyle = {
   border: "none",
@@ -265,6 +271,35 @@ const MainPage = () => {
           />
         </Grid>
 
+        {draftActions.contextHolder}
+        {/* Setup started and never finished (meeting 2026-09-29 `38:42`).
+            These used to be listed in Past as "Closed". */}
+        {showDrafts && draftEvents.length > 0 && (
+          <>
+            <Grid marginY={2} container>
+              <Grid item xs={12}>
+                <Typography style={sectionHeaderStyle}>Drafts</Typography>
+                <Typography style={{ ...Subtitle, textAlign: "left", width: "100%" }}>
+                  Events you started setting up and did not finish. Continue where you left
+                  off, or delete them.
+                </Typography>
+              </Grid>
+            </Grid>
+            <Grid marginY={1} display={"flex"} container>
+              <Grid style={CenteringGrid} item xs={12}>
+                <DraftEventsTable
+                  drafts={draftEvents}
+                  onResume={draftActions.resume}
+                  onDelete={draftActions.remove}
+                  canResume={draftActions.canResume}
+                  canDelete={draftActions.canDelete}
+                  busyId={draftActions.busyId}
+                />
+              </Grid>
+            </Grid>
+          </>
+        )}
+
         {showLive && liveEvents.length > 0 && (
           <>
             <Grid marginY={2} container>
@@ -358,7 +393,8 @@ const MainPage = () => {
         )}
 
         {((statusFilter === "live" && liveEvents.length === 0) ||
-          (statusFilter === "past" && pastEventsCount === 0)) && (
+          (statusFilter === "past" && pastEventsCount === 0) ||
+          (statusFilter === "draft" && draftEvents.length === 0)) && (
           <Grid marginY={3} container>
             <Grid item xs={12}>
               <Typography
@@ -366,6 +402,8 @@ const MainPage = () => {
               >
                 {statusFilter === "live"
                   ? "No events are live right now."
+                  : statusFilter === "draft"
+                  ? "No drafts. Every event you started has been set up."
                   : "No past events yet."}
               </Typography>
             </Grid>

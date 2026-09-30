@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **40** |
+| **Abierto, total** | **39** |
 | — bloquea (§1) | 2 |
-| — trabajo de producto (§2) | 15 |
+| — trabajo de producto (§2) | 14 |
 | — reunión del 29-09 (§2b) | 8 |
 | — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 20 |
+| Cerrado desde que se escribió su lista | 21 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -182,7 +182,32 @@ pasada.
   **Hecho 2026-09-29 en `b037a10b`:** se renombró la columna a `image`, en
   plantilla, parser y tests. El payload al API sigue enviando `image_url`.
 
-### Eventos a medio crear — etiqueta Draft y volver a terminarlos
+### ~~Eventos a medio crear — etiqueta Draft y volver a terminarlos~~ — hecho 2026-09-30
+
+**Hecho.** La señal es `configuration: "in-progress"`, dato confirmado por
+backend. `utils/eventDraft.js` la lee, y un evento sin `configuration` (los
+anteriores al campo) **no** es borrador.
+
+- Los borradores salen de Live, Upcoming y Past, donde aparecían como
+  "Closed", y tienen su propia sección **Drafts** arriba, con filtro. El chip de
+  estado y la tarjeta dicen "Draft" en vez de "Ended".
+- **Continue setup** (`event:create`): busca el id de SQL, rehidrata Redux y
+  abre el paso 1 con los datos rellenados. Con los dos ids en Redux, Next
+  actualiza el evento en vez de crear otro. Si no encuentra el id de SQL, no
+  abre el wizard, porque el paso 1 crearía un duplicado.
+- **Delete** (`event:delete`), con confirmación: borra la fila de SQL, si la
+  hay, y el evento de Mongo.
+
+**Pendiente:**
+- Probar en el navegador que retomar llega hasta el final sin duplicar.
+- Confirmar que `DELETE /db_event/:id` no deja filas huérfanas en tablas
+  relacionadas.
+- El matiz de Fredrik: un borrador que llega a su fecha de fin pasa a
+  *inactive*. Hoy sigue diciendo Draft.
+
+---
+
+Texto original:
 
 Pedido en reunión, anotado 2026-09-29. Si alguien empieza a crear un evento y
 sale de la página a mitad, en la sección de eventos ese evento debería

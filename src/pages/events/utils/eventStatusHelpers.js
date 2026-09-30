@@ -2,6 +2,8 @@
 // short countdown label. Kept free of JSX so they can be used for both
 // grouping logic and badge rendering.
 
+import { isDraftEvent } from "./eventDraft";
+
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 /**
@@ -25,6 +27,7 @@ export const getEventStatus = (event) => {
  * tone: "live" | "soon" (<= 7 days out) | "upcoming" | "past"
  */
 export const getCountdownLabel = (event) => {
+  if (isDraftEvent(event)) return { text: "Draft", tone: "draft" };
   const status = getEventStatus(event);
   if (status === "live") return { text: "Live now", tone: "live" };
   if (status === "past") return { text: "Ended", tone: "past" };
@@ -143,6 +146,7 @@ export const countdownBadgeColors = (tone) => {
     case "soon":
       return { bg: "var(--warning-50, #FFFAEB)", fg: "var(--warning-700, #B54708)" };
     case "past":
+    case "draft":
       return { bg: "var(--gray-100, #F2F4F7)", fg: "var(--gray-600, #475467)" };
     case "upcoming":
     default:

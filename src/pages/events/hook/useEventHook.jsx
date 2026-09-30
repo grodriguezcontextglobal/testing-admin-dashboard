@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddContactInfo, onAddDeviceSetup, onAddEventInfoDetail, onAddEventStaff, onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
+import { splitDraftEvents } from "../utils/eventDraft";
 
 export const useEventHook = ({ eventList = [], searchValue = "" }) => {
     const { user } = useSelector((state) => state.admin);
@@ -85,9 +86,13 @@ export const useEventHook = ({ eventList = [], searchValue = "" }) => {
         return Array.from(map.values());
     };
 
-    const normalizedEvents = useMemo(() => {
-        return removeDuplicatesById(permittedEvents);
-    }, [permittedEvents]);
+    // Drafts (setup never finished) are kept out of every other section: they
+    // are inactive, so they used to land in Past as "Closed" — and they never
+    // happened (meeting 2026-09-29 `39:16`). They get their own section.
+    const { drafts: draftEvents, others: normalizedEvents } = useMemo(
+        () => splitDraftEvents(removeDuplicatesById(permittedEvents)),
+        [permittedEvents]
+    );
 
     // Events happening right now: active and the current moment is within
     // [begin, end]. Sorted by which ends soonest.
@@ -195,5 +200,6 @@ export const useEventHook = ({ eventList = [], searchValue = "" }) => {
         dataToBeRenderedInPastSection,
         renderingDataBasedOnStaffAndActiveEvent,
         checkActiveEventsToRemoveDuplicates: () => normalizedEvents,
+        draftEvents,
     };
 };
