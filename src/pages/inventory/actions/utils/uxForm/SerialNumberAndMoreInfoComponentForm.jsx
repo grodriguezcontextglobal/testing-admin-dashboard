@@ -323,17 +323,17 @@ const SerialNumberAndMoreInfoComponentForm = ({
               ))}
             </div>
 
-            {/* The optional action once, on the left: it always appends a row
-                at the end, so one per row said nothing more. The primary action
-                on the right (meeting 2026-09-29 `22:31`–`25:48`). */}
+            {/* The optional action once — it always appends a row at the end,
+                so one per row said nothing more — and the primary action below
+                it, both on the right with the row actions (meeting 2026-09-29
+                `22:31`–`25:48`). */}
             <div
               style={{
                 marginTop: "12px",
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "12px",
-                flexWrap: "wrap",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: "8px",
               }}
             >
               <GrayButtonComponent
