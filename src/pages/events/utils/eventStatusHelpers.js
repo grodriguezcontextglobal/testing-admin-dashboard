@@ -30,7 +30,7 @@ export const getCountdownLabel = (event) => {
   if (isDraftEvent(event)) return { text: "Draft", tone: "draft" };
   const status = getEventStatus(event);
   if (status === "live") return { text: "Live now", tone: "live" };
-  if (status === "past") return { text: "Ended", tone: "past" };
+  if (status === "past") return { text: "Closed", tone: "past" };
 
   const now = new Date();
   const begin = new Date(event?.eventInfoDetail?.dateBegin);

@@ -4,14 +4,14 @@ import Chip from "../../../../components/UX/Chip/Chip";
 import { getEventStatus } from "../../utils/getEventStatus";
 
 /**
- * Status chip for an event: Live / Upcoming / Ended / Past end date,
+ * Status chip for an event: Live / Upcoming / Closed / Draft / Past end date,
  * with a relative-time hint ("ends in 2 days", "starts in 30 days").
  */
 const DOT_COLORS = {
   live: "var(--success-500)",
   upcoming: "var(--brand-400)",
   pastEnd: "var(--warning-500)",
-  ended: "var(--gray-500)",
+  closed: "var(--gray-500)",
   draft: "var(--gray-400)",
 };
 

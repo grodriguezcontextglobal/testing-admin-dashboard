@@ -13,6 +13,7 @@ import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
 import Service from "./review/service";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { syncEventStaff } from "./utils/eventStaffSync";
+import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../utils/eventLifecycle";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
@@ -104,20 +105,22 @@ const ReviewAndSubmitEvent = () => {
     return Array.from(result.values());
   };
 
-  const completingEventConfigurationProcess = async (eventId) => {
-    await devitrakApi.post(`/db_event/update-event/${eventId}`,{
-      configuration:"completed"
-    });
-  };
   const createEventNoSQLDatabase = async () => {
     await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
       deviceSetup: deviceSetupNoSQL(),
       active: true,
       contactInfo: contactInfo,
       contract_for: "event",
-      configuration: "completed",
     });
-    await completingEventConfigurationProcess(event.idSql);
+    // "created" (was "completed"), on both records. Written apart and
+    // tolerantly: a backend that does not accept the word yet must not undo an
+    // event that was just activated — `active: true` already says it is real.
+    await writeEventConfiguration({
+      api: devitrakApi,
+      mongoId: event.idNoSQl,
+      sqlId: event.idSql,
+      value: EVENT_CONFIGURATION.CREATED,
+    });
     return await lockedItemsInWarehouseForEventShipping();
   };
 

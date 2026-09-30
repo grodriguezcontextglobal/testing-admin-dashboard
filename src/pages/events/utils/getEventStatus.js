@@ -4,10 +4,10 @@
  *   live      → green   ("Live · ends in 2 days")
  *   upcoming  → blue    ("Upcoming · starts in 30 days")
  *   pastEnd   → amber   (active but end date passed — matches the reminder banner)
- *   ended     → gray
- *   draft     → gray   (setup never finished — see eventDraft.js)
+ *   closed    → gray
+ *   draft     → gray   (setup never finished — see eventLifecycle.js)
  */
-import { isDraftEvent } from "./eventDraft";
+import { EVENT_CONFIGURATION, eventLifecycle } from "./eventLifecycle";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -27,10 +27,11 @@ export const getEventStatus = (event) => {
   const begin = new Date(event?.eventInfoDetail?.dateBegin).getTime();
   const end = new Date(event?.eventInfoDetail?.dateEnd).getTime();
 
-  // Before `active`: a draft is inactive too, and it has not ended — it never
-  // started (meeting 2026-09-29 `39:16`).
-  if (isDraftEvent(event)) return { key: "draft", label: "Draft", color: "default" };
-  if (!event?.active) return { key: "ended", label: "Ended", color: "default" };
+  // A draft is inactive too, and it has not closed — it never started (meeting
+  // 2026-09-29 `39:16`). "Closed", not "Ended": the action is "Close event".
+  const stage = eventLifecycle(event);
+  if (stage === EVENT_CONFIGURATION.DRAFT) return { key: "draft", label: "Draft", color: "default" };
+  if (stage === EVENT_CONFIGURATION.CLOSED) return { key: "closed", label: "Closed", color: "default" };
   if (Number.isFinite(begin) && now < begin) {
     const rel = relativeDays(now, begin);
     return {

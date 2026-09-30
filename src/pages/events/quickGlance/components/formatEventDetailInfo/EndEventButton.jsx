@@ -11,6 +11,7 @@ import DangerButtonComponent from "../../../../../components/UX/buttons/DangerBu
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../../utils/eventLifecycle";
 
 const ModalToDisplayFunctionInProgress = lazy(
   () => import("./endEvent/ModalToDisplayFunctionInProgress"),
@@ -530,7 +531,15 @@ const EndEventButton = () => {
       );
 
       if (resp.data.ok) {
-        dispatch(onAddEventData({ ...event, active: false }));
+        // "closed" — before this nothing recorded the close except active:
+        // false. Tolerant: it never blocks closing the event.
+        await writeEventConfiguration({
+          api: devitrakApi,
+          mongoId: event.id,
+          sqlId: event.sql?.event_id,
+          value: EVENT_CONFIGURATION.CLOSED,
+        });
+        dispatch(onAddEventData({ ...event, active: false, configuration: EVENT_CONFIGURATION.CLOSED }));
         // return openNotificationWithIcon(
         //   "success",
         //   "Event inventory has been moved back to Company Inventory"
@@ -749,7 +758,7 @@ const EndEventButton = () => {
             lg={12}
           >
             <DangerButtonComponent
-              title="End event"
+              title="Close event"
               func={confirmEndEvent}
               styles={{ width: "100%" }}
               size="lg"

@@ -75,12 +75,12 @@ describe("splitDraftEvents", () => {
 });
 
 describe("the status a draft shows", () => {
-  it("reads Draft, not Ended, on the status chip", () => {
+  it("reads Draft, not Closed, on the status chip", () => {
     expect(getEventStatus(draft)).toMatchObject({ key: "draft", label: "Draft" });
-    expect(getEventStatus(closed).key).toBe("ended");
+    expect(getEventStatus(closed)).toMatchObject({ key: "closed", label: "Closed" });
   });
 
-  it("reads Draft, not Ended, on the event card", () => {
+  it("reads Draft, not Closed, on the event card", () => {
     expect(getCountdownLabel(draft)).toEqual({ text: "Draft", tone: "draft" });
   });
 });

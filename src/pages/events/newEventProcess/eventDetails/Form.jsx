@@ -26,6 +26,7 @@ import {
   saveExistingEventDetails,
   stepOneSubmitLabel,
 } from "./utils/eventDetailsStep";
+import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../utils/eventLifecycle";
 const Form = () => {
   const { eventInfoDetail, staff, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -199,6 +200,15 @@ const Form = () => {
           }
         });
         dispatch(onAddEventData({ ...format, idNoSQl: t[1].NoSQlID, idSql: t[0].SqlID }));
+        // The event exists from here on, unfinished: a draft. Tolerant — the
+        // server's own default ("in-progress") still reads as a draft if this
+        // word is refused.
+        await writeEventConfiguration({
+          api: devitrakApi,
+          mongoId: t[1].NoSQlID,
+          sqlId: t[0].SqlID,
+          value: EVENT_CONFIGURATION.DRAFT,
+        });
         dispatch(onAddContactInfo(contactInfoFormat));
       }
       // Merged, not replaced: the rest (legal_documents_list among it) belongs

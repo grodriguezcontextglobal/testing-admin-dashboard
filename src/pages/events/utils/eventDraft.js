@@ -1,18 +1,19 @@
+import { EVENT_CONFIGURATION, eventLifecycle } from "./eventLifecycle";
+
 /**
  * Events whose setup was started and never finished (meeting 2026-09-29
  * `38:42`–`40:16`: "It was never done… you add a new one that is called
  * draft").
  *
- * Step 1 of the new-event wizard creates the event on the server with
- * `active: false` and `configuration: "in-progress"`; the review step sets
- * `active: true` and `configuration: "completed"`. Every screen used to read
- * only `active`, so an unfinished event was listed with the closed ones as
- * "Closed" / "Ended".
+ * Step 1 of the new-event wizard creates the event inactive, as a draft; the
+ * review step activates it. Every screen used to read only `active`, so an
+ * unfinished event was listed with the closed ones as "Closed".
  *
- * Only an explicit "in-progress" is a draft. Events from before the field
- * existed carry no `configuration`, and they are finished events.
+ * What counts as a draft — `configuration` "draft" or the older "in-progress",
+ * on an event that is not active — lives in eventLifecycle.js. Events from
+ * before the field existed carry no `configuration`, and they are not drafts.
  */
-export const isDraftEvent = (event) => event?.configuration === "in-progress";
+export const isDraftEvent = (event) => eventLifecycle(event) === EVENT_CONFIGURATION.DRAFT;
 
 /** @returns {{ drafts: object[], others: object[] }} in the original order */
 export const splitDraftEvents = (events = []) => {
