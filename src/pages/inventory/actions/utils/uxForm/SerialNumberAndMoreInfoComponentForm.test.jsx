@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SerialNumberAndMoreInfoComponentForm from "./SerialNumberAndMoreInfoComponentForm";
 
@@ -109,5 +109,30 @@ describe("SerialNumberAndMoreInfoComponentForm — the two actions", () => {
     expect(buttonNamed(/queue this item for creation/i).className).toMatch(
       /customized__blueButton/
     );
+  });
+});
+
+/* 2026-09-30: the identifier rows overflowed their container — negative
+   margins, and a long "Add additional identifier" button repeated in every
+   row — so the Queue button, aligned to the container, looked out of place.
+   The rows are one grid now, and the add button appears once: it always
+   appends a row at the end, whichever row it sat in. */
+describe("SerialNumberAndMoreInfoComponentForm — compact identifier rows", () => {
+  const addButtons = () =>
+    screen.getAllByRole("button", { name: /add additional identifier/i });
+
+  it("shows one 'Add additional identifier' button however many rows there are", () => {
+    setup();
+    fireEvent.click(addButtons()[0]);
+    fireEvent.click(addButtons()[0]);
+    expect(addButtons()).toHaveLength(1);
+    expect(screen.getAllByPlaceholderText("e.g. 3241684981556474651")).toHaveLength(3);
+  });
+
+  it("offers Remove on each row once there is more than one", () => {
+    setup();
+    expect(screen.queryByRole("button", { name: /remove/i })).toBeNull();
+    fireEvent.click(addButtons()[0]);
+    expect(screen.getAllByRole("button", { name: /remove/i })).toHaveLength(2);
   });
 });

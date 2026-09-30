@@ -2,7 +2,7 @@ import { Grid, Typography } from "@mui/material";
 import { AutoComplete, Checkbox, Divider, message, Radio } from "antd";
 import { uniqueId } from "lodash";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -13,6 +13,21 @@ import ScanUnitsPanel from "./ScanUnitsPanel";
 import { matchesTypedText } from "../referenceLookup";
 
 const options = [{ value: "Serial number", label: "Serial number" }];
+
+/* Serial checkbox · identifier name · value · row action. */
+const identifierGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "56px minmax(0, 1fr) minmax(0, 1.4fr) 88px",
+  columnGap: "12px",
+  rowGap: "8px",
+  alignItems: "center",
+  width: "100%",
+};
+
+const headerCellStyle = {
+  font: "600 12px/18px Inter, sans-serif",
+  color: "var(--gray-600, #475467)",
+};
 
 const newRow = () => ({
   id: uniqueId("identifier-"),
@@ -248,55 +263,28 @@ const SerialNumberAndMoreInfoComponentForm = ({
               which adds the unit. */}
             </Typography>
 
-            <Grid container>
-              <Grid item xs={12} sm={3} md={1} lg={1}>
-                <Typography
-                  variant="caption"
-                  display="block"
-                  color="text.secondary"
-                  sx={{ fontWeight: 600 }}
-                >
-                  Serial *
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={4} md={4} lg={4}>
-                <Typography
-                  variant="caption"
-                  display="block"
-                  color="text.secondary"
-                  sx={{ fontWeight: 600 }}
-                >
-                  Identifier *
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={4} md={4} lg={4}>
-                <Typography
-                  variant="caption"
-                  display="block"
-                  color="text.secondary"
-                  sx={{ fontWeight: 600 }}
-                >
-                  Value *
-                </Typography>
-              </Grid>
-            </Grid>
+            {/* One grid for the header and every row, so the columns line up
+                and nothing reaches past the container. The rows used MUI Grid
+                with negative margins and a long button per row, and spilled
+                out to the right — which made the Queue button, correctly
+                aligned to the container, look misplaced (2026-09-30). */}
+            <div style={identifierGridStyle}>
+              <span style={headerCellStyle}>Serial *</span>
+              <span style={headerCellStyle}>Identifier *</span>
+              <span style={headerCellStyle}>Value *</span>
+              <span aria-hidden="true" />
 
-            {identifiers.map((identifier, index) => (
-              <Grid
-                container
-                spacing={1}
-                key={identifier.id}
-                sx={{ margin: 0, alignItems: "center" }}
-              >
-                <Grid item xs={12} sm={3} md={1} lg={1}>
-                  <Checkbox
-                    checked={primaryRow === index}
-                    onChange={() => setPrimaryRow(index)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4} md={4} lg={4}>
+              {identifiers.map((identifier, index) => (
+                <Fragment key={identifier.id}>
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <Checkbox
+                      checked={primaryRow === index}
+                      onChange={() => setPrimaryRow(index)}
+                      aria-label={`Use identifier ${index + 1} as the serial number`}
+                    />
+                  </div>
                   <AutoComplete
-                    style={{ ...style, margin: "0 0 0 -8px", width: "95%" }}
+                    style={{ ...style, margin: 0, width: "100%", minWidth: 0 }}
                     options={options}
                     value={identifier.type}
                     onChange={(value) =>
@@ -306,8 +294,6 @@ const SerialNumberAndMoreInfoComponentForm = ({
                     filterOption={matchesTypedText}
                     placeholder="Select or type a name"
                   />
-                </Grid>
-                <Grid item xs={12} sm md lg display="flex" gap={0.5}>
                   <Input
                     placeholder="e.g. 3241684981556474651"
                     value={identifier.value}
@@ -319,32 +305,45 @@ const SerialNumberAndMoreInfoComponentForm = ({
                       )
                     }
                     onKeyDown={handleKeyDown}
-                    style={{ width: "100%", margin: "0 0 0 -8px" }}
+                    style={{ width: "100%", margin: 0 }}
                     allowClear
                   />
-                  {/* Secondary, and "additional": optional, and "new" read as a
-                      new unit (meeting 2026-09-29 `22:31`, `24:00`). */}
-                  <GrayButtonComponent
-                    title="Add additional identifier"
-                    buttonType="button"
-                    func={addIdentifierRow}
-                    iconLeading={<Plus size={16} />}
-                  />
-                  {identifiers.length > 1 && (
-                    <DangerButtonComponent
-                      title="Remove"
-                      buttonType="button"
-                      func={() => removeIdentifierRow(identifier.id)}
-                    />
-                  )}
-                </Grid>
-              </Grid>
-            ))}
+                  {/* Row actions on the right (meeting 2026-09-29 `25:31`). */}
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    {identifiers.length > 1 && (
+                      <DangerButtonComponent
+                        title="Remove"
+                        buttonType="button"
+                        size="sm"
+                        func={() => removeIdentifierRow(identifier.id)}
+                      />
+                    )}
+                  </div>
+                </Fragment>
+              ))}
+            </div>
 
-            {/* The primary action — what everyone has to do to continue — and
-                on the right, with the other row actions (meeting 2026-09-29
-                `24:32`–`25:48`). */}
-            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
+            {/* The optional action once, on the left: it always appends a row
+                at the end, so one per row said nothing more. The primary action
+                on the right (meeting 2026-09-29 `22:31`–`25:48`). */}
+            <div
+              style={{
+                marginTop: "12px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <GrayButtonComponent
+                title="Add additional identifier"
+                buttonType="button"
+                size="sm"
+                func={addIdentifierRow}
+                iconLeading={<Plus size={16} />}
+                styles={{ width: "fit-content" }}
+              />
               <BlueButtonComponent
                 buttonType="button"
                 func={addSingleUnit}
