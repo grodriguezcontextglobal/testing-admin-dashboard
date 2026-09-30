@@ -19,9 +19,19 @@ import FormFields from "./ux/FormFields";
 import AddingEventCreated from "../staff/components/AddingEventCreated";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { checkArray } from "../../../../components/utils/checkArray";
+import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import {
+  eventExists,
+  mergeEventInfoDetail,
+  saveExistingEventDetails,
+  stepOneSubmitLabel,
+} from "./utils/eventDetailsStep";
 const Form = () => {
   const { eventInfoDetail, staff, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  const { notify, contextHolder } = useStatusNotification();
+  // Two requests either way; without this the button looked dead meanwhile.
+  const [saving, setSaving] = useState(false);
   const addressSplit = eventInfoDetail?.address?.split(" ");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -165,45 +175,51 @@ const Form = () => {
       email: user.email,
       phone: numberOfPhoneNumbersPerEvent,
     };
-    if (numberOfPhoneNumbersPerEvent.length < 1)
-      return alert(
-        "There is no phone number assigned to event. Please enter the phone number and then click plus icon button."
+    if (numberOfPhoneNumbersPerEvent.length < 1) {
+      return notify(
+        "warning",
+        "Add a phone number for the event.",
+        "Enter it and press the plus button next to the field."
       );
-    dispatch(onAddContactInfo(contactInfoFormat));
-    dispatch(onAddEventInfoDetail(format));
-    if (event.idNoSQl && event.idSql) {
-      await devitrakApi.patch(`/event/edit-event/${event.idNoSQl}`, {
-        eventInfoDetail: format,
-        contactInfo: contactInfoFormat,
-      });
-      await devitrakApi.post(`/db_event/update-event/${event.idSql}`, {
-        event_id: event.idSql,
-        event_name: format.eventName,
-        venue_name: format.floor,
-        street_address: data.street,
-        city_address: data.city,
-        state_address: data.state,
-        zip_address: data.zipCode,
-        email_company: contactInfoFormat.email,
-        phone_number: contactInfoFormat.phone[0],
-        contact_name: contactInfoFormat.name,
-      })
-      return navigate("/create-event-page/staff-detail");
-    } else {
-      const t = await createEventInProcess({
-        event: format, contactInfo: contactInfoFormat, sqlAddress: {
-          street_address: data.street,
-          city_address: data.city,
-          state_address: data.state,
-          zip_address: data.zipCode,
-        }
-      });
-      const template = {
-        ...format, idNoSQl: t[1].NoSQlID, idSql: t[0].SqlID
-      }
-      dispatch(onAddEventData(template))
     }
-    return navigate("/create-event-page/staff-detail");
+
+    setSaving(true);
+    try {
+      if (eventExists(event)) {
+        // A second visit to this step, or a resumed draft: update both records.
+        await saveExistingEventDetails({
+          api: devitrakApi,
+          event,
+          format,
+          contactInfo: contactInfoFormat,
+          address: data,
+        });
+      } else {
+        const t = await createEventInProcess({
+          event: format, contactInfo: contactInfoFormat, sqlAddress: {
+            street_address: data.street,
+            city_address: data.city,
+            state_address: data.state,
+            zip_address: data.zipCode,
+          }
+        });
+        dispatch(onAddEventData({ ...format, idNoSQl: t[1].NoSQlID, idSql: t[0].SqlID }));
+      }
+      dispatch(onAddContactInfo(contactInfoFormat));
+      // Merged, not replaced: the rest (legal_documents_list among it) belongs
+      // to later steps and was being dropped here.
+      dispatch(onAddEventInfoDetail(mergeEventInfoDetail(eventInfoDetail, format)));
+      return navigate("/create-event-page/staff-detail");
+    } catch (error) {
+      // This used to be swallowed, which read as a button that did nothing.
+      notify(
+        "error",
+        "The event details could not be saved.",
+        error?.response?.data?.msg ?? error?.message ?? "Please try again."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const theme = useTheme();
@@ -218,12 +234,15 @@ const Form = () => {
       gap={2}
       container
     >
+      {contextHolder}
       {triggerAddingAdminStaff && <AddingEventCreated />}
       <FormFields
         isMobile={isMobile}
         handleSubmit={handleSubmit}
         errors={errors}
         handleEventInfo={handleEventInfo}
+        submitLabel={stepOneSubmitLabel(event)}
+        saving={saving}
         register={register}
         eventInfoDetail={eventInfoDetail}
         begin={begin}

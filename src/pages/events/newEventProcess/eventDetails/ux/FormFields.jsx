@@ -28,6 +28,8 @@ const FormFields = ({
   daysAfterEvent,
   setDaysBeforeEvent,
   setDaysAfterEvent,
+  submitLabel = "Next step",
+  saving = false,
 }) => {
   return (
     <form
@@ -70,12 +72,9 @@ const FormFields = ({
       <MainMerchantSection key="mainMerchantSection" merchant={merchant} setMerchant={setMerchant} />
       <Grid item xs={12} sm={12} md={12} lg={12}>
         <BlueButtonComponent
-          title={
-            String(eventInfoDetail.eventName).length === 0
-              ? "Next step"
-              : "Save changes"
-          }
+          title={submitLabel}
           buttonType="submit"
+          loadingState={saving}
           styles={{ width: "100%" }}
         />
       </Grid>
