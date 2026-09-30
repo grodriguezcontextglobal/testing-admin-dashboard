@@ -46,7 +46,7 @@ export const headerAliasMap = {
     "parent_guardian_phone_number",
     "guardian_phone",
   ],
-  image_url: ["image_url", "imageurl", "photo", "photo_url", "picture"],
+  image_url: ["image", "image_url", "imageurl", "photo", "photo_url", "picture"],
 };
 
 /**
@@ -164,12 +164,12 @@ export const MEMBER_IMPORT_COLUMNS = [
       "Postal code. For a US state it must be 12345 or 12345-6789; a zip that lost its leading zero in Excel (2134) is fixed on import.",
   },
   {
-    header: "image_url",
-    title: "Image URL",
-    width: 200,
+    header: "image",
+    title: "Image",
+    width: 150,
     example: "",
     description:
-      "Optional link to the member's photo. Leave blank if you don't have one.",
+      "Optional photo of the member. Place the picture inside the cell (Insert > Picture > Place in Cell); it travels inside the file. Links are not accepted. Older files with an `image_url` header are still read.",
   },
   {
     header: "parent_guardian_first_name",
@@ -400,11 +400,21 @@ export const normalizeZip = (zip, state) => {
  * errors stop nothing here, the caller decides. Kept separate from `errors` so
  * the UI can show them in different colours instead of one red wall.
  *
+ * Pictures placed inside cells are invisible to SheetJS; they come in as
+ * `imagesByRow` (from readWorkbookCellImages), keyed by the SHEET row number.
+ * Each row takes the one on its own row, as `imageMediaPath`, and the upload
+ * turns it into `image_url` afterwards — see memberImportImages.js.
+ *
  * @param {Array<object>} inputRows rows from sheet_to_json
  * @param {number|string|null} companyId company id to stamp on every row
+ * @param {{ imagesByRow?: Map<number, {mediaPath: string}> }} [options]
  * @returns {{ errors: string[], warnings: string[], columnsDetected: string[], rows: object[] }}
  */
-export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
+export const validateAndNormalizeRows = (
+  inputRows = [],
+  companyId = null,
+  { imagesByRow = new Map() } = {}
+) => {
   const errors = [];
   const warnings = [];
   const rows = [];
@@ -484,6 +494,21 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
     }
     normalizedRow.zip = zip.value;
 
+    // The sheet row, not the position: sheet_to_json skips blank rows, and
+    // counting positions would hand every picture below a gap to the wrong
+    // member. __rowNum__ is 0-based; the header is row 1.
+    const sheetRow = Number.isInteger(row.__rowNum__)
+      ? row.__rowNum__ + 1
+      : idx + 2;
+    const image = imagesByRow.get(sheetRow) ?? null;
+    // No links (2026-09-29, "absolutely no hyperlinks"). A cell holding a
+    // picture reads as blank or as an error value, so text here was typed.
+    if (!image && `${normalizedRow.image_url ?? ""}`.trim()) {
+      warnings.push(
+        `Row ${idx + 1}: text in the Image column is not used — place the picture inside the cell (Insert > Picture > Place in Cell).`
+      );
+    }
+
     const hasParts = ["street", "city", "state", "zip"].every((k) =>
       Boolean(normalizedRow[k])
     );
@@ -504,7 +529,8 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
       address_state: normalizedRow.state || "",
       address_zip: normalizedRow.zip || "",
       company_id: companyId,
-      image_url: normalizedRow.image_url || "",
+      image_url: "",
+      imageMediaPath: image?.mediaPath ?? null,
       grade: String(normalizedRow.grade || ""),
       homeroom: String(normalizedRow.homeroom || ""),
       date_of_birth: dob,

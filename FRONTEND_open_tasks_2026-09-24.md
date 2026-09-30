@@ -30,10 +30,10 @@ y se pasa por alto lo que de verdad queda.
 | **Abierto, total** | **42** |
 | — bloquea (§1) | 2 |
 | — trabajo de producto (§2) | 15 |
-| — reunión del 29-09 (§2b) | 11 |
-| — surgido esta semana (§3) | 7 |
+| — reunión del 29-09 (§2b) | 10 |
+| — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 17 |
+| Cerrado desde que se escribió su lista | 18 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -256,7 +256,7 @@ Va primero porque es por donde entra un colegio, y Fredrik manda el correo al
 colegio esta semana: *"this needs to work… They're not going to sit and do it
 manually."*
 
-**Hecho 2026-09-30, salvo la imagen.** Commit en el log, con `fix(members)`.
+**Hecho 2026-09-30:** en `c3a23249`, y la imagen en el commit siguiente, `fix(members)`.
 
 - ~~Fecha de nacimiento~~: la celda de fecha de Excel ya se leía. Ahora
   también se aceptan `.` y espacio como separador, el año de dos cifras, los
@@ -272,9 +272,12 @@ manually."*
   construida desde `MEMBER_IMPORT_COLUMNS`.
 - ~~Código postal~~: se comprueba solo con un estado de EE. UU., y avisa sin
   bloquear. El cero inicial que Excel quita se repone.
-- **Imagen pegada en la celda: pendiente**, en commit aparte. Hay que reusar
-  `inventoryImportImages.js` y la subida de inventario, y enviar la URL en
-  `image_url`.
+- ~~Imagen pegada en la celda~~: se lee con `readWorkbookCellImages`, el
+  mismo lector de inventario, y la columna pasa a llamarse `image` (el nombre
+  `image_url` se sigue leyendo). Un enlace escrito ya no se guarda: se avisa.
+  La subida es propia (`memberImportImages.js`), con un id por import, para
+  que un import no pise en Cloudinary las fotos del anterior. Si una foto
+  falla, ese miembro entra sin ella y el import sigue.
 
 **Sin verificar: si el backend acepta `email: ""`** en `/db_member/bulk-members`
 y en `/db_member/new-member`. Si la columna es NOT NULL o única, el primer menor
@@ -392,6 +395,17 @@ configuración del build, no el código fuente.
 
 El único bloqueo real es `vite-plugin-pwa@0.20.5`, que declara `vite ^5`. La
 1.3.0 acepta `^3 … ^8` y se puede subir sola, antes que Vite.
+
+### El import de inventario asigna las imágenes por posición, no por fila
+`src/pages/inventory/utils/inventoryImportRows.js:93`
+
+Encontrado 2026-09-30 al hacer lo mismo para estudiantes.
+`rowNumber = index + FIRST_DATA_ROW`, pero `sheet_to_json` **se salta las filas
+vacías**. Con una fila en blanco en medio de la hoja, cada imagen de debajo
+queda asignada a la unidad de la fila siguiente, y lo mismo pasa con los
+números de fila de los errores. El import de estudiantes ya usa `__rowNum__`,
+el número real que SheetJS pone en cada fila. Aquí es un cambio de una línea
+más un test.
 
 ### `quill` 2.0.3
 Advisory low sin parche publicado. Camino no alcanzable: no usamos

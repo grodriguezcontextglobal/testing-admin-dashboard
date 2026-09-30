@@ -274,12 +274,19 @@ describe("columnas que antes se perdían", () => {
     expect(rows[0].homeroom).toBe("Rivera 7B");
   });
 
-  it("transporta image_url", () => {
-    const { rows } = validateAndNormalizeRows(
+  /* Reunión 2026-09-29 `14:56`: "You can copy an image, but absolutely no
+     hyperlinks" — lo mismo que el import de inventario desde el 18-09. Un
+     enlace escrito en la columna ya no se guarda: se avisa y la fila sigue. */
+  it("no guarda un enlace escrito en la columna de imagen, y lo dice", () => {
+    const { rows, warnings, errors } = validateAndNormalizeRows(
       [{ ...base, "Image URL": "https://cdn.school.edu/b.jpg" }],
       62
     );
-    expect(rows[0].image_url).toBe("https://cdn.school.edu/b.jpg");
+    expect(rows[0].image_url).toBe("");
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([
+      "Row 1: text in the Image column is not used — place the picture inside the cell (Insert > Picture > Place in Cell).",
+    ]);
   });
 
   it("acepta external_id además del header ambiguo 'id'", () => {
@@ -578,5 +585,68 @@ describe("columnRequirementLabel", () => {
       "mandatory if minor"
     );
     expect(columnRequirementLabel({})).toBe("optional");
+  });
+});
+
+/* La imagen pegada en la celda (2026-09-29 `14:56`). SheetJS no la ve: la lee
+   readWorkbookCellImages, que devuelve las imágenes por número de fila de la
+   hoja. Aquí cada fila recibe la suya. */
+describe("imagen pegada en la celda", () => {
+  const adultRow = (extra = {}) => ({
+    first_name: "Ada",
+    last_name: "L",
+    email: "a@b.c",
+    phone: "1",
+    date_of_birth: "01-01-1990",
+    ...extra,
+  });
+  // sheet_to_json marca cada fila con __rowNum__ (0-based, no enumerable).
+  const atSheetRow = (row, zeroBased) =>
+    Object.defineProperty(row, "__rowNum__", { value: zeroBased, enumerable: false });
+
+  it("asigna a cada fila la imagen de su fila en la hoja", () => {
+    const imagesByRow = new Map([[2, { mediaPath: "xl/media/image1.png" }]]);
+    const { rows } = validateAndNormalizeRows(
+      [atSheetRow(adultRow(), 1), atSheetRow(adultRow(), 2)],
+      1,
+      { imagesByRow }
+    );
+    expect(rows[0].imageMediaPath).toBe("xl/media/image1.png");
+    expect(rows[1].imageMediaPath).toBeNull();
+  });
+
+  // sheet_to_json se salta las filas vacías: contar por posición correría todas
+  // las imágenes de debajo a la fila equivocada.
+  it("no se desplaza cuando la hoja tiene una fila vacía en medio", () => {
+    const imagesByRow = new Map([[4, { mediaPath: "xl/media/image2.png" }]]);
+    const { rows } = validateAndNormalizeRows(
+      [atSheetRow(adultRow(), 1), atSheetRow(adultRow(), 3)],
+      1,
+      { imagesByRow }
+    );
+    expect(rows[0].imageMediaPath).toBeNull();
+    expect(rows[1].imageMediaPath).toBe("xl/media/image2.png");
+  });
+
+  it("sin __rowNum__, cuenta desde la fila 2", () => {
+    const imagesByRow = new Map([[2, { mediaPath: "xl/media/image1.png" }]]);
+    const { rows } = validateAndNormalizeRows([adultRow()], 1, { imagesByRow });
+    expect(rows[0].imageMediaPath).toBe("xl/media/image1.png");
+  });
+
+  it("la celda con imagen no cuenta como texto escrito", () => {
+    const imagesByRow = new Map([[2, { mediaPath: "xl/media/image1.png" }]]);
+    const { warnings } = validateAndNormalizeRows(
+      [adultRow({ image: "#VALUE!" })],
+      1,
+      { imagesByRow }
+    );
+    expect(warnings).toEqual([]);
+  });
+
+  it("la plantilla llama a la columna Image, y el nombre viejo se sigue leyendo", () => {
+    const column = MEMBER_IMPORT_COLUMNS.find((c) => resolveKey(c.header) === "image_url");
+    expect(column.header).toBe("image");
+    expect(resolveKey("image_url")).toBe("image_url");
   });
 });

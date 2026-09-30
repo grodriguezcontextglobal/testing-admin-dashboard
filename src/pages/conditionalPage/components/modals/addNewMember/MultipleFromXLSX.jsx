@@ -17,6 +17,11 @@ import {
   importCounts,
 } from "../../../utils/memberImportPresentation";
 import {
+  buildBulkMembersList,
+  uploadMemberImportImages,
+} from "../../../utils/memberImportImages";
+import { readWorkbookCellImages } from "../../../../inventory/utils/readWorkbookCellImages";
+import {
   MEMBER_IMPORT_COLUMNS,
   buildInstructionRows,
   buildTemplateRow,
@@ -98,9 +103,15 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
       const book = read(buffer, { type: "array" });
       const sheet = book.Sheets[book.SheetNames[0]];
       const json = utils.sheet_to_json(sheet, { defval: "" });
-      setParsed(
-        validateAndNormalizeRows(json, user?.sqlInfo?.company_id || companyId)
-      );
+      // Pictures placed in cells are invisible to SheetJS, so the archive is
+      // read a second time for them — the same reader the inventory import uses.
+      const { byRow, media } = await readWorkbookCellImages(buffer);
+      setParsed({
+        ...validateAndNormalizeRows(json, user?.sqlInfo?.company_id || companyId, {
+          imagesByRow: byRow,
+        }),
+        media,
+      });
     } catch (error) {
       setParsed({
         rows: [],
@@ -122,8 +133,22 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
 
     setImporting(true);
     try {
+      // Photos first, once per distinct file. A failed one leaves that member
+      // without a photo; it does not stop the import.
+      const { urlByMediaPath, failed } = await uploadMemberImportImages({
+        media: parsed.media,
+        companyId: user?.sqlInfo?.company_id,
+      });
+      if (failed.length > 0) {
+        notify(
+          "warning",
+          `${failed.length} photo${failed.length === 1 ? "" : "s"} could not be uploaded.`,
+          "Those members are imported without a photo."
+        );
+      }
+
       const response = await devitrakApi.post("/db_member/bulk-members", {
-        list: parsed.rows,
+        list: buildBulkMembersList(parsed.rows, urlByMediaPath),
         company_id: user?.sqlInfo?.company_id,
       });
 
@@ -305,6 +330,10 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
                     tone: counts.blocked > 0 ? "critical" : "neutral",
                   },
                   { label: "Worth a look", value: counts.warned },
+                  {
+                    label: "With a photo",
+                    value: parsed.rows.filter((row) => row.imageMediaPath).length,
+                  },
                 ]}
               />
 
