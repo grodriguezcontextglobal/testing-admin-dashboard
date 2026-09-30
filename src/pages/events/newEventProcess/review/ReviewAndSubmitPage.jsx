@@ -12,6 +12,7 @@ import "./blurring.css";
 import ModalCreatingEventInProgress from "./components/ModalCreatingEvent";
 import Service from "./review/service";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import { syncEventStaff } from "./utils/eventStaffSync";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
@@ -30,39 +31,10 @@ const ReviewAndSubmitEvent = () => {
   // const dispatch = useDispatch();
   const { notify, contextHolder, api } = useStatusNotification();
 
-  const createStaffInEvent = async (newEventId) => {
-    const employeeStaff = [...staff.adminUser, ...staff.headsetAttendees];
-    const staffRoleDate = new Map();
-    for (let [key, value] of employeeStaff.entries()) {
-      if (!staffRoleDate.has(key)) {
-        staffRoleDate.set(key, value);
-      }
-    }
-    for (let [key, value] of staffRoleDate.entries()) {
-      const respo = await devitrakApi.post("/db_staff/consulting-member", {
-        email: key,
-      });
-      if (respo.data.member.length > 0) {
-        await devitrakApi.post("/db_event/event_staff", {
-          event_id: newEventId,
-          staff_id: respo.data.member.at(-1).staff_id,
-          role: value.role,
-        });
-      } else {
-        const newMember = await devitrakApi.post("/db_staff/new_member", {
-          first_name: value.firstName,
-          last_name: value.lastName,
-          email: key,
-          phone_number: "0000000000",
-        });
-        await devitrakApi.post("/db_event/event_staff", {
-          event_id: newEventId,
-          staff_id: newMember.data.member.insertId,
-          role: value.role,
-        });
-      }
-    }
-  };
+  // By email, once each; staff already on the event (a retry, or a resumed
+  // draft) are skipped instead of failing the step — see eventStaffSync.js.
+  const createStaffInEvent = (newEventId) =>
+    syncEventStaff({ api: devitrakApi, eventId: newEventId, staff });
 
   const lockedItemsInWarehouseForEventShipping = async()=> {
     for (let data of deviceSetup) {
