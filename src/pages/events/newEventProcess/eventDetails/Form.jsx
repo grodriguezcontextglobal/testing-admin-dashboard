@@ -187,13 +187,8 @@ const Form = () => {
     try {
       if (eventExists(event)) {
         // A second visit to this step, or a resumed draft: update both records.
-        await saveExistingEventDetails({
-          api: devitrakApi,
-          event,
-          format,
-          contactInfo: contactInfoFormat,
-          address: data,
-        });
+        // Event details only; the contact was set when it was created.
+        await saveExistingEventDetails({ api: devitrakApi, event, format, address: data });
       } else {
         const t = await createEventInProcess({
           event: format, contactInfo: contactInfoFormat, sqlAddress: {
@@ -204,8 +199,8 @@ const Form = () => {
           }
         });
         dispatch(onAddEventData({ ...format, idNoSQl: t[1].NoSQlID, idSql: t[0].SqlID }));
+        dispatch(onAddContactInfo(contactInfoFormat));
       }
-      dispatch(onAddContactInfo(contactInfoFormat));
       // Merged, not replaced: the rest (legal_documents_list among it) belongs
       // to later steps and was being dropped here.
       dispatch(onAddEventInfoDetail(mergeEventInfoDetail(eventInfoDetail, format)));

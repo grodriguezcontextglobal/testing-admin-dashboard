@@ -22,26 +22,35 @@ export const stepOneSubmitLabel = (event) =>
 export const mergeEventInfoDetail = (previous, format) => ({ ...(previous ?? {}), ...format });
 
 /**
- * Both records of the event, Mongo then SQL. Throws on failure: the caller
- * shows it — swallowing it is what looked like "no response".
+ * Both records of the event, Mongo then SQL — the event's details only.
+ *
+ * The contact is set when the event is created at the start of the wizard and
+ * is not edited here. Sending it made the SQL update refuse the whole request
+ * (2026-09-30: `Invalid field(s): contact_name`), which is what stopped a
+ * resumed draft on step 1.
+ *
+ * Throws on failure: the caller shows it — swallowing it is what looked like
+ * "no response".
  */
-export const saveExistingEventDetails = async ({ api, event, format, contactInfo, address }) => {
-  await api.patch(`/event/edit-event/${event.idNoSQl}`, {
-    eventInfoDetail: format,
-    contactInfo,
-  });
-  await api.post(`/db_event/update-event/${event.idSql}`, {
-    event_id: event.idSql,
+/** A refusal can arrive as a 200 with `{ ok: false }`, which axios does not throw. */
+const assertAccepted = (response) => {
+  if (response?.data?.ok === false) {
+    throw new Error(response.data.msg ?? "The server refused the change.");
+  }
+};
+
+export const saveExistingEventDetails = async ({ api, event, format, address }) => {
+  assertAccepted(
+    await api.patch(`/event/edit-event/${event.idNoSQl}`, { eventInfoDetail: format })
+  );
+  assertAccepted(await api.post(`/db_event/update-event/${event.idSql}`, {
     event_name: format.eventName,
     venue_name: format.floor,
     street_address: address.street,
     city_address: address.city,
     state_address: address.state,
     zip_address: address.zipCode,
-    email_company: contactInfo.email,
-    phone_number: contactInfo.phone?.[0],
-    contact_name: contactInfo.name,
-  });
+  }));
 };
 
 export { eventExists };
