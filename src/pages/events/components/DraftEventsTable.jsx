@@ -1,3 +1,4 @@
+import { useMediaQuery, useTheme } from "@mui/material";
 import PropTypes from "prop-types";
 import Chip from "../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -25,6 +26,9 @@ const formatRange = (detail) => {
 };
 
 const DraftEventsTable = ({ drafts, onResume, onDelete, canResume, canDelete, busyId }) => {
+  // Side by side from md up, one above the other below it (2026-09-30).
+  const theme = useTheme();
+  const stacked = useMediaQuery(theme.breakpoints.down("md"));
   const columns = [
     {
       title: "Event",
@@ -56,7 +60,16 @@ const DraftEventsTable = ({ drafts, onResume, onDelete, canResume, canDelete, bu
         const busy = busyId === event.id;
         const name = event?.eventInfoDetail?.eventName ?? "this event";
         return (
-          <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+          <div
+            data-draft-actions
+            style={{
+              display: "flex",
+              flexDirection: stacked ? "column" : "row",
+              alignItems: stacked ? "flex-end" : "center",
+              justifyContent: "flex-end",
+              gap: "8px",
+            }}
+          >
             {canResume && (
               <BlueButtonComponent
                 title="Continue setup"

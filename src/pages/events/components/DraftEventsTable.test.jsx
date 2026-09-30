@@ -73,3 +73,42 @@ describe("DraftEventsTable", () => {
     expect(screen.getByRole("button", { name: /continue setup/i })).toBeDisabled();
   });
 });
+
+/* 2026-09-30: side by side from md up, one above the other below it. */
+describe("DraftEventsTable — button layout", () => {
+  const viewport = (small) =>
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query) => ({
+        // MUI asks "(max-width:899.95px)" for down("md").
+        matches: small && /max-width/.test(query),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+  const actions = () =>
+    screen.getByRole("button", { name: /continue setup/i }).closest("[data-draft-actions]");
+
+  it("puts the buttons side by side on md and larger screens", () => {
+    viewport(false);
+    try {
+      setup();
+      expect(actions().style.flexDirection).toBe("row");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("stacks them on small screens", () => {
+    viewport(true);
+    try {
+      setup();
+      expect(actions().style.flexDirection).toBe("column");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
