@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **41** |
+| **Abierto, total** | **40** |
 | — bloquea (§1) | 2 |
 | — trabajo de producto (§2) | 15 |
-| — reunión del 29-09 (§2b) | 9 |
+| — reunión del 29-09 (§2b) | 8 |
 | — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 19 |
+| Cerrado desde que se escribió su lista | 20 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -319,13 +319,22 @@ Solo el wizard de **alta**. **El de edición de grupo tiene el mismo campo**
 probablemente el mismo hueco. Sin comprobar ni tocar: se reusan
 `PendingSubLocationNotice` y `pendingSubLocation` si hace falta.
 
-### 2b.3 — Documentos en el alta de evento: el arrastre [12, 13]
-`pages/events/newEventProcess/documents/Form.jsx`
+### ~~2b.3 — Documentos en el alta de evento: el arrastre [12, 13]~~ — hecho 2026-09-30
 
-- La zona "Drop here" parece aceptar archivos del escritorio. Hay que decir que
-  se arrastran documentos ya subidos, de *available* a *assigned*.
-- El documento arrastrado se dibuja **detrás** del panel. Hace falta z-index o
-  un portal para el overlay.
+`DocumentAssignmentBoard.jsx` + `utils/documentAssignment.js`, usados desde
+`documents/Form.jsx`.
+
+- ~~La zona parecía aceptar archivos del escritorio~~: ahora dice "Drag a
+  document here from the list on the left, or use Assign" y manda los
+  archivos a "Upload a new document" (antes "Add new Document"). Si alguien
+  suelta un archivo del sistema, se muestra un aviso en vez de que el
+  navegador lo abra y saque del alta.
+- ~~Se dibujaba detrás del panel~~: el documento arrastrado va en un
+  `DragOverlay`, por encima de todo. Además los componentes arrastrables ya no
+  se redefinen dentro del formulario en cada render.
+- **Nuevo**: botón **Assign** en cada documento, porque Fredrik dijo *"here I
+  can drag it, but I cannot click it"*. El arrastre empieza a los 5 px, así
+  que el clic funciona como clic.
 
 ### 2b.4 — Correo de recordatorio de vencidos [6, 7]
 `pages/conditionalPage/tables/OverdueDevicesTable.jsx`,

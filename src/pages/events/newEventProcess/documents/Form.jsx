@@ -1,4 +1,3 @@
-import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { message, Table, Tooltip } from "antd";
@@ -12,6 +11,8 @@ import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import DocumentUpload from "../../../../components/documents/DocumentUpload";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
+import DocumentAssignmentBoard from "./DocumentAssignmentBoard";
+import { assignDocument, unassignedDocuments } from "./utils/documentAssignment";
 
 const FormDocuments = () => {
   // eslint-disable-next-line no-unused-vars
@@ -45,11 +46,10 @@ const FormDocuments = () => {
     }
   }, [eventInfoDetail.legal_documents_list]);
 
-  // Helper: docs not yet assigned
-  const unassignedDocs =
-    availableDocuments?.data?.documents?.filter(
-      (doc) => !dataToDisplay.some((assigned) => assigned.id === doc._id)
-    ) || [];
+  const unassignedDocs = unassignedDocuments(
+    availableDocuments?.data?.documents,
+    dataToDisplay
+  );
 
   const handleRemoveDocument = (documentId) => {
     const updatedList = dataToDisplay.filter((doc) => doc.id !== documentId);
@@ -73,87 +73,12 @@ const FormDocuments = () => {
     }
   };
 
-  // Drag-and-drop item: available document
-  const DraggableDocument = ({ doc }) => {
-    const { attributes, listeners, setNodeRef, transform, isDragging } =
-      useDraggable({
-        id: doc._id,
-      });
-
-    const style = {
-      transform: transform
-        ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-        : undefined,
-      background: isDragging ? "#e0f2fe" : "#f9fafb",
-      border: "1px solid #e5e7eb",
-      borderRadius: "6px",
-      padding: "10px",
-      cursor: "grab",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    };
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        {...listeners}
-        {...attributes}
-        title="Drag to assign"
-      >
-        <span style={{ marginRight: "8px" }}>{doc.title}</span>
-        <span style={{ fontSize: "12px", color: "#6b7280" }}>{doc._id}</span>
-      </div>
-    );
-  };
-
-  // Drop zone: assigned list
-  const AssignedDropZone = ({ children }) => {
-    const { isOver, setNodeRef } = useDroppable({
-      id: "assigned-dropzone",
-    });
-    return (
-      <Box
-        ref={setNodeRef}
-        sx={{
-          border: `2px dashed ${isOver ? "#2563eb" : "#cbd5e1"}`,
-          backgroundColor: isOver ? "#eff6ff" : "#fafafa",
-          transition: "all 160ms ease",
-          borderRadius: "8px",
-          padding: "12px",
-          minHeight: "260px",
-        }}
-      >
-        {children}
-      </Box>
-    );
-  };
-
-  // Handle drop to assign
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (!over || over.id !== "assigned-dropzone") return;
-
-    const droppedId = active.id;
-    const doc = availableDocuments?.data?.documents?.find(
-      (d) => d._id === droppedId
-    );
-    if (!doc) {
-      message.error("Document not found");
-      return;
-    }
-    const alreadyAssigned = dataToDisplay.some((d) => d.id === doc._id);
-    if (alreadyAssigned) {
-      message.info("Document already assigned");
-      return;
-    }
-    const newDoc = {
-      id: doc._id,
-      title: doc.title,
-      view_url: doc.document_url,
-    };
-    setDataToDisplay((prev) => [...prev, newDoc]);
+  // Dragging and the Assign button both land here.
+  const handleAssign = (doc) => {
+    const { list, outcome } = assignDocument(dataToDisplay, doc);
+    if (outcome === "missing") return message.error("Document not found");
+    if (outcome === "duplicate") return message.info("Document already assigned");
+    setDataToDisplay(list);
     message.success(`"${doc.title}" assigned successfully`);
   };
 
@@ -250,65 +175,29 @@ const FormDocuments = () => {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Tooltip title="Drag a document from the left and drop it into the right panel to assign it to this event.">
+      <Tooltip title="Drag a document from the left and drop it into the right panel, or use Assign. Files from your computer are added with “Upload a new document”.">
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Available documents (drag) → Assigned/added documents (drop):{" "}
-          <QuestionIcon />
+          Documents for this event <QuestionIcon />
         </Typography>
       </Tooltip>
-      <DndContext onDragEnd={handleDragEnd}>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 2,
-            alignItems: "start",
-          }}
-        >
-          {/* Available documents (draggable list) */}
-          <Box
-            sx={{
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              padding: "12px",
-              minHeight: "260px",
-              backgroundColor: "var(--base-white, #fff)",
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Available documents ({unassignedDocs.length})
-            </Typography>
-            <Box sx={{ display: "grid", gap: 1 }}>
-              {loadingAvailable ? (
-                <Typography>Loading...</Typography>
-              ) : unassignedDocs.length === 0 ? (
-                <Typography>No documents available</Typography>
-              ) : (
-                unassignedDocs.map((doc) => (
-                  <DraggableDocument key={doc._id} doc={doc} />
-                ))
-              )}
-            </Box>
-          </Box>
-
-          {/* Drop zone + assigned preview */}
-          <AssignedDropZone>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Drop here to assign ({dataToDisplay.length})
-            </Typography>
-            <Table
-              size="small"
-              columns={assignedColumns}
-              dataSource={dataToDisplay || []}
-              rowKey="id"
-              pagination={false}
-            />
-          </AssignedDropZone>
-        </Box>
-      </DndContext>
+      <DocumentAssignmentBoard
+        available={unassignedDocs}
+        assigned={dataToDisplay}
+        loading={loadingAvailable}
+        onAssign={handleAssign}
+        assignedTable={
+          <Table
+            size="small"
+            columns={assignedColumns}
+            dataSource={dataToDisplay || []}
+            rowKey="id"
+            pagination={false}
+          />
+        }
+      />
       {activeTab === "1" ? (
         <BlueButtonComponent
-          title="Add new Document"
+          title="Upload a new document"
           func={() => setActiveTab("2")}
           styles={{ width: "100%", margin: "1rem 0" }}
         />
