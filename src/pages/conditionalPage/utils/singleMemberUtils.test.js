@@ -75,6 +75,14 @@ describe("validateSingleMemberForm", () => {
     expect(errs).toContain("Guardian phone number is required for minors.");
   });
 
+  // 2026-09-29: la misma regla que el import (memberContactRules.js) — un menor
+  // no necesita email ni teléfono propios; los avisos van al tutor.
+  it("acepta a un menor sin email ni teléfono propios", () => {
+    expect(
+      validateSingleMemberForm({ ...validMinor, email: "", phone: "" })
+    ).toEqual([]);
+  });
+
   it("no exige datos del guardián de un menor cuando ya están completos", () => {
     const errs = validateSingleMemberForm(validMinor);
     expect(errs).toEqual([]);

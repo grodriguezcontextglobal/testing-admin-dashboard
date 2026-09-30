@@ -256,17 +256,31 @@ Va primero porque es por donde entra un colegio, y Fredrik manda el correo al
 colegio esta semana: *"this needs to work… They're not going to sit and do it
 manually."*
 
-- **Fecha de nacimiento:** si Excel cambia el formato de la celda, la fila
-  queda *blocked*. El parser tiene que aceptar el número de serie de fecha de
-  Excel y las formas habituales, porque la gente va a pegar desde sus propias
-  hojas. Fredrik propuso bajar la plantilla en CSV. Eso no resuelve el
-  copy-paste.
-- **Contacto:** el email pasa a opcional. Regla a cerrar: al menos un medio de
-  contacto (email, teléfono o dirección), y si es menor, el del tutor.
-- **Instrucciones** por columna, como en `inventoryImportTemplate.js`.
-- **Imagen pegada en la celda, sin enlaces:** reusar `inventoryImportImages.js`
-  y el aviso de URL escrita a mano de `inventoryImportRows.js`.
-- **Código postal:** validar solo cuando el país sea US.
+**Hecho 2026-09-30, salvo la imagen.** Commit en el log, con `fix(members)`.
+
+- ~~Fecha de nacimiento~~: la celda de fecha de Excel ya se leía. Ahora
+  también se aceptan `.` y espacio como separador, el año de dos cifras, los
+  dígitos sin separador y el número en que Excel convierte `06152010`.
+- ~~Contacto~~: el email y el teléfono propios pasan a opcionales **solo para
+  menores**. Al tutor se le sigue exigiendo todo (nombre, email y teléfono),
+  porque se lo busca y se lo vincula por email y el consentimiento le llega
+  por email. El email del tutor **no** se copia al estudiante, porque el
+  consumidor del evento se busca por email y dos hermanos se fusionarían. La
+  regla vive en `memberContactRules.js` y la usan el import y el alta
+  individual.
+- ~~Instrucciones~~: la plantilla descargada lleva una hoja *Instructions*,
+  construida desde `MEMBER_IMPORT_COLUMNS`.
+- ~~Código postal~~: se comprueba solo con un estado de EE. UU., y avisa sin
+  bloquear. El cero inicial que Excel quita se repone.
+- **Imagen pegada en la celda: pendiente**, en commit aparte. Hay que reusar
+  `inventoryImportImages.js` y la subida de inventario, y enviar la URL en
+  `image_url`.
+
+**Sin verificar: si el backend acepta `email: ""`** en `/db_member/bulk-members`
+y en `/db_member/new-member`. Si la columna es NOT NULL o única, el primer menor
+sin email pasa y el segundo choca. Hay que probarlo en el navegador con dos
+menores sin email. Y un menor sin email todavía no se puede registrar a un
+evento: el consumidor sale de `member.email`. Eso es de backend.
 
 ### 2b.2 — Alta de inventario: cuatro retoques [8–11]
 `pages/inventory/actions/utils/uxForm/SerialNumberAndMoreInfoComponentForm.jsx`,

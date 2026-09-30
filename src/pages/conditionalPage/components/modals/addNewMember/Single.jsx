@@ -256,11 +256,18 @@ const Single = ({ onClose }) => {
           {[
             { key: "first_name", label: "First name" },
             { key: "last_name", label: "Last name" },
-            { key: "email", label: "Email", type: "email" },
-            { key: "phone", label: "Phone" },
+            // A minor's own email and phone are optional: notices go to the
+            // guardian (memberContactRules.js).
+            { key: "email", label: "Email", type: "email", adultsOnly: true },
+            { key: "phone", label: "Phone", adultsOnly: true },
           ].map((field) => (
             <div className="action-form__field" key={field.key}>
-              <Label htmlFor={field.key} required>{field.label}</Label>
+              <Label
+                htmlFor={field.key}
+                required={!(field.adultsOnly && ageFlags.minor)}
+              >
+                {field.label}
+              </Label>
               <Input
                 id={field.key}
                 type={field.type ?? "text"}

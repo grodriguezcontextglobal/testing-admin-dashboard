@@ -5,6 +5,7 @@
  */
 
 import { calculateStudentAgeFlags } from "./ageCalculationUtils";
+import { memberContactErrors } from "./memberContactRules";
 
 /** The pristine form state (company_id is injected by the component). */
 export const EMPTY_SINGLE_MEMBER_FORM = {
@@ -61,25 +62,11 @@ export const singleMemberFieldErrors = (
   form = {},
   { representativeLabel = "Guardian", requireDob = false } = {}
 ) => {
-  const errs = {};
-  if (!form.first_name) errs.first_name = "First name is required.";
-  if (!form.last_name) errs.last_name = "Last name is required.";
-  if (!form.email) errs.email = "Email is required.";
-  if (!form.phone) errs.phone = "Phone is required.";
+  // Same rule as the spreadsheet import — see memberContactRules.js.
+  const { minor } = calculateStudentAgeFlags(form.date_of_birth);
+  const errs = memberContactErrors({ ...form, minor }, { representativeLabel });
   if (requireDob && !form.date_of_birth)
     errs.date_of_birth = "Date of birth is required.";
-
-  const { minor } = calculateStudentAgeFlags(form.date_of_birth);
-  if (minor) {
-    if (!form.parent_guardian_first_name)
-      errs.parent_guardian_first_name = `${representativeLabel} first name is required for minors.`;
-    if (!form.parent_guardian_last_name)
-      errs.parent_guardian_last_name = `${representativeLabel} last name is required for minors.`;
-    if (!form.parent_guardian_email)
-      errs.parent_guardian_email = `${representativeLabel} email is required for minors.`;
-    if (!form.parent_guardian_phone_number)
-      errs.parent_guardian_phone_number = `${representativeLabel} phone number is required for minors.`;
-  }
   return errs;
 };
 

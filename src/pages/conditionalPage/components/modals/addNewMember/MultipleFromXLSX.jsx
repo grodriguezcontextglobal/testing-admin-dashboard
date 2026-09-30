@@ -18,6 +18,7 @@ import {
 } from "../../../utils/memberImportPresentation";
 import {
   MEMBER_IMPORT_COLUMNS,
+  buildInstructionRows,
   buildTemplateRow,
   columnRequirementLabel,
   validateAndNormalizeRows,
@@ -76,6 +77,14 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
     });
     const book = utils.book_new();
     utils.book_append_sheet(book, sheet, "Template");
+    // The guidance travels with the file (2026-09-29, "I need to add more
+    // instruction"). Only the first sheet is read on import, so this one is
+    // never mistaken for data.
+    utils.book_append_sheet(
+      book,
+      utils.json_to_sheet(buildInstructionRows()),
+      "Instructions"
+    );
     writeFile(book, "Member_Import_Template.xlsx");
   };
 

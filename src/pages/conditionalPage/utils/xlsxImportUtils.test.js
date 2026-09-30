@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   MEMBER_IMPORT_COLUMNS,
+  buildInstructionRows,
   buildTemplateRow,
+  columnRequirementLabel,
   headerAliasMap,
   normalizeHeader,
   parseImportedDob,
@@ -77,7 +79,7 @@ describe("validateAndNormalizeRows", () => {
   it("reporta campos core faltantes con el número de fila", () => {
     const { errors } = validateAndNormalizeRows([{ "First Name": "Ada" }], 1);
     expect(errors.some((e) => e.includes("Row 1"))).toBe(true);
-    expect(errors.some((e) => e.includes("last name"))).toBe(true);
+    expect(errors.some((e) => /last name/i.test(e))).toBe(true);
   });
 
   it("exige datos del guardián cuando minor es truthy (manual)", () => {
@@ -205,12 +207,13 @@ describe("MEMBER_IMPORT_COLUMNS — plantilla ↔ importador", () => {
   });
 
   it("los campos obligatorios de la plantilla son los que valida el importador", () => {
-    const required = MEMBER_IMPORT_COLUMNS.filter((c) => c.required).map((c) =>
-      resolveKey(normalizeHeader(c.header))
-    );
-    expect(required.sort()).toEqual(
-      ["first name", "last name", "email", "phone"].sort()
-    );
+    const keysWhere = (flag) =>
+      MEMBER_IMPORT_COLUMNS.filter((c) => c[flag])
+        .map((c) => resolveKey(normalizeHeader(c.header)))
+        .sort();
+    expect(keysWhere("required")).toEqual(["first name", "last name"].sort());
+    // 2026-09-29: el email y el teléfono propios solo se exigen a un adulto.
+    expect(keysWhere("requiredUnlessMinor")).toEqual(["email", "phone"].sort());
   });
 
   it("cada columna trae ejemplo y descripción para la guía y la plantilla", () => {
@@ -413,5 +416,167 @@ describe("date_of_birth en la importación", () => {
     );
     expect(errors).toEqual([]);
     expect(warnings).toEqual([]);
+  });
+});
+
+/* Reunión 2026-09-29 `5:03`–`11:36`: la fecha escrita "como la escribe la
+   gente" dejó la fila bloqueada. El parser ya leía la celda de fecha de Excel,
+   ISO y MM-DD-YYYY; lo que llega pegado desde otras hojas trae más formas. */
+describe("parseImportedDob — las formas que llegan pegadas de otras hojas", () => {
+  it("acepta punto y espacio como separador", () => {
+    expect(parseImportedDob("06.15.2010")).toBe("2010-06-15");
+    expect(parseImportedDob("06 15 2010")).toBe("2010-06-15");
+  });
+
+  it("acepta el año de dos cifras, sin poner a nadie en el futuro", () => {
+    expect(parseImportedDob("6/15/10")).toBe("2010-06-15");
+    expect(parseImportedDob("6/15/95")).toBe("1995-06-15");
+  });
+
+  it("acepta los dígitos sin separador, MMDDYYYY y YYYYMMDD", () => {
+    expect(parseImportedDob("06152010")).toBe("2010-06-15");
+    expect(parseImportedDob("20100615")).toBe("2010-06-15");
+  });
+
+  // Excel convierte 06152010 tecleado en el número 6152010: pierde el cero y
+  // deja de ser texto. No es un número de serie de fecha — ninguno llega a
+  // tanto —, así que se lee como los dígitos que se escribieron.
+  it("recupera los dígitos que Excel convirtió en número", () => {
+    expect(parseImportedDob(6152010)).toBe("2010-06-15");
+    expect(parseImportedDob(20100615)).toBe("2010-06-15");
+  });
+
+  it("sigue leyendo el número de serie de una celda de fecha", () => {
+    expect(parseImportedDob(42167)).toBe("2015-06-12");
+  });
+
+  it("no inventa fechas con dígitos que no lo son", () => {
+    expect(parseImportedDob("13152010")).toBeNull();
+    expect(parseImportedDob("123")).toBeNull();
+  });
+});
+
+describe("contacto — menores sin email propio (2026-09-29)", () => {
+  const minorRow = {
+    first_name: "Carl",
+    last_name: "Starmark",
+    date_of_birth: "06-15-2015",
+    parent_guardian_first_name: "Fredrik",
+    parent_guardian_last_name: "Starmark",
+    parent_guardian_email: "f@home.com",
+    parent_guardian_phone_number: "555-0101",
+  };
+
+  it("importa a un menor sin email ni teléfono propios", () => {
+    const { errors, rows } = validateAndNormalizeRows([minorRow], 1);
+    expect(errors).toEqual([]);
+    expect(rows[0]).toMatchObject({ minor: true, email: "", phone: "" });
+  });
+
+  it("no copia el email del tutor al estudiante", () => {
+    const { rows } = validateAndNormalizeRows([minorRow], 1);
+    expect(rows[0].email).toBe("");
+  });
+
+  // Al tutor se lo busca y se lo vincula por email, y el consentimiento le
+  // llega por email: sin él no hay a quién avisar.
+  it("sigue exigiendo el email del tutor", () => {
+    const { errors } = validateAndNormalizeRows(
+      [{ ...minorRow, parent_guardian_email: "" }],
+      1
+    );
+    expect(errors).toEqual(["Row 1: Guardian email is required for minors."]);
+  });
+
+  it("al adulto le sigue exigiendo email y teléfono", () => {
+    const { errors } = validateAndNormalizeRows(
+      [{ first_name: "Ada", last_name: "L", date_of_birth: "01-01-1990" }],
+      1
+    );
+    expect(errors).toEqual([
+      "Row 1: Email is required.",
+      "Row 1: Phone is required.",
+    ]);
+  });
+});
+
+/* Reunión 2026-09-29 `5:57`–`6:26`: un código postal equivocado se aceptaba
+   sin más. El formato depende del país y la plantilla no tiene columna de
+   país, así que solo se comprueba cuando el estado es de EE. UU. */
+describe("código postal", () => {
+  const row = (state, zip) => ({
+    first_name: "Ada",
+    last_name: "L",
+    email: "a@b.c",
+    phone: "1",
+    address_street: "1 Main",
+    address_city: "Boston",
+    address_state: state,
+    address_zip: zip,
+    date_of_birth: "01-01-1990",
+  });
+
+  it("devuelve el cero inicial que Excel le quita a un zip de EE. UU.", () => {
+    const { rows, warnings } = validateAndNormalizeRows([row("MA", 2134)], 1);
+    expect(rows[0].address_zip).toBe("02134");
+    expect(rows[0].address).toBe("1 Main, Boston, MA 02134");
+    expect(warnings).toEqual([]);
+  });
+
+  it("acepta ZIP+4", () => {
+    const { warnings } = validateAndNormalizeRows([row("NY", "10001-1234")], 1);
+    expect(warnings).toEqual([]);
+  });
+
+  it("avisa, sin bloquear, de un zip que no es de EE. UU.", () => {
+    const { errors, warnings } = validateAndNormalizeRows([row("NY", "1000A")], 1);
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([
+      'Row 1: zip code "1000A" is not a US zip code (12345 or 12345-6789).',
+    ]);
+  });
+
+  it("no juzga el código postal de fuera de EE. UU.", () => {
+    const { warnings, rows } = validateAndNormalizeRows(
+      [row("Ontario", "K1A 0B1")],
+      1
+    );
+    expect(warnings).toEqual([]);
+    expect(rows[0].address_zip).toBe("K1A 0B1");
+  });
+});
+
+/* Reunión 2026-09-29 `14:33`: "I need to add more instruction". La plantilla
+   descargada lleva una segunda hoja con la guía, construida de las mismas
+   columnas, para que no pueda contradecir al importador. */
+describe("buildInstructionRows — la hoja de instrucciones", () => {
+  it("trae una fila por columna de la plantilla, en el mismo orden", () => {
+    expect(buildInstructionRows().map((r) => r.Column)).toEqual(
+      MEMBER_IMPORT_COLUMNS.map((c) => c.header)
+    );
+  });
+
+  it("dice qué es obligatorio con la misma etiqueta que la guía en pantalla", () => {
+    const byColumn = Object.fromEntries(
+      buildInstructionRows().map((r) => [r.Column, r])
+    );
+    expect(byColumn.first_name.Requirement).toBe("mandatory");
+    expect(byColumn.email.Requirement).toBe("mandatory for adults");
+    expect(byColumn.parent_guardian_email.Requirement).toBe(
+      "mandatory if minor"
+    );
+  });
+});
+
+describe("columnRequirementLabel", () => {
+  it("distingue las cuatro clases de columna", () => {
+    expect(columnRequirementLabel({ required: true })).toBe("mandatory");
+    expect(columnRequirementLabel({ requiredUnlessMinor: true })).toBe(
+      "mandatory for adults"
+    );
+    expect(columnRequirementLabel({ requiredIfMinor: true })).toBe(
+      "mandatory if minor"
+    );
+    expect(columnRequirementLabel({})).toBe("optional");
   });
 });

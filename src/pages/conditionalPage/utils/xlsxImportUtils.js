@@ -6,6 +6,7 @@
  */
 
 import { calculateStudentAgeFlags } from "./ageCalculationUtils";
+import { memberContactErrors } from "./memberContactRules";
 
 /** Normalizes an arbitrary header name to a snake_case token. */
 export const normalizeHeader = (key) =>
@@ -88,17 +89,19 @@ export const MEMBER_IMPORT_COLUMNS = [
     header: "email",
     title: "Email",
     width: 200,
-    required: true,
+    requiredUnlessMinor: true,
     example: "john.doe@example.com",
-    description: "The member's email address. One row per address.",
+    description:
+      "The member's own email address, one per row. Required for adults. Optional for a minor: notices about a minor go to the guardian. Do not repeat the guardian's email here.",
   },
   {
     header: "phone",
     title: "Phone",
     width: 150,
-    required: true,
+    requiredUnlessMinor: true,
     example: "555-0123",
-    description: "The member's phone number.",
+    description:
+      "The member's own phone number. Required for adults, optional for a minor.",
   },
   {
     header: "external_id",
@@ -114,7 +117,7 @@ export const MEMBER_IMPORT_COLUMNS = [
     width: 120,
     example: "06-15-2010",
     description:
-      "MM-DD-YYYY. This is what decides whether the member is a minor, and therefore whether notices go to a guardian instead of to them. Leave it out and the row is treated as an adult.",
+      "MM-DD-YYYY, e.g. 06-15-2010. 06/15/2010, 6/15/10, 2010-06-15 and 06152010 are read too, and so is a cell Excel has turned into a date. This decides whether the member is a minor, and therefore whether notices go to a guardian instead of to them. Leave it out and the row is treated as an adult.",
   },
   {
     header: "grade",
@@ -157,7 +160,8 @@ export const MEMBER_IMPORT_COLUMNS = [
     title: "Zip Code",
     width: 100,
     example: "10001",
-    description: "Postal code.",
+    description:
+      "Postal code. For a US state it must be 12345 or 12345-6789; a zip that lost its leading zero in Excel (2134) is fixed on import.",
   },
   {
     header: "image_url",
@@ -190,7 +194,7 @@ export const MEMBER_IMPORT_COLUMNS = [
     requiredIfMinor: true,
     example: "jane.doe@example.com",
     description:
-      "Required when the member is a minor — every notice about the member goes here, not to the member.",
+      "Required when the member is a minor — every notice and consent request about the member goes here, not to the member.",
   },
   {
     header: "parent_guardian_phone_number",
@@ -202,12 +206,28 @@ export const MEMBER_IMPORT_COLUMNS = [
   },
 ];
 
-/** "(mandatory)" / "(mandatory if minor)" / "(optional)" for the guide steps. */
+/** The requirement wording the guide table and the Instructions sheet share. */
 export const columnRequirementLabel = (column) => {
   if (column?.required) return "mandatory";
+  if (column?.requiredUnlessMinor) return "mandatory for adults";
   if (column?.requiredIfMinor) return "mandatory if minor";
   return "optional";
 };
+
+/**
+ * The rows of the "Instructions" sheet in the downloaded template, so the
+ * guidance travels with the file instead of living only on the screen that
+ * offered the download.
+ *
+ * @returns {Array<{Column: string, Requirement: string, Description: string, Example: string}>}
+ */
+export const buildInstructionRows = () =>
+  MEMBER_IMPORT_COLUMNS.map((column) => ({
+    Column: column.header,
+    Requirement: columnRequirementLabel(column),
+    Description: column.description,
+    Example: column.example,
+  }));
 
 /**
  * The one example row shipped inside the downloaded template, keyed by the
@@ -226,6 +246,12 @@ export const buildTemplateRow = () =>
 const EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30);
 const MS_PER_DAY = 86400000;
 
+/**
+ * No birth date is a larger serial than 2099-12-31. A bigger number is digits
+ * Excel converted, not a date cell, and is read as the digits.
+ */
+const MAX_DATE_SERIAL = 73050;
+
 const pad = (value) => String(value).padStart(2, "0");
 const toIsoDay = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
 
@@ -241,10 +267,15 @@ const toIsoDay = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
  * a 15-year-old about their own lost laptop instead of their guardian — the exact
  * defect fixed twice already this month, arriving by a third route.
  *
- * Accepts, in order: a Date, an Excel serial, ISO `YYYY-MM-DD`, and the
- * `MM-DD-YYYY` the template documents (with `/` or `-`). `DD-MM-YYYY` is taken
- * only when the first number cannot be a month, which is a fact rather than a
- * guess; a genuinely ambiguous `06-07-2010` is read as the documented MM-DD.
+ * Accepts, in order: a Date, an Excel serial, ISO `YYYY-MM-DD`, the
+ * `MM-DD-YYYY` the template documents (with `-`, `/`, `.` or a space, and a
+ * two- or four-digit year), and bare digits `MMDDYYYY` / `YYYYMMDD`.
+ * `DD-MM-YYYY` is taken only when the first number cannot be a month, which is
+ * a fact rather than a guess; a genuinely ambiguous `06-07-2010` is read as the
+ * documented MM-DD.
+ *
+ * The extra forms are from the 2026-09-29 meeting: a date typed the way people
+ * type it blocked the row, and a school will paste from sheets it already has.
  *
  * @param {string|number|Date} value
  * @returns {string|null} YYYY-MM-DD
@@ -256,7 +287,12 @@ export const parseImportedDob = (value) => {
       : toIsoDay(value.getFullYear(), value.getMonth() + 1, value.getDate());
   }
 
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value > 0 &&
+    value <= MAX_DATE_SERIAL
+  ) {
     const date = new Date(EXCEL_EPOCH_UTC + value * MS_PER_DAY);
     if (Number.isNaN(date.getTime())) return null;
     // Read back in UTC: the serial is a whole day count, so any local-timezone
@@ -272,22 +308,43 @@ export const parseImportedDob = (value) => {
   const raw = `${value ?? ""}`.trim();
   if (!raw) return null;
 
-  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw);
+  const iso = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(raw);
   if (iso) {
     const [, year, month, day] = iso.map(Number);
     return isRealDate(year, month, day) ? toIsoDay(year, month, day) : null;
   }
 
-  const slashed = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(raw);
-  if (slashed) {
-    const [, first, second, year] = slashed.map(Number);
-    // first > 12 can only be a day, so DD-MM-YYYY is a reading, not a guess.
-    const [month, day] = first > 12 ? [second, first] : [first, second];
-    return isRealDate(year, month, day) ? toIsoDay(year, month, day) : null;
+  const separated = /^(\d{1,2})[-/. ](\d{1,2})[-/. ](\d{2}|\d{4})$/.exec(raw);
+  if (separated) {
+    const [, first, second, year] = separated.map(Number);
+    return monthFirst(first, second, expandYear(year, separated[3]));
+  }
+
+  // Digits with no separator, as typed — or as Excel left them after turning
+  // "06152010" into the number 6152010 and dropping the leading zero.
+  if (/^\d{7,8}$/.test(raw)) {
+    const digits = raw.padStart(8, "0");
+    const [yyyy, mm, dd] = [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6)].map(Number);
+    if (/^(19|20)/.test(digits) && isRealDate(yyyy, mm, dd)) return toIsoDay(yyyy, mm, dd);
+    const [first, second, year] = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].map(Number);
+    return monthFirst(first, second, year);
   }
 
   return null;
 };
+
+/** MM-DD, unless the first number cannot be a month — then it is the day. */
+function monthFirst(first, second, year) {
+  const [month, day] = first > 12 ? [second, first] : [first, second];
+  return isRealDate(year, month, day) ? toIsoDay(year, month, day) : null;
+}
+
+/** "10" -> 2010 and "95" -> 1995: a birth date is never in the future. */
+function expandYear(year, text) {
+  if (text.length === 4) return year;
+  const currentTwoDigits = new Date().getFullYear() % 100;
+  return year <= currentTwoDigits ? 2000 + year : 1900 + year;
+}
 
 /** Rejects 2026-02-31 and friends, which the Date constructor rolls forward. */
 function isRealDate(year, month, day) {
@@ -308,7 +365,33 @@ export const resolveKey = (normalizedKey) => {
   return null;
 };
 
-const REQUIRED_CORE = ["first name", "last name", "email", "phone"];
+/** States, DC and territories: where a zip code has one known shape. */
+const US_STATE_CODES = new Set(
+  (
+    "AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO " +
+    "MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY " +
+    "DC PR VI GU AS MP"
+  ).split(" ")
+);
+
+/**
+ * The zip as it should be stored, and whether it is wrong.
+ *
+ * Checked only for a US state: the template has no country column, and a
+ * Canadian or European postal code is not wrong for looking different. Excel
+ * reads a typed 02134 as the number 2134, so a short all-digit US zip gets its
+ * zeros back rather than being reported as invalid.
+ *
+ * @returns {{ value: string, invalid: boolean }}
+ */
+export const normalizeZip = (zip, state) => {
+  const text = `${zip ?? ""}`.trim();
+  const isUs = US_STATE_CODES.has(`${state ?? ""}`.trim().toUpperCase());
+  if (!text || !isUs) return { value: text, invalid: false };
+
+  const value = /^\d{1,4}$/.test(text) ? text.padStart(5, "0") : text;
+  return { value, invalid: !/^\d{5}(-\d{4})?$/.test(value) };
+};
 
 /**
  * Validates and normalizes raw spreadsheet rows into the member schema.
@@ -337,13 +420,6 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
         detectedSet.add(target);
       }
     });
-
-    const missingCore = REQUIRED_CORE.filter((k) => !normalizedRow[k]);
-    if (missingCore.length) {
-      errors.push(
-        `Row ${idx + 1}: missing required field(s): ${missingCore.join(", ")}`
-      );
-    }
 
     // Calculate minor from DOB; fall back to manual minor column for backward
     // compat. The raw cell is normalized first — see parseImportedDob: an Excel
@@ -383,18 +459,30 @@ export const validateAndNormalizeRows = (inputRows = [], companyId = null) => {
       );
     }
 
-    if (isMinor) {
-      if (!normalizedRow["parent guardian first name"])
-        errors.push(`Row ${idx + 1}: Guardian first name is required for minors.`);
-      if (!normalizedRow["parent guardian last name"])
-        errors.push(`Row ${idx + 1}: Guardian last name is required for minors.`);
-      if (!normalizedRow["parent guardian email"])
-        errors.push(`Row ${idx + 1}: Guardian email is required for minors.`);
-      if (!normalizedRow["parent guardian phone number"])
-        errors.push(
-          `Row ${idx + 1}: Guardian phone number is required for minors.`
-        );
+    // Who must be reachable depends on the age just derived — see
+    // memberContactRules.js, shared with the single-member form.
+    const contact = {
+      minor: isMinor,
+      first_name: normalizedRow["first name"],
+      last_name: normalizedRow["last name"],
+      email: normalizedRow.email,
+      phone: normalizedRow.phone,
+      parent_guardian_first_name: normalizedRow["parent guardian first name"],
+      parent_guardian_last_name: normalizedRow["parent guardian last name"],
+      parent_guardian_email: normalizedRow["parent guardian email"],
+      parent_guardian_phone_number: normalizedRow["parent guardian phone number"],
+    };
+    Object.values(memberContactErrors(contact)).forEach((message) =>
+      errors.push(`Row ${idx + 1}: ${message}`)
+    );
+
+    const zip = normalizeZip(normalizedRow.zip, normalizedRow.state);
+    if (zip.invalid) {
+      warnings.push(
+        `Row ${idx + 1}: zip code "${zip.value}" is not a US zip code (12345 or 12345-6789).`
+      );
     }
+    normalizedRow.zip = zip.value;
 
     const hasParts = ["street", "city", "state", "zip"].every((k) =>
       Boolean(normalizedRow[k])
