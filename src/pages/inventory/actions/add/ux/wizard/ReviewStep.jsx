@@ -115,7 +115,7 @@ const ReviewStep = ({
           <div style={{ ...kvCellStyle, gridColumn: isRent ? "span 2" : "span 4", borderRight: "none", borderBottom: "none" }}>
             <Typography variant="caption" color="text.secondary" sx={kvKeyStyle}>Description</Typography>
             <Typography variant="body2" sx={kvValStyle}>
-              {description} <BadgeWithDot color="gray" style={{ marginLeft: "4px" }}>Built for you</BadgeWithDot>
+              {description}
             </Typography>
           </div>
         </div>
@@ -138,7 +138,7 @@ const ReviewStep = ({
           )}
         </div>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-          A serial number that already exists in your inventory is rejected by the server, not silently merged — you get told which one.
+          If a serial number already exists, it will be rejected, and you will be notified.
         </Typography>
       </div>
 

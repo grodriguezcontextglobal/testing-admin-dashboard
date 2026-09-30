@@ -422,6 +422,8 @@ const useBulkActionLogic = () => {
             func={() => {
               setDisplaySublocationFields(false);
               setSubLocationInputs([{ id: Date.now(), value: "" }]);
+              // Or the hidden field keeps its text and the step waits on it.
+              setValue("sub_location", "");
             }}
             title="Remove all sub location"
             styles={{

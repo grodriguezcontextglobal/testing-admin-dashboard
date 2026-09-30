@@ -3,6 +3,7 @@ import useBulkActionLogic from "./useBulkActionLogic";
 
 import { STEPS } from "./wizardSteps";
 import { scrollToFirstFieldError } from "../utils/scrollToFirstFieldError";
+import { pendingSubLocation } from "../utils/pendingSubLocation";
 
 /* Re-exported so the hook stays the one import a caller needs; the data itself
    lives in wizardSteps.js, which has no imports of its own. */
@@ -39,6 +40,11 @@ const useCreateGroupWizard = () => {
   };
 
   const goNextFromLocation = async () => {
+    // The button is disabled for this too; this is the guard behind it.
+    if (pendingSubLocation(watch("sub_location"))) {
+      openNotificationWithIcon("Add the sub-location you typed, or clear it, before continuing.");
+      return;
+    }
     if (await trigger(LOCATION_FIELDS)) goToStep(2);
     else scrollToFirstFieldError();
   };

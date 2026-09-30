@@ -100,6 +100,7 @@ const AddNewBulkItems = () => {
           returningDate={wizard.returningDate}
           setReturningDate={wizard.setReturningDate}
           setSubLocationsSubmitted={wizard.setSubLocationsSubmitted}
+          setValue={wizard.setValue}
           subLocationsOptions={wizard.subLocationsOptions}
           subLocationsSubmitted={wizard.subLocationsSubmitted}
           watch={wizard.watch}

@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **42** |
+| **Abierto, total** | **41** |
 | — bloquea (§1) | 2 |
 | — trabajo de producto (§2) | 15 |
-| — reunión del 29-09 (§2b) | 10 |
+| — reunión del 29-09 (§2b) | 9 |
 | — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 18 |
+| Cerrado desde que se escribió su lista | 19 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -295,20 +295,22 @@ sin email pasa y el segundo choca. Hay que probarlo en el navegador con dos
 menores sin email. Y un menor sin email todavía no se puede registrar a un
 evento: el consumidor sale de `member.email`. Eso es de backend.
 
-### 2b.2 — Alta de inventario: cuatro retoques [8–11]
-`pages/inventory/actions/utils/uxForm/SerialNumberAndMoreInfoComponentForm.jsx`,
-`pages/inventory/actions/add/ux/wizard/ReviewStep.jsx`, `hooks/useSubLocations.jsx`
+### ~~2b.2 — Alta de inventario: cuatro retoques [8–11]~~ — hecho 2026-09-30
 
-- **Sublocación escrita y no añadida:** hoy se pierde en silencio. Hay que
-  resolverlo igual que `SerialScanner` en `18d7da99`: aviso visible con botón,
-  y Continue deshabilitado mientras haya texto sin añadir.
-- **"Add new identifier" → "Add additional identifier"**, con el `+`, y pasa a
-  secundario. **"Queue this item for creation"** pasa a primario, y los dos
-  botones van a la derecha, con los de Remove.
-- **Quitar el badge "Built for you"** (`ReviewStep.jsx:118`). Nadie en la
-  reunión supo qué era.
-- **Texto del duplicado** (`ReviewStep.jsx:141`) → *"If a serial number
-  already exists, it will be rejected, and you will be notified."*
+- ~~Sublocación escrita y no añadida~~: aviso con *Add sub-location* y
+  *Clear*, y Continue deshabilitado mientras haya texto
+  (`PendingSubLocationNotice.jsx`, `utils/pendingSubLocation.js`). "Remove all
+  sub location" ahora también limpia el campo, para que no quede un pendiente
+  oculto.
+- ~~Botones~~: "Add additional identifier" pasa a secundario, con `+`; "Queue
+  this item for creation" pasa a primario, a la derecha. El formulario es
+  compartido, así que el cambio también llega a `BulkItemForm` y a
+  `BulkRentedItems` (eventos).
+- ~~"Built for you"~~, quitado.
+- ~~Texto del duplicado~~, con su redacción.
+
+Solo el wizard de **alta**. El de edición de grupo no tiene este campo de
+sublocación.
 
 ### 2b.3 — Documentos en el alta de evento: el arrastre [12, 13]
 `pages/events/newEventProcess/documents/Form.jsx`

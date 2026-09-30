@@ -83,3 +83,31 @@ describe("the three ways of adding units", () => {
     );
   });
 });
+
+/* Meeting 2026-09-29 `21:03`–`25:48`: "why is this blue and the other one is
+   white?". Queueing the unit is what everyone has to do to continue, so it is
+   the primary action; an extra identifier is optional, so it is secondary —
+   and "new" read as "a new unit", so it says "additional". */
+describe("SerialNumberAndMoreInfoComponentForm — the two actions", () => {
+  const buttonNamed = (name) => screen.getByRole("button", { name });
+
+  it("calls the optional action 'Add additional identifier'", () => {
+    setup();
+    expect(buttonNamed(/add additional identifier/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add new identifier/i })).toBeNull();
+  });
+
+  it("makes adding an identifier the secondary button", () => {
+    setup();
+    expect(buttonNamed(/add additional identifier/i).className).not.toMatch(
+      /customized__blueButton/
+    );
+  });
+
+  it("makes queueing the unit the primary button", () => {
+    setup();
+    expect(buttonNamed(/queue this item for creation/i).className).toMatch(
+      /customized__blueButton/
+    );
+  });
+});

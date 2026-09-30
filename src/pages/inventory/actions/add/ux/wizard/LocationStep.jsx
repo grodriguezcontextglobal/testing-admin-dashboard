@@ -3,7 +3,9 @@ import { continueLabel } from "../../wizardSteps";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { renderFields } from "../../../utils/BulkItemsFields";
+import { pendingSubLocation } from "../../../utils/pendingSubLocation";
 import FieldGrid from "./FieldGrid";
+import PendingSubLocationNotice from "./PendingSubLocationNotice";
 import { cardBodyStyle, cardFootStyle, cardHeadStyle, cardStyle } from "./wizardStyles";
 
 /**
@@ -24,6 +26,7 @@ const LocationStep = ({
   returningDate,
   setReturningDate,
   setSubLocationsSubmitted,
+  setValue,
   subLocationsOptions,
   subLocationsSubmitted,
   watch,
@@ -40,6 +43,8 @@ const LocationStep = ({
     suppliersOptions: [],
   })
     .filter((field) => field.displayField && field.section === "location");
+
+  const pending = pendingSubLocation(watch("sub_location"));
 
   const mismatch =
     watch("location") && watch("tax_location") && watch("location") !== watch("tax_location");
@@ -65,6 +70,12 @@ const LocationStep = ({
           setSubLocationsSubmitted={setSubLocationsSubmitted}
           subLocationsSubmitted={subLocationsSubmitted}
           watch={watch}
+        />
+
+        <PendingSubLocationNotice
+          value={pending}
+          onAdd={addingSubLocation}
+          onClear={() => setValue("sub_location", "")}
         />
 
         {mismatch && (
@@ -116,7 +127,13 @@ const LocationStep = ({
       </div>
       <div style={cardFootStyle}>
         <GrayButtonComponent title="Back" buttonType="button" func={goBack} />
-        <BlueButtonComponent title={continueLabel("location")} buttonType="button" func={goNext} />
+        {/* Waits while a typed sub-location is not added — see the notice. */}
+        <BlueButtonComponent
+          title={continueLabel("location")}
+          buttonType="button"
+          func={goNext}
+          disabled={Boolean(pending)}
+        />
       </div>
     </div>
   );

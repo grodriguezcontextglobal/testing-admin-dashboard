@@ -1,8 +1,8 @@
 import { Grid, Typography } from "@mui/material";
 import { AutoComplete, Checkbox, Divider, message, Radio } from "antd";
 import { uniqueId } from "lodash";
+import { Plus } from "lucide-react";
 import { useState } from "react";
-import { WhiteCirclePlusIcon } from "../../../../../components/icons/WhiteCirclePlusIcon";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
@@ -322,11 +322,13 @@ const SerialNumberAndMoreInfoComponentForm = ({
                     style={{ width: "100%", margin: "0 0 0 -8px" }}
                     allowClear
                   />
-                  <BlueButtonComponent
-                    title={`Add new identifier`}
+                  {/* Secondary, and "additional": optional, and "new" read as a
+                      new unit (meeting 2026-09-29 `22:31`, `24:00`). */}
+                  <GrayButtonComponent
+                    title="Add additional identifier"
                     buttonType="button"
                     func={addIdentifierRow}
-                    icon={<WhiteCirclePlusIcon />}
+                    iconLeading={<Plus size={16} />}
                   />
                   {identifiers.length > 1 && (
                     <DangerButtonComponent
@@ -339,8 +341,11 @@ const SerialNumberAndMoreInfoComponentForm = ({
               </Grid>
             ))}
 
-            <div style={{ marginTop: "1rem" }}>
-              <GrayButtonComponent
+            {/* The primary action — what everyone has to do to continue — and
+                on the right, with the other row actions (meeting 2026-09-29
+                `24:32`–`25:48`). */}
+            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
+              <BlueButtonComponent
                 buttonType="button"
                 func={addSingleUnit}
                 title="Queue this item for creation"

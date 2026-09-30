@@ -66,3 +66,21 @@ describe("ReviewStep confirmation copy", () => {
     );
   });
 });
+
+/* Meeting 2026-09-29 `26:29`–`27:50`. Neither Fredrik nor Cesar could say what
+   the "Built for you" badge was ("I think you can remove that"), and the
+   duplicate-serial sentence took him two readings. */
+describe("ReviewStep — meeting 2026-09-29", () => {
+  it("no longer shows the unexplained 'Built for you' badge", () => {
+    const { container } = renderReview();
+    expect(container.textContent).not.toContain("Built for you");
+  });
+
+  it("says what happens to a duplicate serial in his words", () => {
+    const { container } = renderReview();
+    expect(container.textContent).toContain(
+      "If a serial number already exists, it will be rejected, and you will be notified."
+    );
+    expect(container.textContent).not.toContain("not silently merged");
+  });
+});
