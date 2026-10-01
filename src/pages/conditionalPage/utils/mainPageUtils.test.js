@@ -2,6 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 import { buildManageMembersMenu } from "./mainPageUtils";
 
 describe("buildManageMembersMenu", () => {
+  it("does not singularize a word that only ends in a double s", () => {
+    expect(buildManageMembersMenu({ titleParams: "staff" })[0].label).toBe("Add new staff");
+  });
+
   it("retorna add, divider, advance-grades, divider, export, divider, delete cuando los 4 flags están activos", () => {
     const items = buildManageMembersMenu({ titleParams: "members" });
     expect(items).toHaveLength(7);
@@ -14,9 +18,12 @@ describe("buildManageMembersMenu", () => {
     expect(items[6]).toMatchObject({ key: "delete", danger: true });
   });
 
+  /* B9 (2026-10-01): "Add" adds one person, so it is singular — it read
+     "Add new patients". Export and Delete act on many (Delete is a checkbox
+     selection), so they stay plural. */
   it("interpola titleParams en las etiquetas y capitaliza nada extra", () => {
     const items = buildManageMembersMenu({ titleParams: "patients" });
-    expect(items[0].label).toBe("Add new patients");
+    expect(items[0].label).toBe("Add new patient");
     expect(items[2].label).toBe("Advance grades");
     expect(items[4].label).toBe("Export patients (.xlsx)");
     expect(items[6].label).toBe("Delete patients");
@@ -25,8 +32,8 @@ describe("buildManageMembersMenu", () => {
   it("usa un fallback cuando titleParams está vacío", () => {
     const items = buildManageMembersMenu({ titleParams: "" });
     expect(items[0].label).toBe("Add new member");
-    expect(items[4].label).toBe("Export member (.xlsx)");
-    expect(items[6].label).toBe("Delete member");
+    expect(items[4].label).toBe("Export members (.xlsx)");
+    expect(items[6].label).toBe("Delete members");
   });
 
   it("cablea onAdd al onClick del item add", () => {

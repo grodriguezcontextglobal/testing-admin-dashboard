@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **34** |
+| **Abierto, total** | **33** |
 | — bloquea (§1) | 2 |
-| — trabajo de producto (§2) | 12 |
+| — trabajo de producto (§2) | 11 |
 | — reunión del 29-09 (§2b) | 6 |
 | — surgido esta semana (§3) | 7 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 26 |
+| Cerrado desde que se escribió su lista | 27 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -112,7 +112,10 @@ donde las hermanas ya se reconstruyeron.
 de staff sale de `staffProfileActionList`, con tests, escrito para leerse junto
 al de estudiantes. Esta lista lo dio por abierto por error.
 
-### B9 — una palabra para una persona, no dos
+### ~~B9 — una palabra para una persona, no dos~~ — hecho 2026-10-01
+
+**Cerrado:** "Add new" va en singular (*Add new patient*); Export y Delete actúan sobre varios y siguen en plural. El valor por defecto pasa a "members".
+
 `industryProfiles.js` ya resuelve el vocabulario por industria — existe el
 concepto de cómo llama cada compañía a la gente de su módulo. Pero queda al
 menos una etiqueta a mano: `mainPageUtils.test.js` fija `"Add new member"`. La
