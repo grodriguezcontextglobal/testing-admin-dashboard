@@ -208,3 +208,42 @@ export function buildReminderPayload({ member, subject, message, companyName }) 
     company: text(companyName),
   };
 }
+
+/**
+ * The reminder sent from the overdue-devices list, one row = one loan.
+ *
+ * It was written inline in OverdueDevicesTable, apart from the templates
+ * above, and drifted from them (meeting 2026-09-29 `15:54`–`17:11`): the
+ * device was named by serial alone, the school's name was glued to the last
+ * sentence, and the guardian was copied only on a strict `minor === 1`. It
+ * now reads like the other reminders — device name with its serial, a line to
+ * write to, and the sender above the school on lines of their own.
+ *
+ * The frame around it — the school's logo, "Powered by Devitrak" — is added by
+ * the server's mail wrapper, not here.
+ */
+export function buildOverdueRowReminder({ row, companyName, staffName, staffEmail }) {
+  const group = text(row?.device_item_group);
+  const serial = text(row?.device_serial_number);
+  const device = group ? (serial ? `${group} (${serial})` : group) : "device";
+  const due = formatLoanDate(row?.expected_return_date);
+  const days = Number(row?.days_overdue);
+  const lateness = Number.isFinite(days) && days > 0
+    ? ` and is now ${days} day${days === 1 ? "" : "s"} overdue`
+    : " and is now overdue";
+
+  return buildReminderPayload({
+    member: row,
+    subject: "Overdue device",
+    companyName,
+    message: [
+      `Hi ${memberDisplayName(row)},`,
+      "",
+      `Our records show the ${device} assigned to you was due back${due ? ` on ${due}` : ""}${lateness}.`,
+      "",
+      replyLine({ staffEmail, whenLate: true }),
+      "",
+      ...signOff({ staffName, companyName }),
+    ].join("\n"),
+  });
+}

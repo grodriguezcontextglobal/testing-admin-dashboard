@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, Select, Table, Tag, Input, message } from "antd";
 import { Typography } from "@mui/material";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { buildOverdueRowReminder } from "../utils/reminderTemplates";
 import { registerStaffActivity } from "../../../api/activityLog";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -46,25 +47,18 @@ const OverdueDevicesTable = () => {
     );
   }, [overdueQuery?.data?.data?.rows]);
 
-  const sendReminder = async (row) => {
-    const recipients = [row.email];
-    if (row.minor === 1 && row.parent_guardian_email) {
-      recipients.push(row.parent_guardian_email);
-    }
-    const dueDate = row.expected_return_date
-      ? new Date(row.expected_return_date).toLocaleDateString()
-      : "its due date";
-    await devitrakApi.post("/nodemailer/single-email-notification", {
-      consumer: recipients,
-      subject: `Overdue device reminder - ${user.companyData.company_name}`,
-      message: `Hi ${row.first_name},\n\nOur records show the device ${row.device_serial_number || row.device_item_group || ""
-        } assigned to you was due back on ${dueDate} and is now ${row.days_overdue
-        } day(s) overdue. Please return it as soon as possible.\n\n${user.companyData.company_name
-        }`,
-      eventSelected: "",
-      company: user.companyData.company_name,
-    });
-  };
+  // Same wording, recipients and subject as the profile's reminders — see
+  // buildOverdueRowReminder (meeting 2026-09-29 `15:54`).
+  const sendReminder = (row) =>
+    devitrakApi.post(
+      "/nodemailer/single-email-notification",
+      buildOverdueRowReminder({
+        row,
+        companyName: user.companyData.company_name,
+        staffName: [user?.name, user?.lastName].filter(Boolean).join(" "),
+        staffEmail: user?.email,
+      })
+    );
 
   const handleSingleReminder = async (row) => {
     try {

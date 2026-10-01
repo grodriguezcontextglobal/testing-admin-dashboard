@@ -370,7 +370,20 @@ probablemente el mismo hueco. Sin comprobar ni tocar: se reusan
   can drag it, but I cannot click it"*. El arrastre empieza a los 5 px, así
   que el clic funciona como clic.
 
-### 2b.4 — Correo de recordatorio de vencidos [6, 7]
+### 2b.4 — Correo de recordatorio de vencidos [6, 7] — mitad frontend hecha 2026-10-01
+
+**Frontend, hecho:** el recordatorio de "See overdue items" se armaba aparte de
+las plantillas. Ahora sale de `buildOverdueRowReminder`, con tests:
+- nombra el equipo y su serial, por ejemplo "the Chromebook (5CD1234)";
+- dice cuántos días va de atraso y a quién escribir;
+- firma con quien envía y la compañía, cada uno en su línea;
+- copia al tutor aunque `minor` llegue como texto.
+
+**Servidor, pendiente:** el logo de la compañía arriba, "Powered by Devitrak"
+al pie y el logo blanco sobre fondo oscuro van en el envoltorio de nodemailer.
+El pedido está en `FRONTEND_email_wrapper_ask.md`.
+
+Texto original:
 `pages/conditionalPage/tables/OverdueDevicesTable.jsx`,
 `memberDetailsDashboard/innerComponents/Reminders.jsx`
 

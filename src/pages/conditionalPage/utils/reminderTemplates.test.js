@@ -4,6 +4,7 @@ import {
   availableTemplates,
   buildReminderPayload,
   buildReminderSubject,
+  buildOverdueRowReminder,
   describeLoan,
   memberDisplayName,
   overdueLoans,
@@ -272,5 +273,73 @@ describe("the sign-off names the staff member sending it", () => {
     const message = build("overdue", { staffName: "Gustavo Rodriguez" });
     expect(message).toContain("contact the person who sent this");
     expect(message).not.toContain("reply to this email");
+  });
+});
+
+/* Meeting 2026-09-29 `15:54`–`17:11`. The reminder sent from "See overdue
+   items" was built by hand in OverdueDevicesTable, apart from these templates:
+   it named the device by its serial alone ("the device 5CD1234"), ended on the
+   school's name glued to the last sentence, and added the guardian only when
+   `minor === 1` strictly — the same miss reminderRecipients already fixed. */
+describe("buildOverdueRowReminder — the overdue list's reminder", () => {
+  const row = {
+    first_name: "Carl",
+    last_name: "Starmark",
+    email: "carl@school.edu",
+    minor: "1",
+    parent_guardian_email: "fredrik@home.com",
+    device_item_group: "Chromebook",
+    device_serial_number: "5CD1234",
+    expected_return_date: "2026-09-13",
+    days_overdue: 16,
+  };
+  const build = (overrides = {}) =>
+    buildOverdueRowReminder({
+      row,
+      companyName: "Beaver Bridges Public School",
+      staffName: "Fredrik Starmark",
+      staffEmail: "fredrik@devitrak.com",
+      ...overrides,
+    });
+
+  it("names the device, with its serial beside it", () => {
+    expect(build().message).toContain("the Chromebook (5CD1234) assigned to you");
+  });
+
+  it("says how late it is", () => {
+    expect(build().message).toContain("is now 16 days overdue");
+    expect(build({ row: { ...row, days_overdue: 1 } }).message).toContain("is now 1 day overdue");
+  });
+
+  it("puts the school on its own line under the sender, not glued to the last sentence", () => {
+    const lines = build().message.split(/\n/);
+    expect(lines.slice(-3)).toEqual([
+      "Thank you,",
+      "Fredrik Starmark",
+      "Beaver Bridges Public School",
+    ]);
+  });
+
+  it("tells them who to write to", () => {
+    expect(build().message).toContain("write to fredrik@devitrak.com");
+  });
+
+  it("copies the guardian of a minor even when minor arrives as text", () => {
+    expect(build().consumer).toEqual(["carl@school.edu", "fredrik@home.com"]);
+  });
+
+  it("uses the same subject as every other reminder", () => {
+    expect(build().subject).toBe(
+      "Overdue device - Notification from Beaver Bridges Public School"
+    );
+  });
+
+  it("falls back to the group when there is no serial, and to 'device' when there is neither", () => {
+    expect(build({ row: { ...row, device_serial_number: "" } }).message).toContain(
+      "the Chromebook assigned to you"
+    );
+    expect(
+      build({ row: { ...row, device_serial_number: "", device_item_group: "" } }).message
+    ).toContain("the device assigned to you");
   });
 });
