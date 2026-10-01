@@ -244,3 +244,39 @@
   color: var(--gray-600, #5d615a);
   font-family: "Inter", sans-serif;
 }
+/* Documents and folders grouped by what they are for (D1 + D2). */
+.document-library {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.document-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.document-group + .document-group {
+  margin-top: 8px;
+}
+
+.document-group__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font: 600 16px/24px Inter, sans-serif;
+  color: var(--gray-800, #1d2939);
+}
+
+.document-group__count {
+  font: 500 14px/20px Inter, sans-serif;
+  color: var(--gray-500, #667085);
+}
+
+.tag.expired {
+  color: var(--warning-700, #b54708);
+  background: var(--warning-50, #fffaeb);
+  border-color: var(--warning-200, #fedf89);
+}

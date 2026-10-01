@@ -11,11 +11,21 @@ import Header from "../components/Header";
 import "./Documents.css";
 import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import FolderDialog from "./FolderDialog";
+import FilterBar from "../../../components/UX/filterBar/FilterBar";
+import { buildUsesForOptions } from "../../../components/documents/utils/documentUploadForm";
 import {
+  FOLDER_TRIGGER_ACTIONS,
   emptyFolderForm,
   folderFormFromRecord,
   triggerActionOption,
 } from "./utils/folderForm";
+import {
+  documentUseCounts,
+  filterDocuments,
+  groupDocumentsByUse,
+  groupFoldersByTrigger,
+  isExpiredDocument,
+} from "./utils/documentLibrary";
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -25,6 +35,8 @@ const Documents = () => {
   const [openFolderDialog, setOpenFolderDialog] = useState(false);
   const [editingFolder, setEditingFolder] = useState(null);
   const [folderForm, setFolderForm] = useState(emptyFolderForm());
+  // "all", "expired", "other" or a use id — see documentLibrary.js.
+  const [documentFilter, setDocumentFilter] = useState("all");
   const { user } = useSelector((state) => state.admin);
   const queryClient = useQueryClient();
 
@@ -82,7 +94,7 @@ const Documents = () => {
      and the per-field messages are. This is only what happens afterwards. */
   const handleFolderSaved = (outcome, folderName) => {
     message.success(`${folderName} was ${outcome}.`);
-    queryClient.invalidateQueries(["folders", user?.companyData?.id]);
+    queryClient.invalidateQueries({ queryKey: ["folders", user?.companyData?.id] });
     fetchFolders();
   };
 
@@ -90,7 +102,7 @@ const Documents = () => {
     try {
       await devitrakApi.delete(`/document/folder/${folderId}`);
       message.success("Folder deleted successfully");
-      queryClient.invalidateQueries(["folders", user?.companyData?.id]);
+      queryClient.invalidateQueries({ queryKey: ["folders", user?.companyData?.id] });
       fetchFolders();
     } catch (error) {
       message.error("Failed to delete folder");
@@ -122,11 +134,45 @@ const Documents = () => {
       );
     }
 
-    return (
+    // By what each document is for (D1 + D2). `trigger_action` was always on
+    // the record; the list ignored it and showed everything flat.
+    const uses = buildUsesForOptions(user?.companyData?.industry);
+    const counts = documentUseCounts(documents, uses);
+    const tabs = [
+      { key: "all", label: `All (${counts.all})` },
+      ...uses
+        .filter((use) => counts[use.id] > 0)
+        .map((use) => ({ key: use.id, label: `${use.label} (${counts[use.id]})` })),
+      counts.other > 0 && { key: "other", label: `Other (${counts.other})` },
+      counts.expired > 0 && { key: "expired", label: `Expired (${counts.expired})` },
+    ].filter(Boolean);
+    const filter = tabs.some((tab) => tab.key === documentFilter) ? documentFilter : "all";
+
+    const grid = (list) => (
       <div className="document-grid">
-        {documents.map((doc) => (
+        {list.map((doc) => (
           <DocumentCard doc={doc} key={doc._id} />
         ))}
+      </div>
+    );
+
+    return (
+      <div className="document-library">
+        <FilterBar tabs={tabs} activeTab={filter} onTabChange={setDocumentFilter} />
+        {filter === "all"
+          ? groupDocumentsByUse(documents, uses).map((group) => (
+              <section className="document-group" key={group.id}>
+                <h3 className="document-group__title">
+                  {group.label}
+                  <span className="document-group__count">
+                    {group.documents.length}
+                    {group.expiredCount > 0 ? ` · ${group.expiredCount} expired` : ""}
+                  </span>
+                </h3>
+                {grid(group.documents)}
+              </section>
+            ))
+          : grid(filterDocuments(documents, filter, new Date(), uses))}
       </div>
     );
   };
@@ -156,8 +202,15 @@ const Documents = () => {
           />
         )}
 
+        {/* By the action each folder is shown at (D2). */}
+        {groupFoldersByTrigger(folders, FOLDER_TRIGGER_ACTIONS).map((group) => (
+        <section className="document-group" key={group.id}>
+        <h3 className="document-group__title">
+          {group.label}
+          <span className="document-group__count">{group.folders.length}</span>
+        </h3>
         <div className="folder-grid">
-          {folders.map((folder) => (
+          {group.folders.map((folder) => (
             <div
               className="folder-card"
               key={folder.folder_id || folder._id || folder.folder_name}
@@ -181,15 +234,20 @@ const Documents = () => {
                         const doc = documents.find(
                           (d) => d._id === folderDoc.document_id
                         );
-                        return doc ? (
+                        if (!doc) return null;
+                        // Kept in the folder, but no screen hands it out (2b.8).
+                        const expired = isExpiredDocument(doc);
+                        return (
                           <span
                             key={folderDoc.document_id}
-                            className={`tag ${folderDoc.active ? "active" : ""
-                              }`}
+                            className={`tag ${folderDoc.active && !expired ? "active" : ""} ${
+                              expired ? "expired" : ""
+                            }`}
                           >
                             {folderDoc.document_name || doc.title}
+                            {expired ? " · Expired" : ""}
                           </span>
-                        ) : null;
+                        );
                       })}
                       {folder.documents.length > 3 && (
                         <span className="tag">
@@ -214,6 +272,8 @@ const Documents = () => {
             </div>
           ))}
         </div>
+        </section>
+        ))}
       </div>
     );
   };
