@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCustodyTimeline,
+  formatTimelineMoment,
   buildStaffHandoffDevice,
   deriveDeviceState,
   parseAssignmentEventName,
@@ -552,5 +553,77 @@ describe("resolveStaffLabel", () => {
 
   it("says something honest when there is no id either", () => {
     expect(resolveStaffLabel({})).toBe("a staff member");
+  });
+});
+
+/* Meeting 2026-09-29 `1:05:18`–`1:06:28`. A laptop's chain read, top to
+   bottom, "added → returned → assigned" — and it was assigned, then returned.
+   Everything happened the same day. assigned_date / returned_date are DATE
+   (read as local midnight) while create_at carries a time, so "Added to
+   inventory" at 10:00 sorted ABOVE the assignment and the return at 00:00, and
+   the tie between those two fell to insertion order (return first). */
+describe("buildCustodyTimeline — the same day", () => {
+  const sameDay = () =>
+    buildCustodyTimeline({
+      item: { item_id: 7, create_at: "2026-08-25T10:12:40.000Z" },
+      memberLeases: [
+        {
+          id: 1,
+          member_id: 4,
+          assigned_date: "2026-08-25",
+          returned_date: "2026-08-25",
+          returned: 1,
+        },
+      ],
+    });
+
+  it("reads newest first: returned, then assigned, then added", () => {
+    expect(sameDay().map((entry) => entry.kind)).toEqual([
+      "returned",
+      "assigned",
+      "created",
+    ]);
+  });
+
+  it("orders by time inside a day when both entries carry one", () => {
+    const entries = buildCustodyTimeline({
+      item: {},
+      memberLeases: [
+        { id: 1, member_id: 4, assigned_date: "2026-08-25T09:00:00", returned_date: "2026-08-25T11:00:00", returned: 1 },
+        { id: 2, member_id: 5, assigned_date: "2026-08-25T14:00:00", returned: 0 },
+      ],
+    });
+    expect(entries.map((entry) => `${entry.kind}-${entry.personId}`)).toEqual([
+      "assigned-5",
+      "returned-4",
+      "assigned-4",
+    ]);
+  });
+
+  it("still puts a later day above an earlier one", () => {
+    const entries = buildCustodyTimeline({
+      item: { item_id: 7, create_at: "2026-08-20T10:00:00" },
+      memberLeases: [{ id: 1, member_id: 4, assigned_date: "2026-08-25", returned: 0 }],
+    });
+    expect(entries.map((entry) => entry.kind)).toEqual(["assigned", "created"]);
+  });
+});
+
+/* "You may want to put a time stamp on it too, and not only the date" —
+   `1:06:05`, hour, minute and second (`1:13:47`). Only where the record has
+   one: a DATE column has no time to show, and inventing midnight would lie. */
+describe("formatTimelineMoment", () => {
+  it("shows the time, to the second, when the value carries one", () => {
+    expect(formatTimelineMoment("2026-08-25T14:03:09")).toMatch(/2026.*2:03:09\sPM/);
+  });
+
+  it("shows only the date for a date-only value", () => {
+    const text = formatTimelineMoment("2026-08-25");
+    expect(text).toMatch(/2026/);
+    expect(text).not.toMatch(/AM|PM/);
+  });
+
+  it("is null when there is no date", () => {
+    expect(formatTimelineMoment(null)).toBeNull();
   });
 });

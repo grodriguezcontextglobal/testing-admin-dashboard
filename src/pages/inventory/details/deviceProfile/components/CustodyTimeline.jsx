@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ActivityFeed from "../../../../../components/UX/activityFeed/ActivityFeed";
 import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
 import { formatLoanDate } from "../../../../../components/UX/profile";
+import { formatTimelineMoment } from "../utils/deviceProfileModel";
 
 /**
  * The device's chain of custody.
@@ -31,7 +32,9 @@ const describe = (entry) => {
   const parts = [];
   if (entry.kind === "assigned") {
     if (entry.dueDate) parts.push(`Due back ${formatLoanDate(entry.dueDate)}`);
-    if (entry.location) parts.push(entry.location);
+    // Labelled: a bare "FFF" — whatever was typed as the address when it was
+    // assigned — read as a glitch (meeting 2026-09-29 `1:14:18`).
+    if (entry.location) parts.push(`Location: ${entry.location}`);
     if (entry.legacy) {
       // Pre-lease records carry no due date at all; say so rather than
       // letting the gap read as "returned on time".
@@ -101,7 +104,7 @@ const CustodyTimeline = ({ entries, loan }) => {
     timestamp:
       entry.kind === "overdue"
         ? loan.label
-        : formatLoanDate(entry.date) ?? "Date not recorded",
+        : formatTimelineMoment(entry.date) ?? "Date not recorded",
   }));
 
   return <ActivityFeed items={items} />;

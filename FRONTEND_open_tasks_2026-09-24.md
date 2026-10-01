@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **36** |
+| **Abierto, total** | **35** |
 | — bloquea (§1) | 2 |
 | — trabajo de producto (§2) | 12 |
-| — reunión del 29-09 (§2b) | 7 |
+| — reunión del 29-09 (§2b) | 6 |
 | — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 24 |
+| Cerrado desde que se escribió su lista | 25 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -402,7 +402,27 @@ parte de esto puede ser del backend.
 
 `pages/events/quickGlance/components/AllInventoryEventForCustomerOnly.jsx`
 
-### 2b.6 — Historial del dispositivo: orden, hora y un `FFF` [20, 23]
+### ~~2b.6 — Historial del dispositivo: orden, hora y un `FFF` [20, 23]~~ — hecho 2026-10-01
+
+**Causa del desorden:** `assigned_date` y `returned_date` son columnas `DATE`
+(se leen como medianoche), y `create_at` lleva hora. El mismo día, "Added to
+inventory" a las 10:00 quedaba por encima de la asignación y la devolución, y
+el empate entre esas dos se resolvía por el orden de inserción. Se leía
+*added → returned → assigned*.
+
+- **Orden:** primero por día; dentro del día, por hora solo si las dos
+  entradas la tienen; si no, por etapa (alta, asignación, devolución).
+  `newestCustodyFirst` en `deviceProfileModel.js`, con tests.
+- **Hora:** se muestra hora, minutos y segundos cuando el dato la tiene
+  (`formatTimelineMoment`). Una columna `DATE` no tiene hora, y no se inventa.
+- **`FFF`:** era la ubicación escrita al asignar en una prueba, no un fallo.
+  Ahora se muestra como "Location: FFF".
+
+**Para backend (va con 2b.7):** que la asignación y la devolución tengan hora
+requiere que `assigned_date` y `returned_date` pasen a `DATETIME`, o que haya
+un `created_at` por evento de custodia.
+
+Texto original:
 
 - Sale *added → returned → assigned* cuando lo que pasó fue *assigned → returned*.
   Todo tiene la misma fecha y no hay hora, así que no se ve el orden.

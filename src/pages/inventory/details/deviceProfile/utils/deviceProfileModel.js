@@ -418,14 +418,60 @@ export function buildCustodyTimeline({
     });
   }
 
-  return entries.sort((a, b) => {
-    const left = parseDateValue(a.date)?.getTime();
-    const right = parseDateValue(b.date)?.getTime();
-    // Undated entries sink rather than jumping to the top of the chain.
-    if (left === undefined || left === null || Number.isNaN(left)) return 1;
-    if (right === undefined || right === null || Number.isNaN(right)) return -1;
-    return right - left;
-  });
+  return entries.sort(newestCustodyFirst);
+}
+
+/* Within one day, the order things can happen in: added, then assigned, then
+   returned. Used when the records cannot say the time themselves. */
+const CUSTODY_STAGE = { created: 0, assigned: 1, returned: 2 };
+
+/** Whether a stored date carries a time of day, or is a bare DATE. */
+const hasTimeOfDay = (value) =>
+  value instanceof Date || /\d{1,2}:\d{2}/.test(String(value ?? ""));
+
+/**
+ * Newest first — by day, then by time only when BOTH entries record one, then
+ * by stage.
+ *
+ * Comparing raw timestamps was wrong on the day it mattered (meeting
+ * 2026-09-29 `1:05:18`): assigned_date / returned_date are DATE columns, read
+ * as local midnight, while create_at carries a time, so "Added to inventory" at
+ * 10:00 sorted above an assignment and a return made that same day, and the
+ * tie between those two fell to insertion order. It read "added → returned →
+ * assigned" for a laptop that was assigned, then returned.
+ */
+function newestCustodyFirst(a, b) {
+  const left = parseDateValue(a.date);
+  const right = parseDateValue(b.date);
+  // Undated entries sink rather than jumping to the top of the chain.
+  if (!left || Number.isNaN(left.getTime())) return 1;
+  if (!right || Number.isNaN(right.getTime())) return -1;
+
+  const dayDiff = startOfLocalDay(right).getTime() - startOfLocalDay(left).getTime();
+  if (dayDiff !== 0) return dayDiff;
+
+  if (hasTimeOfDay(a.date) && hasTimeOfDay(b.date)) {
+    const timeDiff = right.getTime() - left.getTime();
+    if (timeDiff !== 0) return timeDiff;
+  }
+  return (CUSTODY_STAGE[b.kind] ?? 0) - (CUSTODY_STAGE[a.kind] ?? 0);
+}
+
+/**
+ * When a custody event happened, to the second where the record knows it
+ * (meeting 2026-09-29 `1:06:05`, `1:13:47`). A DATE column has no time to show,
+ * and printing midnight would claim one, so a date-only value stays a date.
+ *
+ * @returns {string|null} "Aug 25, 2026, 2:03:09 PM" or "Aug 25, 2026"
+ */
+export function formatTimelineMoment(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const date = parseDateValue(value);
+  if (!date || Number.isNaN(date.getTime())) return null;
+  const day = { month: "short", day: "numeric", year: "numeric" };
+  return hasTimeOfDay(value)
+    ? date.toLocaleString(undefined, { ...day, hour: "numeric", minute: "2-digit", second: "2-digit" })
+    : date.toLocaleDateString(undefined, day);
 }
 
 
