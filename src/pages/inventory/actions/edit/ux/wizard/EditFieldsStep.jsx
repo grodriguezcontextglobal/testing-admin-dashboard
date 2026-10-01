@@ -22,6 +22,8 @@ import ImageUploaderComponent from "../../../utils/uxForm/ImageUploaderComponent
 import FieldsSections from "../../../utils/uxForm/FieldsSections";
 import { formatTrackedFieldValue } from "../../../utils/updateInventoryMatchSummary";
 import { useAssignableTargets } from "../../../utils/useAssignableTargets";
+import { pendingSubLocation } from "../../../utils/pendingSubLocation";
+import PendingSubLocationNotice from "../../../add/ux/wizard/PendingSubLocationNotice";
 
 const SECTIONS = [
   { key: "identity", title: "Identity", hint: "What the item is called across the app" },
@@ -68,6 +70,7 @@ const EditFieldsStep = ({
   setOpenScanningModal,
   setReturningDate,
   setSubLocationsSubmitted,
+  setValue,
   subLocationsOptions,
   subLocationsSubmitted,
   suppliersOptions,
@@ -77,6 +80,7 @@ const EditFieldsStep = ({
 }) => {
 
   const assignableTargets = useAssignableTargets();
+  const pendingSub = pendingSubLocation(watch("sub_location"));
 
   const fields = renderFields({
     assignableTargets,
@@ -296,9 +300,23 @@ const EditFieldsStep = ({
         );
       })}
 
+      <div style={{ padding: "0 24px" }}>
+        <PendingSubLocationNotice
+          value={pendingSub}
+          onAdd={addingSubLocation}
+          onClear={() => setValue("sub_location", "")}
+        />
+      </div>
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px" }}>
         <GrayButtonComponent title="Back" buttonType="button" func={goBack} />
-        <BlueButtonComponent title="Review changes" buttonType="button" func={handleSubmit(goNext, () => scrollToFirstFieldError())} />
+        {/* Waits while a typed sub-location is not added — same as the add wizard. */}
+        <BlueButtonComponent
+          title="Review changes"
+          buttonType="button"
+          disabled={Boolean(pendingSub)}
+          func={handleSubmit(goNext, () => scrollToFirstFieldError())}
+        />
       </div>
     </div>
   );

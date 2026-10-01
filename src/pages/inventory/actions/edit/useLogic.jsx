@@ -17,7 +17,10 @@ import {
   storeAndGenerateImageUrl,
   updateAllItemsBasedOnParameters,
 } from "../utils/EditBulkActionOptions";
-import { retrieveExistingSubLocationsForCompanyInventory } from "../utils/SubLocationRenderer";
+import {
+  parseSubLocationPath,
+  retrieveExistingSubLocationsForCompanyInventory,
+} from "../utils/SubLocationRenderer";
 import costValueInputFormat from "../../utils/costValueInputFormat";
 import { convertToBase64 } from "../../../../components/utils/convertToBase64";
 import { formatDate } from "../../utils/dateFormat";
@@ -489,7 +492,13 @@ const useLogic = () => {
                 : "No - It is not a container";
             return setValue(key, `${valueToSet}`);
           }
-          if (key === "sub_location" || key === "location") {
+          // The group's current path becomes the chips, as every other field
+          // prefills from the group. Left out, the chips started empty and the
+          // save sent "[]" over the group's sub-location (2026-10-01).
+          if (key === "sub_location") {
+            return setSubLocationsSubmitted(parseSubLocationPath(value));
+          }
+          if (key === "location") {
             return;
           }
           setValue(key, value);
@@ -708,6 +717,7 @@ const useLogic = () => {
     user,
     valueObject,
     watch,
+    setValue,
   };
 };
 

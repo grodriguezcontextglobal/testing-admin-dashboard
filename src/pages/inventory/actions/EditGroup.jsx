@@ -115,6 +115,7 @@ const EditGroup = () => {
           setOpenScanningModal={setOpenScanningModal}
           setReturningDate={wizard.setReturningDate}
           setSubLocationsSubmitted={wizard.setSubLocationsSubmitted}
+          setValue={wizard.setValue}
           subLocationsOptions={wizard.subLocationsOptions}
           subLocationsSubmitted={wizard.subLocationsSubmitted}
           suppliersOptions={wizard.supplierList}

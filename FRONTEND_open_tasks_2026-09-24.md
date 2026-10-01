@@ -368,10 +368,16 @@ evento: el consumidor sale de `member.email`. Eso es de backend.
 - ~~"Built for you"~~, quitado.
 - ~~Texto del duplicado~~, con su redacción.
 
-Solo el wizard de **alta**. **El de edición de grupo tiene el mismo campo**
-(`edit/useLogic.jsx:346`, `edit/ux/wizard/EditFieldsStep.jsx`) y
-probablemente el mismo hueco. Sin comprobar ni tocar: se reusan
-`PendingSubLocationNotice` y `pendingSubLocation` si hace falta.
+**Wizard de edición de grupo — comprobado y arreglado el 2026-10-01.** Tenía
+el mismo hueco, y uno peor:
+- guardaba solo los chips (`JSON.stringify(subLocationsSubmitted)`), así que
+  lo escrito sin añadir **sí se perdía**. Ahora usa `buildSubLocationPath`,
+  como el alta, que además descarta los "null";
+- **no cargaba la sublocación actual del grupo**: el relleno del formulario
+  se la saltaba. Los chips arrancaban vacíos y el guardado mandaba `"[]"`, lo
+  que probablemente borraba la sublocación del grupo al editar cualquier otro
+  campo. Ahora se carga con `parseSubLocationPath`;
+- el paso de campos muestra el mismo aviso y "Review changes" espera.
 
 ### ~~2b.3 — Documentos en el alta de evento: el arrastre [12, 13]~~ — hecho 2026-09-30
 
