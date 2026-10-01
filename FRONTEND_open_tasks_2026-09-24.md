@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **33** |
+| **Abierto, total** | **32** |
 | — bloquea (§1) | 2 |
-| — trabajo de producto (§2) | 11 |
+| — trabajo de producto (§2) | 10 |
 | — reunión del 29-09 (§2b) | 6 |
 | — surgido esta semana (§3) | 7 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 27 |
+| Cerrado desde que se escribió su lista | 28 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -126,7 +126,23 @@ Lo que queda es el menú "Manage" de la lista (`buildManageMembersMenu`), que us
 el plural donde va el singular, por ejemplo *"Add new patients"*. "member" es
 solo el valor por defecto cuando la compañía no tiene industria.
 
-### Merchant service ofrecido sin cuenta de Stripe detrás
+### ~~Merchant service ofrecido sin cuenta de Stripe detrás~~ — hecho 2026-10-01 en el alta
+
+**Corrección al texto de abajo:** la señal **no** es `companyAccountStripe`. Ese
+es el cliente de facturación de la suscripción de la compañía a Devitrak. La
+que importa es la cuenta **conectada**,
+`companyData.stripe_connected_account[test|live]`, que se crea en Profile →
+Stripe account (`utils/merchantAvailability.js`).
+
+Sin esa cuenta, en el paso 1 del alta el "Yes" queda deshabilitado, con el
+motivo y el enlace *Set up the Stripe account*. Si un borrador trae `merchant:
+true` de antes, se pasa a `false`.
+
+**Queda abierto:** los eventos que ya existen con `merchant: true` sin cuenta.
+La edición del evento solo arrastra el valor y no tiene control propio. El
+cobro con tarjeta en el evento sigue dependiendo del flag del evento.
+
+Texto original:
 
 Pedido 2026-09-25. Hoy se puede marcar que un evento **sí** necesita merchant
 service aunque la compañía nunca haya creado su cuenta de Stripe. El evento

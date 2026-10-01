@@ -29,6 +29,7 @@ const FormFields = ({
   setDaysBeforeEvent,
   setDaysAfterEvent,
   submitLabel = "Next step",
+  merchantAvailable = true,
   saving = false,
 }) => {
   return (
@@ -69,7 +70,12 @@ const FormFields = ({
       {/* location section */}
       <LocationSection key="locationSection" register={register} errors={errors} />
       {/* main merchant section */}
-      <MainMerchantSection key="mainMerchantSection" merchant={merchant} setMerchant={setMerchant} />
+      <MainMerchantSection
+        key="mainMerchantSection"
+        merchant={merchant}
+        setMerchant={setMerchant}
+        merchantAvailable={merchantAvailable}
+      />
       <Grid item xs={12} sm={12} md={12} lg={12}>
         <BlueButtonComponent
           title={submitLabel}

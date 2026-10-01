@@ -4,7 +4,7 @@ import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-const Yes = ({ merchant, setMerchant }) => {
+const Yes = ({ merchant, setMerchant, disabled = false }) => {
   return (
     <div
       style={{
@@ -27,7 +27,8 @@ const Yes = ({ merchant, setMerchant }) => {
               : "var(--base-white, #FFF)"
           }`,
         }}
-        onClick={() => setMerchant(true)}
+        disabled={disabled}
+        onClick={() => !disabled && setMerchant(true)}
       >
         <p
           style={{

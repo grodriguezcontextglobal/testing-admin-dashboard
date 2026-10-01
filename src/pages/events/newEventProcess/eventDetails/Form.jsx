@@ -27,6 +27,8 @@ import {
   stepOneSubmitLabel,
 } from "./utils/eventDetailsStep";
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../utils/eventLifecycle";
+import { hasStripeConnectedAccount } from "./utils/merchantAvailability";
+import { ConfigEnvExport } from "../../../../config/ConfigEnvExport";
 const Form = () => {
   const { eventInfoDetail, staff, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -67,6 +69,16 @@ const Form = () => {
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
+  // A merchant service needs the company's Stripe account to charge through.
+  const merchantAvailable = hasStripeConnectedAccount(
+    user?.companyData,
+    ConfigEnvExport.stripe_public_key
+  );
+  // A draft resumed, or an old default, may carry `true` from before the
+  // account was checked: it is not offerable, so it is not kept.
+  useEffect(() => {
+    if (!merchantAvailable && merchant) setMerchant(false);
+  }, [merchantAvailable, merchant]);
   const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
   const [daysBeforeEvent, setDaysBeforeEvent] = useState(
     eventInfoDetail.daysBeforeEvent
@@ -247,6 +259,7 @@ const Form = () => {
         errors={errors}
         handleEventInfo={handleEventInfo}
         submitLabel={stepOneSubmitLabel(event)}
+        merchantAvailable={merchantAvailable}
         saving={saving}
         register={register}
         eventInfoDetail={eventInfoDetail}
