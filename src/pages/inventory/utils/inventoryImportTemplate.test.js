@@ -347,3 +347,29 @@ describe("the column descriptions he rewrote", () => {
     );
   });
 });
+
+/* Meeting 2026-09-25, the three template notes left from that batch. */
+describe("the column descriptions from the 25-09 meeting", () => {
+  const notesFor = (field) =>
+    INVENTORY_IMPORT_COLUMNS.find((column) => column.field === field).notes.join(" ");
+
+  /* `3:26`–`5:18`: in a spreadsheet "row" already means something else, so
+     "one row per physical device" read as a rule about the sheet. */
+  it("says the serial is unique for the unit, in his words", () => {
+    expect(notesFor("serial_number")).toContain("unique for this unit and this row");
+    expect(notesFor("serial_number")).not.toContain("One row per physical device");
+  });
+
+  /* `5:40`: the synonyms stay in the code, the note stops listing them. And it
+     taught "Sale", which stopped being the value in fda62fdd. */
+  it("names Resale, not Sale, and drops the list of synonyms", () => {
+    expect(notesFor("ownership")).toContain("Permanent, Rent, Resale");
+    expect(notesFor("ownership")).not.toMatch(/\bSale\b/);
+    expect(notesFor("ownership")).not.toMatch(/synonym/i);
+  });
+
+  /* `6:27` */
+  it("says where the unit is physically", () => {
+    expect(notesFor("location")).toContain("Where the unit is physically.");
+  });
+});

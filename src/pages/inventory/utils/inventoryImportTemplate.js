@@ -153,7 +153,9 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "serial_number",
     required: true,
     width: 150,
-    notes: ["Unique per unit. One row per physical device."],
+    // "Row" already means a line of the sheet; the old note read as a rule
+    // about the spreadsheet (meeting 2026-09-25 `3:26`–`5:18`).
+    notes: ["Must be unique for this unit and this row."],
     samples: ["100001", "100002", "100003"],
   },
   {
@@ -189,10 +191,9 @@ export const INVENTORY_IMPORT_COLUMNS = [
     field: "ownership",
     required: true,
     width: 120,
-    notes: [
-      "Stored as one of: Permanent, Rent, Sale.",
-      "Common synonyms are mapped for you — Owned, Purchased and Donated become Permanent; Rental, Leased and Loaned become Rent; Sold and Consignment become Sale.",
-    ],
+    // The synonyms are still mapped (ownershipUtils); the note no longer lists
+    // them (`5:40`). "Resale", not "Sale": the canonical value since fda62fdd.
+    notes: ["One of: Permanent, Rent, Resale."],
     samples: ["Rent", "Permanent", "Rent"],
   },
   {
@@ -222,7 +223,7 @@ export const INVENTORY_IMPORT_COLUMNS = [
     required: true,
     width: 150,
     notes: [
-      "Where the unit physically sits, e.g. 'Miami, FL'.",
+      "Where the unit is physically.",
       "A location that does not exist yet is created during the import.",
     ],
     samples: ["Miami, FL", "Orlando, FL", "Miami, FL"],
