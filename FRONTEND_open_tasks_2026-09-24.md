@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **39** |
+| **Abierto, total** | **37** |
 | — bloquea (§1) | 2 |
-| — trabajo de producto (§2) | 14 |
+| — trabajo de producto (§2) | 12 |
 | — reunión del 29-09 (§2b) | 8 |
 | — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 21 |
+| Cerrado desde que se escribió su lista | 23 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -87,9 +87,11 @@ quiera.
 `src/pages/consumers/utils/CreateNewUser.jsx`. Solo maquetación; no tocar lo que
 envía el formulario.
 
-### E2 — el staff añadido desde quick-glance sale sin nombre
-`src/pages/events/quickGlance/staff/`. Bug. Mirar primero la clave de caché: es
-la misma familia que el hueco de invalidación que arregló `71c56930`.
+### ~~E2 — el staff añadido desde quick-glance sale sin nombre~~ — ya estaba hecho
+
+**Cerrado el 2026-08-26 en `6787de1c`**, antes de que se escribiera esta lista.
+Se comprobó el 2026-10-01: `StaffTable` resuelve el nombre con `buildStaffRows`,
+y los 49 tests de `eventStaffUtils` pasan.
 
 ### E3 — notificación por email desde el detalle de consumidor
 `src/components/notification/email/`. La carpeta es compartida: un cambio ahí
@@ -104,15 +106,22 @@ y conservar la forma de la petición.
 usos de `action-form__`**, así que sigue siendo la pantalla rara de esa carpeta,
 donde las hermanas ya se reconstruyeron.
 
-### B10 — staff y estudiantes deberían sentirse el mismo producto
-`StaffDetail.jsx` y el árbol de `memberDetailsDashboard` se construyeron sobre
-ProfileShell en momentos distintos y tienen menús diferentes.
+### ~~B10 — staff y estudiantes deberían sentirse el mismo producto~~ — ya estaba hecho
+
+**Cerrado el 2026-09-01**, según `FRONTEND_pending_tasks_2026-08-31.md`: el menú
+de staff sale de `staffProfileActionList`, con tests, escrito para leerse junto
+al de estudiantes. Esta lista lo dio por abierto por error.
 
 ### B9 — una palabra para una persona, no dos
 `industryProfiles.js` ya resuelve el vocabulario por industria — existe el
 concepto de cómo llama cada compañía a la gente de su módulo. Pero queda al
 menos una etiqueta a mano: `mainPageUtils.test.js` fija `"Add new member"`. La
 fontanería está; falta enchufar ese botón.
+
+**Revisado 2026-10-01:** la ficha ya se hizo el 2026-08-31 (`audienceWords`).
+Lo que queda es el menú "Manage" de la lista (`buildManageMembersMenu`), que usa
+el plural donde va el singular, por ejemplo *"Add new patients"*. "member" es
+solo el valor por defecto cuando la compañía no tiene industria.
 
 ### Merchant service ofrecido sin cuenta de Stripe detrás
 
