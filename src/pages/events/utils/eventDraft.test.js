@@ -30,8 +30,8 @@ const draft = {
   eventInfoDetail: {
     eventName: "BBQ",
     address: "1 Main St, Washington DC, 20001",
-    dateBegin: "2026-10-02T15:00:00.000Z",
-    dateEnd: "2026-10-02T20:00:00.000Z",
+    dateBegin: "2099-10-02T15:00:00.000Z",
+    dateEnd: "2099-10-02T20:00:00.000Z",
   },
   contactInfo: { name: "Fredrik Starmark", email: "f@x.com", phone: ["555"] },
   staff: { adminUser: [{ email: "f@x.com" }], headsetAttendees: [] },

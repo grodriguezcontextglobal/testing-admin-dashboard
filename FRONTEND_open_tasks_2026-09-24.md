@@ -211,8 +211,9 @@ anteriores al campo) **no** es borrador.
 - Probar en el navegador que retomar llega hasta el final sin duplicar.
 - Confirmar que `DELETE /db_event/:id` no deja filas huérfanas en tablas
   relacionadas.
-- El matiz de Fredrik: un borrador que llega a su fecha de fin pasa a
-  *inactive*. Hoy sigue diciendo Draft.
+- ~~El matiz de Fredrik: un borrador que llega a su fecha de fin pasa a
+  *inactive*~~ — hecho 2026-10-01 (`draftStatusLabel`). Sigue en Drafts, con
+  sus dos acciones, pero etiquetado "Inactive".
 
 ---
 

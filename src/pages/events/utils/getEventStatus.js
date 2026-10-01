@@ -7,7 +7,7 @@
  *   closed    → gray
  *   draft     → gray   (setup never finished — see eventLifecycle.js)
  */
-import { EVENT_CONFIGURATION, eventLifecycle } from "./eventLifecycle";
+import { EVENT_CONFIGURATION, draftStatusLabel, eventLifecycle } from "./eventLifecycle";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -30,7 +30,9 @@ export const getEventStatus = (event) => {
   // A draft is inactive too, and it has not closed — it never started (meeting
   // 2026-09-29 `39:16`). "Closed", not "Ended": the action is "Close event".
   const stage = eventLifecycle(event);
-  if (stage === EVENT_CONFIGURATION.DRAFT) return { key: "draft", label: "Draft", color: "default" };
+  if (stage === EVENT_CONFIGURATION.DRAFT) {
+    return { key: "draft", label: draftStatusLabel(event), color: "default" };
+  }
   if (stage === EVENT_CONFIGURATION.CLOSED) return { key: "closed", label: "Closed", color: "default" };
   if (Number.isFinite(begin) && now < begin) {
     const rel = relativeDays(now, begin);

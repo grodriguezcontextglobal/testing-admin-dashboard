@@ -60,3 +60,16 @@ export const writeEventConfiguration = async ({ api, mongoId, sqlId, value }) =>
     : false;
   return { mongo, sql };
 };
+
+/**
+ * What a draft is called. Past its end date it is "Inactive" (meeting
+ * 2026-09-29 `40:00`: "if it stays in draft and then event ended… move it to
+ * inactive"). It is still a draft — it can be finished or deleted — so it keeps
+ * its place in the Drafts section; only the label says what it has become.
+ *
+ * @returns {"Draft"|"Inactive"}
+ */
+export const draftStatusLabel = (event, now = new Date()) => {
+  const end = new Date(event?.eventInfoDetail?.dateEnd);
+  return !Number.isNaN(end.getTime()) && end < now ? "Inactive" : "Draft";
+};

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   EVENT_CONFIGURATION,
+  draftStatusLabel,
   eventLifecycle,
   writeEventConfiguration,
 } from "./eventLifecycle";
@@ -95,5 +96,29 @@ describe("writeEventConfiguration", () => {
     const result = await writeEventConfiguration({ api: client, mongoId: "m1", value: "draft" });
     expect(client.post).not.toHaveBeenCalled();
     expect(result).toEqual({ mongo: true, sql: false });
+  });
+});
+
+/* Meeting 2026-09-29 `40:00`: "if it stays in draft and then event ended, then
+   the event hasn't ended, you would just say move it to inactive." Still a
+   draft — it can be finished or deleted — but labelled for what it has become. */
+describe("draftStatusLabel", () => {
+  const now = new Date("2026-10-01T12:00:00Z");
+  const draftEnding = (dateEnd) => ({
+    active: false,
+    configuration: "draft",
+    eventInfoDetail: { dateEnd },
+  });
+
+  it("is Draft while the event's end date is still ahead", () => {
+    expect(draftStatusLabel(draftEnding("2026-10-05T20:00:00Z"), now)).toBe("Draft");
+  });
+
+  it("is Inactive once the end date has passed", () => {
+    expect(draftStatusLabel(draftEnding("2026-09-20T20:00:00Z"), now)).toBe("Inactive");
+  });
+
+  it("stays Draft when there is no end date to compare", () => {
+    expect(draftStatusLabel(draftEnding(undefined), now)).toBe("Draft");
   });
 });

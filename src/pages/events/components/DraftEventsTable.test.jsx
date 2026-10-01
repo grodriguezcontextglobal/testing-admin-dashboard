@@ -13,8 +13,8 @@ const drafts = [
     configuration: "in-progress",
     eventInfoDetail: {
       eventName: "BBQ",
-      dateBegin: "2026-10-02T15:00:00.000Z",
-      dateEnd: "2026-10-02T20:00:00.000Z",
+      dateBegin: "2099-10-02T15:00:00.000Z",
+      dateEnd: "2099-10-02T20:00:00.000Z",
     },
   },
 ];
@@ -110,5 +110,23 @@ describe("DraftEventsTable — button layout", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+/* A draft whose end date has passed reads Inactive (meeting 2026-09-29
+   `40:00`), and can still be finished or deleted. */
+describe("DraftEventsTable — a draft past its end date", () => {
+  it("labels it Inactive and keeps both actions", () => {
+    setup({
+      drafts: [
+        {
+          ...drafts[0],
+          id: "m2",
+          eventInfoDetail: { ...drafts[0].eventInfoDetail, dateEnd: "2020-01-01T00:00:00.000Z" },
+        },
+      ],
+    });
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /continue setup/i })).toBeInTheDocument();
   });
 });

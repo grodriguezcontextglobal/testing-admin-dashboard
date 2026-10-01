@@ -3,6 +3,7 @@
 // grouping logic and badge rendering.
 
 import { isDraftEvent } from "./eventDraft";
+import { draftStatusLabel } from "./eventLifecycle";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -27,7 +28,7 @@ export const getEventStatus = (event) => {
  * tone: "live" | "soon" (<= 7 days out) | "upcoming" | "past"
  */
 export const getCountdownLabel = (event) => {
-  if (isDraftEvent(event)) return { text: "Draft", tone: "draft" };
+  if (isDraftEvent(event)) return { text: draftStatusLabel(event), tone: "draft" };
   const status = getEventStatus(event);
   if (status === "live") return { text: "Live now", tone: "live" };
   if (status === "past") return { text: "Closed", tone: "past" };

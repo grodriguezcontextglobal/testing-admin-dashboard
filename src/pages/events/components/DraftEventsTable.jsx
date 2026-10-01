@@ -4,6 +4,7 @@ import Chip from "../../../components/UX/Chip/Chip";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
 import BaseTable from "../../../components/UX/tables/BaseTable";
+import { draftStatusLabel } from "../utils/eventLifecycle";
 
 /**
  * Events whose setup was started and not finished (meeting 2026-09-29
@@ -42,7 +43,8 @@ const DraftEventsTable = ({ drafts, onResume, onDelete, canResume, canDelete, bu
     {
       title: "Status",
       key: "status",
-      render: () => <Chip label="Draft" color="default" />,
+      // "Inactive" once its end date has passed (eventLifecycle.js).
+      render: (_, event) => <Chip label={draftStatusLabel(event)} color="default" />,
     },
     {
       title: "Dates",
