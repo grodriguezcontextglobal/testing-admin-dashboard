@@ -10,6 +10,7 @@ import TextLink from "../../../../../../../components/UX/buttons/TextLink";
 import Label from "../../../../../../../components/UX/inputs/Label";
 import { ProfileSkeleton } from "../../../../../../../components/UX/profile";
 import "../../../../../../../styles/global/actionForm.css";
+import { handoverDocumentSource } from "../../../../../../Profile/Documents/utils/handoverDocumentSource";
 
 /**
  * The contracts emailed with a handover.
@@ -68,32 +69,14 @@ const ContractDocumentsPicker = ({
    * those are the documents — the library picker is not offered, because
    * choosing something else would not be honoured.
    */
+  // Expired documents are not sent, from the folder or the library (2b.8) —
+  // see handoverDocumentSource.js.
   const source = useMemo(() => {
-    if (isLoading) return { documents: [], fromFolder: false };
-
-    const folders = (foldersQuery.data?.data?.folders ?? []).filter(
-      (folder) => folder.folder_trigger_action === "equipment_assignment"
-    );
-    const fromFolders = folders.flatMap((folder) =>
-      (folder.documents ?? []).map((doc) => ({
-        id: doc.document_id,
-        title: doc.document_title,
-        view_url: doc.document_url ?? "",
-      }))
-    );
-
-    if (fromFolders.length > 0) {
-      return { documents: fromFolders, fromFolder: true };
-    }
-
-    return {
-      documents: (documentsQuery.data?.data?.documents ?? []).map((doc) => ({
-        id: doc._id,
-        title: doc.title,
-        view_url: doc.document_url ?? "",
-      })),
-      fromFolder: false,
-    };
+    if (isLoading) return { documents: [], fromFolder: false, skippedExpired: [] };
+    return handoverDocumentSource({
+      folders: foldersQuery.data?.data?.folders,
+      libraryDocuments: documentsQuery.data?.data?.documents,
+    });
   }, [foldersQuery.data, documentsQuery.data, isLoading]);
 
   // Pinned documents are applied once, silently — it used to announce itself
@@ -170,6 +153,13 @@ const ContractDocumentsPicker = ({
         </p>
       )}
 
+      {source.skippedExpired?.length > 0 && (
+        <p className="action-form__feedback action-form__feedback--warning">
+          Not sent, because {source.skippedExpired.length === 1 ? "it has" : "they have"} expired:{" "}
+          {source.skippedExpired.join(", ")}. Update the expiration date in Profile → Documents.
+        </p>
+      )}
+
       {!isOpen && (
         <p className="action-form__step-note">
           No documents will be sent with this handover.
@@ -207,14 +197,16 @@ const ContractDocumentsPicker = ({
                       setSelectedDocuments(
                         ids
                           .map((id) =>
-                            source.documents.find((doc) => doc.id === id)
+                            source.documents.find((doc) => doc.id === id && !doc.expired)
                           )
                           .filter(Boolean)
+                          .map(({ id, title, view_url }) => ({ id, title, view_url }))
                       )
                     }
                     options={source.documents.map((doc) => ({
-                      label: doc.title,
+                      label: doc.expired ? `${doc.title} — Expired` : doc.title,
                       value: doc.id,
+                      disabled: doc.expired,
                     }))}
                   />
                   <p className="action-form__step-note">

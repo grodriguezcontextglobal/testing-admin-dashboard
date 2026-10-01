@@ -9,6 +9,7 @@ import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
+import { addDocumentsToEvent, eventDocumentOptions } from "../utils/eventDocuments";
 
 const DisplayDocumentsContainer = ({
   setOpenDisplayDocumentsContainer,
@@ -70,28 +71,15 @@ const DisplayDocumentsContainer = ({
       return;
     }
 
-    // Get full document objects for selected IDs
-    const newDocuments = selectedDocuments.map((_id) => {
-      const doc = availableDocuments.data.documents.find((d) => d._id === _id);
-      return {
-        id: doc._id,
-        title: doc.title,
-        view_url: doc.document_url,
-      };
-    });
-
-    // Combine existing and new documents, avoiding duplicates
-    const updatedList = [
-      ...event.legal_documents_list,
-      ...newDocuments.filter(
-        (newDoc) =>
-          !event.legal_documents_list.some(
-            (existingDoc) => existingDoc._id === newDoc._id
-          )
-      ),
-    ];
-
-    updateEventDocumentsMutation.mutate(updatedList);
+    // By `id` — the old check compared `_id` on both sides, which these
+    // entries do not carry, so adding to an event that already had a document
+    // added nothing. Expired documents are not added (2b.8).
+    const chosen = selectedDocuments
+      .map((_id) => availableDocuments.data.documents.find((d) => d._id === _id))
+      .filter(Boolean);
+    updateEventDocumentsMutation.mutate(
+      addDocumentsToEvent(event.legal_documents_list, chosen)
+    );
   };
 
   const downloadDocument = async (id) => {
@@ -202,19 +190,11 @@ const DisplayDocumentsContainer = ({
               value={selectedDocuments}
               onChange={setSelectedDocuments}
               loading={loadingAvailable}
-              options={
-                availableDocuments?.data?.documents
-                  ?.filter(
-                    (doc) =>
-                      !event.legal_documents_list.some(
-                        (assigned) => assigned._id === doc._id
-                      )
-                  )
-                  .map((doc) => ({
-                    label: doc.title,
-                    value: doc._id,
-                  })) || []
-              }
+              // Not on the event yet; an expired one is listed, disabled.
+              options={eventDocumentOptions(
+                availableDocuments?.data?.documents,
+                event.legal_documents_list
+              )}
             />
             <BlueButtonComponent
               onClick={handleAssignDocuments}

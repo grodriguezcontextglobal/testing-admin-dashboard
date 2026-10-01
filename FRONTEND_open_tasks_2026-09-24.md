@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **32** |
-| — bloquea (§1) | 2 |
+| **Abierto, total** | **30** |
+| — bloquea (§1) | 1 |
 | — trabajo de producto (§2) | 10 |
-| — reunión del 29-09 (§2b) | 6 |
+| — reunión del 29-09 (§2b) | 5 |
 | — surgido esta semana (§3) | 7 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 28 |
+| Cerrado desde que se escribió su lista | 30 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -44,7 +44,15 @@ y se pasa por alto lo que de verdad queda.
 
 ## 1. Abierto — bloquea
 
-### D1 + D2 — los documentos se listan en plano, ignorando el campo que ya existe
+### ~~D1 + D2 — los documentos se listan en plano, ignorando el campo que ya existe~~ — hecho 2026-10-01
+
+La biblioteca se agrupa por uso, con las etiquetas del formulario de subida
+de cada compañía (lo desconocido va a "Other"), y tiene filtros por uso y
+"Expired". Las carpetas se agrupan por su propio vocabulario
+(`utils/documentLibrary.js`, commit `424a1d96`). Se respondió la pregunta de
+abajo: un documento tiene un solo `trigger_action`, y se mantuvo así.
+
+Texto original:
 `src/pages/Profile/Documents/Documents.jsx`
 
 Tanto un documento como una carpeta llevan `trigger_action` (onboarding, event,
@@ -469,7 +477,27 @@ logged."*
 autor. Preguntarlo antes de diseñar. Relacionado con el log de actividad de
 staff (B2) y con el registro de consentimientos (2b.9).
 
-### 2b.8 — Documentos vencidos [14]
+### 2b.8 — Documentos vencidos [14] — frontend hecho 2026-10-01
+
+- **Etiqueta "Expired":** ya estaba en la tarjeta. Ahora también en la lista
+  de cada carpeta, con su filtro y su conteo por sección.
+- **No asignables en ninguna pantalla:**
+  - alta de evento: se ve en la lista, sin Assign ni arrastre, y
+    `assignDocument` lo rechaza;
+  - quick-glance del evento: deshabilitado en el selector;
+  - entrega de equipo a estudiante (`ContractDocumentsPicker`) y a staff
+    (`LegalDocumentModal`): no se envía, y se dice cuál quedó fuera.
+
+  Las dos entregas comparten ahora `handoverDocumentSource.js`.
+- **De paso:** quick-glance comparaba `_id` en entradas que usan `id`, así que
+  si el evento ya tenía un documento, agregarle otro no hacía nada. Corregido.
+
+**Backend, pendiente** (`FRONTEND_documents_backend_ask.md`):
+- no hay ruta para editar un documento, así que "reactivar" uno (cambiarle la
+  fecha) no se puede, y Edit document probablemente falla hoy;
+- el servidor no rechaza todavía asignar un vencido.
+
+Texto original:
 `components/documents/DocumentUpload.jsx`, `pages/Profile/Documents/Documents.jsx`
 
 - Etiqueta **Expired** en todas las vistas donde aparezca.

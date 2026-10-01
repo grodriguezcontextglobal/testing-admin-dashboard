@@ -78,6 +78,7 @@ const FormDocuments = () => {
     const { list, outcome } = assignDocument(dataToDisplay, doc);
     if (outcome === "missing") return message.error("Document not found");
     if (outcome === "duplicate") return message.info("Document already assigned");
+    if (outcome === "expired") return message.warning("That document has expired and cannot be assigned.");
     setDataToDisplay(list);
     message.success(`"${doc.title}" assigned successfully`);
   };

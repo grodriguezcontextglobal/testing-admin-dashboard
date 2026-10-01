@@ -53,3 +53,21 @@ describe("isFileDrag", () => {
     expect(isFileDrag({})).toBe(false);
   });
 });
+
+/* 2b.8 (meeting 2026-09-29 `37:36`): "an expired document… you should not
+   be able to use it anywhere". The board still lists it — marked — but it
+   cannot be put on the event. */
+describe("assignDocument — expired documents", () => {
+  const NOW = new Date("2026-10-01T12:00:00Z");
+  const expired = { _id: "old", title: "Old waiver", document_url: "u", expiration_date: "2026-09-01" };
+
+  it("refuses an expired document", () => {
+    expect(assignDocument([], expired, NOW)).toEqual({ list: [], outcome: "expired" });
+  });
+
+  it("still assigns one that expires later", () => {
+    expect(
+      assignDocument([], { ...expired, expiration_date: "2099-01-01" }, NOW).outcome
+    ).toBe("assigned");
+  });
+});

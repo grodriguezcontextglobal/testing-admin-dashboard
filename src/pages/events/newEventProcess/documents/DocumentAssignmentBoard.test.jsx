@@ -69,3 +69,22 @@ describe("DocumentAssignmentBoard", () => {
     expect(container.textContent).toContain("Assigned to this event (1)");
   });
 });
+
+describe("DocumentAssignmentBoard — an expired document", () => {
+  it("is listed as Expired, with no way to assign it", () => {
+    const onAssign = vi.fn();
+    render(
+      <DocumentAssignmentBoard
+        available={[
+          { _id: "old", title: "Old waiver", document_url: "u", expiration_date: "2020-01-01" },
+        ]}
+        assigned={[]}
+        loading={false}
+        onAssign={onAssign}
+      />
+    );
+    expect(screen.getByText("Old waiver")).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /assign old waiver/i })).toBeNull();
+  });
+});

@@ -12,6 +12,7 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import { isFileDrag } from "./utils/documentAssignment";
+import { isExpiredDocument } from "../../../Profile/Documents/utils/documentLibrary";
 
 /**
  * Available documents on the left, the event's on the right (meeting
@@ -42,10 +43,11 @@ const cardStyle = {
   gap: "8px",
 };
 
-const DocumentCard = ({ doc, onAssign, dragging = false }) => (
+const DocumentCard = ({ doc, onAssign, dragging = false, expired = false }) => (
   <div
     style={{
       ...cardStyle,
+      ...(expired ? { opacity: 0.7, cursor: "not-allowed" } : {}),
       ...(dragging
         ? { background: "#fff", boxShadow: "0 8px 24px rgba(16, 24, 40, 0.18)", cursor: "grabbing" }
         : {}),
@@ -54,7 +56,22 @@ const DocumentCard = ({ doc, onAssign, dragging = false }) => (
     <span style={{ font: "500 14px/20px Inter, sans-serif", overflowWrap: "anywhere" }}>
       {doc.title}
     </span>
-    {onAssign && (
+    {expired && (
+      <span
+        title="Expired documents cannot be assigned. Update its expiration date in Profile → Documents."
+        style={{
+          padding: "2px 8px",
+          borderRadius: "16px",
+          background: "var(--warning-50, #fffaeb)",
+          color: "var(--warning-700, #b54708)",
+          font: "500 12px/18px Inter, sans-serif",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Expired
+      </span>
+    )}
+    {onAssign && !expired && (
       <BlueButtonComponent
         title="Assign"
         buttonType="button"
@@ -165,9 +182,15 @@ const DocumentAssignmentBoard = ({ available, assigned, loading, onAssign, assig
                 No documents available. Upload one below.
               </Typography>
             ) : (
-              available.map((doc) => (
-                <DraggableDocument key={doc._id} doc={doc} onAssign={onAssign} />
-              ))
+              available.map((doc) =>
+                // Listed so nobody wonders where it went, but not draggable
+                // and with no Assign: an expired document is not handed out.
+                isExpiredDocument(doc) ? (
+                  <DocumentCard key={doc._id} doc={doc} expired />
+                ) : (
+                  <DraggableDocument key={doc._id} doc={doc} onAssign={onAssign} />
+                )
+              )
             )}
           </div>
         </div>
@@ -211,7 +234,12 @@ const docShape = PropTypes.shape({
   document_url: PropTypes.string,
 });
 
-DocumentCard.propTypes = { doc: docShape.isRequired, onAssign: PropTypes.func, dragging: PropTypes.bool };
+DocumentCard.propTypes = {
+  doc: docShape.isRequired,
+  onAssign: PropTypes.func,
+  dragging: PropTypes.bool,
+  expired: PropTypes.bool,
+};
 DraggableDocument.propTypes = { doc: docShape.isRequired, onAssign: PropTypes.func.isRequired };
 AssignedDropZone.propTypes = { children: PropTypes.node, onFileDropAttempt: PropTypes.func.isRequired };
 DocumentAssignmentBoard.propTypes = {

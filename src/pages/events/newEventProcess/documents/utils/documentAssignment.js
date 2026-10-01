@@ -1,3 +1,5 @@
+import { isExpiredDocument } from "../../../../Profile/Documents/utils/documentLibrary";
+
 /**
  * Moving company documents onto a new event (documents step of the wizard).
  * Dragging and the Assign button both go through `assignDocument`, so the two
@@ -7,10 +9,12 @@
 /**
  * @param {Array<{id: string}>} assigned what the event already carries
  * @param {{_id: string, title: string, document_url: string}|undefined} doc
- * @returns {{ list: object[], outcome: "assigned"|"duplicate"|"missing" }}
+ * @returns {{ list: object[], outcome: "assigned"|"duplicate"|"missing"|"expired" }}
  */
-export const assignDocument = (assigned = [], doc) => {
+export const assignDocument = (assigned = [], doc, now = new Date()) => {
   if (!doc) return { list: assigned, outcome: "missing" };
+  // Listed, marked, and not assignable (2b.8, meeting 2026-09-29 `37:36`).
+  if (isExpiredDocument(doc, now)) return { list: assigned, outcome: "expired" };
   if (assigned.some((entry) => entry.id === doc._id)) {
     return { list: assigned, outcome: "duplicate" };
   }

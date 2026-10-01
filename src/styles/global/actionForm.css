@@ -126,6 +126,12 @@
   color: var(--error-700, #9a3922);
 }
 
+/* Something was left out on purpose and the person should know — e.g. an
+   expired document that is not sent. */
+.action-form__feedback--warning {
+  color: var(--warning-700, #b54708);
+}
+
 .action-form__notice {
   margin: 0;
   padding: 10px 12px;

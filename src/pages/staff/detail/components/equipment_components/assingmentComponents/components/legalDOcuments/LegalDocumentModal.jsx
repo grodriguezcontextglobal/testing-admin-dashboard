@@ -13,6 +13,7 @@ import { GrayButton } from "../../../../../../../../styles/global/GrayButton";
 import GrayButtonText from "../../../../../../../../styles/global/GrayButtonText";
 import { OutlinedInputStyle } from "../../../../../../../../styles/global/OutlinedInputStyle";
 import { Subtitle } from "../../../../../../../../styles/global/Subtitle";
+import { handoverDocumentSource } from "../../../../../../../Profile/Documents/utils/handoverDocumentSource";
 
 const LegalDocumentModal = ({
   addContracts,
@@ -58,43 +59,23 @@ const LegalDocumentModal = ({
       return { documents: [], loading: true, source: "loading" };
     }
 
-    // Check if there are folders with trigger_action = "equipemnt_staff"
-    const equipmentStaffFolders =
-      fetchedFolders?.data?.folders?.filter(
-        (folder) => folder.folder_trigger_action === "equipment_assignment"
-      ) || [];
-    // If folders exist and have documents, use folder documents
-    if (equipmentStaffFolders.length > 0) {
-      const folderDocuments = [];
-      equipmentStaffFolders.forEach((folder) => {
-        if (folder.documents && folder.documents.length > 0) {
-          folder.documents.forEach((doc) => {
-            // if (doc.active) {
-              // Only include active documents
-              folderDocuments.push({
-                _id: doc.document_id,
-                title: doc.document_title,
-                document_url: doc.document_url || "", // Add fallback for URL
-              });
-            // }
-          });
-        }
-      });
-
-      if (folderDocuments.length > 0) {
-        return {
-          documents: folderDocuments,
-          loading: false,
-          source: "folders",
-        };
-      }
-    }
-
-    // Fallback to all available documents
+    // Shared with the member handover; expired documents are not sent, from
+    // the folder or the library (2b.8) — see handoverDocumentSource.js.
+    const source = handoverDocumentSource({
+      folders: fetchedFolders?.data?.folders,
+      libraryDocuments: availableDocuments?.data?.documents,
+    });
     return {
-      documents: availableDocuments?.data?.documents || [],
+      // This modal's own shape: `_id` / `document_url`.
+      documents: source.documents.map((doc) => ({
+        _id: doc.id,
+        title: doc.title,
+        document_url: doc.view_url,
+        expired: Boolean(doc.expired),
+      })),
       loading: false,
-      source: "all_documents",
+      source: source.fromFolder ? "folders" : "all_documents",
+      skippedExpired: source.skippedExpired,
     };
   }, [fetchedFolders, availableDocuments, loadingFolders, loadingAvailable]);
 
@@ -120,6 +101,11 @@ const LegalDocumentModal = ({
       message.success(
         `Auto-assigned ${autoAssignedDocs.length} document(s) from equipment staff folder`
       );
+      if (documentsToUse.skippedExpired?.length > 0) {
+        message.warning(
+          `Not sent, expired: ${documentsToUse.skippedExpired.join(", ")}. Update the expiration date in Profile → Documents.`
+        );
+      }
     }
   }, [
     documentsToUse,
@@ -371,23 +357,24 @@ const LegalDocumentModal = ({
                     value={selectedDocuments.map((doc) => doc.id || doc._id)}
                     onChange={(values) => {
                       // Convert selected IDs back to document objects
-                      const newSelectedDocs = values.map((_id) => {
-                        const doc = documentsToUse.documents.find(
-                          (d) => d._id === _id
-                        );
-                        return {
+                      const newSelectedDocs = values
+                        .map((_id) =>
+                          documentsToUse.documents.find((d) => d._id === _id && !d.expired)
+                        )
+                        .filter(Boolean)
+                        .map((doc) => ({
                           id: doc._id,
                           title: doc.title,
                           view_url: doc.document_url,
-                        };
-                      });
+                        }));
                       setSelectedDocuments(newSelectedDocs);
                     }}
                     loading={documentsToUse.loading}
                     options={
                       documentsToUse.documents?.map((doc) => ({
-                        label: doc.title,
+                        label: doc.expired ? `${doc.title} — Expired` : doc.title,
                         value: doc._id,
+                        disabled: doc.expired,
                       })) || []
                     }
                   />
