@@ -32,7 +32,7 @@ export const DASHBOARD_MOCKS = [
         kind: "cards",
         cells: ["Contact", "Dates", "Actions", "QR code"],
       },
-      { id: "health", kind: "bar", label: "Device health — out · back · lost" },
+      { id: "health", kind: "bar", label: "Status · Condition" },
       { id: "lostfee", kind: "block", label: "Lost fee report" },
       {
         id: "inventory",

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { groupBy } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 import DeviceHealthBar from "./DeviceHealthBar";
+import { needsAttention, summarizeEventDevices } from "../utils/eventDeviceSummary";
 import ModalListOfDefectedDevices from "./ModalListOfDefectedDevices";
 
 const FormatToDisplayDetail = () => {
@@ -45,37 +45,15 @@ const FormatToDisplayDetail = () => {
     );
     const pool = Array.isArray(inventoryEventData) ? inventoryEventData : [];
 
-    // Devices with a non-Operational status, for the issues modal (lost + defective).
-    const foundAllNoOperatingDeviceListInEvent = () => {
-      const groupingByReturnedStatus = groupBy(pool, "status");
-      let result = [];
-      for (let data of Object.entries(groupingByReturnedStatus)) {
-        if (data[0] !== "Operational") {
-          result = [...result, ...data[1]];
-        }
-      }
-      return result;
-    };
-
-    // Mutually exclusive counts that sum to the pool total — one honest story.
-    const isLost = (item) => `${item.status}`.toLowerCase() === "lost";
-    const isDefective = (item) => item.status !== "Operational" && !isLost(item);
-    const lost = pool.filter(isLost).length;
-    const needsRepair = pool.filter(isDefective).length;
-    const checkedOut = pool.filter(
-      (item) => item.activity && !isLost(item) && !isDefective(item)
-    ).length;
-    const onHand = Math.max(0, pool.length - lost - needsRepair - checkedOut);
-
     return (
       <>
         <DeviceHealthBar
-          counts={{ checkedOut, onHand, needsRepair, lost }}
+          summary={summarizeEventDevices(pool)}
           onOpenIssuesList={() => setDefectedDeviceList(true)}
         />
         {defectedDeviceList && (
           <ModalListOfDefectedDevices
-            data={foundAllNoOperatingDeviceListInEvent()}
+            data={pool.filter(needsAttention)}
             defectedDeviceList={defectedDeviceList}
             setDefectedDeviceList={setDefectedDeviceList}
           />

@@ -374,7 +374,7 @@ const MainPageQuickGlance = () => {
           <FormatEventDetailInfo />
         </Grid>
 
-        {/* Device health (unified stat bar; replaces metric cards + gauge) */}
+        {/* Device status and condition (two bars: location, condition) */}
         <Grid item xs={12} style={{ marginBottom: "16px" }}>
           <FormatToDisplayDetail />
         </Grid>

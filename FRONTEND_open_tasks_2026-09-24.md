@@ -524,8 +524,27 @@ pasarlo al almacén. Tiene que ir por la lógica de devolución de verdad, no
 cambiando un campo suelto, o el evento lo seguiría contando como fuera.
 **Pendiente de decidir quién puede hacerlo.**
 
-### 2b.11 — "Device health" → "Condition" [18]
+### ~~2b.11 — "Device health" → "Condition" [18]~~ — hecho 2026-10-01
 `pages/events/quickGlance/components/DeviceHealthBar.jsx:57`
+
+**Corrección al texto de abajo: no chocaba con §3.** La barra cuenta la
+condición del inventario **del evento**: `status` del `receiversPool` de
+Mongo (`/receiver/receiver-pool-list`, `/receiver/list-receiver-returned-issue`),
+o sea lo que se marcó perdido o con defecto al devolver. No lee la columna
+`condition` de SQL que el backend va a separar.
+
+"Condition" solo describía la mitad de la barra, que mezclaba dónde está el
+equipo con en qué estado volvió. Así que la tarjeta pasa a tener **dos
+barras** (`utils/eventDeviceSummary.js`, con tests):
+- **Status:** Checked out · On site. Un perdido llega como `{ status: "Lost",
+  activity: false }`, igual que uno devuelto, así que se deja fuera de esta
+  barra y se avisa: *"N lost devices not counted here — see Condition."*
+- **Condition:** Operational · Needs repair · Lost. Needs repair y Lost abren
+  la lista de afectados, como antes.
+
+Textos de ayuda actualizados (`help/content/events.js`, `tours.js`).
+
+Texto original:
 
 **No hacerlo suelto.** Choca con la tarea de `condition`/`status` (§3). Hoy
 Condition y status son el mismo valor, y el backend los va a separar. Hay que
@@ -686,7 +705,7 @@ Dentro de lo que sí es esta lista (reordenada el 2026-09-29):
    cada acción. Después, los consentimientos (2b.9), que lo usan.
 8. **E2**, un bug con una pista concreta que se cierra en una tarde.
 9. **Las tres de una línea**: `drop_console`, tests de `/status`, CSP de IIS.
-10. **`condition` antes de que el backend despliegue**, no después, y con él "Device health" (2b.11).
+10. **`condition` antes de que el backend despliegue**, no después. (2b.11 resultó independiente y ya está hecha.)
 11. **S1 y D3**, pantallas sueltas que ya no dependen de nada.
 12. **R3 e Issue #1** cuando haya respuesta del backend, y **devolver un dispositivo encontrado** (2b.10) cuando se decida quién puede hacerlo: esperan un dato o una decisión, no
    esfuerzo nuestro.

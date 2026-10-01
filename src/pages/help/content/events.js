@@ -59,7 +59,7 @@ export const eventsSection = {
           text: "Event detail — contact, dates, the actions card, and the QR code consumers scan to reach the event in the consumer app.",
         },
         {
-          text: "Device health — one bar for the whole event: what is out, what is back, what is lost.",
+          text: "Status and condition — two bars for the event's devices: how many are checked out or back on site, and how many are operational, need repair or are lost.",
         },
         {
           text: "Lost fee report — what has been charged for equipment that did not come back.",
