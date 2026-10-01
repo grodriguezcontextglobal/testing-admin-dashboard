@@ -5,7 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { onAddTransactionInfo } from "../../../../store/slices/customerSlice";
 
-const LOG = (...args) => console.log("[AuthorizedDeposit]", ...args);
+// A block body, not an expression: an arrow that returns console.log(...) uses
+// its result, so the build cannot strip it (vite.config.js, esbuild.pure).
+const LOG = (...args) => {
+  console.log("[AuthorizedDeposit]", ...args);
+};
 const ERR = (...args) => console.error("[AuthorizedDeposit]", ...args);
 
 const AuthorizedDeposit = () => {

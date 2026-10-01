@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **35** |
+| **Abierto, total** | **34** |
 | — bloquea (§1) | 2 |
 | — trabajo de producto (§2) | 12 |
 | — reunión del 29-09 (§2b) | 6 |
-| — surgido esta semana (§3) | 8 |
+| — surgido esta semana (§3) | 7 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 25 |
+| Cerrado desde que se escribió su lista | 26 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -509,7 +509,15 @@ más un test.
 Advisory low sin parche publicado. Camino no alcanzable: no usamos
 `getSemanticHTML` ni el clipboard, y la vista sanea con DOMPurify.
 
-### 192 `console.*` en el bundle de producción
+### ~~192 `console.*` en el bundle de producción~~ — hecho 2026-10-01
+
+Medido en un build real: había 26 `log`, 45 `warn` y 118 `error`. Ahora
+`esbuild.pure` quita, solo en el build, `log`, `info`, `debug` y `trace`. Se
+conservan `warn` y `error`, porque para eso sirve la consola en producción. El
+`terserOptions` muerto se quitó: Vite minifica con esbuild, y terser no es
+dependencia del proyecto. Quedan 2 `console.log` dentro de la librería `xlsx`.
+
+Texto original:
 `vite.config.js` pone `terserOptions.compress.drop_console` pero no
 `minify: "terser"`, y el minificador por defecto de Vite ignora `terserOptions`.
 Una línea, y no depende de ninguna major.

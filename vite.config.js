@@ -8,7 +8,7 @@ const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // background-sync queue doesn't grow unbounded.
 const MUTATION_QUEUE_RETENTION_MINUTES = 24 * 60;
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_APP_");
   // Same two origins src/api/serverManager.js fails over between. Kept as a
   // separate, mirrored computation here (this file runs in Node at build
@@ -159,11 +159,15 @@ export default defineConfig(({ mode }) => {
         },
       },
       chunkSizeWarningLimit: 600,
-      terserOptions: {
-        compress: {
-          drop_console: true,
-        },
-      },
     },
+    // Strip debug logging from the production bundle. `terserOptions` used to
+    // ask for this, but Vite minifies with esbuild unless `minify: "terser"`,
+    // so it never ran — and terser is not a dependency of this project. `pure`
+    // lets esbuild drop the calls whose result is unused. warn and error stay:
+    // they are what a production console is for.
+    esbuild:
+      command === "build"
+        ? { pure: ["console.log", "console.info", "console.debug", "console.trace"] }
+        : undefined,
   };
 });
