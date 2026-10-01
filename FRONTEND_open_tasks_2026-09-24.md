@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **37** |
+| **Abierto, total** | **36** |
 | — bloquea (§1) | 2 |
 | — trabajo de producto (§2) | 12 |
-| — reunión del 29-09 (§2b) | 8 |
+| — reunión del 29-09 (§2b) | 7 |
 | — surgido esta semana (§3) | 8 |
 | — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 23 |
+| Cerrado desde que se escribió su lista | 24 |
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -396,7 +396,10 @@ Antes de tocar nada, ver qué cubre ya el módulo de plantillas de correo por
 compañía. El branding se resuelve en el servidor desde `x-company-id`, así que
 parte de esto puede ser del backend.
 
-### 2b.5 — Tiles del inventario del evento: 3 por fila [19]
+### ~~2b.5 — Tiles del inventario del evento: 3 por fila [19]~~ — hecho 2026-10-01
+
+3 por fila desde `lg`, 2 en pantallas medianas y 1 en el teléfono (`quickGlance/utils/eventInventoryTiles.js`). Columnas fijas en vez de `auto-fit`, así que una sola tarjeta ya no ocupa todo el ancho.
+
 `pages/events/quickGlance/components/AllInventoryEventForCustomerOnly.jsx`
 
 ### 2b.6 — Historial del dispositivo: orden, hora y un `FFF` [20, 23]

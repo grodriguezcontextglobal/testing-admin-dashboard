@@ -1,3 +1,4 @@
+import { useMediaQuery, useTheme } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import CardRendered from "./CardRenderedDeviceSetup";
 import { useState } from "react";
@@ -6,11 +7,20 @@ import {
   onAddDeviceSetup,
   onAddEventData,
 } from "../../../../store/slices/eventSlice";
+import {
+  inventoryTileColumns,
+  inventoryTileGridTemplate,
+} from "../utils/eventInventoryTiles";
 
 const DisplayAllItemsSetInventoryEventForCustomers = ({ database }) => {
   const { event } = useSelector((state) => state.event);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const columns = inventoryTileColumns({
+    small: useMediaQuery(theme.breakpoints.down("sm")),
+    medium: useMediaQuery(theme.breakpoints.down("lg")),
+  });
   const onChange = async (props) => {
     setLoadingStatus(true);
     const deviceInventoryUpdated = [...event.deviceSetup];
@@ -36,12 +46,12 @@ const DisplayAllItemsSetInventoryEventForCustomers = ({ database }) => {
   };
 
   return (
-    // Auto-fit grid: cards expand to fill the row and wrap into new columns
-    // as more are added (1-2 cards stretch across the full width).
+    // Three per row on a large screen (meeting 2026-09-29 `1:03:39`), two on a
+    // medium one, one on a phone. Fixed columns: one card takes one column.
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gridTemplateColumns: inventoryTileGridTemplate(columns),
         gap: "16px 16px",
         width: "100%",
       }}
