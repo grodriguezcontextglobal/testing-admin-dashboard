@@ -85,14 +85,27 @@ esa sesión, ante Fredrik es una puerta fuerte, no una regla.
 El más grande de las cuatro listas. Hoy `PERMISSIONS` en `src/config/roles.js`
 es un mapa estático; no hay ni matriz ni UI. Nada empezado.
 
-### D3 — rediseño del formulario de subir documento
+### ~~D3 — rediseño del formulario de subir documento~~ — ya estaba hecho
+
+**Cerrado el 2026-08-26 en `97e8abda`** (*rebuild the document form and the
+folder dialog*), un día después de pedirse y antes de esta lista. Se comprobó
+el 2026-10-02: `DocumentUpload.jsx` está en `action-form`, por pasos, ya no
+usa `new_form_components/` y hace polling del 202 (`pollJobStatus`).
+
+Texto original:
 `src/components/documents/DocumentUpload.jsx`
 
 **Su bloqueo desapareció:** la subida de PDF ya maneja el 202 + polling
 (`pollJobStatus`, `/jobs/owned/:jobId`). El rediseño se puede hacer cuando se
 quiera.
 
-### E1 — crear consumidor desde un evento
+### ~~E1 — crear consumidor desde un evento~~ — ya estaba hecho
+
+**Cerrado el 2026-08-26 en `2bfd77ea`** (*rebuild adding a consumer*). El
+formulario compartido `CreateNewUser.jsx` está en `action-form`, y el evento lo
+abre desde `ButtonSections.jsx` y `ModalsComponentsEventQuickGlance.jsx`.
+
+Texto original:
 `src/pages/consumers/utils/CreateNewUser.jsx`. Solo maquetación; no tocar lo que
 envía el formulario.
 
@@ -102,7 +115,16 @@ envía el formulario.
 Se comprobó el 2026-10-01: `StaffTable` resuelve el nombre con `buildStaffRows`,
 y los 49 tests de `eventStaffUtils` pasan.
 
-### E3 — notificación por email desde el detalle de consumidor
+### ~~E3 — notificación por email desde el detalle de consumidor~~ — ya estaba hecho
+
+**Cerrado el 2026-08-26 en `d83fb5f1`** (*rebuild the one-off email to a
+consumer*). El email que abre el detalle de consumidor
+(`ConsumerActionRail.jsx`) es `SingleEmail.jsx`: está en `action-form`, tiene
+tests y el 18-09 se le ajustó la cola (`dbee206f`). Los otros cinco
+componentes de `notification/email/` no se abren desde ahí. Si hiciera falta
+rediseñarlos, sería una tarea nueva, con su propio alcance.
+
+Texto original:
 `src/components/notification/email/`. La carpeta es compartida: un cambio ahí
 aterriza en todas las pantallas que mandan correo. Revisar cada llamador.
 
@@ -110,7 +132,15 @@ aterriza en todas las pantallas que mandan correo. Revisar cada llamador.
 Toca payment intents de Stripe. Leer `useCreateTransaction` antes de mover nada
 y conservar la forma de la petición.
 
-### S1 — crear proveedor
+### ~~S1 — crear proveedor~~ — ya estaba hecho
+
+**Cerrado el 2026-08-26 en `094dd10e`** (*rebuild the supplier form and its
+paperwork*). El "0 usos de `action-form__`" de abajo era un falso negativo:
+`NewSupplier.jsx` solo coordina, y el formulario lo pinta
+`Profile/providers/components/UpdateProvider.jsx`. Ese sí está en
+`action-form`, en tres pasos y con errores por campo.
+
+Texto original:
 `src/pages/inventory/actions/utils/suppliers/NewSupplier.jsx`. Verificado: **0
 usos de `action-form__`**, así que sigue siendo la pantalla rara de esa carpeta,
 donde las hermanas ya se reconstruyeron.
