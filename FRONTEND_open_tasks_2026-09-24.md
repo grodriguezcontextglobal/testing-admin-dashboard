@@ -31,6 +31,7 @@ y se pasa por alto lo que de verdad queda.
 | — bloquea (§1) | 1 |
 | — trabajo de producto (§2) | 10 |
 | — reunión del 29-09 (§2b) | 5 |
+| — contrato del backend 2026-10-01 (§2c) | 5 |
 | — surgido esta semana (§3) | 7 |
 | — no es código (§4) | 7 |
 | Cerrado desde que se escribió su lista | 30 |
@@ -236,7 +237,8 @@ anteriores al campo) **no** es borrador.
 
 **Pendiente:**
 - Probar en el navegador que retomar llega hasta el final sin duplicar.
-- Confirmar que `DELETE /db_event/:id` no deja filas huérfanas en tablas
+- **Ver 2c.5:** hoy el Delete falla entero, porque el servidor lee el id de
+  `body.email`. Cuando se arregle, confirmar que `DELETE /db_event/:id` no deja filas huérfanas en tablas
   relacionadas.
 - ~~El matiz de Fredrik: un borrador que llega a su fecha de fin pasa a
   *inactive*~~ — hecho 2026-10-01 (`draftStatusLabel`). Sigue en Drafts, con
@@ -550,6 +552,124 @@ Texto original:
 Condition y status son el mismo valor, y el backend los va a separar. Hay que
 ver qué campo cuenta esta barra y renombrarlo en la misma pasada que los otros
 seis sitios que dicen "Condition".
+
+---
+
+## 2c. Abierto — cambios de contrato del backend, 2026-10-01 (sin desplegar)
+
+> Fuente: `FRONTEND_AGENT_contract_changes_2026-10-01.md`. Llegan en dos ramas
+> del servidor, **sin desplegar**: `feat/member-contact-minors` y
+> `fix/event-handlers-408`. Regla del documento: el cliente tiene que funcionar
+> con los dos contratos hasta que backend confirme el despliegue, y no se quita
+> código viejo antes. Los llamadores se buscaron por ruta y se comprobaron el
+> 2026-10-01.
+
+### 2c.1 — Formulario de edición de member: misma regla que el alta (alta prioridad)
+
+**La regla del servidor:** un adulto necesita `email` y `phone_number`. Un
+menor sin email **o** sin teléfono propio necesita `parent_guardian_email`.
+
+**El alta ya cumple, y es más estricta.** `memberContactErrors`
+(`utils/memberContactRules.js`) la aplican `Single.jsx` y el import: a un menor
+le exige siempre el tutor completo, tenga o no contacto propio. Todo lo que el
+cliente acepta, el servidor también. No hace falta tocarla.
+
+**La edición no la usa.** `UpdateMemberInformation.jsx` no llama a
+`memberContactErrors`. Hay que aplicársela, sobre todo en los tres casos que el
+servidor rechazará:
+- vaciar el email o el teléfono de un adulto;
+- desmarcar `minor` en un alumno sin contacto propio;
+- vaciar el email del tutor de un menor sin contacto propio.
+
+El servidor valida cómo queda la fila completa, no solo lo que se envía. Las
+ediciones sueltas de `StudentInfoSection.jsx` y `GuardianInfoSection.jsx`
+también hacen `PATCH /db_member/update-member-info`, así que hay que revisarlas.
+`AdvanceGrades.jsx` solo cambia el curso y no le afecta.
+
+### 2c.2 — Marcar el campo concreto con `missing` en el 400
+
+`POST /db_member/new-member` (`Single.jsx:191`, y `school/compliance/loadDemoData.js:126`)
+y `PATCH /db_member/update-member-info` (los tres sitios de 2c.1) devuelven
+`400 { ok: false, message, missing: ["email" | "phone_number" | "parent_guardian_email"] }`.
+Hoy ningún llamador lee `missing`.
+
+- Hay que traducir los nombres del servidor a los del formulario
+  (`phone_number` → `phone`) y marcar ese campo.
+- No hay que analizar el texto de `message`.
+- Con el servidor viejo `missing` no viene, así que se trata como opcional.
+- Ojo con la clave del mensaje de error: los endpoints de members usan
+  `message`, los de eventos `msg`.
+
+### 2c.3 — Import de estudiantes: mostrar las filas saltadas
+
+`POST /db_member/bulk-members` (`MultipleFromXLSX.jsx:156`) devuelve
+`contact_skipped: [{ row, missing, msg }]` en las respuestas 201, 202 y 400.
+
+- `row` es el índice desde 0 en la lista enviada, **no** la fila del Excel.
+  Para mostrarla hay que traducirla con el `__rowNum__` de cada fila, que
+  nuestro parser ya guarda. No sirve sumar 2, porque `sheet_to_json` se salta
+  las filas vacías.
+- `skipped` también cuenta las filas sin nombre, que no salen en
+  `contact_skipped`.
+- Hoy ningún sitio lee `skipped` ni `contact_skipped`: un import que salta
+  filas parece completo. Hay que mostrar cada fila saltada con su motivo.
+- **El aviso de éxito cuenta mal:** dice `${parsed.rows.length} members
+  imported` (`MultipleFromXLSX.jsx`), no `inserted`. Con filas saltadas, el
+  número es falso.
+- **El `catch` lee la clave equivocada:** usa `error.response.data.msg`, pero
+  los endpoints de members responden `message`. El 400 de "ninguna fila
+  cumple" mostraría el texto genérico en vez del motivo.
+- Con el servidor viejo no viene: `?? []`.
+- **Comprobar el 202:** el documento dice que `contact_skipped` viene en el
+  202, pero este componente no maneja ningún `jobId`: trata cualquier
+  `ok: true` como terminado. Hay que preguntar a backend cuándo responde 202
+  este endpoint, y si en ese caso `contact_skipped` viene en la respuesta o en
+  el `result` del job (`/jobs/owned/:jobId`).
+- La validación previa en el cliente ya existe (`memberContactErrors`), y es
+  más estricta que el servidor.
+- `xlsxImportUtils.js:519` y `:543` mandan `email: ""` y
+  `parent_guardian_email: ""` cuando faltan. El servidor lo acepta igual que
+  omitirlos, pero pide omitirlos. Es un cambio menor.
+- **Responde lo pendiente de 2b.1:** el servidor nuevo trata `email: ""` igual
+  que sin email.
+
+### 2c.4 — `event_staff`: el 408 deja de significar "ya estaba"
+
+`POST /db_event/event_staff`. El único llamador es `eventStaffSync.js:62`.
+
+`isAlreadyLinked` (`eventStaffSync.js:34`) trata **408 y 409** como "ya
+vinculado". Se hizo así el 2026-09-30, porque el servidor viejo respondía 408
+ante el duplicado. Con el nuevo, el duplicado es 409 y cualquier otro fallo es
+500 inmediato.
+
+- **Mientras convivan los dos contratos, el 408 se queda.** Quitarlo antes
+  rompería "terminar un borrador" contra el servidor viejo.
+- **Después del despliegue hay que quitar el 408.** Si se deja, un timeout real
+  se contaría como staff vinculado sin estarlo.
+- No hay reintentos específicos en este endpoint: el bucle de `syncEventStaff`
+  no reintenta, y no hay `retry` de react-query.
+
+### 2c.5 — `DELETE /db_event/:id`: informe para backend, sin tocar el cliente
+
+**Respuesta a lo que preguntan:** el cliente manda el id en la URL **y**
+`{ email: user.email }` en el body (`hook/useDraftEventActions.jsx:78`, el
+Delete de un Draft). El servidor lee el id del evento de `body.email`, así que
+recibe el **email del administrador** como id. **El borrado en SQL de un Draft
+nunca ha borrado nada.** Respondía 408, y con la rama nueva responderá 500.
+
+Consecuencias en el cliente, comprobadas en `remove()`:
+- **Hoy el Delete de un Draft falla entero** siempre que encuentra el id de SQL.
+  El borrado de SQL va primero y con `await`. El 408 llega a los 30 s, salta al
+  `catch` y el borrado de Mongo no llega a ejecutarse. El usuario espera 30 s y
+  ve "The draft could not be deleted.". Solo funciona en un borrador sin fila en
+  SQL.
+- Con la rama nueva pasa lo mismo, pero con un 500 inmediato.
+- Por indicación del documento, el cliente no se toca. El arreglo es del
+  servidor: leer el `:id` de la URL. Cuando lo arreglen, el Delete de un Draft
+  empezará a funcionar. Es el borrado que se quería, pero hay que probarlo en el
+  navegador, junto con la duda de §2 sobre filas huérfanas.
+
+Hay que mandárselo al equipo de backend.
 
 ---
 
