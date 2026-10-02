@@ -27,12 +27,12 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **22** |
+| **Abierto, total** | **23** |
 | — bloquea (§1) | 1 |
 | — trabajo de producto (§2) | 3 |
 | — reunión del 29-09 (§2b) | 5 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
-| — surgido esta semana (§3) | 5 |
+| — surgido esta semana (§3) | 6 |
 | — no es código (§4) | 6 |
 | Cerrado y tachado en este documento | 23, más la tabla de §5 |
 
@@ -873,6 +873,43 @@ configuración del build, no el código fuente.
 
 El único bloqueo real es `vite-plugin-pwa@0.20.5`, que declara `vite ^5`. La
 1.3.0 acepta `^3 … ^8` y se puede subir sola, antes que Vite.
+
+### Refund en la tabla de transacciones: "A valid payment intent id is required"
+`pages/events/quickGlance/consumer/ConsumerDetail/StripeTransactionTable.jsx:120`
+
+Reportado 2026-10-02. Al pulsar **Refund** en la tabla de transacciones del
+consumidor (detalle del evento), el servidor responde:
+
+```json
+[{ "field": "payment_intent", "message": "A valid payment intent id is required" }]
+```
+
+**Lo que se comprobó en el cliente:**
+- `handleRefund` manda `POST /stripe/refund` con `{ paymentIntent: record.paymentIntent }`,
+  en camelCase, más la cabecera de idempotencia. El contrato
+  (`src/docs/api-payloads.md`) documenta el cuerpo como `paymentIntent`, y el
+  middleware es `validateRefundPayload`.
+- El botón solo aparece en las transacciones "Card charge"
+  (`describeTransactionKind`): id de más de 16 caracteres, que no empieza por
+  `pi_cash` y sin equipos pedidos. O sea que el id que se manda tiene forma
+  de `pi_...`. Esos cargos son, sobre todo, los cobros de servicios.
+- **El error nombra `payment_intent`, en snake_case**, no el `paymentIntent`
+  que enviamos.
+
+**Hipótesis, a confirmar con backend antes de tocar nada:**
+1. `validateRefundPayload` lee `payment_intent` y no `paymentIntent`. Entonces
+   el campo le llega vacío siempre, y **ningún refund funciona**.
+2. O valida el formato del id con una regla que nuestros ids no cumplen.
+
+**Mismo riesgo en el refund parcial:** `consumers/components/UI/ExpandedLostButtons.jsx:78`
+manda `POST /stripe/partial-refund` con el mismo `paymentIntent` y pasa por el
+mismo validador. Hay que probarlo también.
+
+**Qué preguntar a backend:** qué clave y qué formato espera
+`validateRefundPayload`, y si cambió hace poco. Si la clave es
+`payment_intent`, el arreglo en el cliente es mandar esa clave en los dos
+endpoints, con un test. No hay que mandar las dos claves "por si acaso" sin
+saberlo.
 
 ### El import de inventario asigna las imágenes por posición, no por fila
 `src/pages/inventory/utils/inventoryImportRows.js:93`
