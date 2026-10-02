@@ -1,69 +1,113 @@
-import { Button, Grid, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { Result } from "antd";
-import { useEffect, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import DevitrakLoading from "../../components/animation/DevitrakLoading";
-import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
-import { BlueButton } from "../../styles/global/BlueButton";
-import { BlueButtonText } from "../../styles/global/BlueButtonText";
-import CenteringGrid from "../../styles/global/CenteringGrid";
-import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
+import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
+import {
+  ProfileErrorState,
+  ProfileSection,
+  ProfileSkeleton,
+} from "../../components/UX/profile";
+import { onAddDevicesSelectionPaidTransactions } from "../../store/slices/devicesHandleSlice";
+import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
+import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import "../events/quickGlance/consumer/consumerDetail.css";
+import {
+  confirmationStep,
+  isDeclinedIntent,
+  markProcessed,
+} from "./utils/paymentConfirmation";
 
+/**
+ * Where a service charge lands after Stripe redirects back.
+ *
+ * Rebuilt 2026-10-02 on the same pattern as the card-deposit page
+ * (`Confirmation.jsx`), which the 2026-08-21 rework reached and this one did
+ * not. What it used to do:
+ *
+ *  - `catch (error) { return setLoadingStatus(false); }`, and the render showed
+ *    "Successfully transaction!" whenever it was not loading — so a failure
+ *    was announced as a success.
+ *  - The writes ran from a mount effect over a persisted draft that nothing
+ *    cleared: reloading the URL sent the invoice email and saved the
+ *    transaction again.
+ *  - It invalidated only the legacy keys, so the consumer's transaction list
+ *    (`consumerEventTransactions`) kept showing the old state.
+ *  - "Return to event main page" went to `/events/event-attendees`, a route
+ *    that does not exist.
+ *  - The invoice email went out before the transaction was saved.
+ *
+ * The request bodies are unchanged.
+ */
 const ServicePaymentConfirmation = () => {
-  const [loadingStatus, setLoadingStatus] = useState(false);
-  const [triggerStatus, setTriggerStatus] = useState(true);
-  const { deviceSelectionPaidTransaction } = useSelector(
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const { notify, contextHolder } = useStatusNotification();
+
+  const { deviceSelectionPaidTransaction: draft } = useSelector(
     (state) => state.devicesHandle
   );
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.stripe);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
-  const payment_intent = new URLSearchParams(window.location.search).get(
-    "payment_intent"
-  );
+  const paymentIntent = searchParams.get("payment_intent");
+  const clientSecret = searchParams.get("payment_intent_client_secret");
+  const redirectStatus = searchParams.get("redirect_status");
+  const service = draft?.deviceType?.group;
 
-  const clientSecret = new URLSearchParams(window.location.search).get(
-    "payment_intent_client_secret"
+  // Decided once, on arrival: stamping the draft re-renders the page.
+  const [arrival] = useState(() =>
+    confirmationStep({ paymentIntent, redirectStatus, draft, requireSerials: false })
   );
-  const { notify, contextHolder } = useStatusNotification();
-  const openNotification = (type, mess, descript) => {
-    notify(type.toLowerCase(), mess, { description: descript, duration: 0 });
-  };
-  function handleBackAction() {
-    return navigate(
-      `/events/event-attendees/${customer.uid}/transactions-details`
-    );
-  }
-  const saveTransaction = async () => {
-    let sequency = true;
-    if (sequency) {
-      const resp = await devitrakApi.post("/stripe/stripe-transaction-admin", {
-        paymentIntent: payment_intent,
-        clientSecret,
-        device: 0,
-        provider: event.company,
-        eventSelected: event.eventInfoDetail.eventName,
-        user: customer.uid ?? customer.id,
-        company: user.companyData.id,
-        type: "event",
-      });
-      if (resp) {
-        const transactionProfile = {
-          paymentIntent: payment_intent,
+  const [status, setStatus] = useState("working");
+  const startedRef = useRef(false);
+
+  const backToConsumer = () =>
+    navigate(`/events/event-attendees/${customer?.uid}/transactions-details`);
+  const backToEvent = () => navigate("/events/event-quickglance");
+
+  useEffect(() => {
+    if (startedRef.current || arrival !== "run") return;
+    startedRef.current = true;
+
+    const run = async () => {
+      try {
+        const intent = await devitrakApi.get(`/stripe/payment_intents/${paymentIntent}`);
+        if (!intent.data) throw new Error("Stripe did not answer for the intent");
+        if (isDeclinedIntent(intent.data?.paymentIntent)) {
+          setStatus("declined");
+          return;
+        }
+        dispatch(onAddNewPaymentIntent(intent.data));
+        // Before the first write: from here on, a reload must not run again.
+        dispatch(onAddDevicesSelectionPaidTransactions(markProcessed(draft, paymentIntent)));
+
+        await devitrakApi.post("/stripe/stripe-transaction-admin", {
+          paymentIntent,
+          clientSecret,
+          device: 0,
+          provider: event.company,
+          eventSelected: event.eventInfoDetail.eventName,
+          user: customer.uid ?? customer.id,
+          company: user.companyData.id,
+          type: "event",
+        });
+
+        await devitrakApi.post("/transaction/save-transaction", {
+          paymentIntent,
           clientSecret,
           device: [
             {
               deviceNeeded: 0,
-              deviceType: deviceSelectionPaidTransaction.deviceType.group,
-              deviceValue: deviceSelectionPaidTransaction.deviceType.value,
+              deviceType: draft.deviceType.group,
+              deviceValue: draft.deviceType.value,
             },
           ],
           consumerInfo: {
@@ -77,155 +121,139 @@ const ServicePaymentConfirmation = () => {
           company: user.companyData.id,
           date: new Date(),
           type: "event",
-        };
-        const responseTransaction = await devitrakApi.post(
-          "/transaction/save-transaction",
-          transactionProfile
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        );
-        await clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        );
-    
-        if (responseTransaction.data) return (sequency = false);
-      }
-    }
-  };
-
-  const invoiceEmail = async (props) => {
-    const template = {
-      email: customer.email,
-      amount: String(props.amount).slice(0, -2),
-      date: Date().toString().slice(4, 33),
-      paymentIntent: props.id,
-      customer: `${customer.name} ${customer.lastName}`,
-      service: deviceSelectionPaidTransaction.deviceType.group,
-    };
-    return await devitrakApi.post("/nodemailer/invoice-notification", template);
-  };
-
-  const confirmPaymentIntent = async () => {
-    try {
-      setLoadingStatus(true);
-      const response = await devitrakApi.get(
-        `/stripe/payment_intents/${payment_intent}`
-      );
-      if (response.data) {
-        dispatch(onAddNewPaymentIntent(response.data));
-        await invoiceEmail(response.data.paymentIntent);
-        await saveTransaction();
-        openNotification(
-          "success",
-          "Payment successful!",
-          "Service stored into account."
-        );
-        queryClient.invalidateQueries({
-          queryKey: ["transactionPerConsumerListQuery"],
-          exact: true,
         });
-        queryClient.invalidateQueries({
-          queryKey: ["transactionsList"],
-          exact: true,
-        });
-        setLoadingStatus(false);
-        return setTriggerStatus(false);
+
+        // The charge is saved; an email that did not go out is a warning, not
+        // a failed payment.
+        try {
+          const paid = intent.data.paymentIntent;
+          await devitrakApi.post("/nodemailer/invoice-notification", {
+            email: customer.email,
+            amount: String(paid?.amount).slice(0, -2),
+            date: Date().toString().slice(4, 33),
+            paymentIntent: paid?.id,
+            customer: `${customer.name} ${customer.lastName}`,
+            service,
+          });
+        } catch {
+          notify("warning", "Service saved, but the invoice email did not send.");
+        }
+
+        try {
+          await Promise.all([
+            clearCacheMemory(
+              `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+            ),
+            clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`),
+          ]);
+        } catch {
+          // The invalidations below still refresh this session's lists.
+        }
+        queryClient.invalidateQueries({ queryKey: ["consumerEventTransactions"] });
+        queryClient.invalidateQueries({ queryKey: ["transactionPerConsumerListQuery"] });
+        queryClient.invalidateQueries({ queryKey: ["transactionsList"] });
+
+        setStatus("done");
+      } catch {
+        setStatus("failed");
       }
-    } catch (error) {
-      return setLoadingStatus(false);
-    }
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (triggerStatus) {
-      confirmPaymentIntent();
-    }
-    return () => {
-      controller.abort();
     };
-  }, []);
 
-  return (
-    <Grid
-      style={{
-        padding: "5px",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-      container
-    >
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arrival, paymentIntent]);
+
+  const shell = (children) => (
+    <div style={{ padding: "16px 24px 24px", maxWidth: "760px", margin: "0 auto" }}>
       {contextHolder}
-      <Grid
-        marginY={3}
-        display={"flex"}
-        justifyContent={"flex-start"}
-        alignItems={"center"}
-        gap={1}
-        container
+      <ProfileSection title="Service payment" testId="service-payment-confirmation">
+        <div style={{ padding: "4px 20px 20px" }}>{children}</div>
+      </ProfileSection>
+    </div>
+  );
+
+  const reference = paymentIntent ? ` Stripe reference: ${paymentIntent}.` : "";
+  const backAction = (
+    <GrayButtonComponent title="Back to the consumer" func={backToConsumer} />
+  );
+
+  if (arrival === "declined" || status === "declined") {
+    return shell(
+      <ProfileErrorState
+        title="The card was not charged"
+        description={`Stripe did not authorize this payment, so nothing was saved.${reference} Start the service charge again from the consumer's page.`}
+        action={backAction}
+      />
+    );
+  }
+
+  if (arrival === "already-processed") {
+    return shell(
+      <ProfileErrorState
+        title="This payment was already processed"
+        description={`It was not saved a second time.${reference} The transaction is on the consumer's page.`}
+        action={<BlueButtonComponent title="Back to the consumer" func={backToConsumer} />}
+      />
+    );
+  }
+
+  if (arrival === "missing") {
+    return shell(
+      <ProfileErrorState
+        title="Nothing to confirm"
+        description={`This page finishes a service charge started from a consumer's page. The details are no longer in this session, so nothing was saved.${reference}`}
+        action={backAction}
+      />
+    );
+  }
+
+  if (status === "working") {
+    return shell(
+      <>
+        <p className="txn__intro">
+          Confirming the payment for {service}. Do not close this page.
+        </p>
+        <ProfileSkeleton lines={3} />
+      </>
+    );
+  }
+
+  if (status === "failed") {
+    return shell(
+      <ProfileErrorState
+        title="The payment may have gone through, but it was not saved"
+        description={`Check the consumer's transactions before charging again.${reference} Report this reference if the charge does not appear.`}
+        action={backAction}
+      />
+    );
+  }
+
+  return shell(
+    <div className="txn">
+      <p
+        className="scan__feedback scan__feedback--ok"
+        style={{ fontSize: "15px", fontWeight: 600 }}
       >
-        <Grid
-          border={"1px solid var(--gray-200, #eaecf0)"}
-          borderRadius={"12px 12px 0 0"}
-          display={"flex"}
-          alignItems={"center"}
-          justifyContent={"center"}
-          marginBottom={-2}
-          paddingBottom={-2}
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={12}
-        >
-          {loadingStatus ? (
-            <div style={CenteringGrid}>
-              {" "}
-              <DevitrakLoading />{" "}
-            </div>
-          ) : (
-            <Result
-              status="success"
-              title="Successfully transaction!"
-              subTitle={`Order number: ${payment_intent} Now you can click in return button to return to consumer page.`}
-              extra={[
-                <div
-                  key={"payment_confirmed_buttons"}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "2px",
-                  }}
-                >
-                  <Button
-                    style={{ ...BlueButton, width: "100%" }}
-                    onClick={() => navigate("/events/event-attendees")}
-                    key="console"
-                  >
-                    <Typography textTransform={"none"} style={BlueButtonText}>
-                      Return to event main page
-                    </Typography>
-                  </Button>
-                  <Button
-                    style={{ ...BlueButton, width: "100%" }}
-                    onClick={() => handleBackAction()}
-                    key="consumer"
-                  >
-                    <Typography textTransform={"none"} style={BlueButtonText}>
-                      Return to consumer page
-                    </Typography>
-                  </Button>
-                </div>,
-              ]}
-            />
-          )}
-        </Grid>
-      </Grid>
-    </Grid>
+        <CheckCircle2 size={18} style={{ flex: "none" }} />
+        Payment received and saved
+      </p>
+
+      <dl className="txn__summary">
+        <div>
+          <dt>Transaction</dt>
+          <dd className="profile-serial">{paymentIntent}</dd>
+        </div>
+        <div>
+          <dt>Service</dt>
+          <dd style={{ textTransform: "capitalize" }}>{service}</dd>
+        </div>
+      </dl>
+
+      <div className="txn__footer">
+        <GrayButtonComponent title="Back to the event" func={backToEvent} />
+        <BlueButtonComponent title="Back to the consumer" func={backToConsumer} />
+      </div>
+    </div>
   );
 };
 

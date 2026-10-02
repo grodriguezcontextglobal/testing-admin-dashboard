@@ -27,12 +27,12 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **25** |
+| **Abierto, total** | **22** |
 | — bloquea (§1) | 1 |
-| — trabajo de producto (§2) | 5 |
+| — trabajo de producto (§2) | 3 |
 | — reunión del 29-09 (§2b) | 5 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
-| — surgido esta semana (§3) | 6 |
+| — surgido esta semana (§3) | 5 |
 | — no es código (§4) | 6 |
 | Cerrado y tachado en este documento | 23, más la tabla de §5 |
 
@@ -134,7 +134,32 @@ Texto original:
 `src/components/notification/email/`. La carpeta es compartida: un cambio ahí
 aterriza en todas las pantallas que mandan correo. Revisar cada llamador.
 
-### E4 — página de confirmación de pago desde quick-glance
+### ~~E4 — página de confirmación de pago desde quick-glance~~ — hecho 2026-10-02
+
+**Hecho**, sobre los hallazgos de abajo:
+- `utils/paymentConfirmation.js` (con tests) decide qué hacer al llegar:
+  `declined`, `missing`, `already-processed` o `run`. El borrador se marca con
+  el `payment_intent` **antes de la primera escritura**, así que una recarga ya
+  no repite nada y muestra "This deposit/payment was already processed". La
+  idea es evitar el duplicado, no borrarlo después: las funciones
+  `removeDuplicates*` vivían en `components/stripe/payment/ConfirmationPayment.jsx`,
+  que no importaba nadie y se borró.
+- Las dos páginas se paran ante un `redirect_status` de fallo (`failed`,
+  `requires_payment_method`, `canceled`) o un intent sin pago. Solo cuenta un
+  fallo explícito, para no rechazar nunca una retención autorizada.
+- `Confirmation.jsx`: si la caché no se limpia, ya no se informa "no device
+  was assigned". Hay un estado propio para "guardada pero sin asignar", el
+  resultado parcial ya no lleva el icono verde, y todos los estados de error
+  muestran la referencia.
+- `ServicePaymentConfirmation.jsx`: reescrita con el mismo patrón. Un error ya
+  no se pinta como éxito. Guarda antes de mandar la factura, y si la factura
+  falla es un aviso, no un fallo. Invalida `consumerEventTransactions` y vuelve
+  al evento por `/events/event-quickglance`. Los cuerpos de las peticiones no
+  cambian.
+
+**Sin verificar:** no se ha probado en el navegador contra Stripe. Y no se sabe
+si el servidor rechaza un `paymentIntent` repetido en `save-transaction`.
+
 
 **Revisado 2026-10-02, sigue abierto, pero falta saber qué se pide.**
 `AddingDevicesToPaymentIntent.jsx` se reconstruyó el 2026-08-21 en `29c00b80`
@@ -142,6 +167,42 @@ aterriza en todas las pantallas que mandan correo. Revisar cada llamador.
 recorrido del 2026-08-25, cuatro días después. O el recorrido se hizo sobre un
 despliegue anterior, o el rediseño no resolvió la queja. Hay que preguntar qué
 falla antes de tocar Stripe.
+
+**Revisión del código, 2026-10-02 (sin cambios).** Las páginas de confirmación
+del evento son dos, y el rediseño del 21-08 solo tocó una:
+
+- `pages/payment/Confirmation.jsx` (`payment-confirmed`, depósito con tarjeta):
+  rehecha el 21-08. Tiene dos huecos:
+  1. **Una recarga repite la transacción.** El borrador
+     (`deviceSelectionPaidTransaction`) vive en Redux persistido sin
+     whitelist, y nadie lo borra tras el éxito. Si se recarga la URL, que aún
+     lleva `payment_intent`, `startedRef` vuelve a empezar y se ejecutan otra
+     vez `stripe-transaction-admin`, `save-transaction` y las asignaciones.
+  2. **No comprueba que Stripe autorizó.** Solo mira `intent.data.ok`, nunca
+     `redirect_status` ni el estado del intent. `lostFee/actions/CreditCard.jsx`
+     sí exige `redirect_status === "succeeded"`.
+  - Menores: si falla algo después de asignar (por ejemplo, `clearCacheMemory`),
+    la pantalla dice "no device was assigned" aunque sí se asignaron. El
+    resultado parcial se pinta con el icono verde de éxito. Y "Nothing to
+    confirm" no muestra la referencia del `payment_intent`, aunque Stripe tenga
+    retenidos los fondos.
+- `pages/payment/ServicePaymentConfirmation.jsx`
+  (`payment-service-confirmation`, cobro de servicios): **no se tocó**, y
+  tiene el mismo tipo de fallos que el 21-08 corrigió en la otra:
+  - pinta "Successfully transaction!" en verde siempre que no está cargando,
+    **también tras un error** (`catch → setLoadingStatus(false)`);
+  - la escritura va en un `useEffect` de montaje, así que una recarga repite el
+    correo de factura y la transacción;
+  - invalida `transactionPerConsumerListQuery` y `transactionsList`, que son
+    claves viejas. La lista del consumidor usa `consumerEventTransactions`, así
+    que no se refresca;
+  - "Return to event main page" navega a `/events/event-attendees`, una ruta
+    que no existe;
+  - manda el correo de factura antes de guardar la transacción.
+
+**Hipótesis:** la queja del 25-08 es muy probablemente sobre la de
+servicios, la única que el rediseño no tocó. Conviene confirmarlo con Fredrik,
+pero los dos huecos de la de depósito son bugs por sí solos.
 
 Texto original:
 Toca payment intents de Stripe. Leer `useCreateTransaction` antes de mover nada
@@ -351,7 +412,7 @@ a separate task»*.
 **Decisión pendiente con backend:** ¿reconcilia el servidor (preferible, nos
 saca del doble escritura) o escribimos los dos sitios?
 
-### Seguimientos de etiquetas de rol — queda uno de tres
+### ~~Seguimientos de etiquetas de rol~~ — cerrado 2026-10-02
 
 Revisado 2026-10-02. Eran tres ítems en cola desde el 2026-07-17:
 - ~~Asignar members existentes a eventos desde Members~~: hecho el 2026-07-17
@@ -359,11 +420,12 @@ Revisado 2026-10-02. Eran tres ítems en cola desde el 2026-07-17:
 - ~~Proteger el enlace "Staff" del footer~~: hecho el 2026-07-17 en
   `d6def1f2`. El enlace se esconde sin `nav:staff`, y la ruta `/staff` está
   tras `PermissionGuard action="nav:staff"`.
-- **Rediseñar las tarjetas de información del evento** (inventario, staff,
-  participantes esperados): **sigue abierto**, y nunca tuvo mockup ni
-  dirección de diseño. Las barras Status/Condition (`04a84c41`) cubren el
-  inventario, pero no staff ni participantes. Antes de hacerlo hay que
-  decidir qué se quiere.
+- ~~Rediseñar las tarjetas de información del evento~~: **cerrado**. Las
+  tarjetas de la lista de eventos (`CardEventDisplay.jsx`) muestran desde el
+  2026-06-17 una fila con Devices, Groups, Staff y el estado logístico. El
+  detalle tiene las barras Status/Condition y el conteo de staff en su sección.
+  "Participantes esperados" no puede mostrarse porque el evento no guarda ese
+  dato. Si se quiere, es una tarea nueva: añadir el campo al alta del evento.
 
 ---
 
@@ -895,7 +957,14 @@ La página es pública y de cara a clientes. Las tres reglas que importan están
 fijadas en el hook, no donde se ven: que `uptime90d: null` omita la línea, que
 `unknown` nunca sea verde, que el mensaje del incidente vaya escapado.
 
-### CSP de IIS, sin verificar — acotado 2026-10-02
+### ~~CSP de IIS, sin verificar~~ — comprobado 2026-10-02, no hay CSP
+
+**Cerrado.** `GET https://admin.devitrak.net/status` responde 200 sin cabecera
+`Content-Security-Policy` (`Server: openresty`, `X-Powered-By: ASP.NET`), e
+`index.html` no la declara con `<meta>`. El worker de estado responde 200.
+Si algún día se añade una CSP en el IIS o en el proxy, hay que incluir
+`devitrak-status.cacaminero.workers.dev` en `connect-src`.
+
 Si el host sirve `Content-Security-Policy` con `connect-src`, hay que añadir
 `devitrak-status.cacaminero.workers.dev` o la página no podrá consultar nada.
 

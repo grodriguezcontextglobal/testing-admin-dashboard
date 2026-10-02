@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -13,9 +13,16 @@ import {
   ProfileSection,
   ProfileSkeleton,
 } from "../../components/UX/profile";
+import { onAddDevicesSelectionPaidTransactions } from "../../store/slices/devicesHandleSlice";
 import { onAddNewPaymentIntent } from "../../store/slices/stripeSlice";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
 import "../events/quickGlance/consumer/consumerDetail.css";
+import {
+  confirmationStep,
+  draftSerials,
+  isDeclinedIntent,
+  markProcessed,
+} from "./utils/paymentConfirmation";
 
 /**
  * Where a card deposit lands after Stripe redirects back.
@@ -45,6 +52,13 @@ import "../events/quickGlance/consumer/consumerDetail.css";
  * What it does now: the serials were scanned and validated in the transaction
  * modal, so they arrive as an explicit list. This page assigns exactly those,
  * counts what actually succeeded, and says so.
+ *
+ * And it runs once per intent (2026-10-02). The draft is persisted and was
+ * never cleared, so reloading this URL, which still carries `payment_intent`,
+ * wrote the Stripe record, the transaction and the assignments again. The
+ * draft is now stamped before the first write (`markProcessed`). It also stops
+ * on a declined `redirect_status` or a declined intent, where it used to check
+ * only that the lookup answered `ok`.
  */
 const Confirmation = () => {
   const [searchParams] = useSearchParams();
@@ -65,17 +79,20 @@ const Confirmation = () => {
 
   const paymentIntent = searchParams.get("payment_intent");
   const clientSecret = searchParams.get("payment_intent_client_secret");
+  const redirectStatus = searchParams.get("redirect_status");
 
   const draft = deviceSelectionPaidTransaction;
   const deviceType = draft?.deviceType?.group;
   const deviceValue = draft?.deviceType?.value;
   // The modal scans and validates the serials; a single-device transaction is
   // just a one-entry list.
-  const serials = Array.isArray(draft?.serialNumbers)
-    ? draft.serialNumbers
-    : draft?.serialNumber
-    ? [draft.serialNumber]
-    : [];
+  const serials = draftSerials(draft);
+
+  // Decided once, on arrival: stamping the draft re-renders the page, and the
+  // stamp must not turn the run in progress into "already processed".
+  const [arrival] = useState(() =>
+    confirmationStep({ paymentIntent, redirectStatus, draft })
+  );
 
   const poolQuery = useQuery({
     queryKey: ["eventDevicePool", event?.eventInfoDetail?.eventName, user?.companyData?.id],
@@ -93,7 +110,7 @@ const Confirmation = () => {
 
   useEffect(() => {
     if (startedRef.current) return;
-    if (!paymentIntent || serials.length === 0 || !deviceType) return;
+    if (arrival !== "run") return;
     if (poolQuery.isLoading || !poolQuery.data) return;
 
     startedRef.current = true;
@@ -129,12 +146,19 @@ const Confirmation = () => {
     };
 
     const run = async () => {
+      let saved = false;
       try {
         const intent = await devitrakApi.get(
           `/stripe/payment_intents/${paymentIntent}`
         );
         if (!intent.data?.ok) throw new Error("Stripe did not confirm the intent");
+        if (isDeclinedIntent(intent.data?.paymentIntent)) {
+          setState({ status: "declined", assigned: 0, failed: serials });
+          return;
+        }
         dispatch(onAddNewPaymentIntent(intent.data));
+        // Before the first write: from here on, a reload must not run again.
+        dispatch(onAddDevicesSelectionPaidTransactions(markProcessed(draft, paymentIntent)));
 
         await devitrakApi.post("/stripe/stripe-transaction-admin", {
           paymentIntent,
@@ -167,6 +191,7 @@ const Confirmation = () => {
           company: user.companyData.id,
           date: new Date(),
         });
+        saved = true;
 
         // Assigned one at a time so a single refusal is reported as one
         // refusal, not as a failed transaction.
@@ -203,12 +228,18 @@ const Confirmation = () => {
           }
         }
 
-        await Promise.all([
-          clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`),
-          clearCacheMemory(
-            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-          ),
-        ]);
+        // A cache that did not clear is not a failed deposit: the writes are
+        // done, and the old catch reported them as "no device was assigned".
+        try {
+          await Promise.all([
+            clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`),
+            clearCacheMemory(
+              `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+            ),
+          ]);
+        } catch {
+          // The invalidations below still refresh this session's lists.
+        }
         queryClient.invalidateQueries({ queryKey: ["consumerEventTransactions"] });
         queryClient.invalidateQueries({ queryKey: ["consumerEventAssignedDevices"] });
         queryClient.invalidateQueries({ queryKey: ["eventDevicePool"] });
@@ -219,13 +250,13 @@ const Confirmation = () => {
           failed,
         });
       } catch (error) {
-        setState({ status: "failed", assigned: 0, failed: serials });
+        setState({ status: saved ? "unassigned" : "failed", assigned: 0, failed: serials });
       }
     };
 
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentIntent, poolQuery.isLoading, poolQuery.data, serials.length, deviceType]);
+  }, [arrival, paymentIntent, poolQuery.isLoading, poolQuery.data]);
 
   const shell = (children) => (
     <div style={{ padding: "16px 24px 24px", maxWidth: "760px", margin: "0 auto" }}>
@@ -236,13 +267,36 @@ const Confirmation = () => {
     </div>
   );
 
-  // The draft lives in Redux; a hard reload of this URL arrives without it, and
-  // the old page silently assigned nothing and reported success.
-  if (!paymentIntent || serials.length === 0 || !deviceType) {
+  const reference = paymentIntent ? ` Stripe reference: ${paymentIntent}.` : "";
+
+  if (arrival === "declined" || state.status === "declined") {
+    return shell(
+      <ProfileErrorState
+        title="The card was not authorized"
+        description={`Stripe did not authorize this deposit, so nothing was saved and no device was assigned.${reference} Start the transaction again from the consumer's page.`}
+        action={<GrayButtonComponent title="Back to the consumer" func={backToConsumer} />}
+      />
+    );
+  }
+
+  // A reload of this URL after the deposit ran. The old page ran it again.
+  if (arrival === "already-processed") {
+    return shell(
+      <ProfileErrorState
+        title="This deposit was already processed"
+        description={`It was not saved a second time.${reference} Its transaction and devices are on the consumer's page.`}
+        action={<BlueButtonComponent title="Back to the consumer" func={backToConsumer} />}
+      />
+    );
+  }
+
+  // The draft lives in Redux; arriving without one, the old page silently
+  // assigned nothing and reported success.
+  if (arrival === "missing") {
     return shell(
       <ProfileErrorState
         title="Nothing to confirm"
-        description="This page finishes a card deposit started from a consumer's page. The transaction details are no longer in this session, so nothing was assigned."
+        description={`This page finishes a card deposit started from a consumer's page. The transaction details are no longer in this session, so nothing was assigned.${reference}`}
         action={<GrayButtonComponent title="Back to the consumer" func={backToConsumer} />}
       />
     );
@@ -270,13 +324,29 @@ const Confirmation = () => {
     );
   }
 
+  if (state.status === "unassigned") {
+    return shell(
+      <ProfileErrorState
+        title="The transaction was saved, but the devices were not assigned"
+        description={`The deposit ${paymentIntent} is on the consumer's page. Assign ${serials.join(", ")} from that transaction.`}
+        action={<GrayButtonComponent title="Back to the consumer" func={backToConsumer} />}
+      />
+    );
+  }
+
   return shell(
     <div className="txn">
       <p
-        className="scan__feedback scan__feedback--ok"
+        className={`scan__feedback scan__feedback--${
+          state.status === "partial" ? "error" : "ok"
+        }`}
         style={{ fontSize: "15px", fontWeight: 600 }}
       >
-        <CheckCircle2 size={18} style={{ flex: "none" }} />
+        {state.status === "partial" ? (
+          <AlertTriangle size={18} style={{ flex: "none" }} />
+        ) : (
+          <CheckCircle2 size={18} style={{ flex: "none" }} />
+        )}
         {state.status === "partial"
           ? `${state.assigned} of ${serials.length} devices assigned`
           : "Deposit authorized and devices assigned"}
