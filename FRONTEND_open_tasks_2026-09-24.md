@@ -27,14 +27,20 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **30** |
+| **Abierto, total** | **25** |
 | — bloquea (§1) | 1 |
-| — trabajo de producto (§2) | 10 |
-| — reunión del 29-09 (§2b) | 5 |
-| — contrato del backend 2026-10-01 (§2c) | 5 |
-| — surgido esta semana (§3) | 7 |
-| — no es código (§4) | 7 |
-| Cerrado desde que se escribió su lista | 30 |
+| — trabajo de producto (§2) | 5 |
+| — reunión del 29-09 (§2b) | 5 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
+| — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
+| — surgido esta semana (§3) | 6 |
+| — no es código (§4) | 6 |
+| Cerrado y tachado en este documento | 23, más la tabla de §5 |
+
+> **Recontado 2026-10-02** con un script, sección por sección: un `###` sin
+> tachar es un ítem abierto, y en §4 cada viñeta sin tachar. Ese día se cerraron
+> ocho que ya estaban hechos antes de esta lista y nadie había tachado: S1, D3,
+> E1, E3, B11, los textos de la plantilla y dos de los tres seguimientos de
+> etiquetas de rol.
 
 > Contado 2026-09-28 sección por sección. El encabezado venía diciendo 22
 > porque se fue sumando a mano sobre una cifra inicial que ya no cuadraba con
@@ -129,6 +135,15 @@ Texto original:
 aterriza en todas las pantallas que mandan correo. Revisar cada llamador.
 
 ### E4 — página de confirmación de pago desde quick-glance
+
+**Revisado 2026-10-02, sigue abierto, pero falta saber qué se pide.**
+`AddingDevicesToPaymentIntent.jsx` se reconstruyó el 2026-08-21 en `29c00b80`
+(el flujo del consumidor en el evento, ProfileShell), y se volvió a pedir en el
+recorrido del 2026-08-25, cuatro días después. O el recorrido se hizo sobre un
+despliegue anterior, o el rediseño no resolvió la queja. Hay que preguntar qué
+falla antes de tocar Stripe.
+
+Texto original:
 Toca payment intents de Stripe. Leer `useCreateTransaction` antes de mover nada
 y conservar la forma de la petición.
 
@@ -225,7 +240,14 @@ Quedan dos cosas por decidir al hacerlo: qué pasa con los eventos que ya están
 en `merchant: true` sin cuenta detrás, y si el aviso enlaza al alta de Stripe o
 solo la nombra.
 
-### Textos de la plantilla de import — cuatro de la reunión del 25-09
+### ~~Textos de la plantilla de import — cuatro de la reunión del 25-09~~ — hecho
+
+**Cerrado:** los tres textos van en `f848f0e8` (2026-10-01) y la columna de
+imagen en `b037a10b` (2026-09-29). Se comprobó en
+`inventoryImportTemplate.js`: *"Must be unique for this unit and this row."*,
+*"One of: Permanent, Rent, Resale."* y *"Where the unit is physically."*.
+
+Texto original:
 
 Todo en `src/pages/inventory/utils/inventoryImportTemplate.js`. Van juntos: un
 fichero, un test que fija guía, plantilla y cabeceras del parser entre sí, y una
@@ -329,9 +351,19 @@ a separate task»*.
 **Decisión pendiente con backend:** ¿reconcilia el servidor (preferible, nos
 saca del doble escritura) o escribimos los dos sitios?
 
-### Seguimientos de etiquetas de rol
-`useRoleLabel` existe y se consume. Quedan los ítems de UI en cola de la función
-de renombrado por compañía. Sin fecha.
+### Seguimientos de etiquetas de rol — queda uno de tres
+
+Revisado 2026-10-02. Eran tres ítems en cola desde el 2026-07-17:
+- ~~Asignar members existentes a eventos desde Members~~: hecho el 2026-07-17
+  en `c6a08110` (`RegisterMembersToEvent.jsx`).
+- ~~Proteger el enlace "Staff" del footer~~: hecho el 2026-07-17 en
+  `d6def1f2`. El enlace se esconde sin `nav:staff`, y la ruta `/staff` está
+  tras `PermissionGuard action="nav:staff"`.
+- **Rediseñar las tarjetas de información del evento** (inventario, staff,
+  participantes esperados): **sigue abierto**, y nunca tuvo mockup ni
+  dirección de diseño. Las barras Status/Condition (`04a84c41`) cubren el
+  inventario, pero no staff ni participantes. Antes de hacerlo hay que
+  decidir qué se quiere.
 
 ---
 
@@ -863,9 +895,14 @@ La página es pública y de cara a clientes. Las tres reglas que importan están
 fijadas en el hook, no donde se ven: que `uptime90d: null` omita la línea, que
 `unknown` nunca sea verde, que el mensaje del incidente vaya escapado.
 
-### CSP de IIS, sin verificar
+### CSP de IIS, sin verificar — acotado 2026-10-02
 Si el host sirve `Content-Security-Policy` con `connect-src`, hay que añadir
 `devitrak-status.cacaminero.workers.dev` o la página no podrá consultar nada.
+
+**Comprobado en el repo:** `public/web.config` no tiene `customHeaders`, así
+que la aplicación no manda ninguna CSP. Solo queda la posibilidad de que el IIS
+la ponga a nivel de servidor o de sitio. Eso se ve abriendo `/status` en
+producción, o en la configuración del IIS, no en este código.
 
 ---
 
@@ -883,8 +920,11 @@ Si el host sirve `Content-Security-Policy` con `connect-src`, hay que añadir
   sí funciona y es el del demo. Requiere hardware o SDK, no frontend.
 - **C3 — FedRAMP.** Fredrik pidió un día de estudio de las especificaciones para
   tenerlas en cuenta al construir, no una certificación.
-- **B11 — el asterisco de campo obligatorio.** No se pudo confirmar por grep si
-  la inconsistencia sigue. Pide mirar un formulario.
+- ~~**B11 — el asterisco de campo obligatorio.**~~ **Ya estaba hecho** el
+  2026-08-31 en `6827e52c`. `Label` tiene una prop `required`, que pinta
+  `.form-label__required` en rojo de peligro, y se barrieron 33 marcas hechas a
+  mano en 19 ficheros. Comprobado el 2026-10-02: los asteriscos que quedan
+  usan esa clase.
 - **Etiquetas físicas para inventario** (reunión 29-09 `1:18:10`): si un
   cliente quiere etiquetar sus equipos, hace falta una solución, y hoy no la
   hay. Fredrik lo investiga.
