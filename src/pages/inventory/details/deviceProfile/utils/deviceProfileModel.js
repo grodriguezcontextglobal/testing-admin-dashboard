@@ -58,6 +58,15 @@ export const clean = (value) => {
   return ABSENT.has(text.toLowerCase()) ? "" : text;
 };
 
+/**
+ * The unit's condition is item_inv's own `status`. There is no `condition`
+ * column on item_inv: the `condition` on the merged item comes from one
+ * item_inv_assigned_event row, i.e. what a single past event recorded, and
+ * once the backend stops copying `status` into it, it no longer moves when an
+ * event closes a unit as Damaged or Lost.
+ */
+export const resolveDeviceCondition = (item) => clean(item?.status) || "Operational";
+
 /** item_inv.sub_location is a JSON-stringified array — or a bare string, or junk. */
 export function parseSubLocations(raw) {
   if (Array.isArray(raw)) return raw.map(clean).filter(Boolean);
@@ -277,7 +286,7 @@ export function deriveDeviceState({
     inStock,
     statusLabel: inStock ? "In stock" : "In use",
     statusTone: inStock ? "success" : "warning",
-    condition: clean(item.condition) || "Operational",
+    condition: resolveDeviceCondition(item),
     ownership: clean(item.ownership) === "Rent" ? "Leased" : clean(item.ownership) || null,
     leases: normalized,
     openLease,

@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { formatLoanDate } from "../../../../../components/UX/profile";
-import { clean, resolveLocation } from "../utils/deviceProfileModel";
+import { clean, resolveDeviceCondition, resolveLocation } from "../utils/deviceProfileModel";
 import "../deviceProfile.css";
 
 /**
@@ -48,7 +48,7 @@ const DeviceSidebar = ({ item, fleet, utilization }) => {
           <div className="device-spec">
             <span className="device-spec__key">Condition</span>
             <span className="device-spec__value">
-              {clean(item.condition) || "Operational"}
+              {resolveDeviceCondition(item)}
             </span>
           </div>
           <div className="device-spec">

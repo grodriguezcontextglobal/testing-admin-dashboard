@@ -1,7 +1,12 @@
 import PropTypes from "prop-types";
 import { checkValidJSON } from "../../../../../components/utils/checkValidJSON";
 import { formatLoanDate } from "../../../../../components/UX/profile";
-import { clean, parseSubLocations, resolveLocation } from "../utils/deviceProfileModel";
+import {
+  clean,
+  parseSubLocations,
+  resolveDeviceCondition,
+  resolveLocation,
+} from "../utils/deviceProfileModel";
 import "../deviceProfile.css";
 
 /**
@@ -60,7 +65,7 @@ const DeviceSpecs = ({ item }) => {
           value={clean(item.ownership) === "Rent" ? "Leased" : clean(item.ownership) || null}
         />
         <Row label="Value" value={money(item.cost)} />
-        <Row label="Condition" value={clean(item.condition) || "Operational"} />
+        <Row label="Condition" value={resolveDeviceCondition(item)} />
         <Row label="Location" value={resolveLocation(item) ?? "Not recorded"} />
         {subs.length > 1 && <Row label="Sub-locations" value={subs.join(" · ")} />}
         <Row label="Added" value={formatLoanDate(item.create_at)} />

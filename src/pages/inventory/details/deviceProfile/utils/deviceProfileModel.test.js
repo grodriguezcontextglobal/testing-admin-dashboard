@@ -11,6 +11,7 @@ import {
   nextAssignLocation,
   resolvePersonLocation,
   resolveStaffLabel,
+  resolveDeviceCondition,
 } from "./deviceProfileModel";
 
 const NOW = new Date("2026-08-07T12:00:00");
@@ -119,6 +120,33 @@ describe("parseAssignmentEventName", () => {
   it("returns null for empty input", () => {
     expect(parseAssignmentEventName("")).toBeNull();
     expect(parseAssignmentEventName(null)).toBeNull();
+  });
+});
+
+/**
+ * item_inv has no `condition` column: it lives on item_inv_assigned_event, one
+ * per event. The profile merges a tracking row into the item, so `condition`
+ * was whatever one past event assignment said. Until the backend fix it always
+ * equalled `status` (75,000 of 75,000 rows); after it, it stays frozen while
+ * closing an event moves `status`. The item's own `status` is the answer.
+ */
+describe("resolveDeviceCondition", () => {
+  it("reads the item's status, not an event assignment's condition", () => {
+    expect(resolveDeviceCondition({ status: "Damaged", condition: "Operational" })).toBe("Damaged");
+  });
+
+  it("is Operational when the item has no status", () => {
+    expect(resolveDeviceCondition({ status: "  ", condition: "Lost" })).toBe("Operational");
+    expect(resolveDeviceCondition({})).toBe("Operational");
+    expect(resolveDeviceCondition(undefined)).toBe("Operational");
+  });
+
+  it("feeds deriveDeviceState", () => {
+    const state = deriveDeviceState({
+      item: { warehouse: 1, status: "Lost", condition: "Operational" },
+      now: NOW,
+    });
+    expect(state.condition).toBe("Lost");
   });
 });
 

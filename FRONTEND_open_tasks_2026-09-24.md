@@ -595,7 +595,28 @@ Texto original:
 `minify: "terser"`, y el minificador por defecto de Vite ignora `terserOptions`.
 Una línea, y no depende de ninguna major.
 
-### `condition` deja de ser un duplicado de `status`, y tenemos respaldos que lo dan por hecho
+### ~~`condition` deja de ser un duplicado de `status`, y tenemos respaldos que lo dan por hecho~~ — hecho 2026-10-01
+
+**Corrección al texto de abajo, comprobada en el código:**
+
+- **Las dos líneas de respaldo no iban a mentir.** `DownloadXlsx.jsx:114` y
+  `ShippingInventoryModal.jsx:308` leen `status` **primero**, y `status` es
+  columna real de `item_inv`. `condition` solo entra si falta `status`. Se
+  dejaron como estaban.
+- **Cuatro de los seis sitios no leen SQL.** `DeviceDatabase`,
+  `TableIssuesPerDevice` y `TableDetailPerDevice`, y también la barra de
+  2b.11, salen del `receiversPool` de Mongo. Allí "condition" es el `status`
+  del pool, y el despliegue no les afecta.
+- **El que sí mentía es el perfil del dispositivo**, en tres sitios: el chip
+  de la cabecera (`deriveDeviceState`), `DeviceSpecs` y `DeviceSidebar`.
+  Leían `item.condition`, pero `item_inv` **no tiene** esa columna
+  (`FRONTEND_inventory_page_endpoints.md` §6.1). El valor venía de la fila de
+  `tracking_item` que se mezcla con el ítem, o sea de lo que registró una
+  asignación a un evento. Tras el despliegue se quedaría congelado mientras
+  `status` cambia. Ahora los tres leen `status`, mediante
+  `resolveDeviceCondition` en `deviceProfileModel.js`, con tests.
+
+Texto original:
 
 Aparecido 2026-09-25 revisando el arreglo del cierre de eventos. El backend
 descubrió que la columna `condition` **nunca ha tenido valor propio**: 75.000 de
@@ -705,7 +726,7 @@ Dentro de lo que sí es esta lista (reordenada el 2026-09-29):
    cada acción. Después, los consentimientos (2b.9), que lo usan.
 8. **E2**, un bug con una pista concreta que se cierra en una tarde.
 9. **Las tres de una línea**: `drop_console`, tests de `/status`, CSP de IIS.
-10. **`condition` antes de que el backend despliegue**, no después. (2b.11 resultó independiente y ya está hecha.)
+10. ~~**`condition` antes de que el backend despliegue**~~, hecho 2026-10-01: era el perfil del dispositivo, no los respaldos. (2b.11 resultó independiente y también está hecha.)
 11. **S1 y D3**, pantallas sueltas que ya no dependen de nada.
 12. **R3 e Issue #1** cuando haya respuesta del backend, y **devolver un dispositivo encontrado** (2b.10) cuando se decida quién puede hacerlo: esperan un dato o una decisión, no
    esfuerzo nuestro.
