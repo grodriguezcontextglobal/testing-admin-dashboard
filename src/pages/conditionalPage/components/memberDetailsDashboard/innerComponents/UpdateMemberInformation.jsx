@@ -57,6 +57,7 @@ const UpdateMemberInformation = () => {
         membersData={membersData}
         companyId={companyId}
         industryFields={fields}
+        representativeLabel={representative?.label}
         onSaved={() => memberInfoRetrieveQuery.refetch()}
       />
 

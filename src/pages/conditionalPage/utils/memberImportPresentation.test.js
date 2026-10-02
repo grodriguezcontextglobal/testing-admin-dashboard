@@ -4,6 +4,7 @@ import {
   generalIssues,
   importCounts,
   parseRowIssues,
+  summarizeBulkMembersResult,
 } from "./memberImportPresentation";
 
 const rows = [
@@ -105,5 +106,82 @@ describe("generalIssues", () => {
 
   it("is empty when every message names a row", () => {
     expect(generalIssues(errors, warnings)).toEqual([]);
+  });
+});
+
+/**
+ * POST /db_member/bulk-members skips rows that break the contact rule and
+ * inserts the rest (branch feat/member-contact-minors):
+ *   { ok, requested, inserted, skipped, contact_skipped: [{ row, missing, msg }] }
+ * `row` is the 0-based index in the list sent — the preview's "#" minus one.
+ * `skipped` also counts rows without a name, which are not in contact_skipped.
+ * The old server sends neither contact_skipped nor, possibly, the counts.
+ */
+describe("summarizeBulkMembersResult", () => {
+  const sent = [
+    { first_name: "Ada", last_name: "Lovelace" },
+    { first_name: "Grace", last_name: "Hopper" },
+    { first_name: "Alan", last_name: "Turing" },
+    { first_name: "", last_name: "" },
+  ];
+
+  it("names each skipped row by the preview's # and the member, with the reason", () => {
+    const result = summarizeBulkMembersResult(
+      {
+        ok: true,
+        requested: 4,
+        inserted: 1,
+        skipped: 3,
+        contact_skipped: [
+          { row: 1, missing: ["phone_number"], msg: "Adult members require phone_number." },
+          { row: 2, missing: ["parent_guardian_email"], msg: "…" },
+        ],
+      },
+      sent,
+      { representativeLabel: "Parent" }
+    );
+    expect(result.inserted).toBe(1);
+    expect(result.skippedRows).toEqual([
+      { rowNumber: 2, name: "Grace Hopper", reason: "Phone is required for adults." },
+      {
+        rowNumber: 3,
+        name: "Alan Turing",
+        reason: "Parent email is required while the student has no email or phone of their own.",
+      },
+    ]);
+    expect(result.skippedWithoutReason).toBe(1);
+  });
+
+  it("falls back to the server's msg when it names no field it knows", () => {
+    const [row] = summarizeBulkMembersResult(
+      { inserted: 3, skipped: 1, contact_skipped: [{ row: 0, missing: [], msg: "Some new rule." }] },
+      sent
+    ).skippedRows;
+    expect(row.reason).toBe("Some new rule.");
+  });
+
+  it("reads the old contract as everything imported", () => {
+    expect(summarizeBulkMembersResult({ ok: true }, sent)).toEqual({
+      inserted: 4,
+      skippedRows: [],
+      skippedWithoutReason: 0,
+    });
+  });
+
+  it("counts every skipped row when the server sends no inserted count", () => {
+    const result = summarizeBulkMembersResult(
+      { ok: true, contact_skipped: [{ row: 0, missing: ["email"] }] },
+      sent
+    );
+    expect(result.inserted).toBe(3);
+  });
+
+  it("reads a refusal (400, nothing inserted) the same way", () => {
+    const result = summarizeBulkMembersResult(
+      { ok: false, inserted: 0, skipped: 1, contact_skipped: [{ row: 0, missing: ["email"] }] },
+      sent.slice(0, 1)
+    );
+    expect(result).toMatchObject({ inserted: 0, skippedWithoutReason: 0 });
+    expect(result.skippedRows[0]).toMatchObject({ rowNumber: 1, name: "Ada Lovelace" });
   });
 });

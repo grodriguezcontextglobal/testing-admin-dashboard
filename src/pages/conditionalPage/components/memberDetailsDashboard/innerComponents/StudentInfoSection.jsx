@@ -13,6 +13,11 @@ import DangerButtonComponent from "../../../../../components/UX/buttons/DangerBu
 import Input from "../../../../../components/UX/inputs/Input";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { calculateAgeFlags } from "../../../utils/ageCalculationUtils";
+import {
+  memberEditContactErrors,
+  memberServerErrorMessage,
+  memberServerFieldErrors,
+} from "../../../utils/memberContactRules";
 
 /**
  * MySQL DATE columns arrive as full ISO timestamps ("2010-11-21T05:00:00.000Z").
@@ -31,14 +36,22 @@ const toDateInputValue = (value) => {
  * contact, address, and (for Education companies) grade/homeroom/DOB.
  * Saves independently of guardian data via its own
  * PATCH /db_member/update-member-info call.
+ *
+ * Every save is checked first against the server's contact rule
+ * (`memberEditContactErrors`), on how the whole row ends up: the server
+ * refuses an adult without email or phone, and a minor without either of
+ * their own and no guardian email on file.
  */
 const StudentInfoSection = ({
   membersData,
   companyId,
   industryFields,
+  representativeLabel = "Guardian",
   onSaved,
 }) => {
   const [errors, setErrors] = useState([]);
+  // Fields the server's 400 named in `missing` on the last save.
+  const [serverFieldErrors, setServerFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [newImageProfileURL, setNewImageProfileURL] = useState(null);
   const [newImageUploaded, setNewImageUploaded] = useState(null);
@@ -48,6 +61,45 @@ const StudentInfoSection = ({
     dobValue ? calculateAgeFlags(dobValue) : { age: null, minor: false, under_13: false }
   );
   const { notify, contextHolder } = useStatusNotification();
+
+  // Live, so emptying a minor's email says straight away that a guardian
+  // email is now needed — before Save, not as a server 400 after it.
+  const liveContactErrors = membersData
+    ? memberEditContactErrors(
+        membersData,
+        {
+          email: watch("email"),
+          phone: watch("phone"),
+          ...(dobValue ? { minor: ageFlags.minor } : {}),
+        },
+        { representativeLabel }
+      )
+    : {};
+
+  const fieldError = (key) => liveContactErrors[key] ?? serverFieldErrors[key];
+
+  /** A failed save: the fields the server named, or its own message. */
+  const showFailure = (error) => {
+    const byField = memberServerFieldErrors(error, { representativeLabel });
+    setServerFieldErrors(byField);
+    const messages = Object.values(byField);
+    setErrors(
+      messages.length
+        ? messages
+        : [`Failed to update student: ${memberServerErrorMessage(error)}`]
+    );
+  };
+
+  /** Shows why the server would refuse this update; true when it would. */
+  const refuseByContactRule = (update) => {
+    setServerFieldErrors({});
+    const contactErrors = memberEditContactErrors(membersData, update, {
+      representativeLabel,
+    });
+    const messages = Object.values(contactErrors);
+    setErrors(messages);
+    return messages.length > 0;
+  };
 
   const updateMemberInfoMutation = useMutation({
     mutationKey: ["updateStudentInformationData"],
@@ -70,9 +122,7 @@ const StudentInfoSection = ({
       });
       onSaved?.();
     },
-    onError: (error) => {
-      setErrors([`Failed to update student: ${error?.message || String(error)}`]);
-    },
+    onError: showFailure,
   });
 
   const updateNewProfileImage = useMutation({
@@ -129,6 +179,8 @@ const StudentInfoSection = ({
   }, [membersData, setValue]);
 
   const handleImageProfile = async () => {
+    // Checked before the upload: the save that follows it sends email and phone.
+    if (refuseByContactRule({ email: watch("email"), phone: watch("phone") })) return;
     if (newImageProfileURL?.length > 0 && newImageProfileURL[0]?.size > 1048576) {
       return alert("Image is bigger than 5mb. Please resize the image or select a new one.");
     } else if (newImageProfileURL?.length > 0) {
@@ -177,9 +229,10 @@ const StudentInfoSection = ({
           ? { minor: flags.minor, under_13: flags.under_13 }
           : {}),
       };
+      if (refuseByContactRule(payload)) return;
       await updateMemberInfoMutation.mutateAsync(payload);
     } catch (error) {
-      setErrors([`Failed to update student: ${error?.message || String(error)}`]);
+      showFailure(error);
     } finally {
       setSaving(false);
     }
@@ -199,6 +252,7 @@ const StudentInfoSection = ({
       address_zip: watch("zip"),
       image_url: null,
     };
+    if (refuseByContactRule(payload)) return;
     return await updateMemberInfoMutation.mutate(payload);
   };
 
@@ -253,10 +307,20 @@ const StudentInfoSection = ({
           <InputLabel style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={{ width: "100%", textAlign: "left" }}>Email</span>
             <Input {...register("email")} type="email" />
+            {fieldError("email") && (
+              <span style={{ color: "var(--error-700)", fontSize: 12 }}>
+                {fieldError("email")}
+              </span>
+            )}
           </InputLabel>
           <InputLabel style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={{ width: "100%", textAlign: "left" }}>Phone</span>
             <Input {...register("phone")} />
+            {fieldError("phone") && (
+              <span style={{ color: "var(--error-700)", fontSize: 12 }}>
+                {fieldError("phone")}
+              </span>
+            )}
           </InputLabel>
           <InputLabel style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={{ width: "100%", textAlign: "left" }}>Street</span>
@@ -309,6 +373,14 @@ const StudentInfoSection = ({
               </span>
             )}
           </InputLabel>
+        )}
+
+        {liveContactErrors.parent_guardian_email && (
+          <span style={{ color: "var(--warning-700)", fontSize: 12 }}>
+            {liveContactErrors.parent_guardian_email} Add it in the{" "}
+            {representativeLabel.toLowerCase()} section below, or keep the
+            student&apos;s own email and phone.
+          </span>
         )}
 
         {errors.length ? (

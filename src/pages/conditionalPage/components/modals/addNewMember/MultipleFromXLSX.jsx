@@ -10,12 +10,15 @@ import BlueButtonConfirmationComponent from "../../../../../components/UX/button
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import { ProfileStatTiles, StatusChip } from "../../../../../components/UX/profile";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
+import { getIndustryProfile } from "../../../../../config/industryProfiles";
 import "../../../../../styles/global/actionForm.css";
 import {
   annotateImportRows,
   generalIssues,
   importCounts,
+  summarizeBulkMembersResult,
 } from "../../../utils/memberImportPresentation";
+import { memberServerErrorMessage } from "../../../utils/memberContactRules";
 import {
   buildBulkMembersList,
   uploadMemberImportImages,
@@ -65,6 +68,13 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
   // "Uploading photos 40/300…" — a large import spends minutes here, and a
   // spinner alone reads as frozen.
   const [progress, setProgress] = useState("");
+  // What the server did with the rows. Since feat/member-contact-minors it
+  // skips the ones that break the contact rule and inserts the rest, so an
+  // `ok` response no longer means every row is in.
+  const [result, setResult] = useState(null);
+  const { representative } = getIndustryProfile(user?.companyData?.industry);
+  const summarize = (data, sent) =>
+    summarizeBulkMembersResult(data, sent, { representativeLabel: representative.label });
 
   const rows = useMemo(
     () => annotateImportRows(parsed?.rows, parsed?.errors, parsed?.warnings),
@@ -100,6 +110,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setFileName(file.name);
+    setResult(null);
 
     try {
       const buffer = await file.arrayBuffer();
@@ -128,6 +139,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
   const handleClear = () => {
     setFileName("");
     setParsed(null);
+    setResult(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -135,6 +147,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
     if (!rows.length || importing || counts.blocked > 0) return;
 
     setImporting(true);
+    let sent = [];
     try {
       // Photos first, once per distinct file. A failed one leaves that member
       // without a photo; it does not stop the import.
@@ -153,8 +166,9 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
         );
       }
 
+      sent = buildBulkMembersList(parsed.rows, urlByMediaPath);
       const response = await devitrakApi.post("/db_member/bulk-members", {
-        list: buildBulkMembersList(parsed.rows, urlByMediaPath),
+        list: sent,
         company_id: user?.sqlInfo?.company_id,
       });
 
@@ -162,6 +176,8 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
       // `else`: no message, no close, nothing to distinguish it from a click
       // that never registered.
       if (!response?.data?.ok) {
+        const refused = summarize(response?.data, sent);
+        if (refused.skippedRows.length > 0) setResult({ ...refused, refused: true });
         notify(
           "error",
           "The members could not be imported.",
@@ -170,27 +186,39 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
         return;
       }
 
+      const summary = summarize(response.data, sent);
       registerStaffActivity({
         action: "IMPORT",
         target_model: "Member",
-        details: { count: parsed.rows.length },
+        details: { count: summary.inserted },
       });
       // Same gap as the single-create path: two hundred imported members did
       // not appear in the table behind the modal.
       await queryClient.invalidateQueries({ queryKey: ["membersInfoQuery"] });
 
-      notify(
-        "success",
-        `${parsed.rows.length} member${
-          parsed.rows.length === 1 ? "" : "s"
-        } imported.`
-      );
+      const plural = (count) => `${count} member${count === 1 ? "" : "s"}`;
+      if (summary.skippedRows.length > 0 || summary.skippedWithoutReason > 0) {
+        // Stay open: the skipped rows are the part that still needs doing.
+        setResult(summary);
+        notify(
+          "warning",
+          `${summary.inserted} of ${plural(sent.length)} imported.`,
+          "Some rows were skipped — see the list below."
+        );
+        return;
+      }
+      notify("success", `${plural(summary.inserted)} imported.`);
       onClose();
     } catch (error) {
+      // A 400 where no row passed still lists each row and why.
+      const data = error?.response?.data;
+      if (Array.isArray(data?.contact_skipped)) {
+        setResult({ ...summarize(data, sent), refused: true });
+      }
       notify(
         "error",
         "The members could not be imported.",
-        error?.response?.data?.msg || error?.message || "Nothing was saved."
+        memberServerErrorMessage(error, "Nothing was saved.")
       );
     } finally {
       setImporting(false);
@@ -396,10 +424,43 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
         </section>
       )}
 
+      {/* 3 — what the server did, when it did not take every row */}
+      {result && (
+        <section className={stepClass(false)}>
+          <div className="action-form__step-head">
+            <h3 className="action-form__step-title">
+              <span className="action-form__step-index">3</span>
+              {result.refused
+                ? "Nothing was imported"
+                : `${result.inserted} imported, some rows skipped`}
+            </h3>
+          </div>
+          <p className="action-form__step-note">
+            The server skipped these rows. # is the row number in the table above.
+          </p>
+          <ul className="action-form__notice">
+            {result.skippedRows.map((row) => (
+              <li key={row.rowNumber}>
+                #{row.rowNumber}
+                {row.name ? ` ${row.name}` : ""}: {row.reason}
+              </li>
+            ))}
+            {result.skippedWithoutReason > 0 && (
+              <li>
+                {result.skippedWithoutReason} more row
+                {result.skippedWithoutReason === 1 ? "" : "s"} skipped for having no name.
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
+
       <div className="action-form__footer">
         <p className="action-form__consequence">
           {importing && progress
             ? progress
+            : result
+            ? "Fix the skipped rows in the file and import only those, so the rest are not created twice."
             : counts.blocked > 0
             ? `${counts.blocked} row${
                 counts.blocked === 1 ? "" : "s"
@@ -407,7 +468,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
             : "Every row in the file is created as a member."}
         </p>
         <GrayButtonComponent
-          title="Cancel"
+          title={result && !result.refused ? "Close" : "Cancel"}
           buttonType="button"
           disabled={importing}
           func={onClose}
@@ -419,7 +480,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
               : "Import members"
           }
           buttonType="button"
-          disabled={rows.length === 0 || counts.blocked > 0 || importing}
+          disabled={rows.length === 0 || counts.blocked > 0 || importing || Boolean(result)}
           loadingState={importing}
           confirmationTitle={`Import ${counts.total} member${
             counts.total === 1 ? "" : "s"

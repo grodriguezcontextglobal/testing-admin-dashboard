@@ -37,7 +37,7 @@ function renderSection(props = {}) {
         memberId={42}
         companyId={137}
         initialGuardian={initialGuardian}
-        memberData={{}}
+        memberData={{ minor: 1, email: "", phone_number: "" }}
         representative={{ label: "Guardian" }}
         onSaved={vi.fn()}
         {...props}
@@ -156,5 +156,43 @@ describe("GuardianInfoSection", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /save guardian/i }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  });
+
+  /* Server rule (feat/member-contact-minors): a minor with no email or phone
+     of their own needs a guardian email, checked on the whole row. */
+  it("refuses saving without an email for a minor with no contact of their own", async () => {
+    renderSection({
+      initialGuardian: { ...initialGuardian, first_name: "Sam", email: "sam@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/guardian email/i), { target: { value: "  " } });
+    fireEvent.click(screen.getByRole("button", { name: /save guardian/i }));
+
+    expect(
+      await screen.findByText(/guardian email is required while the student has no email or phone/i)
+    ).toBeInTheDocument();
+    expect(devitrakApi.patch).not.toHaveBeenCalled();
+    expect(saveGuardian).not.toHaveBeenCalled();
+  });
+
+  it("lets a minor with their own email and phone clear the guardian email", async () => {
+    renderSection({
+      memberData: { minor: 1, email: "kid@example.com", phone_number: "555-1111" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save guardian/i }));
+    await waitFor(() => expect(devitrakApi.patch).toHaveBeenCalled());
+  });
+  it("shows the guardian field the server's 400 names as missing", async () => {
+    devitrakApi.patch.mockRejectedValue({
+      message: "Request failed with status code 400",
+      response: { status: 400, data: { ok: false, message: "…", missing: ["parent_guardian_email"] } },
+    });
+    renderSection({
+      memberData: { minor: 1, email: "kid@example.com", phone_number: "555-1111" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save guardian/i }));
+
+    expect(
+      await screen.findByText(/guardian email is required while the student has no email or phone/i)
+    ).toBeInTheDocument();
   });
 });

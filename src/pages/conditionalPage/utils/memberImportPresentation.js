@@ -1,3 +1,5 @@
+import { missingFieldMessages } from "./memberContactRules";
+
 /**
  * Turning the importer's flat message lists into something the preview can show.
  *
@@ -85,4 +87,41 @@ export function importCounts(annotated) {
  */
 export function generalIssues(errors, warnings) {
   return [...parseRowIssues(errors).general, ...parseRowIssues(warnings).general];
+}
+
+/**
+ * What POST /db_member/bulk-members actually did (feat/member-contact-minors).
+ * It skips rows that break the contact rule and inserts the rest, so a
+ * successful response is not "everything imported":
+ *
+ *   { ok, requested, inserted, skipped, contact_skipped: [{ row, missing, msg }] }
+ *
+ * `row` is the 0-based index in the list sent, i.e. the preview's "#" minus
+ * one. `skipped` also counts rows without a name, which carry no reason. The
+ * old server sends no contact_skipped, and maybe no counts: that reads as
+ * every row imported, which is what it meant then.
+ *
+ * @param {object} data response body (201, 202 or 400)
+ * @param {object[]} sent the rows sent, in order
+ */
+export function summarizeBulkMembersResult(data, sent, { representativeLabel = "Guardian" } = {}) {
+  const list = Array.isArray(sent) ? sent : [];
+  const contactSkipped = Array.isArray(data?.contact_skipped) ? data.contact_skipped : [];
+  const skipped = Number.isFinite(data?.skipped) ? data.skipped : contactSkipped.length;
+
+  const skippedRows = contactSkipped.map((entry) => {
+    const row = list[entry?.row] ?? {};
+    const reasons = missingFieldMessages(entry?.missing, representativeLabel);
+    return {
+      rowNumber: Number(entry?.row) + 1,
+      name: `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim(),
+      reason: reasons.length ? reasons.join(" ") : String(entry?.msg ?? "Skipped by the server."),
+    };
+  });
+
+  return {
+    inserted: Number.isFinite(data?.inserted) ? data.inserted : Math.max(0, list.length - skipped),
+    skippedRows,
+    skippedWithoutReason: Math.max(0, skipped - contactSkipped.length),
+  };
 }

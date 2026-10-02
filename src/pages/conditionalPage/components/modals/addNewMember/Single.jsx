@@ -27,6 +27,10 @@ import {
   buildSingleMemberPayload,
   singleMemberFieldErrors,
 } from "../../../utils/singleMemberUtils";
+import {
+  memberServerErrorMessage,
+  memberServerFieldErrors,
+} from "../../../utils/memberContactRules";
 
 const RELATIONSHIPS = [
   { id: "guardian", label: "Guardian" },
@@ -72,6 +76,9 @@ const Single = ({ onClose }) => {
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState(null);
   const [guardianNote, setGuardianNote] = useState(null);
+  // Fields the server's 400 named in `missing`. The client rule is stricter,
+  // so this is the safety net; each clears as soon as its field is edited.
+  const [serverFieldErrors, setServerFieldErrors] = useState({});
 
   // Set once the member exists. Everything after this point is the guardian
   // link, and re-running step one would create a duplicate.
@@ -99,16 +106,21 @@ const Single = ({ onClose }) => {
     const value =
       event.target.type === "checkbox" ? event.target.checked : event.target.value ?? "";
     setForm((previous) => ({ ...previous, [key]: value }));
+    setServerFieldErrors((previous) =>
+      key in previous ? { ...previous, [key]: undefined } : previous
+    );
     if (key === "parent_guardian_email") setGuardianNote(null);
   };
 
-  const errorFor = (key) => (submitAttempted ? fieldErrors[key] : undefined);
+  const errorFor = (key) =>
+    serverFieldErrors[key] ?? (submitAttempted ? fieldErrors[key] : undefined);
 
   const clear = () => {
     setForm({ ...EMPTY_SINGLE_MEMBER_FORM, company_id: user.sqlInfo.company_id });
     setSubmitAttempted(false);
     setFailure(null);
     setGuardianNote(null);
+    setServerFieldErrors({});
     createdMemberId.current = null;
   };
 
@@ -223,8 +235,10 @@ const Single = ({ onClose }) => {
       onClose();
     } catch (error) {
       console.error(error);
-      const detail =
-        error?.response?.data?.msg || error?.message || "An unexpected error occurred.";
+      setServerFieldErrors(
+        memberServerFieldErrors(error, { representativeLabel: representative.label })
+      );
+      const detail = memberServerErrorMessage(error);
       setFailure({
         // Once the member exists, only the link is outstanding — saying so is
         // what stops the retry from creating a second member.

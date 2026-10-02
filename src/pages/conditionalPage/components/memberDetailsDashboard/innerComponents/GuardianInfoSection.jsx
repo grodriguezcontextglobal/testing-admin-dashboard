@@ -9,6 +9,11 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import Input from "../../../../../components/UX/inputs/Input";
 import { saveGuardian, searchGuardians } from "../../../utils/guardianConsentApi";
 import {
+  memberEditContactErrors,
+  memberServerErrorMessage,
+  memberServerFieldErrors,
+} from "../../../utils/memberContactRules";
+import {
   buildExistingGuardianLinkPayload,
   buildGuardianSearchPayload,
   buildNewGuardianLinkPayload,
@@ -88,7 +93,15 @@ const GuardianInfoSection = ({
       onSaved?.();
     },
     onError: (error) => {
-      setErrors([`Failed to update guardian: ${error?.message || String(error)}`]);
+      // The server's 400 names the missing fields; fall back to its message.
+      const byField = Object.values(
+        memberServerFieldErrors(error, { representativeLabel: representative?.label || "Guardian" })
+      );
+      setErrors(
+        byField.length
+          ? byField
+          : [`Failed to update guardian: ${memberServerErrorMessage(error)}`]
+      );
     },
   });
 
@@ -116,11 +129,22 @@ const GuardianInfoSection = ({
     }
   };
 
+  const label = representative?.label || "Guardian";
+
+  // The server checks the whole row: clearing this email on a minor with no
+  // email or phone of their own is refused with a 400.
   const handleSave = (data) => {
+    const messages = Object.values(
+      memberEditContactErrors(
+        memberData,
+        { parent_guardian_email: normalizeGuardianEmail(data.email) },
+        { representativeLabel: label }
+      )
+    );
+    setErrors(messages);
+    if (messages.length) return;
     saveGuardianMutation.mutate(data);
   };
-
-  const label = representative?.label || "Guardian";
 
   return (
     <>

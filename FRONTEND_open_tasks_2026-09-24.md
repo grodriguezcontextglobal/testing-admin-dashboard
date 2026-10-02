@@ -564,7 +564,32 @@ seis sitios que dicen "Condition".
 > código viejo antes. Los llamadores se buscaron por ruta y se comprobaron el
 > 2026-10-01.
 
-### 2c.1 — Formulario de edición de member: misma regla que el alta (alta prioridad)
+### ~~2c.1 — Formulario de edición de member: misma regla que el alta (alta prioridad)~~ — hecho 2026-10-02
+
+**Hecho, pero con la regla del servidor, no con la del alta.** La regla del
+alta exige siempre el tutor completo. Aplicada en la edición, bloquearía el
+flujo que ya existe: un alumno que pasa a ser menor guarda primero su sección
+(*"Save this section, then set up guardian information below"*), y solo
+después aparece la del tutor.
+
+- `memberContactMissing`, `memberRowAfterUpdate` y `memberEditContactErrors`,
+  en `utils/memberContactRules.js` y con tests, aplican la regla del servidor
+  a cómo queda la fila completa. Una actualización que no envía ningún campo de
+  contacto no se valida, igual que en el servidor.
+- `StudentInfoSection`: valida antes de cada guardado, también al subir y al
+  quitar la foto, porque esos guardados envían email y teléfono. Si un adulto
+  vacía su email o teléfono, el error aparece en vivo bajo el campo. Si un
+  menor queda sin contacto propio y no hay email de tutor, aparece el aviso en
+  vivo.
+- `GuardianInfoSection`: no deja vaciar el email del tutor de un menor sin
+  contacto propio.
+
+Sin verificar: si el servidor compara `minor === 1`. La edición manda `minor`
+como booleano (`true`/`false`) cuando hay fecha de nacimiento. Si el servidor
+compara estrictamente con 1, trataría a un menor como adulto. Hay que
+preguntarlo a backend.
+
+Texto original:
 
 **La regla del servidor:** un adulto necesita `email` y `phone_number`. Un
 menor sin email **o** sin teléfono propio necesita `parent_guardian_email`.
@@ -586,7 +611,23 @@ ediciones sueltas de `StudentInfoSection.jsx` y `GuardianInfoSection.jsx`
 también hacen `PATCH /db_member/update-member-info`, así que hay que revisarlas.
 `AdvanceGrades.jsx` solo cambia el curso y no le afecta.
 
-### 2c.2 — Marcar el campo concreto con `missing` en el 400
+### ~~2c.2 — Marcar el campo concreto con `missing` en el 400~~ — hecho 2026-10-02
+
+**Hecho.** `memberServerFieldErrors` traduce `missing` a los campos del
+formulario (`phone_number` → `phone`) con los mismos mensajes que la
+validación del cliente. Fuera de un 400, o sin `missing` (servidor viejo),
+devuelve `{}`. `memberServerErrorMessage` lee `message` y, si no está, `msg`.
+Las dos están en `memberContactRules.js`, con tests.
+- `Single.jsx`: marca el campo que el servidor nombra, y la marca se quita al
+  editarlo. El `catch` ya no lee solo `msg`.
+- `StudentInfoSection`: marca el campo bajo el input. El `onError` y el
+  `catch` escribían el error dos veces, y el segundo pisaba al primero. Ahora
+  pasan por una sola función.
+- `GuardianInfoSection`: muestra el motivo en lugar de "Request failed…".
+- `school/compliance/loadDemoData.js` no se tocó: es el sembrador del demo y
+  no tiene formulario.
+
+Texto original:
 
 `POST /db_member/new-member` (`Single.jsx:191`, y `school/compliance/loadDemoData.js:126`)
 y `PATCH /db_member/update-member-info` (los tres sitios de 2c.1) devuelven
@@ -600,7 +641,29 @@ Hoy ningún llamador lee `missing`.
 - Ojo con la clave del mensaje de error: los endpoints de members usan
   `message`, los de eventos `msg`.
 
-### 2c.3 — Import de estudiantes: mostrar las filas saltadas
+### ~~2c.3 — Import de estudiantes: mostrar las filas saltadas~~ — hecho 2026-10-02, salvo dos puntos
+
+**Hecho.** `summarizeBulkMembersResult` (`memberImportPresentation.js`, con
+tests) lee `inserted`, `skipped` y `contact_skipped`.
+- Cada fila saltada se muestra con el mismo `#` de la tabla de vista previa
+  (`row + 1`), el nombre y el motivo. Las saltadas por no tener nombre salen
+  como un conteo aparte.
+- Con filas saltadas, el diálogo no se cierra. El aviso dice "N of M members
+  imported", y el botón Import queda deshabilitado hasta cargar otro fichero,
+  para no crear dos veces las que sí entraron.
+- El 400 de "ninguna fila cumple" también lista las filas, y el mensaje sale
+  de `message`.
+- Con el servidor viejo, que no manda `contact_skipped` ni conteos, se lee
+  como que entraron todas, igual que antes.
+
+**Sin hacer, a propósito:**
+- **Dejar de mandar `email: ""`.** El servidor nuevo trata igual omitirlo,
+  pero no sabemos si el viejo acepta la fila sin ese campo. Se hace después del
+  despliegue.
+- **El 202.** Sigue sin saberse cuándo responde 202 `bulk-members` ni dónde
+  viene entonces `contact_skipped`. Es la pregunta para backend de abajo.
+
+Texto original:
 
 `POST /db_member/bulk-members` (`MultipleFromXLSX.jsx:156`) devuelve
 `contact_skipped: [{ row, missing, msg }]` en las respuestas 201, 202 y 400.
