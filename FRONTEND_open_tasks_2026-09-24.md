@@ -29,8 +29,8 @@ y se pasa por alto lo que de verdad queda.
 |---|---|
 | **Abierto, total** | **30** |
 | — bloquea (§1) | 1 |
-| — trabajo de producto (§2) | 4 |
-| — reunión del 29-09 (§2b) | 5 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
+| — trabajo de producto (§2) | 5 |
+| — reunión del 29-09 (§2b) | 4 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
 | — plan FedRAMP (§2d) | 8 |
 | — surgido esta semana (§3) | 5 |
@@ -473,6 +473,33 @@ cuenta…). Por destinatario:
 guardar un campo del perfil debe despachar `onUpdateProfile`
 (`store/slices/adminSlice.js:98`). Además lee `msg` en el error.
 
+### Registrar toda acción de un usuario o staff — incluye 2b.7
+
+Pedido por Fredrik el 2026-10-05: registrar **cualquier** acción que un usuario
+o staff haga en la app, por ejemplo crear un evento, asignar inventario al
+evento o asignar un dispositivo a un consumidor. **Une a 2b.7** (audit trail con
+autor, empezando por el dispositivo), que pide lo mismo para un caso.
+
+**Lo que hay** (contrato `FRONTEND_staff_activity_log.md`, 05-08): el servidor
+registra solo LOGIN, FORCE_LOGOUT y los CRUD de `controller/admin.js`,
+`event.js` e `inventory.js`. El cliente registra a mano members, préstamos,
+consentimientos y tutores (15 ficheros). De las tres acciones del ejemplo, solo
+crear evento se registra. **Asignar inventario al evento**
+(`mysql/controllers/items_events.js`) y **asignar un dispositivo a un
+consumidor** (`controller/receiver.js`) **no**. Tampoco el inventario en SQL,
+las transacciones ni Stripe: de 404 rutas que escriben, el servidor cubre 30.
+
+**Decisión: lo escribe el servidor**, con un middleware sobre las rutas que
+cambian datos y el autor sacado del JWT. Registrarlo desde el cliente se puede
+saltar, se duplica y depende de que cada pantalla se acuerde. La petición, con
+el detalle por controlador y cinco preguntas, está en
+`FRONTEND_activity_log_backend_ask_2026-10-05.md`.
+
+**La parte del frontend, cuando el servidor responda:** mostrar las acciones
+nuevas en lenguaje legible en la actividad de staff, los filtros por evento y
+dispositivo, el autor en el audit trail del dispositivo, y retirar las
+llamadas a `registerStaffActivity` que pasen a estar cubiertas.
+
 ### Dashboard de gestión de Devitrak
 
 Pedido el 2026-09-25 `20:25`: alta de compañías, datos de Stripe, suscripciones,
@@ -684,7 +711,11 @@ Texto original:
 Es el primer paso de 2b.7 y se puede hacer antes: ordenar por timestamp y
 enseñarlo no necesita backend nuevo, siempre que el timestamp exista.
 
-### 2b.7 — Audit trail con usuario, empezando por el dispositivo [22]
+### ~~2b.7 — Audit trail con usuario, empezando por el dispositivo [22]~~ — unida a "Registrar toda acción" (§2)
+
+Se sigue allí desde el 2026-10-05: pide lo mismo para un caso, y la pregunta a
+backend de abajo está hecha en `FRONTEND_activity_log_backend_ask_2026-10-05.md`.
+
 
 Quién hizo qué y cuándo, en cada acción, con un formato común para todos los
 audit trails de la app. La referencia es el audit history de QuickBooks.
