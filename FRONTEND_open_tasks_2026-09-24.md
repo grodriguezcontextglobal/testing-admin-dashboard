@@ -27,9 +27,9 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **29** |
+| **Abierto, total** | **30** |
 | — bloquea (§1) | 1 |
-| — trabajo de producto (§2) | 3 |
+| — trabajo de producto (§2) | 4 |
 | — reunión del 29-09 (§2b) | 5 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
 | — plan FedRAMP (§2d) | 8 |
@@ -395,6 +395,78 @@ rehidratar el proceso a partir del evento guardado y saber en qué paso quedó.
 Queda por confirmar con backend qué valor tiene `configuration` antes de
 completar el alta, y si los eventos viejos lo tienen puesto. Si no lo tienen,
 cualquier evento anterior a este campo se leería como Draft.
+
+### Notificaciones — lo que salió de la queja de Fredrik del 03-04/10
+
+**Origen, aclarado el 2026-10-05.** Fredrik figura como tutor de un menor en una
+cuenta de pruebas, y ese menor tiene un equipo vencido. El servidor manda el
+recordatorio de vencido **todos los días a las 8:00 (EST), a partir del día
+siguiente a la fecha de devolución, nunca antes**, y le llega a él. **Ese
+comportamiento es el correcto:** es el aviso al tutor que él mismo pidió el
+29-09 (2b.4). Lo que le molesta es que su email real está en datos de prueba.
+Se arregla cambiando ese email por una dirección de pruebas.
+
+**Queda por decidir, sin cambiar la regla:**
+- **La frecuencia no tiene fin:** mientras el equipo no vuelva, el tutor recibe
+  un correo cada día. Se podría espaciar (por ejemplo, días 1, 3 y 7 y luego
+  semanal) o poner un tope. Es decisión de producto, y el cambio es del
+  servidor.
+- **El envío manual se suma al automático:** "Send reminder" y "Send all
+  reminders" (`OverdueDevicesTable.jsx`) y "Send reminder" del perfil del
+  member mandan el mismo aviso aunque esa mañana ya saliera el automático.
+  Mostrar cuándo salió el último, o avisar de que el envío diario existe,
+  evitaría el doble correo.
+
+**Lo que dejó la revisión, y sigue abierto aunque el origen era otro:**
+
+**Lo que hay hoy:** Profile → Notifications (`pages/Profile/notifications/`)
+guarda seis preferencias en el administrador (`PATCH /admin/admin-user/:uid`):
+*News and updates*, *Tips and tutorials* y *User research* (casillas), y
+*Daily summaries*, *Event reminders* y *Subscription renewals* (radio).
+**Ninguna corresponde a un correo que la app envíe**, y **nada en el cliente
+las consulta** antes de enviar. No se sabe si el servidor las respeta, porque
+no se ve desde aquí.
+
+**Opción por opción (2026-10-05):** *News and updates*, *Tips and tutorials*,
+*User research*, *Daily summaries* y *Subscription renewals* **no corresponden a
+ningún correo** de los 38 del servidor. Además, la opción de *Subscription
+renewals* dice "Notify me for all other activity". Solo *Event reminders* existe
+(`/nodemailer/events-begin-reminder`), y **se envía aunque se elija "Do not
+notify me"**.
+
+**Bug del recordatorio:** lo dispara un `useEffect` de `CardEventDisplay.jsx:113-132`
+cuando la tarjeta del evento se muestra en la lista, no una tarea programada. Si
+faltan entre 1 y 10 días laborables, cada visita a la lista de eventos manda un
+correo a todos los admins del evento, otra vez en cada visita. Debería enviarlo
+el servidor una vez al día y respetando la preferencia.
+
+**Las notificaciones reales:** 38 endpoints `/api/nodemailer/*`. El cliente
+llama a 28, y los otros 10 los dispara el servidor (tareas en cola terminadas o
+fallidas, staff asignado a un evento, recordatorio temprano, confirmación de
+cuenta…). Por destinatario:
+- **al usuario del dashboard (staff/admin):** invitación, restablecer
+  contraseña, sesión revocada, aviso interno a staff, staff asignado a un
+  evento, equipo prestado a staff, tarea en cola terminada o fallida, edición
+  de un dispositivo, recordatorio de inicio de evento;
+- **a consumidores, members o tutores:** asignación de equipos, devolución,
+  depósitos (cobrado o devuelto), lost fee, refund, factura, contratos de
+  responsabilidad, incidentes y recibos de members, instrucciones de la app,
+  feedback, mensajes sueltos y masivos, términos y condiciones.
+
+**Antes de diseñar hay que cerrar dos cosas:**
+1. **¿Quién es "el usuario"?** Puede ser el staff que decide qué le llega a
+   él, o la compañía que decide qué correos manda a sus consumidores/members.
+   Son dos pantallas distintas, y la segunda es configuración de compañía, no
+   de perfil. Hay que preguntarlo a Fredrik.
+2. **El servidor tiene que respetar la preferencia.** Si el filtro solo está en
+   el cliente, no sirve para los 10 correos que dispara el servidor. Hace falta
+   un contrato con backend: dónde se guarda cada preferencia (por usuario o por
+   compañía), con qué claves, y que cada `nodemailer/*` la consulte antes de
+   enviar.
+
+**De paso, un bug en la página actual:** al guardar despacha `onLogin`, cuando
+guardar un campo del perfil debe despachar `onUpdateProfile`
+(`store/slices/adminSlice.js:98`). Además lee `msg` en el error.
 
 ### Dashboard de gestión de Devitrak
 
