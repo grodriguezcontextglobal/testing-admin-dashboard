@@ -1,7 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Tooltip } from "antd";
-import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -20,7 +19,6 @@ import { CardStyle } from "../../../styles/global/CardStyle";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import displayMonth from "../quickGlance/components/formatEventDetailInfo/displayMonth";
-import WeekdayDifference from "../utils/DateDifference";
 import {
   countdownBadgeColors,
   getCountdownLabel,
@@ -104,37 +102,12 @@ const CardEventDisplay = ({ props }) => {
     dispatch(onAddExtraServiceNeeded(props.extraServiceNeeded));
     return navigate("/events/event-quickglance");
   };
-  const [weekdayCount, setWeekdayCount] = useState(null);
-
-  const handleWeekdayCountCalculated = (count) => {
-    return setWeekdayCount(count);
-  };
-
-  const reminderEventBegins = async () => {
-    const adminMembers = props.staff.adminUser;
-    for (let member of adminMembers) {
-      await devitrakApi.post("/nodemailer/events-begin-reminder", {
-        staff: member.email,
-        subject: "Event begin reminder",
-        daysToEvent: weekdayCount,
-        event: props.eventInfoDetail.eventName,
-        message: `Please ensure that the serial number range of each device is assigned before the event starts. If all serial numbers have already been assigned, please disregard this message.`,
-      });
-    }
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (weekdayCount !== null) {
-      if (weekdayCount > 0 && weekdayCount <= 10) {
-        reminderEventBegins();
-        return setWeekdayCount(null);
-      }
-    }
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  // The "event begins in 10 weekdays or less" email to the event's admins used
+  // to live here, removed 2026-10-05. Its effect had an empty dependency list,
+  // so it ran once on mount, while the day count from <WeekdayDifference> was
+  // still null, and never sent anything (since 9834d622, 2024). A reminder sent
+  // from a card render would also fire on every visit to this list. If it is
+  // wanted, it belongs on the server, once a day, like the overdue reminder.
   const cardStyle = {
     ...CardStyle,
     border: "1px solid var(--gray-200)",
@@ -429,12 +402,6 @@ const CardEventDisplay = ({ props }) => {
             </div>
           );
         })()}
-        {
-          <WeekdayDifference
-            dateBegin={`${props.eventInfoDetail.dateBegin}`}
-            onWeekdayCountCalculated={handleWeekdayCountCalculated}
-          />
-        }
       </>
     );
   };

@@ -430,15 +430,19 @@ no se ve desde aquí.
 **Opción por opción (2026-10-05):** *News and updates*, *Tips and tutorials*,
 *User research*, *Daily summaries* y *Subscription renewals* **no corresponden a
 ningún correo** de los 38 del servidor. Además, la opción de *Subscription
-renewals* dice "Notify me for all other activity". Solo *Event reminders* existe
-(`/nodemailer/events-begin-reminder`), y **se envía aunque se elija "Do not
-notify me"**.
+renewals* dice "Notify me for all other activity". *Event reminders* tenía un
+endpoint (`/nodemailer/events-begin-reminder`), pero **nunca se enviaba**: ver
+abajo. O sea que **ninguna de las seis opciones controla hoy un correo real.**
 
-**Bug del recordatorio:** lo dispara un `useEffect` de `CardEventDisplay.jsx:113-132`
-cuando la tarjeta del evento se muestra en la lista, no una tarea programada. Si
-faltan entre 1 y 10 días laborables, cada visita a la lista de eventos manda un
-correo a todos los admins del evento, otra vez en cada visita. Debería enviarlo
-el servidor una vez al día y respetando la preferencia.
+**Corrección 2026-10-05 al recordatorio de inicio de evento.** El texto
+anterior de este punto (commit `828f7dd3`) decía que se reenviaba en cada
+visita a la lista de eventos. **Era falso.** El envío estaba en un `useEffect`
+de `CardEventDisplay.jsx` con dependencias vacías: se ejecutaba una sola vez al
+montar, cuando el contador de días de `<WeekdayDifference>` todavía era `null`,
+así que nunca llamaba al envío. Era así desde que se escribió (`9834d622`,
+2024). **Se quitó como código muerto el 2026-10-05.** Si se quiere ese
+recordatorio, debe enviarlo el servidor una vez al día, como el de vencidos, y
+respetando la preferencia `eventReminder`.
 
 **Las notificaciones reales:** 38 endpoints `/api/nodemailer/*`. El cliente
 llama a 28, y los otros 10 los dispara el servidor (tareas en cola terminadas o
@@ -447,7 +451,8 @@ cuenta…). Por destinatario:
 - **al usuario del dashboard (staff/admin):** invitación, restablecer
   contraseña, sesión revocada, aviso interno a staff, staff asignado a un
   evento, equipo prestado a staff, tarea en cola terminada o fallida, edición
-  de un dispositivo, recordatorio de inicio de evento;
+  de un dispositivo (el recordatorio de inicio de evento existía en el cliente
+  pero nunca se enviaba, y se quitó);
 - **a consumidores, members o tutores:** asignación de equipos, devolución,
   depósitos (cobrado o devuelto), lost fee, refund, factura, contratos de
   responsabilidad, incidentes y recibos de members, instrucciones de la app,
