@@ -27,14 +27,15 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **23** |
+| **Abierto, total** | **29** |
 | — bloquea (§1) | 1 |
 | — trabajo de producto (§2) | 3 |
 | — reunión del 29-09 (§2b) | 5 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
-| — surgido esta semana (§3) | 6 |
-| — no es código (§4) | 6 |
-| Cerrado y tachado en este documento | 23, más la tabla de §5 |
+| — plan FedRAMP (§2d) | 8 |
+| — surgido esta semana (§3) | 5 |
+| — no es código (§4) | 5 |
+| Cerrado y tachado en este documento | 28, más la tabla de §5 |
 
 > **Recontado 2026-10-02** con un script, sección por sección: un `###` sin
 > tachar es un ítem abierto, y en §4 cada viñeta sin tachar. Ese día se cerraron
@@ -403,7 +404,21 @@ uso por cuenta. **Es un producto aparte**, no una pantalla de este dashboard.
 Sin alcance ni fecha, y él mismo lo puso por detrás de FedRAMP en la frase
 siguiente. Queda como intención registrada, no como tarea lista para coger.
 
-### R3 — la reconciliación de alcance por ubicación
+### R3 — la reconciliación de alcance por ubicación — a medias: falta el backfill
+
+**Revisado 2026-10-05: el lado de lectura se arregló el 2026-09-17, antes de
+esta lista, en `c995425f`.** `resolveScopedLocationNames` lee primero el
+alcance de SQL y, si no hay, el array heredado de Mongo. Así, un rol con alcance
+asignado desde la pantalla nueva ya no ve todo el inventario de la compañía.
+Está documentado como puerta del flag en
+`FRONTEND_inventory_pagination_migration_plan.md` (`adcf1c24`).
+
+**Lo que queda es del backend:** el backfill Mongo → SQL. Una persona con
+alcance asignado solo en Mongo no tiene filas en SQL, así que el servidor no
+puede aplicarle ese alcance. El texto de abajo describe la situación de antes
+del arreglo.
+
+Texto original:
 `saveScopedRole` escribe el alcance en SQL pero no toca el `preference.managerLocation`
 de Mongo, que es lo que lee el filtro de inventario del servidor.
 `useCompanyScopeLocations.js:14` lo dice en un comentario: *«R3 reconciliation is
@@ -860,6 +875,57 @@ Hay que mandárselo al equipo de backend.
 
 ---
 
+## 2d. Abierto — plan de acción FedRAMP del dashboard (sin trackear hasta ahora)
+
+> Fuente: `fedRAMP/FRONTEND_action_plan_2026-09-28.md`. Nunca había entrado en
+> este tracker. Cada punto se comprobó contra el código el 2026-10-05: **ninguno
+> está hecho.** El plan cuenta como ya aportado el MFA en el cliente, las
+> alertas de dependencias (125 → 7) y quitar los `console.*` del bundle
+> (`62f623fb`).
+
+### F0.1 — Borrar dos secretos muertos del bundle, y rotarlos
+`src/config/ConfigEnvExport.jsx:22,26`: `twilio_auth_token` y
+`secrete_key_encrypt` se exportan y no los usa nadie. Borrarlos son minutos.
+**Hay que rotarlos igual**, porque ya se publicaron en bundles anteriores. La
+rotación es de quien tenga las cuentas.
+
+### F0.2 — `auth-token` es una credencial compartida en JavaScript público
+`src/api/devitrakApi.jsx:195`. Es la misma para todos los usuarios. Necesita que
+el servicio AWS acepte el JWT de sesión. Mientras tanto: rotar y dejar escrita
+la exposición.
+
+### F0.3 — Dejar de comparar contraseñas contra el hash en el navegador
+`compareSync` contra el hash bcrypt del administrador, en
+`signatureVerificationDocuments/StaffMember.jsx:183` y en
+`Profile/my_password/components/Body.jsx:53`. **Es un cambio coordinado:**
+cuando el backend deje de servir el hash, las dos pantallas fallan, así que el
+endpoint que verifique la contraseña en el servidor tiene que llegar a la vez.
+
+### F0.4 — Validar el entorno al arrancar
+No existe ninguna validación. `VITE_APP_HEADER_AUTH_TOKEN`,
+`VITE_APP_SECRETE_KEY_ENCRYPT` y `VITE_APP_TWILIO_AUTH_TOKEN` se usan y no
+están en `.env.dev.example`. Medio día, con su test. No depende de nadie.
+
+### F1.1 — Dejar de leer el rol numérico heredado
+Quedan 12 lecturas de `user.role` que no pasan por `resolveRoleType`.
+Algunas solo lo reenvían al servidor (`ItemTable.jsx:193,400`), y otras viven
+en el código muerto `roleCapabilities.js`. Es un barrido, más un test que
+prohíba el patrón.
+
+### F1.2 — Qué cabecera de tenant lee el servidor
+Nosotros mandamos `x-company-id` y `s-company-lq` (`buildRouteScopedHeaders`).
+El informe dice que no. Es una pregunta para backend, no un cambio nuestro
+hasta saber la respuesta.
+
+### F1.3 — CI con puerta
+El único workflow (`.github/workflows/dev-image.yml`) publica la imagen de
+desarrollo. No ejecuta tests, ni lint, ni build antes de desplegar.
+
+### F1.4 — Inventario de módulos criptográficos
+Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
+
+---
+
 ## 3. Abierto — de esta semana, fuera de toda lista
 
 ### Paso 4 de dependencias — desbloqueado, en standby por decisión
@@ -989,7 +1055,18 @@ aviso previo por esto.
 `label={label}` comentado en el `OutlinedInput`. Ocho llamadores lo pasan;
 descomentarlo cambia el aspecto de todos a la vez, así que pide navegador.
 
-### `/status` sin tests propios
+### ~~`/status` sin tests propios~~ — hecho 2026-10-05
+
+**Hecho.** `ServiceStatusPage.test.jsx`, 13 tests con el hook simulado. Fijan
+las tres promesas de la página: sin `uptime90d` no hay línea de uptime (nunca
+0% ni 100%); `unknown`, o un estado desconocido, nunca sale verde, y si no se
+pudo llegar al worker dice que no pudo comprobarlo, no que haya caída; y el
+mensaje del incidente se pinta escapado. También cubren que la lista recorre
+componentes nuevos y que el enlace va al historial. Se comprobó que vigilan:
+con la página rota a propósito (un estado desconocido pintado como
+operativo), el test falla.
+
+Texto original:
 La página es pública y de cara a clientes. Las tres reglas que importan están
 fijadas en el hook, no donde se ven: que `uptime90d: null` omita la línea, que
 `unknown` nunca sea verde, que el mensaje del incidente vaya escapado.
@@ -1024,8 +1101,11 @@ producción, o en la configuración del IIS, no en este código.
   antes de tocar nada.
 - **C2 — lector RFID OR2505.** No es HID; no llega nada a los inputs. El OR2508
   sí funciona y es el del demo. Requiere hardware o SDK, no frontend.
-- **C3 — FedRAMP.** Fredrik pidió un día de estudio de las especificaciones para
-  tenerlas en cuenta al construir, no una certificación.
+- ~~**C3 — FedRAMP.**~~ **El estudio ya estaba hecho:** informe de readiness
+  (`fedRAMP/Devitrak FedRAMP Readiness.html`, 15-16/09), su revisión desde el
+  frontend y un plan de acción (`fedRAMP/FRONTEND_readiness_review_2026-09-28.md`,
+  `fedRAMP/FRONTEND_action_plan_2026-09-28.md`). La carpeta `fedRAMP/` está
+  **sin trackear** en git. El trabajo que sale del plan está en §2d.
 - ~~**B11 — el asterisco de campo obligatorio.**~~ **Ya estaba hecho** el
   2026-08-31 en `6827e52c`. `Label` tiene una prop `required`, que pinta
   `.form-label__required` en rojo de peligro, y se barrieron 33 marcas hechas a
