@@ -4,6 +4,7 @@ import { lazy, Suspense, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
+import { eventsListPath } from "./utils/eventsListQuery";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import EventsCarousel from "../../components/UX/carousel/EventsCarousel";
@@ -38,9 +39,7 @@ const MainPage = () => {
   const { isLoading, data: eventsData } = useQuery({
     queryKey: ["events"],
     queryFn: () =>
-      devitrakApi.get(
-        `/event/event-list-per-company?company=${user.company}&type=event`
-      ),
+      devitrakApi.get(eventsListPath(user.company)),
     enabled: !!user.companyData.id,
   });
   const eventList = eventsData?.data?.list ?? [];

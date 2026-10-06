@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { sqlDeleteOutcome } from "../utils/eventDraft";
+import clearCacheMemory from "../../../utils/actions/clearCacheMemory";
+import { eventsListCacheKey } from "../utils/eventsListQuery";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { hasPermission, resolveRoleType } from "../../../config/roles";
@@ -104,6 +106,10 @@ const useDraftEventActions = () => {
         }
       }
       await devitrakApi.delete(`/event/delete-event/${event.id}`);
+      /* The list endpoint caches its answer on the server under its own query
+         string, so refetching without this gets the deleted event back and
+         only a page reload shows the truth. */
+      await clearCacheMemory(eventsListCacheKey(user?.company)).catch(() => null);
       await queryClient.invalidateQueries({ queryKey: ["events"] });
       notify("success", `“${nameOf(event)}” was deleted.`);
     } catch (error) {
