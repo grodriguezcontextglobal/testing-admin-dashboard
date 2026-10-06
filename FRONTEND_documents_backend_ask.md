@@ -20,7 +20,12 @@ borrarlo. Para eso hace falta:
   `description`, `document_type`, `trigger_action` y **`expiration_date`**
   (ISO o `null`, para quitar el vencimiento).
 
-Cuando exista, el frontend agrega el campo "Expires on" a Edit document.
+**Actualizado 2026-10-05: el frontend ya lo hizo.** Edit document tiene el
+campo "Expires on" y el estado (Active / Expired), y manda
+`expiration_date` como timestamp ISO o `null` para quitarlo, más
+`public_document` derivado de `trigger_action`. Si la ruta no existe, el
+guardado responde 404 y la pantalla lo dice con esas palabras. **Sigue
+haciendo falta la ruta**, o no se puede reactivar ningún documento vencido.
 
 ## 2. Que el servidor también se niegue a asignar un vencido
 
