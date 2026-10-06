@@ -88,7 +88,16 @@ const Input = forwardRef(({
                 endAdornment={endAdornment}
                 readOnly={readOnly}
                 required={required}
-                // label={label} // Pass label to OutlinedInput so the notch is calculated correctly if label exists
+                /* The InputLabel above is always `shrink`, so it floats onto
+                   the top border. This is what cuts the gap it sits in: MUI
+                   sizes the outline's <legend> from it. Without it the label
+                   is drawn over the border line.
+
+                   Commented out in February 2026 for "potential UI rendering
+                   issues", with none ever named, and only one screen passes a
+                   label today (EndEventCountModal). Input.test.jsx pins the
+                   gap so this does not get switched off a fourth time. */
+                label={label}
                 inputRef={ref}
                 style={combinedStyle}
                 sx={{

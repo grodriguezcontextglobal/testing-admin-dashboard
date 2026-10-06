@@ -27,13 +27,13 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **30** |
+| **Abierto, total** | **29** |
 | — bloquea (§1) | 1 |
 | — trabajo de producto (§2) | 5 |
 | — reunión del 29-09 (§2b) | 4 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
 | — plan FedRAMP (§2d) | 8 |
-| — surgido esta semana (§3) | 5 |
+| — surgido esta semana (§3) | 4 |
 | — no es código (§4) | 5 |
 | Cerrado y tachado en este documento | 29, más la tabla de §5 |
 
@@ -1253,9 +1253,24 @@ XLSX.
 **Hay que hacerlo antes o a la vez que su despliegue**, no después. Se les pidió
 aviso previo por esto.
 
-### `Input.jsx:91` — el label se dibuja sobre el borde
-`label={label}` comentado en el `OutlinedInput`. Ocho llamadores lo pasan;
-descomentarlo cambia el aspecto de todos a la vez, así que pide navegador.
+### ~~`Input.jsx:91` — el label se dibuja sobre el borde~~ — hecho 2026-10-06
+
+**Corrección: no eran ocho llamadores, es uno.** De los 58 ficheros que usan
+el Input de UX, solo `EndEventCountModal.jsx` pasa `label` ("Scan a serial or
+a tag"). El "ocho" salió de un grep mío que contaba otra cosa.
+
+`label={label}` activado. El `InputLabel` siempre va con `shrink`, así que
+flota sobre el borde; esa prop es la que abre el hueco donde se mete, porque
+MUI dimensiona con ella el `<legend>` del contorno.
+
+**Historia:** se comentó, se reactivó cuatro horas después y se volvió a
+comentar el 18-02 (`38ac53e8`, `48affbdd`, `4748cd9f`). El único motivo
+anotado fue "potential UI rendering issues", sin nombrar ninguno. Ahora hay
+`Input.test.jsx` con 5 tests que fijan el hueco, para que no se apague una
+cuarta vez a ciegas.
+
+**Sin ver en el navegador:** la pantalla a mirar es el modal de conteo al
+cerrar un evento.
 
 ### ~~`/status` sin tests propios~~ — hecho 2026-10-05
 
