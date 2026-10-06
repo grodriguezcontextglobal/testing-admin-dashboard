@@ -9,6 +9,7 @@ import Services from "../extra/Services";
 import MerchantService from "./MerchantService";
 import NoMerchantService from "./NoMerchantService";
 import SelectedItemsRendered from "./SelectedItemsRendered";
+import { normalizeEventStaff } from "../../../../../store/slices/eventSlice";
 
 const MainBody = ({
   AddingEventCreated,
@@ -140,7 +141,7 @@ const MainBody = ({
           title={"Skip this step"}
           disabled={
             (!eventInfoDetail.eventName && !eventInfoDetail.building) ||
-            staff.adminUser.length === 0
+            normalizeEventStaff(staff).adminUser.length === 0
           }
           func={() => navigate("/create-event-page/review-submit")}
           styles={{ width: "100%", maxHeight:"35px" }}

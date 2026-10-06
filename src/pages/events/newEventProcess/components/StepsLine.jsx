@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import "./StepsLine.css";
+import { normalizeEventStaff } from "../../../../store/slices/eventSlice";
 
 const StepsLine = () => {
   const { eventInfoDetail, staff } = useSelector((state) => state.event)
@@ -90,7 +91,7 @@ const StepsLine = () => {
   const onChange = (value) => {
     setCurrent(value);
     if (value === 4) {
-      if (eventInfoDetail.eventName && staff.adminUser.length > 0 ) return navigate(`/${step[value].current}`)
+      if (eventInfoDetail.eventName && normalizeEventStaff(staff).adminUser.length > 0 ) return navigate(`/${step[value].current}`)
       return error();
     }
     return navigate(`/${step[value].current}`)

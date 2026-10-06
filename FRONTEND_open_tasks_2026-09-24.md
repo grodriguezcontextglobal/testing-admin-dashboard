@@ -351,6 +351,12 @@ anteriores al campo) **no** es borrador.
 
 **Pendiente:**
 - Probar en el navegador que retomar llega hasta el final sin duplicar.
+  **Encontrado así el 2026-10-06:** el paso 1 reventaba con "Cannot read
+  properties of undefined (reading 'length')". Un borrador abandonado en el
+  paso 1 nunca pasó por el de staff, así que su documento trae `staff: {}`, y
+  `draftResumeState` solo cubría que `staff` faltara del todo. Cinco sitios
+  del asistente leían `staff.adminUser.length` sin guarda. Arreglado con
+  `normalizeEventStaff` en el slice, con tests. Falta repetir la prueba.
 - **Ver 2c.5:** hoy el Delete falla entero, porque el servidor lee el id de
   `body.email`. Cuando se arregle, confirmar que `DELETE /db_event/:id` no deja filas huérfanas en tablas
   relacionadas.

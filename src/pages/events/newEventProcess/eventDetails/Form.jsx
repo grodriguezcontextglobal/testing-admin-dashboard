@@ -29,6 +29,7 @@ import {
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../utils/eventLifecycle";
 import { hasStripeConnectedAccount } from "./utils/merchantAvailability";
 import { ConfigEnvExport } from "../../../../config/ConfigEnvExport";
+import { normalizeEventStaff } from "../../../../store/slices/eventSlice";
 const Form = () => {
   const { eventInfoDetail, staff, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -89,7 +90,7 @@ const Form = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (staff.adminUser.length === 0) {
+    if (normalizeEventStaff(staff).adminUser.length === 0) {
       return setTriggerAddingAdminStaff(true);
     }
     return () => {

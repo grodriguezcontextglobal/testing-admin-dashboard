@@ -16,6 +16,7 @@ import { Subtitle } from "../../../../styles/global/Subtitle";
 import "../../../../styles/global/ant-select.css";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 import MainBody from "./components/MainBody";
+import { normalizeEventStaff } from "../../../../store/slices/eventSlice";
 const AddingEventCreated = lazy(() =>
   import("../staff/components/AddingEventCreated")
 );
@@ -79,7 +80,7 @@ const Form = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (staff.adminUser.length === 0) {
+    if (normalizeEventStaff(staff).adminUser.length === 0) {
       return setTriggerAddingAdminStaff(true);
     }
     return () => {

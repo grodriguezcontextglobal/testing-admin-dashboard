@@ -1,4 +1,5 @@
 import { EVENT_CONFIGURATION, eventLifecycle } from "./eventLifecycle";
+import { normalizeEventStaff } from "../../../store/slices/eventSlice";
 
 /**
  * Events whose setup was started and never finished (meeting 2026-09-29
@@ -41,7 +42,9 @@ export const draftResumeState = (event, sqlEventId) => {
     eventData: { ...eventInfoDetail, idNoSQl: event?.id, idSql: sqlEventId },
     eventInfoDetail,
     contactInfo: event?.contactInfo,
-    staff: event?.staff ?? { adminUser: [], headsetAttendees: [] },
+    /* `?? {}` was not enough: a draft abandoned at step one carries
+       `staff: {}`, which is truthy and has no lists. */
+    staff: normalizeEventStaff(event?.staff),
     deviceSetup: event?.deviceSetup ?? [],
   };
 };
