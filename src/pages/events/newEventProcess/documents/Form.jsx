@@ -11,6 +11,7 @@ import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import DocumentUpload from "../../../../components/documents/DocumentUpload";
 import { QuestionIcon } from "../../../../components/icons/QuestionIcon";
 import { onAddEventInfoDetail } from "../../../../store/slices/eventSlice";
+import { documentsForContext } from "../../../Profile/Documents/utils/documentLibrary";
 import DocumentAssignmentBoard from "./DocumentAssignmentBoard";
 import { assignDocument, unassignedDocuments } from "./utils/documentAssignment";
 
@@ -46,8 +47,9 @@ const FormDocuments = () => {
     }
   }, [eventInfoDetail.legal_documents_list]);
 
+  // Only event documents belong on an event (2026-10-05).
   const unassignedDocs = unassignedDocuments(
-    availableDocuments?.data?.documents,
+    documentsForContext(availableDocuments?.data?.documents, "event"),
     dataToDisplay
   );
 
@@ -210,7 +212,7 @@ const FormDocuments = () => {
         />
       )}{" "}
       {activeTab === "2" && (
-        <DocumentUpload activeTab={setActiveTab} refetch={refetch} />
+        <DocumentUpload activeTab={setActiveTab} refetch={refetch} defaultUse="event" />
       )}
       {uxNavigation()}
     </Box>

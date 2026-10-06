@@ -76,6 +76,7 @@ const ContractDocumentsPicker = ({
     return handoverDocumentSource({
       folders: foldersQuery.data?.data?.folders,
       libraryDocuments: documentsQuery.data?.data?.documents,
+      context: "member",
     });
   }, [foldersQuery.data, documentsQuery.data, isLoading]);
 

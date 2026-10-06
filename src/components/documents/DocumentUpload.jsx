@@ -66,13 +66,19 @@ const todayValue = () => new Date().toISOString().slice(0, 10);
  * The 202 + job-polling path is unchanged: the endpoint returns `{ jobId }` and
  * the form polls `/jobs/owned/:jobId` until it resolves.
  */
-const DocumentUpload = ({ activeTab, refetch }) => {
+const DocumentUpload = ({ activeTab, refetch, defaultUse = null }) => {
   const { user } = useSelector((state) => state.admin);
   const fileInputRef = useRef(null);
 
+  const usesForOptions = buildUsesForOptions(user?.companyData?.industry);
+  // Opened from a path (e.g. the event wizard), the document starts as that
+  // path's: pickers only offer a path's own documents, so one uploaded there
+  // under another use would not appear in the list it was uploaded from.
+  const initialUse = usesForOptions.find((option) => option.id === defaultUse) ?? null;
+
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
-  const [usesFor, setUsesFor] = useState(null);
+  const [usesFor, setUsesFor] = useState(initialUse);
   const [language, setLanguage] = useState(LANGUAGES[0]);
   const [description, setDescription] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
@@ -81,7 +87,6 @@ const DocumentUpload = ({ activeTab, refetch }) => {
   const [progress, setProgress] = useState("");
   const [failure, setFailure] = useState("");
 
-  const usesForOptions = buildUsesForOptions(user?.companyData?.industry);
   const errors = documentFieldErrors({ file, title, usesFor, expirationDate });
   const errorCount = Object.keys(errors).length;
   const errorFor = (key) => (submitAttempted ? errors[key] : undefined);
@@ -89,7 +94,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
   const clear = () => {
     setFile(null);
     setTitle("");
-    setUsesFor(null);
+    setUsesFor(initialUse);
     setLanguage(LANGUAGES[0]);
     setDescription("");
     setExpirationDate("");
@@ -364,6 +369,7 @@ const DocumentUpload = ({ activeTab, refetch }) => {
 DocumentUpload.propTypes = {
   activeTab: PropTypes.func.isRequired,
   refetch: PropTypes.func.isRequired,
+  defaultUse: PropTypes.string,
 };
 
 export default DocumentUpload;

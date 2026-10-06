@@ -8,6 +8,7 @@
  */
 
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { documentsForContext } from "../../Documents/utils/documentLibrary";
 
 
 /**
@@ -85,5 +86,5 @@ export function hasSettingsChanges(current, original) {
 export async function fetchSchoolConsentDocuments(companyId) {
   const response = await devitrakApi.get(`/document/?company_id=${companyId}`);
   const documents = response?.data?.documents ?? [];
-  return documents.filter((doc) => doc.trigger_action === "school_consent");
+  return documentsForContext(documents, "school");
 }

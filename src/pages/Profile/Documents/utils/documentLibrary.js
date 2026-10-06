@@ -89,3 +89,39 @@ export const groupFoldersByTrigger = (folders = [], triggers = []) => {
     }))
     .filter((group) => group.folders.length > 0);
 };
+
+/* The uses that belong to one path each. Every other use (consumer, the
+   industry's own, such as "Students") is a member's. */
+const EVENT_USE = "event";
+const STAFF_USE = "onboarding";
+const SCHOOL_CONSENT_USE = "school_consent";
+const SINGLE_PATH_USES = new Set([EVENT_USE, STAFF_USE, SCHOOL_CONSENT_USE]);
+
+/**
+ * The documents a picker may offer (2026-10-05): event documents only on event
+ * screens, staff documents (`onboarding`) on every staff action that asks for
+ * documents, school consent documents only in the student consent flow
+ * (Education), and everything else on the member handover.
+ *
+ * A document with no use predates the field. There is no route to edit a
+ * document yet (2b.8), so hiding it would leave the company unable to fix it
+ * short of uploading it again: it stays available everywhere — except in the
+ * consent flow, whose documents are served to guardians without a login and
+ * must have been marked for it.
+ *
+ * @param {object[]} documents library records, with `trigger_action`
+ * @param {"event"|"staff"|"member"|"school"} [context] none returns the list unfiltered
+ */
+export const documentsForContext = (documents = [], context) => {
+  const list = Array.isArray(documents) ? documents : [];
+  if (!context) return list;
+  return list.filter((document) => {
+    const use = `${document?.trigger_action ?? ""}`.trim().toLowerCase();
+    if (context === "school") return use === SCHOOL_CONSENT_USE;
+    if (!use) return true;
+    if (context === "event") return use === EVENT_USE;
+    if (context === "staff") return use === STAFF_USE;
+    if (context === "member") return !SINGLE_PATH_USES.has(use);
+    return true;
+  });
+};

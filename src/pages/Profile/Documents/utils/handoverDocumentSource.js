@@ -1,4 +1,4 @@
-import { isExpiredDocument } from "./documentLibrary";
+import { documentsForContext, isExpiredDocument } from "./documentLibrary";
 
 /**
  * The documents emailed with an equipment handover — to a member
@@ -12,19 +12,33 @@ import { isExpiredDocument } from "./documentLibrary";
  * Folder entries carry no expiration of their own, so it is read from the
  * library record with the same id.
  *
+ * Both handovers share that folder and the library, so each offers only its
+ * own documents (`context`, 2026-10-05): a staff handover never a member's
+ * waiver, neither of them an event's. A folder entry's use is also read from
+ * its library record. If the folder holds nothing for this handover, the
+ * library picker is offered instead.
+ *
  * @returns {{
  *   fromFolder: boolean,
  *   documents: Array<{id, title, view_url, expired?}>,
  *   skippedExpired: string[],
  * }}
  */
-export const handoverDocumentSource = ({ folders = [], libraryDocuments = [], now = new Date() }) => {
+export const handoverDocumentSource = ({
+  folders = [],
+  libraryDocuments = [],
+  context,
+  now = new Date(),
+}) => {
   const libraryById = new Map((libraryDocuments ?? []).map((doc) => [doc._id, doc]));
   const expired = (id) => isExpiredDocument(libraryById.get(id), now);
+  const forThisHandover = (id) =>
+    documentsForContext([libraryById.get(id) ?? {}], context).length > 0;
 
   const pinned = (folders ?? [])
     .filter((folder) => folder.folder_trigger_action === "equipment_assignment")
-    .flatMap((folder) => folder.documents ?? []);
+    .flatMap((folder) => folder.documents ?? [])
+    .filter((doc) => forThisHandover(doc.document_id));
 
   if (pinned.length > 0) {
     return {
@@ -44,7 +58,7 @@ export const handoverDocumentSource = ({ folders = [], libraryDocuments = [], no
 
   return {
     fromFolder: false,
-    documents: (libraryDocuments ?? []).map((doc) => ({
+    documents: documentsForContext(libraryDocuments ?? [], context).map((doc) => ({
       id: doc._id,
       title: doc.title,
       view_url: doc.document_url ?? "",

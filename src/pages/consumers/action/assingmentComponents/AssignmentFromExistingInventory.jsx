@@ -447,6 +447,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
                 profile={customer}
                 selectedDocuments={contractList}
                 setSelectedDocuments={setContractList}
+                documentContext="member"
                 titleRef={"consumer"}
               />
               <Divider />

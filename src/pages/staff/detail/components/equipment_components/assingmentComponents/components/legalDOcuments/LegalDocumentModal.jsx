@@ -25,6 +25,9 @@ const LegalDocumentModal = ({
   selectedDocuments,
   setSelectedDocuments,
   titleRef,
+  // Whose handover this is. The consumers module reuses this modal for a
+  // consumer, who must not be offered staff documents (2026-10-05).
+  documentContext = "staff",
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useSelector((state) => state.admin);
@@ -64,6 +67,7 @@ const LegalDocumentModal = ({
     const source = handoverDocumentSource({
       folders: fetchedFolders?.data?.folders,
       libraryDocuments: availableDocuments?.data?.documents,
+      context: documentContext,
     });
     return {
       // This modal's own shape: `_id` / `document_url`.
@@ -77,7 +81,7 @@ const LegalDocumentModal = ({
       source: source.fromFolder ? "folders" : "all_documents",
       skippedExpired: source.skippedExpired,
     };
-  }, [fetchedFolders, availableDocuments, loadingFolders, loadingAvailable]);
+  }, [fetchedFolders, availableDocuments, loadingFolders, loadingAvailable, documentContext]);
 
   // Auto-assign documents from folder when they become available
   useEffect(() => {

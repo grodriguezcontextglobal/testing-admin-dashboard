@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assignableDocuments,
+  documentsForContext,
   documentUseCounts,
   filterDocuments,
   groupDocumentsByUse,
@@ -142,5 +143,56 @@ describe("groupFoldersByTrigger", () => {
       ["unset", [3]],
     ]);
     expect(groups.at(-1).label).toBe("Not set");
+  });
+});
+
+/**
+ * Each picker offers only the documents meant for it (2026-10-05): event
+ * documents only on event screens, staff documents (`onboarding`) on every
+ * staff action that asks for documents, school consent documents only in the
+ * student consent flow (Education), and the rest — consumer, the industry's
+ * own use such as "Students" — on the member handover. A document with no use
+ * at all predates the field and cannot be edited yet (no edit route), so it
+ * stays available everywhere rather than vanish — except in the consent flow.
+ */
+describe("documentsForContext", () => {
+  const docs = [
+    { _id: "e", trigger_action: "event" },
+    { _id: "s", trigger_action: "onboarding" },
+    { _id: "c", trigger_action: "consumer" },
+    { _id: "sc", trigger_action: "school_consent" },
+    { _id: "i", trigger_action: "Student" },
+    { _id: "legacy" },
+    { _id: "blank", trigger_action: "  " },
+  ];
+  const ids = (list) => list.map((doc) => doc._id);
+
+  it("offers only event documents on event screens", () => {
+    expect(ids(documentsForContext(docs, "event"))).toEqual(["e", "legacy", "blank"]);
+  });
+
+  it("offers only staff documents on staff actions", () => {
+    expect(ids(documentsForContext(docs, "staff"))).toEqual(["s", "legacy", "blank"]);
+  });
+
+  it("offers a member everything that is neither event, staff nor school consent", () => {
+    expect(ids(documentsForContext(docs, "member"))).toEqual(["c", "i", "legacy", "blank"]);
+  });
+
+  /* Consent documents are served to guardians without a login: only what was
+     marked for it, never a document whose use nobody set. */
+  it("offers the consent flow only school consent documents, no legacy ones", () => {
+    expect(ids(documentsForContext(docs, "school"))).toEqual(["sc"]);
+  });
+
+  it("reads the use whatever its spacing or case", () => {
+    expect(ids(documentsForContext([{ _id: "x", trigger_action: " Event " }], "staff"))).toEqual(
+      []
+    );
+  });
+
+  it("leaves the list alone without a context, and copes with no list", () => {
+    expect(documentsForContext(docs)).toHaveLength(docs.length);
+    expect(documentsForContext(undefined, "event")).toEqual([]);
   });
 });

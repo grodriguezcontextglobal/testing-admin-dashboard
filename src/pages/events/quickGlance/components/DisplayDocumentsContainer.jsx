@@ -10,6 +10,7 @@ import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import { addDocumentsToEvent, eventDocumentOptions } from "../utils/eventDocuments";
+import { documentsForContext } from "../../../Profile/Documents/utils/documentLibrary";
 
 const DisplayDocumentsContainer = ({
   setOpenDisplayDocumentsContainer,
@@ -192,7 +193,8 @@ const DisplayDocumentsContainer = ({
               loading={loadingAvailable}
               // Not on the event yet; an expired one is listed, disabled.
               options={eventDocumentOptions(
-                availableDocuments?.data?.documents,
+                // Only event documents belong on an event (2026-10-05).
+                documentsForContext(availableDocuments?.data?.documents, "event"),
                 event.legal_documents_list
               )}
             />

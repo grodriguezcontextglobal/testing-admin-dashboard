@@ -58,3 +58,56 @@ describe("handoverDocumentSource — from the library", () => {
     ]);
   });
 });
+
+/**
+ * The member and staff handovers share the equipment-assignment folder and the
+ * library, so each one filters for its own documents (2026-10-05): a staff
+ * handover never offers a member's waiver, and neither offers an event's.
+ * Folder entries carry no use of their own, so it is read from the library
+ * record with the same id.
+ */
+describe("handoverDocumentSource — only the documents for this handover", () => {
+  const mixed = [
+    { _id: "staff", title: "Staff equipment policy", trigger_action: "onboarding" },
+    { _id: "member", title: "Student waiver", trigger_action: "consumer" },
+    { _id: "event", title: "Event terms", trigger_action: "event" },
+    { _id: "consent", title: "Acceptable use policy", trigger_action: "school_consent" },
+  ];
+
+  it("offers a staff handover only staff documents from the library", () => {
+    const source = handoverDocumentSource({ libraryDocuments: mixed, context: "staff", now: NOW });
+    expect(source.documents.map((doc) => doc.id)).toEqual(["staff"]);
+  });
+
+  it("offers a member handover neither staff, event nor school consent documents", () => {
+    const source = handoverDocumentSource({ libraryDocuments: mixed, context: "member", now: NOW });
+    expect(source.documents.map((doc) => doc.id)).toEqual(["member"]);
+  });
+
+  it("filters the pinned folder the same way, by the library record", () => {
+    const source = handoverDocumentSource({
+      folders: [
+        folder([
+          { document_id: "staff", document_title: "Staff equipment policy" },
+          { document_id: "member", document_title: "Student waiver" },
+        ]),
+      ],
+      libraryDocuments: mixed,
+      context: "member",
+      now: NOW,
+    });
+    expect(source.fromFolder).toBe(true);
+    expect(source.documents.map((doc) => doc.id)).toEqual(["member"]);
+  });
+
+  it("falls back to the library when the folder holds nothing for this handover", () => {
+    const source = handoverDocumentSource({
+      folders: [folder([{ document_id: "member", document_title: "Student waiver" }])],
+      libraryDocuments: mixed,
+      context: "staff",
+      now: NOW,
+    });
+    expect(source.fromFolder).toBe(false);
+    expect(source.documents.map((doc) => doc.id)).toEqual(["staff"]);
+  });
+});
