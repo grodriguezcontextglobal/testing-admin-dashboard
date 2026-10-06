@@ -35,7 +35,7 @@ y se pasa por alto lo que de verdad queda.
 | — plan FedRAMP (§2d) | 8 |
 | — surgido esta semana (§3) | 5 |
 | — no es código (§4) | 5 |
-| Cerrado y tachado en este documento | 28, más la tabla de §5 |
+| Cerrado y tachado en este documento | 29, más la tabla de §5 |
 
 > **Recontado 2026-10-02** con un script, sección por sección: un `###` sin
 > tachar es un ítem abierto, y en §4 cada viñeta sin tachar. Ese día se cerraron
@@ -473,7 +473,45 @@ cuenta…). Por destinatario:
 guardar un campo del perfil debe despachar `onUpdateProfile`
 (`store/slices/adminSlice.js:98`). Además lee `msg` en el error.
 
-### Registrar toda acción de un usuario o staff — incluye 2b.7
+### Registrar toda acción de un usuario o staff — el servidor ya lo hace; falta leerlo bien
+
+**El backend desplegó el middleware el 2026-10-05**, el mismo día que se pidió.
+Cada fila trae ahora `source: "server"`, la ruta, el estado HTTP, el cuerpo
+del pedido, la IP, el navegador y un `context` ya resuelto (evento, seriales,
+destinatarios). Audita acciones que antes no se registraban: dispositivos,
+correos, Stripe, caché, compañía, staff, préstamos.
+
+**Hecho en el cliente el 2026-10-05** (`staffActivityLogUtils.js`, con tests):
+- Cada fila dice en palabras qué pasó ("Updated a device"), con etiquetas de
+  lo que la identifica (evento, seriales, destinatario), y detrás de
+  **Details** la evidencia: objeto, ruta y estado, IP y cuerpo del pedido.
+- La hora se muestra en la zona del lector; antes salía en UTC.
+- **El filtro por usuario no devolvía nada.** La lista de empleados trae dos
+  ids: `_id`, el de su fila dentro de la compañía, y `userId`, el de su
+  cuenta. El log identifica al autor por la cuenta, y se mandaba el primero.
+  Los fixtures de los tests solo tenían `_id`, por eso no saltó. De paso,
+  "uno siempre se ve a sí mismo" tampoco se cumplía.
+- **La mitad del registro era inalcanzable:** la pantalla pedía siempre
+  `page: 1` con `limit: 50`, y el endpoint ya respondía `total` y
+  `totalPages`. Ahora la paginación va contra el servidor.
+
+**Decidido 2026-10-05 (Gustavo): la bitácora la lee gente sin formación
+técnica.** Así que:
+- Los borrados de caché **no se listan**. Se filtran en el cliente, así que
+  una página puede venir con menos filas que su tamaño; se pidió al backend
+  excluirlos de origen (pregunta 5).
+- **Details no enseña nada del servidor:** ni ruta, ni estado HTTP, ni cuerpo
+  del pedido. En su lugar, una frase: `activity: false` en
+  `receivers-pool-update` se lee "Returned a device" y "The device went back
+  into the event's inventory.". Las reglas por ruta viven en
+  `staffActivityLogUtils.js`; una ruta sin regla cae a la frase genérica, que
+  es vaga pero nunca técnica ni falsa.
+
+**Sigue abierto:** el audit trail por dispositivo (2b.7) necesita que el
+endpoint acepte filtros por evento y por dispositivo, que es la pregunta 4 de
+`FRONTEND_activity_log_backend_ask_2026-10-05.md`.
+
+Texto original:
 
 Pedido por Fredrik el 2026-10-05: registrar **cualquier** acción que un usuario
 o staff haga en la app, por ejemplo crear un evento, asignar inventario al
@@ -741,9 +779,32 @@ staff (B2) y con el registro de consentimientos (2b.9).
 - **De paso:** quick-glance comparaba `_id` en entradas que usan `id`, así que
   si el evento ya tenía un documento, agregarle otro no hacía nada. Corregido.
 
+**Edit document, hecho 2026-10-05 (la mitad del cliente).** Tenía título,
+descripción, tipo y uso, pero **ni la fecha de vencimiento ni el estado**: el
+único campo que decide si un documento se puede entregar era el único que no
+se podía cambiar.
+- Chip **Active** / **Expired** junto al título, y campo **Expires on**. Vacío
+  = no vence nunca; una fecha por delante de hoy lo reactiva. El texto de
+  ayuda lo dice, y cambia cuando el documento está vencido.
+- La lista "When displayed" se escribía a mano con seis valores y le faltaban
+  School consent y el uso propio de la compañía, así que editar un documento
+  solo podía moverlo a uno de esos seis. Ahora ofrece los mismos usos que el
+  alta, y conserva el valor actual si ya no se ofrece (`on_login`).
+- `public_document` sigue al uso: un documento editado a School consent pasa a
+  servirse al tutor sin login, y uno que sale de ese uso deja de ser público.
+- La fecha vence **al final del día elegido, en hora local**. Guardarla como
+  medianoche UTC la adelantaba un día al oeste de UTC. Y al releerla ya no se
+  corta la cadena ISO, que es la fecha UTC: eso adelantaba la fecha un día en
+  cada guardado. Las dos reglas están fijadas con tests, ida y vuelta incluida.
+- Un guardado fallido dice qué pasó: con 404, que este servidor todavía no
+  puede editar documentos.
+
+Todo en `utils/documentEditForm.js`, con 17 tests.
+
 **Backend, pendiente** (`FRONTEND_documents_backend_ask.md`):
-- no hay ruta para editar un documento, así que "reactivar" uno (cambiarle la
-  fecha) no se puede, y Edit document probablemente falla hoy;
+- **sigue sin confirmarse la ruta `PUT /api/document/:id`**, así que reactivar
+  un documento vencido no funciona hasta que exista. No se probó con un PUT
+  real contra producción, porque eso escribe;
 - el servidor no rechaza todavía asignar un vencido.
 
 Texto original:
@@ -1084,6 +1145,39 @@ mismo validador. Hay que probarlo también.
 `payment_intent`, el arreglo en el cliente es mandar esa clave en los dos
 endpoints, con un test. No hay que mandar las dos claves "por si acaso" sin
 saberlo.
+
+### ~~Cada selector de documentos ofrece solo los de su camino~~ — hecho 2026-10-05
+
+Pedido el 2026-10-05: los documentos de evento solo en eventos, y los de staff
+en todas las acciones de staff que piden documentos. Antes, los cuatro
+selectores cargaban la biblioteca entera.
+
+- `documentsForContext` (`Profile/Documents/utils/documentLibrary.js`, con tests):
+  `event` → solo uso Event; `staff` → solo Staff (`onboarding`); `school` → solo
+  School consent, el flujo de consentimiento del alumno en Education
+  (`StudentConsentPanel`, vía `fetchSchoolConsentDocuments`); `member` → el resto
+  (Consumer y el uso propio de la industria, por ejemplo "Students" en
+  Education). Los documentos School consent ya no aparecen en las entregas de
+  equipo.
+- Alta de evento (`newEventProcess/documents/Form.jsx`) y detalle del evento
+  (`DisplayDocumentsContainer.jsx`): `event`. Un documento subido desde el alta
+  de evento empieza con uso Event (`DocumentUpload` acepta `defaultUse`), porque
+  si no, no aparecería en la lista desde la que se subió.
+- Entregas de equipo (`handoverDocumentSource`, con tests): la de staff
+  (`LegalDocumentModal`) usa `staff`; la de member (`ContractDocumentsPicker`)
+  y la de consumidor desde Consumers, que reutiliza `LegalDocumentModal`, usan
+  `member`. La carpeta fijada de entrega de equipo se filtra igual, según el
+  registro de la biblioteca. Si no tiene nada para esa entrega, se ofrece la
+  biblioteca.
+
+**Decisión:** un documento **sin uso asignado** (anterior al campo) sigue
+apareciendo en todos los selectores, **salvo en el de consentimiento**: esos
+documentos se sirven a tutores sin login, así que ahí solo entra lo marcado
+como School consent. No hay ruta para editar un documento
+(2b.8), así que ocultarlo obligaría a volver a subirlo. Cuando exista la
+edición, se puede pasar a no mostrarlo en ninguno hasta que se le asigne un uso.
+
+**Sin probar en el navegador.**
 
 ### El import de inventario asigna las imágenes por posición, no por fila
 `src/pages/inventory/utils/inventoryImportRows.js:93`

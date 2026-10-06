@@ -1,3 +1,33 @@
 #root > div > div > div > div > div.MuiGrid-root.MuiGrid-container.css-11lq3yg-MuiGrid-root > div > div > form > div > div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-6.MuiGrid-grid-sm-6.MuiGrid-grid-md-6.css-5b82f3-MuiGrid-root > div.ant-select.ant-select-lg.css-dev-only-do-not-override-12jzuas.ant-select-single.ant-select-show-arrow > div{
     border:none
 }
+/* What is behind "Details" on an audit row: label and plain-language value in
+   two columns. No request body, no route — the trail is read by people with no
+   technical background. */
+.activity-row__details {
+    margin-top: 2px;
+}
+
+.activity-row__evidence {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    margin: 6px 0 0;
+    font-size: 13px;
+}
+
+.activity-row__evidence dt {
+    color: var(--gray-500, #777b73);
+}
+
+.activity-row__evidence dd {
+    margin: 0;
+    color: var(--gray-700, #484d47);
+    word-break: break-word;
+}
+
+@media (max-width: 600px) {
+    .activity-row__evidence {
+        grid-template-columns: 1fr;
+    }
+}

@@ -94,7 +94,13 @@ explícita (las de consulta, fuera), que escriba en el mismo almacén que lee
 4. ¿Podéis añadir a `GET /api/admin/activity-logs` filtros por evento y por
    dispositivo? Es lo que permite el *"audit trail por dispositivo"* de la
    reunión.
-5. Cuando cubráis un controlador, avisadnos: el cliente quitará sus llamadas a
+5. **¿Podéis dejar fuera del registro los borrados de caché**
+   (`POST /api/cache_update/remove-cache`)? Son ocho de cada cuarenta y cinco
+   filas, las escribe la máquina sola y no las entiende nadie. Hoy las
+   escondemos en el cliente, pero entonces una página de 50 llega con menos
+   filas y el contador no cuadra. Mejor un parámetro para excluirlas, o no
+   registrarlas.
+6. Cuando cubráis un controlador, avisadnos: el cliente quitará sus llamadas a
    `register` para esas rutas, y así no hay duplicados.
 
 ## 6. Lo que hará el dashboard

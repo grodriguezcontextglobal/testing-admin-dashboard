@@ -38,9 +38,36 @@ export const mapLogToListItem = (log) => ({
     null,
   actionTaken: [log?.action, log?.target_model].filter(Boolean).join(" "),
   time: log?.timestamp,
+
+  /* Everything below arrives from the server's audit middleware (2026-10-05)
+     and is absent on rows written before it — hence the nulls. */
+  summary: describeLogAction(log),
+  highlights: logHighlights(log),
+  /* One sentence in plain words, or nothing. The route, the HTTP status and
+     the request body are deliberately NOT carried here: this list is read by
+     whoever has to answer "who touched this", and `{ "activity": false }`
+     answers nothing. What it means is in `explanation`. */
+  explanation: explainLogChange(log),
+  target: log?.target_id ? `${log?.target_model ?? "Record"} ${log.target_id}` : null,
+  ip: log?.ip_address ?? null,
+  client: describeClient(log?.device_info),
+  isInfrastructure: isInfrastructureLog(log),
 });
 
+/** On a log row, `staff_member_id` is the populated AdminUser record. */
 const staffId = (staff) => staff?._id ?? staff?.id;
+
+/**
+ * The account id of an employee from `/company/search-company`.
+ *
+ * Those records carry two: `_id` is the employee's row inside the company
+ * document, and `userId` is their AdminUser account. The log identifies who
+ * acted by the account, so filtering by `_id` asked the server for an id that
+ * appears in no row — and the Users filter came back empty every time
+ * (reported 2026-10-05). The fallbacks keep records that only ever had one id
+ * working.
+ */
+const employeeAccountId = (staff) => staff?.userId ?? staff?._id ?? staff?.id;
 
 /**
  * B2 read hierarchy: keeps a log row if the viewer authored it (self is always
@@ -131,7 +158,7 @@ export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => 
   if (!Array.isArray(staffList)) return [];
   return staffList
     .filter((staff) => {
-      const id = staffId(staff);
+      const id = employeeAccountId(staff);
       if (viewerId && id && String(id) === String(viewerId)) return true;
       return canViewStaffActivity(viewerRoleType, resolveRoleType(staff));
     })
@@ -140,6 +167,236 @@ export const buildStaffFilterOptions = (staffList, viewerRoleType, viewerId) => 
     .sort(byLastNameThenFirst)
     .map((staff) => ({
       label: staffFilterLabel(staff),
-      value: staffId(staff),
+      value: employeeAccountId(staff),
     }));
+};
+
+/**
+ * Since 2026-10-05 the server audits every route it serves, and each row
+ * carries far more than the pair this list used to print: the route, the HTTP
+ * status, the request body, the caller's IP and browser, and a `context` the
+ * server already worked out (event, serials, recipients).
+ *
+ * What follows turns one of those rows into something a person reads.
+ */
+
+/* Login and logout are whole sentences; everything else is verb + object. */
+const SELF_CONTAINED = {
+  LOGIN: "Signed in",
+  LOGOUT: "Signed out",
+  FORCE_LOGOUT: "Revoked a session",
+};
+
+const VERBS = {
+  CREATE: "Created",
+  UPDATE: "Updated",
+  DELETE: "Deleted",
+  ASSIGN: "Assigned",
+  UNASSIGN: "Unassigned",
+  SEND: "Sent",
+  CLEAR: "Cleared",
+  IMPORT: "Imported",
+  EXPORT: "Exported",
+};
+
+/* The article belongs to the noun: "an email", "cached data". */
+const OBJECTS = {
+  AdminUser: "a staff account",
+  Cache: "cached data",
+  Company: "the company",
+  Device: "a device",
+  Email: "an email",
+  Event: "an event",
+  Item: "an item",
+  Lease: "an equipment loan",
+  Member: "a member",
+  Staff: "a staff record",
+  StripeLink: "a Stripe link",
+};
+
+/**
+ * What happened, in words.
+ *
+ * A verb or an object we have no name for is printed raw rather than dropped:
+ * it is the only sign that the server started logging something new.
+ */
+export const describeLogAction = (log) => {
+  const action = String(log?.action ?? "").trim();
+  const model = String(log?.target_model ?? "").trim();
+  if (SELF_CONTAINED[action]) return SELF_CONTAINED[action];
+
+  /* The route knows things the CRUD pair cannot: the same "UPDATE Device" is
+     a handover or a return depending on one boolean. */
+  const byRoute = HEADLINES[routePath(log)];
+  const headline = typeof byRoute === "function" ? byRoute(requestOf(log)) : byRoute;
+  if (headline) return headline;
+
+  const verb = VERBS[action];
+  const object = OBJECTS[model];
+  if (verb && object) return `${verb} ${object}`;
+  return [action, model].filter(Boolean).join(" ") || "Unknown action";
+};
+
+const MAX_SERIALS = 3;
+
+const listed = (values) => {
+  const items = (Array.isArray(values) ? values : []).filter(Boolean).map(String);
+  if (items.length === 0) return null;
+  const shown = items.slice(0, MAX_SERIALS).join(", ");
+  return items.length > MAX_SERIALS ? `${shown} +${items.length - MAX_SERIALS}` : shown;
+};
+
+/**
+ * The few words that say which event, which device, which person — the ones
+ * that turn "Updated a device" into a row somebody can recognise.
+ *
+ * Rows written before the middleware carry no `context`, so the same facts are
+ * read from the loose fields the old register calls left in `details`.
+ */
+export const logHighlights = (log) => {
+  const context = log?.context ?? {};
+  const details = log?.details ?? {};
+  const serials = listed(context.serial_numbers);
+  const recipients = listed(context.recipients);
+  const fullName = [details.first_name, details.last_name].filter(Boolean).join(" ").trim();
+
+  return [
+    context.event_name,
+    serials,
+    recipients ? `to ${recipients}` : null,
+    details.outcome,
+    fullName || null,
+  ].filter(Boolean);
+};
+
+const CLIENTS = [
+  // Edge and Opera also say "Chrome", so they are tested first.
+  [/Edg\//, "Edge"],
+  [/OPR\/|Opera/, "Opera"],
+  [/Chrome\//, "Chrome"],
+  [/Firefox\//, "Firefox"],
+  [/Safari\//, "Safari"],
+];
+
+const PLATFORMS = [
+  [/Windows/, "Windows"],
+  [/Macintosh|Mac OS X/, "macOS"],
+  [/Android/, "Android"],
+  [/iPhone|iPad/, "iOS"],
+  [/Linux/, "Linux"],
+];
+
+const matched = (table, text) => table.find(([pattern]) => pattern.test(text))?.[1] ?? null;
+
+/**
+ * "Edge on Windows" out of a 120-character user agent. Null when neither half
+ * is recognised, so the row does not print "Unknown on Unknown".
+ */
+export const describeClient = (userAgent) => {
+  const text = String(userAgent ?? "");
+  if (!text) return null;
+  const browser = matched(CLIENTS, text);
+  const platform = matched(PLATFORMS, text);
+  if (browser && platform) return `${browser} on ${platform}`;
+  return browser ?? platform ?? null;
+};
+
+/**
+ * Rows the machine wrote about itself. Eight of one afternoon's forty-five
+ * entries are cache clears, and they bury what a person came to read.
+ */
+export const isInfrastructureLog = (log) =>
+  String(log?.target_model ?? "") === "Cache" || routePath(log).startsWith("/api/cache_update/");
+
+/** The trail without the rows the machine wrote about itself. */
+export const visibleLogs = (logs) =>
+  (Array.isArray(logs) ? logs : []).filter((log) => !isInfrastructureLog(log));
+
+/**
+ * Plain language, because this is read by whoever has to answer "who touched
+ * this student's laptop", not by whoever wrote the endpoint (2026-10-05).
+ *
+ * `PATCH /api/receiver/receivers-pool-update/:id` with `{ activity: false }`
+ * is a device coming back. Nobody outside this repository can know that, so
+ * the route and the field names stay here and never reach the screen.
+ *
+ * A route with no rule falls back to the verb-and-object phrase. It is vague,
+ * never wrong, and never technical.
+ */
+
+const requestOf = (log) => log?.details?.request ?? {};
+
+/** "PATCH /api/x/y" → "/api/x/y"; the method adds nothing for a reader. */
+const routePath = (log) => String(log?.details?.route ?? "").split(" ").at(-1) ?? "";
+
+const handedOrReturned = (out, back) => (request) => {
+  const activity = request?.activity ?? request?.device?.status;
+  if (activity === true) return out;
+  if (activity === false) return back;
+  return null;
+};
+
+/* The headline for the routes whose meaning the CRUD pair loses. */
+const HEADLINES = {
+  "/api/receiver/receivers-pool-update/:id": handedOrReturned(
+    "Handed out a device",
+    "Returned a device"
+  ),
+  "/api/receiver/receiver-update/:id": handedOrReturned(
+    "Handed out a device",
+    "Returned a device"
+  ),
+  "/api/nodemailer/assignig-device-notification": "Emailed an equipment handover",
+  "/api/nodemailer/confirm-returned-device-notification": "Emailed a return confirmation",
+  "/api/nodemailer/lost-device-fee-notification": "Emailed a lost equipment charge",
+  "/api/nodemailer/deposit-collected-notification": "Emailed a deposit receipt",
+  "/api/nodemailer/deposit-return-notification": "Emailed a deposit return",
+  "/api/nodemailer/refund-notification": "Emailed a refund",
+  "/api/nodemailer/invoice-notification": "Emailed an invoice",
+  "/api/nodemailer/new_invitation": "Invited someone to the company",
+  "/api/nodemailer/reset-admin-password": "Sent a password reset",
+  "/api/stripe/account_sessions": "Opened the payments dashboard",
+  "/api/staff/edit-admin/:id": (request) =>
+    request?.online === false ? "Signed out" : null,
+};
+
+/* What a field means, for the handful whose name says nothing to a reader. */
+const EVENT_CHANGES = {
+  deviceSetup: "The equipment set up for the event changed.",
+  staff: "The staff working the event changed.",
+  qrCodeLink: "The event's QR code was set.",
+  extraServices: "The event's extra services changed.",
+  extraServicesNeeded: "The event's extra services were turned on or off.",
+  legal_documents_list: "The documents attached to the event changed.",
+  active: "The event was opened or closed.",
+};
+
+const readableRole = (value) => String(value ?? "").replace(/_/g, " ").trim();
+
+/**
+ * One sentence saying what changed, or null when there is nothing certain to
+ * say. Null is on purpose: a vague headline beats a confident invention.
+ */
+export const explainLogChange = (log) => {
+  const request = requestOf(log);
+  const path = routePath(log);
+
+  const movement = handedOrReturned(
+    "The device went out with a consumer.",
+    "The device went back into the event's inventory."
+  )(request);
+  if (movement && path.startsWith("/api/receiver/")) return movement;
+
+  const role = readableRole(request?.role_type);
+  if (role) return `Their role changed to ${role}.`;
+
+  const updates = log?.details?.updates;
+  if (updates) {
+    const named = Object.keys(updates).find((key) => EVENT_CHANGES[key]);
+    if (named) return EVENT_CHANGES[named];
+  }
+
+  if (Array.isArray(request?.employees)) return "The company's staff list changed.";
+
+  return null;
 };

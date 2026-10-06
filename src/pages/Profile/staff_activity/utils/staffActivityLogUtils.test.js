@@ -5,6 +5,12 @@ import {
   filterLogsByHierarchy,
   buildActionFilterOptions,
   buildStaffFilterOptions,
+  describeLogAction,
+  describeClient,
+  isInfrastructureLog,
+  logHighlights,
+  explainLogChange,
+  visibleLogs,
 } from "./staffActivityLogUtils";
 
 const buildLog = (overrides = {}) => ({
@@ -331,5 +337,364 @@ describe("buildStaffFilterOptions — ordering", () => {
     );
     expect(options).toHaveLength(2);
     expect(options.map((option) => option.label)).toContain("Solo");
+  });
+});
+
+// ─── lo que el servidor manda desde que audita cada ruta (2026-10-05) ────────
+
+/**
+ * El middleware de auditoría del servidor llegó con mucho más por fila: la
+ * ruta, el estado HTTP, el cuerpo del pedido, la IP, el navegador y un
+ * `context` ya masticado (evento, seriales, destinatarios). La lista enseñaba
+ * "UPDATE Device" y la hora en UTC, así que nada de eso se veía.
+ */
+const serverLog = (overrides = {}) => ({
+  id: "log-9",
+  staff_member_id: { _id: "s1", name: "Gustavo", lastName: "Santeliz", email: "g@x.com" },
+  actor_type: "staff",
+  action: "UPDATE",
+  target_model: "Device",
+  target_id: "6abad0ff740748139b2d855c",
+  context: { event_name: "TEST _ 2", serial_numbers: ["SN-100006"] },
+  details: {
+    route: "PATCH /api/receiver/receivers-pool-update/:id",
+    status: 201,
+    request: { id: "6abad0ff740748139b2d855c", activity: false },
+  },
+  source: "server",
+  ip_address: "172.16.40.2:43962",
+  device_info:
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
+  timestamp: "2026-10-05T19:05:54.633Z",
+  ...overrides,
+});
+
+describe("describeLogAction(log)", () => {
+  it("dice en palabras qué pasó, no el par CRUD", () => {
+    // serverLog() es un receivers-pool-update con activity:false: una
+    // devolución. La regla de ruta la nombra; el par CRUD no podía.
+    expect(describeLogAction(serverLog())).toBe("Returned a device");
+    expect(describeLogAction(serverLog({ details: { route: "PATCH /api/other" } }))).toBe(
+      "Updated a device"
+    );
+    // Con su propia ruta: el fixture base lleva la del pool de dispositivos,
+    // y la ruta manda sobre el par CRUD porque dice más.
+    expect(
+      describeLogAction(
+        serverLog({
+          action: "SEND",
+          target_model: "Email",
+          details: { route: "POST /api/nodemailer/single-email-notification" },
+        })
+      )
+    ).toBe("Sent an email");
+    expect(
+      describeLogAction(
+        serverLog({ action: "CREATE", target_model: "Member", details: {} })
+      )
+    ).toBe("Created a member");
+  });
+
+  it("entrar y salir no llevan objeto detrás", () => {
+    expect(describeLogAction({ action: "LOGIN", target_model: "AdminUser" })).toBe("Signed in");
+    expect(describeLogAction({ action: "LOGOUT", target_model: "AdminUser" })).toBe("Signed out");
+    expect(describeLogAction({ action: "FORCE_LOGOUT" })).toBe("Revoked a session");
+  });
+
+  /* Un verbo o un modelo que no conocemos se enseña crudo: esconderlo sería
+     perder la única pista de que el servidor registra algo nuevo. */
+  it("deja ver lo que no sabe nombrar", () => {
+    expect(describeLogAction({ action: "ARCHIVE", target_model: "Widget" })).toBe(
+      "ARCHIVE Widget"
+    );
+    expect(describeLogAction({})).toBe("Unknown action");
+  });
+});
+
+describe("logHighlights(log)", () => {
+  it("saca del context lo que identifica la acción", () => {
+    expect(logHighlights(serverLog())).toEqual(["TEST _ 2", "SN-100006"]);
+  });
+
+  it("resume una lista larga de seriales en vez de desbordar la fila", () => {
+    const highlights = logHighlights(
+      serverLog({ context: { serial_numbers: ["A1", "A2", "A3", "A4"] } })
+    );
+    expect(highlights).toEqual(["A1, A2, A3 +1"]);
+  });
+
+  it("nombra a quién se le escribió", () => {
+    expect(
+      logHighlights(
+        serverLog({
+          action: "SEND",
+          target_model: "Email",
+          context: { recipients: ["lucia@x.test"] },
+        })
+      )
+    ).toEqual(["to lucia@x.test"]);
+  });
+
+  /* Las filas viejas, de antes del middleware, no traen context: lo que las
+     identifica está suelto en details. */
+  it("cae a los detalles sueltos cuando no hay context", () => {
+    expect(
+      logHighlights({
+        action: "UNASSIGN",
+        target_model: "Lease",
+        details: { device_id: 200572, outcome: "returned" },
+      })
+    ).toEqual(["returned"]);
+    expect(logHighlights({ details: { first_name: "G_test", last_name: "R_test" } })).toEqual([
+      "G_test R_test",
+    ]);
+  });
+
+  it("no inventa nada cuando no hay con qué", () => {
+    expect(logHighlights({ action: "LOGIN" })).toEqual([]);
+    expect(logHighlights(undefined)).toEqual([]);
+  });
+});
+
+describe("describeClient(userAgent)", () => {
+  it("dice el navegador y el sistema, no la cadena entera", () => {
+    expect(describeClient(serverLog().device_info)).toBe("Edge on Windows");
+    expect(
+      describeClient(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+      )
+    ).toBe("Chrome on macOS");
+  });
+
+  it("devuelve null cuando no reconoce la cadena, para no escribir 'Unknown on Unknown'", () => {
+    expect(describeClient("curl/8.4.0")).toBeNull();
+    expect(describeClient(undefined)).toBeNull();
+  });
+});
+
+/**
+ * Ocho de las cuarenta y cinco filas de una tarde son borrados de caché: son
+ * de la máquina, no de una persona, y tapan lo que sí se lee.
+ */
+describe("isInfrastructureLog(log)", () => {
+  it("marca el borrado de caché como ruido", () => {
+    expect(isInfrastructureLog({ action: "CLEAR", target_model: "Cache" })).toBe(true);
+  });
+
+  it("no marca nada que una persona reconocería", () => {
+    expect(isInfrastructureLog(serverLog())).toBe(false);
+    expect(isInfrastructureLog({ action: "LOGIN", target_model: "AdminUser" })).toBe(false);
+  });
+});
+
+describe("mapLogToListItem(log) — con el payload del servidor", () => {
+  const item = mapLogToListItem(serverLog());
+
+  it("lleva la frase, lo que la identifica y a qué objeto tocó", () => {
+    expect(item.summary).toBe("Returned a device");
+    expect(item.highlights).toEqual(["TEST _ 2", "SN-100006"]);
+    expect(item.target).toBe("Device 6abad0ff740748139b2d855c");
+  });
+
+  it("explica el cambio en una frase, y deja fuera las palabras del servidor", () => {
+    expect(item.explanation).toBe("The device went back into the event's inventory.");
+    expect(item.ip).toBe("172.16.40.2:43962");
+    expect(item.client).toBe("Edge on Windows");
+  });
+
+  /* Pedido 2026-10-05: la lee gente sin formación técnica. Ni la ruta, ni el
+     estado HTTP, ni el cuerpo del pedido salen del fichero de utilidades. */
+  it("no lleva la ruta, el estado ni el cuerpo a la pantalla", () => {
+    expect(item).not.toHaveProperty("route");
+    expect(item).not.toHaveProperty("status");
+    expect(item).not.toHaveProperty("request");
+    expect(JSON.stringify(item)).not.toMatch(/api\/|activity|PATCH/);
+  });
+
+  it("sigue llevando lo de antes, que la lista ya usaba", () => {
+    expect(item.staffName).toBe("Gustavo Santeliz");
+    expect(item.actionTaken).toBe("UPDATE Device");
+    expect(item.time).toBe("2026-10-05T19:05:54.633Z");
+  });
+
+  it("no deja huecos con una fila vieja que no trae nada de eso", () => {
+    const old = mapLogToListItem({ id: "x", action: "LOGIN", target_model: "AdminUser" });
+    expect(old).toMatchObject({
+      summary: "Signed in",
+      highlights: [],
+      target: null,
+      explanation: null,
+    });
+  });
+});
+
+/**
+ * El filtro de usuario no devolvía nada (reportado 2026-10-05).
+ *
+ * La lista de staff sale de `/company/search-company`, donde cada empleado
+ * lleva DOS ids: `_id`, que es el del subdocumento dentro de la compañía, y
+ * `userId`, que es la cuenta de AdminUser. El log identifica a quien actuó por
+ * `staff_member_id._id`, que es el de la cuenta. Se mandaba el primero, así
+ * que el servidor filtraba por un id que no aparece en ningún registro.
+ *
+ * Los fixtures de arriba traen solo `_id`, que es justo por lo que esto no
+ * saltó: no se parecían al payload.
+ */
+describe("buildStaffFilterOptions — el id que el servidor reconoce", () => {
+  const employee = {
+    _id: "6a7d9ef28f33f83745aa54e3", // el subdocumento dentro de la compañía
+    userId: "66cdf26906fd8fd5e9b13eed", // la cuenta, la que el log registra
+    firstName: "Gustavo",
+    name: "Gustavo",
+    lastName: "Santeliz",
+    user: "g@x.com",
+    role: "0",
+  };
+
+  it("filtra por la cuenta del empleado, no por su fila en la compañía", () => {
+    const [option] = buildStaffFilterOptions([employee], "root_admin", null);
+    expect(option.value).toBe("66cdf26906fd8fd5e9b13eed");
+  });
+
+  it("sigue sirviendo a un registro que solo trae _id", () => {
+    const [option] = buildStaffFilterOptions(
+      [{ _id: "s-1", name: "Ana", lastName: "Gil", roleType: "admin" }],
+      "root_admin",
+      null
+    );
+    expect(option.value).toBe("s-1");
+  });
+
+  /* "Uno siempre se ve a sí mismo" se comprobaba contra el id equivocado, así
+     que no se cumplía nunca para la lista de empleados. */
+  it("se reconoce a sí mismo por la cuenta", () => {
+    const options = buildStaffFilterOptions(
+      [{ ...employee, role: "3" }],
+      "event_manager",
+      "66cdf26906fd8fd5e9b13eed"
+    );
+    expect(options).toHaveLength(1);
+  });
+});
+
+// ─── que lo lea cualquiera, no solo quien sepa leer una ruta ────────────────
+
+/**
+ * Pedido 2026-10-05: la bitácora la lee gente sin formación técnica. Una fila
+ * que dice `PATCH /api/receiver/receivers-pool-update/:id · 201` y
+ * `{ "activity": false }` no le dice a nadie que se devolvió un equipo.
+ */
+const routed = (route, request, overrides = {}) => ({
+  action: "UPDATE",
+  target_model: "Device",
+  details: { route, status: 201, request },
+  ...overrides,
+});
+
+describe("describeLogAction — la ruta dice más que el par CRUD", () => {
+  it("distingue entregar de devolver, que es lo que significa activity", () => {
+    expect(
+      describeLogAction(routed("PATCH /api/receiver/receivers-pool-update/:id", { activity: false }))
+    ).toBe("Returned a device");
+    expect(
+      describeLogAction(routed("PATCH /api/receiver/receivers-pool-update/:id", { activity: true }))
+    ).toBe("Handed out a device");
+  });
+
+  it("lee el mismo hecho escrito en la otra forma", () => {
+    expect(
+      describeLogAction(
+        routed("PATCH /api/receiver/receiver-update/:id", { device: { status: false } })
+      )
+    ).toBe("Returned a device");
+  });
+
+  it("dice de qué correo se trata, no solo que se mandó uno", () => {
+    expect(
+      describeLogAction(
+        routed("POST /api/nodemailer/assignig-device-notification", {}, {
+          action: "SEND",
+          target_model: "Email",
+        })
+      )
+    ).toBe("Emailed an equipment handover");
+  });
+
+  /* Una ruta que no conocemos cae a la frase de siempre, nunca a la ruta. */
+  it("no enseña la ruta cuando no la conoce", () => {
+    const summary = describeLogAction(
+      routed("PATCH /api/something/brand-new/:id", { whatever: 1 })
+    );
+    expect(summary).toBe("Updated a device");
+    expect(summary).not.toMatch(/api|PATCH/);
+  });
+});
+
+describe("explainLogChange(log)", () => {
+  it("traduce el cambio a una frase, sin nombrar campos del servidor", () => {
+    const sentence = explainLogChange(
+      routed("PATCH /api/receiver/receivers-pool-update/:id", { activity: false })
+    );
+    expect(sentence).toBe("The device went back into the event's inventory.");
+    expect(sentence).not.toMatch(/activity|false/);
+  });
+
+  it("explica lo que cambió en un evento por su nombre, no por su campo", () => {
+    expect(
+      explainLogChange({
+        action: "UPDATE",
+        target_model: "Event",
+        details: { updates: { deviceSetup: [{ group: "Laptop" }] } },
+      })
+    ).toBe("The equipment set up for the event changed.");
+    expect(
+      explainLogChange({
+        action: "UPDATE",
+        target_model: "Event",
+        details: { updates: { staff: { adminUser: [] } } },
+      })
+    ).toBe("The staff working the event changed.");
+  });
+
+  it("dice a qué rol se cambió a alguien", () => {
+    expect(
+      explainLogChange({
+        action: "UPDATE",
+        target_model: "Staff",
+        details: {
+          route: "PATCH /api/db_staff/company-staff",
+          request: { role_type: "root_admin" },
+        },
+      })
+    ).toBe("Their role changed to root admin.");
+  });
+
+  it("calla cuando no tiene nada claro que decir, en vez de inventar", () => {
+    expect(explainLogChange(routed("PATCH /api/x/y", { foo: 1 }))).toBeNull();
+    expect(explainLogChange(undefined)).toBeNull();
+  });
+});
+
+describe("visibleLogs(logs)", () => {
+  const cache = {
+    action: "CLEAR",
+    target_model: "Cache",
+    details: { route: "POST /api/cache_update/remove-cache" },
+  };
+
+  it("deja fuera lo que hizo la máquina sola", () => {
+    const logs = [routed("PATCH /api/receiver/receiver-update/:id", {}), cache, cache];
+    expect(visibleLogs(logs)).toHaveLength(1);
+  });
+
+  it("reconoce el borrado de caché por la ruta aunque el modelo cambie", () => {
+    expect(
+      isInfrastructureLog({ action: "CLEAR", details: { route: "POST /api/cache_update/remove-cache" } })
+    ).toBe(true);
+  });
+
+  it("no se traga una lista vacía ni una que no lo es", () => {
+    expect(visibleLogs(undefined)).toEqual([]);
+    expect(visibleLogs([])).toEqual([]);
   });
 });
