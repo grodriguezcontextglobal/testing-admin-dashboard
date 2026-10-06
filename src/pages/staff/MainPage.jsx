@@ -9,16 +9,19 @@ import PageHeader from "../../components/UX/pageHeader/PageHeader";
 import { MagnifyIcon } from "../../components/icons/MagnifyIcon";
 import { usePermission } from "../../hooks/usePermission";
 import "../../styles/global/OutlineInput.css";
+import "./components/staffViewTabs.css";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import MainAdminSettingPage from "./MainAdminSettingPage";
 import DeleteStaffMember from "./action/DeleteStaffMember";
 import { NewStaffMember } from "./action/NewStaffMember";
 import StaffKpiSection from "./components/StaffKpiSection";
+import StaffAssignedDevicesTable from "./components/StaffAssignedDevicesTable";
 
 const MainPage = () => {
   const { register, watch } = useForm();
   const { user } = useSelector((state) => state.admin);
-  const [modalState, setModalState] = useState(false);
+  const [modalState, setModalState] = useState(false);
+  const [activeView, setActiveView] = useState("staff");
   const location = useLocation();
   // command-menu quick action: open the add-staff modal on arrival (once)
   useEffect(() => {
@@ -60,31 +63,63 @@ const MainPage = () => {
           }
         />
         <StaffKpiSection />
-        <Grid
-          display={"flex"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          margin={"12px 0 0.5rem"}
-          item
-          xs={12}
-        >
-          <OutlinedInput
-            {...register("searchAdmin")}
-            style={OutlinedInputStyle}
-            fullWidth
-            placeholder="Search staff by name, email, or role"
-            startAdornment={
-              <InputAdornment position="start">
-                <MagnifyIcon />
-              </InputAdornment>
-            }
-          />
-        </Grid>
+        {/* The same navigator the members page has: the table is no longer
+            the only thing here, because what the staff are holding — and what
+            is late — is read as often as the roster (asked 2026-10-06). */}
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <MainAdminSettingPage
-            searchAdmin={watch("searchAdmin")}
-            modalState={modalState}
-          />
+          <div role="tablist" className="staff-view-tabs">
+            {[
+              { key: "staff", label: "Staff" },
+              { key: "devices", label: "Assigned devices" },
+              { key: "overdue", label: "Overdue" },
+            ].map((view) => (
+              <button
+                key={view.key}
+                type="button"
+                role="tab"
+                aria-selected={activeView === view.key}
+                className={`staff-view-tabs__tab${
+                  activeView === view.key ? " staff-view-tabs__tab--on" : ""
+                }`}
+                onClick={() => setActiveView(view.key)}
+              >
+                {view.label}
+              </button>
+            ))}
+          </div>
+        </Grid>
+
+        {activeView === "staff" && (
+          <Grid
+            display={"flex"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            margin={"0 0 0.5rem"}
+            item
+            xs={12}
+          >
+            <OutlinedInput
+              {...register("searchAdmin")}
+              style={OutlinedInputStyle}
+              fullWidth
+              placeholder="Search staff by name, email, or role"
+              startAdornment={
+                <InputAdornment position="start">
+                  <MagnifyIcon />
+                </InputAdornment>
+              }
+            />
+          </Grid>
+        )}
+        <Grid item xs={12} sm={12} md={12} lg={12}>
+          {activeView === "staff" ? (
+            <MainAdminSettingPage
+              searchAdmin={watch("searchAdmin")}
+              modalState={modalState}
+            />
+          ) : (
+            <StaffAssignedDevicesTable onlyOverdue={activeView === "overdue"} />
+          )}
         </Grid>
       </Grid>
 

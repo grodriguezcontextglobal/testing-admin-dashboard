@@ -1,0 +1,31 @@
+/* The staff page's view switcher. Same shape as the one on the members page,
+   so the two read as the same control rather than two inventions; it lives in
+   a stylesheet because that page builds it from inline styles repeated once
+   per tab. */
+.staff-view-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin: 12px 0;
+    background: var(--gray-50, #f7f7f4);
+    border: 1px solid var(--gray-200, #ddded6);
+    border-radius: var(--radius-md, 8px);
+}
+
+.staff-view-tabs__tab {
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm, 6px);
+    padding: 8px 12px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    background-color: transparent;
+    color: var(--gray-500, #777b73);
+}
+
+.staff-view-tabs__tab--on {
+    background-color: var(--base-white, #fff);
+    color: var(--gray-700, #484d47);
+    box-shadow: var(--shadow-sm);
+}
