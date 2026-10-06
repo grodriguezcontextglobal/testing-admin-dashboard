@@ -205,3 +205,47 @@ describe("describeTransactionKind", () => {
     expect(describeTransactionKind(undefined).canRefund).toBe(false);
   });
 });
+
+/**
+ * Una transacción reembolsada tiene que decirlo (pedido 2026-10-06). Decía
+ * "Closed", que es lo que dice también un depósito capturado o liberado: los
+ * tres caminos guardan exactamente `{ active: false }` y nada más, así que el
+ * registro no sabe por qué se cerró.
+ *
+ * Pero el tipo sí lo sabe. Capturar y liberar solo existen en un depósito, y
+ * reembolsar solo en un cargo, así que **un cargo cerrado solo puede estar
+ * reembolsado**. No hace falta un campo nuevo, y sobrevive a recargar la
+ * página porque sale de lo que ya está guardado.
+ */
+describe("describeTransactionState — un cargo cerrado está reembolsado", () => {
+  const charge = { paymentIntent: "pi_3UKlVhJAluu3aB961NyjOQB6", device: [{ deviceNeeded: 0 }] };
+  const deposit = { paymentIntent: "pi_3UKlVhJAluu3aB961NyjOQB6", device: [{ deviceNeeded: 2 }] };
+
+  it("lo dice con su propia palabra, no 'Closed'", () => {
+    expect(describeTransactionState({ ...charge, active: false })).toMatchObject({
+      key: "refunded",
+      label: "Refunded",
+    });
+  });
+
+  /* Un depósito cerrado puede ser capturado o liberado, y desde aquí no hay
+     forma de saber cuál: llamarlo reembolsado sería mentir. */
+  it("no llama reembolsado a un depósito cerrado", () => {
+    expect(describeTransactionState({ ...deposit, active: false })).toMatchObject({
+      key: "closed",
+      label: "Closed",
+    });
+  });
+
+  it("deja en paz lo que sigue abierto", () => {
+    expect(describeTransactionState(charge).key).toBe("active");
+    expect(describeTransactionState({ ...deposit, active: true }).key).toBe("active");
+  });
+
+  /* El efectivo y los movimientos sin cobro no se reembolsan por Stripe. */
+  it("no llama reembolsado a un cobro en efectivo cerrado", () => {
+    expect(
+      describeTransactionState({ paymentIntent: "pi_cash_1728", active: false }).key
+    ).toBe("closed");
+  });
+});

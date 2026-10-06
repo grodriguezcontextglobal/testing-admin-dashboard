@@ -1184,6 +1184,29 @@ configuración del build, no el código fuente.
 El único bloqueo real es `vite-plugin-pwa@0.20.5`, que declara `vite ^5`. La
 1.3.0 acepta `^3 … ^8` y se puede subir sola, antes que Vite.
 
+### Una transacción reembolsada lo dice — hecho 2026-10-06
+
+Pedido el 2026-10-06. Una transacción reembolsada decía **"Closed"**, igual que
+un depósito capturado o liberado: los tres caminos guardan exactamente
+`{ active: false }` y nada más, así que el registro no sabe por qué se cerró.
+
+**Sin campo nuevo:** capturar y liberar solo existen en un depósito, y
+reembolsar solo en un cargo, así que **un cargo cerrado solo puede estar
+reembolsado**. `describeTransactionState` lo distingue, con tests. Sobrevive a
+recargar la página porque sale de lo que ya está guardado. Un depósito cerrado
+se queda en "Closed", porque desde aquí no hay forma de saber si se capturó o
+se liberó, y decir otra cosa sería adivinar.
+
+El botón ya decía "Refunded" y quedaba deshabilitado; ahora el chip de estado
+dice lo mismo, que es lo que se lee al pasar la vista por la tabla.
+
+**Ojo:** esto no se puede ver hasta que desplieguen el arreglo del refund, que
+no funciona desde marzo. **Nada de esto marca un reembolso hecho fuera del
+dashboard**, por ejemplo desde Stripe: eso solo lo sabría el servidor.
+
+**Pendiente, de su aviso:** cuando esas rutas pidan permiso, contemplar el
+**403** y el **404** con su propio mensaje. Hoy caen en el genérico.
+
 ### Refund en la tabla de transacciones: "A valid payment intent id is required"
 `pages/events/quickGlance/consumer/ConsumerDetail/StripeTransactionTable.jsx:120`
 

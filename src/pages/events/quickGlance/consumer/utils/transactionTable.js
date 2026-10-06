@@ -76,9 +76,23 @@ export function toTransactionRows(transactions) {
   return Array.from(byKey.values());
 }
 
+/**
+ * Where the money stands.
+ *
+ * A refund, a deposit capture and a deposit release all save the same thing —
+ * `{ active: false }` — so the stored record cannot say which of the three
+ * happened. The kind can: capture and release only exist on a deposit, and a
+ * refund only on a card charge, so **a closed charge can only be a refunded
+ * one**. That needs no new field and survives a reload, because it is read
+ * from what is already saved.
+ *
+ * A closed deposit stays "Closed": calling it refunded would be a guess.
+ */
 export function describeTransactionState(record) {
   if (record?.active === false) {
-    return { key: "closed", tone: "neutral", label: "Closed" };
+    return describeTransactionKind(record).canRefund
+      ? { key: "refunded", tone: "neutral", label: "Refunded" }
+      : { key: "closed", tone: "neutral", label: "Closed" };
   }
   return { key: "active", tone: "success", label: "Active" };
 }
