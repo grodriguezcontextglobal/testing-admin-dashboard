@@ -20,7 +20,7 @@ import {
   resolveRoleType,
 } from "../../../../config/roles";
 import { fetchSchoolSettings } from "../../../Profile/school_compliance/utils/schoolComplianceUtils";
-import { calculateStudentAgeFlags } from "../../utils/ageCalculationUtils";
+import { calculateStudentAgeFlags, isMinorMember } from "../../utils/ageCalculationUtils";
 import { fetchStudentConsent } from "../../utils/guardianConsentApi";
 import {
   describeMemberConsent,
@@ -55,7 +55,7 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
 
   const memberId = detailMemberInfo?.member_id;
   const companyId = user?.sqlInfo?.company_id;
-  const isStudent = detailMemberInfo?.minor === 1;
+  const isStudent = isMinorMember(detailMemberInfo);
 
   // Only students carry guardian consent; don't fire this for every member.
   const consentQuery = useQuery({

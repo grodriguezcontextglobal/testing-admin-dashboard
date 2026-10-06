@@ -66,3 +66,28 @@ export const pickSqlEventId = (rows = [], companyId) => {
   );
   return own.at(-1)?.event_id ?? null;
 };
+
+/**
+ * What to do after the SQL half of deleting a draft, by its HTTP status.
+ *
+ * Deleting a draft removes a SQL row and a Mongo document. Until the server
+ * fix (`fix/event-handlers-408`), the SQL delete read the event id out of
+ * `body.email`, matched nothing and still answered `201 ok` — so the client
+ * sailed on and deleted Mongo every time. With the real contract the statuses
+ * mean different things, and the backend asked us to decide (answers
+ * 2026-10-06, §2):
+ *
+ *   404  no such row, or it belongs to another company. For a draft that
+ *        never got a SQL row this is the normal case, and its Mongo document
+ *        still has to go or the event stays in the list forever.
+ *   409  the event still has inventory, staff or registrations. Stop:
+ *        removing the Mongo document would strand the SQL row with no way
+ *        left to reach it.
+ *
+ * @returns {"continue"|"blocked"|"failed"}
+ */
+export const sqlDeleteOutcome = (status) => {
+  if (status === 404 || (status >= 200 && status < 300)) return "continue";
+  if (status === 409) return "blocked";
+  return "failed";
+};

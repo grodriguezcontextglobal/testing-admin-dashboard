@@ -9,10 +9,8 @@
  * from src/pages/consumers/utils/CreateNewUser.jsx.
  */
 
-/** Members come from SQL (`minor` may be boolean or the numeric 0/1 from
- * /db_member/consulting-member) — normalize both shapes. */
-const isMinorMember = (member = {}) =>
-  member?.minor === true || Number(member?.minor) === 1;
+/* The same question the rest of the module asks — see ageCalculationUtils. */
+import { isMinorMember } from "./ageCalculationUtils";
 
 /**
  * Resolves who should receive the attendance-confirmation email:

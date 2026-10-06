@@ -1095,6 +1095,75 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
 
 ---
 
+## 2e. El backend respondió — 2026-10-06
+
+> `BACKEND_answers_to_dashboard_2026-10-06.md`. **Casi todo está escrito pero
+> sin desplegar**, así que el servidor se comporta como hoy hasta que mergeen.
+> Solo están vivos: los filtros del registro de actividad (desde el 05-10) y el
+> comportamiento de `minor`.
+
+### Hecho ya, porque no espera a ningún despliegue
+
+- **`minor`: alineadas las lecturas.** Confirmado que el servidor compara
+  `Number(minor) === 1` en todas, y que la edición **no normaliza**, así que hay
+  que escribir `true`/`false` (ya lo hacíamos). Cuatro sitios comparaban
+  `minor === 1` en estricto: el aviso de "guardian CC'd" de los vencidos, la
+  columna de la tabla, la cabecera del perfil y el portal público. El campo
+  llega como número casi siempre, pero no siempre, y ya hubo un incidente por
+  esto (ver `Reminders.jsx`). `isMinorMember` pasa a ser compartido en
+  `ageCalculationUtils.js`, con tests.
+- **Borrar un Draft: decidido lo que el backend preguntó.** `sqlDeleteOutcome`
+  (con tests): un **404** significa que no hay fila SQL, que es lo normal en un
+  borrador que nunca la tuvo, así que se sigue y se borra el documento de
+  Mongo; un **409** significa que el evento todavía tiene inventario o staff, y
+  ahí se para y se dice por qué, porque borrar Mongo dejaría la fila huérfana.
+  Se quitó el `{ email }` del body, que el servidor ignora. Confirmado además
+  que hoy **no borra nada** y responde `201 ok`.
+
+### Esperando su despliegue, sin trabajo nuestro
+
+- **Refund:** teníamos razón, y es peor de lo que creíamos: **ningún refund
+  funciona desde el 2026-03-18**. El validador aceptaba `payment_intent` y los
+  controladores leen `paymentIntent`. El arreglo acepta los tres nombres y
+  **nuestro payload no cambia**. Después, esas rutas exigirán sesión y
+  `transaction:update`: hay que contemplar **404** (el pago es de otra
+  compañía) y **403** (rol sin permiso).
+- **`PUT /api/document/:id` existe** en una rama, y la ajustaron a lo que manda
+  `EditDocument.jsx`: aceptan `PUT`, ya no exigen `x-company-id` y
+  `public_document` se acepta pero **no se guarda**, vuelve en
+  `ignored_fields`. Reactivar un vencido con fecha futura o `null` funciona
+  tal como lo construimos.
+- **`bulk-members`:** el `202` llega cuando el job pasa de 4 s, y **trae
+  `jobId` y `contact_skipped` a la vez**. Falta implementar el seguimiento del
+  job; hoy damos por terminado cualquier `ok: true`.
+
+### Lo que queda por hacer cuando desplieguen
+
+- **Quitar nuestras 13 llamadas a `registerStaffActivity`.** El middleware
+  lleva desplegado desde el 05-10, así que **ya se está registrando dos veces**
+  todo lo que pasa por el servidor. Ninguna de las nuestras registra algo que
+  no llegue al servidor, así que se van todas. Conviene comprobar primero un
+  caso real, porque perder entradas de una bitácora es peor que duplicarlas.
+- **Dejar de escribir en `transaction-audit-log`**
+  (`AddingDevicesToPaymentIntent.jsx`): es otra colección, sin autor y sin
+  filtros, y el servidor ya registra las transacciones.
+- **Quitar nuestro filtro de caché** cuando el reporte deje de devolverlos.
+- **Pintar su `summary`/`display`** en vez de nuestro `describeLogAction`,
+  dejando el nuestro de respaldo. El servidor distingue cosas que el cliente no
+  ve, como una devolución de una asignación, o una lectura de datos de alumnos.
+
+### Decisiones pendientes
+
+1. **`GET /api/document/:id` es público para CUALQUIER documento**, no solo los
+   de consentimiento. Si la regla es que solo esos sean públicos, hay que
+   añadir el campo en el servidor **y** cerrar el GET para el resto. Nos
+   preguntan si lo queremos.
+2. **Audit trail del dispositivo (2b.7): desbloqueado.** El reporte ya acepta
+   `?serial_number=` y `?item_id=`, en producción. La pestaña del perfil hoy
+   lee solo las tablas SQL de custodia.
+
+---
+
 ## 3. Abierto — de esta semana, fuera de toda lista
 
 ### Paso 4 de dependencias — desbloqueado, en standby por decisión

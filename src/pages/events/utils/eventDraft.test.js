@@ -5,6 +5,7 @@ import {
   pickSqlEventId,
   splitDraftEvents,
   sqlLookupFor,
+  sqlDeleteOutcome,
 } from "./eventDraft";
 import { getEventStatus } from "./getEventStatus";
 import { getCountdownLabel } from "./eventStatusHelpers";
@@ -141,5 +142,37 @@ describe("finding the draft's SQL row", () => {
   it("is null when no row belongs to this company", () => {
     expect(pickSqlEventId([{ event_id: 11, company_assigned_event_id: 99 }], 7)).toBeNull();
     expect(pickSqlEventId(undefined, 7)).toBeNull();
+  });
+});
+
+/**
+ * Borrar un borrador toca dos sitios: la fila de SQL y el documento de Mongo.
+ * Hasta el arreglo del servidor (`fix/event-handlers-408`), el borrado de SQL
+ * respondía `201 ok` sin borrar nada, así que el cliente seguía siempre. Con
+ * el contrato nuevo hay que decidir qué hacer con cada respuesta, y el backend
+ * nos lo preguntó expresamente (respuestas 2026-10-06, §2).
+ */
+describe("sqlDeleteOutcome(status)", () => {
+  it("sigue borrando Mongo cuando SQL dice que no hay tal fila", () => {
+    // Un borrador que nunca llegó a tener fila SQL: su documento sigue ahí y
+    // hay que quitarlo, o quedaría un evento fantasma en la lista.
+    expect(sqlDeleteOutcome(404)).toBe("continue");
+  });
+
+  it("sigue cuando SQL borró", () => {
+    expect(sqlDeleteOutcome(200)).toBe("continue");
+    expect(sqlDeleteOutcome(201)).toBe("continue");
+  });
+
+  /* Con inventario o staff todavía colgando, borrar Mongo dejaría la fila de
+     SQL huérfana y sin forma de llegar a ella. */
+  it("se detiene cuando el evento todavía tiene cosas asociadas", () => {
+    expect(sqlDeleteOutcome(409)).toBe("blocked");
+  });
+
+  it("se detiene ante cualquier otro fallo, en vez de borrar media cosa", () => {
+    expect(sqlDeleteOutcome(400)).toBe("failed");
+    expect(sqlDeleteOutcome(500)).toBe("failed");
+    expect(sqlDeleteOutcome(undefined)).toBe("failed");
   });
 });

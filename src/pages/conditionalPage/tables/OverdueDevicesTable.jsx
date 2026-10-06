@@ -6,6 +6,7 @@ import { Modal, Select, Table, Tag, Input, message } from "antd";
 import { Typography } from "@mui/material";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { buildOverdueRowReminder } from "../utils/reminderTemplates";
+import { isMinorMember } from "../utils/ageCalculationUtils";
 import { registerStaffActivity } from "../../../api/activityLog";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -66,7 +67,7 @@ const OverdueDevicesTable = () => {
       notify(
         "success",
         "Reminder sent",
-        `${row.first_name} ${row.last_name}${row.minor === 1 && row.parent_guardian_email ? " (guardian CC'd)" : ""
+        `${row.first_name} ${row.last_name}${isMinorMember(row) && row.parent_guardian_email ? " (guardian CC'd)" : ""
         }`,
       );
     } catch {
@@ -191,7 +192,7 @@ const OverdueDevicesTable = () => {
       title: "Guardian",
       key: "guardian",
       render: (_, r) =>
-        r.minor === 1 ? (
+        isMinorMember(r) ? (
           <Typography style={{ fontSize: 13, color: "var(--gray-600, #5d615a)" }}>
             {r.parent_guardian_email || "—"}
           </Typography>

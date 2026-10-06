@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   calculateAge,
   isMinor,
+  isMinorMember,
   isUnder13,
   calculateStudentAgeFlags,
 } from "./ageCalculationUtils";
@@ -108,5 +109,28 @@ describe("calculateStudentAgeFlags", () => {
       under_13: false,
       dob_valid: false,
     });
+  });
+});
+
+describe("isMinorMember", () => {
+  /* El servidor confirmó el 2026-10-06 que la columna es tinyint(1) y que él
+     compara Number(minor) === 1 en todas sus lecturas. El cliente recibe ese
+     número casi siempre, pero no siempre: un registro recién creado trae el
+     booleano que mandamos, las filas viejas traen null, y por varios caminos
+     ha llegado el texto "1" — que es como un tutor se quedó fuera de un
+     correo (ver Reminders.jsx). */
+  it("reconoce al menor venga como venga el campo", () => {
+    expect(isMinorMember({ minor: 1 })).toBe(true);
+    expect(isMinorMember({ minor: "1" })).toBe(true);
+    expect(isMinorMember({ minor: true })).toBe(true);
+  });
+
+  it("no da por menor a un adulto, ni a una fila sin el dato", () => {
+    expect(isMinorMember({ minor: 0 })).toBe(false);
+    expect(isMinorMember({ minor: "0" })).toBe(false);
+    expect(isMinorMember({ minor: false })).toBe(false);
+    expect(isMinorMember({ minor: null })).toBe(false);
+    expect(isMinorMember({})).toBe(false);
+    expect(isMinorMember(undefined)).toBe(false);
   });
 });

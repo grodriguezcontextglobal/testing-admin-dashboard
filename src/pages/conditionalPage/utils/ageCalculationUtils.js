@@ -64,3 +64,21 @@ export function calculateStudentAgeFlags(dob) {
 }
 
 export const calculateAgeFlags = calculateStudentAgeFlags;
+
+/**
+ * True when the stored `minor` flag says so — as opposed to `isMinor(dob)`,
+ * which works it out from the birthdate.
+ *
+ * The flag is a MySQL `tinyint(1)`, so a read normally brings back the number
+ * `0` or `1`. It does not always: a record straight out of the create form
+ * carries the boolean this client sent, older rows carry `null`, and several
+ * paths have been seen handing over the string `"1"` — which is how a minor's
+ * guardian was once silently left off an email (see Reminders.jsx). The server
+ * compares `Number(minor) === 1` everywhere it reads, and so does this
+ * (confirmed by backend, 2026-10-06).
+ *
+ * @param {object} member a member record, from SQL or from a form
+ */
+export function isMinorMember(member) {
+  return member?.minor === true || Number(member?.minor) === 1;
+}

@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { sqlDeleteOutcome } from "../utils/eventDraft";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { hasPermission, resolveRoleType } from "../../../config/roles";
@@ -75,7 +76,32 @@ const useDraftEventActions = () => {
       // A lookup failure is not a reason to keep the Mongo draft around.
       const sqlEventId = await findSqlEventId(event).catch(() => null);
       if (sqlEventId) {
-        await devitrakApi.delete(`/db_event/${sqlEventId}`, { data: { email: user?.email } });
+        /* The server reads the id from the URL; the `{ email }` it used to
+           read instead is gone (backend answers 2026-10-06 §2). A 404 means
+           there is no SQL row to delete, which is the normal case for a draft
+           that never got one — the Mongo document still has to go. A 409
+           means the event still has inventory or staff, and removing Mongo
+           would strand that row. See sqlDeleteOutcome. */
+        const sqlResponse = await devitrakApi
+          .delete(`/db_event/${sqlEventId}`)
+          .catch((error) => error?.response ?? { status: 0 });
+        const outcome = sqlDeleteOutcome(sqlResponse?.status);
+        if (outcome === "blocked") {
+          notify(
+            "error",
+            "This event cannot be deleted yet.",
+            "It still has inventory, staff or registrations attached. Remove those first."
+          );
+          return;
+        }
+        if (outcome === "failed") {
+          notify(
+            "error",
+            "The draft could not be deleted.",
+            sqlResponse?.data?.msg ?? "The event could not be removed from the records."
+          );
+          return;
+        }
       }
       await devitrakApi.delete(`/event/delete-event/${event.id}`);
       await queryClient.invalidateQueries({ queryKey: ["events"] });

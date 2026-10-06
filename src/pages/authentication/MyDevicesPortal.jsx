@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { devitrakApi } from "../../api/devitrakApi";
+import { isMinorMember } from "../conditionalPage/utils/ageCalculationUtils";
 
 /**
  * Public family portal — "My Devices".
@@ -215,7 +216,7 @@ const MyDevicesPortal = () => {
                 color: "var(--gray-500, #777b73)",
               }}
             >
-              {result.member.minor === 1
+              {isMinorMember(result.member)
                 ? `Responsible party: ${result.member.responsible_party} (parent/guardian)`
                 : "Adult student — responsible for their own equipment"}
             </p>
