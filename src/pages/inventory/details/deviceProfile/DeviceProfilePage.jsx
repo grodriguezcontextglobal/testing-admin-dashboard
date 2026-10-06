@@ -27,12 +27,21 @@ import DeviceSidebar from "./components/DeviceSidebar";
 import DeviceSpecs from "./components/DeviceSpecs";
 import useDeviceProfile from "./hooks/useDeviceProfile";
 import { clean } from "./utils/deviceProfileModel";
+import { openStaffLeaseRow, staffReturnDeviceInfo } from "./utils/staffReturnFromDevice";
 import "./deviceProfile.css";
 
 const DeleteItem = lazy(() => import("../detailComponent/actions/DeleteItem"));
 const EditItem = lazy(() => import("../detailComponent/actions/EditItem"));
 const ReturnDevice = lazy(() =>
   import("../../../conditionalPage/tables/detailTableComponents/acions/return/Return")
+);
+/* The staff half of the same action. A device out with a staff member had no
+   way back from this page (2b.10): somebody finds it in the corridor and has
+   to put it back where it belongs. This modal runs the real return — close
+   the lease, delete its row, take the device off the event — instead of
+   flipping a field and leaving the event counting it as out. */
+const ReturnDeviceFromStaff = lazy(() =>
+  import("../../../staff/detail/components/equipment_components/ModalReturnDeviceFromStaff")
 );
 
 const breadcrumbLink = {
@@ -72,9 +81,11 @@ const DeviceProfilePage = () => {
   const [tab, setTab] = useState("custody");
   const [assignOpen, setAssignOpen] = useState(false);
   const [returnRecord, setReturnRecord] = useState(null);
+  const [staffReturn, setStaffReturn] = useState(null);
 
   const profile = useDeviceProfile(itemId);
-  const { item, state, holder, timeline, utilization, fleet, memberLeases } = profile;
+  const { item, state, holder, timeline, utilization, fleet, memberLeases, staffLeases } =
+    profile;
 
   // EditItemModal / DeleteItemModal predate this page and read the old
   // [{...row, data, itemInfo}] shape. Kept intact so both keep working.
@@ -180,6 +191,15 @@ const DeviceProfilePage = () => {
     ),
     canAssign && !state.inStock && holder?.kind === "member" && (
       <BlueButtonComponent key="return" title="Return device" func={openReturn} />
+    ),
+    /* Same wording and same permission as the member case: from here it is
+       one action, "this came back", whoever was holding it. */
+    canAssign && !state.inStock && holder?.kind === "staff" && (
+      <BlueButtonComponent
+        key="return-staff"
+        title="Return device"
+        func={() => setStaffReturn(staffReturnDeviceInfo(openStaffLeaseRow(staffLeases), item))}
+      />
     ),
     canEdit && (
       <Suspense key="edit" fallback={null}>
@@ -372,6 +392,22 @@ const DeviceProfilePage = () => {
           )}
         </Suspense>
       </Modal>
+
+      {staffReturn && (
+        <Suspense fallback={null}>
+          <ReturnDeviceFromStaff
+            openReturnDeviceStaffModal
+            setOpenReturnDeviceStaffModal={() => {
+              setStaffReturn(null);
+              /* The modal refreshes the staff page's own queries, which this
+                 page does not use; without this the device would still read
+                 as out until a reload. */
+              profile.refetchAll();
+            }}
+            deviceInfo={staffReturn}
+          />
+        </Suspense>
+      )}
     </>
   );
 };

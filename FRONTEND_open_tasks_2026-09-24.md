@@ -833,7 +833,32 @@ principio de semestre, o **pedir consentimiento**. Si se pide, hay que
 registrar cada respuesta del tutor con su hora. Eso usa el mismo audit trail
 de 2b.7.
 
-### 2b.10 — Devolver un dispositivo encontrado desde Edit [21]
+### ~~2b.10 — Devolver un dispositivo encontrado desde Edit [21]~~ — hecho 2026-10-06
+
+Repetido el 2026-10-06 con el caso de Fredrik: alguien encuentra un equipo en
+el pasillo que figura asignado a otra persona y necesita devolverlo al
+almacén desde la ficha del equipo.
+
+**La mitad ya existía:** la ficha ofrecía "Return device" **solo cuando quien
+lo tenía era un member**. Un equipo en manos de un staff no ofrecía nada, y
+el campo de estado de Edit es de solo lectura a propósito.
+
+Ahora el mismo botón aparece también para un equipo de staff, y abre
+`ModalReturnDeviceFromStaff`, que hace la cadena entera: cierra el préstamo,
+borra su fila y saca el equipo del evento si lo había. Es la condición de
+este punto: ir por la devolución de verdad, no cambiar un campo suelto.
+`staffReturnFromDevice.js` arma lo que ese modal espera, con tests.
+
+**La pregunta de "quién puede hacerlo" se resolvió sola:** el mismo permiso
+que ya gobierna la entrega y la devolución de member en esta ficha
+(`inventory:update`). Tratarlo distinto habría dejado a alguien que sí puede
+entregar un equipo sin poder recogerlo.
+
+**Queda fuera:** un equipo que está en un evento, con un consumidor. Eso no
+son préstamos sino el pool del evento, y se devuelve desde el evento. **Sin
+ver en el navegador.**
+
+Texto original:
 
 El estado de Edit está fijo en "out with someone in event". Hay que poder
 pasarlo al almacén. Tiene que ir por la lógica de devolución de verdad, no
