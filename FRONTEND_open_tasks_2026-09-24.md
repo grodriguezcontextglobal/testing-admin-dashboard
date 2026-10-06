@@ -1164,9 +1164,16 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
    de consentimiento. Si la regla es que solo esos sean públicos, hay que
    añadir el campo en el servidor **y** cerrar el GET para el resto. Nos
    preguntan si lo queremos.
-2. **Audit trail del dispositivo (2b.7): desbloqueado.** El reporte ya acepta
-   `?serial_number=` y `?item_id=`, en producción. La pestaña del perfil hoy
-   lee solo las tablas SQL de custodia.
+2. ~~**Audit trail del dispositivo (2b.7)**~~ — **hecho 2026-10-06.** La
+   pestaña leía solo las tablas SQL de custodia, que dicen a quién se le
+   entregó un equipo pero **no quién lo entregó**. Ahora pide también
+   `?serial_number=` al registro de actividad y entrelaza las dos fuentes por
+   fecha (`deviceActivityTrail.js`, con tests). Las frases salen de
+   `staffActivityLogUtils`, el mismo vocabulario que la bitácora de staff,
+   que es el "formato común" que pidió Fredrik. Nada se descarta por
+   duplicado: "se le entregó a X" y "lo entregó Y" son dos hechos distintos
+   del mismo momento. Si la petición falla, la mitad de custodia se sigue
+   viendo. **Sin ver en el navegador.**
 
 ---
 

@@ -1,7 +1,11 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { devitrakApi } from "../../../../../api/devitrakApi";
+import { devitrakApi, devitrakApiAdmin } from "../../../../../api/devitrakApi";
+import {
+  buildActivityTimeline,
+  mergeDeviceTimeline,
+} from "../utils/deviceActivityTrail";
 import { checkArray } from "../../../../../components/utils/checkArray";
 import {
   buildCustodyTimeline,
@@ -27,6 +31,7 @@ export const deviceProfileKeys = {
   staffLeases: (itemId) => ["deviceStaffLeases", String(itemId ?? "")],
   roster: (companyId) => ["companyMemberRoster", String(companyId ?? "")],
   staffRecord: (staffId) => ["staffRecordById", String(staffId ?? "")],
+  activity: (serial) => ["deviceActivityLog", String(serial ?? "")],
   fleet: (companyId, group) => [
     "deviceFleetContext",
     String(companyId ?? ""),
@@ -204,7 +209,25 @@ export function useDeviceProfile(itemId) {
     [memberLeases, staffLeases]
   );
 
-  const timeline = useMemo(
+  /* Who did it, which the custody tables never knew (2b.7). The report takes
+     a serial since 2026-10-05. A failure here leaves the custody half intact:
+     the page is still worth reading without the names. */
+  const activityQuery = useQuery({
+    queryKey: deviceProfileKeys.activity(item?.serial_number),
+    queryFn: () =>
+      devitrakApiAdmin.get("/activity-logs", {
+        params: { serial_number: item.serial_number, limit: 50, page: 1 },
+      }),
+    enabled: Boolean(item?.serial_number),
+    retry: false,
+  });
+
+  const activityTrail = useMemo(
+    () => buildActivityTimeline(activityQuery.data?.data?.logs),
+    [activityQuery.data]
+  );
+
+  const custodyTimeline = useMemo(
     () =>
       buildCustodyTimeline({
         item,
@@ -214,6 +237,11 @@ export function useDeviceProfile(itemId) {
         resolvePersonLabel,
       }),
     [item, memberLeases, staffLeases, trackingRows, resolvePersonLabel]
+  );
+
+  const timeline = useMemo(
+    () => mergeDeviceTimeline(custodyTimeline, activityTrail),
+    [custodyTimeline, activityTrail]
   );
 
   const holder = useMemo(() => {
@@ -274,6 +302,7 @@ export function useDeviceProfile(itemId) {
     state,
     utilization,
     timeline,
+    activityLoading: activityQuery.isLoading,
     holder,
     fleet,
     refetchAll,

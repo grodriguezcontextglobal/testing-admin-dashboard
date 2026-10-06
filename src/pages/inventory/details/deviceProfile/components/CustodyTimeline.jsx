@@ -19,6 +19,8 @@ const ICONS = {
   returned: { icon: "tabler:check", color: "var(--success700, #027947)" },
   overdue: { icon: "tabler:alert-circle", color: "var(--error-700, #b42318)" },
   created: { icon: "tabler:plus", color: "var(--gray500, #667084)" },
+  // Someone acted on the record, as opposed to the device changing hands.
+  activity: { icon: "tabler:pencil", color: "var(--gray500, #667084)" },
 };
 
 const personNode = (entry) => {
@@ -41,6 +43,7 @@ const describe = (entry) => {
       parts.push("Legacy record — no due date was captured");
     }
   }
+  if (entry.kind === "activity" && entry.detail) parts.push(entry.detail);
   if (entry.kind === "returned" && entry.detail) parts.push(entry.detail);
   if (entry.kind === "created") {
     if (entry.cost !== null && entry.cost !== undefined) {
@@ -61,6 +64,14 @@ const titleFor = (entry) => {
       return <>Returned by {personNode(entry)}</>;
     case "overdue":
       return "Due date passed";
+    /* The custody half says who a device went to; this half says who sent it
+       — the question 2b.7 was asked to answer. */
+    case "activity":
+      return (
+        <>
+          {entry.title} — {personNode(entry)}
+        </>
+      );
     default:
       return "Added to inventory";
   }

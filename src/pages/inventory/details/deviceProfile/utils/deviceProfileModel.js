@@ -449,7 +449,7 @@ const hasTimeOfDay = (value) =>
  * tie between those two fell to insertion order. It read "added → returned →
  * assigned" for a laptop that was assigned, then returned.
  */
-function newestCustodyFirst(a, b) {
+export function newestCustodyFirst(a, b) {
   const left = parseDateValue(a.date);
   const right = parseDateValue(b.date);
   // Undated entries sink rather than jumping to the top of the chain.
