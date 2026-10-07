@@ -2,6 +2,9 @@ import { Box, Typography } from "@mui/material";
 import { useState } from "react";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 
+const DEVITRAK_LOGO_URL =
+  "https://res.cloudinary.com/dpdzkhh07/image/upload/v1791386367/devitrak_login_jeki3x.svg";
+
 const Card = ({ doc }) => {
   const [showContract, setShowContract] = useState(false);
 
@@ -22,25 +25,26 @@ const Card = ({ doc }) => {
       }}
     >
       <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" } }}>
+        {/* The old S3 logo answers 403 (2026-10-07). This one is white, so the
+            tile is the brand's dark blue. */}
         <Box
           sx={{
             position: "relative",
             height: { xs: "150px", sm: "auto" },
+            minHeight: { sm: "150px" },
             width: { xs: "100%", sm: "150px" },
+          }}
+          style={{
+            backgroundColor: "#021833",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <img
-            src={
-              "https://devitrakadmindashboardlogotesting.s3.amazonaws.com/maskable_icon_white_background.png"
-            }
-            alt="Devotrak Logo"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
+            src={DEVITRAK_LOGO_URL}
+            alt="Devitrak"
+            style={{ width: "60%", height: "auto", maxHeight: "60%" }}
           />
           <Box
             sx={{
