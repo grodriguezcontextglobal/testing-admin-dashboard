@@ -833,6 +833,17 @@ principio de semestre, o **pedir consentimiento**. Si se pide, hay que
 registrar cada respuesta del tutor con su hora. Eso usa el mismo audit trail
 de 2b.7.
 
+**[16] Añadir directamente — hecho 2026-10-07.** Revisada la transcripción
+(`46:06`–`49:30`): Fredrik pidió las dos opciones y dijo "Yes" a pasar el
+consentimiento de obligatorio a opcional; no hay marcha atrás después. El modal
+tiene ahora "Ask for guardian consent" (por defecto) y "Add directly" (con
+`member:update`). Añadir directamente hace la misma escritura que la página
+pública al confirmar: `registerConsumerToEvent`, compartida y con tests, que
+ahora usan las dos. No pide email del tutor, pero sí el del miembro, porque el
+consumidor se busca por email. **Sin ver en el navegador.**
+
+**[17] Queda abierto:** registrar cada respuesta del tutor con su hora.
+
 ### ~~2b.10 — Devolver un dispositivo encontrado desde Edit [21]~~ — hecho 2026-10-06
 
 Repetido el 2026-10-06 con el caso de Fredrik: alguien encuentra un equipo en

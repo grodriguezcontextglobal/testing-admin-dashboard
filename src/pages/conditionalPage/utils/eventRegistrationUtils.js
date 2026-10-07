@@ -11,6 +11,11 @@
 
 /* The same question the rest of the module asks — see ageCalculationUtils. */
 import { isMinorMember } from "./ageCalculationUtils";
+import {
+  isAlreadyInEvent,
+  readExistingConsumer,
+  writeSucceeded,
+} from "../../authentication/utils/attendanceConfirmation";
 
 /**
  * Resolves who should receive the attendance-confirmation email:
@@ -185,6 +190,65 @@ export const buildConsumerEventPayloads = (
       phone_number: `${member.phone_number ?? member.phone ?? ""}`,
     },
   };
+};
+
+/**
+ * Who a member is registered as when staff adds them directly, without an
+ * invitation (2026-09-29 `46:06`: a waiver signed at the start of the semester
+ * already covers any event).
+ *
+ * Same shape as getConfirmationRecipient so the selection helpers below work
+ * for both modes. No guardian email is needed, because nobody is being asked;
+ * the member's own email is, because the consumer record is found by it.
+ *
+ * @param {object} member
+ * @returns {{ email: string|null, isGuardian: false, error: string|null }}
+ */
+export const getDirectAddTarget = (member = {}) => {
+  const email = `${member.email ?? ""}`.trim();
+  return email
+    ? { email, isGuardian: false, error: null }
+    : { email: null, isGuardian: false, error: "No email on file for this member." };
+};
+
+/**
+ * Put one member on an event as a consumer: the write the public landing makes
+ * when a guardian confirms, and the one "Add directly" makes without asking.
+ * One implementation, so the two ways in cannot register people differently.
+ *
+ * Looks the consumer up by email; an existing one gets the event merged in, a
+ * new one is created in Mongo and then in SQL. Idempotent: somebody already on
+ * the event is reported as such and nothing is written.
+ *
+ * @param {{ post: Function, patch: Function }} api devitrakApi
+ * @param {{ member: object, event: object, company: { id, name } }} target
+ * @returns {Promise<"added"|"already">}
+ * @throws {Error} with the server's message when a write is refused
+ */
+export const registerConsumerToEvent = async (api, { member, event, company }) => {
+  const email = member?.email ?? member?.memberEmail ?? "";
+  const lookup = await api.post("/auth/user-query", { email });
+  const existingConsumer = readExistingConsumer(lookup);
+
+  if (existingConsumer) {
+    if (isAlreadyInEvent(existingConsumer, event?.id)) return "already";
+    const { merge } = buildConsumerEventPayloads(member, event, company, existingConsumer);
+    const merged = await api.patch(`/auth/${existingConsumer.id}`, merge);
+    if (!writeSucceeded(merged)) {
+      throw new Error(merged?.data?.msg || "The registration was not saved.");
+    }
+    return "added";
+  }
+
+  const { auth, db } = buildConsumerEventPayloads(member, event, company, null);
+  /* Checked, because `POST /auth/new` answers 200 with { ok: false } when it
+     refuses, and the SQL insert must not follow a refusal. */
+  const created = await api.post("/auth/new", auth);
+  if (!writeSucceeded(created)) {
+    throw new Error(created?.data?.msg || "The registration was not saved.");
+  }
+  await api.post("/db_consumer/new_consumer", db);
+  return "added";
 };
 
 const formatEventDate = (value) => {

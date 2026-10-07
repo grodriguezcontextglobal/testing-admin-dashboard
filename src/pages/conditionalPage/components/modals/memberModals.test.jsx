@@ -64,7 +64,15 @@ const post = vi.fn((url) => {
 });
 
 vi.mock("../../../../api/devitrakApi", () => ({
-  devitrakApi: { post: (...args) => post(...args) },
+  devitrakApi: {
+    post: (...args) => post(...args),
+    patch: () => Promise.resolve({ data: { ok: true } }),
+  },
+}));
+
+vi.mock("../../../../config/roles", async (importOriginal) => ({
+  ...(await importOriginal()),
+  hasPermission: () => true,
 }));
 
 const { default: AddNewMember } = await import("./AddNewMember");
@@ -192,6 +200,46 @@ describe("RegisterMembersToEvent", () => {
     fireEvent.change(searchField, { target: { value: "hopper" } });
     await waitFor(() => expect(screen.queryByText("Ada Lovelace")).toBeNull());
     expect(screen.getByText("Grace Hopper")).toBeTruthy();
+  });
+
+  /* 2026-09-29 `46:06`: a waiver signed at the start of the semester already
+     covers any event, so staff can add students without the invitation. */
+  describe("Add directly", () => {
+    const switchToDirect = async () => {
+      await openWithEvent();
+      fireEvent.click(screen.getByRole("radio", { name: /add directly/i }));
+    };
+
+    it("does not need a guardian email, because nobody is asked", async () => {
+      await switchToDirect();
+      expect(screen.getByText("Alan Turing").closest("tr").textContent).not.toContain(
+        "No guardian email on file"
+      );
+      expect(await screen.findByText("Add to event")).toBeTruthy();
+    });
+
+    it("registers the member as a consumer and emails nobody", async () => {
+      await switchToDirect();
+      const adaRow = screen.getByText("Ada Lovelace").closest("tr");
+      fireEvent.click(adaRow.querySelector("input[type=checkbox]"));
+      fireEvent.click(await screen.findByText("Add 1 to event"));
+      fireEvent.click(await screen.findByRole("button", { name: "Add" }));
+
+      await waitFor(() =>
+        expect(post).toHaveBeenCalledWith(
+          "/db_consumer/new_consumer",
+          expect.objectContaining({ email: "ada@x.com" })
+        )
+      );
+      expect(post).toHaveBeenCalledWith(
+        "/auth/new",
+        expect.objectContaining({ email: "ada@x.com", event_providers: ["evt-1"] })
+      );
+      expect(post).not.toHaveBeenCalledWith(
+        "/nodemailer/customize-message-notification",
+        expect.anything()
+      );
+    });
   });
 
   it("shows who the invitation actually goes to", async () => {

@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Tooltip } from "antd";
+import { Segmented, Tooltip } from "antd";
 import PropTypes from "prop-types";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { hasPermission, resolveRoleType } from "../../../../config/roles";
 import renderingTitle from "../../../../components/general/renderingTitle";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
@@ -24,12 +25,23 @@ import {
   buildConfirmationLink,
   filterInviteRows,
   getConfirmationRecipient,
+  getDirectAddTarget,
   inviteSelectionCounts,
+  registerConsumerToEvent,
   selectableInviteKeys,
 } from "../../utils/eventRegistrationUtils";
 
 const stepClass = (done) =>
   `action-form__step${done ? " action-form__step--done" : ""}`;
+
+const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
+/* 2026-09-29 `46:06`: a waiver signed at the start of the semester can already
+   cover any event, so asking a guardian again is optional. */
+const MODES = [
+  { value: "consent", label: "Ask for guardian consent" },
+  { value: "direct", label: "Add directly" },
+];
 
 /**
  * "Register [members] to event" — a Members page action.
@@ -47,11 +59,19 @@ const stepClass = (done) =>
  * no guardian email on file looked exactly like one that left out none. It also
  * sent to everyone selected the moment the button was pressed; outbound email
  * to a few hundred guardians now asks first.
+ *
+ * "Add directly" (2026-10-07) skips the invitation for students whose waiver is
+ * already on file: it makes the same consumer write the landing page makes on
+ * Confirm (registerConsumerToEvent), straight away and without emailing anyone.
+ * It writes records, so it needs member:update on top of member:notify.
  */
 const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "members" }) => {
   const { user } = useSelector((state) => state.admin);
   const { notify, contextHolder } = useStatusNotification();
+  const canAddDirectly = hasPermission("member:update", resolveRoleType(user));
 
+  const [mode, setMode] = useState("consent");
+  const direct = mode === "direct";
   const [selectedEventOption, setSelectedEventOption] = useState(null);
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [search, setSearch] = useState("");
@@ -88,9 +108,11 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     return members.map((member) => ({
       ...member,
       key: member.member_id,
-      _recipient: getConfirmationRecipient(member),
+      // Who is asked, or who is registered: the selection helpers read the
+      // same `error` either way.
+      _recipient: direct ? getDirectAddTarget(member) : getConfirmationRecipient(member),
     }));
-  }, [membersQuery?.data]);
+  }, [membersQuery?.data, direct]);
 
   const visibleRows = useMemo(() => filterInviteRows(rows, search), [rows, search]);
   const counts = useMemo(
@@ -104,10 +126,66 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
 
   const closeModal = () => {
     if (sending) return;
+    setMode("consent");
     setSelectedEventOption(null);
     setSelectedKeys([]);
     setSearch("");
     setOpenModal(false);
+  };
+
+  // Who can be picked differs per mode, so a selection does not carry over.
+  const changeMode = (next) => {
+    if (sending) return;
+    setMode(next);
+    setSelectedKeys([]);
+  };
+
+  const handleAddDirectly = async () => {
+    if (!selectedEvent || selectedRows.length === 0) return;
+    setSending(true);
+
+    const company = { id: user?.companyData?.id, name: user?.company };
+    const results = await Promise.allSettled(
+      selectedRows.map((member) =>
+        registerConsumerToEvent(devitrakApi, { member, event: selectedEvent, company })
+      )
+    );
+
+    const failures = results
+      .map((result, index) => ({ result, member: selectedRows[index] }))
+      .filter(({ result }) => result.status === "rejected");
+    const already = results.filter(
+      (result) => result.status === "fulfilled" && result.value === "already"
+    ).length;
+    const added = results.length - failures.length - already;
+    const eventName = selectedEventOption?.label ?? "the event";
+
+    setSending(false);
+    notify(
+      failures.length === 0 ? "success" : "warning",
+      failures.length === 0
+        ? `${plural(added, audienceLabel.replace(/s$/, ""))} added to ${eventName}`
+        : `${added} of ${results.length} added to ${eventName}`,
+      [
+        already > 0 ? `${already} already registered, left as they were.` : null,
+        ...failures.map(
+          ({ member, result }) =>
+            `${member.first_name} ${member.last_name}: ${
+              result.reason?.message ?? "Not saved."
+            }`
+        ),
+      ]
+        .filter(Boolean)
+        .join(" · ") || undefined
+    );
+
+    if (failures.length === 0) {
+      closeModal();
+    } else {
+      // Retrying is safe — someone already on the event is left alone — but
+      // leaving only the failures selected says which ones they were.
+      setSelectedKeys(failures.map(({ member }) => member.key));
+    }
   };
 
   const handleSend = async () => {
@@ -182,7 +260,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
         `${record.first_name ?? ""} ${record.last_name ?? ""}`.trim() || "—",
     },
     {
-      title: "Invitation goes to",
+      title: direct ? "Registered as" : "Invitation goes to",
       key: "recipient",
       render: (_, record) => record._recipient.email || "—",
     },
@@ -191,7 +269,16 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
       key: "status",
       render: (_, record) => {
         if (record._recipient.error) {
-          return <StatusChip label="No guardian email on file" tone="critical" pip />;
+          return (
+            <StatusChip
+              label={direct ? "No email on file" : "No guardian email on file"}
+              tone="critical"
+              pip
+            />
+          );
+        }
+        if (direct) {
+          return <StatusChip label="Ready to add" tone="neutral" />;
         }
         if (record._recipient.isGuardian) {
           return <StatusChip label="Minor — guardian" tone="warning" pip />;
@@ -205,9 +292,22 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     <div className="action-form">
       {contextHolder}
 
+      {canAddDirectly && (
+        <div className="action-form__toolbar">
+          <Segmented options={MODES} value={mode} onChange={changeMode} block />
+        </div>
+      )}
+
       <p className="action-form__lead">
-        Each selected {audienceLabel.replace(/s$/, "")} is emailed a link to
-        confirm attendance. Nobody is registered until they confirm.
+        {direct
+          ? `Each selected ${audienceLabel.replace(
+              /s$/,
+              ""
+            )} is registered to the event now, without asking a guardian. Use this when a waiver is already on file.`
+          : `Each selected ${audienceLabel.replace(
+              /s$/,
+              ""
+            )} is emailed a link to confirm attendance. Nobody is registered until they confirm.`}
       </p>
 
       {/* 1 — the event */}
@@ -247,7 +347,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
           <div className="action-form__step-head">
             <h3 className="action-form__step-title">
               <span className="action-form__step-index">2</span>
-              Who to invite
+              {direct ? "Who to add" : "Who to invite"}
             </h3>
           </div>
 
@@ -261,7 +361,10 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
               <ProfileStatTiles
                 tiles={[
                   { label: "Selected", value: counts.selected },
-                  { label: "Can be invited", value: counts.selectable },
+                  {
+                    label: direct ? "Can be added" : "Can be invited",
+                    value: counts.selectable,
+                  },
                   {
                     label: "Missing an email",
                     value: counts.blocked,
@@ -293,7 +396,9 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
                   title={
                     counts.selected === counts.selectable
                       ? "Clear selection"
-                      : `Select all ${counts.selectable} that can be invited`
+                      : `Select all ${counts.selectable} that can be ${
+                          direct ? "added" : "invited"
+                        }`
                   }
                   func={() =>
                     setSelectedKeys(
@@ -318,7 +423,13 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
                     }),
                     renderCell: (checked, record, index, originNode) =>
                       record._recipient.error ? (
-                        <Tooltip title="Add a guardian email to this member first">
+                        <Tooltip
+                          title={
+                            direct
+                              ? "Add an email to this member first"
+                              : "Add a guardian email to this member first"
+                          }
+                        >
                           {originNode}
                         </Tooltip>
                       ) : (
@@ -334,9 +445,13 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
 
       <div className="action-form__footer">
         <p className="action-form__consequence">
-          {counts.blocked > 0
-            ? `${counts.blocked} ${audienceLabel} cannot be invited until a guardian email is on file.`
-            : "Emails go out immediately and cannot be recalled."}
+          {direct
+            ? counts.blocked > 0
+              ? `${counts.blocked} ${audienceLabel} cannot be added until an email is on file.`
+              : "No email is sent. Anyone already on the event is left as they are."
+            : counts.blocked > 0
+              ? `${counts.blocked} ${audienceLabel} cannot be invited until a guardian email is on file.`
+              : "Emails go out immediately and cannot be recalled."}
         </p>
         <GrayButtonComponent
           title="Cancel"
@@ -344,6 +459,21 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
           disabled={sending}
           func={closeModal}
         />
+        {direct ? (
+          <BlueButtonConfirmationComponent
+            title={counts.selected > 0 ? `Add ${counts.selected} to event` : "Add to event"}
+            buttonType="button"
+            disabled={!selectedEvent || counts.selected === 0 || sending}
+            loadingState={sending}
+            confirmationTitle={`Add ${plural(
+              counts.selected,
+              audienceLabel.replace(/s$/, "")
+            )} to ${selectedEventOption?.label ?? "the event"}?`}
+            confirmationDescription="They are registered now, without asking a guardian."
+            okText="Add"
+            func={handleAddDirectly}
+          />
+        ) : (
         <BlueButtonConfirmationComponent
           title={
             counts.selected > 0
@@ -362,6 +492,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
           okText="Send"
           func={handleSend}
         />
+        )}
       </div>
     </div>
   );

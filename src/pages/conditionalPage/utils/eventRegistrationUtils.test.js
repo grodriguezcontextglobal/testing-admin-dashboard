@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   getConfirmationRecipient,
   buildConfirmationLink,
@@ -9,6 +9,8 @@ import {
   filterInviteRows,
   inviteSelectionCounts,
   selectableInviteKeys,
+  getDirectAddTarget,
+  registerConsumerToEvent,
 } from "./eventRegistrationUtils";
 
 const adultMember = {
@@ -377,5 +379,99 @@ describe("the invite table's selection", () => {
         selected: 0,
       });
     });
+  });
+});
+
+/* 2026-09-29 `46:06`: "They may have a waiver on the beginning of the semester
+   that allows them to join any events… So you should be able to add them to
+   the event here without that invitation thing." */
+describe("getDirectAddTarget", () => {
+  it("registers the member under their own email", () => {
+    expect(getDirectAddTarget(adultMember)).toEqual({
+      email: "ada@test.com",
+      isGuardian: false,
+      error: null,
+    });
+  });
+
+  it("does not need a guardian email: nobody is being asked", () => {
+    expect(getDirectAddTarget(minorMemberNoGuardian).error).toBeNull();
+  });
+
+  it("refuses a member with no email, because a consumer is found by email", () => {
+    expect(getDirectAddTarget({ ...adultMember, email: "  " })).toEqual({
+      email: null,
+      isGuardian: false,
+      error: "No email on file for this member.",
+    });
+  });
+});
+
+describe("registerConsumerToEvent", () => {
+  const api = (responses) => ({
+    post: vi.fn((url) => Promise.resolve(responses[url] ?? { data: { ok: true } })),
+    patch: vi.fn(() => Promise.resolve(responses.patch ?? { data: { ok: true } })),
+  });
+
+  it("creates the consumer when the email is new", async () => {
+    const client = api({ "/auth/user-query": { data: { ok: true, users: [] } } });
+    await expect(
+      registerConsumerToEvent(client, { member: adultMember, event, company })
+    ).resolves.toBe("added");
+    expect(client.post).toHaveBeenCalledWith(
+      "/auth/new",
+      expect.objectContaining({ email: "ada@test.com", event_providers: ["event-123"] })
+    );
+    expect(client.post).toHaveBeenCalledWith(
+      "/db_consumer/new_consumer",
+      expect.objectContaining({ email: "ada@test.com" })
+    );
+  });
+
+  it("adds the event to a consumer that already exists", async () => {
+    const existing = { id: "c-1", eventSelected: ["Old"], event_providers: ["e-0"] };
+    const client = api({ "/auth/user-query": { data: { ok: true, users: [existing] } } });
+    await expect(
+      registerConsumerToEvent(client, { member: adultMember, event, company })
+    ).resolves.toBe("added");
+    expect(client.patch).toHaveBeenCalledWith(
+      "/auth/c-1",
+      expect.objectContaining({ event_providers: ["e-0", "event-123"] })
+    );
+    expect(client.post).not.toHaveBeenCalledWith("/auth/new", expect.anything());
+  });
+
+  it("writes nothing when the consumer is already on the event", async () => {
+    const existing = { id: "c-1", event_providers: [123] };
+    const client = api({ "/auth/user-query": { data: { ok: true, users: [existing] } } });
+    await expect(
+      registerConsumerToEvent(client, {
+        member: adultMember,
+        event: { ...event, id: "123" },
+        company,
+      })
+    ).resolves.toBe("already");
+    expect(client.patch).not.toHaveBeenCalled();
+  });
+
+  it("stops before the SQL insert when the account is refused", async () => {
+    const client = api({
+      "/auth/user-query": { data: { ok: true, users: [] } },
+      "/auth/new": { data: { ok: false, msg: "Email already in use" } },
+    });
+    await expect(
+      registerConsumerToEvent(client, { member: adultMember, event, company })
+    ).rejects.toThrow("Email already in use");
+    expect(client.post).not.toHaveBeenCalledWith("/db_consumer/new_consumer", expect.anything());
+  });
+
+  it("reports a refused update", async () => {
+    const client = api({
+      "/auth/user-query": { data: { ok: true, users: [{ id: "c-1" }] } },
+      patch: { data: { ok: false } },
+    });
+    await expect(
+      registerConsumerToEvent(client, { member: adultMember, event, company })
+    ).rejects.toThrow("The registration was not saved.");
   });
 });

@@ -3,15 +3,12 @@ import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
 import {
-  buildConsumerEventPayloads,
   parseConfirmationParams,
+  registerConsumerToEvent,
 } from "../conditionalPage/utils/eventRegistrationUtils";
 import {
   describeInvitation,
-  isAlreadyInEvent,
   readConfirmationError,
-  readExistingConsumer,
-  writeSucceeded,
 } from "./utils/attendanceConfirmation";
 import "./publicLanding.css";
 
@@ -102,49 +99,14 @@ const AttendanceConfirmationLanding = () => {
       const event = { id: eventId, eventInfoDetail: { eventName } };
       const companyRecord = { id: companyId, name: company };
 
-      const lookup = await devitrakApi.post("/auth/user-query", {
-        email: memberEmail,
-      });
-      const existingConsumer = readExistingConsumer(lookup);
-
-      if (existingConsumer) {
-        if (isAlreadyInEvent(existingConsumer, eventId)) {
-          setStatus("already-confirmed");
-          return;
-        }
-        const { merge } = buildConsumerEventPayloads(
-          member,
-          event,
-          companyRecord,
-          existingConsumer
-        );
-        const merged = await devitrakApi.patch(
-          `/auth/${existingConsumer.id}`,
-          merge
-        );
-        if (!writeSucceeded(merged)) {
-          throw new Error(
-            merged?.data?.msg || "The confirmation was not saved."
-          );
-        }
-        setStatus("confirmed");
-        return;
-      }
-
-      const { auth, db } = buildConsumerEventPayloads(
+      /* The same write "Add directly" makes from the Members page, so the two
+         ways onto an event cannot register people differently. */
+      const outcome = await registerConsumerToEvent(devitrakApi, {
         member,
         event,
-        companyRecord,
-        null
-      );
-      /* Checked, because a refusal here used to be followed by the SQL insert
-         and an "Attendance confirmed" screen. */
-      const created = await devitrakApi.post("/auth/new", auth);
-      if (!writeSucceeded(created)) {
-        throw new Error(created?.data?.msg || "The confirmation was not saved.");
-      }
-      await devitrakApi.post("/db_consumer/new_consumer", db);
-      setStatus("confirmed");
+        company: companyRecord,
+      });
+      setStatus(outcome === "already" ? "already-confirmed" : "confirmed");
     } catch (error) {
       setErrorMessage(readConfirmationError(error));
       setStatus("error");
