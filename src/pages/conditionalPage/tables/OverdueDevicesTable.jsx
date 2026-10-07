@@ -270,7 +270,9 @@ const OverdueDevicesTable = () => {
       key: "actions",
       render: (_, r) => {
         const stopped = areRemindersStopped(r);
-        const showToggle = canToggleReminders && supportsReminderToggle(r);
+        // Shown before the backend ships, but disabled: a row without
+        // reminders_stopped_at comes from a server without the routes.
+        const toggleAvailable = supportsReminderToggle(r);
         const toggling = togglingLease === r.lease_id;
         return (
           <div
@@ -286,7 +288,7 @@ const OverdueDevicesTable = () => {
               title="Send reminder"
               func={() => handleSingleReminder(r)}
             />
-            {showToggle &&
+            {canToggleReminders &&
               (stopped ? (
                 <GrayButtonComponent
                   title="Resume reminders"
@@ -295,15 +297,24 @@ const OverdueDevicesTable = () => {
                   func={() => handleToggleReminders(r)}
                 />
               ) : (
-                <DangerButtonConfirmationComponent
-                  title="Stop reminders"
-                  confirmationTitle="Stop automatic reminders?"
-                  confirmationDescription={stopRemindersConfirmation(r)}
-                  okText="Stop reminders"
-                  loadingState={toggling}
-                  disabled={Boolean(togglingLease)}
-                  func={() => handleToggleReminders(r)}
-                />
+                <span
+                  title={
+                    toggleAvailable
+                      ? undefined
+                      : "Available once the server update is deployed."
+                  }
+                  style={{ display: "inline-flex" }}
+                >
+                  <DangerButtonConfirmationComponent
+                    title="Stop reminders"
+                    confirmationTitle="Stop automatic reminders?"
+                    confirmationDescription={stopRemindersConfirmation(r)}
+                    okText="Stop reminders"
+                    loadingState={toggling}
+                    disabled={!toggleAvailable || Boolean(togglingLease)}
+                    func={() => handleToggleReminders(r)}
+                  />
+                </span>
               ))}
           </div>
         );
