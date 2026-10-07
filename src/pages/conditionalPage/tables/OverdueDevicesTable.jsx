@@ -3,13 +3,27 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, Select, Table, Tag, Input, message } from "antd";
-import { Typography } from "@mui/material";
+import { Typography, useMediaQuery, useTheme } from "@mui/material";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { buildOverdueRowReminder } from "../utils/reminderTemplates";
 import { isMinorMember } from "../utils/ageCalculationUtils";
+import {
+  areRemindersStopped,
+  buildReminderTogglePayload,
+  nextReminderLabel,
+  reminderToggleFailure,
+  resumeLeaseReminders,
+  stopLeaseReminders,
+  stopRemindersConfirmation,
+  supportsReminderToggle,
+  withRemindersStopped,
+} from "../utils/overdueReminders";
 import { registerStaffActivity } from "../../../api/activityLog";
+import { hasPermission, resolveRoleType } from "../../../config/roles";
+import { formatLoanDate } from "../../../components/UX/profile";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
+import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 
 /**
@@ -27,8 +41,13 @@ const OverdueDevicesTable = () => {
   const [bulkStatus, setBulkStatus] = useState("returned");
   const [bulkNote, setBulkNote] = useState("");
   const [working, setWorking] = useState(false);
+  const [togglingLease, setTogglingLease] = useState(null);
+  // Row buttons side by side from md up, one above the other below it (2026-10-07).
+  const theme = useTheme();
+  const stackedActions = useMediaQuery(theme.breakpoints.down("md"));
 
   const companyId = user?.sqlInfo?.company_id;
+  const canToggleReminders = hasPermission("member:update", resolveRoleType(user));
   const overdueQuery = useQuery({
     queryKey: ["overdueLeasesQuery", companyId],
     queryFn: () =>
@@ -75,11 +94,15 @@ const OverdueDevicesTable = () => {
     }
   };
 
+  // A device whose reminders staff stopped is skipped by the bulk send too;
+  // the per-row button still lets someone send one on purpose.
+  const remindableRows = rows.filter((r) => !areRemindersStopped(r));
+
   const handleAllReminders = async () => {
-    if (!rows.length || working) return;
+    if (!remindableRows.length || working) return;
     setWorking(true);
     let sent = 0;
-    for (const row of rows) {
+    for (const row of remindableRows) {
       try {
         await sendReminder(row);
         sent += 1;
@@ -91,8 +114,31 @@ const OverdueDevicesTable = () => {
     notify(
       "success",
       "Reminders sent",
-      `${sent} of ${rows.length} reminder emails sent (guardians CC'd for minors).`,
+      `${sent} of ${remindableRows.length} reminder emails sent (guardians CC'd for minors).`,
     );
+  };
+
+  // The server logs both routes as UPDATE on Lease, so no registerStaffActivity.
+  const handleToggleReminders = async (row) => {
+    if (togglingLease) return;
+    const stop = !areRemindersStopped(row);
+    const payload = buildReminderTogglePayload({ companyId, row });
+    setTogglingLease(row.lease_id);
+    try {
+      await (stop ? stopLeaseReminders(payload) : resumeLeaseReminders(payload));
+      queryClient.setQueryData(["overdueLeasesQuery", companyId], (cached) =>
+        withRemindersStopped(cached, row, stop ? new Date().toISOString() : null)
+      );
+      message.success(stop ? "Reminders stopped for this device." : "Reminders resumed.");
+    } catch (error) {
+      const failure = reminderToggleFailure(error);
+      if (failure.refresh) {
+        queryClient.invalidateQueries({ queryKey: ["overdueLeasesQuery"] });
+      }
+      message.error(failure.message);
+    } finally {
+      setTogglingLease(null);
+    }
   };
 
   const handleBulkReturn = async () => {
@@ -203,14 +249,65 @@ const OverdueDevicesTable = () => {
         ),
     },
     {
+      title: "Reminders",
+      key: "reminders",
+      render: (_, r) =>
+        areRemindersStopped(r) ? (
+          <Tag color="default">
+            Stopped {formatLoanDate(r.reminders_stopped_at) || ""}
+          </Tag>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Tag color="green" style={{ width: "fit-content" }}>Active</Tag>
+            <Typography style={{ fontSize: 12, color: "var(--gray-600, #5d615a)" }}>
+              Next: {nextReminderLabel(r)}
+            </Typography>
+          </div>
+        ),
+    },
+    {
       title: "",
       key: "actions",
-      render: (_, r) => (
-        <GrayButtonComponent
-          title="Send reminder"
-          func={() => handleSingleReminder(r)}
-        />
-      ),
+      render: (_, r) => {
+        const stopped = areRemindersStopped(r);
+        const showToggle = canToggleReminders && supportsReminderToggle(r);
+        const toggling = togglingLease === r.lease_id;
+        return (
+          <div
+            data-overdue-row-actions
+            style={{
+              display: "flex",
+              flexDirection: stackedActions ? "column" : "row",
+              alignItems: stackedActions ? "stretch" : "center",
+              gap: 8,
+            }}
+          >
+            <GrayButtonComponent
+              title="Send reminder"
+              func={() => handleSingleReminder(r)}
+            />
+            {showToggle &&
+              (stopped ? (
+                <GrayButtonComponent
+                  title="Resume reminders"
+                  loadingState={toggling}
+                  disabled={Boolean(togglingLease)}
+                  func={() => handleToggleReminders(r)}
+                />
+              ) : (
+                <DangerButtonConfirmationComponent
+                  title="Stop reminders"
+                  confirmationTitle="Stop automatic reminders?"
+                  confirmationDescription={stopRemindersConfirmation(r)}
+                  okText="Stop reminders"
+                  loadingState={toggling}
+                  disabled={Boolean(togglingLease)}
+                  func={() => handleToggleReminders(r)}
+                />
+              ))}
+          </div>
+        );
+      },
     },
   ];
 
@@ -236,8 +333,8 @@ const OverdueDevicesTable = () => {
           options={grades.map((g) => ({ label: `Grade ${g}`, value: g }))}
         />
         <GrayButtonComponent
-          title={`Send all reminders (${rows.length})`}
-          disabled={!rows.length || working}
+          title={`Send all reminders (${remindableRows.length})`}
+          disabled={!remindableRows.length || working}
           func={handleAllReminders}
         />
         <BlueButtonComponent

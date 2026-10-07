@@ -1168,6 +1168,15 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
   `jobId` y `contact_skipped` a la vez**. Falta implementar el seguimiento del
   job; hoy damos por terminado cualquier `ok: true`.
 
+- **Detener / reanudar recordatorios de vencido por dispositivo**
+  (`FRONTEND_overdue_reminders_2026-10-07.md`, backend `9d61857`): **cliente
+  hecho 2026-10-07.** `utils/overdueReminders.js` (con tests) y la tabla de
+  Overdue devices: columna Reminders (Active + próximo envío / Stopped + fecha),
+  Stop con confirmación y Resume, solo con `member:update`. El botón aparece
+  cuando la fila trae `reminders_stopped_at`, así que se enciende solo al
+  desplegar. "Send all reminders" ya no incluye los detenidos. **Sin ver en el
+  navegador.**
+
 ### Lo que queda por hacer cuando desplieguen
 
 - **Quitar nuestras 13 llamadas a `registerStaffActivity`.** El middleware
