@@ -1,39 +1,35 @@
 import { useMemo } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { checkArray } from "../../../components/utils/checkArray";
-import { StatusChip } from "../../../components/UX/profile";
-import { formatLoanDate } from "../../../components/UX/profile";
 import BaseTable from "../../../components/UX/tables/BaseTable";
 import EmptyState from "../../../components/UX/emptyState/EmptyState";
-import { staffLeaseCounts, staffLeaseRows } from "../utils/staffLeaseTable";
+import { staffLeaseRows } from "../utils/staffLeaseTable";
 
 /**
- * The devices staff are holding, and which ones are late.
+ * The devices staff are holding.
  *
  * The staff page had one view, its table of people. Members has had a tabbed
  * navigator for a while — all / overdue / readiness — and this is the same
  * idea asked for here (2026-10-06): see the people, but also what they are
  * holding.
  *
- * Lateness is decided by the server (`POST /api/db_lease/status`), not by this
- * browser's clock. `only_overdue` narrows the rows server-side; the inventory
- * lookup is what turns a device id into a serial somebody recognises.
+ * No due date, no status, no overdue (2026-10-07): staff keep a device until
+ * they leave or it has to change, so lateness here would be noise. The
+ * inventory lookup is what turns a device id into a serial somebody recognises.
  */
-const StaffAssignedDevicesTable = ({ onlyOverdue = false }) => {
+const StaffAssignedDevicesTable = () => {
   const { user } = useSelector((state) => state.admin);
   const companyId = user?.sqlInfo?.company_id;
 
   const leasesQuery = useQuery({
-    queryKey: ["staffLeaseStatus", companyId, onlyOverdue],
+    queryKey: ["staffLeaseStatus", companyId],
     queryFn: () =>
       devitrakApi.post("/db_lease/status", {
         company_id: companyId,
         lessee_type: "staff",
-        only_overdue: onlyOverdue,
       }),
     enabled: !!companyId,
   });
@@ -122,7 +118,6 @@ const StaffAssignedDevicesTable = ({ onlyOverdue = false }) => {
     () => staffLeaseRows(leases, { itemsById, staffById }),
     [leases, itemsById, staffById]
   );
-  const counts = staffLeaseCounts(rows);
 
   const columns = [
     {
@@ -152,29 +147,13 @@ const StaffAssignedDevicesTable = ({ onlyOverdue = false }) => {
         </span>
       ),
     },
-    {
-      title: "Due back",
-      dataIndex: "dueDate",
-      key: "due",
-      responsive: ["md"],
-      render: (date) => (date ? formatLoanDate(date) : "No date set"),
-    },
-    {
-      title: "Status",
-      key: "status",
-      render: (_, row) => <StatusChip tone={row.statusTone} pip label={row.statusLabel} />,
-    },
   ];
 
   if (!leasesQuery.isLoading && rows.length === 0) {
     return (
       <EmptyState
-        title={onlyOverdue ? "Nothing is overdue" : "No devices are out with staff"}
-        description={
-          onlyOverdue
-            ? "Every device a staff member is holding is still within its return date."
-            : "Devices handed to a staff member show up here until they come back."
-        }
+        title="No devices are out with staff"
+        description="Devices handed to a staff member show up here until they come back."
       />
     );
   }
@@ -188,8 +167,7 @@ const StaffAssignedDevicesTable = ({ onlyOverdue = false }) => {
           color: "var(--gray-600, #5d615a)",
         }}
       >
-        {counts.total} {counts.total === 1 ? "device" : "devices"} out
-        {counts.overdue > 0 ? ` · ${counts.overdue} overdue` : ""}
+        {rows.length} {rows.length === 1 ? "device" : "devices"} out
       </p>
       <BaseTable
         className="profile-table"
@@ -203,10 +181,6 @@ const StaffAssignedDevicesTable = ({ onlyOverdue = false }) => {
       />
     </>
   );
-};
-
-StaffAssignedDevicesTable.propTypes = {
-  onlyOverdue: PropTypes.bool,
 };
 
 export default StaffAssignedDevicesTable;

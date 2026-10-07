@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { staffLeaseRows, staffLeaseCounts } from "./staffLeaseTable";
+import { staffLeaseRows } from "./staffLeaseTable";
 
 /**
- * "Qué equipos tiene el staff, y cuáles van tarde", pedido el 2026-10-06 con
- * el mismo navegador por pestañas que ya tiene la página de members.
- *
- * Sale de `POST /api/db_lease/status` (`FRONTEND_server_updates_2026-07.md`
- * §4), que clasifica el vencimiento en el servidor: `overdue` ya viene
- * decidido y no se recalcula aquí con otro reloj.
+ * "Qué equipos tiene el staff", pedido el 2026-10-06 con el mismo navegador
+ * por pestañas que ya tiene la página de members. Sale de
+ * `POST /api/db_lease/status` (`FRONTEND_server_updates_2026-07.md` §4).
  *
  * El contrato documenta `device_id` y `lessee_id` y deja el resto abierto
  * ("…"), así que el nombre del equipo se busca en el inventario de la
@@ -71,23 +68,38 @@ describe("staffLeaseRows", () => {
     expect(staffLeaseRows([lease()], { itemsById })[0].holderName).toBe("Staff 207");
   });
 
-  /* El vencimiento lo decide el servidor: recalcularlo aquí con el reloj del
-     navegador daría dos respuestas distintas para la misma fila. */
-  it("respeta la clasificación del servidor en vez de recalcularla", () => {
-    expect(staffLeaseRows([lease()], { itemsById })[0]).toMatchObject({
-      overdue: true,
-      statusLabel: "Overdue",
-      statusTone: "critical",
-    });
-    expect(
-      staffLeaseRows([lease({ overdue: false, status: "outstanding" })], { itemsById })[0]
-    ).toMatchObject({ overdue: false, statusLabel: "Out", statusTone: "warning" });
+  /* 2026-10-07: a staff member keeps a device until they leave or it has to
+     change — there is no return date to miss. "Overdue" and a status column
+     said more about a date nobody set than about the device. */
+  it("no habla de vencimientos ni de fechas de devolución", () => {
+    const [row] = staffLeaseRows([lease()], { itemsById });
+    expect(row).not.toHaveProperty("overdue");
+    expect(row).not.toHaveProperty("dueDate");
+    expect(row).not.toHaveProperty("statusLabel");
   });
 
-  it("deja ver un estado que no conoce, en vez de esconderlo", () => {
-    expect(staffLeaseRows([lease({ status: "damaged" })], { itemsById })[0].statusLabel).toBe(
-      "Damaged"
+  /* Sin la columna Status, una fila devuelta parecería seguir en manos del
+     staff: el endpoint sirve también returned, lost y damaged. */
+  it("solo lleva lo que el staff tiene ahora", () => {
+    const rows = staffLeaseRows(
+      [
+        lease(),
+        lease({ lease_key: "staff-2", overdue: false, status: "outstanding" }),
+        lease({ lease_key: "staff-3", outstanding: 0, status: "returned" }),
+        lease({ lease_key: "staff-4", outstanding: 0, status: "lost" }),
+        lease({ lease_key: "staff-5", outstanding: 0, status: "damaged" }),
+      ],
+      { itemsById }
     );
+    expect(rows.map((row) => row.key)).toEqual(["staff-41", "staff-2"]);
+  });
+
+  it("aguanta una fila sin outstanding, guiándose por su estado", () => {
+    const open = lease({ status: "outstanding" });
+    delete open.outstanding;
+    const closed = lease({ lease_key: "staff-9", status: "returned" });
+    delete closed.outstanding;
+    expect(staffLeaseRows([open, closed], { itemsById })).toHaveLength(1);
   });
 
   it("solo lleva préstamos de staff, aunque el endpoint sirva de todo", () => {
@@ -101,20 +113,5 @@ describe("staffLeaseRows", () => {
     expect(staffLeaseRows([lease()], { itemsById })[0].key).toBe("staff-41");
     expect(staffLeaseRows(undefined, {})).toEqual([]);
     expect(staffLeaseRows([], {})).toEqual([]);
-  });
-});
-
-describe("staffLeaseCounts", () => {
-  it("cuenta lo que hay fuera y lo que va tarde", () => {
-    const rows = staffLeaseRows(
-      [lease(), lease({ lease_key: "staff-42", overdue: false, status: "outstanding" })],
-      { itemsById }
-    );
-    expect(staffLeaseCounts(rows)).toEqual({ total: 2, overdue: 1 });
-  });
-
-  it("no inventa números sin filas", () => {
-    expect(staffLeaseCounts([])).toEqual({ total: 0, overdue: 0 });
-    expect(staffLeaseCounts(undefined)).toEqual({ total: 0, overdue: 0 });
   });
 });

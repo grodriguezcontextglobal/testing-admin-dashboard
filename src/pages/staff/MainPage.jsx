@@ -64,14 +64,14 @@ const MainPage = () => {
         />
         <StaffKpiSection />
         {/* The same navigator the members page has: the table is no longer
-            the only thing here, because what the staff are holding — and what
-            is late — is read as often as the roster (asked 2026-10-06). */}
+            the only thing here, because what the staff are holding is read as
+            often as the roster (asked 2026-10-06). No Overdue tab: staff keep
+            devices with no return date (2026-10-07). */}
         <Grid item xs={12} sm={12} md={12} lg={12}>
           <div role="tablist" className="staff-view-tabs">
             {[
               { key: "staff", label: "Staff" },
               { key: "devices", label: "Assigned devices" },
-              { key: "overdue", label: "Overdue" },
             ].map((view) => (
               <button
                 key={view.key}
@@ -118,7 +118,7 @@ const MainPage = () => {
               modalState={modalState}
             />
           ) : (
-            <StaffAssignedDevicesTable onlyOverdue={activeView === "overdue"} />
+            <StaffAssignedDevicesTable />
           )}
         </Grid>
       </Grid>
