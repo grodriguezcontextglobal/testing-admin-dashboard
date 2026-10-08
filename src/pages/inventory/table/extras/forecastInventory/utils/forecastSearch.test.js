@@ -6,6 +6,7 @@ import {
   countFilters,
   describeFilters,
   emptyFilters,
+  forecastContextFromFacets,
   formatSearchDate,
   readCachedOptions,
   readSearchError,
@@ -277,5 +278,38 @@ describe("readSearchError", () => {
     expect(readSearchError({})).toBe(
       "The forecast could not be run. Nothing was changed — try again."
     );
+  });
+});
+
+/* With the inventory paginated on the server, the page holds no full dataset,
+   and the forecast options built from it came out empty. They come from the
+   facets now, which are the company’s distinct values. */
+describe("forecastContextFromFacets", () => {
+  const facets = {
+    category_name: [{ value: "Radios", count: 12 }, { value: "Headsets", count: 3 }],
+    item_group: [{ value: "Motorola", count: 12 }],
+    brand: [{ value: "Moto", count: 12 }, { value: "", count: 1 }],
+    location: [{ value: "Warehouse / Shelf A", count: 15 }],
+    status: [{ value: "Operational", count: 15 }],
+  };
+
+  it("gives the modal its four lists, from the facets", () => {
+    const options = resolveFilterOptions({
+      context: forecastContextFromFacets(facets),
+      cached: null,
+    });
+    expect(options.category.map((o) => o.label)).toEqual(["Radios", "Headsets"]);
+    expect(options.group.map((o) => o.label)).toEqual(["Motorola"]);
+    expect(options.brand.map((o) => o.label)).toEqual(["Moto"]);
+    expect(options.location.map((o) => o.label)).toEqual(["Warehouse / Shelf A"]);
+  });
+
+  it("returns empty lists while the facets are still loading", () => {
+    expect(forecastContextFromFacets(undefined)).toEqual({
+      category: [],
+      group: [],
+      brand: [],
+      location: [],
+    });
   });
 });

@@ -57,6 +57,34 @@ export const resolveFilterOptions = ({ context, cached }) => {
   return anyOptions(fallback) ? fallback : live;
 };
 
+/* inventory-facets key for each forecast filter. */
+const FACET_FOR_FIELD = {
+  category: "category_name",
+  group: "item_group",
+  brand: "brand",
+  location: "location",
+};
+
+/**
+ * The modal's context, out of the inventory-facets block.
+ *
+ * With the inventory paginated on the server the page holds one page of rows,
+ * and the full dataset the options used to be counted from is empty — so the
+ * forecast opened with four empty dropdowns. The facets are the company's
+ * distinct values, which is what the options always meant.
+ */
+export const forecastContextFromFacets = (facets) => {
+  const source = facets && typeof facets === "object" ? facets : {};
+  return Object.fromEntries(
+    Object.entries(FACET_FOR_FIELD).map(([field, facetKey]) => [
+      field,
+      (Array.isArray(source[facetKey]) ? source[facetKey] : [])
+        .filter((entry) => text(entry?.value).length > 0)
+        .map((entry) => ({ key: entry.value, value: entry.count })),
+    ])
+  );
+};
+
 /** Read the fallback blob, tolerating anything that is not JSON. */
 export const readCachedOptions = (storage) => {
   try {

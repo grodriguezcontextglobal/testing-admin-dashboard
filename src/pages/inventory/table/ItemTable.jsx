@@ -512,6 +512,11 @@ const ItemTable = ({
                 setOpenDetails={setOpenDetails}
                 allowedLocations={allowedLocations}
                 setOpenCreateLocationModal={setOpenCreateLocationModal}
+                forecastFacets={
+                  FEATURE_INVENTORY_SERVER_PAGINATION
+                    ? facetOptionsQuery.facets
+                    : null
+                }
               />
             </Grid>
             <Grid

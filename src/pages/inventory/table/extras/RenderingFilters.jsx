@@ -32,6 +32,7 @@ import RenderingMoreThanTreeviewElements from "../../utils/RenderingMoreThanTree
 import SkeletonInventoryCards from "../../utils/SkeletonInventoryCards";
 import StaffMemberWrapper from "../../utils/StaffMemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
+import { forecastContextFromFacets } from "./forecastInventory/utils/forecastSearch";
 import { SearchItemContext } from "../../MainPage";
 export const AdvanceSearchContext = createContext();
 
@@ -119,6 +120,7 @@ const RenderingFilters = ({
   allowedLocations,
   // setFiltering,
   setOpenCreateLocationModal,
+  forecastFacets = null,
 }) => {
   const searchItemContext = useContext(SearchItemContext);
   const contextSetOpenAdvanceSearchModal = searchItemContext?.setOpenAdvanceSearchModal;
@@ -1421,24 +1423,30 @@ const RenderingFilters = ({
 
       {openAdvanceSearchModal && (
         <AdvanceSearchContext.Provider
-          value={{
-            location: displayTotalDevicesAndTotalAvailablePerLocation({
-              props: "location",
-              data: dataToDisplay,
-            }),
-            category: sortingByParameters({
-              props: "category_name",
-              data: dataToDisplay,
-            }),
-            group: sortingByParameters({
-              props: "item_group",
-              data: dataToDisplay,
-            }),
-            brand: sortingByParameters({
-              props: "brand",
-              data: dataToDisplay,
-            }),
-          }}
+          value={
+            /* Server pagination leaves dataToDisplay empty, so the options
+               come from the company-wide facets instead. */
+            forecastFacets
+              ? forecastContextFromFacets(forecastFacets)
+              : {
+                  location: displayTotalDevicesAndTotalAvailablePerLocation({
+                    props: "location",
+                    data: dataToDisplay,
+                  }),
+                  category: sortingByParameters({
+                    props: "category_name",
+                    data: dataToDisplay,
+                  }),
+                  group: sortingByParameters({
+                    props: "item_group",
+                    data: dataToDisplay,
+                  }),
+                  brand: sortingByParameters({
+                    props: "brand",
+                    data: dataToDisplay,
+                  }),
+                }
+          }
         >
           <AdvanceSearchModal
             openAdvanceSearchModal={openAdvanceSearchModal}
@@ -1454,6 +1462,7 @@ export default RenderingFilters;
 RenderingFilters.propType = {
   user: PropTypes.object,
   dataToDisplay: PropTypes.array,
+  forecastFacets: PropTypes.object,
 };
 
 const extractStaffToken = (raw) => {
