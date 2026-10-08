@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  INVITATION_RESPONSE_PATH,
+  buildInvitationResponse,
   describeInvitation,
+  recordInvitationResponse,
   isAlreadyInEvent,
   readConfirmationError,
   readExistingConsumer,
@@ -144,5 +147,75 @@ describe("readConfirmationError", () => {
   it("falls back to the thrown error, then to a sentence of its own", () => {
     expect(readConfirmationError(new Error("Network Error"))).toBe("Network Error");
     expect(readConfirmationError({})).toBe("Something went wrong. Please try again.");
+  });
+});
+
+/* 2026-09-29 `48:52`: "you need to log everything, like when the parent
+   clicked". The page is public, so the response is sent to its own route and
+   the server stamps the time; the client time rides along only for context. */
+describe("buildInvitationResponse", () => {
+  const now = new Date("2026-10-08T14:00:00.000Z");
+  const link = {
+    memberEmail: "timmy@x.com",
+    memberId: "42",
+    eventId: "evt-1",
+    eventName: "Science Fair",
+    companyId: "co-1",
+  };
+
+  it("names the guardian as the one responding for a minor", () => {
+    expect(
+      buildInvitationResponse(
+        { ...link, minor: true, guardianEmail: "mum@x.com" },
+        "confirmed",
+        { now }
+      )
+    ).toEqual({
+      company_id: "co-1",
+      event_id: "evt-1",
+      event_name: "Science Fair",
+      member_id: "42",
+      member_email: "timmy@x.com",
+      responder_email: "mum@x.com",
+      responder_role: "guardian",
+      response: "confirmed",
+      client_time: "2026-10-08T14:00:00.000Z",
+    });
+  });
+
+  it("names the member for an adult, and carries why a confirmation failed", () => {
+    const payload = buildInvitationResponse({ ...link, minor: false }, "failed", {
+      now,
+      reason: "Email already in use.",
+    });
+    expect(payload.responder_role).toBe("member");
+    expect(payload.responder_email).toBe("timmy@x.com");
+    expect(payload.reason).toBe("Email already in use.");
+  });
+
+  it("sends no member id for a link written before it carried one", () => {
+    const { memberId: _unused, ...oldLink } = link;
+    expect(_unused).toBe("42");
+    expect(buildInvitationResponse(oldLink, "opened", { now }).member_id).toBeNull();
+  });
+});
+
+describe("recordInvitationResponse", () => {
+  it("posts the response to its own route", async () => {
+    const api = { post: vi.fn(() => Promise.resolve({ data: { ok: true } })) };
+    expect(await recordInvitationResponse(api, { response: "opened" })).toBe(true);
+    expect(api.post).toHaveBeenCalledWith(INVITATION_RESPONSE_PATH, { response: "opened" });
+  });
+
+  it("never throws: recording the click must not stop the confirmation", async () => {
+    // A server without the route answers 404.
+    const notDeployed = { post: vi.fn(() => Promise.reject({ response: { status: 404 } })) };
+    expect(await recordInvitationResponse(notDeployed, {})).toBe(false);
+    const broken = {
+      post: () => {
+        throw new Error("boom");
+      },
+    };
+    expect(await recordInvitationResponse(broken, {})).toBe(false);
   });
 });

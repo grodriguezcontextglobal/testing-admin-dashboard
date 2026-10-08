@@ -29,13 +29,19 @@ const staffFullName = (staff) =>
  */
 export const mapLogToListItem = (log) => ({
   id: log?.id,
-  staffName: staffFullName(log?.staff_member_id),
+  /* A guardian answering an invitation is not staff: the row names them by
+     what they are, rather than as "Unknown staff". */
+  staffName: invitationResponder(log)?.name ?? staffFullName(log?.staff_member_id),
   /* The populated staff record is the source; `details.email` is the fallback,
      since the register endpoint stamps it on the login rows and it is the same
      person either way. */
   staffEmail:
-    String(log?.staff_member_id?.email ?? log?.details?.email ?? "").trim() ||
-    null,
+    String(
+      invitationResponder(log)?.email ??
+        log?.staff_member_id?.email ??
+        log?.details?.email ??
+        ""
+    ).trim() || null,
   actionTaken: [log?.action, log?.target_model].filter(Boolean).join(" "),
   time: log?.timestamp,
 
@@ -260,8 +266,13 @@ export const logHighlights = (log) => {
   const recipients = listed(context.recipients);
   const fullName = [details.first_name, details.last_name].filter(Boolean).join(" ").trim();
 
+  /* The response route is public, so the server has no event context to add;
+     the page sends the name itself. */
+  const eventName =
+    context.event_name ?? (isInvitationResponse(log) ? requestOf(log).event_name : null);
+
   return [
-    context.event_name,
+    eventName,
     serials,
     recipients ? `to ${recipients}` : null,
     details.outcome,
@@ -336,8 +347,50 @@ const handedOrReturned = (out, back) => (request) => {
   return null;
 };
 
+/* The public attendance page records each step a guardian or attendee takes
+   (AttendanceConfirmationLanding.jsx). Nobody is signed in there, so the row
+   carries no staff record and the request says who answered. */
+const INVITATION_RESPONSE_ROUTE = "/api/school/event-invitations/response";
+
+const isInvitationResponse = (log) => routePath(log) === INVITATION_RESPONSE_ROUTE;
+
+const INVITATION_HEADLINES = {
+  opened: "Opened an event invitation",
+  already_confirmed: "Opened an invitation already confirmed",
+  failed: "Tried to confirm attendance, and it failed",
+};
+
+const invitationResponder = (log) => {
+  if (!isInvitationResponse(log)) return null;
+  const request = requestOf(log);
+  return {
+    name: RESPONDER_LABELS[request?.responder_role] ?? "Invitation link",
+    email: request?.responder_email ?? null,
+  };
+};
+
+const invitationHeadline = (request) => {
+  if (request?.response === "confirmed") {
+    return request?.responder_role === "guardian"
+      ? "Confirmed their child's attendance"
+      : "Confirmed attendance";
+  }
+  return INVITATION_HEADLINES[request?.response] ?? null;
+};
+
+const RESPONDER_LABELS = { guardian: "Parent / guardian", member: "Attendee" };
+
+/* The invitation email links to the confirmation page; the same route also
+   carries any other custom message, which keeps the generic headline. */
+const invitationEmail = (request) =>
+  String(request?.message ?? "").includes("/attendance-confirmation")
+    ? "Emailed an event invitation"
+    : null;
+
 /* The headline for the routes whose meaning the CRUD pair loses. */
 const HEADLINES = {
+  [INVITATION_RESPONSE_ROUTE]: invitationHeadline,
+  "/api/nodemailer/customize-message-notification": invitationEmail,
   "/api/receiver/receivers-pool-update/:id": handedOrReturned(
     "Handed out a device",
     "Returned a device"
@@ -380,6 +433,13 @@ const readableRole = (value) => String(value ?? "").replace(/_/g, " ").trim();
 export const explainLogChange = (log) => {
   const request = requestOf(log);
   const path = routePath(log);
+
+  if (isInvitationResponse(log)) {
+    const reason = String(request?.reason ?? "").trim();
+    return request?.response === "failed" && reason
+      ? `The confirmation was not saved: ${reason}`
+      : null;
+  }
 
   const movement = handedOrReturned(
     "The device went out with a consumer.",

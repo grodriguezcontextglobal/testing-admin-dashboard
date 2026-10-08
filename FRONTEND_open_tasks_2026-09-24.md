@@ -842,7 +842,20 @@ pública al confirmar: `registerConsumerToEvent`, compartida y con tests, que
 ahora usan las dos. No pide email del tutor, pero sí el del miembro, porque el
 consumidor se busca por email. **Sin ver en el navegador.**
 
-**[17] Queda abierto:** registrar cada respuesta del tutor con su hora.
+**[17] Registrar cada respuesta del tutor — cliente hecho 2026-10-08, falta
+backend.** La página pública registra cada paso en
+`POST /api/school/event-invitations/response`:
+- abrir el enlace (una vez por visita);
+- confirmar;
+- pulsar ya confirmado;
+- fallar, con el motivo.
+
+Dice quién respondió (el tutor si es menor) y el `member_id`, que ahora va en
+el enlace. Nunca bloquea la confirmación: hasta que exista la ruta, el 404 se
+ignora. Staff activity ya pinta esas filas con el tutor como autor. El envío de
+la invitación sale como "Emailed an event invitation". Pedido al servidor en
+`FRONTEND_event_invitation_responses_2026-10-08.md`, con la nota de que el
+enlace no va firmado. **Sin ver en el navegador.**
 
 ### ~~2b.10 — Devolver un dispositivo encontrado desde Edit [21]~~ — hecho 2026-10-06
 

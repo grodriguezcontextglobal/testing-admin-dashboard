@@ -105,6 +105,16 @@ describe("buildConfirmationLink", () => {
     expect(url.searchParams.get("guardianEmail")).toBe("guardian@test.com");
   });
 
+  it("carries the member id, so each response can be filed under the student", () => {
+    const link = buildConfirmationLink(
+      "https://app.devitrak.net",
+      { ...adultMember, member_id: 42 },
+      event,
+      company,
+    );
+    expect(new URL(link).searchParams.get("memberId")).toBe("42");
+  });
+
   it("leaves guardianEmail empty for adults", () => {
     const link = buildConfirmationLink("https://app.devitrak.net", adultMember, event, company);
     const url = new URL(link);
@@ -147,6 +157,7 @@ describe("parseConfirmationParams", () => {
       companyId: "company-abc",
       minor: true,
       guardianEmail: "guardian@test.com",
+      memberId: "",
     });
   });
 

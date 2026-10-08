@@ -80,6 +80,8 @@ export const buildConfirmationLink = (origin, member = {}, event = {}, company =
     companyId: company?.id ?? "",
     minor: minor ? "true" : "false",
     guardianEmail: minor ? (member.parent_guardian_email ?? "") : "",
+    // Files each recorded response under the student (activity log member_id).
+    memberId: member.member_id ?? "",
   });
   const base = `${origin ?? ""}`.replace(/\/$/, "");
   return `${base}${ATTENDANCE_CONFIRMATION_PATH}?${params.toString()}`;
@@ -117,6 +119,8 @@ export const parseConfirmationParams = (searchParams) => {
     companyId: `${get("companyId")}`,
     minor: get("minor") === "true",
     guardianEmail: `${get("guardianEmail")}`,
+    // Optional: links sent before 2026-10-08 do not carry it.
+    memberId: `${get("memberId")}`,
   };
   const missing = REQUIRED_CONFIRMATION_PARAMS.filter((key) => !result[key]);
   if (missing.length) {

@@ -630,6 +630,78 @@ describe("describeLogAction — la ruta dice más que el par CRUD", () => {
   });
 });
 
+/* The public attendance page records each response with no staff behind it. */
+describe("invitation responses", () => {
+  const response = (request) =>
+    routed("POST /api/school/event-invitations/response", request, {
+      action: "CREATE",
+      target_model: "EventInvitation",
+      staff_member_id: null,
+    });
+  const guardian = {
+    responder_role: "guardian",
+    responder_email: "mum@x.com",
+    event_name: "Science Fair",
+  };
+
+  it("says what the guardian did", () => {
+    expect(describeLogAction(response({ ...guardian, response: "opened" }))).toBe(
+      "Opened an event invitation"
+    );
+    expect(describeLogAction(response({ ...guardian, response: "confirmed" }))).toBe(
+      "Confirmed their child's attendance"
+    );
+    expect(
+      describeLogAction(response({ ...guardian, response: "already_confirmed" }))
+    ).toBe("Opened an invitation already confirmed");
+    expect(describeLogAction(response({ ...guardian, response: "failed" }))).toBe(
+      "Tried to confirm attendance, and it failed"
+    );
+  });
+
+  it("says an adult confirmed for themselves", () => {
+    expect(
+      describeLogAction(
+        response({ responder_role: "member", responder_email: "ada@x.com", response: "confirmed" })
+      )
+    ).toBe("Confirmed attendance");
+  });
+
+  it("names who answered instead of an unknown staff member", () => {
+    const item = mapLogToListItem(response({ ...guardian, response: "confirmed" }));
+    expect(item.staffName).toBe("Parent / guardian");
+    expect(item.staffEmail).toBe("mum@x.com");
+    expect(item.highlights).toContain("Science Fair");
+  });
+
+  it("says why a confirmation failed", () => {
+    const item = mapLogToListItem(
+      response({ ...guardian, response: "failed", reason: "Email already in use." })
+    );
+    expect(item.explanation).toBe("The confirmation was not saved: Email already in use.");
+  });
+
+  it("names the invitation email the staff member sent", () => {
+    expect(
+      describeLogAction(
+        routed(
+          "POST /api/nodemailer/customize-message-notification",
+          { message: "<a href='https://app.devitrak.net/attendance-confirmation?x=1'>Confirm</a>" },
+          { action: "SEND", target_model: "Email" }
+        )
+      )
+    ).toBe("Emailed an event invitation");
+    expect(
+      describeLogAction(
+        routed("POST /api/nodemailer/customize-message-notification", { message: "Hello" }, {
+          action: "SEND",
+          target_model: "Email",
+        })
+      )
+    ).toBe("Sent an email");
+  });
+});
+
 describe("explainLogChange(log)", () => {
   it("traduce el cambio a una frase, sin nombrar campos del servidor", () => {
     const sentence = explainLogChange(

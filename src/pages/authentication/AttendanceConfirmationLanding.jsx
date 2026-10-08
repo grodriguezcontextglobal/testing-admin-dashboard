@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { devitrakApi } from "../../api/devitrakApi";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
@@ -7,8 +7,11 @@ import {
   registerConsumerToEvent,
 } from "../conditionalPage/utils/eventRegistrationUtils";
 import {
+  INVITATION_RESPONSES,
+  buildInvitationResponse,
   describeInvitation,
   readConfirmationError,
+  recordInvitationResponse,
 } from "./utils/attendanceConfirmation";
 import "./publicLanding.css";
 
@@ -52,6 +55,24 @@ const AttendanceConfirmationLanding = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const invitation = useMemo(() => describeInvitation(parsed), [parsed]);
+
+  /* 2026-09-29 `48:52`: every step the guardian takes is recorded, opening
+     the link included. Fire-and-forget: recording never holds up the page. */
+  const record = (response, options) => {
+    void recordInvitationResponse(
+      devitrakApi,
+      buildInvitationResponse(parsed, response, options)
+    );
+  };
+
+  // Once per visit, not once per render (StrictMode mounts effects twice).
+  const openedRecorded = useRef(false);
+  useEffect(() => {
+    if (parsed.error || openedRecorded.current) return;
+    openedRecorded.current = true;
+    record(INVITATION_RESPONSES.OPENED);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parsed]);
 
   const shell = (children) => (
     <div className="public-landing">
@@ -106,9 +127,15 @@ const AttendanceConfirmationLanding = () => {
         event,
         company: companyRecord,
       });
-      setStatus(outcome === "already" ? "already-confirmed" : "confirmed");
+      const already = outcome === "already";
+      record(
+        already ? INVITATION_RESPONSES.ALREADY_CONFIRMED : INVITATION_RESPONSES.CONFIRMED
+      );
+      setStatus(already ? "already-confirmed" : "confirmed");
     } catch (error) {
-      setErrorMessage(readConfirmationError(error));
+      const reason = readConfirmationError(error);
+      record(INVITATION_RESPONSES.FAILED, { reason });
+      setErrorMessage(reason);
       setStatus("error");
     }
   };

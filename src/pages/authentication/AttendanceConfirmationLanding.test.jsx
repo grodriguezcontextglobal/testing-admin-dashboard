@@ -172,6 +172,97 @@ describe("AttendanceConfirmationLanding", () => {
     expect(screen.getByText("Try again")).toBeInTheDocument();
   });
 
+  /* 2026-09-29 `48:52`: "you need to log everything, like when the parent
+     clicked". Each response goes to its own route, one post per step. */
+  describe("records every response", () => {
+    const RESPONSE_PATH = "/school/event-invitations/response";
+    const responses = () =>
+      post.mock.calls
+        .filter(([url]) => url === RESPONSE_PATH)
+        .map(([, body]) => body.response);
+
+    it("records that the guardian opened the link, once", async () => {
+      withParams({ minor: "true", guardianEmail: "mum@x.com" });
+      const { rerender } = render(<AttendanceConfirmationLanding />);
+      rerender(<AttendanceConfirmationLanding />);
+
+      await waitFor(() => expect(responses()).toEqual(["opened"]));
+      const body = post.mock.calls.find(([url]) => url === RESPONSE_PATH)[1];
+      expect(body).toMatchObject({
+        responder_email: "mum@x.com",
+        responder_role: "guardian",
+        event_id: "evt-1",
+        member_email: "ada@school.org",
+      });
+    });
+
+    it("records nothing for a link it cannot read", () => {
+      withParams({ eventId: "" });
+      render(<AttendanceConfirmationLanding />);
+      expect(responses()).toEqual([]);
+    });
+
+    it("records the confirmation", async () => {
+      post.mockImplementation((url) => {
+        if (url === "/auth/user-query") return Promise.resolve(noConsumer);
+        if (url === "/auth/new") return Promise.resolve({ data: { id: "usr-1" } });
+        return Promise.resolve({ data: { ok: true } });
+      });
+      render(<AttendanceConfirmationLanding />);
+      fireEvent.click(screen.getByText("Confirm attendance"));
+
+      await waitFor(() => expect(responses()).toEqual(["opened", "confirmed"]));
+    });
+
+    it("records a second click on a confirmed invitation", async () => {
+      post.mockImplementation((url) => {
+        if (url === "/auth/user-query") {
+          return Promise.resolve({
+            data: { ok: true, users: [{ id: "usr-1", event_providers: ["evt-1"] }] },
+          });
+        }
+        return Promise.resolve({ data: { ok: true } });
+      });
+      render(<AttendanceConfirmationLanding />);
+      fireEvent.click(screen.getByText("Confirm attendance"));
+
+      await waitFor(() =>
+        expect(responses()).toEqual(["opened", "already_confirmed"])
+      );
+    });
+
+    it("records a failed attempt with its reason", async () => {
+      post.mockImplementation((url) => {
+        if (url === "/auth/user-query") return Promise.resolve(noConsumer);
+        if (url === "/auth/new") {
+          return Promise.resolve({ data: { ok: false, msg: "Email already in use." } });
+        }
+        return Promise.resolve({ data: { ok: true } });
+      });
+      render(<AttendanceConfirmationLanding />);
+      fireEvent.click(screen.getByText("Confirm attendance"));
+
+      await waitFor(() => expect(responses()).toEqual(["opened", "failed"]));
+      const failed = post.mock.calls.filter(([url]) => url === RESPONSE_PATH)[1][1];
+      expect(failed.reason).toBe("Email already in use.");
+    });
+
+    it("confirms even when the server cannot record the response yet", async () => {
+      post.mockImplementation((url) => {
+        if (url === RESPONSE_PATH) return Promise.reject({ response: { status: 404 } });
+        if (url === "/auth/user-query") return Promise.resolve(noConsumer);
+        if (url === "/auth/new") return Promise.resolve({ data: { id: "usr-1" } });
+        return Promise.resolve({ data: { ok: true } });
+      });
+      render(<AttendanceConfirmationLanding />);
+      fireEvent.click(screen.getByText("Confirm attendance"));
+
+      await waitFor(() =>
+        expect(screen.getByText("Ada Lovelace is going to Science Fair")).toBeInTheDocument()
+      );
+    });
+  });
+
   it("says this page cannot decline, rather than leaving it unsaid", () => {
     render(<AttendanceConfirmationLanding />);
     expect(screen.getByText(/To\s+decline, reply to the invitation email/)).toBeInTheDocument();

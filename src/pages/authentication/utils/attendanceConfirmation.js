@@ -99,3 +99,57 @@ export const readConfirmationError = (error) => {
     "Something went wrong. Please try again."
   );
 };
+
+/**
+ * Where the page records each response. Public, like the page: the guardian
+ * has no session, so the staff activity route cannot take it, and the audit
+ * middleware only sees the writes a confirmation makes — not who made them,
+ * nor an open or a failed click, which write nothing.
+ * Asked of the backend in FRONTEND_event_invitation_responses_2026-10-08.md.
+ */
+export const INVITATION_RESPONSE_PATH = "/school/event-invitations/response";
+
+/** Every step a person can take on the page, in the order they take them. */
+export const INVITATION_RESPONSES = {
+  OPENED: "opened",
+  CONFIRMED: "confirmed",
+  ALREADY_CONFIRMED: "already_confirmed",
+  FAILED: "failed",
+};
+
+/**
+ * One response, as the server stores it.
+ *
+ * 2026-09-29 `48:52`: "you need to log everything, like when the parent
+ * clicked". For a minor the person answering is the guardian the link was
+ * sent to. The server stamps the time it receives it; `client_time` only says
+ * what the reader's clock showed.
+ */
+export const buildInvitationResponse = (parsed, response, { reason, now = new Date() } = {}) => {
+  const isGuardian = Boolean(parsed?.minor);
+  return {
+    company_id: text(parsed?.companyId),
+    event_id: text(parsed?.eventId),
+    event_name: text(parsed?.eventName),
+    member_id: text(parsed?.memberId) || null,
+    member_email: text(parsed?.memberEmail),
+    responder_email: text(isGuardian ? parsed?.guardianEmail : parsed?.memberEmail) || null,
+    responder_role: isGuardian ? "guardian" : "member",
+    response,
+    ...(text(reason) ? { reason: text(reason) } : {}),
+    client_time: now.toISOString(),
+  };
+};
+
+/**
+ * Sends one response. Never throws: a response that cannot be recorded — the
+ * route is not deployed yet, the network dropped — must not stop the
+ * confirmation it describes.
+ */
+export const recordInvitationResponse = async (api, payload) => {
+  try {
+    return writeSucceeded(await api.post(INVITATION_RESPONSE_PATH, payload));
+  } catch {
+    return false;
+  }
+};
