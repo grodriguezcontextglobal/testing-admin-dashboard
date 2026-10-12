@@ -126,8 +126,23 @@ const HeaderInventaryComponent = ({
       md={12}
       lg={12}
     >
-      <Grid marginY={0} item xs={12} sm={12} md={4} lg={4}>
-        <p style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}>
+      {/* A column, so the warehouse-manager pill sits under the title rather
+          than beside it. */}
+      <Grid
+        marginY={0}
+        item
+        xs={12}
+        sm={12}
+        md={4}
+        lg={4}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: "8px",
+        }}
+      >
+        <p style={{ ...TextFontSize30LineHeight38, textAlign: "left", margin: 0 }}>
           Inventory
         </p>
         {/* Rendered only when there is a real, active person to name — an
