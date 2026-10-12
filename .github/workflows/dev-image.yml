@@ -16,8 +16,13 @@ env:
   IMAGE_NAME: grodriguezcontextglobal/devitrak-client-dev
 
 jobs:
+  # La imagen solo se publica si pasa la puerta de CI.
+  checks:
+    uses: ./.github/workflows/ci.yml
+
   build-and-push:
     name: Build & push dev image
+    needs: checks
     runs-on: ubuntu-latest
 
     permissions:

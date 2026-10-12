@@ -1107,13 +1107,32 @@ Hay que mandárselo al equipo de backend.
 > alertas de dependencias (125 → 7) y quitar los `console.*` del bundle
 > (`62f623fb`).
 
-### F0.1 — Borrar dos secretos muertos del bundle, y rotarlos
+### ~~F0.1 — Borrar dos secretos muertos del bundle, y rotarlos~~ — hecho 2026-10-12
+
+`ConfigEnvExport` exporta solo `stripe_public_key`, y lee cada variable por
+nombre. **Lo que importaba no era la clave muerta, sino la desestructuración**:
+`const { … } = import.meta.env` hace que Vite emita el objeto de entorno
+entero (`__vite_import_meta_env__`). Comprobado con builds canario: el código
+nuevo no emite ese objeto. **Con la toolchain de hoy, el código viejo tampoco
+filtraba los dos secretos**, porque Rollup 4 descarta las propiedades sin uso.
+Si bundles más antiguos los llevaban no se puede saber desde aquí: rotarlos
+sigue siendo lo prudente, pero ya no es urgente. Las plantillas `.env*.example`
+ya no los piden. Test: `src/config/ConfigEnvExport.test.js`.
+
+Texto original:
 `src/config/ConfigEnvExport.jsx:22,26`: `twilio_auth_token` y
 `secrete_key_encrypt` se exportan y no los usa nadie. Borrarlos son minutos.
 **Hay que rotarlos igual**, porque ya se publicaron en bundles anteriores. La
 rotación es de quien tenga las cuentas.
 
-### F0.2 — `auth-token` es una credencial compartida en JavaScript público
+### ~~F0.2 — `auth-token` es una credencial compartida en JavaScript público~~ — hecho 2026-10-12
+
+**No hacía falta cambiar AWS:** `devitrakAWSApi`, el único cliente que mandaba
+`auth-token`, no tenía ningún llamador. Se borró, junto con `aws_api`,
+`header_auth_token` y sus variables. El token ya no está en el bundle. Lo que
+sigue siendo de quien tenga la cuenta es **rotar** el valor publicado antes.
+
+Texto original:
 `src/api/devitrakApi.jsx:195`. Es la misma para todos los usuarios. Necesita que
 el servicio AWS acepte el JWT de sesión. Mientras tanto: rotar y dejar escrita
 la exposición.
@@ -1125,7 +1144,21 @@ la exposición.
 cuando el backend deje de servir el hash, las dos pantallas fallan, así que el
 endpoint que verifique la contraseña en el servidor tiene que llegar a la vez.
 
-### F0.4 — Validar el entorno al arrancar
+### ~~F0.4 — Validar el entorno al arrancar~~ — hecho 2026-10-12
+
+`src/config/envValidation.js` (con tests), llamado desde `vite.config.js`:
+**`vite build` se para** y nombra lo que falta o está mal, y `vite dev` solo
+avisa. Exige `VITE_APP_DEVITRACK_API` (URL http(s)) y
+`VITE_APP_PUBLIC_STRIPE_KEY`, y **rechaza una clave `sk_`/`rk_`**, que acabaría
+en el bundle. Avisa de cada `VITE_APP_*` que nadie lee: así se habría visto que
+`.env.dev.example` traía `VITE_APP_AWS_HEADER_AUTH` en vez de
+`VITE_APP_HEADER_AUTH_TOKEN`. Las plantillas declaran exactamente las variables
+conocidas, y un test lo vigila.
+
+**Cuidado con la máquina de IIS:** si a su `.env` le falta una de las dos
+variables obligatorias, el build ahora falla, a propósito.
+
+Texto original:
 No existe ninguna validación. `VITE_APP_HEADER_AUTH_TOKEN`,
 `VITE_APP_SECRETE_KEY_ENCRYPT` y `VITE_APP_TWILIO_AUTH_TOKEN` se usan y no
 están en `.env.dev.example`. Medio día, con su test. No depende de nadie.
@@ -1141,7 +1174,26 @@ Nosotros mandamos `x-company-id` y `s-company-lq` (`buildRouteScopedHeaders`).
 El informe dice que no. Es una pregunta para backend, no un cambio nuestro
 hasta saber la respuesta.
 
-### F1.3 — CI con puerta
+### ~~F1.3 — CI con puerta~~ — hecho 2026-10-12
+
+`.github/workflows/ci.yml`: en cada push a main y en cada PR corre lint (solo
+errores), los tests unitarios y el build en Linux, que además caza imports con
+mayúsculas mal puestas. `dev-image.yml` lo reutiliza y solo publica si pasa.
+Para dejarla en verde:
+- ESLint ignora `dev-dist/` y conoce los globales de Cypress (eran 1070 de los
+  1111 errores);
+- se arreglaron los 19 errores reales. **Uno era un bug de producción:**
+  `Capturing.jsx` no importaba `paymentIdempotencyHeaders` desde `47cb253f`
+  (17-09), así que **capturar un depósito fallaba siempre** con "The deposit
+  was not captured", sin llegar a mandar la petición.
+- se apuntaron en `apiContractAudit` las rutas de stop/resume de recordatorios
+  (backend `9d61857`, sin desplegar).
+
+**Lo que la puerta no cubre:** el despliegue a IIS sigue siendo un `git pull`
+manual, y no mira si la CI pasó. Los ~280 warnings de `exhaustive-deps` no
+bloquean.
+
+Texto original:
 El único workflow (`.github/workflows/dev-image.yml`) publica la imagen de
 desarrollo. No ejecuta tests, ni lint, ni build antes de desplegar.
 

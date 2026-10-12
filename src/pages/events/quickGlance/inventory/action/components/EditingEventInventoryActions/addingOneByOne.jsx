@@ -211,63 +211,51 @@ const useAddingItemsToEventInventoryOneByOne = ({
   };
 
   const updateDeviceSetupInEvent = async (props) => {
-    try {
-      await eventInventoryRef({
-        device: props.pool,
-        database: props.database,
-        checking: props.checking,
-      });
-    } catch (error) {
-      throw error;
-    }
+    await eventInventoryRef({
+      device: props.pool,
+      database: props.database,
+      checking: props.checking,
+    });
   };
 
+  // Errors propagate on purpose: this is step 4 of the chain, and swallowing
+  // one here is what let the event report devices it never listed.
   const checkInsertedDataAndUpdateInventoryEvent = async (props) => {
-    try {
-      const checking = await devitrakApi.post("/receiver/receiver-pool-list", {
-        type: props[0].item_group,
-        eventSelected: eventInfo.eventInfoDetail.eventName,
-        company: user.companyData.id,
+    const checking = await devitrakApi.post("/receiver/receiver-pool-list", {
+      type: props[0].item_group,
+      eventSelected: eventInfo.eventInfoDetail.eventName,
+      company: user.companyData.id,
+    });
+    if (checking.data.receiversInventory.length > 0) {
+      await updateDeviceSetupInEvent({
+        pool: checking.data.receiversInventory,
+        database: props,
+        checking: checking,
       });
-      if (checking.data.receiversInventory.length > 0) {
-        await updateDeviceSetupInEvent({
-          pool: checking.data.receiversInventory,
-          database: props,
-          checking: checking,
-        });
-      }
-    } catch (error) {
-      // Re-thrown: this is step 4 of the chain, and swallowing it here is what
-      // let the event report devices it never listed.
-      throw error;
     }
   };
 
   const createDeviceRecordInNoSQLDatabase = async (props) => {
-    try {
-      let data = null;
-      data = props.deviceInfo;
-      const template = {
-        deviceList: JSON.stringify(data.map((item) => item.serial_number)),
-        status: "Operational",
-        activity: false,
-        comment: "No comment",
-        eventSelected: eventInfo.eventInfoDetail.eventName,
-        provider: user.company,
-        type: data[0].item_group,
-        company: user.companyData.id,
-        event_id: eventInfo.id,
-      };
-      await runStep(2, () =>
-        devitrakApi.post("/receiver/receivers-pool-bulk", template),
-      );
-      await runStep(3, () => checkInsertedDataAndUpdateInventoryEvent(data));
-      // Expanding containers stays best-effort: most items are not containers,
-      // so a miss here is normal and must not fail an otherwise complete add.
-      await checkIfContainer(data);
-    } catch (error) {
-      throw error;
-    }
+    let data = null;
+    data = props.deviceInfo;
+    const template = {
+      deviceList: JSON.stringify(data.map((item) => item.serial_number)),
+      status: "Operational",
+      activity: false,
+      comment: "No comment",
+      eventSelected: eventInfo.eventInfoDetail.eventName,
+      provider: user.company,
+      type: data[0].item_group,
+      company: user.companyData.id,
+      event_id: eventInfo.id,
+    };
+    await runStep(2, () =>
+      devitrakApi.post("/receiver/receivers-pool-bulk", template),
+    );
+    await runStep(3, () => checkInsertedDataAndUpdateInventoryEvent(data));
+    // Expanding containers stays best-effort: most items are not containers,
+    // so a miss here is normal and must not fail an otherwise complete add.
+    await checkIfContainer(data);
   };
 
   const createDeviceInEvent = async (props) => {

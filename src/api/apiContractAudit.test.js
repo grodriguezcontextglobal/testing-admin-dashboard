@@ -47,6 +47,12 @@ const KNOWN_UNMATCHED = [
   // artifacts in src/docs -- the backend regenerates those, we do not. Drop
   // this line once api-payloads.json carries the route.
   "POST /api/school/consent/list",
+  // Stop / resume the daily overdue reminder per device: the backend's
+  // 9d61857, not deployed yet, so newer than the generated artifacts in
+  // src/docs (FRONTEND_overdue_reminders_2026-10-07.md). Drop these lines once
+  // api-payloads.json carries the routes.
+  "POST /api/school/reminders/resume",
+  "POST /api/school/reminders/stop",
   // Same shape: the branding-preview routes ship in the server's
   // feat/school-consent-backend branch (nodeMailer/brandingPreview.js), which is
   // newer than the generated artifacts in src/docs. The settings page needs the

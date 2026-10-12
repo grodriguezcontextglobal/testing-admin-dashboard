@@ -15,7 +15,6 @@ export const bulkItemUpdateAlphanumeric = async ({
   user,
   navigate,
   dispatch,
-  openNotificationWithIcon,
   openSuccessNotification,
   setLoadingStatus,
   setValue,

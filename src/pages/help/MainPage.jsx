@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import Input from "../../components/UX/inputs/Input";
 import { ProfileSection } from "../../components/UX/profile";

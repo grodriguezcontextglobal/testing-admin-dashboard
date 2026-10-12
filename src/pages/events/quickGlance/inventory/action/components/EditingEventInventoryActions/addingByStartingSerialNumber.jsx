@@ -210,35 +210,27 @@ const useAddingByStartingSerialNumber = ({
   };
 
   const updateDeviceSetupInEvent = async (props) => {
-    try {
-      await eventInventoryRef({
-        device: props.pool,
-        database: props.database,
-        checking: props.checking,
-      });
-    } catch (error) {
-      throw error;
-    }
+    await eventInventoryRef({
+      device: props.pool,
+      database: props.database,
+      checking: props.checking,
+    });
   };
 
+  // Errors propagate on purpose: this is step 4 of the chain, and swallowing
+  // one here is what let the event report devices it never listed.
   const checkInsertedDataAndUpdateInventoryEvent = async (props) => {
-    try {
-      const checking = await devitrakApi.post("/receiver/receiver-pool-list", {
-        type: props[0].item_group,
-        eventSelected: eventInfo.eventInfoDetail.eventName,
-        company: user.companyData.id,
+    const checking = await devitrakApi.post("/receiver/receiver-pool-list", {
+      type: props[0].item_group,
+      eventSelected: eventInfo.eventInfoDetail.eventName,
+      company: user.companyData.id,
+    });
+    if (checking.data.receiversInventory.length > 0) {
+      await updateDeviceSetupInEvent({
+        pool: checking.data.receiversInventory,
+        database: props,
+        checking: checking,
       });
-      if (checking.data.receiversInventory.length > 0) {
-        await updateDeviceSetupInEvent({
-          pool: checking.data.receiversInventory,
-          database: props,
-          checking: checking,
-        });
-      }
-    } catch (error) {
-      // Re-thrown: this is step 4 of the chain, and swallowing it here is what
-      // let the event report devices it never listed.
-      throw error;
     }
   };
 

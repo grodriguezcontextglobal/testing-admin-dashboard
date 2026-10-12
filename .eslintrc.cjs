@@ -7,7 +7,8 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  // dev-dist is the service worker vite-plugin-pwa generates in dev.
+  ignorePatterns: ['dist', 'dev-dist', '.eslintrc.cjs'],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   settings: { react: { version: '18.2' } },
   plugins: ['react-refresh'],
@@ -18,6 +19,7 @@ module.exports = {
       { allowConstantExport: true },
     ],
     "react/prop-types": 'off',
+    'no-unused-vars': ['error', { ignoreRestSiblings: true }],
   },
   overrides: [
     {
@@ -25,6 +27,12 @@ module.exports = {
       // `process`/`module`/`__dirname` etc. in scope.
       files: ['*.config.js', '*.config.cjs'],
       env: { node: true },
+    },
+    {
+      // Cypress specs run under Mocha with Cypress's own globals.
+      files: ['cypress/**/*.js'],
+      env: { mocha: true },
+      globals: { cy: 'readonly', Cypress: 'readonly', expect: 'readonly', assert: 'readonly' },
     },
   ],
 }

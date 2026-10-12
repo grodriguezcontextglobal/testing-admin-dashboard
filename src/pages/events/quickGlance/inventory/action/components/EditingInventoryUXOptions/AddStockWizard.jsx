@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import BlueButtonComponent from "../../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../../components/UX/buttons/GrayButton";
@@ -99,7 +98,6 @@ const AddStockWizard = ({
   setValueItemSelected,
   watch,
 }) => {
-  const { user } = useSelector((state) => state.admin);
   const [step, setStep] = useState("1");
   const [mode, setMode] = useState("range");
   const [query, setQuery] = useState("");

@@ -8,9 +8,6 @@
  *  DELETE – modal "Delete group" con validación de campos
  */
 
-const API = '**/api/**'
-const COMPANY_ID = 'test-sql-company-id'
-
 describe('Inventario – READ', () => {
   beforeEach(() => {
     cy.intercept('GET', /db_item\/check-company-has-inventory/, {

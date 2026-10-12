@@ -15,7 +15,6 @@ export const bulkItemInsertAlphanumeric = async ({
   data,
   user,
   navigate,
-  openNotificationWithIcon,
   openSuccessNotification,
   setLoadingStatus,
   setValue,

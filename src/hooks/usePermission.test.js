@@ -23,7 +23,9 @@ function makeStore(roleType) {
 }
 
 function wrapper(store) {
-  return ({ children }) => createElement(Provider, { store }, children);
+  return function Wrapper({ children }) {
+    return createElement(Provider, { store }, children);
+  };
 }
 
 describe("usePermission", () => {

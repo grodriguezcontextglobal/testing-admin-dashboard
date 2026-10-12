@@ -41,7 +41,9 @@ function makeStore({ roleType, role = "2", super_user = false, managerLocation =
 }
 
 function wrap(store) {
-  return ({ children }) => createElement(Provider, { store }, children);
+  return function Wrapper({ children }) {
+    return createElement(Provider, { store }, children);
+  };
 }
 
 // ─── isAdmin ─────────────────────────────────────────────────────────────────

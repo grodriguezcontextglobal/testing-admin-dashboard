@@ -1,0 +1,60 @@
+name: CI
+
+# Puerta de calidad (FedRAMP F1.3): lint, tests unitarios y build en cada push
+# a main. dev-image.yml la llama antes de publicar la imagen.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_call:
+
+# github.workflow es el del llamador cuando dev-image.yml reutiliza este fichero:
+# así su ejecución no cancela la de este mismo push, ni al revés.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, tests y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # Los tests unitarios no necesitan el binario de Cypress.
+      CYPRESS_INSTALL_BINARY: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # La misma versión que Dockerfile.dev.
+          node-version: 20.19.5
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Solo errores: los ~280 warnings de react-hooks/exhaustive-deps que hay
+      # hoy no bloquean. `npm run lint` (--max-warnings 0) sigue siendo la meta.
+      - name: Lint
+        run: npx eslint . --ext js,jsx --quiet
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      # Linux distingue mayúsculas en las rutas de import; Windows no. Valores
+      # de relleno: vite.config.js exige las variables (src/config/envValidation.js),
+      # y aquí solo se comprueba que el build compila.
+      - name: Build
+        run: npm run build
+        env:
+          VITE_APP_DEVITRACK_API: https://ci.invalid
+          VITE_APP_PUBLIC_STRIPE_KEY: pk_test_ci

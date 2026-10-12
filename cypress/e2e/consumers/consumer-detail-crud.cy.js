@@ -23,18 +23,6 @@ const PAYMENT_INTENT = 'pi_authorized001'
 
 // ─── helpers: intercepts ──────────────────────────────────────────────────────
 
-const interceptTransactionList = (fixture = 'consumer-detail', alias = 'getTransactions') => {
-  cy.intercept('POST', /\/transaction\/transaction/, (req) => {
-    req.reply({ fixture: `${fixture}`, statusCode: 200 })
-  })
-  cy.intercept('POST', /\/transaction\/transaction/, {
-    statusCode: 200,
-    fixture: `${fixture}`,
-  })
-  // Override limpio sin fixture anidada
-  cy.intercept('POST', /\/transaction\/transaction/, { statusCode: 200, body: { ok: true, list: [] } }).as(alias)
-}
-
 const interceptAll = ({
   transactions = [],
   assigned = [],
