@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { checkEnv, formatEnvReport } from "./src/config/envValidation.js";
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -10,6 +11,12 @@ const MUTATION_QUEUE_RETENTION_MINUTES = 24 * 60;
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_APP_");
+  // FedRAMP F0.4: a build stops naming what is wrong; the dev server only
+  // prints the report, so a half-filled .env.dev still starts.
+  const envCheck = checkEnv(env);
+  const envReport = formatEnvReport(envCheck);
+  if (command === "build" && envCheck.errors.length) throw new Error(envReport);
+  if (envReport) console.warn(envReport);
   // Same two origins src/api/serverManager.js fails over between. Kept as a
   // separate, mirrored computation here (this file runs in Node at build
   // time, serverManager.js runs in the browser) — regex must stay a literal
@@ -114,9 +121,7 @@ export default defineConfig(({ command, mode }) => {
             // POST/PUT and auto-retry once connectivity returns.
             // Complements (does not replace) the backend's own async
             // job queue — see FRONTEND_task_queue_changes.md /
-            // backgroundJobsSlice.js. devitrakAWSApi is intentionally
-            // NOT covered here: it's built outside the shared axios
-            // instances/interceptor in src/api/devitrakApi.jsx.
+            // backgroundJobsSlice.js.
             {
               urlPattern: apiOriginPattern,
               method: "POST",

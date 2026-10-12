@@ -1,13 +1,11 @@
 import axios from "axios";
 import { notifyStatus } from "../components/notification/alerts/useStatusNotification";
-import { ConfigEnvExport } from "../config/ConfigEnvExport";
 import { getActiveServerSynchronously, switchServer, initializeActiveServer } from "./serverManager";
 import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
 import { guardRequest } from "./devPayloadGuard";
 import { isOfflineQueueableRequest } from "../config/offlineQueue";
 
-// Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads (not
-// exposed through ConfigEnvExport, which only carries the primary origin).
+// Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads.
 const configuredApiOrigins = [
     import.meta.env.VITE_APP_DEVITRACK_API,
     import.meta.env.VITE_APP_DEVITRACK_API_BACKUP,
@@ -24,8 +22,6 @@ if (typeof window !== "undefined") {
         hasShownOfflineQueueNotice = false;
     });
 }
-
-const { aws_api, header_auth_token } = ConfigEnvExport;
 
 // Helper function to get client information
 const getClientInfo = () => ({
@@ -188,19 +184,3 @@ const setupResponseInterceptor = (instance) => {
 
 instances.forEach(setupResponseInterceptor);
 
-// AWS API instance remains unchanged as it has a separate configuration.
-export const devitrakAWSApi = axios.create({
-  baseURL: aws_api,
-  headers: {
-      "auth-token": header_auth_token,
-  },
-});
-
-devitrakAWSApi.interceptors.request.use((config) => {
-    const clientInfo = getClientInfo();
-  config.headers = {
-    ...config.headers,
-      ...clientInfo,
-  };
-  return config;
-});

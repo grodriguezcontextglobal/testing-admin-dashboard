@@ -1,29 +1,6 @@
-const {
-  VITE_APP_DEVITRACK_API,
-  VITE_APP_DEVITRAK_CONSUMER_API,
-  VITE_APP_TWILIO_ACCOUNT_SID,
-  VITE_APP_TWILIO_AUTH_TOKEN,
-  PORT,
-  PORT_SSR,
-  VITE_APP_PUBLIC_STRIPE_KEY,
-  VITE_APP_RECAPTCHA_SITEKEY,
-  VITE_APP_ALGORITHM,
-  VITE_APP_SECRETE_KEY_ENCRYPT,
-  VITE_APP_HEADER_AUTH_TOKEN,
-  VITE_APP_AWS_API,
-} = import.meta.env;
-
+// Read each variable by name. Destructuring the env object makes Vite inline
+// the whole env object, so every VITE_* var set at build time would ship in
+// the public bundle, used or not.
 export const ConfigEnvExport = {
-  stripe_public_key: VITE_APP_PUBLIC_STRIPE_KEY,
-  recaptcha_sitekey: VITE_APP_RECAPTCHA_SITEKEY,
-  devitrack_api: VITE_APP_DEVITRACK_API,
-  devitrack_consumer_api: VITE_APP_DEVITRAK_CONSUMER_API,
-  twilio_account_sid: VITE_APP_TWILIO_ACCOUNT_SID,
-  twilio_auth_token: VITE_APP_TWILIO_AUTH_TOKEN,
-  port: PORT,
-  port_ssr: PORT_SSR,
-  algorithm: VITE_APP_ALGORITHM,
-  secrete_key_encrypt: VITE_APP_SECRETE_KEY_ENCRYPT,
-  header_auth_token: VITE_APP_HEADER_AUTH_TOKEN,
-  aws_api: VITE_APP_AWS_API,
+  stripe_public_key: import.meta.env.VITE_APP_PUBLIC_STRIPE_KEY,
 };
