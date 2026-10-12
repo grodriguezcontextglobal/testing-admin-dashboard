@@ -17,24 +17,9 @@ import {
 } from "lucide-react";
 import pkg from "prop-types";
 import { forwardRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../api/devitrakApi";
-import { clearSessionStorage } from "../../api/sessionHeaders";
-import { persistor } from "../../store/Store";
-import { onLogout } from "../../store/slices/adminSlice";
-import { onResetArticleEdited } from "../../store/slices/articleSlide";
-import { onResetBackgroundJobs } from "../../store/slices/backgroundJobsSlice";
-import { onResetCustomer } from "../../store/slices/customerSlice";
-import {
-  onResetDeviceInQuickGlance,
-  onResetDevicesHandle,
-} from "../../store/slices/devicesHandleSlice";
-import { onResetEventInfo } from "../../store/slices/eventSlice";
-import { onResetHelpers } from "../../store/slices/helperSlice";
-import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
-import { onResetStripesInfo } from "../../store/slices/stripeSlice";
-import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
+import { useSelector } from "react-redux";
+import { NavLink, useLocation } from "react-router-dom";
+import useLogout from "../../hooks/useLogout";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 // import { TextFontSize14LineHeight20 } from "../../styles/global/TextFontSize14LineHeight20";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
@@ -90,27 +75,8 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
   // const [rowId, setRowId] = useState(null);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const logout = async () => {
-    await devitrakApi.patch(`/staff/edit-admin/${user.uid}`, {
-      online: false,
-    });
-    persistor.purge();
-    dispatch(onResetArticleEdited());
-    dispatch(onResetCustomer());
-    dispatch(onResetDevicesHandle());
-    dispatch(onResetDeviceInQuickGlance());
-    dispatch(onResetEventInfo());
-    dispatch(onResetStaffProfile());
-    dispatch(onResetHelpers());
-    dispatch(onResetBackgroundJobs());
-    dispatch(onResetStripesInfo());
-    dispatch(onResetSubscriptionInfo());
-    clearSessionStorage();
-    dispatch(onLogout());
-    return navigate("/login");
-  };
+  // Ends the server session too; see useLogout.
+  const logout = useLogout();
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);

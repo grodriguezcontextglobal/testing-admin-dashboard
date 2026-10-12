@@ -1,23 +1,8 @@
 import { Grid } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
-import { devitrakApi } from "../../api/devitrakApi";
-import { clearSessionStorage } from "../../api/sessionHeaders";
+import useLogout from "../../hooks/useLogout";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
-import { persistor } from "../../store/Store";
-import { onLogout } from "../../store/slices/adminSlice";
-import { onResetArticleEdited } from "../../store/slices/articleSlide";
-import { onResetBackgroundJobs } from "../../store/slices/backgroundJobsSlice";
-import { onResetCustomer } from "../../store/slices/customerSlice";
-import {
-  onResetDeviceInQuickGlance,
-  onResetDevicesHandle,
-} from "../../store/slices/devicesHandleSlice";
-import { onResetEventInfo } from "../../store/slices/eventSlice";
-import { onResetHelpers } from "../../store/slices/helperSlice";
-import { onResetStaffProfile } from "../../store/slices/staffDetailSlide";
-import { onResetStripesInfo } from "../../store/slices/stripeSlice";
-import { onResetSubscriptionInfo } from "../../store/slices/subscriptionSlice";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import MainHeaders from "./ui/MainHeaders";
@@ -25,32 +10,8 @@ import MainHeaders from "./ui/MainHeaders";
 const MainProfileSettings = () => {
   const { user } = useSelector((state) => state.admin);
   const { isSuperUser } = useStaffRoleAndLocations();
-  const dispatch = useDispatch();
-  const logout = async () => {
-    try {
-      await devitrakApi.patch(`/staff/edit-admin/${user.uid}`, {
-        online: false,
-      });
-      await devitrakApi.post("/admin/logout");
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      // Client-side cleanup
-      persistor.purge();
-      dispatch(onResetArticleEdited());
-      dispatch(onResetCustomer());
-      dispatch(onResetDevicesHandle());
-      dispatch(onResetDeviceInQuickGlance());
-      dispatch(onResetEventInfo());
-      dispatch(onResetStaffProfile());
-      dispatch(onResetHelpers());
-      dispatch(onResetBackgroundJobs());
-      dispatch(onResetStripesInfo());
-      dispatch(onResetSubscriptionInfo());
-      clearSessionStorage();
-      dispatch(onLogout());
-    }
-  };
+  // Ends the server session too; see useLogout.
+  const logout = useLogout();
   const tabOptions = [
     { label: "My details",      route: "my_details",               permission: "nav:profile"            },
     { label: "Password",        route: "password",                 permission: "nav:profile"            },
