@@ -1,7 +1,7 @@
 import { Alert } from "antd";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { isCoordinatorLevel } from "../../../config/roles";
+import { inventoryPageActions } from "../utils/inventoryPageActions";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import TourModal from "../utils/TourModal";
@@ -19,8 +19,9 @@ import DocumentInventoryXLSXUpload from "../../../components/documents/DocumentI
  * - Enforces access control by blocking the upload interface for unauthorized users.
  *
  * Permission Logic:
- * - Checks if the user has `create: true` in at least one location in `managerLocation`.
- * - Displays an error alert if no create permissions are found.
+ * - Allows the upload when inventoryPageActions grants create: the role's
+ *   permission, narrowed by the location rows in the permission slice.
+ * - Displays an error alert otherwise.
  *
  * @param {Object} props
  * @param {boolean} props.openModal - Controls modal visibility.
@@ -29,13 +30,10 @@ import DocumentInventoryXLSXUpload from "../../../components/documents/DocumentI
 const AddInventoryFromXLSXFile = ({ openModal, closeModal }) => {
   const [tourModal, setTourModal] = useState(false);
   const { roleType, locations } = useSelector((state) => state.permission);
-  const canCreate = useMemo(() => {
-    if (isCoordinatorLevel(roleType)) return true;
-    if (Array.isArray(locations)) {
-      return locations.some((loc) => loc.can_create || loc.can_update);
-    }
-    return false;
-  }, [roleType, locations]);
+  const { canCreate } = useMemo(
+    () => inventoryPageActions({ roleType, locations }),
+    [roleType, locations]
+  );
 
   const closingModal = () => {
     return closeModal(false);

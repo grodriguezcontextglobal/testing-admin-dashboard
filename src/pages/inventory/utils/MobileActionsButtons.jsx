@@ -1,18 +1,15 @@
 import { Grid } from "@mui/material";
 import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import LightBlueButtonComponent from "../../../components/UX/buttons/LigthBlueButton";
-import { useStaffRoleAndLocations } from "../../../utils/checkStaffRoleAndLocations";
+import { inventoryPageActions } from "./inventoryPageActions";
 
 const MobileActionsButtons = ({ user, setOpenCreateLocationModal }) => {
-  // Check permissions
-  const {
-    isAdmin,locationsCreatePermission, locationsUpdatePermission
-  } = useStaffRoleAndLocations();
-  // Check permissions
-  const canCreate = isAdmin ? isAdmin : locationsCreatePermission.length > 0
-  const canUpdate = isAdmin ? isAdmin : locationsUpdatePermission.length > 0
+  // The same gate as the desktop header (HeaderInventaryComponent).
+  const { roleType, locations } = useSelector((state) => state.permission);
+  const { canCreate, canUpdate } = inventoryPageActions({ roleType, locations });
 
 
   return (

@@ -1,5 +1,4 @@
 import { Grid } from "@mui/material";
-import { isCoordinatorLevel } from "../../../config/roles";
 import { Dropdown } from "antd";
 import PropTypes from "prop-types";
 import { useMemo } from "react";
@@ -15,6 +14,7 @@ import PlusSquareDarkIcon from "../../../components/icons/PlusSquareDarkIcon";
 import TrashIcon from "../../../components/icons/TrashIcon";
 import Vertical3Dots from "../../../components/icons/Vertical3Dots";
 import Chip from "../../../components/UX/Chip/Chip";
+import { inventoryPageActions } from "./inventoryPageActions";
 import { findWarehouseManager } from "./warehouseManagerUtils";
 
 /**
@@ -27,8 +27,8 @@ import { findWarehouseManager } from "./warehouseManagerUtils";
  * - Keeps one primary action ("Add inventory") and one secondary action
  *   ("Import inventory") visible; folds the remaining actions into an
  *   overflow menu.
- * - Checks `user.companyData.employees[].preference.managerLocation` for
- *   `create` and `update` permissions.
+ * - Gates each action through inventoryPageActions: the role's permissions,
+ *   narrowed by the location rows in the permission slice.
  *
  * @param {Object} props
  * @param {Object} props.user - User data object containing permissions.
@@ -61,13 +61,10 @@ const HeaderInventaryComponent = ({
     () => findWarehouseManager(employees),
     [employees]
   );
-  const fullAccess = isCoordinatorLevel(roleType);
-  const canCreate = fullAccess || locations.some((loc) => loc.can_create);
-  const canUpdate = fullAccess || locations.some((loc) => loc.can_update);
-  const canManageDevices =
-    fullAccess ||
-    (locations.length > 0 &&
-      locations.every((loc) => loc.can_create && loc.can_update && loc.can_delete));
+  const { canCreate, canUpdate, canManageDevices } = inventoryPageActions({
+    roleType,
+    locations,
+  });
 
   const overflowMenuLabel = (icon, text) => (
     <span

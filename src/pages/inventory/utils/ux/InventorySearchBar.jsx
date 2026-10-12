@@ -1,5 +1,5 @@
 import { Grid, Typography } from "@mui/material";
-import { isCoordinatorLevel } from "../../../../config/roles";
+import { inventoryPageActions } from "../inventoryPageActions";
 import { Title } from "../../../../styles/global/Title";
 import Input from "../../../../components/UX/inputs/Input";
 import { Divider, Tag } from "antd";
@@ -50,10 +50,10 @@ const InventorySearchBar = ({
   };
   const clearAllFilters = () => setChosenOption?.([]);
 
-  const canRenderButton =
-    isCoordinatorLevel(roleType) ||
-    (locations?.length > 0 &&
-      locations.every((loc) => loc.can_create && loc.can_update && loc.can_delete));
+  const { canManageDevices: canRenderButton } = inventoryPageActions({
+    roleType,
+    locations,
+  });
 
   return (
     <Grid
