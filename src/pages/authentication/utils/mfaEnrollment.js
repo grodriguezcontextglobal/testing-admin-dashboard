@@ -69,3 +69,32 @@ export const isCompleteMfaCode = (value) =>
  */
 export const mfaRequestConfig = (authToken) =>
   authToken ? { headers: { "x-token": String(authToken) } } : {};
+
+/**
+ * The server's own MFA gate, read off a refused login.
+ *
+ * The server now enforces enrolment itself: an account without MFA no longer
+ * logs in on a password alone. `/admin/login` refuses with `mfaSetupRequired`
+ * and, instead of a session token, an `mfaSetupToken` (`purpose: "mfa_setup"`,
+ * 15 minutes) that only authenticates the enrolment calls. Read by the body,
+ * not the status, so the 401 and 403 branches of the login failure handling
+ * cannot claim it first.
+ *
+ * Returns `{ setupToken }`, or `null` for every other failure.
+ */
+export const readMfaSetupChallenge = (error) => {
+  const data = error?.response?.data;
+  const setupToken = data?.mfaSetupToken;
+  if (!data?.mfaSetupRequired || typeof setupToken !== "string" || !setupToken) {
+    return null;
+  }
+  return { setupToken };
+};
+
+/**
+ * What the enrolment modal authenticates with for the login on hold: the
+ * setup token when the server refused the login, or the session token of a
+ * login that went through on an account the client caught without MFA.
+ */
+export const enrolmentAuthToken = (pending) =>
+  pending?.setupToken ?? pending?.loginResponse?.data?.token;

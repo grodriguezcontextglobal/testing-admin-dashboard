@@ -64,7 +64,12 @@ import {
   buildLoginPayload,
   fieldsToClearFor,
 } from "./utils/loginPayload";
-import { markEnrolled, needsMfaEnrollment } from "./utils/mfaEnrollment";
+import {
+  enrolmentAuthToken,
+  markEnrolled,
+  needsMfaEnrollment,
+  readMfaSetupChallenge,
+} from "./utils/mfaEnrollment";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
@@ -115,7 +120,9 @@ const Login = () => {
 
   const dataPassed = useRef(null);
 
-  /* An authenticated login held open while the account enrols in MFA. A ref,
+  /* A login held open while the account enrols in MFA: the server's setup
+     token when it refused the login (`{ setupToken }`), or the authenticated
+     response when the client's own gate caught the account. A ref,
      not state: nothing renders from it except the token handed to the modal,
      and `setMfaEnrollmentOpen` is the render that reads it. */
   const pendingLogin = useRef(null);
@@ -462,6 +469,18 @@ const Login = () => {
    * instead of a second copy of it.
    */
   const handleLoginFailure = (error) => {
+    /* The server's MFA gate. Not a failure: the password was right, and the
+       answer carries the token to enrol with. It has to be read before the
+       status branches below, which would take it for an expired session (401)
+       or a plain error and send the visitor back to the email step. */
+    const setupChallenge = readMfaSetupChallenge(error);
+    if (setupChallenge) {
+      pendingLogin.current = setupChallenge;
+      dispatch(clearErrorMessage());
+      setMfaEnrollmentOpen(true);
+      return;
+    }
+
     // Check for MFA requirement with flexible property naming and status codes
     const responseData = error.response?.data;
     const isMfaRequired =
@@ -547,6 +566,19 @@ const Login = () => {
     setMfaEnrollmentOpen(false);
     pendingLogin.current = null;
     if (!pending) return;
+
+    /* Enrolled on the server's setup token, which never was a session. The
+       account now has MFA, so the login it refused will challenge for a code:
+       the email and password are still held, and the code is the one step
+       left. */
+    if (pending.setupToken) {
+      goToStep(LOGIN_STEPS.MFA);
+      openNotificationWithIcon(
+        "success",
+        "Two-step verification is on. Enter the code from your app to finish signing in.",
+      );
+      return;
+    }
 
     openNotificationWithIcon(
       "success",
@@ -840,7 +872,7 @@ const Login = () => {
       {mfaEnrollmentOpen && (
         <MfaEnrollmentModal
           open={mfaEnrollmentOpen}
-          authToken={pendingLogin.current?.loginResponse?.data?.token}
+          authToken={enrolmentAuthToken(pendingLogin.current)}
           email={userEmail}
           onEnrolled={handleMfaEnrolled}
           onDismiss={handleMfaEnrollmentDismissed}

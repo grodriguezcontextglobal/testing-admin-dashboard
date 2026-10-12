@@ -7,7 +7,9 @@ import {
   markEnrolled,
   mfaRequestConfig,
   needsMfaEnrollment,
+  enrolmentAuthToken,
   normalizeMfaCode,
+  readMfaSetupChallenge,
 } from "./mfaEnrollment";
 
 /* The shape POST /api/admin/login answers with. `entire` is the whole admin
@@ -98,5 +100,58 @@ describe("authenticating the enrolment calls", () => {
   it("falls back to the interceptor when there is no token to pass", () => {
     expect(mfaRequestConfig()).toEqual({});
     expect(mfaRequestConfig("")).toEqual({});
+  });
+});
+
+describe("the server refusing a login until MFA is set up", () => {
+  /* What POST /api/admin/login answers for an account without MFA, now that
+     the server enforces it: no session token, only a short-lived one scoped to
+     the enrolment calls. */
+  const refusal = (data, status = 403) => ({ response: { status, data } });
+  const body = {
+    ok: false,
+    msg: "MFA setup required. Set up an authenticator app to continue.",
+    mfaSetupRequired: true,
+    mfaSetupToken: "setup-jwt",
+  };
+
+  it("hands back the setup token", () => {
+    expect(readMfaSetupChallenge(refusal(body))).toEqual({
+      setupToken: "setup-jwt",
+    });
+  });
+
+  it("does not depend on the status code", () => {
+    expect(readMfaSetupChallenge(refusal(body, 401))).toEqual({
+      setupToken: "setup-jwt",
+    });
+  });
+
+  it("is not a setup challenge without a token to enrol with", () => {
+    expect(readMfaSetupChallenge(refusal({ ...body, mfaSetupToken: "" }))).toBeNull();
+    expect(readMfaSetupChallenge(refusal({ ...body, mfaSetupToken: undefined }))).toBeNull();
+  });
+
+  it("ignores every other failure", () => {
+    expect(readMfaSetupChallenge(refusal({ ok: false, msg: "Incorrect password" }, 400))).toBeNull();
+    expect(readMfaSetupChallenge(refusal({ mfaRequired: true }))).toBeNull();
+    expect(readMfaSetupChallenge(new Error("Network Error"))).toBeNull();
+    expect(readMfaSetupChallenge(undefined)).toBeNull();
+  });
+});
+
+describe("the token the enrolment modal authenticates with", () => {
+  it("prefers the setup token the server issued", () => {
+    expect(enrolmentAuthToken({ setupToken: "setup-jwt" })).toBe("setup-jwt");
+  });
+
+  it("falls back to the session token of a login that went through", () => {
+    expect(
+      enrolmentAuthToken({ loginResponse: { data: { token: "jwt" } } })
+    ).toBe("jwt");
+  });
+
+  it("has nothing when no login is pending", () => {
+    expect(enrolmentAuthToken(null)).toBeUndefined();
   });
 });
