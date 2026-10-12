@@ -1,0 +1,103 @@
+.cards-carousel {
+  width: 100%;
+  max-width: 1400px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* The same wrapping row the cards sat in before (antd Space, 8px x 16px). */
+.cards-carousel__page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 8px;
+}
+
+.cards-carousel__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.cards-carousel__counter {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--gray-700, #344054);
+  white-space: nowrap;
+}
+
+.cards-carousel__dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.cards-carousel__dot {
+  flex: 0 0 auto;
+  margin: 0;
+  box-shadow: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: var(--gray-200, #eaecf0);
+  transition: background 0.25s ease, width 0.25s ease;
+}
+
+.cards-carousel__dot--active {
+  width: 24px;
+  border-radius: 4px;
+  background: var(--blue-dark--700, #004eea);
+}
+
+.cards-carousel__nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* Every property the global `button` rules set is restated here. index.css
+   pads buttons 0.6em 1.2em, which inside 40px left the chevron almost no room,
+   and checkoutStyles.css makes every button full-width, blue and white-text. */
+.cards-carousel__btn {
+  flex: 0 0 auto;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300, #d0d5dd);
+  background: var(--basewhite, #fff);
+  cursor: pointer;
+  color: var(--gray-700, #344054);
+  box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+  filter: none;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.cards-carousel__btn:hover:not(:disabled) {
+  background: var(--gray-50, #f9fafb);
+  color: var(--gray-900, #101828);
+}
+
+.cards-carousel__btn svg {
+  flex-shrink: 0;
+}
+
+.cards-carousel__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

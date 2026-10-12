@@ -1,6 +1,6 @@
 // import { Grid } from "@mui/material";
+import CardsCarousel from "../../../components/UX/carousel/CardsCarousel";
 import CardLocations from "./CardLocations";
-import { Space } from "antd";
 import { ownershipLabel } from "../actions/utils/ownershipUtils";
 
 /**
@@ -15,36 +15,38 @@ const cardTitle = (sectionKey, value) =>
 const RenderingMoreThanTreeviewElements = ({ item, searchItem }) => {
   const elemId = item.key;
   const r = () => item.data; //ensureThreeItems(item.data);
+  // A page at a time (CardsCarousel's twelve): a company with dozens of brands or categories used to
+  // get them all at once, and the panel pushed the table off the page.
   return (
-    <Space align="start" size={[8, 16]} wrap style={{ maxWidth: "1400px", minWidth:"320px", width:"100%" }}>
-      {r().map((opt) => {
-        return (
-          <CardLocations
-            key={`${elemId}-${opt?.key}`}
-            id={`card-${elemId}-`}
-            navigate={
-              opt?.fake
-                ? null
-                : `/inventory/${String(
-                    item.routeTitle
-                  ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
-                searchItem || ""
-                  }`
-            }
-            title={cardTitle(item.key, opt?.key)}
-            props={`${opt?.value} total devices`}
-            total={typeof opt?.value === "number" ? opt.value : null}
-            available={
-              typeof opt?.totalAvailable === "number"
-                ? opt.totalAvailable
-                : null
-            }
-            optional={null}
-            style={{ general: { opacity: opt?.fake ? 0 : 1, cursor: null } }}
-          />
-        );
-      })}
-    </Space>
+    <CardsCarousel
+      items={r()}
+      label={item.title}
+      getKey={(opt) => `${elemId}-${opt?.key}`}
+      renderItem={(opt) => (
+        <CardLocations
+          id={`card-${elemId}-`}
+          navigate={
+            opt?.fake
+              ? null
+              : `/inventory/${String(
+                  item.routeTitle
+                ).toLowerCase()}?${decodeURI(opt?.key)}&search=${
+              searchItem || ""
+                }`
+          }
+          title={cardTitle(item.key, opt?.key)}
+          props={`${opt?.value} total devices`}
+          total={typeof opt?.value === "number" ? opt.value : null}
+          available={
+            typeof opt?.totalAvailable === "number"
+              ? opt.totalAvailable
+              : null
+          }
+          optional={null}
+          style={{ general: { opacity: opt?.fake ? 0 : 1, cursor: null } }}
+        />
+      )}
+    />
   );
 };
 

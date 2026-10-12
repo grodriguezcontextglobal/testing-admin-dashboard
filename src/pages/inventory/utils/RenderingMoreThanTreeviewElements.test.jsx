@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import RenderingMoreThanTreeviewElements from "./RenderingMoreThanTreeviewElements";
@@ -69,5 +69,73 @@ describe("RenderingMoreThanTreeviewElements", () => {
 
     expect(screen.getByText("Rent")).toBeInTheDocument();
     expect(screen.queryByText("Leased")).not.toBeInTheDocument();
+  });
+});
+
+/* A company with dozens of categories or brands used to get every card at
+   once, and the panel grew until it pushed the table off the page. The cards
+   now come twelve at a time, in a carousel. */
+describe("RenderingMoreThanTreeviewElements — carousel", () => {
+  const cards = (count) =>
+    Array.from({ length: count }, (_, i) => ({
+      key: `Brand ${String(i + 1).padStart(2, "0")}`,
+      value: i + 1,
+    }));
+
+  it("shows at most twelve cards at a time", () => {
+    renderSection(section({ key: "brand", routeTitle: "brand", data: cards(25) }));
+
+    expect(screen.getByText("Brand 01")).toBeInTheDocument();
+    expect(screen.getByText("Brand 12")).toBeInTheDocument();
+    expect(screen.queryByText("Brand 13")).not.toBeInTheDocument();
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+  });
+
+  it("moves to the next twelve and back", () => {
+    renderSection(section({ key: "brand", routeTitle: "brand", data: cards(25) }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Next cards" }));
+    expect(screen.getByText("Brand 13")).toBeInTheDocument();
+    expect(screen.queryByText("Brand 01")).not.toBeInTheDocument();
+    expect(screen.getByText("2 / 3")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous cards" }));
+    expect(screen.getByText("Brand 01")).toBeInTheDocument();
+  });
+
+  it("jumps straight to a page", () => {
+    renderSection(section({ key: "brand", routeTitle: "brand", data: cards(25) }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Go to page 3" }));
+    expect(screen.getByText("Brand 25")).toBeInTheDocument();
+    expect(screen.queryByText("Brand 24")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next cards" })).toBeDisabled();
+  });
+
+  it("has no controls when twelve cards or fewer fit on one page", () => {
+    renderSection(section({ key: "brand", routeTitle: "brand", data: cards(12) }));
+
+    expect(screen.getByText("Brand 12")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Next cards" })).not.toBeInTheDocument();
+  });
+
+  /* A search can shrink the list while the carousel is on a later page; it
+     must not be left on a page that no longer exists, showing nothing. */
+  it("falls back to the last page that still exists when the list shrinks", () => {
+    const { rerender } = renderSection(
+      section({ key: "brand", routeTitle: "brand", data: cards(25) })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Go to page 3" }));
+
+    rerender(
+      <MemoryRouter>
+        <RenderingMoreThanTreeviewElements
+          item={section({ key: "brand", routeTitle: "brand", data: cards(20) })}
+          searchItem=""
+        />
+      </MemoryRouter>
+    );
+    expect(screen.getByText("Brand 13")).toBeInTheDocument();
+    expect(screen.getByText("2 / 2")).toBeInTheDocument();
   });
 });
