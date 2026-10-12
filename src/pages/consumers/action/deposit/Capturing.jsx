@@ -19,6 +19,7 @@ import ModalUX from "../../../../components/UX/modal/ModalUX";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { describePaymentError } from "../../../../utils/paymentRequestState";
+import { paymentIdempotencyHeaders } from "../../../../utils/paymentIdempotency";
 const schema = yup
   .object({
     amount: yup.number().required().positive().integer(),
