@@ -1451,6 +1451,10 @@ const RenderingFilters = ({
           <AdvanceSearchModal
             openAdvanceSearchModal={openAdvanceSearchModal}
             setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
+            // The filters narrow each other, from the same source the plain
+            // lists come from: the facets, or the rows in memory.
+            cascadeFromServer={Boolean(forecastFacets)}
+            cascadeRows={forecastFacets ? null : dataToDisplay}
           />
         </AdvanceSearchContext.Provider>
       )}

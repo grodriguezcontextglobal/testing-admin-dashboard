@@ -1,7 +1,7 @@
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import PropTypes from "prop-types";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -23,6 +23,7 @@ import {
   buildSearchQuery,
   countFilters,
   describeFilters,
+  dropUnavailableFilters,
   emptyFilters,
   readCachedOptions,
   readSearchError,
@@ -30,6 +31,7 @@ import {
   searchFieldErrors,
   writeCachedOptions,
 } from "./forecastInventory/utils/forecastSearch";
+import useForecastFilterOptions from "./forecastInventory/utils/useForecastFilterOptions";
 
 const { RangePicker } = DatePicker;
 
@@ -76,6 +78,11 @@ const stepClass = (done) =>
  *  - `periodUpdateOnly` changed the wording to "Update the period" and left
  *    every filter editable. The filters are stated, not editable, in that mode.
  *
+ *
+ * The filters narrow each other: pick the Laptop group and the brand, category
+ * and location lists keep only what laptops have (useForecastFilterOptions).
+ * Without `cascadeRows` or `cascadeFromServer` the lists stay unnarrowed.
+ *
  * The request is unchanged: the same eight query parameters, and the same
  * unpadded `2026-8-1` day format, both pinned by tests.
  */
@@ -84,6 +91,8 @@ const AdvanceSearchModal = ({
   setOpenAdvanceSearchModal,
   existingParameters = null,
   periodUpdateOnly = false,
+  cascadeRows = null,
+  cascadeFromServer = false,
 }) => {
   const context = useContext(AdvanceSearchContext);
   const { user } = useSelector((state) => state.admin);
@@ -96,14 +105,30 @@ const AdvanceSearchModal = ({
   const [isSearching, setIsSearching] = useState(false);
   const [failure, setFailure] = useState("");
 
+  /* The filter picked last: when two picks rule each other out, it stays. */
+  const lastPicked = useRef(null);
+  const cascade = useForecastFilterOptions({
+    filters,
+    rows: cascadeRows,
+    fromServer: cascadeFromServer,
+  });
+
   const options = useMemo(
     () =>
       resolveFilterOptions({
-        context,
+        context: cascade.context ?? context,
         cached: readCachedOptions(window.localStorage),
       }),
-    [context]
+    [cascade.context, context]
   );
+
+  /* A pick the others have ruled out is cleared, one per pass: clearing it
+     widens the other lists, and the next pass judges against those. */
+  useEffect(() => {
+    if (!cascade.context || !cascade.settled) return;
+    const next = dropUnavailableFilters(filters, cascade.context, lastPicked.current);
+    if (next !== filters) setFilters(next);
+  }, [cascade.context, cascade.settled, filters]);
 
   /* Refresh the fallback whenever the live context has something to say. */
   useEffect(() => {
@@ -261,12 +286,13 @@ const AdvanceSearchModal = ({
                       items.find((item) => item.id === filters[field.name]) ??
                       null
                     }
-                    onSelect={(option) =>
+                    onSelect={(option) => {
+                      lastPicked.current = field.name;
                       setFilters((current) => ({
                         ...current,
                         [field.name]: option?.id ?? "",
-                      }))
-                    }
+                      }));
+                    }}
                   />
                 </div>
               );
@@ -320,6 +346,8 @@ AdvanceSearchModal.propTypes = {
   setOpenAdvanceSearchModal: PropTypes.func.isRequired,
   existingParameters: PropTypes.object,
   periodUpdateOnly: PropTypes.bool,
+  cascadeRows: PropTypes.array,
+  cascadeFromServer: PropTypes.bool,
 };
 
 export default AdvanceSearchModal;

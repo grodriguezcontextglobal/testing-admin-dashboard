@@ -85,6 +85,68 @@ export const forecastContextFromFacets = (facets) => {
   );
 };
 
+/**
+ * The forecast filters picked, as inventory-facets filters, leaving out
+ * `fieldName` (null leaves out none). A filter's own options are never narrowed
+ * by itself: that would leave only the value already picked, and switching to
+ * another would need a Clear first.
+ */
+export const facetFiltersExcept = (filters, fieldName) =>
+  Object.fromEntries(
+    FILTER_FIELDS.filter(
+      (field) => field.name !== fieldName && text(filters?.[field.name])
+    ).map((field) => [FACET_FOR_FIELD[field.name], text(filters[field.name])])
+  );
+
+/**
+ * Each filter's options out of the rows in memory, narrowed by the others
+ * picked — the same rule as facetFiltersExcept, for when the table holds the
+ * whole inventory (server pagination off). Pick the Laptop group and the brand,
+ * category and location lists keep only what laptops have.
+ *
+ * Shaped like the modal's context: `{ key, value }` with value the item count.
+ */
+export const cascadeOptionsFromRows = (rows, filters) => {
+  const list = Array.isArray(rows) ? rows : [];
+  return Object.fromEntries(
+    FILTER_FIELDS.map((field) => {
+      const narrowing = Object.entries(facetFiltersExcept(filters, field.name));
+      const counts = new Map();
+      for (const row of list) {
+        if (!narrowing.every(([column, value]) => text(row?.[column]) === value)) continue;
+        const label = text(row?.[FACET_FOR_FIELD[field.name]]);
+        if (label) counts.set(label, (counts.get(label) ?? 0) + 1);
+      }
+      return [
+        field.name,
+        [...counts.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, value]) => ({ key, value })),
+      ];
+    })
+  );
+};
+
+/**
+ * The filters, minus one pick the others have ruled out: brand Apple, then the
+ * Desktop group, when no desktop is an Apple. Kept, it would run a forecast
+ * over nothing while its select showed empty.
+ *
+ * `keep` is the filter just picked. Two picks can rule each other out, and the
+ * one the person just made is the one they meant.
+ *
+ * One per call, because dropping a pick widens the others' lists: the caller
+ * recomputes the options and asks again until the same object comes back.
+ */
+export const dropUnavailableFilters = (filters, options, keep) => {
+  const ruledOut = FILTER_FIELDS.find((field) => {
+    const value = text(filters?.[field.name]);
+    if (!value || field.name === keep) return false;
+    return !toOptions(options?.[field.name]).some((option) => option.id === value);
+  });
+  return ruledOut ? { ...filters, [ruledOut.name]: "" } : filters;
+};
+
 /** Read the fallback blob, tolerating anything that is not JSON. */
 export const readCachedOptions = (storage) => {
   try {

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  cascadeOptionsFromRows,
+  dropUnavailableFilters,
+  facetFiltersExcept,
   FILTER_FIELDS,
   buildSearchParameters,
   buildSearchQuery,
@@ -311,5 +314,108 @@ describe("forecastContextFromFacets", () => {
       brand: [],
       location: [],
     });
+  });
+});
+
+describe("filters that narrow each other", () => {
+  const rows = [
+    { category_name: "Computers", item_group: "Laptop", brand: "Dell", location: "Main" },
+    { category_name: "Computers", item_group: "Laptop", brand: "Apple", location: "Main" },
+    { category_name: "Computers", item_group: "Desktop", brand: "Dell", location: "Annex" },
+    { category_name: "Audio", item_group: "Headset", brand: "Sennheiser", location: "Annex" },
+  ];
+  const labels = (options) => options.map((option) => option.key).sort();
+
+  it("offers everything while nothing is picked", () => {
+    const options = cascadeOptionsFromRows(rows, emptyFilters());
+    expect(labels(options.group)).toEqual(["Desktop", "Headset", "Laptop"]);
+    expect(labels(options.brand)).toEqual(["Apple", "Dell", "Sennheiser"]);
+  });
+
+  /* The example asked for: picking the Laptop group leaves only the brands,
+     categories and locations that laptops have. */
+  it("narrows the other filters to what matches the one picked", () => {
+    const options = cascadeOptionsFromRows(rows, { ...emptyFilters(), group: "Laptop" });
+    expect(labels(options.brand)).toEqual(["Apple", "Dell"]);
+    expect(labels(options.category)).toEqual(["Computers"]);
+    expect(labels(options.location)).toEqual(["Main"]);
+  });
+
+  /* A filter is never narrowed by itself, or after picking Laptop the group
+     list would hold only Laptop and switching to another group would need a
+     Clear first. */
+  it("keeps the whole list for the filter being narrowed by", () => {
+    const options = cascadeOptionsFromRows(rows, { ...emptyFilters(), group: "Laptop" });
+    expect(labels(options.group)).toEqual(["Desktop", "Headset", "Laptop"]);
+  });
+
+  it("combines every other filter picked", () => {
+    const options = cascadeOptionsFromRows(rows, {
+      ...emptyFilters(),
+      brand: "Dell",
+      location: "Annex",
+    });
+    expect(labels(options.group)).toEqual(["Desktop"]);
+    expect(labels(options.brand)).toEqual(["Dell", "Sennheiser"]);
+  });
+
+  it("counts the items behind each option", () => {
+    const options = cascadeOptionsFromRows(rows, { ...emptyFilters(), category: "Computers" });
+    expect(options.brand.find((option) => option.key === "Dell").value).toBe(2);
+  });
+
+  it("tolerates no rows", () => {
+    expect(cascadeOptionsFromRows(null, emptyFilters())).toEqual({
+      category: [],
+      group: [],
+      brand: [],
+      location: [],
+    });
+  });
+
+  it("asks the server for each filter's options with every other filter applied", () => {
+    const filters = { category: "", group: "Laptop", brand: "Dell", location: "" };
+    expect(facetFiltersExcept(filters, "brand")).toEqual({ item_group: "Laptop" });
+    expect(facetFiltersExcept(filters, "location")).toEqual({
+      item_group: "Laptop",
+      brand: "Dell",
+    });
+    expect(facetFiltersExcept(emptyFilters(), "group")).toEqual({});
+    expect(facetFiltersExcept(filters, null)).toEqual({
+      item_group: "Laptop",
+      brand: "Dell",
+    });
+  });
+
+  /* Brand Apple, then Desktop: no desktop is an Apple, and keeping the brand
+     would run a forecast over nothing while the select shows it empty. */
+  it("drops a pick the others have ruled out, keeping the one just made", () => {
+    const filters = { category: "", group: "Desktop", brand: "Apple", location: "" };
+    const options = cascadeOptionsFromRows(rows, filters);
+    // Each rules the other out; which one goes depends on which came last.
+    expect(dropUnavailableFilters(filters, options, "group")).toEqual({
+      ...filters,
+      brand: "",
+    });
+    expect(dropUnavailableFilters(filters, options, "brand")).toEqual({
+      ...filters,
+      group: "",
+    });
+  });
+
+  /* One at a time: dropping one pick widens the others' lists, so a second
+     pick that looked ruled out may stand once the first is gone. */
+  it("drops one pick per call", () => {
+    const filters = { category: "Audio", group: "Laptop", brand: "Apple", location: "" };
+    const options = cascadeOptionsFromRows(rows, filters);
+    const next = dropUnavailableFilters(filters, options, "group");
+    expect(next).toEqual({ ...filters, category: "" });
+    expect(dropUnavailableFilters(next, cascadeOptionsFromRows(rows, next), "group")).toBe(next);
+  });
+
+  it("returns the same object when every pick still stands", () => {
+    const filters = { ...emptyFilters(), group: "Laptop", brand: "Dell" };
+    const options = cascadeOptionsFromRows(rows, filters);
+    expect(dropUnavailableFilters(filters, options, "brand")).toBe(filters);
   });
 });

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -30,15 +31,19 @@ const context = {
   location: [{ key: "Warehouse" }],
 };
 
+/* The options hook asks inventory-facets through React Query, so the modal
+   needs a client even when the facets are off. */
 const wrap = (props = {}, ctx = context) =>
   render(
-    <AdvanceSearchContext.Provider value={ctx}>
-      <AdvanceSearchModal
-        openAdvanceSearchModal
-        setOpenAdvanceSearchModal={setOpen}
-        {...props}
-      />
-    </AdvanceSearchContext.Provider>
+    <QueryClientProvider client={new QueryClient()}>
+      <AdvanceSearchContext.Provider value={ctx}>
+        <AdvanceSearchModal
+          openAdvanceSearchModal
+          setOpenAdvanceSearchModal={setOpen}
+          {...props}
+        />
+      </AdvanceSearchContext.Provider>
+    </QueryClientProvider>
   );
 
 /* The antd RangePicker is a calendar, not the subject of these tests. The
@@ -287,5 +292,30 @@ describe("AdvanceSearchModal — failures", () => {
 
     await waitFor(() => expect(screen.getByText("Network Error")).toBeInTheDocument());
     expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe("AdvanceSearchModal — filters that narrow each other", () => {
+  const rows = [
+    { category_name: "Computers", item_group: "Laptop", brand: "Dell", location: "Main" },
+    { category_name: "Computers", item_group: "Laptop", brand: "Apple", location: "Main" },
+    { category_name: "Audio", item_group: "Headset", brand: "Sennheiser", location: "Annex" },
+  ];
+
+  it("offers only the brands of the group picked", () => {
+    wrap({ cascadeRows: rows });
+    pick("Any group", "Laptop");
+    fireEvent.click(screen.getByPlaceholderText("Any brand"));
+    expect(screen.getByText("Dell")).toBeInTheDocument();
+    expect(screen.getByText("Apple")).toBeInTheDocument();
+    expect(screen.queryByText("Sennheiser")).not.toBeInTheDocument();
+  });
+
+  it("narrows in either direction: a brand narrows the groups", () => {
+    wrap({ cascadeRows: rows });
+    pick("Any brand", "Sennheiser");
+    fireEvent.click(screen.getByPlaceholderText("Any group"));
+    expect(screen.getByText("Headset")).toBeInTheDocument();
+    expect(screen.queryByText("Laptop")).not.toBeInTheDocument();
   });
 });
