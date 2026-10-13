@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
@@ -8,6 +8,8 @@ import { eventsListPath } from "./utils/eventsListQuery";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import EventsCarousel from "../../components/UX/carousel/EventsCarousel";
+import Chip from "../../components/UX/Chip/Chip";
+import { findEventManager } from "../inventory/utils/warehouseManagerUtils";
 import { onAddCompanyAccountStripe } from "../../store/slices/adminSlice";
 import {
   onResetEventInfo
@@ -32,6 +34,15 @@ const MainPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
+  // Who is in charge of the company's events, so everyone on this page can see
+  // it — the same pill the inventory page shows for the warehouse manager.
+  // Read off the roster already in Redux, reduced in useMemo so the random
+  // pick holds for the life of the mount.
+  const employees = user?.companyData?.employees;
+  const eventManager = useMemo(() => findEventManager(employees), [employees]);
+  const eventManagerPill = eventManager ? (
+    <Chip size="small" color="info" label={`Event manager: ${eventManager.name}`} />
+  ) : null;
   // eventList derives from the query cache (not local state): revisits render
   // the cached list instantly while the refetch runs in the background —
   // gating the page on isRefetching swapped content back to a spinner on
@@ -146,6 +157,7 @@ const MainPage = () => {
             textAlign={"center"}
             justifyContent={"center"}
             alignItems={"center"}
+            flexDirection={"column"}
             margin={"0.5rem auto 0"}
             gap={1}
             marginY={2}
@@ -155,6 +167,7 @@ const MainPage = () => {
             md={12}
             lg={12}
           >
+            {eventManagerPill}
             {/* /event/new_subscription */}
             <Link
               to="/create-event-page/event-detail"
@@ -191,11 +204,23 @@ const MainPage = () => {
             md={12}
             lg={12}
           >
-            <Typography
-              style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+            {/* A column, so the event-manager pill sits under the title, as the
+                warehouse-manager pill does on the inventory page. */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "8px",
+              }}
             >
-              Events
-            </Typography>
+              <Typography
+                style={{ ...TextFontSize30LineHeight38, textAlign: "left" }}
+              >
+                Events
+              </Typography>
+              {eventManagerPill}
+            </div>
             {/* /event/new_subscription */}
             <Link to="/create-event-page/event-detail">
               {" "}

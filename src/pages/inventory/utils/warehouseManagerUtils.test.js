@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { findWarehouseManager } from "./warehouseManagerUtils";
+import { findEventManager, findWarehouseManager } from "./warehouseManagerUtils";
 
 const employee = (over = {}) => ({
   firstName: "Ana",
@@ -162,5 +162,32 @@ describe("findWarehouseManager — edge cases", () => {
     expect(
       findWarehouseManager([employee({ lastName: undefined })])?.name
     ).toBe("Ana");
+  });
+});
+
+// The events page names the company's event manager the same way the
+// inventory page names the warehouse manager.
+describe("findEventManager", () => {
+  it("finds the event manager in each stored form of the role", () => {
+    expect(findEventManager([employee({ role: "3" })])?.name).toBe("Ana Ruiz");
+    expect(findEventManager([employee({ role: "event_manager" })])?.name).toBe("Ana Ruiz");
+    expect(findEventManager([employee({ roleType: "manager_event" })])).toEqual({
+      name: "Ana Ruiz",
+      email: "ana@x.com",
+    });
+  });
+
+  it("does not take the warehouse manager for the event manager", () => {
+    expect(findEventManager([employee({ role: "4" })])).toBeNull();
+    expect(findWarehouseManager([employee({ role: "3" })])).toBeNull();
+  });
+
+  it("skips Pending and inactive event managers", () => {
+    expect(findEventManager([employee({ role: "3", status: "Pending" })])).toBeNull();
+    expect(findEventManager([employee({ role: "3", active: false })])).toBeNull();
+  });
+
+  it("returns null for a missing roster", () => {
+    expect(findEventManager(undefined)).toBeNull();
   });
 });

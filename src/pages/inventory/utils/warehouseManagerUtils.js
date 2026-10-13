@@ -2,6 +2,8 @@ import { getRoleLabelGroupKey } from "../../../config/roles";
 
 /** The role concept that counts as being in charge of the warehouse. */
 const WAREHOUSE_MANAGER_CONCEPT = "inventory_manager";
+/** The role concept that counts as being in charge of the company's events. */
+const EVENT_MANAGER_CONCEPT = "event_manager";
 
 /**
  * Mirrors the active-staff predicate the staff KPI strip uses: `active` arrives
@@ -46,7 +48,7 @@ const fullName = (employee) =>
  * @param {Array<object>} employees company.employees
  * @returns {{name: string, email: string|undefined}|null}
  */
-export const findWarehouseManager = (employees) => {
+const findManagerOf = (concept) => (employees) => {
   const list = Array.isArray(employees) ? employees : [];
 
   const managers = list
@@ -57,7 +59,7 @@ export const findWarehouseManager = (employees) => {
       // 0 maps to root_admin, so an employee with an empty role would resolve
       // to a concept they do not hold.
       if (raw === undefined || raw === null || raw === "") return false;
-      return getRoleLabelGroupKey(raw) === WAREHOUSE_MANAGER_CONCEPT;
+      return getRoleLabelGroupKey(raw) === concept;
     })
     .filter((employee) => fullName(employee).length > 0);
 
@@ -65,5 +67,14 @@ export const findWarehouseManager = (employees) => {
   const picked = managers[Math.floor(Math.random() * managers.length)];
   return { name: fullName(picked), email: picked?.user };
 };
+
+export const findWarehouseManager = findManagerOf(WAREHOUSE_MANAGER_CONCEPT);
+
+/**
+ * The same rule for the events page: one active event manager, picked at
+ * random, or null. Matches the legacy "3", "event_manager" and the canonical
+ * "manager_event".
+ */
+export const findEventManager = findManagerOf(EVENT_MANAGER_CONCEPT);
 
 export default findWarehouseManager;
