@@ -12,12 +12,15 @@ import Input from "../../components/UX/inputs/Input";
 import PasswordRequirements from "../../components/UX/password/PasswordRequirements";
 import PasswordVisibilityToggle from "../../components/UX/password/PasswordVisibilityToggle";
 import { FormHelperText, FormLabel } from "@mui/material";
+import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
 import PasswordMfaStep from "./password/PasswordMfaStep";
 import {
     buildPasswordUpdatePayload,
-    describePasswordUpdateError,
     newPasswordSchema,
+    readPasswordMfaOutcome,
 } from "./utils/passwordPolicy";
+
+const DEFAULT_CODE_HINT = "Enter the 6-digit code from your authenticator app to confirm the change.";
 
 const FeaturedIcon = ({ children, color = "gray" }) => {
     const colorStyles = {
@@ -67,6 +70,11 @@ const ResetPassword = () => {
     const [mfaError, setMfaError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
+    /* `{ setupToken }` while the MFA setup is open, for an account without MFA. */
+    const [enrollment, setEnrollment] = useState(null);
+    const [codeHint, setCodeHint] = useState(DEFAULT_CODE_HINT);
+    const [formError, setFormError] = useState("");
+    const [linkRejected, setLinkRejected] = useState(false);
     const {
         register,
         handleSubmit,
@@ -75,20 +83,78 @@ const ResetPassword = () => {
     } = useForm({ resolver: yupResolver(newPasswordSchema), defaultValues: { password: "", password2: "" } });
     const navigate = useNavigate();
 
-    /* The link carries the account's email (and its `uid`, for links sent
-       before the email was added): the page no longer downloads the staff list
-       to look the email up. `stamp-time` is
-       only a courtesy notice that the link is old — it can be edited in the
-       URL, so it protects nothing; the MFA code does. */
-    const stampTime = new URLSearchParams(window.location.search).get("stamp-time");
-    const adminUid = new URLSearchParams(window.location.search).get("uid");
+    /* The server writes and signs the link (FRONTEND_password_reset_sin_mfa_
+       2026-10-13.md): its `token` names the account and proves the mailbox,
+       lasts an hour and is used once. The server checks all of that, so a
+       signed link is not timed here.
+       Links sent before that carry only `uid`, `email` and `stamp-time`; for
+       those `stamp-time` is still the courtesy notice it always was — it can
+       be edited in the URL, so it protects nothing; the MFA code does. */
+    const params = new URLSearchParams(window.location.search);
+    const resetToken = params.get("token");
+    const stampTime = params.get("stamp-time");
+    const adminUid = params.get("uid");
     /* Read from the link and sent back in the PATCH, never shown on the page. */
-    const adminEmail = new URLSearchParams(window.location.search).get("email");
-    const isLinkValid = Boolean(adminEmail || adminUid) && new Date(stampTime).getTime() - new Date().getTime() > -400000;
+    const adminEmail = params.get("email");
+    const isLinkValid = resetToken
+        ? true
+        : Boolean(adminEmail || adminUid) && new Date(stampTime).getTime() - new Date().getTime() > -400000;
 
-    const goToMfaStep = (data) => {
+    const passwordPayload = (password, mfaCode) =>
+        buildPasswordUpdatePayload({ resetToken, uid: adminUid, email: adminEmail, password, mfaCode });
+
+    const finishReset = () => {
+        setSuccessMessage("Password updated. Redirecting to login...");
+        setTimeout(() => navigate("/login"), 5000);
+    };
+
+    /* Every refusal, from either step, ends up here. An account without MFA is
+       never asked for a code it cannot have: it sets MFA up first, with the
+       `mfaSetupToken` the server hands to a signed link, and comes back to the
+       code step afterwards. */
+    const handleRefusal = (error, showError) => {
+        const outcome = readPasswordMfaOutcome(error);
+        if (outcome.action === "enroll") {
+            setEnrollment({ setupToken: outcome.setupToken });
+        } else if (outcome.action === "enterCode") {
+            setStep("mfa");
+        } else if (outcome.action === "linkInvalid") {
+            setLinkRejected(true);
+        } else if (outcome.action === "setupUnavailable") {
+            showError(
+                "Your account needs two-step verification before its password can be reset. Request a new reset email and open the link in it."
+            );
+        } else {
+            showError(outcome.message);
+        }
+    };
+
+    /* First send, without a code: nothing is saved, and the server says what
+       the account still needs — the code (`mfaRequired`) or the MFA setup
+       (`mfaSetupRequired`). */
+    const submitPassword = async (data) => {
         setNewPassword(data.password);
+        setFormError("");
         setMfaError("");
+        setCodeHint(DEFAULT_CODE_HINT);
+        setIsLoading(true);
+        try {
+            await devitrakApi.patch(`/admin/update-password`, passwordPayload(data.password));
+            finishReset();
+        } catch (error) {
+            handleRefusal(error, setFormError);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    /* Not a session: the setup only turned MFA on, and the password has not
+       changed yet. So no trip to /login (`reloginRequired` does not apply
+       here) — the code step sends the change. */
+    const finishMfaSetup = () => {
+        setEnrollment(null);
+        setMfaError("");
+        setCodeHint("Two-step verification is on. Enter the code your app shows now to reset your password.");
         setStep("mfa");
     };
 
@@ -98,20 +164,11 @@ const ResetPassword = () => {
         setIsLoading(true);
         setMfaError("");
         try {
-            await devitrakApi.patch(
-                `/admin/update-password`,
-                buildPasswordUpdatePayload({
-                    uid: adminUid,
-                    email: adminEmail,
-                    password: newPassword,
-                    mfaCode,
-                })
-            );
-            setSuccessMessage("Password updated. Redirecting to login...");
-            setTimeout(() => navigate("/login"), 5000);
+            await devitrakApi.patch(`/admin/update-password`, passwordPayload(newPassword, mfaCode));
+            finishReset();
             return true;
         } catch (error) {
-            setMfaError(describePasswordUpdateError(error));
+            handleRefusal(error, setMfaError);
             return false;
         } finally {
             setIsLoading(false);
@@ -144,7 +201,7 @@ const ResetPassword = () => {
         textAlign: "center",
     };
 
-    if (!isLinkValid) {
+    if (!isLinkValid || linkRejected) {
         return (
             <section style={pageStyle}>
                 <div style={containerStyle}>
@@ -160,7 +217,7 @@ const ResetPassword = () => {
                                 Link expired
                             </h1>
                             <p style={{ fontSize: "16px", color: "var(--gray-500, #667085)", lineHeight: "24px", margin: 0 }}>
-                                This password reset link has expired. Please request a new one.
+                                This password reset link has expired or was already used. Please request a new one.
                             </p>
                         </div>
                     </div>
@@ -206,11 +263,12 @@ const ResetPassword = () => {
                             isLoading={isLoading}
                             error={mfaError}
                             confirmLabel="Reset password"
+                            hint={codeHint}
                         />
                     </div>
                 ) : (
                     <form
-                        onSubmit={handleSubmit(goToMfaStep)}
+                        onSubmit={handleSubmit(submitPassword)}
                         style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative", zIndex: 10 }}
                     >
                         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -252,6 +310,11 @@ const ResetPassword = () => {
                             </FormLabel>
                             <FormHelperText>{errors?.password2?.message}</FormHelperText>
                         </div>
+                        {formError ? (
+                            <FormHelperText error role="alert" style={{ margin: 0 }}>
+                                {formError}
+                            </FormHelperText>
+                        ) : null}
                         <BlueButtonComponent
                             buttonType="submit"
                             size="lg"
@@ -266,6 +329,15 @@ const ResetPassword = () => {
                     <GrayButtonComponent href="/login" title="Back to log in" iconLeading={<LeftArrowIcon />} />
                 </div>
             </div>
+            {/* No `email`: the address in the link is never shown on this page. */}
+            <MfaEnrollmentModal
+                open={Boolean(enrollment)}
+                setupToken={enrollment?.setupToken}
+                onEnrolled={finishMfaSetup}
+                onDismiss={() => setEnrollment(null)}
+                dismissLabel="Cancel"
+                dismissHint="Your password can't be reset until two-step verification is set up."
+            />
         </section>
     );
 };

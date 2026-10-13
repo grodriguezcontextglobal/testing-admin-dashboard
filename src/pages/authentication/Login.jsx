@@ -873,6 +873,7 @@ const Login = () => {
         <MfaEnrollmentModal
           open={mfaEnrollmentOpen}
           authToken={enrolmentAuthToken(pendingLogin.current)}
+          setupToken={pendingLogin.current?.setupToken}
           email={userEmail}
           onEnrolled={handleMfaEnrolled}
           onDismiss={handleMfaEnrollmentDismissed}

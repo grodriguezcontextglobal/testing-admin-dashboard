@@ -1,4 +1,6 @@
 import { ROLE_LEVELS } from "../../../config/roles";
+import { normalizeMfaCode } from "./mfaEnrollment";
+import { describeMfaError } from "./passwordPolicy";
 
 /**
  * Pure logic for InvitationLanding — the accept-invitation payload, the
@@ -19,6 +21,10 @@ const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try later.";
  * could ask for root_admin and land with it in company_staff, which is the
  * source of truth on the SQL side. The backend now resolves the role from the
  * invitation already sitting in Company.employees and returns the one it used.
+ *
+ * A new account sends the password it chose. An account that already exists
+ * sends no password: it proves it is the holder with `mfaCode`, the code from
+ * its authenticator app, the same way a password change does.
  */
 export const buildAcceptInvitationPayload = ({
   firstName,
@@ -26,15 +32,20 @@ export const buildAcceptInvitationPayload = ({
   email,
   companyName,
   password,
-}) => ({
-  user: {
-    name: firstName,
-    lastName,
-    email,
-    ...(password ? { password } : {}),
-  },
-  company: { company_name: companyName },
-});
+  mfaCode,
+}) => {
+  const code = normalizeMfaCode(mfaCode);
+  return {
+    user: {
+      name: firstName,
+      lastName,
+      email,
+      ...(password ? { password } : {}),
+    },
+    company: { company_name: companyName },
+    ...(code ? { mfaCode: code } : {}),
+  };
+};
 
 /**
  * The companiesAssigned entry appended when an existing account joins another
@@ -65,5 +76,7 @@ export const buildCompanyAssignment = ({ companyName, roleType }) => {
  */
 export const invitationErrorMessage = (error) => {
   if (error?.response?.status === 404) return NO_INVITATION_MESSAGE;
+  const mfaMessage = describeMfaError(error);
+  if (mfaMessage) return mfaMessage;
   return error?.response?.data?.msg ?? GENERIC_ERROR_MESSAGE;
 };

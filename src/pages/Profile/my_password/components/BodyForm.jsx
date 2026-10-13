@@ -47,6 +47,8 @@ const BodyForm = ({
   password,
   isSaving,
   mfaError,
+  codeHint,
+  setupPrompt,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -111,6 +113,8 @@ const BodyForm = ({
                 isLoading={isSaving}
                 error={mfaError}
                 confirmLabel="Save and log out"
+                hint={codeHint}
+                setupPrompt={setupPrompt}
               />
             </Grid>
           </Grid>

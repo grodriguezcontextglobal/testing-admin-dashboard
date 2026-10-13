@@ -7,6 +7,7 @@ import {
   describePasswordUpdateError,
   newPasswordSchema,
   passwordStrength,
+  readPasswordMfaOutcome,
 } from "./passwordPolicy";
 
 const ruleIds = (password) =>
@@ -122,6 +123,27 @@ describe("buildPasswordUpdatePayload", () => {
     expect(params.get("stamp-time")).toBe("Mon Oct 13 2026");
   });
 
+  it("leaves the code out when there is none, to ask the server whether the account has MFA", () => {
+    expect(buildPasswordUpdatePayload({ email: "a@b.co", password: "Abcdef1!" })).toEqual({
+      email: "a@b.co",
+      password: "Abcdef1!",
+    });
+  });
+
+  // FRONTEND_password_reset_sin_mfa_2026-10-13.md: with the signed link's
+  // token the server takes the account from it and ignores uid and email.
+  it("sends only the reset token of a signed link, not uid or email", () => {
+    expect(
+      buildPasswordUpdatePayload({
+        resetToken: "reset.jwt",
+        uid: "abc123",
+        email: "a@b.co",
+        password: "Abcdef1!",
+        mfaCode: "123456",
+      }),
+    ).toEqual({ resetToken: "reset.jwt", password: "Abcdef1!", mfaCode: "123456" });
+  });
+
   it("never sends the current password", () => {
     const payload = buildPasswordUpdatePayload({
       email: "a@b.co",
@@ -162,5 +184,63 @@ describe("describePasswordUpdateError", () => {
     expect(describePasswordUpdateError(new Error("Network Error"))).toBe(
       "We couldn't update your password. Please try again.",
     );
+  });
+});
+
+describe("readPasswordMfaOutcome", () => {
+  const refused = (data, status = 403) => ({ response: { status, data } });
+
+  it("opens the setup with the token the server hands an account without MFA", () => {
+    expect(
+      readPasswordMfaOutcome(refused({ mfaSetupRequired: true, mfaSetupToken: "setup.jwt" })),
+    ).toEqual({ action: "enroll", setupToken: "setup.jwt" });
+  });
+
+  // The server's exact answer for an account without MFA (2026-10-13).
+  const NO_MFA_ANSWER = {
+    ok: false,
+    mfaSetupRequired: true,
+    msg: "MFA is not enabled on this account. Enable MFA and then send this request again.",
+  };
+
+  it("offers the setup on the server's no-MFA answer when signed in", () => {
+    expect(readPasswordMfaOutcome(refused(NO_MFA_ANSWER), { hasSession: true })).toEqual({
+      action: "enroll",
+      setupToken: undefined,
+    });
+  });
+
+  it("opens the setup on the open session when the user is signed in", () => {
+    expect(
+      readPasswordMfaOutcome(refused({ mfaSetupRequired: true }), { hasSession: true }),
+    ).toEqual({ action: "enroll", setupToken: undefined });
+  });
+
+  // Without a session and without a token the client has nothing that
+  // authenticates /mfa/generate; offering the setup would only fail later.
+  // That is a link sent before the server signed them.
+  it("does not offer a setup it cannot authenticate", () => {
+    expect(readPasswordMfaOutcome(refused({ mfaSetupRequired: true }))).toEqual({
+      action: "setupUnavailable",
+    });
+  });
+
+  it("recognises a fake, expired or used reset link", () => {
+    expect(
+      readPasswordMfaOutcome(refused({ ok: false, resetLinkInvalid: true }, 400)),
+    ).toEqual({ action: "linkInvalid" });
+  });
+
+  it("asks for the code when the account already has MFA", () => {
+    expect(readPasswordMfaOutcome(refused({ mfaRequired: true }))).toEqual({ action: "enterCode" });
+  });
+
+  it("passes every other failure through as a message", () => {
+    expect(
+      readPasswordMfaOutcome(refused({ msg: "Invalid email or MFA code" }, 400)),
+    ).toEqual({
+      action: "error",
+      message: "The code or the account isn't valid. Codes expire every 30 seconds — try the one showing now.",
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { Typography } from "antd";
 import PropTypes from "prop-types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { devitrakApiAdmin } from "../../../api/devitrakApi";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -40,6 +40,7 @@ const stepTitleStyle = {
 const MfaEnrollmentModal = ({
   open,
   authToken,
+  setupToken,
   email,
   onEnrolled,
   onDismiss,
@@ -52,6 +53,10 @@ const MfaEnrollmentModal = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState("");
+  /* Read through a ref so a new callback from the parent does not rebuild
+     `generate`, which would rerun the effect and replace the QR code. */
+  const onEnrolledRef = useRef(onEnrolled);
+  onEnrolledRef.current = onEnrolled;
 
   const generate = useCallback(async () => {
     try {
@@ -60,7 +65,7 @@ const MfaEnrollmentModal = ({
       const response = await devitrakApiAdmin.post(
         "/mfa/generate",
         {},
-        mfaRequestConfig(authToken)
+        mfaRequestConfig(authToken, setupToken)
       );
       if (!response.data?.qrCode) {
         throw new Error("No QR code in the response");
@@ -68,6 +73,12 @@ const MfaEnrollmentModal = ({
       setQrCode(response.data.qrCode);
       setSecret(response.data.secret ?? "");
     } catch (err) {
+      /* 409: the account already has MFA — turned on in another tab. There is
+         nothing to set up; the caller goes on to ask for the code. */
+      if (err?.response?.status === 409) {
+        onEnrolledRef.current();
+        return;
+      }
       console.error("MFA generate", err);
       setQrCode(null);
       setError(
@@ -77,7 +88,7 @@ const MfaEnrollmentModal = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [authToken]);
+  }, [authToken, setupToken]);
 
   /* Asked for once per opening. The server writes a fresh secret on every
      call, so regenerating behind the user's back would invalidate the QR code
@@ -101,7 +112,7 @@ const MfaEnrollmentModal = ({
       await devitrakApiAdmin.post(
         "/mfa/verify",
         { token: normalizeMfaCode(code) },
-        mfaRequestConfig(authToken)
+        mfaRequestConfig(authToken, setupToken)
       );
       onEnrolled();
     } catch (err) {
@@ -256,6 +267,8 @@ const MfaEnrollmentModal = ({
 MfaEnrollmentModal.propTypes = {
   open: PropTypes.bool.isRequired,
   authToken: PropTypes.string,
+  /* An `mfaSetupToken`; sent in `x-mfa-setup-token` instead of `authToken`. */
+  setupToken: PropTypes.string,
   email: PropTypes.string,
   onEnrolled: PropTypes.func.isRequired,
   onDismiss: PropTypes.func.isRequired,

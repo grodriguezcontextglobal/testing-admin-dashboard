@@ -64,11 +64,20 @@ export const isCompleteMfaCode = (value) =>
  * so the token travels as an explicit header rather than through the request
  * interceptor, which reads `localStorage["admin-token"]`.
  *
+ * A setup token (`mfaSetupToken`, from a refused login or a password reset)
+ * wins over a session token when both are known. It travels in `x-token` too:
+ * FRONTEND_password_reset_sin_mfa_2026-10-13.md names an `x-mfa-setup-token`
+ * header, but the production CORS does not list it in
+ * Access-Control-Allow-Headers, and the browser blocked every /mfa/generate
+ * that carried it (2026-10-13). Switch once the server allows it.
+ *
  * With no token the config is empty and the interceptor's own header applies,
  * which is the profile-page case, where a session is already open.
  */
-export const mfaRequestConfig = (authToken) =>
-  authToken ? { headers: { "x-token": String(authToken) } } : {};
+export const mfaRequestConfig = (authToken, setupToken) => {
+  const token = setupToken || authToken;
+  return token ? { headers: { "x-token": String(token) } } : {};
+};
 
 /**
  * The server's own MFA gate, read off a refused login.

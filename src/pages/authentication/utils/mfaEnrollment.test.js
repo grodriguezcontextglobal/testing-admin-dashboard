@@ -97,6 +97,19 @@ describe("authenticating the enrolment calls", () => {
     expect(mfaRequestConfig("jwt")).toEqual({ headers: { "x-token": "jwt" } });
   });
 
+  // FRONTEND_password_reset_sin_mfa names an `x-mfa-setup-token` header, but
+  // the production CORS does not allow it (Access-Control-Allow-Headers,
+  // checked 2026-10-13): the browser blocked /mfa/generate before sending it.
+  // The setup token travels in x-token, the header that is allowed.
+  it("sends a setup token in x-token, ahead of a session token", () => {
+    expect(mfaRequestConfig(undefined, "setup-jwt")).toEqual({
+      headers: { "x-token": "setup-jwt" },
+    });
+    expect(mfaRequestConfig("jwt", "setup-jwt")).toEqual({
+      headers: { "x-token": "setup-jwt" },
+    });
+  });
+
   it("falls back to the interceptor when there is no token to pass", () => {
     expect(mfaRequestConfig()).toEqual({});
     expect(mfaRequestConfig("")).toEqual({});
