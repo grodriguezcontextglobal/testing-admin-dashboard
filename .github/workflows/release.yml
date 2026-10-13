@@ -1,0 +1,104 @@
+name: Release (IIS)
+
+# Producción (IIS en DEVITRACKAPP) no recibe nada desde aquí: cada push a main
+# que pasa la CI publica el build como GitHub Release, y el servidor lo
+# recoge con deploy/iis/Update-AdminSite.ps1. Ver deploy/iis/README.md.
+#
+# Pull en vez de push porque el repo es público: un runner self-hosted
+# ejecutaría workflows de PRs de forks en el servidor, y Web Deploy obligaría
+# a abrir el 8172 a todo internet.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Un release a la vez y sin cancelar uno a medias: el orden de los tags es el
+# orden de los despliegues.
+concurrency:
+  group: release-iis
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Build y publicar release
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Las VITE_APP_* de producción son variables de este environment
+    # (Settings → Environments → production). Si falta una obligatoria,
+    # vite.config.js (src/config/envValidation.js) aborta el build y no se
+    # publica nada.
+    environment: production
+    permissions:
+      contents: write
+
+    env:
+      CYPRESS_INSTALL_BINARY: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.5
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_APP_DEVITRACK_API: ${{ vars.VITE_APP_DEVITRACK_API }}
+          VITE_APP_DEVITRACK_API_BACKUP: ${{ vars.VITE_APP_DEVITRACK_API_BACKUP }}
+          VITE_APP_PUBLIC_STRIPE_KEY: ${{ vars.VITE_APP_PUBLIC_STRIPE_KEY }}
+          VITE_APP_FEATURE_SCOPED_ROLES: ${{ vars.VITE_APP_FEATURE_SCOPED_ROLES }}
+          VITE_APP_FEATURE_MEMBER_FEES: ${{ vars.VITE_APP_FEATURE_MEMBER_FEES }}
+          VITE_APP_FEATURE_THEME_SWITCH: ${{ vars.VITE_APP_FEATURE_THEME_SWITCH }}
+          VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION: ${{ vars.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION }}
+
+      # El script del servidor se niega a desplegar un paquete sin index.html o
+      # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.
+      - name: Check package
+        run: |
+          test -f dist/index.html
+          test -f dist/web.config
+
+      - name: Package
+        id: package
+        run: |
+          tag="admin-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          (cd dist && zip -qr ../admin-dist.zip .)
+          sha256sum admin-dist.zip | cut -d' ' -f1 > admin-dist.zip.sha256
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.package.outputs.tag }}
+        run: |
+          gh release create "$TAG" admin-dist.zip admin-dist.zip.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes "Build de ${GITHUB_SHA}. DEVITRACKAPP lo despliega en la siguiente pasada de Update-AdminSite.ps1." \
+            --latest
+
+      # Los 15 más recientes bastan para volver atrás; el servidor guarda 5.
+      - name: Prune old releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 200 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("admin-"))] | sort_by(.createdAt) | reverse | .[15:] | .[].tagName' |
+          while read -r tag; do
+            gh release delete "$tag" --yes --cleanup-tag
+          done
