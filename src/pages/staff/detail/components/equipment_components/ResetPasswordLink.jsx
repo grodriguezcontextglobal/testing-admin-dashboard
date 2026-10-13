@@ -9,7 +9,7 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { ProfileSkeleton } from "../../../../../components/UX/profile";
-import { buildResetPasswordLink } from "../../../../authentication/utils/passwordPolicy";
+import { buildResetEmailRequest } from "../../../../authentication/utils/passwordPolicy";
 import "../../../../../styles/global/actionForm.css";
 
 /**
@@ -71,27 +71,16 @@ const ForgetPasswordLinkFromStaffPage = () => {
 
   const closeModal = () => navigate(`/staff/${profile.adminUserInfo.id}/main`);
 
-  /* The handler reads `contactInfo` and `linkToResetPassword`, and nothing
-     else (see src/docs/api-payloads.md and the backend's reply of 2026-09-10).
-     This used to also send `company_logo`, which nobody read: account
-     recovery is deliberately Devitrak-branded, because the person opening it
-     needs to recognise the platform their account is on rather than their
-     school — it is the email a phishing attempt would imitate. Sending a logo
-     made the code look like the opposite was true. */
+  /* The same request as the self-service flow: the server finds the account
+     by email and builds and signs the link itself, so nothing else is sent.
+     Account recovery is deliberately Devitrak-branded — it is the email a
+     phishing attempt would imitate — so no company logo either. */
   const sendLink = useMutation({
     mutationFn: () =>
-      devitrakApi.post("/nodemailer/reset-admin-password", {
-        adminUser: { firstName: account.name, lastName: account.lastName },
-        // The same link as the self-service flow: /reset-password sends the
-        // email back in the PATCH, so the link has to carry it.
-        linkToResetPassword: buildResetPasswordLink({
-          origin: "https://admin.devitrak.net",
-          uid: account.id,
-          email: account.email ?? profile.email,
-          stampTime: `${new Date()}`,
-        }),
-        contactInfo: { email: profile.email, company: account.company },
-      }),
+      devitrakApi.post(
+        "/nodemailer/reset-admin-password",
+        buildResetEmailRequest(profile.email),
+      ),
     onSuccess: (response) => {
       if (!response.data?.ok) {
         return setNotice("The email was not sent. Try again in a moment.");

@@ -94,17 +94,13 @@ export const buildPasswordUpdatePayload = ({ resetToken, uid, email, password, m
 };
 
 /**
- * The link in the reset email. It carries the email so the reset page can send
- * it back in the PATCH without showing it or looking it up.
+ * Body for POST /nodemailer/reset-admin-password. The server builds and signs
+ * the link itself and ignores one sent by the client, so the address is all
+ * it takes. It answers 202 whether or not the account exists, on purpose.
  */
-export const buildResetPasswordLink = ({ origin, uid, email, stampTime }) => {
-  const params = new URLSearchParams({
-    uid: String(uid ?? ""),
-    email: String(email ?? "").trim(),
-    "stamp-time": String(stampTime ?? ""),
-  });
-  return `${origin}/reset-password?${params.toString()}`;
-};
+export const buildResetEmailRequest = (email) => ({
+  contactInfo: { email: String(email ?? "").trim() },
+});
 
 /**
  * A wrong code and an unknown account get the same 400 on purpose, so nobody

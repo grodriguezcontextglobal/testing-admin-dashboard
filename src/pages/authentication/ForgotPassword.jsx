@@ -10,7 +10,7 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Input from "../../components/UX/inputs/Input";
 import ModalUX from "../../components/UX/modal/ModalUX";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
-import { buildResetPasswordLink } from "./utils/passwordPolicy";
+import { buildResetEmailRequest } from "./utils/passwordPolicy";
 
 const schema = yup.object().shape({
   email: yup
@@ -18,11 +18,6 @@ const schema = yup.object().shape({
     .email("Email format is not valid")
     .required("Email is required"),
 });
-
-/* `company` is no longer among the public fields; the first company the
-   account belongs to stands in for it in the email. */
-const resetEmailCompany = (user) =>
-  user?.company ?? user?.companiesAssigned?.[0]?.company ?? "";
 
 const ForgotPassword = ({ open, close }) => {
   const [loading, setLoading] = useState(false);
@@ -44,21 +39,18 @@ const ForgotPassword = ({ open, close }) => {
     [notify],
   );
 
-  /* The server answers one exact email at a time, with public fields only.
-     It used to hand the whole staff list, hashes included, to anyone. */
-  const findStaff = async (email) => {
-    const response = await devitrakApi.post("/staff/__staff-search", {
-      email: String(email ?? "").trim(),
-    });
-    return response?.data?.adminUsers?.[0] ?? null;
-  };
-
   const sendingEmailMutation = useMutation({
     mutationFn: (data) =>
       devitrakApi.post("/nodemailer/reset-admin-password", data),
     onSuccess: (_, variables) => {
       setLoading(false);
-      openNotification("success", `Password reset email sent to ${variables.contactInfo.email}`);
+      // The same words whether or not the account exists: the server answers
+      // 202 either way so nobody can probe which emails have an account, and
+      // the page must not give away what the server keeps to itself.
+      openNotification(
+        "success",
+        `If an account exists for ${variables.contactInfo.email}, we sent it a link to reset the password.`,
+      );
       setTimeout(handleClose, 1500);
     },
     onError: (error) => {
@@ -70,38 +62,11 @@ const ForgotPassword = ({ open, close }) => {
     },
   });
 
-  const handleSubmitEmailLink = async (data) => {
+  /* No lookup first: telling "no account found" apart from "sent" is exactly
+     what the server's identical answers are there to prevent. */
+  const handleSubmitEmailLink = (data) => {
     setLoading(true);
-    let user = null;
-    try {
-      user = await findStaff(data.email);
-    } catch {
-      openNotification("error", "We couldn't look up this email. Please try again.");
-      setLoading(false);
-      return;
-    }
-    if (!user) {
-      openNotification("error", "No account found for this email.");
-      setLoading(false);
-      return;
-    }
-    const stampTime = `${new Date()}`;
-    await sendingEmailMutation.mutateAsync({
-      adminUser: {
-        firstName: user.name,
-        lastName: user.lastName,
-      },
-      linkToResetPassword: buildResetPasswordLink({
-        origin: "https://admin.devitrak.net",
-        uid: user.id,
-        email: user.email ?? data.email,
-        stampTime,
-      }),
-      contactInfo: {
-        email: data.email,
-        company: resetEmailCompany(user),
-      },
-    });
+    sendingEmailMutation.mutate(buildResetEmailRequest(data.email));
   };
 
   const handleClose = () => {

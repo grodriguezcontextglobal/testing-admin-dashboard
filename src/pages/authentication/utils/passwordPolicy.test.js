@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PASSWORD_RULES,
   buildPasswordUpdatePayload,
-  buildResetPasswordLink,
+  buildResetEmailRequest,
   checkPassword,
   describePasswordUpdateError,
   newPasswordSchema,
@@ -109,18 +109,12 @@ describe("buildPasswordUpdatePayload", () => {
     ).toEqual({ uid: "abc123", password: "Abcdef1!", mfaCode: "123456" });
   });
 
-  it("puts the email in the reset link, encoded", () => {
-    const link = buildResetPasswordLink({
-      origin: "https://admin.devitrak.net",
-      uid: "abc123",
-      email: "ana+1@b.co",
-      stampTime: "Mon Oct 13 2026",
+  // The server builds and signs the link itself and ignores one sent by the
+  // client; the email is all it needs (FRONTEND_password_reset_sin_mfa).
+  it("asks for the reset email with the address alone, trimmed", () => {
+    expect(buildResetEmailRequest("  ana+1@b.co ")).toEqual({
+      contactInfo: { email: "ana+1@b.co" },
     });
-    const params = new URL(link).searchParams;
-    expect(new URL(link).pathname).toBe("/reset-password");
-    expect(params.get("uid")).toBe("abc123");
-    expect(params.get("email")).toBe("ana+1@b.co");
-    expect(params.get("stamp-time")).toBe("Mon Oct 13 2026");
   });
 
   it("leaves the code out when there is none, to ask the server whether the account has MFA", () => {
