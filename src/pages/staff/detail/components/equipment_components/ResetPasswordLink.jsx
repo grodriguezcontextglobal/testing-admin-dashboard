@@ -9,6 +9,7 @@ import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { ProfileSkeleton } from "../../../../../components/UX/profile";
+import { buildResetPasswordLink } from "../../../../authentication/utils/passwordPolicy";
 import "../../../../../styles/global/actionForm.css";
 
 /**
@@ -81,9 +82,14 @@ const ForgetPasswordLinkFromStaffPage = () => {
     mutationFn: () =>
       devitrakApi.post("/nodemailer/reset-admin-password", {
         adminUser: { firstName: account.name, lastName: account.lastName },
-        linkToResetPassword: `https://admin.devitrak.net/reset-password?uid=${
-          account.id
-        }&stamp-time=${encodeURI(`${new Date()}`)}`,
+        // The same link as the self-service flow: /reset-password sends the
+        // email back in the PATCH, so the link has to carry it.
+        linkToResetPassword: buildResetPasswordLink({
+          origin: "https://admin.devitrak.net",
+          uid: account.id,
+          email: account.email ?? profile.email,
+          stampTime: `${new Date()}`,
+        }),
         contactInfo: { email: profile.email, company: account.company },
       }),
     onSuccess: (response) => {

@@ -7,9 +7,9 @@ import {
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { message, Tooltip } from "antd";
-import { compareSync } from "bcryptjs";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "../style/authStyle.css";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -23,6 +23,7 @@ import HidenIcon from "../../../components/icons/HidenIcon";
 
 const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
   const navigate = useNavigate();
+  const signedInEmail = useSelector((state) => state.admin?.user?.email);
   const company_id = new URLSearchParams(window.location.search).get(
     "company_id"
   );
@@ -177,13 +178,25 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
       );
     };
 
+    /* The server checks the password of the account in the session token
+       (POST /admin/verify-password); the hash no longer reaches the browser.
+       So the signer has to be signed in, and signed in as the staff member
+       the document names — otherwise anyone's own password would sign it. */
     const staffMemberAuthentication = async (props) => {
+      if (!localStorage.getItem("admin-token")) {
+        message.error("Sign in with your Devitrak account to verify and sign this document.");
+        return false;
+      }
+      const signerEmail = adminStaffQuery.data?.data?.adminUsers?.[0]?.email;
+      if (!signerEmail || signedInEmail !== signerEmail) {
+        message.error("This document must be signed by the staff member it was sent to. Sign in with that account.");
+        return false;
+      }
       try {
-        const staffMemberInfo = adminStaffQuery.data.data.adminUsers[0];
-        const isValid = compareSync(
-          props.current_password,
-          staffMemberInfo.password
-        );
+        const response = await devitrakApi.post("/admin/verify-password", {
+          password: props.current_password,
+        });
+        const isValid = response?.data?.valid === true;
         setValidPassword(isValid);
         return isValid;
       } catch (error) {

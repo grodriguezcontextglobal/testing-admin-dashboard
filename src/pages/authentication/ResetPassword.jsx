@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { groupBy } from "lodash";
 import { devitrakApi } from "../../api/devitrakApi";
 import { AlertCircleIcon } from "../../components/icons/AlertCircleIcon";
 import { LeftArrowIcon } from "../../components/icons/LeftArrowIcon";
@@ -12,12 +9,15 @@ import { LockUnlock01Icon } from "../../components/icons/LockUnlock01";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import Input from "../../components/UX/inputs/Input";
+import PasswordRequirements from "../../components/UX/password/PasswordRequirements";
+import PasswordVisibilityToggle from "../../components/UX/password/PasswordVisibilityToggle";
 import { FormHelperText, FormLabel } from "@mui/material";
-
-const schema = yup.object().shape({
-    password: yup.string().min(6).max(20).required("Password is required"),
-    password2: yup.string().oneOf([yup.ref("password"), null], "Passwords must match").required("Please confirm your password"),
-});
+import PasswordMfaStep from "./password/PasswordMfaStep";
+import {
+    buildPasswordUpdatePayload,
+    describePasswordUpdateError,
+    newPasswordSchema,
+} from "./utils/passwordPolicy";
 
 const FeaturedIcon = ({ children, color = "gray" }) => {
     const colorStyles = {
@@ -62,43 +62,57 @@ const BackgroundPattern = () => (
 const ResetPassword = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [step, setStep] = useState("password");
+    const [newPassword, setNewPassword] = useState("");
+    const [mfaError, setMfaError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
     const {
         register,
         handleSubmit,
+        watch,
         formState: { errors },
-    } = useForm({ resolver: yupResolver(schema) });
+    } = useForm({ resolver: yupResolver(newPasswordSchema), defaultValues: { password: "", password2: "" } });
     const navigate = useNavigate();
 
-    const adminStaffQuery = useQuery({
-        queryKey: ["staffMember"],
-        queryFn: () => devitrakApi.get("/staff/__staff-search"),
-    });
-
-    if (adminStaffQuery.isLoading) {
-        return (
-            <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--base-white, #fff)" }}>
-                <p style={{ color: "var(--gray-500, #667085)", fontSize: "16px" }}>Loading...</p>
-            </section>
-        );
-    }
-
-    if (!adminStaffQuery.data) return null;
-
+    /* The link carries the account's email (and its `uid`, for links sent
+       before the email was added): the page no longer downloads the staff list
+       to look the email up. `stamp-time` is
+       only a courtesy notice that the link is old — it can be edited in the
+       URL, so it protects nothing; the MFA code does. */
     const stampTime = new URLSearchParams(window.location.search).get("stamp-time");
     const adminUid = new URLSearchParams(window.location.search).get("uid");
-    const groupAdminPerEmail = groupBy(adminStaffQuery.data.data.adminUsers, "id");
-    const foundAdminStaffData = groupAdminPerEmail[adminUid];
-    const isLinkValid = new Date(stampTime).getTime() - new Date().getTime() > -400000;
+    /* Read from the link and sent back in the PATCH, never shown on the page. */
+    const adminEmail = new URLSearchParams(window.location.search).get("email");
+    const isLinkValid = Boolean(adminEmail || adminUid) && new Date(stampTime).getTime() - new Date().getTime() > -400000;
 
-    const submitNewPassword = async (data) => {
+    const goToMfaStep = (data) => {
+        setNewPassword(data.password);
+        setMfaError("");
+        setStep("mfa");
+    };
+
+    /* The server checks the code before it saves anything, so a reset link on
+       its own is no longer enough to change somebody's password. */
+    const submitNewPassword = async (mfaCode) => {
         setIsLoading(true);
+        setMfaError("");
         try {
-            await devitrakApi.patch(`/admin/update-password`, {
-                email: foundAdminStaffData.at(-1).email,
-                password: data.password,
-            });
+            await devitrakApi.patch(
+                `/admin/update-password`,
+                buildPasswordUpdatePayload({
+                    uid: adminUid,
+                    email: adminEmail,
+                    password: newPassword,
+                    mfaCode,
+                })
+            );
             setSuccessMessage("Password updated. Redirecting to login...");
             setTimeout(() => navigate("/login"), 5000);
+            return true;
+        } catch (error) {
+            setMfaError(describePasswordUpdateError(error));
+            return false;
         } finally {
             setIsLoading(false);
         }
@@ -173,7 +187,9 @@ const ResetPassword = () => {
                             Set new password
                         </h1>
                         <p style={{ fontSize: "16px", color: "var(--gray-500, #667085)", lineHeight: "24px", margin: 0 }}>
-                            Your new password must be at least 6 characters.
+                            {step === "mfa"
+                                ? "Enter the code from your authenticator app to confirm the change."
+                                : "Use at least 8 characters, with an uppercase and a lowercase letter, a number and a symbol."}
                         </p>
                     </div>
                 </div>
@@ -182,27 +198,54 @@ const ResetPassword = () => {
                     <p style={{ textAlign: "center", fontSize: "16px", color: "var(--success-700, #027a48)", position: "relative", zIndex: 10 }}>
                         {successMessage}
                     </p>
+                ) : step === "mfa" ? (
+                    <div style={{ position: "relative", zIndex: 10 }}>
+                        <PasswordMfaStep
+                            onConfirm={submitNewPassword}
+                            onBack={() => setStep("password")}
+                            isLoading={isLoading}
+                            error={mfaError}
+                            confirmLabel="Reset password"
+                        />
+                    </div>
                 ) : (
                     <form
-                        onSubmit={handleSubmit(submitNewPassword)}
+                        onSubmit={handleSubmit(goToMfaStep)}
                         style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative", zIndex: 10 }}
                     >
                         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                             <FormLabel htmlFor="password" style={{ width: "100%", textAlign: "left" }}>New password
                                 <Input
                                     // label="New password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
+                                    autoComplete="new-password"
+                                    endAdornment={
+                                        <PasswordVisibilityToggle
+                                            visible={showPassword}
+                                            onToggle={() => setShowPassword((shown) => !shown)}
+                                            controls="password"
+                                        />
+                                    }
                                     {...register("password")}
                                     error={!!errors?.password}
                                     helperText={errors?.password?.message}
                                 />
                             </FormLabel>
+                            <PasswordRequirements password={watch("password")} id="reset-password-requirements" />
                             <FormLabel htmlFor="password2" style={{ width: "100%", textAlign: "left" }}>Confirm password
                                 <Input
                                     // label="Confirm password"
-                                    type="password"
+                                    type={showConfirmation ? "text" : "password"}
                                     placeholder="••••••••"
+                                    autoComplete="new-password"
+                                    endAdornment={
+                                        <PasswordVisibilityToggle
+                                            visible={showConfirmation}
+                                            onToggle={() => setShowConfirmation((shown) => !shown)}
+                                            controls="password2"
+                                        />
+                                    }
                                     {...register("password2")}
                                     error={!!errors?.password2}
                                 />
@@ -213,7 +256,7 @@ const ResetPassword = () => {
                             buttonType="submit"
                             size="lg"
                             isLoading={isLoading}
-                            title="Reset password"
+                            title="Continue"
                             styles={{ width: "100%" }}
                         />
                     </form>
