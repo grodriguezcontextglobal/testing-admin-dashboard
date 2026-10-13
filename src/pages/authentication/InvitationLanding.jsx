@@ -4,7 +4,7 @@ import { FormLabel, Grid, InputAdornment, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { message, Progress } from "antd";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,10 +18,8 @@ import { onLogin } from "../../store/slices/adminSlice";
 import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
 import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
-import PasswordMfaStep from "./password/PasswordMfaStep";
 import {
   buildAcceptInvitationPayload,
-  buildCompanyAssignment,
   invitationErrorMessage,
 } from "./utils/invitationAcceptance";
 import "./style/authStyle.css";
@@ -34,9 +32,6 @@ const InvitationLanding = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMatch, setPasswordMatch] = useState(true);
   const [acceptanceTermsAndPoliciesResult, setAcceptanceTermsAndPoliciesResult] = useState(null);
-  // Usuario existente: primero ve la invitación, después confirma con el código MFA.
-  const [existingUserStep, setExistingUserStep] = useState("review");
-  const [mfaError, setMfaError] = useState("");
 
   // URL parameters
   const params    = new URLSearchParams(window.location.search);
@@ -62,7 +57,6 @@ const InvitationLanding = () => {
 
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
-  const newUser   = useRef(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   // ── API queries ─────────────────────────────────────────────────────────────
@@ -84,9 +78,7 @@ const InvitationLanding = () => {
   const existingUser = useMemo(() => {
     const users = allStaffSavedQuery.data?.data?.adminUsers ?? [];
     if (users.length === 0) return null;
-    const found = users.at(-1);
-    newUser.current = found;
-    return found;
+    return users.at(-1);
   }, [allStaffSavedQuery.data]);
 
   const isNewUser = allStaffSavedQuery.isSuccess && existingUser === null;
@@ -133,7 +125,7 @@ const InvitationLanding = () => {
   };
 
   // Endpoint consolidado: maneja MongoDB + SQL (staff_member + company_staff) en un solo call
-  const callAcceptInvitation = async ({ password, mfaCode } = {}) => {
+  const callAcceptInvitation = async (password = undefined) => {
     const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
     const resp = await devitrakApi.post(
       "/registration/accept-invitation",
@@ -143,49 +135,29 @@ const InvitationLanding = () => {
         email,
         companyName: hostCompanyInfo?.company_name ?? companyNameFromLink,
         password,
-        mfaCode,
       }),
     );
     return resp.data;
   };
 
-  // Para usuario existente: también actualiza companiesAssigned en MongoDB
-  const linkExistingUserToCompany = async (roleType) => {
-    const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
-    await devitrakApi.patch(`/staff/edit-admin/${existingUser.id}`, {
-      multipleCompanies: true,
-      companiesAssigned: [
-        ...(existingUser.companiesAssigned ?? []),
-        buildCompanyAssignment({
-          companyName: hostCompanyInfo?.company_name ?? companyNameFromLink,
-          roleType,
-        }),
-      ],
-    });
-  };
-
   // ── Submit ───────────────────────────────────────────────────────────────────
-  // Una cuenta que ya existe no escribe contraseña: el código de su app de
-  // autenticación es lo que prueba que es el titular, y el servidor lo valida.
-  // Devuelve false para que el paso MFA limpie el código.
-  const handleAcceptInvitation = async (mfaCode) => {
+  const handleAcceptInvitation = async () => {
     try {
       setLoadingStatus(true);
-      setMfaError("");
-      // Secuencial, no Promise.all: el rol que hay que registrar en
-      // companiesAssigned lo devuelve accept-invitation, que lo resuelve desde
-      // la invitación. En paralelo también se escribía la membresía aunque la
-      // aceptación fallara.
-      const result = await callAcceptInvitation({ mfaCode });
-      await linkExistingUserToCompany(result?.company?.roleType);
-      warning("success", "Invitation accepted. Please sign in to access your account.");
+      // accept-invitation es todo lo que hace falta: confirma la membresía en
+      // Company.employees, que es de donde el login saca las compañías y el
+      // rol. Ya no se escribe companiesAssigned con PATCH /staff/edit-admin:
+      // esa ruta exige sesión (401 "There is not token") y aquí no hay
+      // ninguna, y nada en el dashboard lee ese campo para dar acceso.
+      await callAcceptInvitation();
+      // La verificación es la del login: pide el código MFA, o configurarlo a
+      // una cuenta que aún no lo tiene. accept-invitation no valida ninguno.
+      warning("success", "Invitation accepted. Sign in to continue — you'll be asked for two-step verification.");
       navigate("/login", { replace: true });
-      return true;
     } catch (error) {
       console.error("Invitation accept error:", error);
-      setMfaError(invitationErrorMessage(error));
+      warning("error", invitationErrorMessage(error));
       setLoadingStatus(false);
-      return false;
     }
   };
 
@@ -195,7 +167,7 @@ const InvitationLanding = () => {
     }
     try {
       setLoadingStatus(true);
-      const result = await callAcceptInvitation({ password: data.password });
+      const result = await callAcceptInvitation(data.password);
       // Actualizar T&C si aplica
       if (acceptanceTermsAndPoliciesResult?.acceptanceInfo?.id && result.user?.uid) {
         await devitrakApi.patch(`/devitrak/${acceptanceTermsAndPoliciesResult.acceptanceInfo.id}`, {
@@ -300,29 +272,18 @@ const InvitationLanding = () => {
               <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", backgroundColor: "#EFF8FF", borderRadius: "8px", padding: "12px 16px", border: "1px solid #B2DDFF" }}>
                 <Icon icon="mdi:information-outline" width={18} height={18} color="#0086C9" style={{ marginTop: "2px", flexShrink: 0 }} />
                 <Typography style={{ fontSize: "13px", color: "#026AA2", fontFamily: "Inter", lineHeight: "20px" }}>
-                  Your existing account will be linked to this company. No password needed — confirm with the code from your authenticator app.
+                  Your existing account will be linked to this company. No password needed here — you&apos;ll confirm it&apos;s you with two-step verification when you sign in.
                 </Typography>
               </div>
 
-              {existingUserStep === "mfa" ? (
-                <PasswordMfaStep
-                  onConfirm={handleAcceptInvitation}
-                  onBack={() => {
-                    setMfaError("");
-                    setExistingUserStep("review");
-                  }}
-                  isLoading={loadingStatus}
-                  error={mfaError}
-                  confirmLabel="Accept invitation"
-                  hint="Enter the 6-digit code from your authenticator app to accept the invitation."
-                />
-              ) : (
-                <BlueButtonComponent
-                  title="Accept invitation"
-                  func={() => setExistingUserStep("mfa")}
-                  styles={{ width: "100%" }}
-                />
-              )}
+              {/* Accept button */}
+              <BlueButtonComponent
+                title="Accept invitation"
+                func={handleAcceptInvitation}
+                disabled={loadingStatus}
+                loadingState={loadingStatus}
+                styles={{ width: "100%" }}
+              />
 
               <Typography style={{ ...Subtitle, textAlign: "center" }}>
                 Not you?{" "}
