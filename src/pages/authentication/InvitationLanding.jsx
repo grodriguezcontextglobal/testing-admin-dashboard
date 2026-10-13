@@ -19,8 +19,10 @@ import { Subtitle } from "../../styles/global/Subtitle";
 import "../../styles/global/ant-select.css";
 import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
 import {
+  INVALID_LINK_MESSAGE,
   buildAcceptInvitationPayload,
   invitationErrorMessage,
+  isInvitationAlreadyAccepted,
 } from "./utils/invitationAcceptance";
 import "./style/authStyle.css";
 
@@ -44,6 +46,9 @@ const InvitationLanding = () => {
   // invitado podía editarla y pedir root_admin, porque la ruta de aceptación no
   // lleva autenticación.
   const companyNameFromLink = params.get("company_name");
+  // Firmado por el servidor y solo en el correo: es lo que autentica la
+  // aceptación. Un enlace sin él es anterior al cambio y ya no sirve.
+  const invitationToken = params.get("token");
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: { firstName, lastName, email, password: "", password2: "" },
@@ -63,14 +68,14 @@ const InvitationLanding = () => {
   const allStaffSavedQuery = useQuery({
     queryKey: ["staff"],
     queryFn: () => devitrakApi.post("/staff/__staff-search", { email }),
-    enabled: !!email,
+    enabled: !!email && !!invitationToken,
     staleTime: 60 * 60,
   });
 
   const companiesQuery = useQuery({
     queryKey: ["companyListQuery"],
     queryFn: () => devitrakApi.post("/company/search-company", { _id: company }),
-    enabled: !!email,
+    enabled: !!email && !!invitationToken,
     staleTime: 60 * 60,
   });
 
@@ -126,18 +131,24 @@ const InvitationLanding = () => {
 
   // Endpoint consolidado: maneja MongoDB + SQL (staff_member + company_staff) en un solo call
   const callAcceptInvitation = async (password = undefined) => {
-    const hostCompanyInfo = companiesQuery.data.data.company.at(-1);
     const resp = await devitrakApi.post(
       "/registration/accept-invitation",
-      buildAcceptInvitationPayload({
-        firstName,
-        lastName,
-        email,
-        companyName: hostCompanyInfo?.company_name ?? companyNameFromLink,
-        password,
-      }),
+      buildAcceptInvitationPayload({ invitationToken, firstName, lastName, password }),
     );
     return resp.data;
+  };
+
+  // Un enlace ya usado no es un fallo para quien lo abre: la cuenta ya está
+  // en la compañía, así que se le manda a iniciar sesión.
+  const handleAcceptError = (error) => {
+    console.error("Invitation accept error:", error);
+    if (isInvitationAlreadyAccepted(error)) {
+      warning("info", invitationErrorMessage(error));
+      navigate("/login", { replace: true });
+      return;
+    }
+    warning("error", invitationErrorMessage(error));
+    setLoadingStatus(false);
   };
 
   // ── Submit ───────────────────────────────────────────────────────────────────
@@ -145,19 +156,15 @@ const InvitationLanding = () => {
     try {
       setLoadingStatus(true);
       // accept-invitation es todo lo que hace falta: confirma la membresía en
-      // Company.employees, que es de donde el login saca las compañías y el
-      // rol. Ya no se escribe companiesAssigned con PATCH /staff/edit-admin:
-      // esa ruta exige sesión (401 "There is not token") y aquí no hay
-      // ninguna, y nada en el dashboard lee ese campo para dar acceso.
+      // Company.employees y el propio servidor añade la compañía a
+      // companiesAssigned. El dashboard no escribe nada más.
       await callAcceptInvitation();
       // La verificación es la del login: pide el código MFA, o configurarlo a
       // una cuenta que aún no lo tiene. accept-invitation no valida ninguno.
       warning("success", "Invitation accepted. Sign in to continue — you'll be asked for two-step verification.");
       navigate("/login", { replace: true });
     } catch (error) {
-      console.error("Invitation accept error:", error);
-      warning("error", invitationErrorMessage(error));
-      setLoadingStatus(false);
+      handleAcceptError(error);
     }
   };
 
@@ -178,11 +185,29 @@ const InvitationLanding = () => {
       warning("success", "Registration complete. Please sign in to access your account.");
       navigate("/login", { replace: true });
     } catch (error) {
-      console.error("Registration error:", error);
-      warning("error", invitationErrorMessage(error));
-      setLoadingStatus(false);
+      handleAcceptError(error);
     }
   };
+
+  // ── Enlace sin token ─────────────────────────────────────────────────────────
+  if (!invitationToken) {
+    return (
+      <Grid style={{ backgroundColor: "var(--basewhite)", height: "100dvh" }} container>
+        <Grid item xs={12} display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap={2} style={{ padding: "0 16px", textAlign: "center" }}>
+          <Icon icon="mdi:link-variant-off" width={40} height={40} color="#667085" />
+          <Typography style={{ color: "var(--gray-900, #101828)", fontSize: "20px", fontFamily: "Inter", fontWeight: 600 }}>
+            Invitation link not valid
+          </Typography>
+          <Typography style={{ color: "var(--gray-500, #667085)", fontSize: "16px", fontFamily: "Inter", maxWidth: "420px" }}>
+            {INVALID_LINK_MESSAGE}
+          </Typography>
+          <Link to="/login" style={{ color: "#004EEB", fontWeight: 600, fontSize: "14px", fontFamily: "Inter" }}>
+            Back to log in
+          </Link>
+        </Grid>
+      </Grid>
+    );
+  }
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (!allStaffSavedQuery.isSuccess || !companiesQuery.isSuccess) {

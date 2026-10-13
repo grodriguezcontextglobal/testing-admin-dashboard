@@ -6,32 +6,40 @@
 export const NO_INVITATION_MESSAGE =
   "This invitation is no longer valid. Ask your administrator to send you a new one.";
 
+export const INVALID_LINK_MESSAGE =
+  "This invitation link isn't valid or has expired. Ask your administrator to send you a new one.";
+
+export const ALREADY_ACCEPTED_MESSAGE =
+  "You already accepted this invitation. Sign in to continue.";
+
 const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try later.";
 
 /**
  * Body for POST /registration/accept-invitation.
  *
- * Identity only. The role is deliberately absent: the route carries no
- * authentication, so while roleType travelled in the body the invited person
- * could ask for root_admin and land with it in company_staff, which is the
- * source of truth on the SQL side. The backend now resolves the role from the
- * invitation already sitting in Company.employees and returns the one it used.
+ * The signed `token` of the emailed link is what authenticates the request:
+ * the server takes the email and the company from it and ignores any in the
+ * body, so neither is sent. The role is absent too — it comes from the
+ * invitation in Company.employees, never from the person accepting it.
+ * The password goes only for a new account.
  */
 export const buildAcceptInvitationPayload = ({
+  invitationToken,
   firstName,
   lastName,
-  email,
-  companyName,
   password,
 }) => ({
+  invitationToken,
   user: {
     name: firstName,
     lastName,
-    email,
     ...(password ? { password } : {}),
   },
-  company: { company_name: companyName },
 });
+
+export const isInvitationAlreadyAccepted = (error) =>
+  error?.response?.status === 409 &&
+  Boolean(error.response.data?.invitationAlreadyAccepted);
 
 /**
  * A 404 from accept-invitation means the email is not in Company.employees —
@@ -40,6 +48,8 @@ export const buildAcceptInvitationPayload = ({
  * the dead link.
  */
 export const invitationErrorMessage = (error) => {
+  if (error?.response?.data?.invitationLinkInvalid) return INVALID_LINK_MESSAGE;
+  if (isInvitationAlreadyAccepted(error)) return ALREADY_ACCEPTED_MESSAGE;
   if (error?.response?.status === 404) return NO_INVITATION_MESSAGE;
   return error?.response?.data?.msg ?? GENERIC_ERROR_MESSAGE;
 };

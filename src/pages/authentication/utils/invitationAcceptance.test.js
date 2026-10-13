@@ -1,24 +1,30 @@
 import { describe, it, expect } from "vitest";
 import {
+  ALREADY_ACCEPTED_MESSAGE,
+  INVALID_LINK_MESSAGE,
   NO_INVITATION_MESSAGE,
   buildAcceptInvitationPayload,
   invitationErrorMessage,
+  isInvitationAlreadyAccepted,
 } from "./invitationAcceptance";
 
 // ─── buildAcceptInvitationPayload ────────────────────────────────────────────
 
 describe("buildAcceptInvitationPayload", () => {
   const identity = {
+    invitationToken: "invite.jwt",
     firstName: "Maria",
     lastName: "Lopez",
-    email: "maria@test.com",
-    companyName: "Acme Corp",
   };
 
-  it("manda la identidad y la compañía", () => {
-    expect(buildAcceptInvitationPayload(identity)).toEqual({
-      user: { name: "Maria", lastName: "Lopez", email: "maria@test.com" },
-      company: { company_name: "Acme Corp" },
+  // FRONTEND_invitation_signed_link_2026-10-13.md: el email y la compañía
+  // salen del token firmado; los del body el servidor los ignora.
+  it("manda el token del enlace y el nombre, no el email ni la compañía", () => {
+    expect(
+      buildAcceptInvitationPayload({ ...identity, email: "maria@test.com", companyName: "Acme Corp" }),
+    ).toEqual({
+      invitationToken: "invite.jwt",
+      user: { name: "Maria", lastName: "Lopez" },
     });
   });
 
@@ -45,6 +51,16 @@ describe("buildAcceptInvitationPayload", () => {
 // ─── invitationErrorMessage ──────────────────────────────────────────────────
 
 describe("invitationErrorMessage", () => {
+  it("explica un enlace falso, caducado o sin token", () => {
+    const error = { response: { status: 400, data: { ok: false, invitationLinkInvalid: true, msg: "x" } } };
+    expect(invitationErrorMessage(error)).toBe(INVALID_LINK_MESSAGE);
+  });
+
+  it("explica una invitación ya aceptada", () => {
+    const error = { response: { status: 409, data: { ok: false, invitationAlreadyAccepted: true } } };
+    expect(invitationErrorMessage(error)).toBe(ALREADY_ACCEPTED_MESSAGE);
+  });
+
   it("explica el 404 en vez de repetir el mensaje del servidor", () => {
     const error = { response: { status: 404, data: { msg: "No hay una invitación pendiente" } } };
     expect(invitationErrorMessage(error)).toBe(NO_INVITATION_MESSAGE);
@@ -59,5 +75,20 @@ describe("invitationErrorMessage", () => {
     expect(invitationErrorMessage(new Error("Network Error"))).toBe(
       "Something went wrong. Please try later.",
     );
+  });
+});
+
+// ─── isInvitationAlreadyAccepted ─────────────────────────────────────────────
+
+describe("isInvitationAlreadyAccepted", () => {
+  it("reconoce el 409 de un enlace ya usado", () => {
+    expect(
+      isInvitationAlreadyAccepted({ response: { status: 409, data: { invitationAlreadyAccepted: true } } }),
+    ).toBe(true);
+  });
+
+  it("no confunde otros errores", () => {
+    expect(isInvitationAlreadyAccepted({ response: { status: 404, data: {} } })).toBe(false);
+    expect(isInvitationAlreadyAccepted(new Error("Network Error"))).toBe(false);
   });
 });
