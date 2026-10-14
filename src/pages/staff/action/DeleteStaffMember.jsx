@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useRoleLabel } from "../../../hooks/useRoleLabel";
-import { isRootAdmin } from "../../config/roles";
+import { isRootAdmin } from "../../../config/roles";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
