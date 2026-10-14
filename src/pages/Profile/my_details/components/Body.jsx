@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import ImageUploaderFormat from "../../../../classes/imageCloudinaryFormat";
 import { useRoleLabel } from "../../../../hooks/useRoleLabel";
+import { resolveRoleType } from "../../../../config/roles";
 import {
   onUpdateCompanyData,
   onUpdateProfile,
@@ -18,7 +19,7 @@ const Body = () => {
   const [loading, setLoading] = useState(false);
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const roleLabel = useRoleLabel();
-  const roleDefinition = roleLabel(user.role);
+  const roleDefinition = roleLabel(resolveRoleType(user));
   const { register, handleSubmit, watch, setValue, reset } = useForm({
     defaultValues: {
       name: user.name,

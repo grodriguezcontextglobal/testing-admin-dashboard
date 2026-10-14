@@ -66,6 +66,18 @@ export const LEGACY_ROLE_MAP = {
   5: "assistant",
 };
 
+/**
+ * The roleType for a legacy numeric role (number or numeric string), or
+ * undefined. The only reader of LEGACY_ROLE_MAP: a blank is not level 0,
+ * although Number("") and Number(null) both say it is — that read turned an
+ * employee with an empty role into root_admin.
+ */
+export const legacyRoleType = (value) => {
+  if (typeof value !== "number" && typeof value !== "string") return undefined;
+  if (typeof value === "string" && !/^\s*\d+\s*$/.test(value)) return undefined;
+  return LEGACY_ROLE_MAP[Number(value)];
+};
+
 // ─── Role upgrade map (F-01) ─────────────────────────────────────────────────
 // Maps legacy roleType strings → new canonical strings.
 // Used in F-06 migration to upgrade individual staff records.
@@ -106,7 +118,7 @@ export const ROLE_LABEL_GROUPS = {
  * Accepts a roleType string or a legacy numeric role value (see getRoleLabel).
  */
 export const getRoleLabelGroupKey = (roleType) => {
-  const resolved = LEGACY_ROLE_MAP[Number(roleType)] ?? roleType;
+  const resolved = legacyRoleType(roleType) ?? roleType;
   const entry = Object.entries(ROLE_LABEL_GROUPS).find(([, members]) =>
     members.includes(resolved)
   );
@@ -339,8 +351,19 @@ const VALID_ROLE_TYPES = new Set(Object.values(ROLE_TYPES));
 export const resolveRoleType = (user) => {
   if (!user) return "assistant";
   if (user.roleType && VALID_ROLE_TYPES.has(user.roleType)) return user.roleType;
-  return LEGACY_ROLE_MAP[Number(user.role)] ?? "assistant";
+  // UpdateRoleInCompany writes `role: roleType` for the scoped roles.
+  if (VALID_ROLE_TYPES.has(user.role)) return user.role;
+  return legacyRoleType(user.role) ?? "assistant";
 };
+
+/** ROLE_LEVELS rank of a user or employee record; 99 (last) without one. */
+export const roleLevelOf = (subject) => ROLE_LEVELS[resolveRoleType(subject)] ?? 99;
+
+/** Root administrator or administrator (levels 0–1), by role type. */
+export const isCompanyAdmin = (subject) => !!subject && roleLevelOf(subject) <= 1;
+
+/** Root administrator (level 0) only. */
+export const isRootAdmin = (subject) => !!subject && roleLevelOf(subject) === 0;
 
 /**
  * Returns true if roleType is allowed to perform action.
@@ -379,7 +402,7 @@ export const ROLE_LABELS = {
 // the old src/components/general/dicRole.jsx dictionary used to provide.
 export const getRoleLabel = (roleType) => {
   if (roleType === undefined || roleType === null || roleType === "") return "";
-  const resolved = LEGACY_ROLE_MAP[Number(roleType)] ?? roleType;
+  const resolved = legacyRoleType(roleType) ?? roleType;
   return ROLE_LABELS[resolved] ?? resolved;
 };
 

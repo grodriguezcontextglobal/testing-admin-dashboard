@@ -1,4 +1,5 @@
 import { useRoleLabel } from "../../../../hooks/useRoleLabel";
+import { resolveRoleType } from "../../../../config/roles";
 import ImageUploaderUX from "../../../../components/utils/UX/ImageUploaderUX";
 import Chip from "../../../../components/UX/Chip/Chip";
 import Input from "../../../../components/UX/inputs/Input";
@@ -130,7 +131,7 @@ const BodyRendering = ({
               <Input
                 type="text"
                 id="role"
-                value={roleLabel(user?.role) ?? ""}
+                value={roleLabel(resolveRoleType(user)) ?? ""}
                 readOnly
                 className="input input--readonly"
               />

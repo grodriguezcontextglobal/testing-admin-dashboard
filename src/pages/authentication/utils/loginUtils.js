@@ -1,11 +1,11 @@
-import { LEGACY_ROLE_MAP } from "../../../config/roles";
+import { legacyRoleType } from "../../../config/roles";
 
 /**
  * Derives the roleType string from an employee record.
  *
  * Priority:
  * 1. Use employee.roleType if the backend already provides it (post-migration).
- * 2. Fall back to LEGACY_ROLE_MAP keyed by numeric role (pre-migration).
+ * 2. Fall back to the legacy numeric role (legacyRoleType) (pre-migration).
  * 3. Default to "assistant" as the safest/lowest-privilege fallback.
  *
  * @param {Object|null} employeeInfo
@@ -14,8 +14,7 @@ import { LEGACY_ROLE_MAP } from "../../../config/roles";
 export const deriveRoleType = (employeeInfo) => {
   if (!employeeInfo) return "assistant";
   if (employeeInfo.roleType) return employeeInfo.roleType;
-  const level = Number(employeeInfo.role ?? -1);
-  return LEGACY_ROLE_MAP[level] ?? "assistant";
+  return legacyRoleType(employeeInfo.role) ?? "assistant";
 };
 
 /**

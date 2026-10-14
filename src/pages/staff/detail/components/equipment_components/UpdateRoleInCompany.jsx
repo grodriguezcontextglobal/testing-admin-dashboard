@@ -13,7 +13,7 @@ import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../../store/slices/adminSlice";
 import {
   isCoordinatorLevel,
-  LEGACY_ROLE_MAP,
+  legacyRoleType,
   ROLE_LEVELS,
   resolveRoleType,
 } from "../../../../../config/roles";
@@ -85,7 +85,7 @@ const UpdateRoleInCompany = () => {
       });
     },
     onSuccess: (mongoResult) => {
-      const roleType = LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant";
+      const roleType = legacyRoleType(newRole) ?? "assistant";
       dispatch(
         onAddStaffProfile({
           ...profile,
@@ -198,7 +198,7 @@ const UpdateRoleInCompany = () => {
       if (!scopeValidation.valid) return;
       return saveScopedRole({ roleType: newRole, selection: scopeSelection });
     }
-    const roleType = LEGACY_ROLE_MAP[Number(newRole)] ?? "assistant";
+    const roleType = legacyRoleType(newRole) ?? "assistant";
     const foundStaffIdx = profile.companyData.employees.findIndex(
       (el) => el.user === profile.user,
     );

@@ -1,5 +1,5 @@
 import * as yup from "yup";
-import { LEGACY_ROLE_MAP, ROLE_LABELS } from "../../../../config/roles";
+import { legacyRoleType, ROLE_LABELS } from "../../../../config/roles";
 
 /**
  * Pure logic for NewStaffMember — role option filtering, the company employee
@@ -20,7 +20,7 @@ export const buildRoleOptions = (userLevel, allOptions = ALL_ROLE_OPTIONS) =>
   userLevel === 0 ? allOptions : allOptions.filter((o) => o.value > userLevel);
 
 export const roleTypeFromRole = (role) =>
-  LEGACY_ROLE_MAP[Number(role)] ?? "assistant";
+  legacyRoleType(role) ?? "assistant";
 
 /**
  * What each role actually grants, read off the PERMISSIONS matrix in

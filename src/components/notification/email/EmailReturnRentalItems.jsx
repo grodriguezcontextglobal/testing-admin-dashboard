@@ -1,4 +1,5 @@
 import { devitrakApi } from "../../../api/devitrakApi";
+import { isCompanyAdmin } from "../../../config/roles";
 import { message } from "antd";
 import generateOptimizedXLSXFile from "../../../pages/inventory/details/OwnershipDetail/components/suppliers/actions/generateOptimizedXLSXFile";
 import { checkRequestSize } from "../../utils/checkRequestSize";
@@ -73,7 +74,7 @@ const EmailReturnRentalItems = async ({
         subject: "Returned items to renter - Summary",
         staffEmails: [
           ...user.companyData.employees
-            .filter((element) => Number(element.role) < 2)
+            .filter((element) => isCompanyAdmin(element))
             .map((ele) => ele.user),
         ],
         supplierInfo: supplierInfo.data.providerCompanies,
@@ -102,7 +103,7 @@ const EmailReturnRentalItems = async ({
         subject: "Returned items to renter",
         staffEmails: [
           ...user.companyData.employees
-            .filter((element) => Number(element.role) < 2)
+            .filter((element) => isCompanyAdmin(element))
             .map((ele) => ele.user),
         ],
         supplierInfo: supplierInfo.data.providerCompanies,
@@ -151,7 +152,7 @@ const EmailReturnRentalItems = async ({
               "Returned items to renter - Summary (Attachment too large)",
             staffEmails: [
               ...user.companyData.employees
-                .filter((element) => Number(element.role) < 2)
+                .filter((element) => isCompanyAdmin(element))
                 .map((ele) => ele.user),
             ],
             itemCount: Array.from(items).length,

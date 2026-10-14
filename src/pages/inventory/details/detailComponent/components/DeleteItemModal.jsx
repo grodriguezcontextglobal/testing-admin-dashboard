@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../../api/devitrakApi";
+import { isCompanyAdmin } from "../../../../../config/roles";
 import {
   notifyStatus,
   useStatusNotification,
@@ -179,7 +180,7 @@ const DeleteItemModal = ({
       const employees = user.companyData.employees ?? [];
       await Promise.all(
         employees
-          .filter((data) => Number(data.role) < 2)
+          .filter((data) => isCompanyAdmin(data))
           .map((data) =>
             devitrakApi.post("/nodemailer/internal-single-email-notification", {
               staff: data.user,

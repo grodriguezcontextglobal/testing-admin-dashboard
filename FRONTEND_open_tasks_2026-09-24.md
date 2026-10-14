@@ -1163,7 +1163,19 @@ No existe ninguna validación. `VITE_APP_HEADER_AUTH_TOKEN`,
 `VITE_APP_SECRETE_KEY_ENCRYPT` y `VITE_APP_TWILIO_AUTH_TOKEN` se usan y no
 están en `.env.dev.example`. Medio día, con su test. No depende de nadie.
 
-### F1.1 — Dejar de leer el rol numérico heredado
+### F1.1 — Dejar de leer el rol numérico heredado — fase 1 hecha 2026-10-14
+
+**Fase 1 (cliente), hecha:** ninguna pantalla decide leyendo el número; todo
+pasa por `legacyRoleType` / `resolveRoleType` en `config/roles.js`, y
+`legacyNumericRoles.test.js` prohíbe `Number(x.role)` y `LEGACY_ROLE_MAP[`
+fuera de ese fichero. `roleCapabilities.js` borrado. De paso: `role: ""` sin
+`roleType` se leía como `root_admin`. **Sin ver en el navegador.**
+
+**Fase 2, espera a backend:** el número sigue en los datos y en el body de
+los endpoints de inventario. Preguntas en
+`FRONTEND_numeric_role_backend_ask_2026-10-14.md`.
+
+Texto original:
 Quedan 12 lecturas de `user.role` que no pasan por `resolveRoleType`.
 Algunas solo lo reenvían al servidor (`ItemTable.jsx:193,400`), y otras viven
 en el código muerto `roleCapabilities.js`. Es un barrido, más un test que

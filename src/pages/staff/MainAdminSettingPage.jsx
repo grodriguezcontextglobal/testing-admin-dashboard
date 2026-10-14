@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Chip from "../../components/UX/Chip/Chip";
 import { useRoleLabel } from "../../hooks/useRoleLabel";
+import { isCompanyAdmin, roleLevelOf } from "../../config/roles";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import PageSpinner from "../../components/utils/PageSpinner";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
@@ -27,11 +28,10 @@ const secondaryTextStyle = {
   color: "var(--gray-600, #5d615a)",
 };
 
-// 0 Root admin / 1 Admin -> primary, 2 Manager -> info, 3 Support / 4 Staff -> default
-const roleChipColor = (role) => {
-  const numericRole = Number(role);
-  if (numericRole === 0 || numericRole === 1) return "primary";
-  if (numericRole === 2) return "info";
+// Root admin / Admin -> primary, Sales (level 2) -> info, everyone else -> default
+const roleChipColor = (record) => {
+  if (isCompanyAdmin(record)) return "primary";
+  if (roleLevelOf(record) === 2) return "info";
   return "default";
 };
 
@@ -117,6 +117,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
           email: data.user,
           phone: adminUserInfo?.phone ?? data.phone ?? null,
           role: data.role,
+          roleType: data.roleType,
           active: status,
           entireData,
           key: data.user,
@@ -124,7 +125,7 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       })
       .filter((row) => {
         if (!term) return true;
-        const haystack = `${row.name} ${row.email} ${roleLabel(row.role) ?? ""
+        const haystack = `${row.name} ${row.email} ${roleLabel(row.roleType || row.role) ?? ""
           } ${statusChipProps(row.active).label}`.toLowerCase();
         return haystack.includes(term);
       });
@@ -200,12 +201,12 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       dataIndex: "role",
       width: "18%",
       sorter: {
-        compare: (a, b) => Number(a.role) - Number(b.role),
+        compare: (a, b) => roleLevelOf(a) - roleLevelOf(b),
       },
-      render: (role) => (
+      render: (_, record) => (
         <Chip
-          label={roleLabel(role) || "Unknown"}
-          color={roleChipColor(role)}
+          label={roleLabel(record.roleType || record.role) || "Unknown"}
+          color={roleChipColor(record)}
           size="small"
         />
       ),

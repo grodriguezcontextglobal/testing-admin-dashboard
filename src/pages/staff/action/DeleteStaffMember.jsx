@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useRoleLabel } from "../../../hooks/useRoleLabel";
+import { isRootAdmin } from "../../config/roles";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import DangerButtonConfirmationComponent from "../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -152,7 +153,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
   const rowSelection = {
     onChange: (_, selectedRows) => setStaffMemberList(selectedRows),
     getCheckboxProps: (record) => ({
-      disabled: Number(record.role) === 0,
+      disabled: isRootAdmin(record),
       name: record.name,
     }),
   };
@@ -245,6 +246,7 @@ const DeleteStaffMember = ({ modalState, setModalState }) => {
       email: data.email,
       phone: data.phone,
       role: data.role,
+      roleType: data.roleType,
       active: data.status,
       entireData: data,
       key: data.email,
