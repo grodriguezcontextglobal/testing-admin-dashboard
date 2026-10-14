@@ -1417,6 +1417,10 @@ números de fila de los errores. El import de estudiantes ya usa `__rowNum__`,
 el número real que SheetJS pone en cada fila. Aquí es un cambio de una línea
 más un test.
 
+**Hecho 2026-10-14:** `sheetRowNumber` (`__rowNum__ + 1`, o la posición si la
+fila no lo trae). Test con una hoja real de SheetJS con una fila en blanco y
+otra saltada. **Sin probar en el navegador.**
+
 ### `quill` 2.0.3
 Advisory low sin parche publicado. Camino no alcanzable: no usamos
 `getSemanticHTML` ni el clipboard, y la vista sanea con DOMPurify.

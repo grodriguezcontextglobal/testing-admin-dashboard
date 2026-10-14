@@ -32,6 +32,18 @@ import {
 export const FIRST_DATA_ROW = 2;
 
 /**
+ * The row a person sees in Excel, which is what pictures are keyed by and what
+ * a skipped row is reported as.
+ *
+ * Not the position in the array: `sheet_to_json` drops blank rows, and counting
+ * positions handed every picture below a gap to the unit above it. SheetJS
+ * marks each row with `__rowNum__` (0-based, non-enumerable); rows built by
+ * hand, without it, count from the first data row.
+ */
+export const sheetRowNumber = (row, index) =>
+  Number.isInteger(row?.__rowNum__) ? row.__rowNum__ + 1 : index + FIRST_DATA_ROW;
+
+/**
  * Reads one field out of a row object keyed by whatever headers the file used.
  *
  * The header has to be the documented one. Case, surrounding space and the
@@ -90,7 +102,7 @@ export const parseInventoryImportRows = (rows = [], options = {}) => {
   const unrecognizedColumns = unknownColumns(headers);
 
   rows.forEach((row, index) => {
-    const rowNumber = index + FIRST_DATA_ROW;
+    const rowNumber = sheetRowNumber(row, index);
 
     const required = REQUIRED_IMPORT_FIELDS.reduce((values, field) => {
       values[field] = readField(row, field);

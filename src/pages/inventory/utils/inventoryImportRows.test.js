@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { utils } from "xlsx";
 
 import {
   parseCost,
@@ -224,5 +225,43 @@ describe("the picture in the Image cell", () => {
     expect(units).toHaveLength(2);
     expect(units[1].rowNumber).toBe(4);
     expect(units[1].imageMediaPath).toBe("xl/media/image2.jpeg");
+  });
+});
+
+/* sheet_to_json drops blank rows, so a row's position in the array is not its
+   row in the sheet. Counting positions handed every picture below a gap to the
+   unit above it, and reported skipped rows one line off. The sheet row comes
+   from __rowNum__ (0-based, non-enumerable), as in the members importer. */
+describe("a blank row in the middle of the sheet", () => {
+  const HEADERS = Object.keys(sheetRow());
+  const line = (overrides) => HEADERS.map((key) => sheetRow(overrides)[key]);
+
+  const readSheet = () =>
+    utils.sheet_to_json(
+      utils.aoa_to_sheet([
+        HEADERS,
+        line({ serial_number: "AUD-1" }), // sheet row 2
+        [], // sheet row 3, blank
+        line({ serial_number: "AUD-4" }), // sheet row 4
+        line({ serial_number: "" }), // sheet row 5, skipped
+      ]),
+      { defval: "" }
+    );
+
+  it("gives each unit the picture in its own sheet row", () => {
+    const imagesByRow = new Map([[4, { mediaPath: "xl/media/image1.jpeg", alt: "" }]]);
+    const { units } = parseInventoryImportRows(readSheet(), { imagesByRow });
+
+    expect(units.map((unit) => [unit.serial_number, unit.rowNumber])).toEqual([
+      ["AUD-1", 2],
+      ["AUD-4", 4],
+    ]);
+    expect(units[0].imageMediaPath).toBeNull();
+    expect(units[1].imageMediaPath).toBe("xl/media/image1.jpeg");
+  });
+
+  it("reports a skipped row by the row number the person sees in Excel", () => {
+    const { skipped } = parseInventoryImportRows(readSheet());
+    expect(skipped.map((row) => row.rowNumber)).toEqual([5]);
   });
 });
