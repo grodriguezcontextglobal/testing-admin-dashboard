@@ -8,7 +8,11 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { onLogin } from "../../../../store/slices/adminSlice";
+import { onUpdateProfile } from "../../../../store/slices/adminSlice";
+import {
+  notificationPreferencesPatch,
+  notificationSaveErrorMessage,
+} from "../utils/notificationPreferences";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import "./Body.css";
 import BodyForm from "./BodyForm";
@@ -91,28 +95,15 @@ const Body = () => {
         subscriptionRenewals: subscriptions,
         eventReminder: eventsReminders,
       });
-      if (resp?.data?.adminUpdated) {
+      const patch = notificationPreferencesPatch(resp?.data?.adminUpdated);
+      if (patch) {
         openNotificationWithIcon("Success");
-        dispatch(
-          onLogin({
-            ...user,
-            data: {
-              ...user.data,
-              emailNotifications: resp.data.adminUpdated.emailNotifications,
-              dailySummaries: resp.data.adminUpdated.dailySummaries,
-              subscriptionRenewals: resp.data.adminUpdated.subscriptionRenewals,
-              eventReminder: resp.data.adminUpdated.eventReminder,
-            },
-          })
-        );
+        dispatch(onUpdateProfile(patch));
       } else {
         message.error("Failed to update notification settings.");
       }
     } catch (error) {
-      message.error(
-        error?.response?.data?.msg ||
-          "Failed to update notification settings. Please try again."
-      );
+      message.error(notificationSaveErrorMessage(error));
     }
   };
   return (
