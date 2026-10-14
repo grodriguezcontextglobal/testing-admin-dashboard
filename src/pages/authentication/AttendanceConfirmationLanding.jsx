@@ -9,8 +9,10 @@ import {
 import {
   INVITATION_RESPONSES,
   buildInvitationResponse,
+  confirmInvitationWithToken,
+  confirmationFailure,
   describeInvitation,
-  readConfirmationError,
+  readLinkToken,
   recordInvitationResponse,
 } from "./utils/attendanceConfirmation";
 import "./publicLanding.css";
@@ -44,6 +46,13 @@ import "./publicLanding.css";
  *    numeric one with `===`, so somebody already confirmed was offered the
  *    button again.
  *  - Every terminal state was a title and one line. They say what happens next.
+ *
+ * 2026-10-14 (FRONTEND_attendance_invitation_link_2026-10-14.md): the server
+ * now builds and signs the link (5 days, single use). With `token` in the URL,
+ * Confirm is one call the server decides from the token, and the server records
+ * the confirmation itself. A link without a token was sent before the change:
+ * it keeps the consumer writes above until the backend enforces signing, and
+ * then answers 401, shown as an expired link.
  */
 const AttendanceConfirmationLanding = () => {
   const parsed = useMemo(
@@ -51,7 +60,12 @@ const AttendanceConfirmationLanding = () => {
     []
   );
 
-  const [status, setStatus] = useState("idle"); // idle | loading | confirmed | already-confirmed | error
+  const token = useMemo(
+    () => readLinkToken(new URLSearchParams(window.location.search)),
+    []
+  );
+
+  const [status, setStatus] = useState("idle"); // idle | loading | confirmed | already-confirmed | error | expired | used
   const [errorMessage, setErrorMessage] = useState("");
 
   const invitation = useMemo(() => describeInvitation(parsed), [parsed]);
@@ -61,7 +75,8 @@ const AttendanceConfirmationLanding = () => {
   const record = (response, options) => {
     void recordInvitationResponse(
       devitrakApi,
-      buildInvitationResponse(parsed, response, options)
+      buildInvitationResponse(parsed, response, options),
+      token
     );
   };
 
@@ -112,6 +127,12 @@ const AttendanceConfirmationLanding = () => {
     setStatus("loading");
     setErrorMessage("");
     try {
+      if (token) {
+        const outcome = await confirmInvitationWithToken(devitrakApi, token);
+        setStatus(outcome === "already" ? "already-confirmed" : "confirmed");
+        return;
+      }
+
       const member = {
         first_name: memberFirstName,
         last_name: memberLastName,
@@ -133,12 +154,31 @@ const AttendanceConfirmationLanding = () => {
       );
       setStatus(already ? "already-confirmed" : "confirmed");
     } catch (error) {
-      const reason = readConfirmationError(error);
-      record(INVITATION_RESPONSES.FAILED, { reason });
-      setErrorMessage(reason);
-      setStatus("error");
+      const failure = confirmationFailure(error);
+      record(INVITATION_RESPONSES.FAILED, { reason: failure.message });
+      setErrorMessage(failure.message);
+      setStatus(failure.state === "retry" ? "error" : failure.state);
     }
   };
+
+  if (status === "expired" || status === "used") {
+    return shell(
+      <>
+        <h1 className="public-landing__title">
+          {status === "used"
+            ? "This link has already been used"
+            : "This link is no longer valid"}
+        </h1>
+        <p className="public-landing__lead">
+          {status === "used"
+            ? "Each invitation link works once."
+            : "Invitation links expire after a few days."}{" "}
+          Ask {company || "the organiser"} to send the invitation again.
+        </p>
+        <p className="public-landing__note">Attendance was not recorded.</p>
+      </>
+    );
+  }
 
   if (status === "confirmed") {
     return shell(

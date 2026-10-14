@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  EVENT_INVITATION_CONFIRM_PATH,
   INVITATION_RESPONSE_PATH,
   buildInvitationResponse,
+  confirmInvitationWithToken,
+  confirmationFailure,
+  readLinkToken,
   describeInvitation,
   recordInvitationResponse,
   isAlreadyInEvent,
@@ -217,5 +221,80 @@ describe("recordInvitationResponse", () => {
       },
     };
     expect(await recordInvitationResponse(broken, {})).toBe(false);
+  });
+});
+
+/* 2026-10-14 (FRONTEND_attendance_invitation_link_2026-10-14.md): the server
+   signs the link, so a recorded response is only trusted when it carries the
+   token. With a token, only the two steps the server cannot see are sent —
+   /confirm records the confirmation itself and answers 400 to a copy. */
+describe("recordInvitationResponse with a signed link", () => {
+  it("sends the link token as x-link-token", async () => {
+    const api = { post: vi.fn(() => Promise.resolve({ data: { ok: true } })) };
+    expect(await recordInvitationResponse(api, { response: "opened" }, "tok-1")).toBe(true);
+    expect(api.post).toHaveBeenCalledWith(
+      INVITATION_RESPONSE_PATH,
+      { response: "opened" },
+      { headers: { "x-link-token": "tok-1" } }
+    );
+  });
+
+  it("does not send what /confirm already recorded", async () => {
+    const api = { post: vi.fn(() => Promise.resolve({ data: { ok: true } })) };
+    expect(await recordInvitationResponse(api, { response: "confirmed" }, "tok-1")).toBe(false);
+    expect(await recordInvitationResponse(api, { response: "already_confirmed" }, "tok-1")).toBe(
+      false
+    );
+    expect(api.post).not.toHaveBeenCalled();
+  });
+});
+
+describe("readLinkToken", () => {
+  it("reads the token from the link, trimmed", () => {
+    expect(readLinkToken(new URLSearchParams("token=%20abc%20&eventId=1"))).toBe("abc");
+  });
+
+  it("is empty for a link sent before the server signed them", () => {
+    expect(readLinkToken(new URLSearchParams("eventId=1"))).toBe("");
+    expect(readLinkToken(null)).toBe("");
+  });
+});
+
+describe("confirmInvitationWithToken", () => {
+  it("confirms with the token and nothing else from the URL", async () => {
+    const api = { post: vi.fn(() => Promise.resolve({ data: { outcome: "confirmed" } })) };
+    expect(await confirmInvitationWithToken(api, "tok-1")).toBe("confirmed");
+    expect(api.post).toHaveBeenCalledWith(
+      EVENT_INVITATION_CONFIRM_PATH,
+      {},
+      { headers: { "x-link-token": "tok-1" } }
+    );
+  });
+
+  it("passes on that the person was already on the event", async () => {
+    const api = { post: () => Promise.resolve({ data: { outcome: "already" } }) };
+    expect(await confirmInvitationWithToken(api, "tok-1")).toBe("already");
+  });
+
+  it("does not report a confirmation the server did not state", async () => {
+    const api = { post: () => Promise.resolve({ data: { ok: false } }) };
+    await expect(confirmInvitationWithToken(api, "tok-1")).rejects.toThrow();
+  });
+});
+
+describe("confirmationFailure", () => {
+  it("an expired or forged link cannot be retried", () => {
+    expect(confirmationFailure({ response: { status: 401 } }).state).toBe("expired");
+  });
+
+  it("a link already used cannot be retried", () => {
+    expect(confirmationFailure({ response: { status: 410 } }).state).toBe("used");
+  });
+
+  it("anything else keeps the link and offers Try again", () => {
+    const failure = confirmationFailure({
+      response: { status: 500, data: { msg: "Database unavailable." } },
+    });
+    expect(failure).toEqual({ state: "retry", message: "Database unavailable." });
   });
 });

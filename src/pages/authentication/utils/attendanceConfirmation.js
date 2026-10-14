@@ -142,14 +142,60 @@ export const buildInvitationResponse = (parsed, response, { reason, now = new Da
 };
 
 /**
+ * 2026-10-14 (FRONTEND_attendance_invitation_link_2026-10-14.md): the server
+ * builds and signs the link (5 days, single use). With the token, the server
+ * reads member, guardian and event from the token, not from the URL.
+ */
+export const EVENT_INVITATION_CONFIRM_PATH = "/school/event-invitations/confirm";
+
+const linkTokenConfig = (token) => ({ headers: { "x-link-token": token } });
+
+/** The link's signed token, or "" for a link sent before the server signed them. */
+export const readLinkToken = (searchParams) => text(searchParams?.get?.("token"));
+
+/* With a token the server records confirmed / already_confirmed itself, on
+   /confirm, and answers 400 to the page sending them again. */
+const SIGNED_PAGE_RESPONSES = [INVITATION_RESPONSES.OPENED, INVITATION_RESPONSES.FAILED];
+
+/**
  * Sends one response. Never throws: a response that cannot be recorded — the
  * route is not deployed yet, the network dropped — must not stop the
  * confirmation it describes.
  */
-export const recordInvitationResponse = async (api, payload) => {
+export const recordInvitationResponse = async (api, payload, token = "") => {
   try {
-    return writeSucceeded(await api.post(INVITATION_RESPONSE_PATH, payload));
+    if (!token) return writeSucceeded(await api.post(INVITATION_RESPONSE_PATH, payload));
+    if (!SIGNED_PAGE_RESPONSES.includes(payload?.response)) return false;
+    return writeSucceeded(
+      await api.post(INVITATION_RESPONSE_PATH, payload, linkTokenConfig(token))
+    );
   } catch {
     return false;
   }
+};
+
+/**
+ * Confirms a signed invitation: "confirmed", or "already" when the person was
+ * on the event and nothing was written. Throws on anything else, so the page
+ * never claims a confirmation the server did not state.
+ */
+export const confirmInvitationWithToken = async (api, token) => {
+  const { data } = await api.post(EVENT_INVITATION_CONFIRM_PATH, {}, linkTokenConfig(token));
+  if (data?.outcome === "confirmed" || data?.outcome === "already") return data.outcome;
+  throw new Error(text(data?.msg ?? data?.message) || "The confirmation was not saved.");
+};
+
+/**
+ * What a failed confirmation leaves the reader with.
+ *
+ * 401: the link is expired, forged, or — for an unsigned link after the
+ * backend enforces signing — no longer accepted. 410: already used. Neither
+ * gets better by pressing again. Anything else (a 500 included) leaves the
+ * token valid, so the page offers Try again.
+ */
+export const confirmationFailure = (error) => {
+  const status = error?.response?.status;
+  if (status === 401) return { state: "expired", message: readConfirmationError(error) };
+  if (status === 410) return { state: "used", message: readConfirmationError(error) };
+  return { state: "retry", message: readConfirmationError(error) };
 };
