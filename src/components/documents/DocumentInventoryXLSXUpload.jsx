@@ -19,7 +19,10 @@ import {
 } from "../../pages/inventory/utils/inventoryQueryKeys";
 import { parseInventoryImportRows } from "../../pages/inventory/utils/inventoryImportRows";
 import { readWorkbookCellImages } from "../../pages/inventory/utils/readWorkbookCellImages";
-import { uploadImportImages } from "../../pages/inventory/utils/uploadImportImages";
+import {
+    uploadImportImages,
+    usedImportMedia,
+} from "../../pages/inventory/utils/uploadImportImages";
 import {
     MAX_IMPORT_UNITS,
     buildSpreadsheetImportRequest,
@@ -85,6 +88,9 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             missingColumns,
             unrecognizedColumns,
             media,
+            /* What will actually go to Cloudinary: a picture no unit points at
+               (a skipped row, another column) is not uploaded. */
+            usedMedia: usedImportMedia(media, units),
             /* The file goes in one request, so there is nothing to plan — only
                the two things worth saying before it is sent. */
             summary: summarizeImportUnits(units),
@@ -144,10 +150,10 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
             /* 1. Pictures, once per distinct file. Ours either way — the server
                   does not download anything. */
             let urlByMediaPath = new Map();
-            if (preview.media.size > 0) {
-                setProgress(`Uploading ${preview.media.size} image(s)…`);
+            if (preview.usedMedia.size > 0) {
+                setProgress(`Uploading ${preview.usedMedia.size} image(s)…`);
                 const uploaded = await uploadImportImages({
-                    media: preview.media,
+                    media: preview.usedMedia,
                     units: preview.units,
                     user,
                     onProgress: (done, total) =>
@@ -338,6 +344,8 @@ const DocumentInventoryXLSXUpload = ({ closeModal }) => {
                                         inside cells, used by{" "}
                                         {preview.units.filter((u) => u.imageMediaPath).length}{" "}
                                         unit(s).
+                                        {preview.usedMedia.size < preview.media.size &&
+                                            ` Only the ${preview.usedMedia.size} used by a unit will be uploaded.`}
                                     </>
                                 )}
                             </div>

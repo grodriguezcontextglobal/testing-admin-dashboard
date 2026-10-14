@@ -81,14 +81,24 @@ export const fitWithin = (width, height, max) => {
  * undecodable file, no canvas — returns the original: a photo uploaded at full
  * size is better than no photo.
  *
+ * A photo already within `max` is returned as is, unless `reencode` asks for
+ * it to be re-encoded anyway (the inventory importer does, and keeps whichever
+ * is smaller).
+ *
  * @param {string} dataUrl
+ * @param {number} [max]
+ * @param {{reencode?: boolean}} [options]
  * @returns {Promise<string>}
  */
-export const shrinkDataUrl = async (dataUrl, max = MEMBER_PHOTO_MAX_PX) => {
+export const shrinkDataUrl = async (
+  dataUrl,
+  max = MEMBER_PHOTO_MAX_PX,
+  { reencode = false } = {}
+) => {
   try {
     const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
     const { width, height } = fitWithin(bitmap.width, bitmap.height, max);
-    if (width === bitmap.width && height === bitmap.height) return dataUrl;
+    if (!reencode && width === bitmap.width && height === bitmap.height) return dataUrl;
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
