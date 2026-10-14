@@ -47,6 +47,11 @@ const KNOWN_UNMATCHED = [
   // artifacts in src/docs -- the backend regenerates those, we do not. Drop
   // this line once api-payloads.json carries the route.
   "POST /api/school/consent/list",
+  // Checks the session user's current password server-side, replacing the
+  // browser's compareSync (FRONTEND_password_reset_mfa_2026-10-13.md). On
+  // release/observabilidad, not deployed yet, so newer than src/docs. Drop
+  // this line once api-payloads.json carries the route.
+  "POST /api/admin/verify-password",
   // Stop / resume the daily overdue reminder per device: the backend's
   // 9d61857, not deployed yet, so newer than the generated artifacts in
   // src/docs (FRONTEND_overdue_reminders_2026-10-07.md). Drop these lines once
