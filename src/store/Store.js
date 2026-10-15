@@ -15,6 +15,7 @@ import {
 // const { combineReducers, configureStore } = require("@reduxjs/toolkit");
 // const storage = require("redux-persist/es/storage");
 // const { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore } = require("redux-persist");
+import { stripPasswordsTransform } from "./persistTransforms";
 import adminSlice from "./slices/adminSlice";
 import articleSlide from "./slices/articleSlide";
 import backgroundJobsSlice from "./slices/backgroundJobsSlice";
@@ -34,6 +35,8 @@ const persistConfig = {
   key: "root",
   version: 1,
   storage,
+  // Passwords never reach localStorage (persistTransforms.js).
+  transforms: [stripPasswordsTransform],
 };
 
 const reducers = combineReducers({

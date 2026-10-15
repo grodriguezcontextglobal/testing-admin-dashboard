@@ -20,6 +20,7 @@ import DevitrakTermsAndConditions, {
 } from "./actions/DevitrakTermsAndConditions";
 import CompanyRegistration from "./ux/CompanyRegistration";
 import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
+import { signupNeedsPasswordAgain } from "./utils/registrationSession";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
@@ -131,6 +132,19 @@ const RegisterCompany = () => {
   };
   const onSubmitRegister = async (data) => {
     if (companyExists) return;
+    /* The password typed in step one lives only in memory: it is never
+       written to localStorage (store/persistTransforms.js). After a reload it
+       is gone, and /registration/new would get `password: undefined`. */
+    if (signupNeedsPasswordAgain(user)) {
+      openNotificationWithIcon(
+        "warning",
+        "Please enter your password again",
+        "For your security, your password is not kept after the page reloads.",
+        6
+      );
+      navigate("/register");
+      return;
+    }
     if (locationList.length < 1) {
       return alert(
         "Please provide at least one location. Go to locations field, type a location where your inventory will be located and then click button Add, then you can proceed to complete the registration process.",

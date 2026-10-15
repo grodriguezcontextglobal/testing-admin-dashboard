@@ -118,7 +118,8 @@ const Registration = () => {
       name: userData.name,
       lastName: userData.lastName,
       email: userData.email,
-      password: userData.password,
+      // No password: this is the server's record (a hash at best), and path B
+      // in RegisterCompany only adds a company to the existing account.
       role: "0",
       online: true,
       imageProfile: userData.imageProfile,
