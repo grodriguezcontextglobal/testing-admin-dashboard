@@ -1409,6 +1409,12 @@ pendientes se reenvían (las viejas no traen token).
 - **Nuevo 2026-10-15:** si `/send` no es idempotente, un lote que corta por
   timeout después de enviar parte se marca entero como fallido, y reintentarlo
   manda correos dobles. Preguntado al backend.
+- **Hecho 2026-10-15** (`ad05c2a1`): un menor con solo el email del tutor no
+  podía entrar en un evento, porque el consumidor se busca por email. Ahora
+  usa el del tutor con `+m<member_id>` (`consumerEmailFor`); la invitación
+  sigue yendo a la dirección normal del tutor. **El `/confirm` firmado tiene
+  que aplicar la misma regla en el servidor**: pedido en el punto 4 del
+  documento del backend. **Sin probar en el navegador.**
 
 ### Rutas del servidor sin `validateJWT`
 `FRONTEND_unauthenticated_routes_2026-10-14.md`

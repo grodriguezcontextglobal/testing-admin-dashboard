@@ -88,8 +88,20 @@ evento? Si un lote de 500 corta por timeout después de enviar parte, el
 cliente marca el lote entero como fallido y un reintento manda el correo dos
 veces. Necesitamos saber si repetir es seguro, o un id de idempotencia.
 
-**Hecho cuando:** `/send` y `/confirm` desplegados y la pregunta bloqueante
-respondida. Ese día commiteamos el envío.
+**Nuevo, 2026-10-15 — menores sin email propio.** El consumidor se busca y
+se crea por email, así que un menor registrado solo con el email del tutor no
+podía entrar en un evento. El dashboard ya lo resolvió en su lado
+(`ad05c2a1`, `consumerEmailFor`): el email propio si existe; si no, para un
+menor, **el del tutor con `+m<member_id>`** (`maria+m1234@gmail.com`). Es único
+por niño (dos hermanos no se fusionan en un consumidor) y llega al buzón del
+tutor. **Con el enlace firmado lo decide el servidor**, que lee el miembro de
+`members_info`: `/confirm` tiene que usar la misma regla para buscar y crear
+el consumidor, o el mismo niño acabaría con dos consumidores según por dónde
+entre. La invitación se sigue mandando a la dirección normal del tutor.
+
+**Hecho cuando:** `/send` y `/confirm` desplegados, la pregunta bloqueante
+respondida y confirmada la regla del email del menor. Ese día commiteamos el
+envío.
 
 ---
 
