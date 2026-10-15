@@ -14,6 +14,7 @@ import { isMinorMember } from "./ageCalculationUtils";
 import { consumerEmailFor } from "./minorConsumerEmail";
 import {
   isAlreadyInEvent,
+  readConfirmationError,
   readExistingConsumer,
   writeSucceeded,
 } from "../../authentication/utils/attendanceConfirmation";
@@ -394,4 +395,74 @@ export const inviteSelectionCounts = (rows, selectedKeys) => {
     selectable: list.length - blocked.length,
     selected: list.filter((row) => selected.has(row?.key)).length,
   };
+};
+
+/**
+ * 2026-10-14 (FRONTEND_attendance_invitation_link_2026-10-14.md): the server
+ * builds, signs and emails the confirmation link. The browser used to build it
+ * with every value in clear, so anybody could forge one; now it only says who
+ * and which event, and the server reads email, name and minor status from
+ * members_info.
+ */
+export const EVENT_INVITATIONS_SEND_PATH = "/school/event-invitations/send";
+
+/** The most member ids the server takes in one call. */
+export const INVITATION_SEND_LIMIT = 500;
+
+/**
+ * Sends the invitations in batches of INVITATION_SEND_LIMIT.
+ *
+ * Members the table already knows cannot be reached (`_recipient.error`) are
+ * not sent. A refused batch fails every member in it; a member the server does
+ * not answer for is not counted as sent. Ids are matched as strings: the
+ * server answers "10" for a member_id that may be 10 here.
+ *
+ * `refused` is the server's message when nothing went out because the request
+ * itself was refused (401, 403, 404, 500): the modal says so once and leaves
+ * the selection alone (FRONTEND_event_invitation_send_2026-10-15.md §5). A
+ * later batch refused after earlier ones went out stays per member.
+ *
+ * @returns {Promise<{ sent: number, failures: { member: object, reason: string }[], refused: string|null }>}
+ */
+export const sendEventInvitations = async (api, { companyId, event, members }) => {
+  const list = Array.isArray(members) ? members : [];
+  const failures = list
+    .filter((member) => member?._recipient?.error)
+    .map((member) => ({ member, reason: member._recipient.error }));
+  const reachable = list.filter((member) => !member?._recipient?.error);
+
+  let sent = 0;
+  let refused = null;
+  let delivered = false;
+  for (let start = 0; start < reachable.length; start += INVITATION_SEND_LIMIT) {
+    const batch = reachable.slice(start, start + INVITATION_SEND_LIMIT);
+    try {
+      const { data } = await api.post(EVENT_INVITATIONS_SEND_PATH, {
+        company_id: companyId,
+        event_id: event?.id ?? event?._id,
+        member_ids: batch.map((member) => member.member_id),
+      });
+      const byId = new Map(
+        (Array.isArray(data?.results) ? data.results : []).map((result) => [
+          String(result?.member_id),
+          result,
+        ])
+      );
+      delivered = true;
+      for (const member of batch) {
+        const result = byId.get(String(member.member_id));
+        if (result?.ok) sent += 1;
+        else
+          failures.push({
+            member,
+            reason: result?.error || "The server did not confirm this invitation.",
+          });
+      }
+    } catch (error) {
+      const reason = readConfirmationError(error);
+      if (!delivered && refused === null) refused = reason;
+      for (const member of batch) failures.push({ member, reason });
+    }
+  }
+  return { sent, failures, refused: delivered ? null : refused };
 };

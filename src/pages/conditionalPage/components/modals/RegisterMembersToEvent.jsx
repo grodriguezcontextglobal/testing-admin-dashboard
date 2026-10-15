@@ -21,14 +21,13 @@ import {
 import SelectableTable from "../../../../components/UX/tables/SelectableTable";
 import "../../../../styles/global/actionForm.css";
 import {
-  buildAttendanceEmail,
-  buildConfirmationLink,
   filterInviteRows,
   getConfirmationRecipient,
   getDirectAddTarget,
   inviteSelectionCounts,
   registerConsumerToEvent,
   selectableInviteKeys,
+  sendEventInvitations,
 } from "../../utils/eventRegistrationUtils";
 
 const stepClass = (done) =>
@@ -192,52 +191,32 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     if (!selectedEvent || selectedRows.length === 0) return;
     setSending(true);
 
-    const company = { id: user?.companyData?.id, name: user?.company };
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-
-    const results = await Promise.allSettled(
-      selectedRows.map(async (member) => {
-        const recipient = member._recipient;
-        if (recipient.error) {
-          throw new Error(`${member.first_name} ${member.last_name}: ${recipient.error}`);
-        }
-        const confirmationLink = buildConfirmationLink(origin, member, selectedEvent, company);
-        const email = buildAttendanceEmail({
-          member,
-          event: selectedEvent,
-          recipient,
-          confirmationLink,
-        });
-        // customize-message-notification (not the generic send-notification)
-        // because its controller renders a custom HTML template rather than
-        // wrapping the body in the default one. `staff` is the recipient field
-        // that endpoint expects — the name is historical, not a role.
-        return devitrakApi.post("/nodemailer/customize-message-notification", {
-          staff: email.to,
-          subject: email.subject,
-          message: email.message,
-          company: user?.company,
-        });
-      })
-    );
-
-    const failures = results
-      .map((result, index) => ({ result, member: selectedRows[index] }))
-      .filter(({ result }) => result.status === "rejected");
+    /* The server builds, signs and emails each link
+       (FRONTEND_attendance_invitation_link_2026-10-14.md); the browser no
+       longer writes a link anybody could have forged. */
+    const total = selectedRows.length;
+    const { sent, failures, refused } = await sendEventInvitations(devitrakApi, {
+      companyId: user?.sqlInfo?.company_id,
+      event: selectedEvent,
+      members: selectedRows,
+    });
 
     setSending(false);
+    if (refused) {
+      // Nothing went out (401, 403, 404, 500): say so once and keep the
+      // selection as it was, so pressing again sends the same people.
+      notify("error", "Invitations not sent", refused);
+      return;
+    }
     notify(
       failures.length === 0 ? "success" : "warning",
       failures.length === 0
-        ? `${results.length} invitation${results.length === 1 ? "" : "s"} sent`
-        : `${results.length - failures.length} of ${results.length} invitations sent`,
+        ? `${sent} invitation${sent === 1 ? "" : "s"} sent`
+        : `${sent} of ${total} invitations sent`,
       failures.length > 0
         ? failures
             .map(
-              ({ member, result }) =>
-                `${member.first_name} ${member.last_name}: ${
-                  result.reason?.message ?? "Send failed."
-                }`
+              ({ member, reason }) => `${member.first_name} ${member.last_name}: ${reason}`
             )
             .join(" · ")
         : undefined

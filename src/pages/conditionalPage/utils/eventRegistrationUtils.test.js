@@ -11,6 +11,9 @@ import {
   selectableInviteKeys,
   getDirectAddTarget,
   registerConsumerToEvent,
+  EVENT_INVITATIONS_SEND_PATH,
+  INVITATION_SEND_LIMIT,
+  sendEventInvitations,
 } from "./eventRegistrationUtils";
 
 const adultMember = {
@@ -484,5 +487,146 @@ describe("registerConsumerToEvent", () => {
     await expect(
       registerConsumerToEvent(client, { member: adultMember, event, company })
     ).rejects.toThrow("The registration was not saved.");
+  });
+});
+
+/* 2026-10-14 (FRONTEND_attendance_invitation_link_2026-10-14.md): the server
+   builds, signs and emails the link. The dashboard names who and which event;
+   the server reads email, name and minor status from members_info itself. */
+describe("sendEventInvitations", () => {
+  const row = (id, extra = {}) => ({
+    member_id: id,
+    key: id,
+    first_name: `First${id}`,
+    last_name: `Last${id}`,
+    _recipient: { email: `m${id}@x.com` },
+    ...extra,
+  });
+
+  it("sends ids only, with the SQL company id", async () => {
+    const api = {
+      post: vi.fn(() =>
+        Promise.resolve({ data: { ok: true, results: [{ member_id: "10", ok: true }] } })
+      ),
+    };
+    const outcome = await sendEventInvitations(api, {
+      companyId: 7,
+      event,
+      members: [row(10)],
+    });
+    expect(api.post).toHaveBeenCalledWith(EVENT_INVITATIONS_SEND_PATH, {
+      company_id: 7,
+      event_id: "event-123",
+      member_ids: [10],
+    });
+    expect(outcome).toEqual({ sent: 1, failures: [], refused: null });
+  });
+
+  /* FRONTEND_event_invitation_send_2026-10-15.md §2: event_id is
+     `selectedEvent.id ?? selectedEvent._id`. */
+  it("takes the Mongo _id when the event has no id", async () => {
+    const api = { post: vi.fn(() => Promise.resolve({ data: { ok: true, results: [] } })) };
+    await sendEventInvitations(api, { companyId: 7, event: { _id: "mongo-1" }, members: [row(10)] });
+    expect(api.post.mock.calls[0][1].event_id).toBe("mongo-1");
+  });
+
+  it("reads each row's failure, matching ids as strings", async () => {
+    const api = {
+      post: () =>
+        Promise.resolve({
+          data: {
+            ok: true,
+            results: [
+              { member_id: "10", ok: true },
+              { member_id: "12", ok: false, error: "Missing guardian email for this minor member." },
+            ],
+          },
+        }),
+    };
+    const twelve = row(12);
+    const outcome = await sendEventInvitations(api, {
+      companyId: 7,
+      event,
+      members: [row(10), twelve],
+    });
+    expect(outcome.sent).toBe(1);
+    expect(outcome.failures).toEqual([
+      { member: twelve, reason: "Missing guardian email for this minor member." },
+    ]);
+  });
+
+  it("does not send a member the table already knows cannot be reached", async () => {
+    const api = {
+      post: vi.fn(() =>
+        Promise.resolve({ data: { ok: true, results: [{ member_id: "10", ok: true }] } })
+      ),
+    };
+    const blocked = row(11, { _recipient: { error: "No guardian email on file." } });
+    const outcome = await sendEventInvitations(api, {
+      companyId: 7,
+      event,
+      members: [row(10), blocked],
+    });
+    expect(api.post.mock.calls[0][1].member_ids).toEqual([10]);
+    expect(outcome.failures).toEqual([{ member: blocked, reason: "No guardian email on file." }]);
+  });
+
+  it("splits a school-sized selection into the server's batch size", async () => {
+    const members = Array.from({ length: INVITATION_SEND_LIMIT + 1 }, (_, i) => row(i + 1));
+    const api = {
+      post: vi.fn((_path, body) =>
+        Promise.resolve({
+          data: { ok: true, results: body.member_ids.map((id) => ({ member_id: String(id), ok: true })) },
+        })
+      ),
+    };
+    const outcome = await sendEventInvitations(api, { companyId: 7, event, members });
+    expect(api.post).toHaveBeenCalledTimes(2);
+    expect(api.post.mock.calls[0][1].member_ids).toHaveLength(INVITATION_SEND_LIMIT);
+    expect(api.post.mock.calls[1][1].member_ids).toEqual([INVITATION_SEND_LIMIT + 1]);
+    expect(outcome).toEqual({ sent: INVITATION_SEND_LIMIT + 1, failures: [], refused: null });
+  });
+
+  /* §5 of the backend's note: a 401, 403, 404 or 500 means nothing went out.
+     The modal says so once, with the server's msg, and leaves the selection
+     alone; `refused` is what tells it apart from per-member failures. */
+  it("a request refused outright is reported once, as `refused`", async () => {
+    const api = {
+      post: () => Promise.reject({ response: { status: 404, data: { msg: "Event not found" } } }),
+    };
+    const ten = row(10);
+    const outcome = await sendEventInvitations(api, { companyId: 7, event, members: [ten] });
+    expect(outcome).toEqual({
+      sent: 0,
+      failures: [{ member: ten, reason: "Event not found" }],
+      refused: "Event not found",
+    });
+  });
+
+  it("a later batch refused after earlier ones went out is per member, not `refused`", async () => {
+    const members = Array.from({ length: INVITATION_SEND_LIMIT + 1 }, (_, i) => row(i + 1));
+    let call = 0;
+    const api = {
+      post: (_path, body) =>
+        call++ === 0
+          ? Promise.resolve({
+              data: { ok: true, results: body.member_ids.map((id) => ({ member_id: String(id), ok: true })) },
+            })
+          : Promise.reject({ response: { status: 500, data: { msg: "Could not send the invitations." } } }),
+    };
+    const outcome = await sendEventInvitations(api, { companyId: 7, event, members });
+    expect(outcome.sent).toBe(INVITATION_SEND_LIMIT);
+    expect(outcome.refused).toBeNull();
+    expect(outcome.failures).toEqual([
+      { member: members.at(-1), reason: "Could not send the invitations." },
+    ]);
+  });
+
+  it("does not count as sent a member the server did not answer for", async () => {
+    const api = { post: () => Promise.resolve({ data: { ok: true, results: [] } }) };
+    const ten = row(10);
+    const outcome = await sendEventInvitations(api, { companyId: 7, event, members: [ten] });
+    expect(outcome.sent).toBe(0);
+    expect(outcome.failures[0].member).toBe(ten);
   });
 });
