@@ -18,6 +18,8 @@
  */
 
 const CONFLICT = 409;
+const FORBIDDEN = 403;
+const NOT_FOUND = 404;
 
 /** True only for the duplicate-in-flight answer. */
 export const isPaymentRequestInProgress = (error) =>
@@ -35,6 +37,24 @@ export const describePaymentError = (error, { failure, subject = "request" }) =>
     return {
       inProgress: true,
       message: `The previous ${subject} is still going through. Check the transaction to see where it landed before sending it again.`,
+    };
+  }
+
+  /* Refund, partial refund, capture and cancel are going to require a session
+     and transaction:update (BACKEND_answers_to_dashboard_2026-10-06.md). Both
+     answers are given before the handler runs, so `failure` still holds; the
+     added sentence says why, because pressing again would fail the same way. */
+  const status = error?.response?.status;
+  if (status === FORBIDDEN) {
+    return {
+      inProgress: false,
+      message: `${failure} Your role cannot make this ${subject}; ask an administrator.`,
+    };
+  }
+  if (status === NOT_FOUND) {
+    return {
+      inProgress: false,
+      message: `${failure} This payment was not found for your company; reload the transactions before trying again.`,
     };
   }
 

@@ -62,6 +62,35 @@ describe("describePaymentError", () => {
     );
   });
 
+  /* BACKEND_answers_to_dashboard_2026-10-06.md: refund, partial refund,
+     capture and cancel will require a session and transaction:update. Both
+     answers come before the handler runs, so the money did not move — but
+     "it failed" alone sends the operator to retry something that will fail
+     again for the same reason. */
+  it("says a 403 is the role, and that retrying will not help", () => {
+    const result = describePaymentError(
+      { response: { status: 403 } },
+      { failure: "The refund failed. Nothing was charged back.", subject: "refund" },
+    );
+
+    expect(result.inProgress).toBe(false);
+    expect(result.message).toBe(
+      "The refund failed. Nothing was charged back. Your role cannot make this refund; ask an administrator.",
+    );
+  });
+
+  it("says a 404 is a payment this company cannot reach", () => {
+    const result = describePaymentError(
+      { response: { status: 404 } },
+      { failure: "The deposit was not captured. Nothing was charged.", subject: "capture" },
+    );
+
+    expect(result.inProgress).toBe(false);
+    expect(result.message).toBe(
+      "The deposit was not captured. Nothing was charged. This payment was not found for your company; reload the transactions before trying again.",
+    );
+  });
+
   it("falls back to a neutral subject", () => {
     expect(describePaymentError(conflict, { failure: "It failed." }).message).toContain(
       "request",
