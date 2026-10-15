@@ -1,6 +1,6 @@
 # Lo que queda abierto — documento único
 
-> **2026-09-24.** Sustituye a cuatro listas que se contradecían entre sí:
+> **2026-09-24, actualizado 2026-10-15.** Sustituye a cuatro listas que se contradecían entre sí:
 > `FRONTEND_pending_tasks_2026-07-27.md` (scoped roles),
 > `FRONTEND_pending_tasks_2026-08-25.md` (recorrido por la app),
 > `FRONTEND_pending_tasks_2026-08-31.md` (walkthrough de 71 min con Fredrik) y
@@ -27,15 +27,25 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **29** |
-| — bloquea (§1) | 1 |
+| **Abierto, total** | **28** |
+| — bloquea (§1) | 1 (espera al backend) |
 | — trabajo de producto (§2) | 5 |
-| — reunión del 29-09 (§2b) | 4 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
+| — reunión del 29-09 (§2b) | 3 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
-| — plan FedRAMP (§2d) | 8 |
-| — surgido esta semana (§3) | 4 |
-| — no es código (§4) | 5 |
-| Cerrado y tachado en este documento | 29, más la tabla de §5 |
+| — plan FedRAMP (§2d) | 3 (F0.3 y F1.1 con el cliente hecho; los tres esperan al backend) |
+| — surgido del 13 al 15-10 (§2f) | 3 |
+| — fuera de toda lista (§3) | 3 |
+| — no es código (§4) | 8 |
+
+> **Recontado 2026-10-15** con el mismo script (§2e no cuenta: sus `###` son
+> agrupaciones, y sus pendientes ya figuran en otros ítems). Ese día se
+> comprobó contra el código cada tarea que no espera al backend. Se cerraron
+> F1.4 (`f784781e`), los mensajes 403/404 de los cobros (`bcd74b06`), el bug de
+> Notifications (`448b928a`), el 202 del import de miembros (`2f16b8ab`), las
+> imágenes del import de inventario (`10447cff`) y el home por rol
+> (`b03f5f53`). Ya estaban hechos sin anotar: la puerta de CI del despliegue a
+> IIS (`aa0f098b`, 13-10) y dejar de escribir en `transaction-audit-log`. Entró
+> §2f. **El orden de trabajo vigente está al principio de §6.**
 
 > **Recontado 2026-10-02** con un script, sección por sección: un `###` sin
 > tachar es un ítem abierto, y en §4 cada viñeta sin tachar. Ese día se cerraron
@@ -475,9 +485,12 @@ cuenta…). Por destinatario:
    compañía), con qué claves, y que cada `nodemailer/*` la consulte antes de
    enviar.
 
-**De paso, un bug en la página actual:** al guardar despacha `onLogin`, cuando
+~~**De paso, un bug en la página actual:** al guardar despacha `onLogin`, cuando
 guardar un campo del perfil debe despachar `onUpdateProfile`
-(`store/slices/adminSlice.js:98`). Además lee `msg` en el error.
+(`store/slices/adminSlice.js:98`). Además lee `msg` en el error.~~ **Hecho
+2026-10-14** (`448b928a`): despacha `onUpdateProfile` solo con las cuatro
+preferencias y lee `message` con respaldo a `msg`. Podía apagar el MFA en la
+sesión al guardar.
 
 ### Registrar toda acción de un usuario o staff — el servidor ya lo hace; falta leerlo bien
 
@@ -857,6 +870,11 @@ la invitación sale como "Emailed an event invitation". Pedido al servidor en
 `FRONTEND_event_invitation_responses_2026-10-08.md`, con la nota de que el
 enlace no va firmado. **Sin ver en el navegador.**
 
+**2026-10-14:** el backend respondió con el enlace firmado
+(`FRONTEND_attendance_invitation_link_2026-10-14.md`). Con token, `opened` y
+`failed` viajan con `x-link-token`, y `confirmed`/`already` los registra el
+servidor en `/confirm` (`a5959069`). Ver §2f.
+
 ### ~~2b.10 — Devolver un dispositivo encontrado desde Edit [21]~~ — hecho 2026-10-06
 
 Repetido el 2026-10-06 con el caso de Fredrik: alguien encuentra un equipo en
@@ -1022,9 +1040,9 @@ tests) lee `inserted`, `skipped` y `contact_skipped`.
 **Sin hacer, a propósito:**
 - **Dejar de mandar `email: ""`.** El servidor nuevo trata igual omitirlo,
   pero no sabemos si el viejo acepta la fila sin ese campo. Se hace después del
-  despliegue.
-- **El 202.** Sigue sin saberse cuándo responde 202 `bulk-members` ni dónde
-  viene entonces `contact_skipped`. Es la pregunta para backend de abajo.
+  despliegue. **Sigue igual el 2026-10-15** (`xlsxImportUtils.js:519,543`).
+- ~~**El 202.**~~ **Hecho 2026-10-14** (`2f16b8ab`), con la respuesta del
+  backend del 06-10: ver §2e.
 
 Texto original:
 
@@ -1097,6 +1115,11 @@ Consecuencias en el cliente, comprobadas en `remove()`:
 
 Hay que mandárselo al equipo de backend.
 
+**2026-10-06:** respondieron y el cliente ya hizo su parte
+(`sqlDeleteOutcome`, ver §2e): 404 = no había fila SQL, se sigue; 409 = tiene
+inventario o staff, se para. Queda que el servidor despliegue leyendo `:id` de
+la URL; hoy responde `201 ok` sin borrar nada.
+
 ---
 
 ## 2d. Abierto — plan de acción FedRAMP del dashboard (sin trackear hasta ahora)
@@ -1137,7 +1160,18 @@ Texto original:
 el servicio AWS acepte el JWT de sesión. Mientras tanto: rotar y dejar escrita
 la exposición.
 
-### F0.3 — Dejar de comparar contraseñas contra el hash en el navegador
+### F0.3 — Dejar de comparar contraseñas contra el hash en el navegador — cliente hecho 2026-10-13
+
+**Cliente, hecho** (`c1a4a454`): el cambio de contraseña usa
+`POST /api/admin/verify-password` y ya no queda ningún `compareSync` en `src/`
+(comprobado 2026-10-15). `bcryptjs` se quitó de las dependencias el
+2026-10-15 (`f784781e`).
+
+**Falta el despliegue del backend** (`release/observabilidad`, ver §2f): hasta
+entonces `verify-password` está en las excepciones de
+`apiContractAudit.test.js`, y hay que quitarla cuando llegue al contrato.
+
+Texto original:
 `compareSync` contra el hash bcrypt del administrador, en
 `signatureVerificationDocuments/StaffMember.jsx:183` y en
 `Profile/my_password/components/Body.jsx:53`. **Es un cambio coordinado:**
@@ -1171,6 +1205,20 @@ pasa por `legacyRoleType` / `resolveRoleType` en `config/roles.js`, y
 fuera de ese fichero. `roleCapabilities.js` borrado. De paso: `role: ""` sin
 `roleType` se leía como `root_admin`. **Sin ver en el navegador.**
 
+Seguimiento 2026-10-15:
+- `f253a8d0`: la tabla de staff lee etiqueta, color y orden del rol de una
+  sola lectura (`staffRoleChip`). Antes la etiqueta podía decir un rol y el
+  color otro.
+- `b3a70602`: el guard de `legacyNumericRoles.test.js` era **el test que
+  fallaba de forma intermitente**. Leía todo `src/` dentro de cada `it` y se
+  pasaba del límite de 5 s con la suite en paralelo.
+- Comprobado: todo lo que escribe empleados en el cliente
+  (`UpdateRoleInCompany`, `useRoleReassignment`, `buildEmployeeEntry`) escribe
+  `role` y `roleType` a la vez.
+- **Pendiente, de datos:** un empleado con `role` vacío y sin `roleType` ya
+  no recibe correos de admin ni tiene la protección de root. Consultar la base
+  de datos por si algún root admin real está así.
+
 **Fase 2, espera a backend:** el número sigue en los datos y en el body de
 los endpoints de inventario. Preguntas en
 `FRONTEND_numeric_role_backend_ask_2026-10-14.md`.
@@ -1201,15 +1249,32 @@ Para dejarla en verde:
 - se apuntaron en `apiContractAudit` las rutas de stop/resume de recordatorios
   (backend `9d61857`, sin desplegar).
 
-**Lo que la puerta no cubre:** el despliegue a IIS sigue siendo un `git pull`
-manual, y no mira si la CI pasó. Los ~280 warnings de `exhaustive-deps` no
-bloquean.
+~~**Lo que la puerta no cubre:** el despliegue a IIS sigue siendo un `git pull`
+manual, y no mira si la CI pasó.~~ **Resuelto 2026-10-13** (`aa0f098b`): el
+despliegue a IIS sale de un GitHub Release (`release.yml`), y su job
+`release` tiene `needs: checks` sobre `ci.yml`, así que con la CI en rojo no
+se publica. Los ~280 warnings de `exhaustive-deps` siguen sin bloquear.
 
 Texto original:
 El único workflow (`.github/workflows/dev-image.yml`) publica la imagen de
 desarrollo. No ejecuta tests, ni lint, ni build antes de desplegar.
 
-### F1.4 — Inventario de módulos criptográficos
+### ~~F1.4 — Inventario de módulos criptográficos~~ — hecho 2026-10-15
+
+`FRONTEND_crypto_inventory_2026-10-15.md` (`f784781e`). El cliente no cifra,
+firma ni hashea nada propio: `jwt-decode` solo decodifica, la idempotencia usa
+`crypto.randomUUID` y las tarjetas viven en el iframe de Stripe. Lo que pesa
+para FedRAMP es **lo guardado en el navegador**, y queda abierto como
+decisión:
+- el JWT de sesión en `localStorage` (pasarlo a cookie `HttpOnly` es un cambio
+  coordinado con backend);
+- todo el store de Redux persistido sin `whitelist` y sin cifrar, con datos
+  de miembros y empleados;
+- dos detalles menores: el respaldo de `generateIdempotencyKey` usa
+  `Math.random`, y `envValidation.js` acepta `http://` para la API;
+- `@azure/msal-browser` y `@azure/msal-react` no los importa nada.
+
+Texto original:
 Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
 
 ---
@@ -1246,7 +1311,9 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
   controladores leen `paymentIntent`. El arreglo acepta los tres nombres y
   **nuestro payload no cambia**. Después, esas rutas exigirán sesión y
   `transaction:update`: hay que contemplar **404** (el pago es de otra
-  compañía) y **403** (rol sin permiso).
+  compañía) y **403** (rol sin permiso). **Contemplados 2026-10-15**
+  (`bcd74b06`): `describePaymentError` añade el motivo en las siete pantallas
+  de capture, release, refund y refund parcial.
 - **`PUT /api/document/:id` existe** en una rama, y la ajustaron a lo que manda
   `EditDocument.jsx`: aceptan `PUT`, ya no exigen `x-company-id` y
   `public_document` se acepta pero **no se guarda**, vuelve en
@@ -1272,14 +1339,17 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
 
 ### Lo que queda por hacer cuando desplieguen
 
-- **Quitar nuestras 13 llamadas a `registerStaffActivity`.** El middleware
-  lleva desplegado desde el 05-10, así que **ya se está registrando dos veces**
+- **Quitar nuestras llamadas a `registerStaffActivity`.** Recontado el
+  2026-10-15: son **17 llamadas en 15 ficheros**, no 13. El middleware lleva
+  desplegado desde el 05-10, así que **ya se está registrando dos veces**
   todo lo que pasa por el servidor. Ninguna de las nuestras registra algo que
-  no llegue al servidor, así que se van todas. Conviene comprobar primero un
-  caso real, porque perder entradas de una bitácora es peor que duplicarlas.
-- **Dejar de escribir en `transaction-audit-log`**
-  (`AddingDevicesToPaymentIntent.jsx`): es otra colección, sin autor y sin
-  filtros, y el servidor ya registra las transacciones.
+  no llegue al servidor, así que se van todas. **No espera al backend**, pero
+  antes hay que comprobar en producción, con un caso real de cada tipo, que el
+  servidor las registra: perder entradas de una bitácora es peor que
+  duplicarlas.
+- ~~**Dejar de escribir en `transaction-audit-log`**
+  (`AddingDevicesToPaymentIntent.jsx`)~~. **Ya no se escribe:** comprobado el
+  2026-10-15, no queda ninguna llamada en `src/` fuera del contrato.
 - **Quitar nuestro filtro de caché** cuando el reporte deje de devolverlos.
 - **Pintar su `summary`/`display`** en vez de nuestro `describeLogAction`,
   dejando el nuestro de respaldo. El servidor distingue cosas que el cliente no
@@ -1304,9 +1374,76 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
 
 ---
 
+## 2f. Abierto — surgido del 13 al 15 de octubre
+
+> **Todo lo que espera al servidor está reunido en un solo documento para el
+> agente de backend:** `FRONTEND_backend_pending_2026-10-15.md`, 18 puntos por
+> prioridad, cada uno con la condición con la que lo cerramos aquí.
+
+### El release de IIS tiene que salir junto con `release/observabilidad` — bloquea
+`FRONTEND_invitation_signed_link_2026-10-13.md`,
+`FRONTEND_password_reset_mfa_2026-10-13.md`
+
+En `main` ya están: aceptar invitación con token firmado (`8054a452`), reset
+con enlace firmado y MFA (`a9e3c00a`), cambio de contraseña con
+`verify-password` (`c1a4a454`) y `companiesAssigned` escrito por el servidor
+(`1a86f327`). **El servidor que los soporta no está desplegado.** Un release de
+`main` antes que el backend rompe aceptar invitaciones y el reset de
+contraseña. Hay que pedir la fecha y publicar el mismo día; las invitaciones
+pendientes se reenvían (las viejas no traen token).
+
+### Invitaciones a evento con enlace firmado — envío listo, sin commitear
+`FRONTEND_attendance_invitation_link_2026-10-14.md` (backend),
+`FRONTEND_attendance_invitation_link_review_2026-10-14.md` (nuestra revisión)
+
+- **Landing, hecha** (`a5959069`): con `token` en la URL, Confirm llama a
+  `/school/event-invitations/confirm` con `x-link-token`; 401 y 410 muestran
+  enlace caducado o usado. Sin token sigue el camino viejo, así que ya está en
+  `main` sin riesgo.
+- **Envío, sin commitear** (`RegisterMembersToEvent.jsx`,
+  `sendEventInvitations` en `eventRegistrationUtils.js`, con tests): lotes de
+  500 `member_ids` a `/school/event-invitations/send`. **No se sube hasta que
+  la ruta esté desplegada:** si no, no sale ninguna invitación.
+- **Bloquea:** cómo distingue el servidor al dashboard sin sesión de la app de
+  consumidores en las cuatro rutas genéricas (§1 de la revisión).
+- **Nuevo 2026-10-15:** si `/send` no es idempotente, un lote que corta por
+  timeout después de enviar parte se marca entero como fallido, y reintentarlo
+  manda correos dobles. Preguntado al backend.
+
+### Rutas del servidor sin `validateJWT`
+`FRONTEND_unauthenticated_routes_2026-10-14.md`
+
+384 de 484 rutas, en seis grupos. Es trabajo del backend; lo nuestro es
+comprobar cada grupo cuando lo cierren. Prioritario: las 29 de colegio
+(datos de menores) y las 154 del grupo B, que no nos rompen nada.
+
+### ~~El home muestra todo a todos los roles~~ — hecho 2026-10-15
+
+`b03f5f53`. `homeLayout` (con tests) decide secciones por `inventory:read` /
+`event:read` y botones por `:create`; los KPIs y sus queries siguen lo mismo.
+La pantalla de "añade inventario primero" solo retiene a quien puede añadirlo
+(antes `sale_manager` sin inventario veía solo los KPIs). **Sin ver en el
+navegador.**
+
+---
+
 ## 3. Abierto — de esta semana, fuera de toda lista
 
 ### Paso 4 de dependencias — desbloqueado, en standby por decisión
+
+**Recontado 2026-10-15 con `npm audit`: 7** (4 altas, 1 moderada, 2 bajas),
+después de arreglar `source-map-js` (alta, parche 1.2.2, `61e4e88a`) y quitar
+`bcryptjs` (`f784781e`). Todas las que quedan piden versión mayor:
+`vite` 5→8 (y su `esbuild`), `vite-plugin-pwa` → **2.0.0** (ya no la 1.3.0
+que se anotó abajo), `@vite-pwa/assets-generator` → 2.0.0 (y su `sharp`), y
+`quill` / `react-quill-new`. Dependabot cuenta 9; su recuento va por manifiesto
+y tarda en actualizarse tras un push.
+
+**Ojo con el lockfile sin Docker:** el npm del host reescribe dependencias
+anidadas de vitest. Los dos cambios de hoy se hicieron a mano en
+`package-lock.json`, y hay que reconstruir la imagen de desarrollo.
+
+Texto original:
 7 advisories: `vite` 5→8, `sharp`, `esbuild`, PWA.
 
 **`million` ya no es el obstáculo: se quitó el 2026-09-25.** Y al analizarlo
@@ -1318,7 +1455,7 @@ configuración del build, no el código fuente.
 El único bloqueo real es `vite-plugin-pwa@0.20.5`, que declara `vite ^5`. La
 1.3.0 acepta `^3 … ^8` y se puede subir sola, antes que Vite.
 
-### Una transacción reembolsada lo dice — hecho 2026-10-06
+### ~~Una transacción reembolsada lo dice~~ — hecho 2026-10-06
 
 Pedido el 2026-10-06. Una transacción reembolsada decía **"Closed"**, igual que
 un depósito capturado o liberado: los tres caminos guardan exactamente
@@ -1338,10 +1475,20 @@ dice lo mismo, que es lo que se lee al pasar la vista por la tabla.
 no funciona desde marzo. **Nada de esto marca un reembolso hecho fuera del
 dashboard**, por ejemplo desde Stripe: eso solo lo sabría el servidor.
 
-**Pendiente, de su aviso:** cuando esas rutas pidan permiso, contemplar el
-**403** y el **404** con su propio mensaje. Hoy caen en el genérico.
+~~**Pendiente, de su aviso:** cuando esas rutas pidan permiso, contemplar el
+**403** y el **404** con su propio mensaje. Hoy caen en el genérico.~~ Hecho
+2026-10-15 (`bcd74b06`).
 
-### Refund en la tabla de transacciones: "A valid payment intent id is required"
+### Refund en la tabla de transacciones: "A valid payment intent id is required" — causa confirmada, espera despliegue
+
+**Confirmado por backend el 2026-10-06 (§2e): era la hipótesis 1.** El
+validador leía `payment_intent` y los controladores `paymentIntent`, así que
+**ningún refund funciona desde el 2026-03-18**, tampoco el parcial. El arreglo
+acepta los tres nombres y nuestro payload no cambia: **no hay nada que tocar en
+el cliente**. Queda probar refund y refund parcial en el navegador cuando
+desplieguen. Los mensajes del 403/404 ya están (`bcd74b06`).
+
+Texto original:
 `pages/events/quickGlance/consumer/ConsumerDetail/StripeTransactionTable.jsx:120`
 
 Reportado 2026-10-02. Al pulsar **Refund** en la tabla de transacciones del
@@ -1411,7 +1558,13 @@ edición, se puede pasar a no mostrarlo en ninguno hasta que se le asigne un uso
 
 **Sin probar en el navegador.**
 
-### El import de inventario asigna las imágenes por posición, no por fila
+### ~~El import de inventario asigna las imágenes por posición, no por fila~~ — hecho 2026-10-14
+
+`10447cff`. De paso, `5832a993`: el import sube a Cloudinary solo las
+imágenes que usa alguna unidad, reducidas a 1600 px y en JPEG. **Sin probar en
+el navegador.**
+
+Texto original:
 `src/pages/inventory/utils/inventoryImportRows.js:93`
 
 Encontrado 2026-09-30 al hacer lo mismo para estudiantes.
@@ -1567,6 +1720,14 @@ producción, o en la configuración del IIS, no en este código.
 - **Etiquetas físicas para inventario** (reunión 29-09 `1:18:10`): si un
   cliente quiere etiquetar sus equipos, hace falta una solución, y hoy no la
   hay. Fredrik lo investiga.
+- **Rotar los secretos publicados** (F0.1/F0.2, 2026-10-12):
+  `twilio_auth_token`, `secrete_key_encrypt` y `auth-token`. Ya no están en el
+  bundle; la rotación es de quien tenga esas cuentas.
+- **El email real de Fredrik en datos de prueba** (2026-10-05): es el origen de
+  los recordatorios diarios que le llegan. Cambiarlo por una dirección de
+  pruebas.
+- **Root admins con `role` vacío** (2026-10-15, ver F1.1): consulta a la base
+  de datos.
 
 ---
 
@@ -1594,6 +1755,39 @@ Los ocho ítems del walkthrough que su propio documento ya daba por cerrados
 ---
 
 ## 6. Orden sugerido
+
+### Reordenado 2026-10-15
+
+FedRAMP sigue por delante (Fredrik, 25-09). Casi todo lo abierto espera al
+servidor; eso va en `FRONTEND_backend_pending_2026-10-15.md` y aquí solo se
+lista lo que es nuestro o una decisión.
+
+**Sin esperar a nadie:**
+1. **Quitar los registros duplicados de `registerStaffActivity`** (§2e, 17
+   llamadas), después de comprobar en producción un caso real de cada tipo.
+2. **Lo guardado en el navegador** (F1.4): `whitelist` en `redux-persist` y
+   decidir con backend el JWT en cookie `HttpOnly`. Es el hallazgo FedRAMP de
+   más peso que es nuestro.
+3. **Pruebas en el navegador** de lo hecho sin ver (abajo).
+4. **Paso 4 de dependencias** (§3), cuando lo decidas.
+
+**Coordinación con backend, por orden:**
+1. Fecha de despliegue de `release/observabilidad`, para publicar el release
+   de IIS el mismo día (§2f).
+2. Despliegue del arreglo de refunds (§3, §2e).
+3. Pregunta bloqueante e idempotencia de `/send` (§2f), y entonces commitear
+   el envío de invitaciones.
+4. Respuestas de F1.1 fase 2 y F1.2.
+
+**Pendiente de ver en el navegador, del más antiguo al más nuevo:** aviso de
+actualización (tras un despliegue) · selectores de documentos y Edit document
+(05-10) · label del `Input` en el conteo al cerrar evento (06-10) · audit trail
+del dispositivo (06-10) · Stop/Resume de recordatorios (07-10) · "Add
+directly" (07-10) · F1.1 en staff y perfil (14-10) · imágenes del import de
+inventario (14-10) · import de miembros con 202 (14-10) · home por rol (15-10)
+· chip de rol en la tabla de staff (15-10).
+
+### Orden del 2026-09-29 (historial)
 
 Fredrik fijó la prioridad general el 2026-09-25 `21:10`, y pesa más que esta
 lista: **FedRAMP por delante.** Lo dijo justo después de pedir el dashboard de
