@@ -11,6 +11,7 @@
 
 /* The same question the rest of the module asks — see ageCalculationUtils. */
 import { isMinorMember } from "./ageCalculationUtils";
+import { consumerEmailFor } from "./minorConsumerEmail";
 import {
   isAlreadyInEvent,
   readExistingConsumer,
@@ -71,7 +72,9 @@ const eventNameOf = (event = {}) =>
 export const buildConfirmationLink = (origin, member = {}, event = {}, company = {}) => {
   const minor = isMinorMember(member);
   const params = new URLSearchParams({
-    memberEmail: member.email ?? "",
+    // The consumer's key: a minor without an email of their own gets the
+    // guardian's address tagged with the member id (consumerEmailFor).
+    memberEmail: consumerEmailFor(member) ?? "",
     memberFirstName: member.first_name ?? "",
     memberLastName: member.last_name ?? "",
     eventId: event?.id ?? "",
@@ -202,17 +205,20 @@ export const buildConsumerEventPayloads = (
  * already covers any event).
  *
  * Same shape as getConfirmationRecipient so the selection helpers below work
- * for both modes. No guardian email is needed, because nobody is being asked;
- * the member's own email is, because the consumer record is found by it.
+ * for both modes. Nobody is being asked, but the consumer record is found by
+ * email: the member's own, or for a minor without one the guardian's tagged
+ * with the member id (consumerEmailFor, 2026-10-15).
  *
  * @param {object} member
  * @returns {{ email: string|null, isGuardian: false, error: string|null }}
  */
 export const getDirectAddTarget = (member = {}) => {
-  const email = `${member.email ?? ""}`.trim();
-  return email
-    ? { email, isGuardian: false, error: null }
-    : { email: null, isGuardian: false, error: "No email on file for this member." };
+  const email = consumerEmailFor(member);
+  if (email) return { email, isGuardian: false, error: null };
+  const error = isMinorMember(member)
+    ? "No email on file for this member or their guardian."
+    : "No email on file for this member.";
+  return { email: null, isGuardian: false, error };
 };
 
 /**
@@ -229,8 +235,13 @@ export const getDirectAddTarget = (member = {}) => {
  * @returns {Promise<"added"|"already">}
  * @throws {Error} with the server's message when a write is refused
  */
-export const registerConsumerToEvent = async (api, { member, event, company }) => {
-  const email = member?.email ?? member?.memberEmail ?? "";
+export const registerConsumerToEvent = async (api, { member: source, event, company }) => {
+  /* A member record (Add directly) may be a minor with only a guardian email;
+     the landing passes the link's memberEmail, already resolved. The same
+     email is the lookup and the new record, or a second call would not find
+     the first. */
+  const email = consumerEmailFor(source) ?? source?.memberEmail ?? "";
+  const member = { ...source, email };
   const lookup = await api.post("/auth/user-query", { email });
   const existingConsumer = readExistingConsumer(lookup);
 
