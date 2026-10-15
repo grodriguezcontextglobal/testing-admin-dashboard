@@ -28,6 +28,12 @@ export const describeInvitation = (parsed) => {
   const isMinor = Boolean(parsed?.minor);
   const guardianEmail = text(parsed?.guardianEmail);
 
+  /* A signed link may leave a label out (the server decides from the token),
+     so every sentence has to read without it. */
+  const who = memberName || (isMinor ? "Your child" : "You");
+  const verb = memberName || isMinor ? "is" : "are";
+  const what = eventName || "an event";
+
   return {
     memberName,
     eventName,
@@ -38,11 +44,14 @@ export const describeInvitation = (parsed) => {
     heading: isMinor ? "Confirm your child's attendance" : "Confirm your attendance",
     /** One sentence saying who is invited, by whom. */
     invitedLine: company
-      ? `${memberName} is invited by ${company} to ${eventName}.`
-      : `${memberName} is invited to ${eventName}.`,
+      ? `${who} ${verb} invited by ${company} to ${what}.`
+      : `${who} ${verb} invited to ${what}.`,
     /** Said only when it is true, so it never reads as boilerplate. */
+    /** Headings of the confirmed and already-confirmed states. */
+    goingLine: `${who} ${verb} going to ${eventName || "the event"}`,
+    alreadyLine: `${who} ${verb} already going to ${eventName || "the event"}`,
     roleLine: isMinor
-      ? `You are confirming as ${memberName}'s parent or guardian${
+      ? `You are confirming as ${memberName ? `${memberName}'s` : "their"} parent or guardian${
           guardianEmail ? ` (${guardianEmail})` : ""
         }.`
       : null,

@@ -126,6 +126,12 @@ export const parseConfirmationParams = (searchParams) => {
     // Optional: links sent before 2026-10-08 do not carry it.
     memberId: `${get("memberId")}`,
   };
+  /* A signed link (`token`) is decided by the server from the token, and
+     these values only label the page: requiring them locked a guardian out
+     when one was empty, e.g. memberEmail for a minor with no email of their
+     own (first end-to-end test, 2026-10-15). An unsigned link still needs
+     them all, because the page writes the registration with them. */
+  if (`${get("token")}`.trim()) return result;
   const missing = REQUIRED_CONFIRMATION_PARAMS.filter((key) => !result[key]);
   if (missing.length) {
     return { error: "This confirmation link is invalid or incomplete." };

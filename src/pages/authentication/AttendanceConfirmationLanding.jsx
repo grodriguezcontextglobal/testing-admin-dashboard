@@ -187,7 +187,7 @@ const AttendanceConfirmationLanding = () => {
           Confirmed
         </p>
         <h1 className="public-landing__title">
-          {invitation.memberName} is going to {eventName}
+          {invitation.goingLine}
         </h1>
         <p className="public-landing__lead">
           {company ? `${company} has been told.` : "The organiser has been told."}{" "}
@@ -208,7 +208,7 @@ const AttendanceConfirmationLanding = () => {
           Already confirmed
         </p>
         <h1 className="public-landing__title">
-          {invitation.memberName} is already going to {eventName}
+          {invitation.alreadyLine}
         </h1>
         <p className="public-landing__lead">
           Nothing was recorded twice. You can close this page.
@@ -224,21 +224,28 @@ const AttendanceConfirmationLanding = () => {
       </p>
       <h1 className="public-landing__title">{invitation.heading}</h1>
 
-      <dl className="public-landing__facts">
-        <div>
-          <dt>Event</dt>
-          <dd>{eventName}</dd>
-        </div>
-        <div>
-          <dt>{invitation.isMinor ? "Student" : "Attendee"}</dt>
-          <dd>
-            {invitation.memberName}
-            {memberEmail && invitation.memberName !== memberEmail && (
-              <span className="public-landing__facts-sub">{memberEmail}</span>
-            )}
-          </dd>
-        </div>
-      </dl>
+      {/* A signed link may leave a label out; show only the rows it has. */}
+      {(eventName || invitation.memberName) && (
+        <dl className="public-landing__facts">
+          {eventName && (
+            <div>
+              <dt>Event</dt>
+              <dd>{eventName}</dd>
+            </div>
+          )}
+          {invitation.memberName && (
+            <div>
+              <dt>{invitation.isMinor ? "Student" : "Attendee"}</dt>
+              <dd>
+                {invitation.memberName}
+                {memberEmail && invitation.memberName !== memberEmail && (
+                  <span className="public-landing__facts-sub">{memberEmail}</span>
+                )}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
 
       {invitation.roleLine && (
         <p className="public-landing__note public-landing__note--boxed">
