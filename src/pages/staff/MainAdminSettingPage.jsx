@@ -2,13 +2,13 @@ import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Typography } from "antd";
 import { PropTypes } from "prop-types";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
 import Chip from "../../components/UX/Chip/Chip";
 import { useRoleLabel } from "../../hooks/useRoleLabel";
-import { isCompanyAdmin, roleLevelOf } from "../../config/roles";
+import { staffRoleChip } from "./utils/staffRoleChip";
 import { RightNarrowInCircle } from "../../components/icons/RightNarrowInCircle";
 import PageSpinner from "../../components/utils/PageSpinner";
 import RefreshButton from "../../components/utils/UX/RefreshButton";
@@ -28,12 +28,6 @@ const secondaryTextStyle = {
   color: "var(--gray-600, #5d615a)",
 };
 
-// Root admin / Admin -> primary, Sales (level 2) -> info, everyone else -> default
-const roleChipColor = (record) => {
-  if (isCompanyAdmin(record)) return "primary";
-  if (roleLevelOf(record) === 2) return "info";
-  return "default";
-};
 
 // status is "Pending" (invitation) or the employee's active flag
 const statusChipProps = (status) => {
@@ -54,6 +48,10 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const roleLabel = useRoleLabel();
+  const roleChipLabel = useCallback(
+    (chip) => (chip.roleType && roleLabel(chip.roleType)) || "Unknown",
+    [roleLabel]
+  );
   const companiesEmployees = useQuery({
     queryKey: ["employeesPerCompanyList"],
     queryFn: () =>
@@ -118,6 +116,8 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
           phone: adminUserInfo?.phone ?? data.phone ?? null,
           role: data.role,
           roleType: data.roleType,
+          // Label, colour and sort from one read of the role (staffRoleChip).
+          roleChip: staffRoleChip(data),
           active: status,
           entireData,
           key: data.user,
@@ -125,11 +125,11 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       })
       .filter((row) => {
         if (!term) return true;
-        const haystack = `${row.name} ${row.email} ${roleLabel(row.roleType || row.role) ?? ""
+        const haystack = `${row.name} ${row.email} ${roleChipLabel(row.roleChip)
           } ${statusChipProps(row.active).label}`.toLowerCase();
         return haystack.includes(term);
       });
-  }, [employees, adminUsersQuery.data, searchAdmin, company, roleLabel]);
+  }, [employees, adminUsersQuery.data, searchAdmin, company, roleChipLabel]);
 
   const handleDetailStaff = (record) => {
     if (record.active === "Pending" || !record?.entireData?.adminUserInfo?.id)
@@ -201,12 +201,12 @@ const MainAdminSettingPage = ({ searchAdmin }) => {
       dataIndex: "role",
       width: "18%",
       sorter: {
-        compare: (a, b) => roleLevelOf(a) - roleLevelOf(b),
+        compare: (a, b) => a.roleChip.level - b.roleChip.level,
       },
       render: (_, record) => (
         <Chip
-          label={roleLabel(record.roleType || record.role) || "Unknown"}
-          color={roleChipColor(record)}
+          label={roleChipLabel(record.roleChip)}
+          color={record.roleChip.color}
           size="small"
         />
       ),
