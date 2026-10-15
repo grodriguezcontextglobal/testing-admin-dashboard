@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   isCompanyAdmin,
   isRootAdmin,
@@ -91,17 +91,30 @@ const sourceFiles = (dir) =>
     return full === ROLES_FILE ? [] : [full];
   });
 
+/* Every non-comment line of src/, read once. Reading the whole tree is slow
+   while the rest of the suite runs alongside, and doing it inside each `it`
+   went past vitest's 5 s per-test limit now and then (2026-10-15). */
+let sourceLines = [];
+
 const offenders = (pattern) =>
-  sourceFiles(SRC).flatMap((file) =>
-    fs
-      .readFileSync(file, "utf8")
-      .split("\n")
-      .map((line, i) => ({ line, at: `${path.relative(SRC, file)}:${i + 1}` }))
-      .filter(({ line }) => !/^\s*(\/\/|\*|\/\*)/.test(line) && pattern.test(line))
-      .map(({ at }) => at),
-  );
+  sourceLines.filter(({ line }) => pattern.test(line)).map(({ at }) => at);
 
 describe("guard — the numeric role is decided only in config/roles.js", () => {
+  beforeAll(() => {
+    sourceLines = sourceFiles(SRC).flatMap((file) =>
+      fs
+        .readFileSync(file, "utf8")
+        .split("\n")
+        .map((line, i) => ({ line, at: `${path.relative(SRC, file)}:${i + 1}` }))
+        .filter(({ line }) => !/^\s*(\/\/|\*|\/\*)/.test(line))
+    );
+  }, 60_000);
+
+  // An empty read would let both guards below pass without looking at anything.
+  it("actually reads the source tree", () => {
+    expect(sourceLines.length).toBeGreaterThan(10_000);
+  });
+
   it("no Number(x.role) outside config/roles.js", () => {
     expect(offenders(/Number\(\s*[\w?.]*\.role\s*\)/)).toEqual([]);
   });
