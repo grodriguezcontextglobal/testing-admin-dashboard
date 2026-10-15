@@ -108,6 +108,16 @@ nota no menciona dos cosas de este punto, que siguen abiertas: la regla del
 email del menor sin email propio en `/confirm`, y si `/send` repetido es
 seguro (idempotencia).
 
+**Prueba de punta a punta, 2026-10-15:** el enlace que armó `/send` llegó a la
+página sin alguno de `memberEmail`, `eventId`, `eventName`, `company` o
+`companyId`, y la página lo rechazó ("invalid or incomplete"). Lo arreglamos en
+el dashboard (`4c6202b4`): con `token`, ya no exige esos valores. Pero el
+documento de ustedes dice que el enlace lleva "los mismos parámetros que
+antes, más `token`", así que **confirmen qué parámetros pone `/send` en el
+enlace**. Si `memberEmail` va vacío para un menor sin email, que vaya con la
+regla de `consumerEmailFor`; y con `eventName`, `company` y el nombre del
+miembro la página se lee completa.
+
 ---
 
 ## P1 — FedRAMP
