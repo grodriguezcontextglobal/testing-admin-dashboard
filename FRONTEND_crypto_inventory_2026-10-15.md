@@ -40,6 +40,20 @@ sección 3: secretos y datos que el cliente **guarda** en el navegador.
    que hace falta para rehidratar la sesión, o `sessionStorage`. Es trabajo
    nuestro; pedirlo como tarea aparte, porque cambia qué sobrevive a una
    recarga.
+
+   **Lo peor de esto, cerrado el mismo día (`de0b092a`):** el alta de
+   compañía guardaba la **contraseña en texto plano** en `admin.user` entre sus
+   dos pasos, y con ella el store persistido; un alta abandonada la dejaba en
+   disco sin fecha de borrado. Y `admin.user.data` (el registro del servidor)
+   puede traer el hash. `stripPasswordsTransform` los quita de la copia que se
+   escribe; tras una recarga a mitad del alta, `RegisterCompany` vuelve al
+   primer paso.
+
+   **El `whitelist` general sigue abierto** y necesita navegador: los detalles
+   de staff (`staffDetail.profile`), consumidor (`customer`), miembro
+   (`member.memberInfo`) y evento (`event`) se leen del store, y hay que ver
+   página por página cuáles se rompen al recargar sin ellos antes de dejar de
+   persistirlos.
 3. **El logout limpia** `SESSION_STORAGE_KEYS` (`api/sessionHeaders.js:10`)
    mediante `clearSessionStorage`. Lo persistido de Redux lo limpia el
    `onLogout` del slice; no se comprobó aquí que *todos* los slices se vacíen.
