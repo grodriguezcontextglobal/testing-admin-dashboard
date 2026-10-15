@@ -56,8 +56,12 @@ sección 3: secretos y datos que el cliente **guarda** en el navegador.
   exigir `https://`, salvo `localhost`.
 - **Dependencias sin uso:** `bcryptjs` (quitado en este mismo cambio, era del
   `compareSync` que F0.3 eliminó) y **`@azure/msal-browser` /
-  `@azure/msal-react`**, que nada importa en `src/`. Quitar MSAL reduce
-  superficie; se deja para otro commit porque no es criptografía propia.
+  `@azure/msal-react`**, que nada importa en el repo. **Quitados el mismo
+  día**, con `@azure/msal-common`, que solo traían ellos.
+
+**Hecho el mismo día:** el respaldo de `generateIdempotencyKey` usa
+`getRandomValues` (`28f3a826`) y el build exige `https` fuera de esta máquina
+(`a69f10be`).
 
 ## 5. Qué no hay
 
