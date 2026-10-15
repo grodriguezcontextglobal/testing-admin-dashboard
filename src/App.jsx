@@ -22,6 +22,7 @@ import { onResetSubscriptionInfo } from "./store/slices/subscriptionSlice";
 import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
+import { persistor } from "./store/Store";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 // const InactivityLogout = lazyWithRetry(() =>
@@ -76,7 +77,10 @@ const App = () => {
       clearSessionStorage();
       dispatch(onLogout());
       openNotificationWithIcon("error", "Session has expired. Please sign in again.");
-      return window.location.reload(true);
+      /* onLogout resets every slice (store/rootReducer.js), but redux-persist
+         writes to localStorage on a throttle: reloading straight away could
+         rehydrate the old session from disk. Wait for the write. */
+      return persistor.flush().finally(() => window.location.reload(true));
     }
   };
 

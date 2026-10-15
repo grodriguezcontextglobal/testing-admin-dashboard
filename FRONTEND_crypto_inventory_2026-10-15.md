@@ -55,8 +55,15 @@ sección 3: secretos y datos que el cliente **guarda** en el navegador.
    página por página cuáles se rompen al recargar sin ellos antes de dejar de
    persistirlos.
 3. **El logout limpia** `SESSION_STORAGE_KEYS` (`api/sessionHeaders.js:10`)
-   mediante `clearSessionStorage`. Lo persistido de Redux lo limpia el
-   `onLogout` del slice; no se comprobó aquí que *todos* los slices se vacíen.
+   mediante `clearSessionStorage`. ~~Lo persistido de Redux lo limpia el
+   `onLogout` del slice; no se comprobó aquí que *todos* los slices se vacíen.~~
+   **Comprobado el mismo día: no se vaciaban.** Cada logout hacía `purge()` y
+   luego despachaba su propia lista de resets; cada dispatch reescribía el store
+   en disco, y las listas olvidaban `member` (la ficha del último alumno
+   abierto), `searchResult`, `permission` y `staffActivity`. El logout por
+   sesión caducada (`App.jsx`) ni siquiera hacía `purge`. Ahora `onLogout`
+   reinicia todos los slices en el reducer raíz (`store/rootReducer.js`, con
+   tests), y `App.jsx` espera a `persistor.flush()` antes de recargar.
 
 ## 4. Pequeños, sin dependencia
 

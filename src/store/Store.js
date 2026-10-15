@@ -1,4 +1,4 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 // import pkg from '@reduxjs/toolkit';
 // const {combineReducers, configureStore} = pkg;
 import storage from "redux-persist/es/storage";
@@ -16,20 +16,7 @@ import {
 // const storage = require("redux-persist/es/storage");
 // const { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistStore } = require("redux-persist");
 import { stripPasswordsTransform } from "./persistTransforms";
-import adminSlice from "./slices/adminSlice";
-import articleSlide from "./slices/articleSlide";
-import backgroundJobsSlice from "./slices/backgroundJobsSlice";
-import customerSlice from "./slices/customerSlice";
-import devicesHandleSlice from "./slices/devicesHandleSlice";
-import eventSlice from "./slices/eventSlice";
-import helperSlice from "./slices/helperSlice";
-import memberSlice from "./slices/memberSlice";
-import permissionsSlice from "./slices/permissions";
-import searchBarResultSlice from "./slices/searchBarResultSlice";
-import staffActivitySlice from "./slices/staffActivitySlice";
-import staffDetailSlide from "./slices/staffDetailSlide";
-import stripeSlice from "./slices/stripeSlice";
-import subscriptionSlice from "./slices/subscriptionSlice";
+import { rootReducer } from "./rootReducer";
 
 const persistConfig = {
   key: "root",
@@ -39,24 +26,7 @@ const persistConfig = {
   transforms: [stripPasswordsTransform],
 };
 
-const reducers = combineReducers({
-  admin: adminSlice,
-  article: articleSlide,
-  backgroundJobs: backgroundJobsSlice,
-  customer: customerSlice,
-  devicesHandle: devicesHandleSlice,
-  event: eventSlice,
-  helper: helperSlice,
-  member: memberSlice,
-  permission: permissionsSlice, // permission slice
-  searchResult: searchBarResultSlice,
-  staffActivity: staffActivitySlice,
-  staffDetail: staffDetailSlide,
-  stripe: stripeSlice,
-  subscription: subscriptionSlice,
-});
-
-const persistedReducers = persistReducer(persistConfig, reducers);
+const persistedReducers = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
   reducer: persistedReducers,
