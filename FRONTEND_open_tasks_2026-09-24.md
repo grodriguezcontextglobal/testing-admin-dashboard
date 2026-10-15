@@ -27,10 +27,10 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **28** |
+| **Abierto, total** | **27** |
 | — bloquea (§1) | 1 (espera al backend) |
 | — trabajo de producto (§2) | 5 |
-| — reunión del 29-09 (§2b) | 3 (de 2b.4 y 2b.8 solo queda la parte del servidor) |
+| — reunión del 29-09 (§2b) | 2 (de 2b.8 solo queda la parte del servidor; 2b.4 cerrado el 15-10) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
 | — plan FedRAMP (§2d) | 3 (F0.3 y F1.1 con el cliente hecho; los tres esperan al backend) |
 | — surgido del 13 al 15-10 (§2f) | 3 |
@@ -706,7 +706,12 @@ el mismo hueco, y uno peor:
   can drag it, but I cannot click it"*. El arrastre empieza a los 5 px, así
   que el clic funciona como clic.
 
-### 2b.4 — Correo de recordatorio de vencidos [6, 7] — mitad frontend hecha 2026-10-01
+### ~~2b.4 — Correo de recordatorio de vencidos [6, 7]~~ — hecho: frontend 2026-10-01, servidor confirmado 2026-10-15
+
+**2026-10-15:** Gustavo confirma que el servidor ya corrigió [6] y [7]: logo
+de la compañía arriba, "Powered by Devitrak" al pie y logo blanco sobre fondo
+oscuro en el envoltorio de nodemailer. **Sin ver en un correo real** desde el
+dashboard.
 
 **Frontend, hecho:** el recordatorio de "See overdue items" se armaba aparte de
 las plantillas. Ahora sale de `buildOverdueRowReminder`, con tests:

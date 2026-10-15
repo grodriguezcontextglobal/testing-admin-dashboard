@@ -221,8 +221,10 @@ alcance. **Hecho cuando:** el backfill está ejecutado.
 - **El logo y el nombre de Devitrak salen como imagen rota** en el preview de
   branding, que usa las mismas plantillas que un envío real. Seguramente
   también en los correos de verdad.
-- El envoltorio (2b.4): logo de la compañía arriba, "Powered by Devitrak" al
-  pie y logo blanco sobre fondo oscuro.
+- ~~El envoltorio (2b.4): logo de la compañía arriba, "Powered by Devitrak" al
+  pie y logo blanco sobre fondo oscuro.~~ **Hecho** (confirmado 2026-10-15).
+  Si el mismo cambio arregló también las imágenes rotas de arriba, díganlo y
+  lo cerramos.
 
 El dashboard no tiene nada que cambiar en ninguno de los dos.
 
