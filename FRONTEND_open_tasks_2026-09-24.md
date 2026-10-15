@@ -887,6 +887,14 @@ enlace no va firmado. **Sin ver en el navegador.**
 `failed` viajan con `x-link-token`, y `confirmed`/`already` los registra el
 servidor en `/confirm` (`a5959069`). Ver §2f.
 
+**2026-10-15 — cliente terminado** (`ddf206a5`), siguiendo
+`FRONTEND_event_invitation_send_2026-10-15.md` del backend: `handleSend`
+llama a `/school/event-invitations/send` y el servidor firma y envía el
+enlace. Sin eso, todas las invitaciones salían sin token y las respuestas
+quedaban con `verified: false`. **Lo único que falta es el despliegue del
+servidor** (`release/observabilidad`; hoy `/send`, `/confirm` y `/response`
+dan 404 en prod). Comprobación de punta a punta: §6 de ese documento.
+
 ### ~~2b.10 — Devolver un dispositivo encontrado desde Edit [21]~~ — hecho 2026-10-06
 
 Repetido el 2026-10-06 con el caso de Fredrik: alguien encuentra un equipo en
@@ -1404,7 +1412,14 @@ con enlace firmado y MFA (`a9e3c00a`), cambio de contraseña con
 contraseña. Hay que pedir la fecha y publicar el mismo día; las invitaciones
 pendientes se reenvían (las viejas no traen token).
 
-### Invitaciones a evento con enlace firmado — envío listo, sin commitear
+### Invitaciones a evento con enlace firmado — cliente terminado, espera el despliegue
+
+**2026-10-15:** el envío está commiteado (`ddf206a5`), con lo que pidió el
+backend en `FRONTEND_event_invitation_send_2026-10-15.md`: `event_id` con
+`id ?? _id`, y una petición rechazada entera (401/403/404/500) se muestra como
+un solo error con el `msg` del servidor, sin tocar la selección. Opción A: sale
+con el release que acompañe al despliegue de `release/observabilidad`. Lo de
+abajo es el estado anterior.
 `FRONTEND_attendance_invitation_link_2026-10-14.md` (backend),
 `FRONTEND_attendance_invitation_link_review_2026-10-14.md` (nuestra revisión)
 

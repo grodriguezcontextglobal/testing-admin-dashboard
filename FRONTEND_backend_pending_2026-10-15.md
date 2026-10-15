@@ -100,8 +100,13 @@ el consumidor, o el mismo niño acabaría con dos consumidores según por dónde
 entre. La invitación se sigue mandando a la dirección normal del tutor.
 
 **Hecho cuando:** `/send` y `/confirm` desplegados, la pregunta bloqueante
-respondida y confirmada la regla del email del menor. Ese día commiteamos el
-envío.
+respondida y confirmada la regla del email del menor.
+
+**2026-10-15:** el envío ya está commiteado en el dashboard (`ddf206a5`),
+siguiendo su `FRONTEND_event_invitation_send_2026-10-15.md` (opción A). Su
+nota no menciona dos cosas de este punto, que siguen abiertas: la regla del
+email del menor sin email propio en `/confirm`, y si `/send` repetido es
+seguro (idempotencia).
 
 ---
 
