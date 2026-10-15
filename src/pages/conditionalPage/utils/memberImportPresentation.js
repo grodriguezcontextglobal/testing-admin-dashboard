@@ -1,3 +1,4 @@
+import { isValidJobId } from "../../Profile/system_jobs/utils/jobQueueUtils";
 import { missingFieldMessages } from "./memberContactRules";
 
 /**
@@ -124,4 +125,25 @@ export function summarizeBulkMembersResult(data, sent, { representativeLabel = "
     skippedRows,
     skippedWithoutReason: Math.max(0, skipped - contactSkipped.length),
   };
+}
+
+/**
+ * Whether POST /db_member/bulk-members finished, is still running, or refused.
+ *
+ * The server waits up to 4 s for the import job (BACKEND_answers_to_dashboard_
+ * 2026-10-06.md §3). Past that it answers 202 with `jobId` and
+ * `contact_skipped`, and the members are still being written. A 202 whose id
+ * cannot be followed is reported as running all the same: claiming it finished
+ * is the mistake this exists to stop.
+ *
+ * @param {{status?: number, data?: object}} response
+ * @returns {{kind: "done"} | {kind: "queued", jobId: string|null} | {kind: "refused"}}
+ */
+export function bulkMembersOutcome(response) {
+  const data = response?.data;
+  if (!data?.ok) return { kind: "refused" };
+  if (response?.status === 202) {
+    return { kind: "queued", jobId: isValidJobId(data.jobId) ? String(data.jobId).trim() : null };
+  }
+  return { kind: "done" };
 }

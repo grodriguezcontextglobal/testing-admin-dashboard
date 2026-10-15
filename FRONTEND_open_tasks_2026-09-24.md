@@ -1255,6 +1255,11 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
 - **`bulk-members`:** el `202` llega cuando el job pasa de 4 s, y **trae
   `jobId` y `contact_skipped` a la vez**. Falta implementar el seguimiento del
   job; hoy damos por terminado cualquier `ok: true`.
+  **Hecho 2026-10-14:** `bulkMembersOutcome` (con tests) distingue 201, 202 y
+  rechazo. En el 202 el modal pasa el job a `BackgroundJobsTracker` (invalida
+  `membersInfoQuery` al terminar), dice "Importing N in the background" y, si
+  hubo filas saltadas, las muestra ya. **Sin probar en el navegador** (hace
+  falta un import que tarde más de 4 s).
 
 - **Detener / reanudar recordatorios de vencido por dispositivo**
   (`FRONTEND_overdue_reminders_2026-10-07.md`, backend `9d61857`): **cliente

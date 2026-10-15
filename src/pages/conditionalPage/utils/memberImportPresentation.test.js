@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   annotateImportRows,
   generalIssues,
+  bulkMembersOutcome,
   importCounts,
   parseRowIssues,
   summarizeBulkMembersResult,
@@ -183,5 +184,37 @@ describe("summarizeBulkMembersResult", () => {
     );
     expect(result).toMatchObject({ inserted: 0, skippedWithoutReason: 0 });
     expect(result.skippedRows[0]).toMatchObject({ rowNumber: 1, name: "Ada Lovelace" });
+  });
+});
+
+/* BACKEND_answers_to_dashboard_2026-10-06.md §3: the server waits up to 4 s
+   for the import job. A 202 means it did not finish in time: the body carries
+   jobId (and contact_skipped), and the job carries on in the background. The
+   modal used to read any ok: true as finished. */
+describe("bulkMembersOutcome", () => {
+  const JOB = "65a1b2c3d4e5f6a7b8c9d0e1";
+
+  it("a 201 finished", () => {
+    expect(bulkMembersOutcome({ status: 201, data: { ok: true, inserted: 2 } })).toEqual({
+      kind: "done",
+    });
+  });
+
+  it("a 202 is still running, and names its job", () => {
+    expect(
+      bulkMembersOutcome({ status: 202, data: { ok: true, jobId: JOB, contact_skipped: [] } })
+    ).toEqual({ kind: "queued", jobId: JOB });
+  });
+
+  it("a 202 without a usable job id is still not finished", () => {
+    expect(bulkMembersOutcome({ status: 202, data: { ok: true, jobId: "nope" } })).toEqual({
+      kind: "queued",
+      jobId: null,
+    });
+  });
+
+  it("ok: false is a refusal, whatever the status", () => {
+    expect(bulkMembersOutcome({ status: 200, data: { ok: false } })).toEqual({ kind: "refused" });
+    expect(bulkMembersOutcome(undefined)).toEqual({ kind: "refused" });
   });
 });

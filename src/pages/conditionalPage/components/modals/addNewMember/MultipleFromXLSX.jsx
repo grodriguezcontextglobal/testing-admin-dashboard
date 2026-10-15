@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { read, utils, writeFile } from "xlsx";
 import { registerStaffActivity } from "../../../../../api/activityLog";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -11,10 +11,12 @@ import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton
 import { ProfileStatTiles, StatusChip } from "../../../../../components/UX/profile";
 import BaseTable from "../../../../../components/UX/tables/BaseTable";
 import { getIndustryProfile } from "../../../../../config/industryProfiles";
+import { onTrackBackgroundJob } from "../../../../../store/slices/backgroundJobsSlice";
 import "../../../../../styles/global/actionForm.css";
 import {
   annotateImportRows,
   generalIssues,
+  bulkMembersOutcome,
   importCounts,
   summarizeBulkMembersResult,
 } from "../../../utils/memberImportPresentation";
@@ -60,6 +62,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
   const { user } = useSelector((state) => state.admin);
   const { notify, contextHolder } = useStatusNotification();
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const fileInputRef = useRef(null);
 
   const [fileName, setFileName] = useState("");
@@ -187,6 +190,47 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
       }
 
       const summary = summarize(response.data, sent);
+      const plural = (count) => `${count} member${count === 1 ? "" : "s"}`;
+
+      /* A 202: the server stopped waiting after 4 s and the job is still
+         writing members. Telling the person they were imported, and reloading
+         a table that does not have them yet, is what this used to do. The
+         skipped rows are already known — they are decided before queueing. */
+      const outcome = bulkMembersOutcome(response);
+      if (outcome.kind === "queued") {
+        if (outcome.jobId) {
+          dispatch(
+            onTrackBackgroundJob({
+              jobId: outcome.jobId,
+              type: "bulk-members-import",
+              successMessage: `${plural(summary.inserted)} imported.`,
+              failureMessage: "The member import failed.",
+              invalidateKeys: [["membersInfoQuery"]],
+            })
+          );
+        }
+        registerStaffActivity({
+          action: "IMPORT",
+          target_model: "Member",
+          details: { count: summary.inserted, queued: true },
+        });
+        const followUp = outcome.jobId
+          ? "You'll be told when it finishes; the members list updates then."
+          : "It can take a few minutes. Reload the members list to see them.";
+        if (summary.skippedRows.length > 0 || summary.skippedWithoutReason > 0) {
+          setResult({ ...summary, queued: true });
+          notify(
+            "warning",
+            `Importing ${summary.inserted} of ${plural(sent.length)} in the background.`,
+            `Some rows were skipped — see the list below. ${followUp}`
+          );
+          return;
+        }
+        notify("info", `Importing ${plural(summary.inserted)} in the background.`, followUp);
+        onClose();
+        return;
+      }
+
       registerStaffActivity({
         action: "IMPORT",
         target_model: "Member",
@@ -196,7 +240,6 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
       // not appear in the table behind the modal.
       await queryClient.invalidateQueries({ queryKey: ["membersInfoQuery"] });
 
-      const plural = (count) => `${count} member${count === 1 ? "" : "s"}`;
       if (summary.skippedRows.length > 0 || summary.skippedWithoutReason > 0) {
         // Stay open: the skipped rows are the part that still needs doing.
         setResult(summary);
@@ -432,6 +475,8 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
               <span className="action-form__step-index">3</span>
               {result.refused
                 ? "Nothing was imported"
+                : result.queued
+                ? `${result.inserted} being imported, some rows skipped`
                 : `${result.inserted} imported, some rows skipped`}
             </h3>
           </div>
