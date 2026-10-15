@@ -161,10 +161,12 @@ usa para aislar compañías. ¿Cuál lee cada ruta, y la contrasta con la del JW
 **Surgió:** 2026-10-01 · `FRONTEND_documents_backend_ask.md`
 
 `PUT /api/document/:id` existe en una rama y está ajustada a lo que manda
-`EditDocument.jsx` (`BACKEND_answers_to_dashboard_2026-10-06.md`). Falta:
-- **desplegarla**;
-- que el servidor **rechace asignar un documento vencido** (§2): hoy solo lo
-  impide el cliente.
+`EditDocument.jsx` (`BACKEND_answers_to_dashboard_2026-10-06.md`).
+- ~~**desplegarla**~~ — **hecho**, confirmado 2026-10-15.
+- Que el servidor **rechace asignar un documento vencido** (§2). **Ya no
+  bloquea:** el dashboard valida la fecha y deshabilita la asignación en
+  todas las pantallas. Queda como defensa para quien llame a la API sin pasar
+  por el dashboard; prioridad baja.
 
 ### 9. Borrar un evento Draft no borra nada en SQL
 **Surgió:** 2026-10-02

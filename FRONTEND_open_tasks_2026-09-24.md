@@ -27,10 +27,10 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **27** |
+| **Abierto, total** | **26** |
 | — bloquea (§1) | 1 (espera al backend) |
 | — trabajo de producto (§2) | 5 |
-| — reunión del 29-09 (§2b) | 2 (de 2b.8 solo queda la parte del servidor; 2b.4 cerrado el 15-10) |
+| — reunión del 29-09 (§2b) | 1 (2b.9; 2b.4 y 2b.8 cerrados el 15-10) |
 | — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
 | — plan FedRAMP (§2d) | 3 (F0.3 y F1.1 con el cliente hecho; los tres esperan al backend) |
 | — surgido del 13 al 15-10 (§2f) | 3 |
@@ -788,7 +788,14 @@ logged."*
 autor. Preguntarlo antes de diseñar. Relacionado con el log de actividad de
 staff (B2) y con el registro de consentimientos (2b.9).
 
-### 2b.8 — Documentos vencidos [14] — frontend hecho 2026-10-01
+### ~~2b.8 — Documentos vencidos [14]~~ — hecho: frontend 2026-10-01, endpoint confirmado 2026-10-15
+
+**2026-10-15:** Gustavo confirma que el endpoint para editar un documento
+existe, así que reactivar un vencido cambiando su fecha ya funciona. El
+cliente valida el vencimiento y deshabilita la asignación en todas las
+pantallas. Queda **solo como defensa adicional**, sin bloquear: que el
+servidor también rechace asignar un vencido a quien llame a la API sin pasar
+por el dashboard (punto 8 del documento del backend).
 
 - **Etiqueta "Expired":** ya estaba en la tarjeta. Ahora también en la lista
   de cada carpeta, con su filtro y su conteo por sección.
