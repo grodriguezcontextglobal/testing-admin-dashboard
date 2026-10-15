@@ -45,6 +45,21 @@ describe("checkEnv", () => {
     ]);
   });
 
+  /* FRONTEND_crypto_inventory_2026-10-15.md §4: plain http sends the session
+     token in clear. Only a server on this same machine may skip TLS. */
+  it("refuses a plain-http API that is not on this machine", () => {
+    for (const name of ["VITE_APP_DEVITRACK_API", "VITE_APP_DEVITRACK_API_BACKUP"]) {
+      const { errors } = checkEnv({ ...valid, [name]: "http://api.devitrak.net" });
+      expect(errors).toEqual([expect.stringMatching(new RegExp(`${name} must use https`))]);
+    }
+  });
+
+  it("lets a local development server use plain http", () => {
+    for (const local of ["http://localhost:3000", "http://127.0.0.1:8080/api", "http://[::1]:3000"]) {
+      expect(checkEnv({ ...valid, VITE_APP_DEVITRACK_API: local }).errors).toEqual([]);
+    }
+  });
+
   // Every VITE_* value ships in the public bundle: a secret Stripe key there
   // is a leaked key.
   it("refuses a secret or restricted Stripe key", () => {

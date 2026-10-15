@@ -27,6 +27,14 @@ const isHttpUrl = (value) => {
   }
 };
 
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
+/** An http:// URL whose host is not this machine. Assumes isHttpUrl. */
+const isPlainHttpOffMachine = (value) => {
+  const url = new URL(value.trim());
+  return url.protocol === "http:" && !LOCAL_HOSTS.includes(url.hostname);
+};
+
 /**
  * @param {Record<string, string | undefined>} env the VITE_APP_* variables
  * @returns {{ errors: string[], warnings: string[] }}
@@ -40,8 +48,12 @@ export const checkEnv = (env) => {
   }
 
   for (const name of ["VITE_APP_DEVITRACK_API", "VITE_APP_DEVITRACK_API_BACKUP"]) {
-    if (!isBlank(env[name]) && !isHttpUrl(env[name])) {
+    if (isBlank(env[name])) continue;
+    if (!isHttpUrl(env[name])) {
       errors.push(`${name} must be an http(s) URL.`);
+    } else if (isPlainHttpOffMachine(env[name])) {
+      // The session token travels on every request (crypto inventory §4).
+      errors.push(`${name} must use https unless the server runs on this machine.`);
     }
   }
 
