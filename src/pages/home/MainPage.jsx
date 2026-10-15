@@ -25,6 +25,8 @@ import { PlusSquareIcon } from "../../components/icons/PlusSquareIcon";
 import HomeKpiSection from "./components/HomeKpiSection";
 import EventsDevicesChart from "./components/EventsDevicesChart";
 import LiveEventSnapshot from "./components/LiveEventSnapshot";
+import { hasPermission, resolveRoleType } from "../../config/roles";
+import { homeLayout } from "./utils/homeLayout";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -41,6 +43,9 @@ const MainPage = () => {
   ] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
+  const roleType = resolveRoleType(user);
+  // A role without inventory:read is not asked for the inventory at all.
+  const canReadInventory = hasPermission("inventory:read", roleType);
   const companiesCheck = useQuery({
     queryKey: ["companiesList"],
     queryFn: () =>
@@ -56,7 +61,12 @@ const MainPage = () => {
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
       }),
+    enabled: canReadInventory,
     refetchOnMount: false,
+  });
+  const layout = homeLayout({
+    roleType,
+    inventoryCount: inventoryQuery?.data?.data?.items?.length ?? 0,
   });
   const totalConsumers = async () => {
     if (inventoryQuery.data) {
@@ -67,7 +77,8 @@ const MainPage = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    inventoryQuery.refetch();
+    // refetch() ignores `enabled`, so the guard has to be here too.
+    if (canReadInventory) inventoryQuery.refetch();
     return () => {
       controller.abort();
     };
@@ -245,22 +256,26 @@ const MainPage = () => {
           md={5}
           lg={5}
         >
-          <Link
-            style={{
-              width: "fit-content",
-            }}
-            to="/inventory/new-bulk-items"
-          >
-            <BlueButtonComponent title={"Add to inventory"} iconTrailing={<PlusSquareIcon stroke="#ffffff" />} func={null} />
-          </Link>
-          <Link
-            to="/create-event-page/event-detail"
-            style={{
-              width: "fit-content",
-            }}
-          >
-            <GrayButtonComponent title={"Create new event"} iconTrailing={<PlusIcon stroke="#000000" />} func={null} />
-          </Link>
+          {layout.actions.addInventory && (
+            <Link
+              style={{
+                width: "fit-content",
+              }}
+              to="/inventory/new-bulk-items"
+            >
+              <BlueButtonComponent title={"Add to inventory"} iconTrailing={<PlusSquareIcon stroke="#ffffff" />} func={null} />
+            </Link>
+          )}
+          {layout.actions.createEvent && (
+            <Link
+              to="/create-event-page/event-detail"
+              style={{
+                width: "fit-content",
+              }}
+            >
+              <GrayButtonComponent title={"Create new event"} iconTrailing={<PlusIcon stroke="#000000" />} func={null} />
+            </Link>
+          )}
         </Grid>
         {/* ===== Dashboard widgets: KPIs, live-event snapshot, per-event chart ===== */}
         <Grid
@@ -294,10 +309,13 @@ const MainPage = () => {
         </Grid>
         <Divider style={{ margin: "8px 0 16px" }} />
         <Grid item xs={12} sm={12} md={12} lg={12}>
-          <HomeKpiSection />
+          <HomeKpiSection
+            showInventory={layout.kpis.inventory}
+            showEvents={layout.kpis.events}
+          />
         </Grid>
-        {inventoryQuery?.data?.data?.items.length > 0 ? (
-          <>
+        {/* Each section only for the roles that can read it (homeLayout). */}
+        {layout.inventorySection && (
             <Grid
               textAlign={"right"}
               display={"flex"}
@@ -312,6 +330,8 @@ const MainPage = () => {
             >
               <InventoryMainPage />
             </Grid>
+        )}
+        {layout.eventsSection && (
             <Grid
               style={{
                 display: "flex",
@@ -426,14 +446,15 @@ const MainPage = () => {
                 <ActiveEventMainPage />
               </Grid>
             </Grid>
-          </>
-        ) : (
+        )}
+        {layout.onboarding && (
           <Grid
             container
             gap={1}
             justifyContent={"space-between"}
             alignItems={"center"}
           >
+            {layout.onboarding.addInventory && (
             <Grid item xs={12} sm={12} md={5} lg={5}>
               {" "}
               <BannerMsg
@@ -452,6 +473,8 @@ const MainPage = () => {
                 }}
               />
             </Grid>
+            )}
+            {layout.onboarding.createEvent && (
             <Grid item xs={12} sm={12} md={5} lg={5}>
               {" "}
               <BannerMsg
@@ -470,6 +493,7 @@ const MainPage = () => {
                 }}
               />
             </Grid>
+            )}
           </Grid>
         )}{" "}
       </Grid>

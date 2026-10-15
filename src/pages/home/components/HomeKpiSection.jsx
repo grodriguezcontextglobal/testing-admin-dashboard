@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { getEventStatus } from "../../events/utils/getEventStatus";
 import { getIndustryProfile } from "../../../config/industryProfiles";
+import { hasPermission, resolveRoleType } from "../../../config/roles";
 
 /**
  * Home dashboard KPI strip. Derives everything from two queries that other
@@ -94,7 +95,11 @@ export const sumDeviceSetup = (event) =>
     0
   );
 
-const HomeKpiSection = () => {
+/**
+ * `showInventory` / `showEvents` come from homeLayout: a role that cannot read
+ * one side neither sees its cards nor asks the server for it.
+ */
+const HomeKpiSection = ({ showInventory = true, showEvents = true }) => {
   // Company-wide status strip: inventory, devices out, team, consumers,
   // events. Every number reuses a query some other page already makes
   // (shared query keys), so this row adds no extra network cost.
@@ -105,7 +110,7 @@ const HomeKpiSection = () => {
       devitrakApi.get(
         `/event/event-list-per-company?company=${user.company}&type=event`
       ),
-    enabled: !!user.companyData.id,
+    enabled: showEvents && !!user.companyData.id,
   });
   const inventoryQuery = useQuery({
     queryKey: ["itemsList"],
@@ -113,6 +118,7 @@ const HomeKpiSection = () => {
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
       }),
+    enabled: showInventory,
     refetchOnMount: false,
   });
   const companyQuery = useQuery({
@@ -128,6 +134,11 @@ const HomeKpiSection = () => {
   const industryProfile = getIndustryProfile(user?.companyData?.industry);
   const usesMembers = Boolean(industryProfile.audience);
   const consumersHidden = industryProfile.hiddenNavTabs.includes("consumers");
+  // Consumers and members come from the event side: same permission as their tab.
+  const showAudience = hasPermission(
+    usesMembers ? "nav:members" : "nav:consumers",
+    resolveRoleType(user)
+  );
 
   const consumersQuery = useQuery({
     queryKey: ["allConsumersBasedOnEventsPerCompany"],
@@ -135,7 +146,7 @@ const HomeKpiSection = () => {
       devitrakApi.get(
         `/auth/all-consumers-based-on-all-events-per-company/${user.companyData.id}`
       ),
-    enabled: !!user.companyData.id && !consumersHidden,
+    enabled: showAudience && !!user.companyData.id && !consumersHidden,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -145,7 +156,7 @@ const HomeKpiSection = () => {
       devitrakApi.post("/db_member/consulting-member", {
         company_id: user?.sqlInfo?.company_id,
       }),
-    enabled: usesMembers && !!user?.sqlInfo?.company_id,
+    enabled: showAudience && usesMembers && !!user?.sqlInfo?.company_id,
     staleTime: 5 * 60 * 1000,
   });
   const totalMembers = membersQuery.data?.data?.members?.length ?? 0;
@@ -183,24 +194,28 @@ const HomeKpiSection = () => {
         margin: "0 0 16px",
       }}
     >
-      <KpiCard
-        icon="tabler:box"
-        label="Inventory units"
-        value={inventoryUnits}
-      />
-      <KpiCard
-        icon="tabler:device-mobile-share"
-        label="Devices out"
-        value={devicesOut}
-        hint={inventoryUnits > 0 ? `of ${inventoryUnits}` : undefined}
-      />
+      {showInventory && (
+        <>
+          <KpiCard
+            icon="tabler:box"
+            label="Inventory units"
+            value={inventoryUnits}
+          />
+          <KpiCard
+            icon="tabler:device-mobile-share"
+            label="Devices out"
+            value={devicesOut}
+            hint={inventoryUnits > 0 ? `of ${inventoryUnits}` : undefined}
+          />
+        </>
+      )}
       <KpiCard
         icon="tabler:users"
         label="Team members"
         value={employees.length}
         hint={employees.length > 0 ? `${activeStaff} active` : undefined}
       />
-      {usesMembers ? (
+      {!showAudience ? null : usesMembers ? (
         <KpiCard
           icon={industryProfile.icon}
           label={industryProfile.audience}
@@ -213,18 +228,27 @@ const HomeKpiSection = () => {
           value={totalConsumers}
         />
       )}
-      <KpiCard
-        icon="tabler:broadcast"
-        label="Live events"
-        value={liveEvents.length}
-      />
-      <KpiCard
-        icon="tabler:calendar-time"
-        label="Upcoming events"
-        value={upcomingEvents.length}
-      />
+      {showEvents && (
+        <>
+          <KpiCard
+            icon="tabler:broadcast"
+            label="Live events"
+            value={liveEvents.length}
+          />
+          <KpiCard
+            icon="tabler:calendar-time"
+            label="Upcoming events"
+            value={upcomingEvents.length}
+          />
+        </>
+      )}
     </div>
   );
+};
+
+HomeKpiSection.propTypes = {
+  showInventory: PropTypes.bool,
+  showEvents: PropTypes.bool,
 };
 
 export default HomeKpiSection;
