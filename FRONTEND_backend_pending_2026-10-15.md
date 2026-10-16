@@ -1,272 +1,286 @@
-# Backend: todo lo que el dashboard espera del servidor (2026-10-15)
+# Backend: everything the dashboard is waiting on from the server (2026-10-15)
 
-Para el agente de backend. **Un solo documento con todo lo pendiente**, en
-orden de prioridad. Cada punto remite al documento donde está el detalle, que
-sigue siendo la fuente; aquí solo va lo necesario para empezar y saber cuándo
-está terminado.
+For the backend agent. **One document with everything pending**, in priority
+order. Each item points to the document that holds the detail, which remains
+the source; this one only carries what you need to start and to know when an
+item is done.
 
-**Prioridad general (Fredrik, 2026-09-25):** FedRAMP por delante de todo.
+**Overall priority (Fredrik, 2026-09-25):** FedRAMP comes first.
 
-**Cómo leerlo.** "Surgió" es la fecha en que se pidió. "Hecho cuando" es la
-condición que el dashboard comprueba para cerrarlo de su lado. Al terminar un
-punto, respondan en un `BACKEND_*_REPLY` con el número de punto, la rama y si
-está desplegado: varios cambios del cliente se activan solo cuando lo está.
+**How to read it.** "Raised" is the date it was asked for. "Done when" is the
+condition the dashboard checks to close it on our side. When you finish an
+item, reply in a `BACKEND_*_REPLY` with the item number, the branch and
+whether it is deployed: several client changes only switch on once it is.
+
+*Updated 2026-10-16. Translated to English; items 4, 12 and 13 brought up to
+date with what changed on 2026-10-15.*
 
 ---
 
-## P0 — Roto en producción o a punto de romperse
+## P0 — Broken in production, or about to break
 
-### 1. Desplegar `release/observabilidad` — y avisar el día exacto
-**Surgió:** 2026-10-13 · `FRONTEND_invitation_signed_link_2026-10-13.md`,
+### 1. Deploy `release/observabilidad` — and tell us the exact day
+**Raised:** 2026-10-13 · `FRONTEND_invitation_signed_link_2026-10-13.md`,
 `FRONTEND_password_reset_mfa_2026-10-13.md`
 
-El dashboard **ya está en `main`** con el contrato nuevo:
-- aceptar invitación con `invitationToken` firmado (`8054a452`);
-- reset de contraseña con enlace firmado y MFA (`a9e3c00a`);
-- cambio de contraseña con `POST /api/admin/verify-password`, sin hash en el
-  cliente (`c1a4a454`);
-- `companiesAssigned` lo escribe el servidor (`1a86f327`);
-- `x-mfa-setup-token` en CORS.
+The dashboard is **already on `main`** with the new contract:
+- accepting an invitation with a signed `invitationToken` (`8054a452`);
+- password reset with a signed link and MFA (`a9e3c00a`);
+- password change through `POST /api/admin/verify-password`, with no hash in
+  the client (`c1a4a454`);
+- `companiesAssigned` written by the server (`1a86f327`);
+- `x-mfa-setup-token` allowed by CORS;
+- signed event invitations through `/school/event-invitations/send`
+  (`ddf206a5`, item 4).
 
-**Tienen que salir a la vez.** Retenemos el release de IIS hasta que
-desplieguen. Necesitamos **la fecha** para publicar el dashboard el mismo día,
-y que las invitaciones pendientes se reenvíen (las viejas no traen token).
+**They have to go out together.** We are holding the IIS release until you
+deploy. We need **the date** so we can publish the dashboard the same day, and
+pending invitations must be re-sent (the old ones carry no token).
 
-**Hecho cuando:** la rama está en producción y nos dan la hora del despliegue.
-Además, la copia del contrato (`src/docs/api-payloads.json`) con
-`verify-password`, para quitarla de nuestras excepciones del audit.
+**Done when:** the branch is in production and you give us the deploy time.
+Also send the regenerated contract (`src/docs/api-payloads.json`) with
+`verify-password`, so we can drop it from our audit exceptions.
 
-### 2. Refunds: ninguno funciona desde el 2026-03-18
-**Surgió:** 2026-10-02 · confirmado en `BACKEND_answers_to_dashboard_2026-10-06.md`
+### 2. Refunds: none has worked since 2026-03-18
+**Raised:** 2026-10-02 · confirmed in `BACKEND_answers_to_dashboard_2026-10-06.md`
 
-El validador acepta `payment_intent` y los controladores leen `paymentIntent`.
-El arreglo ya está escrito (acepta los tres nombres); **falta desplegarlo**.
-Afecta a `POST /stripe/refund` y `POST /stripe/partial-refund`.
+The validator accepts `payment_intent` and the controllers read
+`paymentIntent`. The fix is written (it accepts all three names); **it still
+has to be deployed**. Affects `POST /stripe/refund` and
+`POST /stripe/partial-refund`.
 
-**Hecho cuando:** desplegado. Confirmen también los códigos que darán cuando
-estas rutas exijan sesión y `transaction:update`: **403** sin permiso y **404**
-si el pago es de otra compañía, con `message` legible.
+**Done when:** deployed. Please also confirm the codes these routes will
+return once they require a session and `transaction:update`: **403** without
+permission and **404** when the payment belongs to another company, with a
+readable `message`. The dashboard already shows a specific message for both
+(`bcd74b06`).
 
-### 3. El login sigue dando token a cuentas con MFA apagado
-**Surgió:** 2026-09-21 · `FRONTEND_force_logout_token_2026-09-21.md`
+### 3. Login still issues a token to accounts with MFA off
+**Raised:** 2026-09-21 · `FRONTEND_force_logout_token_2026-09-21.md`
 
-El cliente obliga a enrolarse, pero un `POST /api/admin/login` directo se salta
-la puerta. Para FedRAMP (IA-2) la regla tiene que estar en el servidor.
+The client forces enrolment, but a direct `POST /api/admin/login` skips the
+gate. For FedRAMP (IA-2) the rule has to live on the server.
 
-**Hecho cuando:** el login de una cuenta sin MFA no devuelve un token de sesión
-completo, solo el de enrolamiento. Díganos qué forma tiene esa respuesta.
+**Done when:** logging in to an account without MFA returns only the
+enrolment token, not a full session token. Tell us the shape of that response.
 
-De paso, el mismo documento pide un **token de un solo uso en el enlace de
-force-logout** (§"What we are asking for", puntos 1 y 2). El punto 3 se hizo el
-2026-09-23; confirmen si 1 y 2 están hechos.
+The same document also asks for a **single-use token in the force-logout
+link** (§"What we are asking for", points 1 and 2). Point 3 was done on
+2026-09-23; please confirm whether 1 and 2 are done.
 
-### 4. Invitaciones a evento con enlace firmado — una pregunta bloqueante
-**Surgió:** 2026-10-14 · `FRONTEND_attendance_invitation_link_2026-10-14.md`
-(su diseño) y `FRONTEND_attendance_invitation_link_review_2026-10-14.md`
-(nuestra revisión)
+### 4. Signed event invitations — open questions
+**Raised:** 2026-10-14 · `FRONTEND_attendance_invitation_link_2026-10-14.md`
+(your design), `FRONTEND_attendance_invitation_link_review_2026-10-14.md`
+(our review), `FRONTEND_event_invitation_send_2026-10-15.md` (your send
+contract)
 
-El cliente está hecho: la landing ya usa `x-link-token` (`a5959069`, en
-`main`), y el envío por `POST /school/event-invitations/send` está listo pero
-**sin commitear**, porque sin la ruta desplegada no saldría ninguna invitación.
+**Client side is finished and on `main`:** the landing page uses
+`x-link-token` (`a5959069`); `handleSend` calls
+`POST /school/event-invitations/send` following your option A (`ddf206a5`);
+and the landing page accepts a signed link even when a display value is
+missing from the URL (`4c6202b4`). It ships with the release in item 1.
 
-**Bloqueante (§1 de la revisión):** con `enforce`, ¿cómo distinguen al
-dashboard sin sesión de la app de consumidores en `POST /auth/user-query`,
-`POST /auth/new`, `PATCH /auth/:id` y `POST /db_consumer/new_consumer`? Si es
-por `Origin` u otra cabecera del cliente, no es un control.
+**Blocking (§1 of our review):** under `enforce`, how do you tell the
+session-less dashboard apart from the consumer app on `POST /auth/user-query`,
+`POST /auth/new`, `PATCH /auth/:id` and `POST /db_consumer/new_consumer`? If it
+is by `Origin` or any other header the client sends, it is not a control.
 
-**Antes de `enforce`** (§2–§6 de la revisión):
-- caducidad ligada al evento en vez de 5 días fijos;
-- que `opened` no gaste el token;
-- `GET /school/event-invitations/preview` para no leer datos de la URL;
-- que `/confirm` y `/response` decidan solo con `x-link-token`, aunque llegue
-  también `x-token`;
-- `member:notify` en vez de `member:create` en `/send`;
-- token usado con la persona aún en el evento → `200 { outcome: "already" }`.
+**Before `enforce`** (§2–§6 of our review):
+- expiry tied to the event instead of a fixed 5 days;
+- `opened` must not spend the token;
+- `GET /school/event-invitations/preview`, so the page stops reading data from
+  the URL;
+- `/confirm` and `/response` decide from `x-link-token` alone, even when an
+  `x-token` arrives too;
+- `member:notify` instead of `member:create` on `/send`;
+- a used token with the person still on the event → `200 { outcome: "already" }`.
 
-**Nuevo, 2026-10-15:** ¿es **idempotente** `/send` para el mismo miembro y
-evento? Si un lote de 500 corta por timeout después de enviar parte, el
-cliente marca el lote entero como fallido y un reintento manda el correo dos
-veces. Necesitamos saber si repetir es seguro, o un id de idempotencia.
+**Is `/send` idempotent** for the same member and event? If a 500-member batch
+times out after sending part of it, the client marks the whole batch as
+failed and a retry emails some people twice. We need to know whether a repeat
+is safe, or get an idempotency id.
 
-**Nuevo, 2026-10-15 — menores sin email propio.** El consumidor se busca y
-se crea por email, así que un menor registrado solo con el email del tutor no
-podía entrar en un evento. El dashboard ya lo resolvió en su lado
-(`ad05c2a1`, `consumerEmailFor`): el email propio si existe; si no, para un
-menor, **el del tutor con `+m<member_id>`** (`maria+m1234@gmail.com`). Es único
-por niño (dos hermanos no se fusionan en un consumidor) y llega al buzón del
-tutor. **Con el enlace firmado lo decide el servidor**, que lee el miembro de
-`members_info`: `/confirm` tiene que usar la misma regla para buscar y crear
-el consumidor, o el mismo niño acabaría con dos consumidores según por dónde
-entre. La invitación se sigue mandando a la dirección normal del tutor.
+**Minors without an email of their own.** Consumers are looked up and created
+by email, so a minor registered with only a guardian email could not join an
+event. The dashboard solved it on its side (`ad05c2a1`, `consumerEmailFor`):
+the member's own email if there is one; otherwise, for a minor, **the
+guardian's address tagged with `+m<member_id>`** (`maria+m1234@gmail.com`). It
+is unique per child (two siblings do not merge into one consumer) and reaches
+the guardian's inbox. **With the signed link the server decides**, reading the
+member from `members_info`: `/confirm` must use the same rule to look up and
+create the consumer, or the same child ends up with two consumers depending on
+the way in. The invitation itself still goes to the guardian's plain address.
 
-**Hecho cuando:** `/send` y `/confirm` desplegados, la pregunta bloqueante
-respondida y confirmada la regla del email del menor.
+**First end-to-end test, 2026-10-15:** the link built by `/send` reached the
+page without one of `memberEmail`, `eventId`, `eventName`, `company` or
+`companyId`, and the page rejected it ("invalid or incomplete"). Fixed on the
+dashboard (`4c6202b4`): with a `token` those values are no longer required.
+But your note says the link carries "the same parameters as before, plus
+`token`", so **please confirm which parameters `/send` puts in the link**. If
+`memberEmail` is empty for a minor without an email, send it following the
+`consumerEmailFor` rule; with `eventName`, `company` and the member's name the
+page reads in full.
 
-**2026-10-15:** el envío ya está commiteado en el dashboard (`ddf206a5`),
-siguiendo su `FRONTEND_event_invitation_send_2026-10-15.md` (opción A). Su
-nota no menciona dos cosas de este punto, que siguen abiertas: la regla del
-email del menor sin email propio en `/confirm`, y si `/send` repetido es
-seguro (idempotencia).
-
-**Prueba de punta a punta, 2026-10-15:** el enlace que armó `/send` llegó a la
-página sin alguno de `memberEmail`, `eventId`, `eventName`, `company` o
-`companyId`, y la página lo rechazó ("invalid or incomplete"). Lo arreglamos en
-el dashboard (`4c6202b4`): con `token`, ya no exige esos valores. Pero el
-documento de ustedes dice que el enlace lleva "los mismos parámetros que
-antes, más `token`", así que **confirmen qué parámetros pone `/send` en el
-enlace**. Si `memberEmail` va vacío para un menor sin email, que vaya con la
-regla de `consumerEmailFor`; y con `eventName`, `company` y el nombre del
-miembro la página se lee completa.
+**Done when:** `/send`, `/confirm` and `/response` are deployed, the blocking
+question is answered, and the minor-email rule and the link parameters are
+confirmed.
 
 ---
 
 ## P1 — FedRAMP
 
-### 5. Las 384 rutas sin `validateJWT`
-**Surgió:** 2026-10-14 · `FRONTEND_unauthenticated_routes_2026-10-14.md`
+### 5. The 384 routes without `validateJWT`
+**Raised:** 2026-10-14 · `FRONTEND_unauthenticated_routes_2026-10-14.md`
 
-De 484 rutas, 384 no llevan `validateJWT` en la ruta (contrato del 24-08).
-**Primero descarten** que algún router lo monte con `router.use`, porque el
-extractor no lo vería. Después, por grupos:
+Of 484 routes, 384 have no `validateJWT` at route level (contract of 08-24).
+**First rule out** any router mounting it with `router.use`, which the
+extractor would not see. Then, by group:
 
-| Grupo | Rutas | Acción |
+| Group | Routes | Action |
 |---|---|---|
-| **B** | 154 | El dashboard solo las llama con sesión. `validateJWT` + `checkTokenVersion`: **no nos rompe nada**. Es el mayor avance por menos riesgo |
-| **C** | 36 | Tienen `canRead`/`canManage`… sin `validateJWT`. Confirmar que exigen token. **29 son de colegio, con datos de menores: prioritario** |
-| **E** | 4 | Refund, refund parcial, capture y cancel. Ya anunciado; confirmar despliegue (punto 2) |
-| **A** | 44 | Las usa una página pública. Revisar una a una (§3 del documento) |
-| **D** | 35 | `optionalJWT`, 33 de Stripe. Decidir cuáles son públicas de verdad |
-| **F** | 111 | El dashboard no las llama. Cerrar o retirar tras mirar otros clientes |
+| **B** | 154 | The dashboard only calls them with a session. `validateJWT` + `checkTokenVersion`: **breaks nothing on our side**. The biggest gain for the least risk |
+| **C** | 36 | They have `canRead`/`canManage`… but no `validateJWT`. Confirm those require a token. **29 are school routes with minors' data: priority** |
+| **E** | 4 | Refund, partial refund, capture and cancel. Already announced; confirm the deploy (item 2) |
+| **A** | 44 | Called by a public page. Review one by one (§3 of the document) |
+| **D** | 35 | `optionalJWT`, 33 of them Stripe. Decide which are really public |
+| **F** | 111 | The dashboard does not call them. Close or retire them after checking other clients |
 
-Lo más grave por dominio está en §2: `nodemailer/*` permite mandar correo con
-nuestra marca a cualquier dirección, y `receiver/*`, `db_item`, `db_event`,
-`transaction/*` escriben sin sesión.
+The worst, by domain, is in §2: `nodemailer/*` lets anyone send email under
+our brand to any address, and `receiver/*`, `db_item`, `db_event` and
+`transaction/*` write without a session.
 
-**Hecho cuando:** nos mandan el contrato regenerado y la lista de rutas que
-pasaron a exigir sesión.
+**Done when:** you send the regenerated contract and the list of routes that
+now require a session.
 
-### 6. Retirar el rol numérico (F1.1, fase 2)
-**Surgió:** 2026-10-14 · `FRONTEND_numeric_role_backend_ask_2026-10-14.md`
+### 6. Retire the numeric role (F1.1, phase 2)
+**Raised:** 2026-10-14 · `FRONTEND_numeric_role_backend_ask_2026-10-14.md`
 
-El dashboard ya no decide nada con el número (fase 1, `4c8ffa5c`). Para dejar
-de escribirlo y mandarlo, cinco preguntas:
-1. ¿Decide el servidor el alcance con el `role` del body?
-2. ¿Qué lee `authorizeMongoPermission`?
-3. ¿Hay registros sin `roleType`? (Un `role: ""` sin `roleType` se leía como
-   root admin en el cliente: ¿pasa lo mismo en el servidor?)
-4. R1: el choque de niveles entre los roles con alcance y `event_assistant`.
-5. Qué escribe el servidor hoy en `role` y `role_level`.
+The dashboard no longer decides anything from the number (phase 1,
+`4c8ffa5c`). Before we stop writing and sending it, five questions:
+1. Does the server decide scope from the `role` in the body?
+2. What does `authorizeMongoPermission` read?
+3. Are there records without `roleType`? (A `role: ""` with no `roleType` was
+   read as root admin on the client: does the same happen on the server?)
+4. R1: the level clash between the scoped roles and `event_assistant`.
+5. What the server writes today into `role` and `role_level`.
 
-**Hecho cuando:** respondan las cinco.
+**Done when:** all five are answered.
 
-### 7. Qué cabecera de tenant lee el servidor (F1.2)
-**Surgió:** 2026-09-28 · `fedRAMP/FRONTEND_action_plan_2026-09-28.md`
+### 7. Which tenant header the server reads (F1.2)
+**Raised:** 2026-09-28 · `fedRAMP/FRONTEND_action_plan_2026-09-28.md`
 
-Mandamos `x-company-id` (rutas Mongo) y `s-company-lq` (rutas SQL), desde
-`buildRouteScopedHeaders`. El informe de readiness dice que el servidor no las
-usa para aislar compañías. ¿Cuál lee cada ruta, y la contrasta con la del JWT?
+We send `x-company-id` (Mongo routes) and `s-company-lq` (SQL routes) from
+`buildRouteScopedHeaders`. The readiness report says the server does not use
+them to isolate companies. Which one does each route read, and is it checked
+against the JWT?
 
-**Hecho cuando:** respondan. Puede no requerir código.
+**Done when:** answered. It may need no code.
 
 ---
 
-## P2 — Contratos ya pedidos, esperando despliegue o respuesta
+## P2 — Contracts already agreed, waiting for a deploy or an answer
 
-### 8. Edición de documentos y no asignar vencidos (2b.8)
-**Surgió:** 2026-10-01 · `FRONTEND_documents_backend_ask.md`
+### 8. Editing documents, and refusing expired ones (2b.8)
+**Raised:** 2026-10-01 · `FRONTEND_documents_backend_ask.md`
 
-`PUT /api/document/:id` existe en una rama y está ajustada a lo que manda
-`EditDocument.jsx` (`BACKEND_answers_to_dashboard_2026-10-06.md`).
-- ~~**desplegarla**~~ — **hecho**, confirmado 2026-10-15.
-- Que el servidor **rechace asignar un documento vencido** (§2). **Ya no
-  bloquea:** el dashboard valida la fecha y deshabilita la asignación en
-  todas las pantallas. Queda como defensa para quien llame a la API sin pasar
-  por el dashboard; prioridad baja.
+`PUT /api/document/:id` matches what `EditDocument.jsx` sends
+(`BACKEND_answers_to_dashboard_2026-10-06.md`).
+- ~~**Deploy it**~~ — **done**, confirmed 2026-10-15.
+- The server **refusing to assign an expired document** (§2). **No longer
+  blocking:** the dashboard checks the date and disables assignment on every
+  screen. It remains as a defence against callers that bypass the dashboard;
+  low priority.
 
-### 9. Borrar un evento Draft no borra nada en SQL
-**Surgió:** 2026-10-02
+### 9. Deleting a Draft event deletes nothing in SQL
+**Raised:** 2026-10-02
 
-`DELETE /db_event/:id` leía el id de `body.email`. El cliente ya dejó de
-mandar el body y trata **404** como "no había fila" y **409** como "tiene
-inventario o staff". **Hecho cuando:** desplegado leyendo `:id` de la URL.
+`DELETE /db_event/:id` read the id from `body.email`. The client no longer
+sends the body and treats **404** as "there was no row" and **409** as "it
+still has inventory or staff". **Done when:** deployed, reading `:id` from the
+URL.
 
-### 10. `event_staff`: el duplicado como 409
-**Surgió:** 2026-10-01
+### 10. `event_staff`: a duplicate as 409
+**Raised:** 2026-10-01
 
-Con el servidor nuevo, el duplicado es 409 y lo demás es 500. Mientras conviva
-el viejo, el cliente trata 408 también como "ya vinculado". **Avísennos al
-desplegar:** quitamos el 408, porque si no, un timeout real se cuenta como
-staff vinculado.
+With the new server a duplicate is 409 and anything else is 500. While the old
+one is still around, the client also treats 408 as "already linked". **Tell us
+when you deploy:** we will drop the 408, or a real timeout would count as a
+linked staff member.
 
-### 11. Detener y reanudar recordatorios de vencidos
-**Surgió:** 2026-10-07 · `FRONTEND_overdue_reminders_2026-10-07.md`, backend
+### 11. Stopping and resuming overdue reminders
+**Raised:** 2026-10-07 · `FRONTEND_overdue_reminders_2026-10-07.md`, backend
 `9d61857`
 
-Cliente hecho: el botón Stop se habilita solo cuando la fila trae
-`reminders_stopped_at`. **Hecho cuando:** `9d61857` desplegado.
+Client done: the Stop button only switches on when the row carries
+`reminders_stopped_at`. **Done when:** `9d61857` is deployed.
 
-### 12. Registrar las respuestas del tutor (2b.9 [17])
-**Surgió:** 2026-10-08 · `FRONTEND_event_invitation_responses_2026-10-08.md`
+### 12. Recording guardian responses (2b.9, meeting request #17)
+**Raised:** 2026-10-08 · `FRONTEND_event_invitation_responses_2026-10-08.md`
 
-`POST /api/school/event-invitations/response`. Hasta que exista, el cliente
-ignora el 404. Va junto con el punto 4.
+`POST /api/school/event-invitations/response` and `/confirm`: written in
+`release/observabilidad` according to your 2026-10-15 note, not deployed.
+Until then the client ignores the 404, so a guardian is never blocked, but
+nothing is recorded. **Done when:** deployed together with item 4; the
+end-to-end check is §6 of `FRONTEND_event_invitation_send_2026-10-15.md`.
 
-### 13. Registro de actividad: lo que falta del middleware
-**Surgió:** 2026-10-05 · `FRONTEND_activity_log_backend_ask_2026-10-05.md`
+### 13. Activity log: what the middleware still lacks
+**Raised:** 2026-10-05 · `FRONTEND_activity_log_backend_ask_2026-10-05.md`
 
-El middleware está desplegado desde el 05-10 (gracias). Falta:
-- **Q4:** filtro por **evento** en `GET /api/admin/activity-logs` (el de
-  `serial_number` ya lo usamos en el audit trail del dispositivo);
-- **Q5:** excluir de origen los borrados de caché. Hoy los quitamos en el
-  cliente y las páginas llegan con menos filas que su tamaño;
-- desplegar `summary`/`display` (`feat/audit-readable-summary`, `dbcd4f5`);
-- **Q6:** avisar qué controladores cubre el middleware. Las 13 llamadas del
-  cliente a `registerStaffActivity` hoy **duplican** entradas, y las quitaremos
-  en cuanto confirmen la cobertura.
+The middleware has been live since 10-05 (thank you). Still missing:
+- **Q4:** an **event** filter on `GET /api/admin/activity-logs` (we already
+  use the `serial_number` one for the device audit trail);
+- **Q5:** leave cache clears out at the source. Today we drop them on the
+  client, so pages arrive with fewer rows than their size;
+- deploy `summary`/`display` (`feat/audit-readable-summary`, `dbcd4f5`);
+- **Q6:** tell us which controllers the middleware covers. The client's **17
+  calls** to `registerStaffActivity` (in 15 files) **duplicate** entries today,
+  and we will remove them once coverage is confirmed. Our checklist of the 17,
+  with the server route behind each, is
+  `FRONTEND_staff_activity_dedupe_check_2026-10-15.md`.
 
-### 14. Backfill del alcance por ubicación, de Mongo a SQL (R3)
-**Surgió:** 2026-07 (revisado 2026-10-05)
+### 14. Location-scope backfill, Mongo to SQL (R3)
+**Raised:** 2026-07 (reviewed 2026-10-05)
 
-El cliente ya lee SQL primero y cae a Mongo. Una persona con alcance asignado
-solo en Mongo no tiene filas en SQL, así que el servidor no puede aplicarle el
-alcance. **Hecho cuando:** el backfill está ejecutado.
+The client already reads SQL first and falls back to Mongo. Someone whose
+scope was assigned only in Mongo has no SQL rows, so the server cannot apply
+it. **Done when:** the backfill has run.
 
-### 15. Correos: imágenes rotas y envoltorio
-**Surgió:** 2026-10-01 y 2026-10-07 · `FRONTEND_email_wrapper_ask.md`,
+### 15. Email: broken images and wrapper
+**Raised:** 2026-10-01 and 2026-10-07 · `FRONTEND_email_wrapper_ask.md`,
 `FRONTEND_email_branding_devitrak_assets_2026-10-07.md`
 
-- **El logo y el nombre de Devitrak salen como imagen rota** en el preview de
-  branding, que usa las mismas plantillas que un envío real. Seguramente
-  también en los correos de verdad.
-- ~~El envoltorio (2b.4): logo de la compañía arriba, "Powered by Devitrak" al
-  pie y logo blanco sobre fondo oscuro.~~ **Hecho** (confirmado 2026-10-15).
-  Si el mismo cambio arregló también las imágenes rotas de arriba, díganlo y
-  lo cerramos.
+- **The Devitrak logo and wordmark show as broken images** in the branding
+  preview, which uses the same templates as a real send. Probably in real
+  emails too.
+- ~~The wrapper (2b.4): company logo at the top, "Powered by Devitrak" footer
+  and white logo on dark backgrounds.~~ **Done** (confirmed 2026-10-15). If the
+  same change also fixed the broken images above, tell us and we will close
+  it.
 
-El dashboard no tiene nada que cambiar en ninguno de los dos.
+The dashboard has nothing to change for either.
 
 ---
 
-## P3 — Esperan una decisión antes de ser trabajo
+## P3 — Waiting on a decision before it becomes work
 
-Estas no son para empezar todavía, pero el servidor es quien las ejecutará:
+Not to start yet, but the server will carry them out:
 
-| # | Tema | Surgió | Qué falta decidir |
+| # | Topic | Raised | What is left to decide |
 |---|---|---|---|
-| 16 | `GET /api/document/:id` es público para **cualquier** documento | 2026-10-06 | Nosotros les debemos la respuesta. Nuestra propuesta: público solo lo marcado como School consent |
-| 17 | Recordatorio de vencidos diario y sin fin | 2026-10-05 | Producto (Fredrik): espaciarlo (días 1, 3, 7 y luego semanal) o ponerle tope |
-| 18 | Preferencias de notificación que no controlan ningún correo | 2026-10-05 | Producto: si son del staff o de la compañía. Después, contrato de dónde se guardan y que cada `nodemailer/*` las consulte |
+| 16 | `GET /api/document/:id` is public for **any** document | 2026-10-06 | We owe you the answer. Our proposal: public only for documents marked School consent |
+| 17 | Overdue reminder sent daily with no end | 2026-10-05 | Product (Fredrik): space it out (days 1, 3, 7, then weekly) or cap it |
+| 18 | Notification preferences that control no email | 2026-10-05 | Product: whether they belong to the staff member or the company. Then a contract for where they are stored, and every `nodemailer/*` checking them |
 
 ---
 
-## Resumen para empezar
+## Where to start
 
-1. **Hoy:** fecha de despliegue de `release/observabilidad` (1) y del arreglo
-   de refunds (2).
-2. **FedRAMP sin riesgo para nosotros:** `validateJWT` en las 154 rutas del
-   grupo B y comprobar las 29 de colegio del grupo C (5).
-3. **Respuestas que desbloquean trabajo del cliente:** la pregunta bloqueante y
-   la idempotencia de `/send` (4), las cinco del rol numérico (6) y la de la
-   cabecera de tenant (7).
-4. **El resto:** desplegar lo que ya está escrito (8–13) y avisar cada vez,
-   porque varios cambios del cliente se activan con su despliegue.
+1. **Today:** the deploy date for `release/observabilidad` (1) and the refund
+   fix (2).
+2. **FedRAMP with no risk to us:** `validateJWT` on the 154 group-B routes and
+   checking the 29 school routes in group C (5).
+3. **Answers that unblock client work:** the blocking question, `/send`
+   idempotency, the minor-email rule and the link parameters (4); the five
+   numeric-role questions (6); the tenant header (7).
+4. **The rest:** deploy what is already written (8–13) and tell us each time,
+   because several client changes switch on with your deploy.
