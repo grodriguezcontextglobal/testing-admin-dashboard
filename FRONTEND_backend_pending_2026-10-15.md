@@ -13,6 +13,25 @@ your deploy.
 
 ---
 
+## Start here — work list, in order (2026-10-16)
+
+FedRAMP items are on hold and left out of this list.
+
+| # | Work | Type | Done when |
+|---|---|---|---|
+| W1 | **Deploy `release/observabilidad`** and tell us which commit production runs today and the date of the next deploy (§1) | Deploy + answer | We have the date; the dashboard's IIS release goes out the same day |
+| W2 | **Make `/school/event-invitations/send` safe to repeat** for the same member and event (§3.1). Today a batch that times out after sending part is marked failed on the client, and a retry emails those people twice | Code | A repeated `/send` for a member who already has a live invitation returns `ok: true` without sending a second email (or accepts an `Idempotency-Key`); tell us which |
+| W3 | **Regenerate the contract** (`src/docs/api-payloads.json`, your `scripts/extract-api-payloads.js`). Ours is from 08-24 and lacks `verify-password`, `/school/event-invitations/*`, `/school/reminders/stop|resume` and `PUT /document/:id` | Script run | We receive the file; our contract audit passes without its "known routes without contract" exceptions |
+| W4 | **Activity log response shape**: confirm the field names of the readable summary and the who/what/how/where breakdown (`4c5c4aa`, `4e89c28`) in `GET /api/admin/activity-logs` | Answer | One example response; the dashboard then renders your `summary` and keeps its own as fallback |
+| W5 | **Location-scope backfill, Mongo → SQL (R3, §3.5)** | Script | Everyone with a Mongo `preference.managerLocation` scope has the matching SQL rows; tell us the count migrated |
+| W6 | **Answer two questions on signed invitations (§3.1):** is the `STAFF_ORIGINS` gate an accepted limit; and do you take or decline event-tied expiry, `/preview` and `member:notify` on `/send` | Answer | Yes/no on each |
+| W7 | **Refuse assigning an expired document** on the server (§3.6) | Code, low priority | Assigning an expired document through the API answers 4xx |
+
+Not to start yet: notification preferences (§3.7) wait on a product decision
+from Fredrik.
+
+---
+
 ## 1. The one thing that blocks everything: deploy, and tell us the date
 
 `release/observabilidad` is 88 commits ahead of `main`. The dashboard's `main`
