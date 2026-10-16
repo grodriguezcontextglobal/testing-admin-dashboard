@@ -1766,7 +1766,7 @@ producción, o en la configuración del IIS, no en este código.
   Interpreting. Es su mitad, y es la próxima sesión.
 - ~~**Decisión suya sobre `serial_number`**~~ **Resuelta en el código** (verificado 2026-10-16): la columna llamada "serial number" manda; si no hay, la primera, que es lo que dice la pantalla, y las filas sin serial se saltan con su motivo (`parsePastedInventoryRows.js:134`). Solo se reabre si Fredrik quiere otra regla. Texto original:: si se exige cuando el pegado trae
   cabecera. Tres opciones y una recomendación.
-- **Issue #1 — desplegable de categorías vacío.** Hipótesis: `POST
+- **Issue #1 — desplegable de categorías vacío** (al asignar un rol con alcance por categoría, `ScopeAssignmentSelect`). **Cliente revisado 2026-10-16, correcto:** `useCompanyCategories` manda el id SQL de la compañía y lee `result`, como dice el contrato. Si sale vacío es que la tabla de categorías no tiene filas para esa compañía (lo probable: las categorías solo existen como texto en los ítems). Hipótesis original: `POST
   /db_company/categories` devuelve vacío para la compañía de prueba. **Es una
   pregunta de datos, no de código**: hay que ver el cuerpo real de la respuesta
   antes de tocar nada.
