@@ -5,7 +5,7 @@ against the server code** on `release/observabilidad` (`3f5192e`), read-only.
 Most of the October list is already written there. This document now lists
 what is done (so nobody chases it again) and the few things still open.
 
-**Overall priority (Fredrik, 2026-09-25):** FedRAMP comes first.
+**FedRAMP is on hold since 2026-10-16.** Items 3.2–3.4 below stay listed but are not being pursued until it resumes.
 
 **How to reply.** Answer in a `BACKEND_*_REPLY` with the item number, the
 commit and whether it is deployed: several client changes only switch on with
@@ -35,7 +35,7 @@ which commit.
 | `verify-password` route, password hash out of every response | `5d87d1c` | Drop it from our contract-audit exceptions once the contract is regenerated |
 | Signed password-reset link, MFA from the reset | `6b43863` | None |
 | Signed staff invitation, `companiesAssigned` on the server, MFA header in CORS | `897438c` | None |
-| Signed event invitations `/send`, `/confirm`, `/response`; gate on the 4 generic routes | `296638b` | Done (`ddf206a5`, `4c6202b4`) |
+| Signed event invitations `/send`, `/confirm`, `/response`; gate on the 4 generic routes | `296638b` | Done (`ddf206a5`, `4c6202b4`); consent invitation and "Add directly" tested end to end on 2026-10-15 |
 | Minor with no email of their own: `+m<member_id>` rule in `/send` and `/confirm` | `b34f3eb` | Done (`ad05c2a1`) |
 | Link parameters from `/send` (all display values plus `token`) | `296638b`, `b34f3eb` | Done |
 | Editing a document with `PUT /document/:id` | `88388f5` | Done |
@@ -70,7 +70,7 @@ which commit.
   `/preview` endpoint, and `member:notify` instead of `member:create` on
   `/send` (§2–§6 of our review). Fine to decline; tell us which.
 
-### 3.2 Routes without `validateJWT` (FedRAMP AC-3, IA-2)
+### 3.2 Routes without `validateJWT` (FedRAMP AC-3, IA-2) — on hold
 `FRONTEND_unauthenticated_routes_2026-10-14.md`. Phases 1, 4.1 and 4.3,
 transactions, locations and documents are done. Still to do: group B (154
 routes the dashboard only calls with a session; no risk to us), the 29 school
@@ -78,11 +78,11 @@ routes in group C (minors' data), group D (`optionalJWT` Stripe routes) and
 group F (routes the dashboard does not call). **Done when:** a regenerated
 contract and the list of routes that now require a session.
 
-### 3.3 Retire the numeric role (F1.1, phase 2)
+### 3.3 Retire the numeric role (F1.1, phase 2) — on hold
 `FRONTEND_numeric_role_backend_ask_2026-10-14.md` — five questions, no answer
 or commit yet.
 
-### 3.4 Which tenant header the server reads (F1.2)
+### 3.4 Which tenant header the server reads (F1.2) — on hold
 We send `x-company-id` (Mongo routes) and `s-company-lq` (SQL routes). Which
 does each route read, and is it checked against the JWT? No answer yet.
 

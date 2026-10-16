@@ -32,7 +32,7 @@ y se pasa por alto lo que de verdad queda.
 | — trabajo de producto (§2) | 5 |
 | — reunión del 29-09 (§2b) | 0 (2b.9 cerrado en código; sale con el despliegue) |
 | — contrato del backend 2026-10-01 (§2c) | 1 (2c.4: el servidor ya está; falta quitar nuestro 408 tras el despliegue) |
-| — plan FedRAMP (§2d) | 2 (F1.1 fase 2 y F1.2: esperan respuesta del backend) |
+| — plan FedRAMP (§2d) | 2 (F1.1 fase 2 y F1.2) — **en pausa desde el 16-10** |
 | — surgido del 13 al 15-10 (§2f) | 3 |
 | — fuera de toda lista (§3) | 2 (paso 4 de dependencias, `quill`) |
 | — no es código (§4) | 7 |
@@ -858,7 +858,10 @@ Texto original:
 Va junto a D1 + D2 (§1), porque es el mismo fichero y la misma pasada por la
 navegación. El "no asignable" lo tiene que aplicar también el servidor.
 
-### ~~2b.9 — Registrar estudiantes sin consentimiento, o con registro [16, 17]~~ — cliente terminado, servidor escrito (`296638b`); sale con el despliegue
+### ~~2b.9 — Registrar estudiantes sin consentimiento, o con registro [16, 17]~~ — hecho y probado de punta a punta 2026-10-15
+
+**2026-10-16:** Gustavo confirma que el 15-10 probó la invitación con solicitud de consentimiento y el registro directo al evento, y pasaron después de los arreglos (`4c6202b4` en la página, `b34f3eb` en el servidor).
+
 `pages/conditionalPage/components/modals/RegisterMembersToEvent.jsx`,
 `innerComponents/StudentConsentPanel.jsx`
 
@@ -1158,6 +1161,8 @@ la URL; hoy responde `201 ok` sin borrar nada.
 ---
 
 ## 2d. Abierto — plan de acción FedRAMP del dashboard (sin trackear hasta ahora)
+
+> **En pausa desde el 2026-10-16** por decisión de Gustavo. Lo hecho queda hecho; lo abierto (F1.1 fase 2, F1.2 y las rutas sin `validateJWT` de §2f) no se persigue hasta que se retome.
 
 > Fuente: `fedRAMP/FRONTEND_action_plan_2026-09-28.md`. Nunca había entrado en
 > este tracker. Cada punto se comprobó contra el código el 2026-10-05: **ninguno
@@ -1464,7 +1469,7 @@ abajo es el estado anterior.
   que aplicar la misma regla en el servidor**: pedido en el punto 4 del
   documento del backend. **Sin probar en el navegador.**
 
-### Rutas del servidor sin `validateJWT` — en curso en el servidor
+### Rutas del servidor sin `validateJWT` — en pausa (FedRAMP)
 
 **Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): hechas las fases 1, 4.1 y 4.3, transacciones (`d4fbe2d`), locaciones y documentos. Quedan el grupo B, las 29 de colegio del C, el D y el F.
 
@@ -1818,7 +1823,7 @@ Los ocho ítems del walkthrough que su propio documento ya daba por cerrados
 
 ### Reordenado 2026-10-15
 
-FedRAMP sigue por delante (Fredrik, 25-09). Casi todo lo abierto espera al
+**FedRAMP está en pausa desde el 2026-10-16.** Casi todo lo abierto espera al
 servidor; eso va en `FRONTEND_backend_pending_2026-10-15.md` y aquí solo se
 lista lo que es nuestro o una decisión.
 
@@ -1842,8 +1847,7 @@ lista lo que es nuestro o una decisión.
 **Pendiente de ver en el navegador, del más antiguo al más nuevo:** aviso de
 actualización (tras un despliegue) · selectores de documentos y Edit document
 (05-10) · label del `Input` en el conteo al cerrar evento (06-10) · audit trail
-del dispositivo (06-10) · Stop/Resume de recordatorios (07-10) · "Add
-directly" (07-10) · F1.1 en staff y perfil (14-10) · imágenes del import de
+del dispositivo (06-10) · Stop/Resume de recordatorios (07-10) · F1.1 en staff y perfil (14-10) · imágenes del import de
 inventario (14-10) · import de miembros con 202 (14-10) · home por rol (15-10)
 · chip de rol en la tabla de staff (15-10).
 
