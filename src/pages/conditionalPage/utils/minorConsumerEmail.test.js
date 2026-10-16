@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { consumerEmailFor } from "./minorConsumerEmail";
-import {
-  buildConfirmationLink,
-  getDirectAddTarget,
-  registerConsumerToEvent,
-} from "./eventRegistrationUtils";
+import { getDirectAddTarget, registerConsumerToEvent } from "./eventRegistrationUtils";
 
 /* 2026-10-15: a minor registered with a guardian email but no email of their
    own could not be put on an event. The event's consumer is looked up and
@@ -67,14 +63,6 @@ describe("a minor with only a guardian email can go on an event", () => {
 
   it("Add directly still refuses a minor with no email anywhere", () => {
     expect(getDirectAddTarget({ ...minor, parent_guardian_email: "" }).error).toMatch(/email/i);
-  });
-
-  it("the invitation link carries the consumer email the landing requires", () => {
-    const link = new URL(
-      buildConfirmationLink("https://admin.devitrak.net", minor, { id: "e1", eventName: "Trip" }, { id: "c1", name: "School" })
-    );
-    expect(link.searchParams.get("memberEmail")).toBe("maria+m1234@gmail.com");
-    expect(link.searchParams.get("guardianEmail")).toBe("maria@gmail.com");
   });
 
   it("registers the consumer under that email, created and looked up the same way", async () => {

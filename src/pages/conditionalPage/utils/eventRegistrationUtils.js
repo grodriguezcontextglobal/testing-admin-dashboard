@@ -54,42 +54,8 @@ export const getConfirmationRecipient = (member = {}) => {
   return { email: memberEmail, isGuardian: false, error: null };
 };
 
-export const ATTENDANCE_CONFIRMATION_PATH = "/attendance-confirmation";
-
 const eventNameOf = (event = {}) =>
   event?.eventInfoDetail?.eventName ?? event?.eventName ?? "";
-
-/**
- * Builds the public confirmation link. There is no signed-token
- * infrastructure — same trust model as the existing `/invitation` flow —
- * so every value is a plain, encoded query param.
- *
- * @param {string} origin e.g. window.location.origin
- * @param {object} member
- * @param {object} event event record (`id`, `eventInfoDetail.eventName`)
- * @param {object} company `{ id, name }`
- * @returns {string}
- */
-export const buildConfirmationLink = (origin, member = {}, event = {}, company = {}) => {
-  const minor = isMinorMember(member);
-  const params = new URLSearchParams({
-    // The consumer's key: a minor without an email of their own gets the
-    // guardian's address tagged with the member id (consumerEmailFor).
-    memberEmail: consumerEmailFor(member) ?? "",
-    memberFirstName: member.first_name ?? "",
-    memberLastName: member.last_name ?? "",
-    eventId: event?.id ?? "",
-    eventName: eventNameOf(event),
-    company: company?.name ?? "",
-    companyId: company?.id ?? "",
-    minor: minor ? "true" : "false",
-    guardianEmail: minor ? (member.parent_guardian_email ?? "") : "",
-    // Files each recorded response under the student (activity log member_id).
-    memberId: member.member_id ?? "",
-  });
-  const base = `${origin ?? ""}`.replace(/\/$/, "");
-  return `${base}${ATTENDANCE_CONFIRMATION_PATH}?${params.toString()}`;
-};
 
 const REQUIRED_CONFIRMATION_PARAMS = [
   "memberEmail",
@@ -271,85 +237,6 @@ export const registerConsumerToEvent = async (api, { member: source, event, comp
   }
   await api.post("/db_consumer/new_consumer", db);
   return "added";
-};
-
-const formatEventDate = (value) => {
-  if (!value) return "";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "";
-  return parsed.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-/**
- * Builds the `{ to, subject, message }` shape for the generic nodemailer
- * endpoint (`POST /nodemailer/internal-single-email-notification` — see
- * DeleteItemModal.jsx for the payload envelope this fills). English copy.
- *
- * @param {object} params
- * @param {object} params.member
- * @param {object} params.event
- * @param {{email: string, isGuardian: boolean}} params.recipient
- * @param {string} params.confirmationLink
- * @returns {{to: string, subject: string, message: string}}
- */
-// Minimal HTML-escape for strings interpolated into the email markup.
-// Emails can't run JS, so the "button" is an anchor styled inline (the only
-// mechanism email clients support); the raw URL appears once more below it
-// as a copy/paste fallback for clients that block or strip links.
-const escapeHtml = (value) =>
-  String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-
-export const buildAttendanceEmail = ({ member, event, recipient, confirmationLink }) => {
-  const memberName = `${member?.first_name ?? ""} ${member?.last_name ?? ""}`.trim() || "this member";
-  const eventName = eventNameOf(event) || "the event";
-  const dateBegin = formatEventDate(event?.eventInfoDetail?.dateBegin);
-  const dateEnd = formatEventDate(event?.eventInfoDetail?.dateEnd);
-  const dateRange =
-    dateBegin && dateEnd && dateBegin !== dateEnd
-      ? `${dateBegin} - ${dateEnd}`
-      : dateBegin || dateEnd || "";
-
-  const subject = `Please confirm attendance for ${eventName}`;
-
-  const opening = recipient?.isGuardian
-    ? `You are receiving this message on behalf of ${escapeHtml(memberName)}.`
-    : `Hi ${escapeHtml(memberName)},`;
-
-  const safeLink = escapeHtml(confirmationLink);
-  const safeEventName = escapeHtml(eventName);
-  const safeDateRange = escapeHtml(dateRange);
-
-  const message = [
-    `<div style="font-family: Inter, Arial, sans-serif; color: #171d1a; line-height: 1.6; font-size: 14px;">`,
-    `<p style="margin: 0 0 16px;">${opening}</p>`,
-    `<p style="margin: 0 0 16px;">You have been invited to attend <strong>${safeEventName}</strong>${
-      safeDateRange ? ` (${safeDateRange})` : ""
-    }.</p>`,
-    `<p style="margin: 0 0 24px;">Please confirm attendance by clicking the button below:</p>`,
-    `<p style="margin: 0 0 24px;">` +
-      `<a href="${safeLink}" target="_blank" rel="noopener" ` +
-      `style="background-color: #155eef; color: #ffffff; text-decoration: none; ` +
-      `padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block;">` +
-      `Confirm attendance</a></p>`,
-    `<p style="margin: 0 0 4px; font-size: 12px; color: #5d615a;">` +
-      `If the button doesn't work, copy and paste this link into your browser:</p>`,
-    `<p style="margin: 0; font-size: 12px; color: #5d615a; word-break: break-all;">${safeLink}</p>`,
-    `</div>`,
-  ].join("\n");
-
-  return {
-    to: recipient?.email,
-    subject,
-    message,
-  };
 };
 
 /* ─────────────────────────────────────────────── picking who gets invited ── */
