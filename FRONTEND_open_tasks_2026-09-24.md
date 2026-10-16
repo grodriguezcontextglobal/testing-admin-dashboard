@@ -27,15 +27,15 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **26** |
-| — bloquea (§1) | 1 (espera al backend) |
+| **Abierto, total** | **20** (recontado 2026-10-16 contra el código del dashboard y del servidor) |
+| — bloquea (§1) | 0 (el MFA lo exige el servidor desde el 05-10) |
 | — trabajo de producto (§2) | 5 |
-| — reunión del 29-09 (§2b) | 1 (2b.9; 2b.4 y 2b.8 cerrados el 15-10) |
-| — contrato del backend 2026-10-01 (§2c) | 2 (los dos esperan al backend) |
-| — plan FedRAMP (§2d) | 3 (F0.3 y F1.1 con el cliente hecho; los tres esperan al backend) |
+| — reunión del 29-09 (§2b) | 0 (2b.9 cerrado en código; sale con el despliegue) |
+| — contrato del backend 2026-10-01 (§2c) | 1 (2c.4: el servidor ya está; falta quitar nuestro 408 tras el despliegue) |
+| — plan FedRAMP (§2d) | 2 (F1.1 fase 2 y F1.2: esperan respuesta del backend) |
 | — surgido del 13 al 15-10 (§2f) | 3 |
-| — fuera de toda lista (§3) | 3 |
-| — no es código (§4) | 8 |
+| — fuera de toda lista (§3) | 2 (paso 4 de dependencias, `quill`) |
+| — no es código (§4) | 7 |
 
 > **Recontado 2026-10-15** con el mismo script (§2e no cuenta: sus `###` son
 > agrupaciones, y sus pendientes ya figuran en otros ítems). Ese día se
@@ -86,7 +86,10 @@ sea que un documento pertenece a un único camino. Si alguna vez necesita servir
 a dos, eso es un cambio de backend y conviene saberlo antes de construir encima
 del supuesto.
 
-### El servidor todavía no exige MFA
+### ~~El servidor todavía no exige MFA~~ — hecho en el servidor 2026-10-05
+
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): `29691d7` "MFA obligatoria; sin MFA no se emite token de sesión". El dashboard lo maneja desde `85c55f61` (12-10). Force-logout: el backend eligió borrar la sesión solo con el email (`961346e`), en vez del token de un solo uso; el dashboard ya manda token si algún día llega. Texto original:
+
 `FRONTEND_force_logout_token_2026-09-21.md`
 
 El cliente fuerza el enrolamiento y ya no pide contraseña para revocar sesión.
@@ -414,6 +417,9 @@ cualquier evento anterior a este campo se leería como Draft.
 
 ### Notificaciones — lo que salió de la queja de Fredrik del 03-04/10
 
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): **la frecuencia ya está decidida y escrita**: diario hasta el día 14 de atraso, luego días 17, 22, 29 y semanal (`9d61857`), y un solo correo por destinatario y día con todos sus equipos (`46f1998`). **Sigue abierto:** qué controlan las seis preferencias, y de quién son.
+
+
 **Origen, aclarado el 2026-10-05.** Fredrik figura como tutor de un menor en una
 cuenta de pruebas, y ese menor tiene un equipo vencido. El servidor manda el
 recordatorio de vencido **todos los días a las 8:00 (EST), a partir del día
@@ -493,6 +499,9 @@ preferencias y lee `message` con respaldo a `msg`. Podía apagar el MFA en la
 sesión al guardar.
 
 ### Registrar toda acción de un usuario o staff — el servidor ya lo hace; falta leerlo bien
+
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): el servidor registra **toda** escritura (`271fc70`), tiene filtros por `event_id` y `serial_number` (`staffActivityLog.js:195`), excluye los borrados de caché (`dbcd4f5`) y manda `summary` (`4c5c4aa`, `4e89c28`). **Lo que queda es nuestro, tras el despliegue:** quitar las 17 llamadas a `registerStaffActivity`, quitar el filtro de caché y pintar su `summary`.
+
 
 **El backend desplegó el middleware el 2026-10-05**, el mismo día que se pidió.
 Cada fila trae ahora `source: "server"`, la ruta, el estado HTTP, el cuerpo
@@ -849,7 +858,7 @@ Texto original:
 Va junto a D1 + D2 (§1), porque es el mismo fichero y la misma pasada por la
 navegación. El "no asignable" lo tiene que aplicar también el servidor.
 
-### 2b.9 — Registrar estudiantes sin consentimiento, o con registro [16, 17]
+### ~~2b.9 — Registrar estudiantes sin consentimiento, o con registro [16, 17]~~ — cliente terminado, servidor escrito (`296638b`); sale con el despliegue
 `pages/conditionalPage/components/modals/RegisterMembersToEvent.jsx`,
 `innerComponents/StudentConsentPanel.jsx`
 
@@ -1099,6 +1108,9 @@ Texto original:
 
 ### 2c.4 — `event_staff`: el 408 deja de significar "ya estaba"
 
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): el servidor ya no responde 408 falsos (`92eceb7`). **Lo único que queda es nuestro:** quitar el 408 de `isAlreadyLinked` cuando se despliegue.
+
+
 `POST /db_event/event_staff`. El único llamador es `eventStaffSync.js:62`.
 
 `isAlreadyLinked` (`eventStaffSync.js:34`) trata **408 y 409** como "ya
@@ -1113,7 +1125,10 @@ ante el duplicado. Con el nuevo, el duplicado es 409 y cualquier otro fallo es
 - No hay reintentos específicos en este endpoint: el bucle de `syncEventStaff`
   no reintenta, y no hay `retry` de react-query.
 
-### 2c.5 — `DELETE /db_event/:id`: informe para backend, sin tocar el cliente
+### ~~2c.5 — `DELETE /db_event/:id`~~ — hecho en el servidor (`583dc01`) y en el cliente
+
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): el borrado usa el `:id` de la URL y solo dentro de su compañía. Sale con el despliegue.
+
 
 **Respuesta a lo que preguntan:** el cliente manda el id en la URL **y**
 `{ email: user.email }` en el body (`hook/useDraftEventActions.jsx:78`, el
@@ -1180,7 +1195,10 @@ Texto original:
 el servicio AWS acepte el JWT de sesión. Mientras tanto: rotar y dejar escrita
 la exposición.
 
-### F0.3 — Dejar de comparar contraseñas contra el hash en el navegador — cliente hecho 2026-10-13
+### ~~F0.3 — Dejar de comparar contraseñas contra el hash en el navegador~~ — hecho en los dos lados
+
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): `POST /api/admin/verify-password` existe (`5d87d1c`, `routes/admin.js:123`) y el hash salió de las respuestas. Queda quitar la excepción del audit de contrato cuando regeneren el contrato.
+
 
 **Cliente, hecho** (`c1a4a454`): el cambio de contraseña usa
 `POST /api/admin/verify-password` y ya no queda ningún `compareSync` en `src/`
@@ -1414,6 +1432,9 @@ pendientes se reenvían (las viejas no traen token).
 
 ### Invitaciones a evento con enlace firmado — cliente terminado, espera el despliegue
 
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): la regla del menor sin email ya está en `/send` y `/confirm` (`b34f3eb`), y el enlace lleva todos los parámetros. La "pregunta bloqueante" tiene respuesta: distinguen por origen (`STAFF_ORIGINS`), que nuestra revisión marcó como no ser un control; se les pide confirmar que es un límite aceptado. **Sigue abierta** la idempotencia de `/send`.
+
+
 **2026-10-15:** el envío está commiteado (`ddf206a5`), con lo que pidió el
 backend en `FRONTEND_event_invitation_send_2026-10-15.md`: `event_id` con
 `id ?? _id`, y una petición rechazada entera (401/403/404/500) se muestra como
@@ -1443,7 +1464,10 @@ abajo es el estado anterior.
   que aplicar la misma regla en el servidor**: pedido en el punto 4 del
   documento del backend. **Sin probar en el navegador.**
 
-### Rutas del servidor sin `validateJWT`
+### Rutas del servidor sin `validateJWT` — en curso en el servidor
+
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): hechas las fases 1, 4.1 y 4.3, transacciones (`d4fbe2d`), locaciones y documentos. Quedan el grupo B, las 29 de colegio del C, el D y el F.
+
 `FRONTEND_unauthenticated_routes_2026-10-14.md`
 
 384 de 484 rutas, en seis grupos. Es trabajo del backend; lo nuestro es
@@ -1512,7 +1536,10 @@ dashboard**, por ejemplo desde Stripe: eso solo lo sabría el servidor.
 **403** y el **404** con su propio mensaje. Hoy caen en el genérico.~~ Hecho
 2026-10-15 (`bcd74b06`).
 
-### Refund en la tabla de transacciones: "A valid payment intent id is required" — causa confirmada, espera despliegue
+### ~~Refund en la tabla de transacciones~~ — arreglado en el servidor, sale con el despliegue
+
+**Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): `fab23ed` (el payload) y `7518f98` (sesión y permiso en refund, capture y liberar). Probar refund y refund parcial en el navegador tras el despliegue.
+
 
 **Confirmado por backend el 2026-10-06 (§2e): era la hipótesis 1.** El
 validador leía `payment_intent` y los controladores `paymentIntent`, así que
@@ -1732,7 +1759,7 @@ producción, o en la configuración del IIS, no en este código.
 
 - **La #21 de Fredrik**: revisar con él el resultado del import en ABC
   Interpreting. Es su mitad, y es la próxima sesión.
-- **Decisión suya sobre `serial_number`**: si se exige cuando el pegado trae
+- ~~**Decisión suya sobre `serial_number`**~~ **Resuelta en el código** (verificado 2026-10-16): la columna llamada "serial number" manda; si no hay, la primera, que es lo que dice la pantalla, y las filas sin serial se saltan con su motivo (`parsePastedInventoryRows.js:134`). Solo se reabre si Fredrik quiere otra regla. Texto original:: si se exige cuando el pegado trae
   cabecera. Tres opciones y una recomendación.
 - **Issue #1 — desplegable de categorías vacío.** Hipótesis: `POST
   /db_company/categories` devuelve vacío para la compañía de prueba. **Es una
