@@ -2,7 +2,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { registerStaffActivity } from "../../../../../api/activityLog";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
@@ -211,16 +210,6 @@ const Single = ({ onClose }) => {
         }
         createdMemberId.current = memberId;
 
-        registerStaffActivity({
-          action: "CREATE",
-          target_model: "Member",
-          target_id: memberId,
-          details: {
-            first_name: form.first_name,
-            last_name: form.last_name,
-            grade: form.grade,
-          },
-        });
       }
 
       if (ageFlags.minor) await linkGuardian(createdMemberId.current);

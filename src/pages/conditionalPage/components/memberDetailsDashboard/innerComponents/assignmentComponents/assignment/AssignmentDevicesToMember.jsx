@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { registerStaffActivity } from "../../../../../../../api/activityLog";
 import {
   assertWriteSucceeded,
   strandedAfterRollback,
@@ -358,12 +357,6 @@ const AssignmentDevicesToMember = () => {
       if (!newLease?.data?.ok) {
         throw new Error("Failed to create the device lease record.");
       }
-      registerStaffActivity({
-        action: "ASSIGN",
-        target_model: "Lease",
-        target_id: memberInfo.member_id,
-        details: { device_id: device.item_id },
-      });
     }
 
     return verificationId;

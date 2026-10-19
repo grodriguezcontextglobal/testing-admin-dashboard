@@ -4,7 +4,6 @@ import { Divider } from "antd";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { devitrakApi } from "../../../../../api/devitrakApi";
-import { registerStaffActivity } from "../../../../../api/activityLog";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
 import Input from "../../../../../components/UX/inputs/Input";
 import { saveGuardian, searchGuardians } from "../../../utils/guardianConsentApi";
@@ -82,14 +81,8 @@ const GuardianInfoSection = ({
 
       return saveGuardian(guardianPayload);
     },
-    onSuccess: (response) => {
+    onSuccess: () => {
       notify("success", "Guardian information updated successfully");
-      registerStaffActivity({
-        action: matchedGuardianId ? "UPDATE" : "CREATE",
-        target_model: "Guardian",
-        target_id: matchedGuardianId ?? response?.guardian_id,
-        details: { member_id: memberId },
-      });
       onSaved?.();
     },
     onError: (error) => {

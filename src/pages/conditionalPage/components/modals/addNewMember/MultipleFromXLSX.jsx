@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { read, utils, writeFile } from "xlsx";
-import { registerStaffActivity } from "../../../../../api/activityLog";
 import { devitrakApi } from "../../../../../api/devitrakApi";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonConfirmationComponent from "../../../../../components/UX/buttons/BlueButtonConfirmation";
@@ -209,11 +208,6 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
             })
           );
         }
-        registerStaffActivity({
-          action: "IMPORT",
-          target_model: "Member",
-          details: { count: summary.inserted, queued: true },
-        });
         const followUp = outcome.jobId
           ? "You'll be told when it finishes; the members list updates then."
           : "It can take a few minutes. Reload the members list to see them.";
@@ -231,11 +225,6 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
         return;
       }
 
-      registerStaffActivity({
-        action: "IMPORT",
-        target_model: "Member",
-        details: { count: summary.inserted },
-      });
       // Same gap as the single-create path: two hundred imported members did
       // not appear in the table behind the modal.
       await queryClient.invalidateQueries({ queryKey: ["membersInfoQuery"] });

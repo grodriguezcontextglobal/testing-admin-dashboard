@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Badge, Divider, Spin, Tag } from "antd";
 import { useSelector } from "react-redux";
 import BlueButtonComponent from "../../../../../components/UX/buttons/BlueButton";
-import { registerStaffActivity } from "../../../../../api/activityLog";
 import {
   fetchStudentConsent,
   sendConsentRequest,
@@ -154,14 +153,8 @@ export const StudentConsentPanel = ({
 
   const sendConsentMutation = useMutation({
     mutationFn: (payload) => sendConsentRequest(payload),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries(["studentConsent", memberId]);
-      registerStaffActivity({
-        action: "CREATE",
-        target_model: "Consent",
-        target_id: response?.consent_id,
-        details: { member_id: memberId },
-      });
       notify("success", "Consent request sent");
     },
     onError: (err) => {
@@ -174,14 +167,8 @@ export const StudentConsentPanel = ({
 
   const resendConsentMutation = useMutation({
     mutationFn: (payload) => resendConsentRequest(payload),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries(["studentConsent", memberId]);
-      registerStaffActivity({
-        action: "UPDATE",
-        target_model: "Consent",
-        target_id: response?.consent_id,
-        details: { member_id: memberId },
-      });
       notify("success", "Consent request resent");
     },
     onError: (err) => {

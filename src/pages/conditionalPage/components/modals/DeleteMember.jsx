@@ -5,7 +5,6 @@ import { Avatar, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { registerStaffActivity } from "../../../../api/activityLog";
 import DangerButtonComponent from "../../../../components/UX/buttons/DangerButton";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import { MagnifyIcon } from "../../../../components/icons/MagnifyIcon";
@@ -66,7 +65,7 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
       const res = await devitrakApi.post("/db_member/delete-member-info", body);
       return res?.data;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["allMembersInfoDataQuery"],
         exact: true,
@@ -74,10 +73,6 @@ const DeleteMember = ({ openModal, setOpenModal, members = [], onDelete }) => {
       queryClient.invalidateQueries({
         queryKey: ["membersInfoQuery"],
         exact: true,
-      });
-      const deletedIds = Array.isArray(variables?.member_ids) ? variables.member_ids : [];
-      deletedIds.forEach((memberId) => {
-        registerStaffActivity({ action: "DELETE", target_model: "Member", target_id: memberId });
       });
       setSelectedKeys([]);
       notify("success", "Member(s) deleted");

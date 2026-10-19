@@ -18,7 +18,6 @@ import {
   supportsReminderToggle,
   withRemindersStopped,
 } from "../utils/overdueReminders";
-import { registerStaffActivity } from "../../../api/activityLog";
 import { hasPermission, resolveRoleType } from "../../../config/roles";
 import { formatLoanDate } from "../../../components/UX/profile";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -156,11 +155,6 @@ const OverdueDevicesTable = () => {
       const res = await devitrakApi.post("/db_member/bulk-return", body);
       setBulkModalOpen(false);
       setBulkNote("");
-      registerStaffActivity({
-        action: "UNASSIGN",
-        target_model: "Lease",
-        details: { count: res?.data?.returned ?? 0, return_status: bulkStatus, grade: gradeFilter || undefined },
-      });
       message.success(
         `${res?.data?.returned ?? 0} lease(s) closed, ${res?.data?.devicesRestocked ?? 0
         } device(s) restocked.`

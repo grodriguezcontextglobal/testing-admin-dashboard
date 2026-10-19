@@ -158,7 +158,8 @@ const MemberProfileIdentity = ({ detailMemberInfo, deviceSummary }) => {
     },
     onSuccess: () => {
       // The record is about to be gone, so the audit row is the only place the
-      // name survives.
+      // name survives. Kept on purpose although the server audits every write
+      // since 2026-10-16: its row only has the member_id of someone deleted.
       registerStaffActivity(buildDeleteMemberAuditEntry(detailMemberInfo));
       ["allMembersInfoDataQuery", "membersInfoQuery"].forEach((queryKey) =>
         queryClient.invalidateQueries({ queryKey: [queryKey], exact: true })

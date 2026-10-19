@@ -20,7 +20,6 @@ import { useState } from "react";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
 import { Divider, message } from "antd";
 import { devitrakApi } from "../../../../../../api/devitrakApi";
-import { registerStaffActivity } from "../../../../../../api/activityLog";
 import { formatDate } from "../../../../../inventory/utils/dateFormat";
 import { mapReturnToReceipt } from "../../../../../payment/utils/receiptUtils";
 import { useSelector } from "react-redux";
@@ -137,12 +136,6 @@ const Return = ({
         exact: true,
         refetchType: "active",
         refetchActive: true,
-      });
-      registerStaffActivity({
-        action: "UNASSIGN",
-        target_model: "Lease",
-        target_id: storedRecord.member_id,
-        details: { device_id: storedRecord.device_id, outcome: variables?.outcome },
       });
       await sentReturnEmailNotification({
         outcome: variables?.outcome,

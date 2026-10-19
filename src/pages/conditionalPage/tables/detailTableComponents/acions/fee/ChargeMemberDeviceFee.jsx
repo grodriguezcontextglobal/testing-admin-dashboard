@@ -261,6 +261,9 @@ const ChargeMemberDeviceFee = ({
         date: new Date().toISOString(),
       })
     );
+    /* Kept although the server audits every write since 2026-10-16: the card
+       is charged through Stripe, and when settle-member-fee fails this row is
+       the only place the amount and the payment intent are recorded. */
     registerStaffActivity({
       // No CHARGE verb exists in ACTIVITY_LOG_ACTIONS yet; CREATE + Fee keeps
       // the row inside the catalog the log filter and backend already accept.
