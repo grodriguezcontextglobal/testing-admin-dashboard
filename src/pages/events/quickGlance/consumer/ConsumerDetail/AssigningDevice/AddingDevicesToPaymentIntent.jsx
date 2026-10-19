@@ -232,16 +232,12 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     retrieveDeviceSetupValueBaseOnTypeOfSerialNumber();
   }
 
-  const createEventInTransactionLog = async () => {
-    await devitrakApi.post("/transaction-audit-log/create-audit", {
-      transaction: record.paymentIntent,
-      user: user.email,
-      actionTaken: `Receivers ${serialNumber} were assigned to transaction`,
-      time: `${new Date()}`,
-      action: "action",
-      company: user.company,
-    });
-  };
+  /* The assignment used to be written to /transaction-audit-log as well, a
+     separate collection with no author, no filters and no reader in the
+     dashboard. The server's audit trail records the assignment with its author
+     since 2026-10-05 (in production since 2026-10-16), and that route is to be
+     closed (FRONTEND_fedramp_server_tasks_2026-10-19.md S0.1): awaited here, a
+     401 would have shown an error after the device was already assigned. */
 
   const renderingEmailNotificationForDeviceAssignment = async () => {
     const checkingAllTransactions = await devitrakApi.post(
@@ -385,7 +381,6 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
         deviceIdToUpdate: deviceToUpdate.id,
       });
 
-      await createEventInTransactionLog();
       // Both cache keys are independent (different literal keys, neither depends on
       // the other's result), so clear them concurrently instead of sequentially.
       await Promise.all([

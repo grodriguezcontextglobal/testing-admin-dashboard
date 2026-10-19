@@ -1397,8 +1397,7 @@ Listar qué cifra o firma el cliente y con qué librería. Sin empezar.
   servidor las registra: perder entradas de una bitácora es peor que
   duplicarlas.
 - ~~**Dejar de escribir en `transaction-audit-log`**
-  (`AddingDevicesToPaymentIntent.jsx`)~~. **Ya no se escribe:** comprobado el
-  2026-10-15, no queda ninguna llamada en `src/` fuera del contrato.
+  (`AddingDevicesToPaymentIntent.jsx`)~~. **Corrección 2026-10-19:** el 15-10 se dio por hecho por error (la búsqueda cortaba en las primeras líneas, todas del contrato); la llamada seguía en `AddingDevicesToPaymentIntent.jsx:236`, con `await` tras asignar el equipo. Quitada el 19-10, antes de que el servidor cierre la ruta (S0.1 de `FRONTEND_fedramp_server_tasks_2026-10-19.md`), que habría mostrado un error con el equipo ya asignado.
 - **Quitar nuestro filtro de caché** cuando el reporte deje de devolverlos.
 - **Pintar su `summary`/`display`** en vez de nuestro `describeLogAction`,
   dejando el nuestro de respaldo. El servidor distingue cosas que el cliente no
