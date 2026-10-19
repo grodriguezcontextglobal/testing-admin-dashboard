@@ -175,12 +175,24 @@ export const uploadMemberImportImages = async ({
  * The `list` for `/db_member/bulk-members`: each row with the URL its picture
  * was uploaded to, and without the internal `imageMediaPath`.
  *
+ * A blank `email` or `parent_guardian_email` is left out instead of sent as
+ * "": what the server's contract of 2026-10-01 asks (2c.3). The parsed rows
+ * keep "" because the preview and the validation read them.
+ *
  * @param {object[]} rows validateAndNormalizeRows(...).rows
  * @param {Map<string, string>} urlByMediaPath
  * @returns {object[]}
  */
+const OMIT_WHEN_BLANK = ["email", "parent_guardian_email"];
+
 export const buildBulkMembersList = (rows = [], urlByMediaPath = new Map()) =>
-  rows.map(({ imageMediaPath, ...row }) => ({
-    ...row,
-    image_url: imageMediaPath ? (urlByMediaPath.get(imageMediaPath) ?? "") : "",
-  }));
+  rows.map(({ imageMediaPath, ...row }) => {
+    const entry = {
+      ...row,
+      image_url: imageMediaPath ? (urlByMediaPath.get(imageMediaPath) ?? "") : "",
+    };
+    for (const key of OMIT_WHEN_BLANK) {
+      if (key in entry && !`${entry[key] ?? ""}`.trim()) delete entry[key];
+    }
+    return entry;
+  });

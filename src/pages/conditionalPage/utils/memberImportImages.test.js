@@ -253,6 +253,27 @@ describe("buildBulkMembersList", () => {
     );
   });
 
+  /* The server asked to omit a missing email rather than send "" (contract of
+     2026-10-01, 2c.3). It treats both the same, but waited on the deploy for
+     the old one; production runs the new server since 2026-10-16. */
+  it("leaves out a blank email or guardian email instead of sending \"\"", () => {
+    const [row] = buildBulkMembersList(
+      [{ first_name: "Juan", email: "", parent_guardian_email: "  ", phone: "", imageMediaPath: null }],
+      urls
+    );
+    expect(row).not.toHaveProperty("email");
+    expect(row).not.toHaveProperty("parent_guardian_email");
+    expect(row.phone).toBe("");
+  });
+
+  it("keeps an email that is there", () => {
+    const [row] = buildBulkMembersList(
+      [{ first_name: "Ana", email: "ana@x.org", parent_guardian_email: "m@x.org", imageMediaPath: null }],
+      urls
+    );
+    expect(row).toMatchObject({ email: "ana@x.org", parent_guardian_email: "m@x.org" });
+  });
+
   it("keeps every other field as parsed", () => {
     expect(buildBulkMembersList(rows, urls)[1]).toEqual({
       first_name: "Blaise",
