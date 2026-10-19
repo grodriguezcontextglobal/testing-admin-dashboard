@@ -1,5 +1,7 @@
 # Registros duplicados en Staff activity — checklist para producción (2026-10-15)
 
+> **Resuelto 2026-10-19 sin la prueba manual** (`37410815`). Con el servidor en producción desde el 16-10, se comprobó en su `constants/auditedRoutes.js` que ninguna de estas rutas está en `READ_ONLY_ROUTES` ni en `LOGGED_ELSEWHERE`, así que el middleware las registra todas. Quitadas 13. Se quedan 4 porque guardan algo que la fila del servidor no tiene: #8 (el nombre del miembro borrado), #13 (el importe y el payment intent si `settle-member-fee` falla), #16 y #17 (proveedor y una fila por equipo antes de borrar el ítem).
+
 Viene de §2e del tracker. El middleware del servidor registra desde el
 2026-10-05 cada ruta que cambia datos (`source: "server"`). El cliente además
 llama a `registerStaffActivity` en 17 sitios, así que esas acciones salen

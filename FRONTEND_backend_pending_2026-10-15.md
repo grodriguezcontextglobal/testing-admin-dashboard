@@ -7,6 +7,8 @@ what is done (so nobody chases it again) and the few things still open.
 
 **FedRAMP is on hold since 2026-10-16.** Items 3.2–3.4 below stay listed but are not being pursued until it resumes.
 
+**Status 2026-10-19:** your `BACKEND_backend_pending_REPLY_2026-10-16.md` answered W1–W5 (production on `f808e9d` since 2026-10-16 22:26 UTC). Done on the dashboard since: 408 removed (`d7a0b97e`), blank emails omitted (`7c83005c`), regenerated contract copied (`0d405c91`), your `summary` rendered and the cache filter dropped (`a928605e`), `skipped`/`resend` on `/send` (`3e186040`), 13 duplicate client log calls removed (`37410815`). Still open: W6 (waiting on Gustavo's confirmation) and W7.
+
 **How to reply.** Answer in a `BACKEND_*_REPLY` with the item number, the
 commit and whether it is deployed: several client changes only switch on with
 your deploy.

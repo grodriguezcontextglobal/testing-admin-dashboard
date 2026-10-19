@@ -498,7 +498,10 @@ guardar un campo del perfil debe despachar `onUpdateProfile`
 preferencias y lee `message` con respaldo a `msg`. Podía apagar el MFA en la
 sesión al guardar.
 
-### Registrar toda acción de un usuario o staff — el servidor ya lo hace; falta leerlo bien
+### ~~Registrar toda acción de un usuario o staff~~ — hecho 2026-10-19
+
+**Con el servidor en producción desde el 16-10:** la bitácora usa el `summary` del servidor con el nuestro de respaldo y nombra a quien actuó sin sesión (`a928605e`); fuera el filtro de caché (lo hace el servidor); fuera 13 registros duplicados (`37410815`), comprobando en `constants/auditedRoutes.js` que el servidor los registra. Se quedan 4 a propósito, con su motivo en el código: borrar un miembro desde su ficha, el fee cobrado y las dos devoluciones al proveedor.
+
 
 **Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): el servidor registra **toda** escritura (`271fc70`), tiene filtros por `event_id` y `serial_number` (`staffActivityLog.js:195`), excluye los borrados de caché (`dbcd4f5`) y manda `summary` (`4c5c4aa`, `4e89c28`). **Lo que queda es nuestro, tras el despliegue:** quitar las 17 llamadas a `registerStaffActivity`, quitar el filtro de caché y pintar su `summary`.
 
@@ -1109,7 +1112,10 @@ Texto original:
 - **Responde lo pendiente de 2b.1:** el servidor nuevo trata `email: ""` igual
   que sin email.
 
-### 2c.4 — `event_staff`: el 408 deja de significar "ya estaba"
+### ~~2c.4 — `event_staff`: el 408 deja de significar "ya estaba"~~ — hecho 2026-10-19 (`d7a0b97e`)
+
+**Producción corre el servidor nuevo desde el 2026-10-16 22:26 UTC (`f808e9d`)**, confirmado por el backend en su `BACKEND_backend_pending_REPLY_2026-10-16.md`. Quitado el 408 de `isAlreadyLinked`.
+
 
 **Verificado 2026-10-16 en el código del servidor** (`release/observabilidad`, `3f5192e`, solo lectura): el servidor ya no responde 408 falsos (`92eceb7`). **Lo único que queda es nuestro:** quitar el 408 de `isAlreadyLinked` cuando se despliegue.
 
