@@ -315,9 +315,14 @@ export const INVITATION_SEND_LIMIT = 500;
  * the selection alone (FRONTEND_event_invitation_send_2026-10-15.md §5). A
  * later batch refused after earlier ones went out stays per member.
  *
- * @returns {Promise<{ sent: number, failures: { member: object, reason: string }[], refused: string|null }>}
+ * `alreadyInvited`: members the server did not email because they already
+ * have a live invitation (`skipped: "already_invited"`, backend f808e9d, in
+ * production since 2026-10-16). Not sent, not failed. `resend: true` asks
+ * for a new link for them, which voids the previous one.
+ *
+ * @returns {Promise<{ sent: number, alreadyInvited: object[], failures: { member: object, reason: string }[], refused: string|null }>}
  */
-export const sendEventInvitations = async (api, { companyId, event, members }) => {
+export const sendEventInvitations = async (api, { companyId, event, members, resend = false }) => {
   const list = Array.isArray(members) ? members : [];
   const failures = list
     .filter((member) => member?._recipient?.error)
@@ -325,6 +330,7 @@ export const sendEventInvitations = async (api, { companyId, event, members }) =
   const reachable = list.filter((member) => !member?._recipient?.error);
 
   let sent = 0;
+  const alreadyInvited = [];
   let refused = null;
   let delivered = false;
   for (let start = 0; start < reachable.length; start += INVITATION_SEND_LIMIT) {
@@ -334,6 +340,7 @@ export const sendEventInvitations = async (api, { companyId, event, members }) =
         company_id: companyId,
         event_id: event?.id ?? event?._id,
         member_ids: batch.map((member) => member.member_id),
+        ...(resend ? { resend: true } : {}),
       });
       const byId = new Map(
         (Array.isArray(data?.results) ? data.results : []).map((result) => [
@@ -344,7 +351,8 @@ export const sendEventInvitations = async (api, { companyId, event, members }) =
       delivered = true;
       for (const member of batch) {
         const result = byId.get(String(member.member_id));
-        if (result?.ok) sent += 1;
+        if (result?.ok && result?.skipped) alreadyInvited.push(member);
+        else if (result?.ok) sent += 1;
         else
           failures.push({
             member,
@@ -357,5 +365,34 @@ export const sendEventInvitations = async (api, { companyId, event, members }) =
       for (const member of batch) failures.push({ member, reason });
     }
   }
-  return { sent, failures, refused: delivered ? null : refused };
+  return { sent, alreadyInvited, failures, refused: delivered ? null : refused };
+};
+
+const fullName = (member) =>
+  `${member?.first_name ?? ""} ${member?.last_name ?? ""}`.trim() || "A member";
+
+/**
+ * What the modal says after a send: how many went out, how many already had
+ * an invitation (and how to send them a new one), and who failed and why.
+ *
+ * @param {{ sent: number, alreadyInvited: object[], failures: { member: object, reason: string }[], total: number }} outcome
+ * @returns {{ type: "success"|"info"|"warning", title: string, description?: string }}
+ */
+export const invitationSendNotice = ({ sent, alreadyInvited = [], failures = [], total }) => {
+  const skipped = alreadyInvited.length;
+  if (!skipped && !failures.length) {
+    return { type: "success", title: `${sent} invitation${sent === 1 ? "" : "s"} sent` };
+  }
+  const sentPart = failures.length ? `${sent} of ${total} sent` : `${sent} sent`;
+  const title = skipped ? `${sentPart} · ${skipped} already had an invitation` : sentPart;
+  const lines = [];
+  if (skipped) {
+    lines.push(
+      "Their link still works. Use Resend to email a new one; the previous link stops working."
+    );
+  }
+  if (failures.length) {
+    lines.push(failures.map(({ member, reason }) => `${fullName(member)}: ${reason}`).join(" · "));
+  }
+  return { type: failures.length ? "warning" : "info", title, description: lines.join(" ") };
 };

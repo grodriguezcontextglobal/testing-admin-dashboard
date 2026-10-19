@@ -9,6 +9,7 @@ import renderingTitle from "../../../../components/general/renderingTitle";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonConfirmationComponent from "../../../../components/UX/buttons/BlueButtonConfirmation";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+import GrayButtonConfirmationComponent from "../../../../components/UX/buttons/GrayButtonConfirmation";
 import SelectComponent from "../../../../components/UX/dropdown/SelectComponent";
 import Input from "../../../../components/UX/inputs/Input";
 import Label from "../../../../components/UX/inputs/Label";
@@ -27,6 +28,7 @@ import {
   inviteSelectionCounts,
   registerConsumerToEvent,
   selectableInviteKeys,
+  invitationSendNotice,
   sendEventInvitations,
 } from "../../utils/eventRegistrationUtils";
 
@@ -75,6 +77,9 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [search, setSearch] = useState("");
   const [sending, setSending] = useState(false);
+  // Members /send skipped because they already have a live invitation; the
+  // Resend button sends them a new link (backend f808e9d).
+  const [alreadyInvitedKeys, setAlreadyInvitedKeys] = useState([]);
 
   const selectedEvent = selectedEventOption?.original ?? null;
 
@@ -128,6 +133,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     setMode("consent");
     setSelectedEventOption(null);
     setSelectedKeys([]);
+    setAlreadyInvitedKeys([]);
     setSearch("");
     setOpenModal(false);
   };
@@ -137,6 +143,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     if (sending) return;
     setMode(next);
     setSelectedKeys([]);
+    setAlreadyInvitedKeys([]);
   };
 
   const handleAddDirectly = async () => {
@@ -187,49 +194,47 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     }
   };
 
-  const handleSend = async () => {
-    if (!selectedEvent || selectedRows.length === 0) return;
+  /* The server builds, signs and emails each link
+     (FRONTEND_attendance_invitation_link_2026-10-14.md); the browser no
+     longer writes a link anybody could have forged. */
+  const sendTo = async (members, { resend = false } = {}) => {
+    if (!selectedEvent || members.length === 0) return;
     setSending(true);
-
-    /* The server builds, signs and emails each link
-       (FRONTEND_attendance_invitation_link_2026-10-14.md); the browser no
-       longer writes a link anybody could have forged. */
-    const total = selectedRows.length;
-    const { sent, failures, refused } = await sendEventInvitations(devitrakApi, {
+    const { sent, alreadyInvited, failures, refused } = await sendEventInvitations(devitrakApi, {
       companyId: user?.sqlInfo?.company_id,
       event: selectedEvent,
-      members: selectedRows,
+      members,
+      resend,
     });
-
     setSending(false);
+
     if (refused) {
       // Nothing went out (401, 403, 404, 500): say so once and keep the
       // selection as it was, so pressing again sends the same people.
       notify("error", "Invitations not sent", refused);
       return;
     }
-    notify(
-      failures.length === 0 ? "success" : "warning",
-      failures.length === 0
-        ? `${sent} invitation${sent === 1 ? "" : "s"} sent`
-        : `${sent} of ${total} invitations sent`,
-      failures.length > 0
-        ? failures
-            .map(
-              ({ member, reason }) => `${member.first_name} ${member.last_name}: ${reason}`
-            )
-            .join(" · ")
-        : undefined
-    );
+    const notice = invitationSendNotice({ sent, alreadyInvited, failures, total: members.length });
+    notify(notice.type, notice.title, notice.description);
 
-    if (failures.length === 0) {
+    if (failures.length === 0 && alreadyInvited.length === 0) {
       closeModal();
-    } else {
-      // Leave only what did not go out selected, so pressing again retries
-      // exactly those and does not email anyone twice.
-      setSelectedKeys(failures.map(({ member }) => member.key));
+      return;
     }
+    /* Leave selected only what did not go out: retrying the failures is safe
+       (the server never emails a live invitation twice), and the members who
+       already had one stay picked for Resend. */
+    setSelectedKeys([...failures.map(({ member }) => member.key), ...alreadyInvited.map((m) => m.key)]);
+    setAlreadyInvitedKeys(alreadyInvited.map((member) => member.key));
   };
+
+  const handleSend = () => sendTo(selectedRows);
+
+  const handleResend = () =>
+    sendTo(
+      rows.filter((row) => alreadyInvitedKeys.includes(row.key)),
+      { resend: true }
+    );
 
   const columns = [
     {
@@ -453,6 +458,20 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
             func={handleAddDirectly}
           />
         ) : (
+        <>
+        {alreadyInvitedKeys.length > 0 && (
+          <GrayButtonConfirmationComponent
+            title={`Resend to ${alreadyInvitedKeys.length}`}
+            buttonType="button"
+            disabled={!selectedEvent || sending}
+            confirmationTitle={`Send ${alreadyInvitedKeys.length} new invitation link${
+              alreadyInvitedKeys.length === 1 ? "" : "s"
+            }?`}
+            confirmationDescription="They already have an invitation. The link they have stops working and a new one is emailed now."
+            okText="Resend"
+            func={handleResend}
+          />
+        )}
         <BlueButtonConfirmationComponent
           title={
             counts.selected > 0
@@ -471,6 +490,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
           okText="Send"
           func={handleSend}
         />
+        </>
         )}
       </div>
     </div>

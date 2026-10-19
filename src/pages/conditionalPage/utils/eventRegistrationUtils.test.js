@@ -11,6 +11,7 @@ import {
   EVENT_INVITATIONS_SEND_PATH,
   INVITATION_SEND_LIMIT,
   sendEventInvitations,
+  invitationSendNotice,
 } from "./eventRegistrationUtils";
 
 const adultMember = {
@@ -386,7 +387,7 @@ describe("sendEventInvitations", () => {
       event_id: "event-123",
       member_ids: [10],
     });
-    expect(outcome).toEqual({ sent: 1, failures: [], refused: null });
+    expect(outcome).toEqual({ sent: 1, alreadyInvited: [], failures: [], refused: null });
   });
 
   /* FRONTEND_event_invitation_send_2026-10-15.md §2: event_id is
@@ -451,7 +452,7 @@ describe("sendEventInvitations", () => {
     expect(api.post).toHaveBeenCalledTimes(2);
     expect(api.post.mock.calls[0][1].member_ids).toHaveLength(INVITATION_SEND_LIMIT);
     expect(api.post.mock.calls[1][1].member_ids).toEqual([INVITATION_SEND_LIMIT + 1]);
-    expect(outcome).toEqual({ sent: INVITATION_SEND_LIMIT + 1, failures: [], refused: null });
+    expect(outcome).toEqual({ sent: INVITATION_SEND_LIMIT + 1, alreadyInvited: [], failures: [], refused: null });
   });
 
   /* §5 of the backend's note: a 401, 403, 404 or 500 means nothing went out.
@@ -465,6 +466,7 @@ describe("sendEventInvitations", () => {
     const outcome = await sendEventInvitations(api, { companyId: 7, event, members: [ten] });
     expect(outcome).toEqual({
       sent: 0,
+      alreadyInvited: [],
       failures: [{ member: ten, reason: "Event not found" }],
       refused: "Event not found",
     });
@@ -495,5 +497,90 @@ describe("sendEventInvitations", () => {
     const outcome = await sendEventInvitations(api, { companyId: 7, event, members: [ten] });
     expect(outcome.sent).toBe(0);
     expect(outcome.failures[0].member).toBe(ten);
+  });
+});
+
+/* 2026-10-16, backend f808e9d (W2), in production: /send no longer emails a
+   member who already has a live invitation. Their row comes back
+   `{ ok: true, skipped: "already_invited" }`, and `resend: true` sends a new
+   link that voids the old one. Counting a skipped row as sent would say an
+   email went out when none did. */
+describe("sendEventInvitations — members who already have an invitation", () => {
+  const row = (id) => ({
+    member_id: id,
+    key: id,
+    first_name: `First${id}`,
+    last_name: `Last${id}`,
+    _recipient: { email: `m${id}@x.com` },
+  });
+
+  it("reports a skipped member as already invited, not as sent or failed", async () => {
+    const api = {
+      post: () =>
+        Promise.resolve({
+          data: {
+            ok: true,
+            results: [
+              { member_id: "10", ok: true },
+              { member_id: "11", ok: true, skipped: "already_invited" },
+            ],
+          },
+        }),
+    };
+    const eleven = row(11);
+    const outcome = await sendEventInvitations(api, { companyId: 7, event, members: [row(10), eleven] });
+    expect(outcome.sent).toBe(1);
+    expect(outcome.alreadyInvited).toEqual([eleven]);
+    expect(outcome.failures).toEqual([]);
+  });
+
+  it("asks for a new link only when told to resend", async () => {
+    const api = { post: vi.fn(() => Promise.resolve({ data: { ok: true, results: [] } })) };
+    await sendEventInvitations(api, { companyId: 7, event, members: [row(10)] });
+    await sendEventInvitations(api, { companyId: 7, event, members: [row(10)], resend: true });
+    expect(api.post.mock.calls[0][1]).not.toHaveProperty("resend");
+    expect(api.post.mock.calls[1][1].resend).toBe(true);
+  });
+});
+
+describe("invitationSendNotice", () => {
+  const member = (id) => ({ first_name: `First${id}`, last_name: `Last${id}` });
+
+  it("all sent", () => {
+    expect(invitationSendNotice({ sent: 3, alreadyInvited: [], failures: [], total: 3 })).toEqual({
+      type: "success",
+      title: "3 invitations sent",
+    });
+  });
+
+  it("says who already had an invitation, and how to send a new one", () => {
+    const notice = invitationSendNotice({
+      sent: 2,
+      alreadyInvited: [member(1), member(2), member(3)],
+      failures: [],
+      total: 5,
+    });
+    expect(notice.type).toBe("info");
+    expect(notice.title).toBe("2 sent · 3 already had an invitation");
+    expect(notice.description).toMatch(/Resend/);
+    expect(notice.description).toMatch(/previous link stops working/);
+  });
+
+  it("a failure makes it a warning and names each one", () => {
+    const notice = invitationSendNotice({
+      sent: 1,
+      alreadyInvited: [member(2)],
+      failures: [{ member: member(3), reason: "Member has no email address." }],
+      total: 3,
+    });
+    expect(notice.type).toBe("warning");
+    expect(notice.title).toBe("1 of 3 sent · 1 already had an invitation");
+    expect(notice.description).toContain("First3 Last3: Member has no email address.");
+  });
+
+  it("one invitation reads in the singular", () => {
+    expect(invitationSendNotice({ sent: 1, alreadyInvited: [], failures: [], total: 1 }).title).toBe(
+      "1 invitation sent"
+    );
   });
 });
