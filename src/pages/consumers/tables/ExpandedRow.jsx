@@ -31,6 +31,7 @@ import Choice from "../components/markedLostOption/Choice";
 import ExpandedLostButton from "../components/UI/ExpandedLostButtons";
 import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
+import { firstRecord } from "../utils/sqlLookups";
 // import { ExpandedRowRender } from "./DocumentsTableSection";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import Chip from "../../../components/UX/Chip/Chip";
@@ -234,31 +235,50 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
           email: customer.email,
         }),
       ]);
+      /* Each lookup can come back empty (no SQL row for this consumer or
+         device) or refused; reading [0] blindly made that a TypeError and left
+         the modal open and blank. */
+      const consumer = firstRecord(sqlConsumerInfo, "consumer");
+      const item = firstRecord(sqlItemInfo, "items");
+      if (!consumer || !item) {
+        setOpenReturnDeviceStaffModal(false);
+        message.warning(
+          consumer
+            ? "This device was not found in the inventory, so it cannot be returned from here."
+            : "This consumer has no lease record, so the device cannot be returned from here."
+        );
+        return null;
+      }
       const sqlConsumerLeaseInfo = await devitrakApi.post(
         "/db_lease/consulting-consumer-lease",
         {
-          consumer_member_id: sqlConsumerInfo.data.consumer[0].consumer_id,
+          consumer_member_id: consumer.consumer_id,
           company_id: user.sqlInfo.company_id,
-          device_id: sqlItemInfo.data.items[0].item_id,
+          device_id: item.item_id,
           subscription_current_in_use: 1,
         },
       );
-      if (
-        sqlItemInfo.data.ok &&
-        sqlConsumerInfo.data.ok &&
-        sqlConsumerLeaseInfo.data.ok
-      ) {
-        const template = {
-          ...sqlConsumerInfo.data.consumer[0],
-          ...sqlConsumerLeaseInfo.data.lease[0],
-          ...sqlItemInfo.data.items[0],
-          item_id_info: sqlItemInfo.data.items[0],
-          rowRecord: rowRecord,
-        };
-        return setInfoNeededToBeRenderedInTable(template);
+      const lease = firstRecord(sqlConsumerLeaseInfo, "lease");
+      if (!lease) {
+        setOpenReturnDeviceStaffModal(false);
+        message.warning("No active lease was found for this device and consumer.");
+        return null;
       }
+      const template = {
+        ...consumer,
+        ...lease,
+        ...item,
+        item_id_info: item,
+        rowRecord: rowRecord,
+      };
+      return setInfoNeededToBeRenderedInTable(template);
     } catch (error) {
       console.error(error);
+      // A 401 is handled globally (api/sessionExpiry.js); anything else gets a message.
+      if (error?.response?.status !== 401) {
+        setOpenReturnDeviceStaffModal(false);
+        message.error("The device details could not be loaded. Try again.");
+      }
     }
   };
 

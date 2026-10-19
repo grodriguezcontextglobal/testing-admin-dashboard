@@ -9,6 +9,7 @@ import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ExpandedRow from "./ExpandedRow";
 import { groupBy } from "lodash";
+import { firstRecord } from "../utils/sqlLookups";
 
 const TransactionTableRefactoring = () => {
   const { user } = useSelector((state) => state.admin);
@@ -48,8 +49,11 @@ const TransactionTableRefactoring = () => {
   }, [customerInfoTemplate.id]);
 
   const leasePerConsumer = async () => {
-    if (consumerInfoSqlQuery.data) {
-      const consumerInfo = consumerInfoSqlQuery?.data?.data.consumer[0];
+    /* A consumer with no SQL row has no leases to show; reading consumer[0]
+       blindly threw, and nothing caught it. */
+    const consumerInfo = firstRecord(consumerInfoSqlQuery.data, "consumer");
+    if (!consumerInfo) return setSqlLeasePerConsumer([]);
+    try {
       const response = await devitrakApi.post(
         "/db_lease/consulting-consumer-lease",
         {
@@ -57,8 +61,10 @@ const TransactionTableRefactoring = () => {
           company_id: user.sqlInfo.company_id,
         },
       );
-      if (response.data.ok)
+      if (response?.data?.ok && Array.isArray(response.data.lease))
         return setSqlLeasePerConsumer([...response.data.lease]);
+    } catch {
+      // The list stays as it was; a 401 is handled globally (api/sessionExpiry.js).
     }
   };
   useEffect(() => {
