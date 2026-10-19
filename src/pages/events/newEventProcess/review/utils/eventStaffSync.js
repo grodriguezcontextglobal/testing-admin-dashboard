@@ -28,10 +28,14 @@ export const staffToLink = (staff) => {
   return [...byEmail.values()];
 };
 
-/** The server saying this staff member is already on the event. */
+/**
+ * The server saying this staff member is already on the event: 409. The old
+ * server said it with a 408; production runs the fixed one since 2026-10-16,
+ * so a 408 is a real timeout and must not count as linked.
+ */
 export const isAlreadyLinked = (error) => {
   const status = error?.response?.status;
-  if (status === 408 || status === 409) return true;
+  if (status === 409) return true;
   return /duplicate|already/i.test(`${error?.response?.data?.msg ?? ""}`);
 };
 

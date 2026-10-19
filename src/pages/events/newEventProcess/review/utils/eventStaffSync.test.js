@@ -39,9 +39,16 @@ describe("staffToLink", () => {
 
 describe("isAlreadyLinked", () => {
   it("recognises the server saying the staff member is already on the event", () => {
-    expect(isAlreadyLinked({ response: { status: 408 } })).toBe(true);
     expect(isAlreadyLinked({ response: { status: 409 } })).toBe(true);
     expect(isAlreadyLinked({ response: { status: 400, data: { msg: "Duplicate entry '12-5'" } } })).toBe(true);
+  });
+
+  /* The old server answered a duplicate with 408. Production runs the fixed
+     one since 2026-10-16 (f808e9d, which carries 92eceb7): a duplicate is 409,
+     so a 408 now is a real timeout, and counting it as linked would report
+     staff on the event who are not. */
+  it("a bare 408 is a timeout, not a staff member already on the event", () => {
+    expect(isAlreadyLinked({ response: { status: 408 } })).toBe(false);
   });
 
   it("does not hide any other failure", () => {
@@ -99,7 +106,7 @@ describe("syncEventStaff", () => {
     const api = client({
       existing: { "fredrik@x.com": 5, "cesar@x.com": 6 },
       linkError: (body) =>
-        body.staff_id === 5 ? { response: { status: 408, data: { msg: "Already exists" } } } : null,
+        body.staff_id === 5 ? { response: { status: 409, data: { msg: "Already exists" } } } : null,
     });
     const result = await syncEventStaff({ api, eventId: 88, staff });
     expect(result).toEqual({ linked: ["cesar@x.com"], alreadyLinked: ["fredrik@x.com"] });
