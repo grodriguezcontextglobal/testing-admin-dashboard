@@ -33,10 +33,15 @@ deployed, and anything you decline with the reason.
 | `POST /api/transaction-audit-log/create-audit`, `GET /api/transaction-audit-log/audit-log` | `routes/transactionAuditLog.js:12,15`, mounted bare in `index.js:183` | Anyone can write audit entries and read the whole log, across companies |
 
 - Controls: AC-3, AU-9 · KSI-CNA, KSI-MLA.
-- The dashboard does **not** call `/api/admin/users`, `invalidate-all-sessions`
-  or `transaction-audit-log` any more (`transaction-audit-log` writes were
-  removed from the client before 2026-10-15). Closing them breaks nothing on our
-  side.
+- The dashboard does not call `/api/admin/users` or `invalidate-all-sessions`:
+  those two can be closed now.
+- **`transaction-audit-log`: wait for our release.** The dashboard still wrote
+  to `create-audit` after assigning a device to a transaction, with `await`, so a
+  401 would have shown an error after the device was already assigned. Removed
+  on 2026-10-19 (`dff5fc21`). The dashboard running on IIS today predates that
+  commit, so **close this route only after the IIS release that carries
+  `dff5fc21`** — the same release you are waiting on to enforce the signed
+  links. We will tell you the day.
 - **Done when:** each answers 401 without a valid session, `invalidate-all-sessions`
   is limited to a root admin of one company (or retired), and the audit log is
   scoped by company and not writable from outside the server.
