@@ -1,7 +1,7 @@
 import {
-  describeLogAction,
-  isInfrastructureLog,
+  logActor,
   logHighlights,
+  logSummary,
 } from "../../../../Profile/staff_activity/utils/staffActivityLogUtils";
 import { newestCustodyFirst } from "./deviceProfileModel";
 
@@ -22,30 +22,23 @@ import { newestCustodyFirst } from "./deviceProfileModel";
  * different words would be two formats, which is what he asked us to avoid.
  */
 
-const actorName = (log) =>
-  [log?.staff_member_id?.name, log?.staff_member_id?.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim() || "Unknown staff";
-
 /**
  * Activity-log rows as timeline entries, in the shape `CustodyTimeline`
- * renders. Rows the machine wrote about itself are left out, as they are in
- * the staff trail.
+ * renders. The server no longer sends the cache clears it writes about
+ * itself (dbcd4f5), so nothing is filtered here.
  *
  * @param {object[]} logs rows from GET /api/admin/activity-logs
  */
 export const buildActivityTimeline = (logs) =>
   (Array.isArray(logs) ? logs : [])
-    .filter((log) => !isInfrastructureLog(log))
     .map((log, index) => ({
       id: `activity-${log?.id ?? index}`,
       kind: "activity",
       tone: "neutral",
       date: log?.timestamp ?? null,
-      title: describeLogAction(log),
-      personLabel: actorName(log),
-      personEmail: log?.staff_member_id?.email ?? null,
+      title: logSummary(log),
+      personLabel: logActor(log).name,
+      personEmail: logActor(log).email,
       detail: logHighlights(log).join(" · ") || null,
     }));
 

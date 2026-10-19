@@ -19,6 +19,34 @@ export const ACTIVITY_LOG_ACTIONS = [
 const staffFullName = (staff) =>
   [staff?.name, staff?.lastName].filter(Boolean).join(" ").trim() || "Unknown staff";
 
+const trimmed = (value) => String(value ?? "").trim();
+
+/**
+ * Who acted, as the server's audit trail names them. A staff action carries
+ * the populated `staff_member_id`; one without a session (a guardian answering
+ * an invitation) has `staff_member_id: null` and the person in `actor`, often
+ * with only the email the link went to (backend W4, 2026-10-16).
+ */
+export const logActor = (log) => {
+  const staff = log?.staff_member_id;
+  const email =
+    trimmed(staff?.email) || trimmed(log?.details?.email) || trimmed(log?.actor?.email) || null;
+  /* Only an anonymous actor is named by email: a staff member deleted since
+     keeps "Unknown staff", with the email still shown beside it. */
+  const anonymous = log?.actor_type === "anonymous";
+  const name = staff
+    ? staffFullName(staff)
+    : trimmed(log?.actor?.name) || (anonymous && email) || staffFullName(null);
+  return { name, email };
+};
+
+/**
+ * The sentence for one row: the server's `summary` when it sent one (rows
+ * since 2026-10-05, 4c5c4aa), otherwise ours. Older rows and the ones the
+ * client posts carry none, so describeLogAction stays as the fallback.
+ */
+export const logSummary = (log) => trimmed(log?.summary) || describeLogAction(log);
+
 /**
  * Adapts one raw `GET /api/admin/activity-logs` row into what Body.jsx renders.
  *
@@ -31,23 +59,17 @@ export const mapLogToListItem = (log) => ({
   id: log?.id,
   /* A guardian answering an invitation is not staff: the row names them by
      what they are, rather than as "Unknown staff". */
-  staffName: invitationResponder(log)?.name ?? staffFullName(log?.staff_member_id),
+  staffName: invitationResponder(log)?.name ?? logActor(log).name,
   /* The populated staff record is the source; `details.email` is the fallback,
      since the register endpoint stamps it on the login rows and it is the same
      person either way. */
-  staffEmail:
-    String(
-      invitationResponder(log)?.email ??
-        log?.staff_member_id?.email ??
-        log?.details?.email ??
-        ""
-    ).trim() || null,
+  staffEmail: trimmed(invitationResponder(log)?.email) || logActor(log).email,
   actionTaken: [log?.action, log?.target_model].filter(Boolean).join(" "),
   time: log?.timestamp,
 
   /* Everything below arrives from the server's audit middleware (2026-10-05)
      and is absent on rows written before it — hence the nulls. */
-  summary: describeLogAction(log),
+  summary: logSummary(log),
   highlights: logHighlights(log),
   /* One sentence in plain words, or nothing. The route, the HTTP status and
      the request body are deliberately NOT carried here: this list is read by
@@ -57,7 +79,6 @@ export const mapLogToListItem = (log) => ({
   target: log?.target_id ? `${log?.target_model ?? "Record"} ${log.target_id}` : null,
   ip: log?.ip_address ?? null,
   client: describeClient(log?.device_info),
-  isInfrastructure: isInfrastructureLog(log),
 });
 
 /** On a log row, `staff_member_id` is the populated AdminUser record. */
@@ -312,16 +333,10 @@ export const describeClient = (userAgent) => {
   return browser ?? platform ?? null;
 };
 
-/**
- * Rows the machine wrote about itself. Eight of one afternoon's forty-five
- * entries are cache clears, and they bury what a person came to read.
- */
-export const isInfrastructureLog = (log) =>
-  String(log?.target_model ?? "") === "Cache" || routePath(log).startsWith("/api/cache_update/");
-
-/** The trail without the rows the machine wrote about itself. */
-export const visibleLogs = (logs) =>
-  (Array.isArray(logs) ? logs : []).filter((log) => !isInfrastructureLog(log));
+/* Cache clears used to be filtered here: eight of every forty-five rows were
+   the machine writing about itself. The server leaves them out of the report
+   since dbcd4f5, in production since 2026-10-16, so the filter is gone and a
+   page is no longer shorter than its size. */
 
 /**
  * Plain language, because this is read by whoever has to answer "who touched

@@ -11,7 +11,6 @@ import {
   buildStaffFilterOptions,
   filterLogsByHierarchy,
   mapLogToListItem,
-  visibleLogs,
 } from "./utils/staffActivityLogUtils";
 
 const PAGE_SIZE = 50;
@@ -61,12 +60,10 @@ const StaffActivityMainPage = () => {
     return buildStaffFilterOptions(employees, viewerRoleType, viewerId);
   }, [employeesQuery.data, viewerRoleType, viewerId]);
 
-  /* `visibleLogs` drops what the machine wrote about itself — cache clears are
-     eight of every forty-five rows and bury the rest. They are filtered here
-     rather than asked of the server, so a page can come back shorter than its
-     page size; the backend ask has a request to exclude them server-side. */
+  /* Cache clears used to be filtered here; the server leaves them out of the
+     report since dbcd4f5 (in production since 2026-10-16). */
   const sortData = useMemo(() => {
-    const logs = visibleLogs(activityLogQuery.data?.data?.logs);
+    const logs = activityLogQuery.data?.data?.logs ?? [];
     return filterLogsByHierarchy(logs, viewerRoleType, viewerId).map(mapLogToListItem);
   }, [activityLogQuery.data, viewerRoleType, viewerId]);
 

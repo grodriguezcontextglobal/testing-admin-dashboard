@@ -49,11 +49,23 @@ describe("buildActivityTimeline", () => {
     expect(buildActivityTimeline([log()])[0].detail).toContain("TEST _ 2");
   });
 
-  /* Los borrados de caché los escribe la máquina y no los entiende nadie: no
-     entran aquí tampoco. */
-  it("deja fuera lo que escribió la máquina sola", () => {
-    const cache = log({ action: "CLEAR", target_model: "Cache", id: "log-2" });
-    expect(buildActivityTimeline([log(), cache])).toHaveLength(1);
+  /* El servidor redacta cada registro desde el 05-10 (`summary`, 4c5c4aa) y
+     es más preciso que nuestra frase; la nuestra queda para los anteriores. */
+  it("usa la frase del servidor cuando la trae", () => {
+    const entry = buildActivityTimeline([
+      log({ summary: "Returned device SN-100006 from ana@x.com at event TEST _ 2" }),
+    ])[0];
+    expect(entry.title).toBe("Returned device SN-100006 from ana@x.com at event TEST _ 2");
+  });
+
+  /* Una acción sin sesión (la respuesta de un tutor) no trae staff: el
+     servidor nombra a quien actuó en `actor`. */
+  it("nombra a quien actuó sin sesión, en vez de 'Unknown staff'", () => {
+    const entry = buildActivityTimeline([
+      log({ staff_member_id: null, actor_type: "anonymous", actor: { name: "", email: "maria@x.org" } }),
+    ])[0];
+    expect(entry.personLabel).toBe("maria@x.org");
+    expect(entry.personEmail).toBe("maria@x.org");
   });
 
   it("no se traga una respuesta vacía ni una que no es lista", () => {

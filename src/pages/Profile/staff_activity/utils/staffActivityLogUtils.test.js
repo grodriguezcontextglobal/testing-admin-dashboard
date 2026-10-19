@@ -7,10 +7,8 @@ import {
   buildStaffFilterOptions,
   describeLogAction,
   describeClient,
-  isInfrastructureLog,
   logHighlights,
   explainLogChange,
-  visibleLogs,
 } from "./staffActivityLogUtils";
 
 const buildLog = (overrides = {}) => ({
@@ -476,17 +474,6 @@ describe("describeClient(userAgent)", () => {
  * Ocho de las cuarenta y cinco filas de una tarde son borrados de caché: son
  * de la máquina, no de una persona, y tapan lo que sí se lee.
  */
-describe("isInfrastructureLog(log)", () => {
-  it("marca el borrado de caché como ruido", () => {
-    expect(isInfrastructureLog({ action: "CLEAR", target_model: "Cache" })).toBe(true);
-  });
-
-  it("no marca nada que una persona reconocería", () => {
-    expect(isInfrastructureLog(serverLog())).toBe(false);
-    expect(isInfrastructureLog({ action: "LOGIN", target_model: "AdminUser" })).toBe(false);
-  });
-});
-
 describe("mapLogToListItem(log) — con el payload del servidor", () => {
   const item = mapLogToListItem(serverLog());
 
@@ -747,26 +734,32 @@ describe("explainLogChange(log)", () => {
   });
 });
 
-describe("visibleLogs(logs)", () => {
-  const cache = {
-    action: "CLEAR",
-    target_model: "Cache",
-    details: { route: "POST /api/cache_update/remove-cache" },
-  };
-
-  it("deja fuera lo que hizo la máquina sola", () => {
-    const logs = [routed("PATCH /api/receiver/receiver-update/:id", {}), cache, cache];
-    expect(visibleLogs(logs)).toHaveLength(1);
+/* 2026-10-16, backend W4: GET /api/admin/activity-logs trae `summary` y
+   `display` desde el 05-10 (4c5c4aa, 4e89c28). Se usa su frase; la nuestra
+   queda para los registros anteriores y los que manda el cliente. */
+describe("mapLogToListItem(log) — la frase y el autor que manda el servidor", () => {
+  it("usa el summary del servidor cuando lo trae", () => {
+    const item = mapLogToListItem(
+      serverLog({ summary: "Returned device SN-100006 from ana@x.com at event TEST _ 2" })
+    );
+    expect(item.summary).toBe("Returned device SN-100006 from ana@x.com at event TEST _ 2");
   });
 
-  it("reconoce el borrado de caché por la ruta aunque el modelo cambie", () => {
-    expect(
-      isInfrastructureLog({ action: "CLEAR", details: { route: "POST /api/cache_update/remove-cache" } })
-    ).toBe(true);
+  it("cae a la frase propia si no trae summary o viene en blanco", () => {
+    expect(mapLogToListItem(serverLog()).summary).toBe("Returned a device");
+    expect(mapLogToListItem(serverLog({ summary: "   " })).summary).toBe("Returned a device");
   });
 
-  it("no se traga una lista vacía ni una que no lo es", () => {
-    expect(visibleLogs(undefined)).toEqual([]);
-    expect(visibleLogs([])).toEqual([]);
+  it("nombra a quien actuó sin sesión con lo que dice el servidor", () => {
+    const item = mapLogToListItem({
+      id: "a",
+      action: "UPDATE",
+      target_model: "Member",
+      staff_member_id: null,
+      actor_type: "anonymous",
+      actor: { name: "", email: "maria@x.org" },
+    });
+    expect(item.staffName).toBe("maria@x.org");
+    expect(item.staffEmail).toBe("maria@x.org");
   });
 });
