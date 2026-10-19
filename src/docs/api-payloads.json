@@ -2,14 +2,14 @@
  {
   "method": "DELETE",
   "endpoint": "/api/admin/:id",
-  "routeFile": "routes/admin.js:103",
+  "routeFile": "routes/admin.js:115",
   "handler": "deleteAdminUser",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"staff\", \"delete\")"
   ],
-  "source": "controller/admin.js:521",
+  "source": "controller/admin.js:629",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -35,14 +35,14 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/:id",
-  "routeFile": "routes/admin.js:91",
+  "routeFile": "routes/admin.js:103",
   "handler": "showAllUsers",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"staff\", \"read\")"
   ],
-  "source": "controller/admin.js:636",
+  "source": "controller/admin.js:821",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -83,13 +83,13 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/activity-logs/vocabulary",
-  "routeFile": "routes/admin.js:124",
+  "routeFile": "routes/admin.js:143",
   "handler": "getActivityVocabulary",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "controller/staffActivityLog.js:245",
+  "source": "controller/staffActivityLog.js:286",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -107,24 +107,33 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/activity-logs",
-  "routeFile": "routes/admin.js:50",
+  "routeFile": "routes/admin.js:52",
   "handler": "getStaffActivityLogs",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"staff\", \"read\")"
   ],
-  "source": "controller/staffActivityLog.js:188",
+  "source": "controller/staffActivityLog.js:228",
   "viaFactory": "createGetStaffActivityLogs",
   "body": [],
   "params": [],
   "query": [
    "action",
+   "actor_type",
+   "consumer",
    "end_date",
+   "event_id",
+   "include_automatic",
+   "item_id",
    "limit?",
+   "member_id",
    "page?",
+   "serial_number",
+   "source",
    "staff_member_id",
    "start_date",
+   "target_id",
    "target_model"
   ],
   "headers": [],
@@ -144,13 +153,13 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/activity-logs",
-  "routeFile": "routes/admin.js:49",
+  "routeFile": "routes/admin.js:51",
   "handler": "registerStaffActivity",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "controller/staffActivityLog.js:235",
+  "source": "controller/staffActivityLog.js:276",
   "viaFactory": "createRegisterStaffActivity",
   "body": [
    "action",
@@ -183,14 +192,14 @@
  {
   "method": "PATCH",
   "endpoint": "/api/admin/admin-user/:id",
-  "routeFile": "routes/admin.js:100",
+  "routeFile": "routes/admin.js:112",
   "handler": "editOtherAdminUser",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"staff\", \"update\")"
   ],
-  "source": "controller/admin.js:479",
+  "source": "controller/admin.js:587",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -214,10 +223,10 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/check-online-status/:email",
-  "routeFile": "routes/admin.js:115",
+  "routeFile": "routes/admin.js:132",
   "handler": "checkStatus",
   "middlewares": [],
-  "source": "controller/admin.js:730",
+  "source": "controller/admin.js:994",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -240,12 +249,12 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/invalidate-all-sessions",
-  "routeFile": "routes/admin.js:42",
+  "routeFile": "routes/admin.js:44",
   "handler": "invalidateAllSessions",
   "middlewares": [
    "optionalJWT"
   ],
-  "source": "controller/admin.js:884",
+  "source": "controller/admin.js:1208",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -266,12 +275,12 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/login",
-  "routeFile": "routes/admin.js:68",
+  "routeFile": "routes/admin.js:70",
   "handler": "loginUser",
   "middlewares": [
    "validateFields"
   ],
-  "source": "controller/admin.js:86",
+  "source": "controller/admin.js:101",
   "viaFactory": null,
   "body": [
    "email",
@@ -315,10 +324,10 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/logout",
-  "routeFile": "routes/admin.js:82",
+  "routeFile": "routes/admin.js:84",
   "handler": "logoutUser",
   "middlewares": [],
-  "source": "controller/admin.js:345",
+  "source": "controller/admin.js:375",
   "viaFactory": null,
   "body": [
    "uid"
@@ -344,10 +353,10 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/manually_logout",
-  "routeFile": "routes/admin.js:85",
+  "routeFile": "routes/admin.js:87",
   "handler": "manuallyLogoutUser",
   "middlewares": [],
-  "source": "controller/admin.js:396",
+  "source": "controller/admin.js:426",
   "viaFactory": null,
   "body": [
    "uid"
@@ -372,12 +381,12 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/mfa/disable",
-  "routeFile": "routes/admin.js:120",
+  "routeFile": "routes/admin.js:139",
   "handler": "disableMfa",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/admin.js:816",
+  "source": "controller/admin.js:1092",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -391,18 +400,19 @@
   "dynamic": [],
   "notes": [],
   "statusCodes": [
+   "403",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/admin/mfa/generate",
-  "routeFile": "routes/admin.js:118",
+  "routeFile": "routes/admin.js:137",
   "handler": "generateMfaSecret",
   "middlewares": [
-   "validateJWT"
+   "validateMfaEnrollment"
   ],
-  "source": "controller/admin.js:763",
+  "source": "controller/admin.js:1027",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -417,18 +427,19 @@
   "notes": [],
   "statusCodes": [
    "404",
+   "409",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/admin/mfa/verify",
-  "routeFile": "routes/admin.js:119",
+  "routeFile": "routes/admin.js:138",
   "handler": "verifyMfaSetup",
   "middlewares": [
-   "validateJWT"
+   "validateMfaEnrollment"
   ],
-  "source": "controller/admin.js:790",
+  "source": "controller/admin.js:1061",
   "viaFactory": null,
   "body": [
    "token"
@@ -452,13 +463,13 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/new_admin_user",
-  "routeFile": "routes/admin.js:53",
+  "routeFile": "routes/admin.js:55",
   "handler": "createAdminUser",
   "middlewares": [
    "check(\"email\", \"Email must be provided\").isEmail()",
    "validateFields"
   ],
-  "source": "controller/admin.js:17",
+  "source": "controller/admin.js:31",
   "viaFactory": null,
   "body": [
    "email",
@@ -487,12 +498,12 @@
  {
   "method": "PATCH",
   "endpoint": "/api/admin/profile/:id",
-  "routeFile": "routes/admin.js:97",
+  "routeFile": "routes/admin.js:109",
   "handler": "editAdminUser",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/admin.js:424",
+  "source": "controller/admin.js:488",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -504,14 +515,15 @@
   ],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": true,
+  "ignoresBody": false,
   "allowed": [],
   "identifiers": [],
-  "dynamic": [],
-  "notes": [
-   "pasa `req.body` completo a otra capa (revisar el controlador para el detalle)"
+  "dynamic": [
+   "cuerpo DINÁMICO: se itera el body (`Object.entries`) para armar el SQL"
   ],
+  "notes": [],
   "statusCodes": [
+   "403",
    "404",
    "500"
   ]
@@ -519,7 +531,7 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/protected",
-  "routeFile": "routes/admin.js:44",
+  "routeFile": "routes/admin.js:46",
   "handler": "checkTokenVersion",
   "middlewares": [
    "validateJWT"
@@ -546,7 +558,7 @@
  {
   "method": "POST",
   "endpoint": "/api/admin/receiver-assignation",
-  "routeFile": "routes/admin.js:109",
+  "routeFile": "routes/admin.js:126",
   "handler": "addReceiverToTransaction",
   "middlewares": [],
   "source": "controller/receiver.js:24",
@@ -593,9 +605,11 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/receiver-assigned",
-  "routeFile": "routes/admin.js:112",
+  "routeFile": "routes/admin.js:101",
   "handler": "checkingReceiversAssigned",
-  "middlewares": [],
+  "middlewares": [
+   "validateJWT"
+  ],
   "source": "controller/receiver.js:47",
   "viaFactory": null,
   "body": [
@@ -619,12 +633,12 @@
  {
   "method": "GET",
   "endpoint": "/api/admin/renew",
-  "routeFile": "routes/admin.js:88",
+  "routeFile": "routes/admin.js:90",
   "handler": "renewToken",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/admin.js:557",
+  "source": "controller/admin.js:665",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -637,24 +651,31 @@
   "identifiers": [],
   "dynamic": [],
   "notes": [],
-  "statusCodes": []
+  "statusCodes": [
+   "403"
+  ]
  },
  {
   "method": "PATCH",
   "endpoint": "/api/admin/update-password",
-  "routeFile": "routes/admin.js:106",
+  "routeFile": "routes/admin.js:119",
   "handler": "updatePassword",
   "middlewares": [],
-  "source": "controller/admin.js:587",
+  "source": "controller/admin.js:726",
   "viaFactory": null,
   "body": [
    "email",
-   "password"
+   "mfaCode",
+   "password",
+   "resetToken",
+   "uid"
   ],
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "mfaCode"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -664,16 +685,17 @@
   "statusCodes": [
    "201",
    "400",
+   "403",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/admin/users",
-  "routeFile": "routes/admin.js:94",
+  "routeFile": "routes/admin.js:106",
   "handler": "showAllUsers",
   "middlewares": [],
-  "source": "controller/admin.js:636",
+  "source": "controller/admin.js:821",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -708,6 +730,38 @@
   ],
   "statusCodes": [
    "201",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/admin/verify-password",
+  "routeFile": "routes/admin.js:123",
+  "handler": "verifyPassword",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "controller/admin.js:884",
+  "viaFactory": null,
+  "body": [
+   "password"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "password"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
    "500"
   ]
  },
@@ -854,12 +908,12 @@
  {
   "method": "GET",
   "endpoint": "/api/auth/:id",
-  "routeFile": "routes/auth.js:53",
+  "routeFile": "routes/auth.js:65",
   "handler": "getUser",
   "middlewares": [
    "optionalJWT"
   ],
-  "source": "controller/auth.js:68",
+  "source": "controller/auth.js:108",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -882,10 +936,13 @@
  {
   "method": "PATCH",
   "endpoint": "/api/auth/:id",
-  "routeFile": "routes/auth.js:50",
+  "routeFile": "routes/auth.js:60",
   "handler": "editUser",
-  "middlewares": [],
-  "source": "controller/auth.js:168",
+  "middlewares": [
+   "optionalJWT",
+   "requireSessionFromDashboard"
+  ],
+  "source": "controller/auth.js:208",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -910,13 +967,13 @@
  {
   "method": "GET",
   "endpoint": "/api/auth/all-consumers-based-on-all-events-per-company/:companyID",
-  "routeFile": "routes/auth.js:59",
+  "routeFile": "routes/auth.js:79",
   "handler": "getAllConsumersBasedOnAllEventsPerCompany",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "controller/auth.js:282",
+  "source": "controller/auth.js:330",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -939,20 +996,21 @@
  {
   "method": "POST",
   "endpoint": "/api/auth/new",
-  "routeFile": "routes/auth.js:36",
+  "routeFile": "routes/auth.js:43",
   "handler": "newUser",
   "middlewares": [
    "check(\"lastName\", \"Last name is mandatory\").not().isEmpty()",
    "check(\"email\", \"Email is mandatory\").isEmail()",
-   "validateFields"
+   "validateFields",
+   "optionalJWT",
+   "requireSessionFromDashboard"
   ],
-  "source": "controller/auth.js:120",
+  "source": "controller/auth.js:160",
   "viaFactory": null,
   "body": [
    "category?",
    "company_providers?",
    "email",
-   "email?",
    "eventSelected?",
    "event_providers?",
    "groupName?",
@@ -972,7 +1030,7 @@
    "name": "string",
    "lastName": "string",
    "email": "string",
-   "phoneNumber": "number",
+   "phoneNumber": "string",
    "privacyPolicy": "boolean",
    "category": "string",
    "provider": "unknown[]",
@@ -999,10 +1057,12 @@
  {
   "method": "GET",
   "endpoint": "/api/auth/user-query",
-  "routeFile": "routes/auth.js:33",
+  "routeFile": "routes/auth.js:40",
   "handler": "getListOfUsers",
-  "middlewares": [],
-  "source": "controller/auth.js:27",
+  "middlewares": [
+   "optionalJWT"
+  ],
+  "source": "controller/auth.js:58",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -1025,174 +1085,82 @@
  {
   "method": "POST",
   "endpoint": "/api/auth/user-query",
-  "routeFile": "routes/auth.js:27",
-  "handler": "showAllUsers",
-  "middlewares": [],
-  "source": "controller/auth.js:11",
-  "viaFactory": null,
-  "body": [
-   "category?",
-   "company_providers?",
-   "email?",
-   "eventSelected?",
-   "event_providers?",
-   "groupName?",
-   "lastName?",
-   "name?",
-   "notes?",
-   "phoneNumber?",
-   "privacyPolicy?",
-   "profile_picture?",
-   "provider?"
+  "routeFile": "routes/auth.js:34",
+  "handler": "lookupUsers",
+  "middlewares": [
+   "optionalJWT",
+   "requireSessionFromDashboard"
   ],
+  "source": "controller/auth.js:55",
+  "viaFactory": null,
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phoneNumber": "number",
-   "privacyPolicy": "boolean",
-   "category": "string",
-   "provider": "unknown[]",
-   "eventSelected": "unknown[]",
-   "groupName": "unknown[]",
-   "company_providers": "unknown[]",
-   "event_providers": "unknown[]",
-   "notes": "unknown[]",
-   "profile_picture": "string"
-  },
-  "ignoresBody": false,
+  "schemaTypes": {},
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `User.find()`: cualquier subconjunto de los campos de `models/User.js` (`{}` trae todo)"
-  ],
-  "statusCodes": [
-   "200",
-   "500"
-  ]
+  "notes": [],
+  "statusCodes": []
  },
  {
   "method": "GET",
   "endpoint": "/api/auth/users",
-  "routeFile": "routes/auth.js:24",
+  "routeFile": "routes/auth.js:31",
   "handler": "showAllUsers",
-  "middlewares": [],
-  "source": "controller/auth.js:11",
-  "viaFactory": null,
-  "body": [
-   "category?",
-   "company_providers?",
-   "email?",
-   "eventSelected?",
-   "event_providers?",
-   "groupName?",
-   "lastName?",
-   "name?",
-   "notes?",
-   "phoneNumber?",
-   "privacyPolicy?",
-   "profile_picture?",
-   "provider?"
+  "middlewares": [
+   "optionalJWT"
   ],
+  "source": "controller/auth.js:51",
+  "viaFactory": null,
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phoneNumber": "number",
-   "privacyPolicy": "boolean",
-   "category": "string",
-   "provider": "unknown[]",
-   "eventSelected": "unknown[]",
-   "groupName": "unknown[]",
-   "company_providers": "unknown[]",
-   "event_providers": "unknown[]",
-   "notes": "unknown[]",
-   "profile_picture": "string"
-  },
+  "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `User.find()`: cualquier subconjunto de los campos de `models/User.js` (`{}` trae todo)"
-  ],
-  "statusCodes": [
-   "200",
-   "500"
-  ]
+  "notes": [],
+  "statusCodes": []
  },
  {
   "method": "POST",
   "endpoint": "/api/auth/users",
-  "routeFile": "routes/auth.js:30",
+  "routeFile": "routes/auth.js:37",
   "handler": "showAllUsers",
-  "middlewares": [],
-  "source": "controller/auth.js:11",
-  "viaFactory": null,
-  "body": [
-   "category?",
-   "company_providers?",
-   "email?",
-   "eventSelected?",
-   "event_providers?",
-   "groupName?",
-   "lastName?",
-   "name?",
-   "notes?",
-   "phoneNumber?",
-   "privacyPolicy?",
-   "profile_picture?",
-   "provider?"
+  "middlewares": [
+   "optionalJWT"
   ],
+  "source": "controller/auth.js:51",
+  "viaFactory": null,
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phoneNumber": "number",
-   "privacyPolicy": "boolean",
-   "category": "string",
-   "provider": "unknown[]",
-   "eventSelected": "unknown[]",
-   "groupName": "unknown[]",
-   "company_providers": "unknown[]",
-   "event_providers": "unknown[]",
-   "notes": "unknown[]",
-   "profile_picture": "string"
-  },
-  "ignoresBody": false,
+  "schemaTypes": {},
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `User.find()`: cualquier subconjunto de los campos de `models/User.js` (`{}` trae todo)"
-  ],
-  "statusCodes": [
-   "200",
-   "500"
-  ]
+  "notes": [],
+  "statusCodes": []
  },
  {
   "method": "POST",
   "endpoint": "/api/auth",
-  "routeFile": "routes/auth.js:56",
+  "routeFile": "routes/auth.js:76",
   "handler": "checkUser",
   "middlewares": [
    "check(\"email\", \"Email is mandatory\").isEmail()"
   ],
-  "source": "controller/auth.js:91",
+  "source": "controller/auth.js:131",
   "viaFactory": null,
   "body": [
    "userInfoEmailCheck"
@@ -1251,11 +1219,9 @@
    "amount?",
    "attendee?",
    "company",
-   "company?",
    "createdAt?",
    "deviceLost?",
    "event",
-   "event?",
    "paymentIntent_charge_transaction?",
    "typeCollection?"
   ],
@@ -1299,11 +1265,9 @@
    "amount?",
    "attendee?",
    "company",
-   "company?",
    "createdAt?",
    "deviceLost?",
    "event",
-   "event?",
    "paymentIntent_charge_transaction?",
    "typeCollection?"
   ],
@@ -1347,11 +1311,9 @@
    "amount?",
    "attendee?",
    "company",
-   "company?",
    "createdAt?",
    "deviceLost?",
    "event",
-   "event?",
    "paymentIntent_charge_transaction?",
    "typeCollection?"
   ],
@@ -1439,11 +1401,42 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/cloudinary/upload-image",
+  "routeFile": "index.js:209",
+  "handler": "cloudinaryUploader",
+  "middlewares": [],
+  "source": "cloudinary/connection.js:4",
+  "viaFactory": null,
+  "body": [
+   "context",
+   "imageFile",
+   "imageID",
+   "tags"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [
+   "montado como middleware directo (`app.use(\"/api/cloudinary\", handler)`): CUALQUIER método y subpath bajo `/api/cloudinary` llega a este handler; `routes/cloudinary.js` no está montado"
+  ],
+  "statusCodes": [
+   "201",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/company/assign-location",
-  "routeFile": "routes/company.js:81",
+  "routeFile": "routes/company.js:91",
   "handler": "assignLocationToUser",
   "middlewares": [],
-  "source": "controller/company.js:242",
+  "source": "controller/company.js:250",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -1469,10 +1462,10 @@
  {
   "method": "POST",
   "endpoint": "/api/company/companies",
-  "routeFile": "routes/company.js:79",
+  "routeFile": "routes/company.js:89",
   "handler": "getCompanyList",
   "middlewares": [],
-  "source": "controller/company.js:219",
+  "source": "controller/company.js:227",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -1493,10 +1486,10 @@
  {
   "method": "POST",
   "endpoint": "/api/company/consulting-signatures",
-  "routeFile": "routes/company.js:109",
+  "routeFile": "routes/company.js:130",
   "handler": "consultingSignaturesStaffMember",
   "middlewares": [],
-  "source": "controller/document.js:471",
+  "source": "controller/document.js:623",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -1523,10 +1516,12 @@
  {
   "method": "POST",
   "endpoint": "/api/company/consumer-signatures",
-  "routeFile": "routes/company.js:112",
+  "routeFile": "routes/company.js:133",
   "handler": "getConsumerSignatures",
-  "middlewares": [],
-  "source": "controller/document.js:596",
+  "middlewares": [
+   "optionalJWT"
+  ],
+  "source": "controller/document.js:748",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -1550,10 +1545,10 @@
  {
   "method": "POST",
   "endpoint": "/api/company/event-consumer-signatures",
-  "routeFile": "routes/company.js:115",
+  "routeFile": "routes/company.js:147",
   "handler": "stampEventConsumerSignatures",
   "middlewares": [],
-  "source": "controller/document.js:537",
+  "source": "controller/document.js:689",
   "viaFactory": null,
   "body": [
    "accepted",
@@ -1582,7 +1577,7 @@
  {
   "method": "POST",
   "endpoint": "/api/company/new_provider",
-  "routeFile": "routes/company.js:85",
+  "routeFile": "routes/company.js:95",
   "handler": "createProviderCompany",
   "middlewares": [],
   "source": "controller/providerCompany.js:3",
@@ -1621,10 +1616,10 @@
  {
   "method": "POST",
   "endpoint": "/api/company/new",
-  "routeFile": "routes/company.js:69",
+  "routeFile": "routes/company.js:79",
   "handler": "createCompany",
   "middlewares": [],
-  "source": "controller/company.js:11",
+  "source": "controller/company.js:12",
   "viaFactory": null,
   "body": [
    "address",
@@ -1657,7 +1652,7 @@
  {
   "method": "GET",
   "endpoint": "/api/company/provider-companies",
-  "routeFile": "routes/company.js:98",
+  "routeFile": "routes/company.js:108",
   "handler": "getProviderCompanies",
   "middlewares": [],
   "source": "controller/providerCompany.js:92",
@@ -1686,7 +1681,7 @@
  {
   "method": "POST",
   "endpoint": "/api/company/provider-company/:id",
-  "routeFile": "routes/company.js:121",
+  "routeFile": "routes/company.js:153",
   "handler": "getSpecificProviderCompany",
   "middlewares": [],
   "source": "controller/providerCompany.js:137",
@@ -1716,7 +1711,7 @@
  {
   "method": "POST",
   "endpoint": "/api/company/provider-upload-document/:id",
-  "routeFile": "routes/company.js:91",
+  "routeFile": "routes/company.js:101",
   "handler": "uploadProviderDocument",
   "middlewares": [
    "upload.single(\"document\")"
@@ -1752,10 +1747,10 @@
  {
   "method": "GET",
   "endpoint": "/api/company/search-company",
-  "routeFile": "routes/company.js:77",
+  "routeFile": "routes/company.js:87",
   "handler": "searchingGetCompanyInfo",
   "middlewares": [],
-  "source": "controller/company.js:173",
+  "source": "controller/company.js:181",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -1778,15 +1773,16 @@
  {
   "method": "POST",
   "endpoint": "/api/company/search-company",
-  "routeFile": "routes/company.js:75",
+  "routeFile": "routes/company.js:85",
   "handler": "searchingCompany",
   "middlewares": [],
-  "source": "controller/company.js:150",
+  "source": "controller/company.js:158",
   "viaFactory": null,
   "body": [
    "address?",
    "company_logo?",
    "company_name?",
+   "email_branding?",
    "employees?",
    "industry?",
    "location?",
@@ -1815,6 +1811,7 @@
    "stripe_customer_id": "string",
    "employees": "unknown[]",
    "company_logo": "string",
+   "email_branding": "boolean",
    "stripe_connected_account": "Record<string, unknown>",
    "structure": "Record<string, unknown>",
    "roleLabels": "Record<string, unknown>"
@@ -1834,10 +1831,12 @@
  {
   "method": "POST",
   "endpoint": "/api/company/signatures-for-consumer-member",
-  "routeFile": "routes/company.js:104",
+  "routeFile": "routes/company.js:116",
   "handler": "collectingSignaturesForConsumerMember",
-  "middlewares": [],
-  "source": "controller/document.js:397",
+  "middlewares": [
+   "optionalJWT"
+  ],
+  "source": "controller/document.js:545",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -1870,16 +1869,17 @@
   "notes": [],
   "statusCodes": [
    "200",
+   "409",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/company/signatures",
-  "routeFile": "routes/company.js:101",
+  "routeFile": "routes/company.js:111",
   "handler": "collectingSignatures",
   "middlewares": [],
-  "source": "controller/document.js:324",
+  "source": "controller/document.js:460",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -1918,7 +1918,7 @@
  {
   "method": "PATCH",
   "endpoint": "/api/company/update_provider/:id",
-  "routeFile": "routes/company.js:88",
+  "routeFile": "routes/company.js:98",
   "handler": "updateProviderCompany",
   "middlewares": [],
   "source": "controller/providerCompany.js:193",
@@ -1958,14 +1958,14 @@
  {
   "method": "PATCH",
   "endpoint": "/api/company/update-company/:id",
-  "routeFile": "routes/company.js:71",
+  "routeFile": "routes/company.js:81",
   "handler": "updatingCompany",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"company\", \"update\")"
   ],
-  "source": "controller/company.js:114",
+  "source": "controller/company.js:115",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -1990,10 +1990,10 @@
  {
   "method": "PATCH",
   "endpoint": "/api/company/update-company/register-process/:id",
-  "routeFile": "routes/company.js:73",
+  "routeFile": "routes/company.js:83",
   "handler": "updatingCompany",
   "middlewares": [],
-  "source": "controller/company.js:114",
+  "source": "controller/company.js:115",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -2018,10 +2018,10 @@
  {
   "method": "PATCH",
   "endpoint": "/api/company/update-signatures",
-  "routeFile": "routes/company.js:118",
+  "routeFile": "routes/company.js:150",
   "handler": "updateStampEventConsumerSignatures",
   "middlewares": [],
-  "source": "controller/document.js:572",
+  "source": "controller/document.js:724",
   "viaFactory": null,
   "body": [
    "signatureID",
@@ -2051,7 +2051,7 @@
   "middlewares": [
    "optionalJWT"
   ],
-  "source": "controller/stripe.js:17",
+  "source": "controller/stripe.js:30",
   "viaFactory": null,
   "body": [
    "email",
@@ -2081,7 +2081,7 @@
   "middlewares": [
    "optionalJWT"
   ],
-  "source": "controller/stripe.js:718",
+  "source": "controller/stripe.js:763",
   "viaFactory": null,
   "body": [
    "email?",
@@ -2119,53 +2119,20 @@
   "middlewares": [
    "optionalJWT"
   ],
-  "source": "controller/auth.js:11",
+  "source": "controller/auth.js:51",
   "viaFactory": null,
-  "body": [
-   "category?",
-   "company_providers?",
-   "email?",
-   "eventSelected?",
-   "event_providers?",
-   "groupName?",
-   "lastName?",
-   "name?",
-   "notes?",
-   "phoneNumber?",
-   "privacyPolicy?",
-   "profile_picture?",
-   "provider?"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phoneNumber": "number",
-   "privacyPolicy": "boolean",
-   "category": "string",
-   "provider": "unknown[]",
-   "eventSelected": "unknown[]",
-   "groupName": "unknown[]",
-   "company_providers": "unknown[]",
-   "event_providers": "unknown[]",
-   "notes": "unknown[]",
-   "profile_picture": "string"
-  },
+  "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `User.find()`: cualquier subconjunto de los campos de `models/User.js` (`{}` trae todo)"
-  ],
-  "statusCodes": [
-   "200",
-   "500"
-  ]
+  "notes": [],
+  "statusCodes": []
  },
  {
   "method": "POST",
@@ -2175,53 +2142,20 @@
   "middlewares": [
    "optionalJWT"
   ],
-  "source": "controller/auth.js:11",
+  "source": "controller/auth.js:51",
   "viaFactory": null,
-  "body": [
-   "category?",
-   "company_providers?",
-   "email?",
-   "eventSelected?",
-   "event_providers?",
-   "groupName?",
-   "lastName?",
-   "name?",
-   "notes?",
-   "phoneNumber?",
-   "privacyPolicy?",
-   "profile_picture?",
-   "provider?"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phoneNumber": "number",
-   "privacyPolicy": "boolean",
-   "category": "string",
-   "provider": "unknown[]",
-   "eventSelected": "unknown[]",
-   "groupName": "unknown[]",
-   "company_providers": "unknown[]",
-   "event_providers": "unknown[]",
-   "notes": "unknown[]",
-   "profile_picture": "string"
-  },
-  "ignoresBody": false,
+  "schemaTypes": {},
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `User.find()`: cualquier subconjunto de los campos de `models/User.js` (`{}` trae todo)"
-  ],
-  "statusCodes": [
-   "200",
-   "500"
-  ]
+  "notes": [],
+  "statusCodes": []
  },
  {
   "method": "DELETE",
@@ -2256,7 +2190,7 @@
  {
   "method": "DELETE",
   "endpoint": "/api/db_company/categories/:category_id",
-  "routeFile": "mysql/routes/company.js:205",
+  "routeFile": "mysql/routes/company.js:216",
   "handler": "deleteCategory",
   "middlewares": [
    "validateJWT",
@@ -2292,7 +2226,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/categories/upsert",
-  "routeFile": "mysql/routes/company.js:204",
+  "routeFile": "mysql/routes/company.js:215",
   "handler": "upsertCategory",
   "middlewares": [
    "validateJWT",
@@ -2329,7 +2263,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/categories",
-  "routeFile": "mysql/routes/company.js:202",
+  "routeFile": "mysql/routes/company.js:213",
   "handler": "listCompanyCategories",
   "middlewares": [
    "validateJWT",
@@ -2365,7 +2299,7 @@
   "routeFile": "mysql/routes/company.js:98",
   "handler": "checkInventoryCompanyExists",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1525",
+  "source": "mysql/controllers/item.js:1572",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -2387,13 +2321,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/check-item",
-  "routeFile": "mysql/routes/company.js:196",
+  "routeFile": "mysql/routes/company.js:207",
   "handler": "checkingItem",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:1266",
+  "source": "mysql/controllers/item.js:1313",
   "viaFactory": null,
   "body": [
    "preference",
@@ -2445,7 +2379,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/company-inventory-grouped-full",
-  "routeFile": "mysql/routes/company.js:213",
+  "routeFile": "mysql/routes/company.js:224",
   "handler": "getInventoryGroupedFull",
   "middlewares": [
    "validateJWT",
@@ -2477,10 +2411,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/company-inventory-pagination",
-  "routeFile": "mysql/routes/company.js:104",
+  "routeFile": "mysql/routes/company.js:107",
   "handler": "consultingCompanyInventoryWithPagination",
-  "middlewares": [],
-  "source": "mysql/controllers/item.js:1917",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/item.js:1978",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -2498,19 +2435,20 @@
   "notes": [],
   "statusCodes": [
    "200",
+   "400",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/db_company/company-inventory-structure",
-  "routeFile": "mysql/routes/company.js:116",
+  "routeFile": "mysql/routes/company.js:121",
   "handler": "retrieveItemData",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2405",
+  "source": "mysql/controllers/item.js:2498",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -2537,10 +2475,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/company-inventory-with-current-warehouse-status",
-  "routeFile": "mysql/routes/company.js:119",
+  "routeFile": "mysql/routes/company.js:124",
   "handler": "retrieveCompanyInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2444",
+  "source": "mysql/controllers/item.js:2537",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -2589,13 +2527,13 @@
  {
   "method": "GET",
   "endpoint": "/api/db_company/current-inventory/:company_id",
-  "routeFile": "mysql/routes/company.js:128",
+  "routeFile": "mysql/routes/company.js:133",
   "handler": "checkingInventoryCurrentState",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:1239",
+  "source": "mysql/controllers/item.js:1286",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -2619,10 +2557,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/delete-bulk-items",
-  "routeFile": "mysql/routes/company.js:193",
+  "routeFile": "mysql/routes/company.js:204",
   "handler": "deleteBulkItems",
-  "middlewares": [],
-  "source": "mysql/controllers/item.js:3645",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"delete\")"
+  ],
+  "source": "mysql/controllers/item.js:3775",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -2630,9 +2572,13 @@
   ],
   "params": [],
   "query": [],
-  "headers": [],
+  "headers": [
+   "Idempotency-Key",
+   "idempotency-key"
+  ],
   "required": [
-   "company_id"
+   "company_id",
+   "item_ids"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -2642,6 +2588,7 @@
   "notes": [],
   "statusCodes": [
    "200",
+   "202",
    "400",
    "403",
    "500"
@@ -2650,10 +2597,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/filter-suppliers-info-items",
-  "routeFile": "mysql/routes/company.js:190",
+  "routeFile": "mysql/routes/company.js:195",
   "handler": "filterSuppliersInfoItems",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:3607",
+  "source": "mysql/controllers/item.js:3719",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -2676,10 +2623,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/get-grouped-inventory-by-search-parameter",
-  "routeFile": "mysql/routes/company.js:187",
+  "routeFile": "mysql/routes/company.js:192",
   "handler": "getGroupedInventoryBySearchParameter",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:3476",
+  "source": "mysql/controllers/item.js:3588",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -2707,10 +2654,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/get-inventory-company",
-  "routeFile": "mysql/routes/company.js:131",
+  "routeFile": "mysql/routes/company.js:136",
   "handler": "getGroupedItemInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1849",
+  "source": "mysql/controllers/item.js:1896",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -2733,13 +2680,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/get-location-item-types-hierarchy",
-  "routeFile": "mysql/routes/company.js:179",
+  "routeFile": "mysql/routes/company.js:184",
   "handler": "getInventoryHierarchyWithTypes",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:3333",
+  "source": "mysql/controllers/item.js:3445",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -2766,7 +2713,7 @@
  {
   "method": "DELETE",
   "endpoint": "/api/db_company/groups/:group_id",
-  "routeFile": "mysql/routes/company.js:210",
+  "routeFile": "mysql/routes/company.js:221",
   "handler": "deleteGroup",
   "middlewares": [
    "validateJWT",
@@ -2802,7 +2749,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/groups/upsert",
-  "routeFile": "mysql/routes/company.js:209",
+  "routeFile": "mysql/routes/company.js:220",
   "handler": "upsertGroup",
   "middlewares": [
    "validateJWT",
@@ -2839,7 +2786,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/groups",
-  "routeFile": "mysql/routes/company.js:208",
+  "routeFile": "mysql/routes/company.js:219",
   "handler": "listCompanyGroups",
   "middlewares": [
    "validateJWT",
@@ -2896,10 +2843,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/insert-new-single-item",
-  "routeFile": "mysql/routes/company.js:125",
+  "routeFile": "mysql/routes/company.js:130",
   "handler": "insertingItem",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:159",
+  "source": "mysql/controllers/item.js:163",
   "viaFactory": null,
   "body": [
    "brand",
@@ -2949,10 +2896,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/inventory-based-on-location-and-sublocation",
-  "routeFile": "mysql/routes/company.js:110",
+  "routeFile": "mysql/routes/company.js:115",
   "handler": "consultingCompanyInventoryBasedOnLocationAndSubLocation",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1994",
+  "source": "mysql/controllers/item.js:2087",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -2984,13 +2931,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/inventory-based-on-submitted-parameters",
-  "routeFile": "mysql/routes/company.js:134",
+  "routeFile": "mysql/routes/company.js:139",
   "handler": "consultingCompanyInventoryBasedOnSubmittedParameters",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2358",
+  "source": "mysql/controllers/item.js:2451",
   "viaFactory": null,
   "body": [
    "query",
@@ -3014,13 +2961,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/inventory-query",
-  "routeFile": "mysql/routes/company.js:144",
+  "routeFile": "mysql/routes/company.js:149",
   "handler": "runNamedInventoryQuery",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2318",
+  "source": "mysql/controllers/item.js:2411",
   "viaFactory": null,
   "body": [
    "params",
@@ -3047,14 +2994,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/locations",
-  "routeFile": "mysql/routes/company.js:203",
+  "routeFile": "mysql/routes/company.js:214",
   "handler": "listCompanyLocations",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"read\")"
   ],
-  "source": "mysql/controllers/location.js:559",
+  "source": "mysql/controllers/location.js:620",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -3116,7 +3063,7 @@
   "routeFile": "mysql/routes/company.js:74",
   "handler": "retrieveCompanyInventoryBasedOnParams",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:4011",
+  "source": "mysql/controllers/item.js:4174",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -3148,10 +3095,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/retrieve-company-items-with-locations",
-  "routeFile": "mysql/routes/company.js:199",
+  "routeFile": "mysql/routes/company.js:210",
   "handler": "retrieveCompanyInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2444",
+  "source": "mysql/controllers/item.js:2537",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -3174,13 +3121,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/return-event-devices",
-  "routeFile": "mysql/routes/company.js:154",
+  "routeFile": "mysql/routes/company.js:159",
   "handler": "returnEventDevicesToWarehouse",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2153",
+  "source": "mysql/controllers/item.js:2246",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -3215,7 +3162,7 @@
   "routeFile": "mysql/routes/company.js:87",
   "handler": "returningLeasedEquipmentToCompany",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:832",
+  "source": "mysql/controllers/item.js:879",
   "viaFactory": null,
   "body": [
    "enableAssignFeature",
@@ -3246,7 +3193,7 @@
   "routeFile": "mysql/routes/company.js:95",
   "handler": "searchingGetInventoryTracking",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1361",
+  "source": "mysql/controllers/item.js:1408",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -3272,7 +3219,7 @@
   "routeFile": "mysql/routes/company.js:92",
   "handler": "searchingInventoryTracking",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1314",
+  "source": "mysql/controllers/item.js:1361",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -3332,10 +3279,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/update-all-items-in-inventory",
-  "routeFile": "mysql/routes/company.js:162",
+  "routeFile": "mysql/routes/company.js:167",
   "handler": "updateAllItemsInInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2537",
+  "source": "mysql/controllers/item.js:2630",
   "viaFactory": null,
   "body": [
    "brand",
@@ -3383,7 +3330,7 @@
   "routeFile": "mysql/routes/company.js:101",
   "handler": "updateContentInContainerItem",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1618",
+  "source": "mysql/controllers/item.js:1665",
   "viaFactory": null,
   "body": [
    "container_items",
@@ -3454,23 +3401,21 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/update-items-based-on-alphanumeric-serial-number",
-  "routeFile": "mysql/routes/company.js:165",
+  "routeFile": "mysql/routes/company.js:170",
   "handler": "updateItemsBasedOnAlphanumericSerialNumber",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2743",
+  "source": "mysql/controllers/item.js:2836",
   "viaFactory": "createQueuedJobController",
-  "body": [
-   "id"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
@@ -3484,10 +3429,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_company/update-items-based-on-serial-number",
-  "routeFile": "mysql/routes/company.js:173",
+  "routeFile": "mysql/routes/company.js:178",
   "handler": "updateItemsBasedOnSerialNumber",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2625",
+  "source": "mysql/controllers/item.js:2718",
   "viaFactory": null,
   "body": [
    "brand",
@@ -3608,40 +3553,40 @@
  {
   "method": "DELETE",
   "endpoint": "/api/db_consumer/:id",
-  "routeFile": "mysql/routes/consumers.js:24",
+  "routeFile": "mysql/routes/consumers.js:28",
   "handler": "deleteCustomer",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"consumer\", \"delete\")"
   ],
-  "source": "mysql/controllers/consumer.js:50",
-  "viaFactory": null,
-  "body": [
-   "consumer_id"
-  ],
+  "source": "mysql/controllers/consumer.js:124",
+  "viaFactory": "createDeleteCustomer",
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
   "notes": [],
   "statusCodes": [
    "200",
+   "400",
+   "404",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/db_consumer/consulting-consumer",
-  "routeFile": "mysql/routes/consumers.js:15",
+  "routeFile": "mysql/routes/consumers.js:17",
   "handler": "consultingConsumerInfo",
   "middlewares": [],
-  "source": "mysql/controllers/consumer.js:24",
+  "source": "mysql/controllers/consumer.js:25",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -3666,10 +3611,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_consumer/consumers_information",
-  "routeFile": "mysql/routes/consumers.js:18",
+  "routeFile": "mysql/routes/consumers.js:20",
   "handler": "consultingConsumerTable",
   "middlewares": [],
-  "source": "mysql/controllers/consumer.js:39",
+  "source": "mysql/controllers/consumer.js:40",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -3690,10 +3635,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_consumer/new_consumer",
-  "routeFile": "mysql/routes/consumers.js:21",
+  "routeFile": "mysql/routes/consumers.js:25",
   "handler": "insertingCustomer",
-  "middlewares": [],
-  "source": "mysql/controllers/consumer.js:5",
+  "middlewares": [
+   "optionalJWT",
+   "requireSessionFromDashboard"
+  ],
+  "source": "mysql/controllers/consumer.js:6",
   "viaFactory": null,
   "body": [
    "email",
@@ -3719,36 +3667,40 @@
  {
   "method": "DELETE",
   "endpoint": "/api/db_event/:id",
-  "routeFile": "mysql/routes/events.js:97",
+  "routeFile": "mysql/routes/events.js:98",
   "handler": "deleteEvent",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"event\", \"delete\")"
   ],
-  "source": "mysql/controllers/events.js:239",
+  "source": "mysql/controllers/events.js:251",
   "viaFactory": null,
-  "body": [
-   "email"
+  "body": [],
+  "params": [
+   "id"
   ],
-  "params": [],
   "query": [],
   "headers": [],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
   "notes": [],
   "statusCodes": [
-   "201"
+   "200",
+   "400",
+   "404",
+   "409",
+   "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/db_event/allocate-device-container-event",
-  "routeFile": "mysql/routes/events.js:197",
+  "routeFile": "mysql/routes/events.js:198",
   "handler": "allocateDeviceMarkedAsContainerInEvent",
   "middlewares": [
    "validateJWT",
@@ -3770,6 +3722,7 @@
   "headers": [],
   "required": [
    "company_id",
+   "data",
    "event_id"
   ],
   "schemaTypes": {},
@@ -3788,7 +3741,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/allocate-device-event",
-  "routeFile": "mysql/routes/events.js:189",
+  "routeFile": "mysql/routes/events.js:190",
   "handler": "allocateDeviceToEvent",
   "middlewares": [
    "validateJWT",
@@ -3827,10 +3780,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/confirm-item-return",
-  "routeFile": "mysql/routes/events.js:86",
+  "routeFile": "mysql/routes/events.js:87",
   "handler": "confirmItemsReturnedToStock",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:3824",
+  "source": "mysql/controllers/item.js:3987",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -3847,6 +3800,7 @@
   "required": [
    "company_id",
    "noSqlEventName",
+   "serial_numbers",
    "user_id"
   ],
   "schemaTypes": {},
@@ -3864,10 +3818,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/consulting-event",
-  "routeFile": "mysql/routes/events.js:51",
+  "routeFile": "mysql/routes/events.js:52",
   "handler": "consultingEventInformation",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:145",
+  "source": "mysql/controllers/events.js:146",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -3893,10 +3847,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/device-final-status-refactored",
-  "routeFile": "mysql/routes/events.js:92",
+  "routeFile": "mysql/routes/events.js:93",
   "handler": "itemFinalStatusWhenEventIsFinishedRefactored",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1179",
+  "source": "mysql/controllers/item.js:1226",
   "viaFactory": null,
   "body": [
    "allInventoryOfEvent",
@@ -3922,10 +3876,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/device-final-status",
-  "routeFile": "mysql/routes/events.js:89",
+  "routeFile": "mysql/routes/events.js:90",
   "handler": "itemFinalStatusWhenEventIsFinished",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1152",
+  "source": "mysql/controllers/item.js:1199",
   "viaFactory": null,
   "body": [
    "condition",
@@ -3952,7 +3906,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/event_device_directly",
-  "routeFile": "mysql/routes/events.js:72",
+  "routeFile": "mysql/routes/events.js:73",
   "handler": "insertingDeviceInEventDirectly",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:280",
@@ -3979,7 +3933,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/event_device",
-  "routeFile": "mysql/routes/events.js:69",
+  "routeFile": "mysql/routes/events.js:70",
   "handler": "insertingItemInEvent",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:46",
@@ -4004,10 +3958,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/event_staff",
-  "routeFile": "mysql/routes/events.js:66",
+  "routeFile": "mysql/routes/events.js:67",
   "handler": "insertingStaffInEvent",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:261",
+  "source": "mysql/controllers/events.js:294",
   "viaFactory": null,
   "body": [
    "event_id",
@@ -4029,12 +3983,76 @@
   ]
  },
  {
+  "method": "POST",
+  "endpoint": "/api/db_event/event-count/close",
+  "routeFile": "mysql/routes/events.js:232",
+  "handler": "closeEventCount",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"update\")"
+  ],
+  "source": "mysql/controllers/eventCount.js:242",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "event_id",
+   "scanned"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/db_event/event-count/reconcile",
+  "routeFile": "mysql/routes/events.js:224",
+  "handler": "reconcileEventCount",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"read\")"
+  ],
+  "source": "mysql/controllers/eventCount.js:205",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "event_id",
+   "scanned"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "500"
+  ]
+ },
+ {
   "method": "GET",
   "endpoint": "/api/db_event/event-inventory/:id",
-  "routeFile": "mysql/routes/events.js:100",
+  "routeFile": "mysql/routes/events.js:101",
   "handler": "consultingInventoryEvent",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:290",
+  "source": "mysql/controllers/events.js:329",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -4057,7 +4075,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/event-inventory/:id",
-  "routeFile": "mysql/routes/events.js:75",
+  "routeFile": "mysql/routes/events.js:76",
   "handler": "consultingInventoryInEvent",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:413",
@@ -4083,10 +4101,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/events_company",
-  "routeFile": "mysql/routes/events.js:57",
+  "routeFile": "mysql/routes/events.js:58",
   "handler": "consultingEventsPerCompany",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:211",
+  "source": "mysql/controllers/events.js:212",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -4107,10 +4125,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/events_information",
-  "routeFile": "mysql/routes/events.js:54",
+  "routeFile": "mysql/routes/events.js:55",
   "handler": "consultingEventTable",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:178",
+  "source": "mysql/controllers/events.js:179",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -4136,7 +4154,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/inserting-items-in-event-from-container",
-  "routeFile": "mysql/routes/events.js:122",
+  "routeFile": "mysql/routes/events.js:123",
   "handler": "insertingDeviceInEventDirectlyFromContainer",
   "middlewares": [
    "validateJWT",
@@ -4146,7 +4164,6 @@
   "viaFactory": "createQueuedJobController",
   "body": [
    "event_id",
-   "id",
    "refDatabase"
   ],
   "params": [],
@@ -4171,13 +4188,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/inventory-based-on-submitted-parameters",
-  "routeFile": "mysql/routes/events.js:161",
+  "routeFile": "mysql/routes/events.js:162",
   "handler": "consultingCompanyInventoryBasedOnSubmittedParameters",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2358",
+  "source": "mysql/controllers/item.js:2451",
   "viaFactory": null,
   "body": [
    "query",
@@ -4201,13 +4218,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/inventory-query",
-  "routeFile": "mysql/routes/events.js:171",
+  "routeFile": "mysql/routes/events.js:172",
   "handler": "runNamedInventoryQuery",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2318",
+  "source": "mysql/controllers/item.js:2411",
   "viaFactory": null,
   "body": [
    "params",
@@ -4234,7 +4251,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/lock-items-for-event",
-  "routeFile": "mysql/routes/events.js:217",
+  "routeFile": "mysql/routes/events.js:218",
   "handler": "lockItemsForEvent",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:823",
@@ -4249,7 +4266,8 @@
   "headers": [],
   "required": [
    "company_id",
-   "event_id"
+   "event_id",
+   "items"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -4266,10 +4284,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/new_event",
-  "routeFile": "mysql/routes/events.js:60",
+  "routeFile": "mysql/routes/events.js:61",
   "handler": "insertingEvent",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:32",
+  "source": "mysql/controllers/events.js:33",
   "viaFactory": null,
   "body": [
    "city_address",
@@ -4300,7 +4318,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/remove-item-inventory-event",
-  "routeFile": "mysql/routes/events.js:103",
+  "routeFile": "mysql/routes/events.js:104",
   "handler": "deletingItemsInEventAfterDeviceInventoryIsUpdated",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:301",
@@ -4329,7 +4347,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/remove-reserved-items-for-event",
-  "routeFile": "mysql/routes/events.js:214",
+  "routeFile": "mysql/routes/events.js:215",
   "handler": "removeReservedItemsInInventoryForEvent",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:917",
@@ -4357,7 +4375,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/reserve-items-for-event",
-  "routeFile": "mysql/routes/events.js:206",
+  "routeFile": "mysql/routes/events.js:207",
   "handler": "reserveItemsInInventoryForEvent",
   "middlewares": [
    "validateJWT",
@@ -4388,13 +4406,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/retrieve-item-group-location-quantity",
-  "routeFile": "mysql/routes/events.js:143",
+  "routeFile": "mysql/routes/events.js:144",
   "handler": "getGroupedItemInventory",
   "middlewares": [
    "validateJWT",
    "authorizePermission(\"event\", \"read\")"
   ],
-  "source": "mysql/controllers/item.js:1849",
+  "source": "mysql/controllers/item.js:1896",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -4417,10 +4435,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/retrieve-item-group-quantity-with-format",
-  "routeFile": "mysql/routes/events.js:151",
+  "routeFile": "mysql/routes/events.js:152",
   "handler": "getGroupedItemWithFormatInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2059",
+  "source": "mysql/controllers/item.js:2152",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -4441,10 +4459,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/retrieve-item-location-quantity-full-details",
-  "routeFile": "mysql/routes/events.js:136",
+  "routeFile": "mysql/routes/events.js:137",
   "handler": "consultItemDataFromSerialNumber",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1778",
+  "source": "mysql/controllers/item.js:1825",
   "viaFactory": null,
   "body": [
    "category_name?",
@@ -4480,10 +4498,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/retrieve-item-location-quantity",
-  "routeFile": "mysql/routes/events.js:130",
+  "routeFile": "mysql/routes/events.js:131",
   "handler": "retrieveItemLocationQuantityForEvent",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1704",
+  "source": "mysql/controllers/item.js:1751",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -4511,13 +4529,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/return-event-devices",
-  "routeFile": "mysql/routes/events.js:181",
+  "routeFile": "mysql/routes/events.js:182",
   "handler": "returnEventDevicesToWarehouse",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2153",
+  "source": "mysql/controllers/item.js:2246",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -4549,10 +4567,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/returning-item-refactored",
-  "routeFile": "mysql/routes/events.js:81",
+  "routeFile": "mysql/routes/events.js:82",
   "handler": "returningItemToStockWhenEventIsFinishedRefactored",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1052",
+  "source": "mysql/controllers/item.js:1099",
   "viaFactory": null,
   "body": [
    "allInventoryOfEvent",
@@ -4583,10 +4601,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/returning-item",
-  "routeFile": "mysql/routes/events.js:78",
+  "routeFile": "mysql/routes/events.js:79",
   "handler": "returningItemToStockWhenEventIsFinished",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1005",
+  "source": "mysql/controllers/item.js:1052",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -4614,10 +4632,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/update-event/:event_id",
-  "routeFile": "mysql/routes/events.js:63",
+  "routeFile": "mysql/routes/events.js:64",
   "handler": "updateEventInfo",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:81",
+  "source": "mysql/controllers/events.js:82",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -4646,10 +4664,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/update-item-in-table-after-being-added-to-event-from-container",
-  "routeFile": "mysql/routes/events.js:112",
+  "routeFile": "mysql/routes/events.js:113",
   "handler": "updateItemInTableAfterBeingAddedToEventFromContainer",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1648",
+  "source": "mysql/controllers/item.js:1695",
   "viaFactory": null,
   "body": [
    "refDatabase",
@@ -4673,10 +4691,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_event/update-status-item-based-on-event",
-  "routeFile": "mysql/routes/events.js:109",
+  "routeFile": "mysql/routes/events.js:110",
   "handler": "updateStatusItemBasedOnEvent",
   "middlewares": [],
-  "source": "mysql/controllers/events.js:325",
+  "source": "mysql/controllers/events.js:364",
   "viaFactory": null,
   "body": [
    "event_id",
@@ -4699,13 +4717,115 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/db_identifier/by-items",
+  "routeFile": "mysql/routes/identifier.js:39",
+  "handler": "getIdentifiersByItems",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"read\")"
+  ],
+  "source": "mysql/controllers/identifier.js:311",
+  "viaFactory": null,
+  "body": [
+   "item_ids"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "item_ids"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/db_identifier/register-bulk",
+  "routeFile": "mysql/routes/identifier.js:36",
+  "handler": "registerIdentifiersBulk",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"update\")"
+  ],
+  "source": "mysql/controllers/identifier.js:181",
+  "viaFactory": null,
+  "body": [
+   "identifiers"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "identifiers"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/db_identifier/register",
+  "routeFile": "mysql/routes/identifier.js:33",
+  "handler": "registerIdentifier",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"update\")"
+  ],
+  "source": "mysql/controllers/identifier.js:76",
+  "viaFactory": null,
+  "body": [
+   "id_type",
+   "id_value",
+   "item_id"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "201",
+   "400",
+   "404",
+   "409",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/db_inventory/check-item",
   "routeFile": "mysql/routes/inventory.js:33",
   "handler": "checkingItem",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "mysql/controllers/item.js:1266",
+  "source": "mysql/controllers/item.js:1313",
   "viaFactory": null,
   "body": [
    "preference",
@@ -4740,7 +4860,7 @@
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"read\")"
   ],
-  "source": "mysql/controllers/item.js:3064",
+  "source": "mysql/controllers/item.js:3157",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -4750,7 +4870,8 @@
   "query": [],
   "headers": [],
   "required": [
-   "company_id"
+   "company_id",
+   "item_ids"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -4770,7 +4891,7 @@
   "routeFile": "mysql/routes/inventory.js:35",
   "handler": "getContainerItems",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2822",
+  "source": "mysql/controllers/item.js:2915",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -4802,7 +4923,7 @@
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2755",
+  "source": "mysql/controllers/item.js:2848",
   "viaFactory": null,
   "body": [
    "child_ids",
@@ -4832,7 +4953,7 @@
   "routeFile": "mysql/routes/inventory.js:37",
   "handler": "deleteContainerItem",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:2935",
+  "source": "mysql/controllers/item.js:3028",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -4864,7 +4985,7 @@
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2991",
+  "source": "mysql/controllers/item.js:3084",
   "viaFactory": null,
   "body": [
    "child_ids"
@@ -4875,6 +4996,7 @@
   "query": [],
   "headers": [],
   "required": [
+   "child_ids",
    "container_item_id"
   ],
   "schemaTypes": {},
@@ -4892,14 +5014,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_inventory/update-large-data",
-  "routeFile": "mysql/routes/inventory.js:46",
+  "routeFile": "mysql/routes/inventory.js:55",
   "handler": "updateLargeData",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"update\")"
   ],
-  "source": "mysql/controllers/item.js:3153",
+  "source": "mysql/controllers/item.js:3246",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -4921,13 +5043,16 @@
  {
   "method": "POST",
   "endpoint": "/api/db_inventory/update-location-sub-location",
-  "routeFile": "mysql/routes/inventory.js:43",
+  "routeFile": "mysql/routes/inventory.js:46",
   "handler": "updateSubLocation",
-  "middlewares": [],
-  "source": "mysql/controllers/item.js:3171",
-  "viaFactory": null,
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"update\")"
+  ],
+  "source": "mysql/controllers/item.js:3443",
+  "viaFactory": "createUpdateSubLocation",
   "body": [
-   "company_id",
    "currentIndex",
    "newName",
    "path"
@@ -4936,9 +5061,9 @@
   "query": [],
   "headers": [],
   "required": [
-   "company_id",
    "currentIndex",
-   "newName"
+   "newName",
+   "path"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -4949,21 +5074,20 @@
   "statusCodes": [
    "200",
    "400",
-   "404",
    "500"
   ]
  },
  {
   "method": "POST",
-  "endpoint": "/api/db_item/:id",
-  "routeFile": "mysql/routes/item.js:101",
+  "endpoint": "/api/db_item/:id(\\\\d+)",
+  "routeFile": "mysql/routes/item.js:148",
   "handler": "deleteItem",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"delete\")"
   ],
-  "source": "mysql/controllers/item.js:606",
+  "source": "mysql/controllers/item.js:610",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -4993,14 +5117,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/bulk-item-alphanumeric",
-  "routeFile": "mysql/routes/item.js:87",
+  "routeFile": "mysql/routes/item.js:120",
   "handler": "insertBulkItemAlhpanumericFormat",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"create\")"
   ],
-  "source": "mysql/controllers/item.js:514",
+  "source": "mysql/controllers/item.js:518",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -5034,15 +5158,52 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/db_item/bulk-item-from-spreadsheet",
+  "routeFile": "mysql/routes/item.js:96",
+  "handler": "postInventoryImport",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/inventoryImport.js:48",
+  "viaFactory": null,
+  "body": [
+   "company",
+   "company_id",
+   "defaults"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [
+   "Idempotency-Key",
+   "idempotency-key"
+  ],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "202",
+   "400",
+   "401",
+   "403",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/db_item/bulk-item",
-  "routeFile": "mysql/routes/item.js:84",
+  "routeFile": "mysql/routes/item.js:117",
   "handler": "insertBulkItem",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"create\")"
   ],
-  "source": "mysql/controllers/item.js:429",
+  "source": "mysql/controllers/item.js:433",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -5079,10 +5240,10 @@
  {
   "method": "GET",
   "endpoint": "/api/db_item/check-company-has-inventory",
-  "routeFile": "mysql/routes/item.js:140",
+  "routeFile": "mysql/routes/item.js:187",
   "handler": "checkingIfCompanyHasInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1681",
+  "source": "mysql/controllers/item.js:1728",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -5105,7 +5266,7 @@
  {
   "method": "GET",
   "endpoint": "/api/db_item/check-inventory/:company_id",
-  "routeFile": "mysql/routes/item.js:125",
+  "routeFile": "mysql/routes/item.js:172",
   "handler": "checkingInventoryCurrentState",
   "middlewares": [
    "validateJWT"
@@ -5134,12 +5295,12 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/check-item",
-  "routeFile": "mysql/routes/item.js:122",
+  "routeFile": "mysql/routes/item.js:169",
   "handler": "checkingItem",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "mysql/controllers/item.js:1266",
+  "source": "mysql/controllers/item.js:1313",
   "viaFactory": null,
   "body": [
    "preference",
@@ -5167,10 +5328,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/consulting-item",
-  "routeFile": "mysql/routes/item.js:63",
+  "routeFile": "mysql/routes/item.js:70",
   "handler": "consultingItem",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:580",
+  "source": "mysql/controllers/item.js:584",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -5196,7 +5357,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/consulting-row-item-assigned-event",
-  "routeFile": "mysql/routes/item.js:110",
+  "routeFile": "mysql/routes/item.js:157",
   "handler": "consultingRowInItemInvAssignedEventTable",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:438",
@@ -5223,7 +5384,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/current-inventory",
-  "routeFile": "mysql/routes/item.js:72",
+  "routeFile": "mysql/routes/item.js:105",
   "handler": "consultingInventoryCurrentState",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:330",
@@ -5251,14 +5412,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/delete-bulk-items-criteria",
-  "routeFile": "mysql/routes/item.js:57",
+  "routeFile": "mysql/routes/item.js:64",
   "handler": "deleteBulkItemBasedOnCriteria",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"delete\")"
   ],
-  "source": "mysql/controllers/item.js:3923",
+  "source": "mysql/controllers/item.js:4086",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -5290,14 +5451,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/delete-bulk-items",
-  "routeFile": "mysql/routes/item.js:107",
+  "routeFile": "mysql/routes/item.js:154",
   "handler": "deleteBulkItems",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"delete\")"
   ],
-  "source": "mysql/controllers/item.js:3645",
+  "source": "mysql/controllers/item.js:3775",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -5305,9 +5466,13 @@
   ],
   "params": [],
   "query": [],
-  "headers": [],
+  "headers": [
+   "Idempotency-Key",
+   "idempotency-key"
+  ],
   "required": [
-   "company_id"
+   "company_id",
+   "item_ids"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -5317,6 +5482,7 @@
   "notes": [],
   "statusCodes": [
    "200",
+   "202",
    "400",
    "403",
    "500"
@@ -5325,14 +5491,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/delete-item",
-  "routeFile": "mysql/routes/item.js:104",
+  "routeFile": "mysql/routes/item.js:151",
   "handler": "deleteItem",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"delete\")"
   ],
-  "source": "mysql/controllers/item.js:606",
+  "source": "mysql/controllers/item.js:610",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -5362,21 +5528,20 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/edit-item",
-  "routeFile": "mysql/routes/item.js:90",
+  "routeFile": "mysql/routes/item.js:123",
   "handler": "updateItemInTable",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"update\")"
   ],
-  "source": "mysql/controllers/item.js:705",
+  "source": "mysql/controllers/item.js:752",
   "viaFactory": null,
   "body": [
    "brand?",
    "category_name?",
    "company?",
    "company_id",
-   "company_id?",
    "container?",
    "containerSpotLimit?",
    "container_id?",
@@ -5467,7 +5632,7 @@
  {
   "method": "PUT",
   "endpoint": "/api/db_item/event-items/bulk-update",
-  "routeFile": "mysql/routes/item.js:54",
+  "routeFile": "mysql/routes/item.js:61",
   "handler": "bulkUpdateEventItemShipping",
   "middlewares": [
    "validateJWT",
@@ -5475,15 +5640,13 @@
   ],
   "source": "mysql/controllers/items_events.js:67",
   "viaFactory": "createQueuedJobController",
-  "body": [
-   "id"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
@@ -5497,7 +5660,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/event-items/search",
-  "routeFile": "mysql/routes/item.js:52",
+  "routeFile": "mysql/routes/item.js:59",
   "handler": "getEventItemShipping",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:136",
@@ -5528,7 +5691,7 @@
  {
   "method": "DELETE",
   "endpoint": "/api/db_item/event-items",
-  "routeFile": "mysql/routes/item.js:53",
+  "routeFile": "mysql/routes/item.js:60",
   "handler": "removeEventItemShipping",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:83",
@@ -5541,7 +5704,8 @@
   "query": [],
   "headers": [],
   "required": [
-   "event_id"
+   "event_id",
+   "items"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -5559,7 +5723,7 @@
  {
   "method": "PUT",
   "endpoint": "/api/db_item/event-items",
-  "routeFile": "mysql/routes/item.js:51",
+  "routeFile": "mysql/routes/item.js:58",
   "handler": "updateEventItemShipping",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:205",
@@ -5576,6 +5740,7 @@
   "required": [
    "company_id",
    "event_id",
+   "items",
    "updates"
   ],
   "schemaTypes": {},
@@ -5593,10 +5758,10 @@
  {
   "method": "GET",
   "endpoint": "/api/db_item/fragment-data",
-  "routeFile": "mysql/routes/item.js:128",
+  "routeFile": "mysql/routes/item.js:175",
   "handler": "fragmentData",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1408",
+  "source": "mysql/controllers/item.js:1455",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -5618,10 +5783,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/get-inventory-company",
-  "routeFile": "mysql/routes/item.js:190",
+  "routeFile": "mysql/routes/item.js:240",
   "handler": "getGroupedItemInventory",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1849",
+  "source": "mysql/controllers/item.js:1896",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -5644,7 +5809,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/inventory_event/:id",
-  "routeFile": "mysql/routes/item.js:75",
+  "routeFile": "mysql/routes/item.js:108",
   "handler": "consultingInventoryInEvent",
   "middlewares": [],
   "source": "mysql/controllers/items_events.js:413",
@@ -5670,10 +5835,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/inventory-based-on-location-and-sublocation",
-  "routeFile": "mysql/routes/item.js:152",
+  "routeFile": "mysql/routes/item.js:202",
   "handler": "consultingCompanyInventoryBasedOnLocationAndSubLocation",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1994",
+  "source": "mysql/controllers/item.js:2087",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -5705,13 +5870,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/inventory-based-on-submitted-parameters",
-  "routeFile": "mysql/routes/item.js:162",
+  "routeFile": "mysql/routes/item.js:212",
   "handler": "consultingCompanyInventoryBasedOnSubmittedParameters",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2358",
+  "source": "mysql/controllers/item.js:2451",
   "viaFactory": null,
   "body": [
    "query",
@@ -5734,11 +5899,117 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/db_item/inventory-export",
+  "routeFile": "mysql/routes/item.js:90",
+  "handler": "postInventoryExport",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/inventoryExport.js:36",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "filters",
+   "search",
+   "sortBy",
+   "sortDir"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [
+   "Idempotency-Key",
+   "idempotency-key"
+  ],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "202",
+   "400",
+   "401",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/db_item/inventory-facets",
+  "routeFile": "mysql/routes/item.js:83",
+  "handler": "getInventoryFacets",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/inventoryPage.js:132",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "facets",
+   "filters",
+   "search"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/db_item/inventory-page",
+  "routeFile": "mysql/routes/item.js:82",
+  "handler": "getInventoryPage",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/inventoryPage.js:96",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "cursor",
+   "filters",
+   "pageSize",
+   "search",
+   "sortBy",
+   "sortDir"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/db_item/inventory-pagination",
-  "routeFile": "mysql/routes/item.js:149",
+  "routeFile": "mysql/routes/item.js:199",
   "handler": "consultingCompanyInventoryWithPagination",
-  "middlewares": [],
-  "source": "mysql/controllers/item.js:1917",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/item.js:1978",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -5756,19 +6027,20 @@
   "notes": [],
   "statusCodes": [
    "200",
+   "400",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/db_item/inventory-query",
-  "routeFile": "mysql/routes/item.js:172",
+  "routeFile": "mysql/routes/item.js:222",
   "handler": "runNamedInventoryQuery",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2318",
+  "source": "mysql/controllers/item.js:2411",
   "viaFactory": null,
   "body": [
    "params",
@@ -5795,14 +6067,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/item-out-warehouse",
-  "routeFile": "mysql/routes/item.js:97",
+  "routeFile": "mysql/routes/item.js:130",
   "handler": "updateItemInWarehouseAfterBeingAddedToEvent",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"update\")"
   ],
-  "source": "mysql/controllers/item.js:890",
+  "source": "mysql/controllers/item.js:937",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -5818,6 +6090,7 @@
   "required": [
    "category_name",
    "company_id",
+   "data",
    "item_group",
    "logistic_status"
   ],
@@ -5838,20 +6111,21 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/items_information",
-  "routeFile": "mysql/routes/item.js:69",
+  "routeFile": "mysql/routes/item.js:102",
   "handler": "consultingItemTable",
-  "middlewares": [],
-  "source": "mysql/controllers/item.js:654",
-  "viaFactory": null,
-  "body": [
-   "company"
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
   ],
+  "source": "mysql/controllers/item.js:669",
+  "viaFactory": null,
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
@@ -5864,10 +6138,10 @@
  {
   "method": "GET",
   "endpoint": "/api/db_item/location-count",
-  "routeFile": "mysql/routes/item.js:131",
+  "routeFile": "mysql/routes/item.js:178",
   "handler": "gettingDataFromLocationOption",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1473",
+  "source": "mysql/controllers/item.js:1520",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -5889,14 +6163,14 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/new_item",
-  "routeFile": "mysql/routes/item.js:81",
+  "routeFile": "mysql/routes/item.js:114",
   "handler": "insertingItem",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizePermission(\"inventory\", \"create\")"
   ],
-  "source": "mysql/controllers/item.js:159",
+  "source": "mysql/controllers/item.js:163",
   "viaFactory": null,
   "body": [
    "brand",
@@ -5946,12 +6220,12 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/retrieve-item-data",
-  "routeFile": "mysql/routes/item.js:192",
+  "routeFile": "mysql/routes/item.js:242",
   "handler": "retrieveItemData",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "mysql/controllers/item.js:2405",
+  "source": "mysql/controllers/item.js:2498",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -5978,10 +6252,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/retrieve-item-location-quantity",
-  "routeFile": "mysql/routes/item.js:143",
+  "routeFile": "mysql/routes/item.js:190",
   "handler": "retrieveItemLocationQuantityForEvent",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1704",
+  "source": "mysql/controllers/item.js:1751",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -6009,13 +6283,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/return-event-devices",
-  "routeFile": "mysql/routes/item.js:182",
+  "routeFile": "mysql/routes/item.js:232",
   "handler": "returnEventDevicesToWarehouse",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion"
   ],
-  "source": "mysql/controllers/item.js:2153",
+  "source": "mysql/controllers/item.js:2246",
   "viaFactory": null,
   "body": [
    "category_name",
@@ -6047,10 +6321,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/returning-item-refactored",
-  "routeFile": "mysql/routes/item.js:134",
+  "routeFile": "mysql/routes/item.js:181",
   "handler": "returningItemToStockWhenEventIsFinishedRefactored",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1052",
+  "source": "mysql/controllers/item.js:1099",
   "viaFactory": null,
   "body": [
    "allInventoryOfEvent",
@@ -6081,10 +6355,10 @@
  {
   "method": "GET",
   "endpoint": "/api/db_item/search-inventory",
-  "routeFile": "mysql/routes/item.js:119",
+  "routeFile": "mysql/routes/item.js:166",
   "handler": "searchingGetInventoryTracking",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1361",
+  "source": "mysql/controllers/item.js:1408",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -6107,10 +6381,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/search-inventory",
-  "routeFile": "mysql/routes/item.js:116",
+  "routeFile": "mysql/routes/item.js:163",
   "handler": "searchingInventoryTracking",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1314",
+  "source": "mysql/controllers/item.js:1361",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -6132,12 +6406,42 @@
   ]
  },
  {
+  "method": "GET",
+  "endpoint": "/api/db_item/serial-suggest",
+  "routeFile": "mysql/routes/item.js:84",
+  "handler": "suggestSerials",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "mysql/controllers/inventoryPage.js:176",
+  "viaFactory": null,
+  "body": [],
+  "params": [],
+  "query": [
+   "company_id",
+   "limit",
+   "q"
+  ],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200"
+  ]
+ },
+ {
   "method": "POST",
   "endpoint": "/api/db_item/tracking_item/:id",
-  "routeFile": "mysql/routes/item.js:78",
+  "routeFile": "mysql/routes/item.js:111",
   "handler": "consultingInventoryTracking",
   "middlewares": [],
-  "source": "mysql/controllers/item.js:1212",
+  "source": "mysql/controllers/item.js:1259",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -6160,12 +6464,12 @@
  {
   "method": "POST",
   "endpoint": "/api/db_item/warehouse-items",
-  "routeFile": "mysql/routes/item.js:66",
+  "routeFile": "mysql/routes/item.js:73",
   "handler": "consultingItemInWarehouseTable",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "mysql/controllers/item.js:673",
+  "source": "mysql/controllers/item.js:720",
   "viaFactory": null,
   "body": [
    "preference",
@@ -6446,19 +6750,26 @@
  },
  {
   "method": "GET",
-  "endpoint": "/api/db_location/companies/:id/location-paths-tree",
-  "routeFile": "mysql/routes/location.js:55",
+  "endpoint": "/api/db_location/companies/:company_id/location-paths-tree",
+  "routeFile": "mysql/routes/location.js:141",
   "handler": "getLocationPathsTree",
-  "middlewares": [],
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"location\", \"read\")"
+  ],
   "source": "mysql/controllers/sub_location_paths.js:58",
   "viaFactory": null,
   "body": [],
   "params": [
+   "company_id",
    "id"
   ],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "company_id"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -6473,19 +6784,26 @@
  },
  {
   "method": "GET",
-  "endpoint": "/api/db_location/companies/:id/locations/tree",
-  "routeFile": "mysql/routes/location.js:42",
+  "endpoint": "/api/db_location/companies/:company_id/locations/tree",
+  "routeFile": "mysql/routes/location.js:87",
   "handler": "getCompanyLocationTree",
-  "middlewares": [],
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"location\", \"read\")"
+  ],
   "source": "mysql/controllers/location.js:357",
   "viaFactory": null,
   "body": [],
   "params": [
+   "company_id",
    "id"
   ],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "company_id"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -6501,7 +6819,7 @@
  {
   "method": "GET",
   "endpoint": "/api/db_location/companies/:id/locations",
-  "routeFile": "mysql/routes/location.js:38",
+  "routeFile": "mysql/routes/location.js:79",
   "handler": "getCompanyLocations",
   "middlewares": [
    "validateJWT"
@@ -6531,7 +6849,7 @@
  {
   "method": "POST",
   "endpoint": "/api/db_location/companies/:id/locations",
-  "routeFile": "mysql/routes/location.js:40",
+  "routeFile": "mysql/routes/location.js:81",
   "handler": "getCompanyLocations",
   "middlewares": [
    "validateJWT"
@@ -6561,9 +6879,12 @@
  {
   "method": "PUT",
   "endpoint": "/api/db_location/locations/:id/inventory",
-  "routeFile": "mysql/routes/location.js:28",
+  "routeFile": "mysql/routes/location.js:66",
   "handler": "bulkAssignInventory",
   "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"update\")",
    "check(\"company_id\", \"Company ID is required\").not().isEmpty()",
    "validateFields"
   ],
@@ -6597,10 +6918,15 @@
  {
   "method": "POST",
   "endpoint": "/api/db_location/locations/:id",
-  "routeFile": "mysql/routes/location.js:26",
+  "routeFile": "mysql/routes/location.js:52",
   "handler": "deleteLocation",
-  "middlewares": [],
-  "source": "mysql/controllers/location.js:515",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "resolveLocationCompanyId",
+   "authorizePermission(\"location\", \"delete\")"
+  ],
+  "source": "mysql/controllers/location.js:563",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -6626,9 +6952,12 @@
  {
   "method": "POST",
   "endpoint": "/api/db_location/locations",
-  "routeFile": "mysql/routes/location.js:16",
+  "routeFile": "mysql/routes/location.js:29",
   "handler": "createLocation",
   "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"location\", \"create\")",
    "check(\"location_name\", \"Location name is required\").not().isEmpty()",
    "validateFields"
   ],
@@ -6662,10 +6991,55 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/db_location/sub-location-path/delete",
+  "routeFile": "mysql/routes/location.js:127",
+  "handler": "deleteSubLocationPath",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"location\", \"delete\")",
+   "check(\"location_id\", \"location_id is required\").not().isEmpty()",
+   "check(\"sub_location_path\", \"sub_location_path must be a non-empty array\").isArray({ min: 1 })",
+   "validateFields"
+  ],
+  "source": "mysql/controllers/sub_location_paths.js:216",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "location_id",
+   "sub_location_path"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "company_id",
+   "location_id",
+   "sub_location_path"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "404",
+   "409",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/db_location/sub-location-path",
-  "routeFile": "mysql/routes/location.js:44",
+  "routeFile": "mysql/routes/location.js:105",
   "handler": "createSubLocationPath",
   "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"location\", \"create\")",
    "check(\"location_id\", \"location_id is required\").not().isEmpty()",
    "check(\"sub_location_path\", \"sub_location_path must be a non-empty array\").isArray({ min: 1 })",
    "validateFields"
@@ -6683,7 +7057,8 @@
   "headers": [],
   "required": [
    "company_id",
-   "location_id"
+   "location_id",
+   "sub_location_path"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -6707,7 +7082,7 @@
   "middlewares": [
    "canCreate"
   ],
-  "source": "mysql/controllers/members.js:194",
+  "source": "mysql/controllers/members.js:204",
   "viaFactory": null,
   "body": [
    "data",
@@ -6741,7 +7116,7 @@
   "middlewares": [
    "canUpdate"
   ],
-  "source": "mysql/controllers/members.js:1890",
+  "source": "mysql/controllers/members.js:1943",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -6779,7 +7154,7 @@
   "middlewares": [
    "canRead"
   ],
-  "source": "mysql/controllers/members.js:684",
+  "source": "mysql/controllers/members.js:736",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -6806,7 +7181,7 @@
   "middlewares": [
    "canDelete"
   ],
-  "source": "mysql/controllers/members.js:1674",
+  "source": "mysql/controllers/members.js:1726",
   "viaFactory": null,
   "body": [
    "where"
@@ -6835,7 +7210,7 @@
   "middlewares": [
    "canDelete"
   ],
-  "source": "mysql/controllers/members.js:642",
+  "source": "mysql/controllers/members.js:694",
   "viaFactory": null,
   "body": [
    "ids",
@@ -6866,7 +7241,7 @@
   "middlewares": [
    "canRead"
   ],
-  "source": "mysql/controllers/members.js:1602",
+  "source": "mysql/controllers/members.js:1654",
   "viaFactory": null,
   "body": [
    "companyId",
@@ -6899,7 +7274,7 @@
   "routeFile": "mysql/routes/members.js:100",
   "handler": "retrieveMyDevices",
   "middlewares": [],
-  "source": "mysql/controllers/members.js:1970",
+  "source": "mysql/controllers/members.js:2023",
   "viaFactory": null,
   "body": [
    "email",
@@ -6933,7 +7308,7 @@
   "middlewares": [
    "canCreate"
   ],
-  "source": "mysql/controllers/members.js:734",
+  "source": "mysql/controllers/members.js:786",
   "viaFactory": null,
   "body": [
    "data",
@@ -6966,7 +7341,7 @@
   "middlewares": [
    "canCreate"
   ],
-  "source": "mysql/controllers/members.js:29",
+  "source": "mysql/controllers/members.js:30",
   "viaFactory": null,
   "body": [
    "address",
@@ -7019,7 +7394,7 @@
   "middlewares": [
    "canRead"
   ],
-  "source": "mysql/controllers/members.js:1831",
+  "source": "mysql/controllers/members.js:1883",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -7051,7 +7426,7 @@
   "middlewares": [
    "canDelete"
   ],
-  "source": "mysql/controllers/members.js:1772",
+  "source": "mysql/controllers/members.js:1824",
   "viaFactory": null,
   "body": [
    "companyId",
@@ -7085,7 +7460,7 @@
   "middlewares": [
    "canRead"
   ],
-  "source": "mysql/controllers/members.js:459",
+  "source": "mysql/controllers/members.js:491",
   "viaFactory": null,
   "body": [
    "where"
@@ -7113,7 +7488,7 @@
   "middlewares": [
    "canUpdate"
   ],
-  "source": "mysql/controllers/members.js:1425",
+  "source": "mysql/controllers/members.js:1477",
   "viaFactory": null,
   "body": [
    "companyId",
@@ -7160,7 +7535,7 @@
   "middlewares": [
    "canUpdate"
   ],
-  "source": "mysql/controllers/members.js:1202",
+  "source": "mysql/controllers/members.js:1254",
   "viaFactory": null,
   "body": [
    "update",
@@ -7190,7 +7565,7 @@
   "middlewares": [
    "canUpdate"
   ],
-  "source": "mysql/controllers/members.js:579",
+  "source": "mysql/controllers/members.js:611",
   "viaFactory": null,
   "body": [
    "dateOfBirth",
@@ -7506,6 +7881,7 @@
    "courier",
    "destination",
    "event_id",
+   "package_list",
    "recipient_name",
    "tracking_number"
   ],
@@ -7842,10 +8218,10 @@
  {
   "method": "GET",
   "endpoint": "/api/db_sub_location/locations/:location_id/sub-locations",
-  "routeFile": "mysql/routes/sub_location.js:24",
+  "routeFile": "mysql/routes/sub_location.js:27",
   "handler": "getSubLocationsHierarchy",
   "middlewares": [],
-  "source": "mysql/controllers/sub_location.js:203",
+  "source": "mysql/controllers/sub_location.js:204",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -7868,10 +8244,14 @@
  {
   "method": "DELETE",
   "endpoint": "/api/db_sub_location/sub-locations/:id",
-  "routeFile": "mysql/routes/sub_location.js:30",
+  "routeFile": "mysql/routes/sub_location.js:46",
   "handler": "deleteSubLocation",
-  "middlewares": [],
-  "source": "mysql/controllers/sub_location.js:288",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"delete\")"
+  ],
+  "source": "mysql/controllers/sub_location.js:320",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -7899,10 +8279,14 @@
  {
   "method": "PUT",
   "endpoint": "/api/db_sub_location/sub-locations/:id",
-  "routeFile": "mysql/routes/sub_location.js:26",
+  "routeFile": "mysql/routes/sub_location.js:33",
   "handler": "updateSubLocation",
-  "middlewares": [],
-  "source": "mysql/controllers/sub_location.js:241",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"inventory\", \"update\")"
+  ],
+  "source": "mysql/controllers/sub_location.js:262",
   "viaFactory": null,
   "body": [
    "active",
@@ -7931,10 +8315,10 @@
  {
   "method": "POST",
   "endpoint": "/api/db_sub_location/sub-locations/check",
-  "routeFile": "mysql/routes/sub_location.js:28",
+  "routeFile": "mysql/routes/sub_location.js:41",
   "handler": "checkSubLocation",
   "middlewares": [],
-  "source": "mysql/controllers/sub_location.js:325",
+  "source": "mysql/controllers/sub_location.js:370",
   "viaFactory": null,
   "body": [
    "location_id",
@@ -7959,13 +8343,13 @@
  {
   "method": "POST",
   "endpoint": "/api/db_sub_location/sub-locations",
-  "routeFile": "mysql/routes/sub_location.js:14",
+  "routeFile": "mysql/routes/sub_location.js:17",
   "handler": "createSubLocation",
   "middlewares": [
    "check(\"name\", \"Name is required\").not().isEmpty()",
    "validateFields"
   ],
-  "source": "mysql/controllers/sub_location.js:159",
+  "source": "mysql/controllers/sub_location.js:160",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -8036,7 +8420,6 @@
    "date?",
    "documentsAndPolicies?",
    "email",
-   "email?",
    "signature?",
    "staff_id?"
   ],
@@ -8066,12 +8449,12 @@
  {
   "method": "DELETE",
   "endpoint": "/api/document/:id",
-  "routeFile": "routes/document.js:120",
+  "routeFile": "routes/document.js:145",
   "handler": "deleteDocument",
   "middlewares": [
    "canManage"
   ],
-  "source": "controller/document.js:272",
+  "source": "controller/document.js:414",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -8087,17 +8470,18 @@
   "dynamic": [],
   "notes": [],
   "statusCodes": [
-   "404",
    "500"
   ]
  },
  {
   "method": "GET",
   "endpoint": "/api/document/:id",
-  "routeFile": "routes/document.js:117",
+  "routeFile": "routes/document.js:127",
   "handler": "getCompanyDocumentByID",
-  "middlewares": [],
-  "source": "controller/document.js:152",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:155",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -8117,12 +8501,72 @@
   ]
  },
  {
+  "method": "PATCH",
+  "endpoint": "/api/document/:id",
+  "routeFile": "routes/document.js:143",
+  "handler": "updateDocument",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:364",
+  "viaFactory": null,
+  "body": [
+   "company_id"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [
+   "rest-spread `...body`: acepta campos extra"
+  ],
+  "statusCodes": [
+   "400"
+  ]
+ },
+ {
+  "method": "PUT",
+  "endpoint": "/api/document/:id",
+  "routeFile": "routes/document.js:144",
+  "handler": "updateDocument",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:364",
+  "viaFactory": null,
+  "body": [
+   "company_id"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [
+   "rest-spread `...body`: acepta campos extra"
+  ],
+  "statusCodes": [
+   "400"
+  ]
+ },
+ {
   "method": "GET",
   "endpoint": "/api/document/download/:documentId/:userId",
-  "routeFile": "routes/document.js:118",
+  "routeFile": "routes/document.js:128",
   "handler": "getDocumentDownloadUrl",
-  "middlewares": [],
-  "source": "controller/document.js:205",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:208",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -8147,10 +8591,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/download/documentUrl",
-  "routeFile": "routes/document.js:119",
+  "routeFile": "routes/document.js:129",
   "handler": "generateTemporaryDownloadUrl",
-  "middlewares": [],
-  "source": "controller/document.js:308",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:444",
   "viaFactory": null,
   "body": [
    "documentUrl"
@@ -8172,15 +8618,15 @@
  {
   "method": "DELETE",
   "endpoint": "/api/document/folder/:id",
-  "routeFile": "routes/document.js:141",
+  "routeFile": "routes/document.js:167",
   "handler": "deleteFolder",
-  "middlewares": [],
-  "source": "controller/document.js:756",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:904",
   "viaFactory": null,
   "body": [],
-  "params": [
-   "id"
-  ],
+  "params": [],
   "query": [],
   "headers": [],
   "required": [],
@@ -8192,22 +8638,21 @@
   "notes": [],
   "statusCodes": [
    "200",
-   "404",
    "500"
   ]
  },
  {
   "method": "GET",
   "endpoint": "/api/document/folder/:id",
-  "routeFile": "routes/document.js:139",
+  "routeFile": "routes/document.js:165",
   "handler": "getFolderByID",
-  "middlewares": [],
-  "source": "controller/document.js:702",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:856",
   "viaFactory": null,
   "body": [],
-  "params": [
-   "id"
-  ],
+  "params": [],
   "query": [],
   "headers": [],
   "required": [],
@@ -8224,10 +8669,12 @@
  {
   "method": "PUT",
   "endpoint": "/api/document/folder/:id",
-  "routeFile": "routes/document.js:140",
+  "routeFile": "routes/document.js:166",
   "handler": "updateFolder",
-  "middlewares": [],
-  "source": "controller/document.js:718",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:872",
   "viaFactory": null,
   "body": [
    "documents",
@@ -8235,9 +8682,7 @@
    "folder_name",
    "trigger_action"
   ],
-  "params": [
-   "id"
-  ],
+  "params": [],
   "query": [],
   "headers": [],
   "required": [
@@ -8255,17 +8700,18 @@
   "statusCodes": [
    "200",
    "400",
-   "404",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/document/folders",
-  "routeFile": "routes/document.js:138",
+  "routeFile": "routes/document.js:164",
   "handler": "getFolders",
-  "middlewares": [],
-  "source": "controller/document.js:659",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:812",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -8288,10 +8734,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/new_folder",
-  "routeFile": "routes/document.js:137",
+  "routeFile": "routes/document.js:163",
   "handler": "createNewFolder",
-  "middlewares": [],
-  "source": "controller/document.js:617",
+  "middlewares": [
+   "canManage"
+  ],
+  "source": "controller/document.js:769",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -8325,12 +8773,12 @@
  {
   "method": "GET",
   "endpoint": "/api/document/triggers",
-  "routeFile": "routes/document.js:112",
+  "routeFile": "routes/document.js:122",
   "handler": "getTriggerActions",
   "middlewares": [
    "canManage"
   ],
-  "source": "controller/document.js:185",
+  "source": "controller/document.js:188",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -8352,12 +8800,12 @@
  {
   "method": "GET",
   "endpoint": "/api/document/types",
-  "routeFile": "routes/document.js:111",
+  "routeFile": "routes/document.js:121",
   "handler": "getDocumentTypes",
   "middlewares": [
    "canManage"
   ],
-  "source": "controller/document.js:169",
+  "source": "controller/document.js:172",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -8379,13 +8827,13 @@
  {
   "method": "POST",
   "endpoint": "/api/document/upload/xlsx",
-  "routeFile": "routes/document.js:109",
+  "routeFile": "routes/document.js:119",
   "handler": "uploadExcelToS3",
   "middlewares": [
    "canManage",
    "uploadXLSX.single(\"document\")"
   ],
-  "source": "controller/document.js:1622",
+  "source": "controller/document.js:1767",
   "viaFactory": null,
   "body": [
    "company",
@@ -8413,13 +8861,13 @@
  {
   "method": "POST",
   "endpoint": "/api/document/upload",
-  "routeFile": "routes/document.js:108",
+  "routeFile": "routes/document.js:118",
   "handler": "uploadDocument",
   "middlewares": [
    "canManage",
    "upload.single(\"document\")"
   ],
-  "source": "controller/document.js:70",
+  "source": "controller/document.js:73",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -8448,10 +8896,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/verification/consumer_member/check_signed_document",
-  "routeFile": "routes/document.js:160",
+  "routeFile": "routes/document.js:193",
   "handler": "consumerMemberVerificationSignedDocumentForAssignmentDevices",
-  "middlewares": [],
-  "source": "controller/document.js:1046",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1188",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -8480,10 +8930,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/verification/consumer_member/signed_document",
-  "routeFile": "routes/document.js:156",
+  "routeFile": "routes/document.js:185",
   "handler": "createConsumerVerification",
-  "middlewares": [],
-  "source": "controller/document.js:821",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:963",
   "viaFactory": null,
   "body": [
    "assigner_staff_member_id",
@@ -8512,10 +8964,12 @@
  {
   "method": "PATCH",
   "endpoint": "/api/document/verification/consumer_member/signing_document",
-  "routeFile": "routes/document.js:164",
+  "routeFile": "routes/document.js:205",
   "handler": "addSignatureToConsumerDocument",
-  "middlewares": [],
-  "source": "controller/document.js:1424",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1566",
   "viaFactory": null,
   "body": [
    "contract_url",
@@ -8534,16 +8988,19 @@
   "statusCodes": [
    "200",
    "404",
+   "409",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/document/verification/member/check_signed_document",
-  "routeFile": "routes/document.js:171",
+  "routeFile": "routes/document.js:220",
   "handler": "memberVerificationSignedDocumentForAssignmentDevices",
-  "middlewares": [],
-  "source": "controller/document.js:1187",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1329",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -8572,10 +9029,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/verification/member/signed_document",
-  "routeFile": "routes/document.js:169",
+  "routeFile": "routes/document.js:218",
   "handler": "createMemberVerification",
-  "middlewares": [],
-  "source": "controller/document.js:864",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1006",
   "viaFactory": null,
   "body": [
    "assigner_staff_member_id",
@@ -8604,10 +9063,12 @@
  {
   "method": "PATCH",
   "endpoint": "/api/document/verification/member/signing_document",
-  "routeFile": "routes/document.js:176",
+  "routeFile": "routes/document.js:226",
   "handler": "addSignatureToMemberDocument",
-  "middlewares": [],
-  "source": "controller/document.js:1528",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1673",
   "viaFactory": null,
   "body": [
    "contract_url",
@@ -8632,10 +9093,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/verification/staff_member/check_signed_document",
-  "routeFile": "routes/document.js:146",
+  "routeFile": "routes/document.js:173",
   "handler": "staffMemberVerificationSignedDocumentForAssignmentDevices",
-  "middlewares": [],
-  "source": "controller/document.js:908",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1050",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -8664,10 +9127,12 @@
  {
   "method": "POST",
   "endpoint": "/api/document/verification/staff_member/signed_document",
-  "routeFile": "routes/document.js:142",
+  "routeFile": "routes/document.js:168",
   "handler": "createStaffMemberVerification",
-  "middlewares": [],
-  "source": "controller/document.js:779",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:921",
   "viaFactory": null,
   "body": [
    "assigner_staff_member_id",
@@ -8696,10 +9161,12 @@
  {
   "method": "PATCH",
   "endpoint": "/api/document/verification/staff_member/signing_document",
-  "routeFile": "routes/document.js:150",
+  "routeFile": "routes/document.js:178",
   "handler": "addSignatureToDocument",
-  "middlewares": [],
-  "source": "controller/document.js:1328",
+  "middlewares": [
+   "publicViewer"
+  ],
+  "source": "controller/document.js:1470",
   "viaFactory": null,
   "body": [
    "contract_url",
@@ -8724,12 +9191,12 @@
  {
   "method": "GET",
   "endpoint": "/api/document",
-  "routeFile": "routes/document.js:110",
+  "routeFile": "routes/document.js:120",
   "handler": "getCompanyDocuments",
   "middlewares": [
    "canManage"
   ],
-  "source": "controller/document.js:130",
+  "source": "controller/document.js:133",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -8832,10 +9299,12 @@
  {
   "method": "GET",
   "endpoint": "/api/event/all-users-and-transactions-per-event",
-  "routeFile": "routes/event.js:49",
+  "routeFile": "routes/event.js:50",
   "handler": "getListOfUsersAndTransactionsPerEvent",
-  "middlewares": [],
-  "source": "controller/auth.js:219",
+  "middlewares": [
+   "validateJWT"
+  ],
+  "source": "controller/auth.js:259",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -8928,12 +9397,12 @@
  {
   "method": "DELETE",
   "endpoint": "/api/event/delete-event/:id",
-  "routeFile": "routes/event.js:61",
+  "routeFile": "routes/event.js:63",
   "handler": "deleteEvent",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/event.js:138",
+  "source": "controller/event.js:142",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -8964,7 +9433,7 @@
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/event.js:93",
+  "source": "controller/event.js:97",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -8996,7 +9465,7 @@
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/event.js:93",
+  "source": "controller/event.js:97",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -9055,10 +9524,10 @@
  {
   "method": "GET",
   "endpoint": "/api/event/event-inventory-based-on-period",
-  "routeFile": "routes/event.js:58",
+  "routeFile": "routes/event.js:60",
   "handler": "inventoryEventBasedOnPeriod",
   "middlewares": [],
-  "source": "controller/event.js:419",
+  "source": "controller/event.js:438",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -9086,7 +9555,7 @@
   "routeFile": "routes/event.js:44",
   "handler": "gettingEventListPerCompany",
   "middlewares": [],
-  "source": "controller/event.js:190",
+  "source": "controller/event.js:194",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -9112,7 +9581,7 @@
   "routeFile": "routes/event.js:38",
   "handler": "eventList",
   "middlewares": [],
-  "source": "controller/event.js:174",
+  "source": "controller/event.js:178",
   "viaFactory": null,
   "body": [
    "active?",
@@ -9178,7 +9647,7 @@
   "routeFile": "routes/event.js:41",
   "handler": "eventList",
   "middlewares": [],
-  "source": "controller/event.js:174",
+  "source": "controller/event.js:178",
   "viaFactory": null,
   "body": [
    "active?",
@@ -9241,10 +9710,10 @@
  {
   "method": "GET",
   "endpoint": "/api/event/event-staff-detail/:id",
-  "routeFile": "routes/event.js:55",
+  "routeFile": "routes/event.js:57",
   "handler": "eventStaffDetailInfo",
   "middlewares": [],
-  "source": "controller/event.js:245",
+  "source": "controller/event.js:249",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -9270,7 +9739,7 @@
   "routeFile": "routes/event.js:46",
   "handler": "searchStaffAllEvents",
   "middlewares": [],
-  "source": "controller/event.js:228",
+  "source": "controller/event.js:232",
   "viaFactory": null,
   "body": [
    "email"
@@ -9293,10 +9762,10 @@
  {
   "method": "POST",
   "endpoint": "/api/event/update-event-inventory-freshest-data",
-  "routeFile": "routes/event.js:68",
+  "routeFile": "routes/event.js:70",
   "handler": "updateEventInventoryFreshestData",
   "middlewares": [],
-  "source": "controller/event.js:596",
+  "source": "controller/event.js:615",
   "viaFactory": null,
   "body": [
    "event_id",
@@ -9324,10 +9793,10 @@
  {
   "method": "PATCH",
   "endpoint": "/api/event/update-events",
-  "routeFile": "routes/event.js:64",
+  "routeFile": "routes/event.js:66",
   "handler": "updateLargeNumberOfEventsAtOnce",
   "middlewares": [],
-  "source": "controller/event.js:465",
+  "source": "controller/event.js:484",
   "viaFactory": null,
   "body": [
    "ids",
@@ -9355,10 +9824,10 @@
  {
   "method": "POST",
   "endpoint": "/api/event/update-global-state",
-  "routeFile": "routes/event.js:66",
+  "routeFile": "routes/event.js:68",
   "handler": "updateGlobalStateOfEvent",
   "middlewares": [],
-  "source": "controller/event.js:530",
+  "source": "controller/event.js:549",
   "viaFactory": null,
   "body": [
    "event_id"
@@ -9892,11 +10361,11 @@
  {
   "method": "GET",
   "endpoint": "/api/jobs/:jobId",
-  "routeFile": "routes/jobs.js:25",
+  "routeFile": "routes/jobs.js:26",
   "handler": "getJobStatus",
   "middlewares": [
    "validateJWT",
-   "requireSuperUser"
+   "requirePlatformRead"
   ],
   "source": "controller/jobs.js:53",
   "viaFactory": null,
@@ -9923,7 +10392,7 @@
  {
   "method": "GET",
   "endpoint": "/api/jobs/owned/:jobId",
-  "routeFile": "routes/jobs.js:24",
+  "routeFile": "routes/jobs.js:25",
   "handler": "getOwnedJobStatus",
   "middlewares": [
    "validateJWT"
@@ -9954,11 +10423,11 @@
  {
   "method": "GET",
   "endpoint": "/api/jobs/stats",
-  "routeFile": "routes/jobs.js:23",
+  "routeFile": "routes/jobs.js:24",
   "handler": "getJobStats",
   "middlewares": [
    "validateJWT",
-   "requireSuperUser"
+   "requirePlatformRead"
   ],
   "source": "controller/jobs.js:80",
   "viaFactory": null,
@@ -10162,10 +10631,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/assignig-device-notification",
-  "routeFile": "routes/nodeMailer.js:46",
+  "routeFile": "routes/nodeMailer.js:72",
   "handler": "assingDeviceNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:118",
+  "source": "nodeMailer/notifications.js:119",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer",
@@ -10185,12 +10654,69 @@
   "statusCodes": []
  },
  {
+  "method": "GET",
+  "endpoint": "/api/nodemailer/branding-preview/templates",
+  "routeFile": "routes/nodeMailer.js:68",
+  "handler": "listPreviewTemplates",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "nodeMailer/brandingPreview.js:176",
+  "viaFactory": null,
+  "body": [],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/nodemailer/branding-preview",
+  "routeFile": "routes/nodeMailer.js:69",
+  "handler": "previewBranding",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion"
+  ],
+  "source": "nodeMailer/brandingPreview.js:130",
+  "viaFactory": null,
+  "body": [
+   "branding",
+   "template?"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "500"
+  ]
+ },
+ {
   "method": "POST",
   "endpoint": "/api/nodemailer/completed-task-notification",
-  "routeFile": "routes/nodeMailer.js:173",
+  "routeFile": "routes/nodeMailer.js:204",
   "handler": "completedTask",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:883",
+  "source": "nodeMailer/notifications.js:894",
   "viaFactory": "createQueuedEmailController",
   "body": [],
   "params": [],
@@ -10208,10 +10734,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/confirm-returned-device-notification",
-  "routeFile": "routes/nodeMailer.js:49",
+  "routeFile": "routes/nodeMailer.js:75",
   "handler": "returningDeviceNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:126",
+  "source": "nodeMailer/notifications.js:127",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer",
@@ -10233,10 +10759,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/confirmation-account",
-  "routeFile": "routes/nodeMailer.js:73",
+  "routeFile": "routes/nodeMailer.js:99",
   "handler": "confirmationLinkNewConsumerNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:284",
+  "source": "nodeMailer/notifications.js:286",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10259,10 +10785,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/consumer-lease-return-device-notification",
-  "routeFile": "routes/nodeMailer.js:151",
+  "routeFile": "routes/nodeMailer.js:182",
   "handler": "consumerLeaseEndedDeviceReturnedNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:873",
+  "source": "nodeMailer/notifications.js:883",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer",
@@ -10272,7 +10798,11 @@
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "consumer",
+   "devices",
+   "returnDate"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -10284,10 +10814,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/customize-message-notification",
-  "routeFile": "routes/nodeMailer.js:193",
+  "routeFile": "routes/nodeMailer.js:224",
   "handler": "customizeMessage",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:915",
+  "source": "nodeMailer/notifications.js:926",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10310,10 +10840,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/customized-notification",
-  "routeFile": "routes/nodeMailer.js:85",
+  "routeFile": "routes/nodeMailer.js:112",
   "handler": "customizedEmailNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:312",
+  "source": "nodeMailer/notifications.js:314",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10337,10 +10867,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/deposit-collected-notification",
-  "routeFile": "routes/nodeMailer.js:58",
+  "routeFile": "routes/nodeMailer.js:84",
   "handler": "captureDepositNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:227",
+  "source": "nodeMailer/notifications.js:228",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "amount",
@@ -10366,10 +10896,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/deposit-return-notification",
-  "routeFile": "routes/nodeMailer.js:55",
+  "routeFile": "routes/nodeMailer.js:81",
   "handler": "cancelDepositNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:219",
+  "source": "nodeMailer/notifications.js:220",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "amount",
@@ -10395,10 +10925,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/device-report-per-transaction",
-  "routeFile": "routes/nodeMailer.js:121",
+  "routeFile": "routes/nodeMailer.js:150",
   "handler": "deviceReportPerTransaction",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:211",
+  "source": "nodeMailer/notifications.js:212",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer",
@@ -10420,10 +10950,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/early-remind-notification",
-  "routeFile": "routes/nodeMailer.js:61",
+  "routeFile": "routes/nodeMailer.js:87",
   "handler": "earlierReturningNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:241",
+  "source": "nodeMailer/notifications.js:242",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer"
@@ -10443,10 +10973,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/edit-device-admin",
-  "routeFile": "routes/nodeMailer.js:82",
+  "routeFile": "routes/nodeMailer.js:109",
   "handler": "editingDeviceAdminNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:257",
+  "source": "nodeMailer/notifications.js:258",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "contactAdminEmail"
@@ -10466,10 +10996,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/event-staff-notification",
-  "routeFile": "routes/nodeMailer.js:64",
+  "routeFile": "routes/nodeMailer.js:90",
   "handler": "eventStaffNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:249",
+  "source": "nodeMailer/notifications.js:250",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10491,10 +11021,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/events-begin-reminder",
-  "routeFile": "routes/nodeMailer.js:97",
+  "routeFile": "routes/nodeMailer.js:126",
   "handler": "eventBeginsReminderNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:344",
+  "source": "nodeMailer/notifications.js:346",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "daysToEvent",
@@ -10518,10 +11048,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/failed-task-notification",
-  "routeFile": "routes/nodeMailer.js:176",
+  "routeFile": "routes/nodeMailer.js:207",
   "handler": "failedTask",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:891",
+  "source": "nodeMailer/notifications.js:902",
   "viaFactory": "createQueuedEmailController",
   "body": [],
   "params": [],
@@ -10539,14 +11069,13 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/feedback-email-notification",
-  "routeFile": "routes/nodeMailer.js:124",
+  "routeFile": "routes/nodeMailer.js:153",
   "handler": "devitrakFeedbackEmailNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:441",
+  "source": "nodeMailer/notifications.js:444",
   "viaFactory": "createQueuedJobController",
   "body": [
-   "id",
-   "payload"
+   "eventID"
   ],
   "params": [],
   "query": [],
@@ -10567,10 +11096,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/forcing-revoking-active-session",
-  "routeFile": "routes/nodeMailer.js:179",
+  "routeFile": "routes/nodeMailer.js:210",
   "handler": "forcingRevokingActiveSession",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:899",
+  "source": "nodeMailer/notifications.js:910",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "email"
@@ -10590,10 +11119,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/internal-single-email-notification",
-  "routeFile": "routes/nodeMailer.js:94",
+  "routeFile": "routes/nodeMailer.js:123",
   "handler": "internalNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:336",
+  "source": "nodeMailer/notifications.js:338",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10616,10 +11145,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/invoice-notification",
-  "routeFile": "routes/nodeMailer.js:106",
+  "routeFile": "routes/nodeMailer.js:135",
   "handler": "chargeInvoice",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:376",
+  "source": "nodeMailer/notifications.js:378",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "amount",
@@ -10644,10 +11173,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/leased-equip-staff-notification",
-  "routeFile": "routes/nodeMailer.js:103",
+  "routeFile": "routes/nodeMailer.js:132",
   "handler": "itemInfoStaffNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:360",
+  "source": "nodeMailer/notifications.js:362",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10671,15 +11200,18 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/liability-contract-consumer-email-notification",
-  "routeFile": "routes/nodeMailer.js:133",
+  "routeFile": "routes/nodeMailer.js:163",
   "handler": "liabilityContractConsumerNotification",
-  "middlewares": [],
-  "source": "nodeMailer/notifications.js:579",
+  "middlewares": [
+   "attachContractLinkTokens"
+  ],
+  "source": "nodeMailer/notifications.js:583",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company_id",
    "company_name",
    "consumer",
+   "contract_link_tokens",
    "contract_list",
    "date_reference",
    "email",
@@ -10692,7 +11224,10 @@
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "contract_list",
+   "items"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -10704,10 +11239,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/liability-contract-email-notification",
-  "routeFile": "routes/nodeMailer.js:127",
+  "routeFile": "routes/nodeMailer.js:156",
   "handler": "liabilityContractStaffNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:591",
+  "source": "nodeMailer/notifications.js:596",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company_id",
@@ -10725,7 +11260,10 @@
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "contract_list",
+   "items"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -10737,10 +11275,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/liability-contract-member-email-notification",
-  "routeFile": "routes/nodeMailer.js:139",
+  "routeFile": "routes/nodeMailer.js:170",
   "handler": "liabilityContractMemberNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:567",
+  "source": "nodeMailer/notifications.js:570",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company_id",
@@ -10758,7 +11296,10 @@
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "contract_list",
+   "items"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -10770,10 +11311,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/login-existing-consumer",
-  "routeFile": "routes/nodeMailer.js:76",
+  "routeFile": "routes/nodeMailer.js:102",
   "handler": "loginLinkExistingConsumerNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:292",
+  "source": "nodeMailer/notifications.js:294",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -10796,10 +11337,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/lost-device-fee-notification",
-  "routeFile": "routes/nodeMailer.js:67",
+  "routeFile": "routes/nodeMailer.js:93",
   "handler": "lostDeviceFeeCollectedNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:275",
+  "source": "nodeMailer/notifications.js:276",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "amount",
@@ -10844,21 +11385,18 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/massive-event-customer-notification",
-  "routeFile": "routes/nodeMailer.js:115",
+  "routeFile": "routes/nodeMailer.js:144",
   "handler": "massiveEventCustomerNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:415",
+  "source": "nodeMailer/notifications.js:418",
   "viaFactory": "createQueuedJobController",
-  "body": [
-   "id",
-   "payload"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
@@ -10872,12 +11410,12 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/member-device-fee-receipt-notification",
-  "routeFile": "routes/nodeMailer.js:166",
+  "routeFile": "routes/nodeMailer.js:197",
   "handler": "memberDeviceFeeReceiptNotification",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "nodeMailer/notifications.js:194",
+  "source": "nodeMailer/notifications.js:195",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "billedGuardian",
@@ -10903,12 +11441,12 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/member-device-incident-notification",
-  "routeFile": "routes/nodeMailer.js:161",
+  "routeFile": "routes/nodeMailer.js:192",
   "handler": "memberDeviceIncidentNotification",
   "middlewares": [
    "validateJWT"
   ],
-  "source": "nodeMailer/notifications.js:176",
+  "source": "nodeMailer/notifications.js:177",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "conditionNote",
@@ -10933,10 +11471,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/member-email-notification",
-  "routeFile": "routes/nodeMailer.js:182",
+  "routeFile": "routes/nodeMailer.js:213",
   "handler": "memberEmailNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:907",
+  "source": "nodeMailer/notifications.js:918",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer",
@@ -10958,10 +11496,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/member-lease-return-device-notification",
-  "routeFile": "routes/nodeMailer.js:154",
+  "routeFile": "routes/nodeMailer.js:185",
   "handler": "returningDeviceLeaseMemberNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:134",
+  "source": "nodeMailer/notifications.js:135",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "devices",
@@ -10982,10 +11520,12 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/new_invitation",
-  "routeFile": "routes/nodeMailer.js:91",
+  "routeFile": "routes/nodeMailer.js:120",
   "handler": "newUserInvitationNotification",
-  "middlewares": [],
-  "source": "nodeMailer/notifications.js:328",
+  "middlewares": [
+   "attachInvitationLink"
+  ],
+  "source": "nodeMailer/notifications.js:330",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "consumer",
@@ -11007,10 +11547,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/refund-notification",
-  "routeFile": "routes/nodeMailer.js:110",
+  "routeFile": "routes/nodeMailer.js:139",
   "handler": "refundInvoice",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:384",
+  "source": "nodeMailer/notifications.js:386",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "amount",
@@ -11037,13 +11577,16 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/reset-admin-password",
-  "routeFile": "routes/nodeMailer.js:79",
+  "routeFile": "routes/nodeMailer.js:106",
   "handler": "linkToResetPassword",
-  "middlewares": [],
-  "source": "nodeMailer/notifications.js:304",
+  "middlewares": [
+   "attachPasswordResetLink"
+  ],
+  "source": "nodeMailer/notifications.js:306",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "contactInfo",
+   "link",
    "linkToResetPassword"
   ],
   "params": [],
@@ -11061,22 +11604,23 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/returned-items-to-renter-notification",
-  "routeFile": "routes/nodeMailer.js:145",
+  "routeFile": "routes/nodeMailer.js:176",
   "handler": "returnedItemsToRenterNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:677",
+  "source": "nodeMailer/notifications.js:684",
   "viaFactory": "createQueuedJobController",
   "body": [
    "attachments",
-   "id",
-   "payload",
    "staffEmails",
    "subject"
   ],
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "staffEmails",
+   "subject"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -11092,10 +11636,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/send-consumer-app-instructions",
-  "routeFile": "routes/nodeMailer.js:112",
+  "routeFile": "routes/nodeMailer.js:141",
   "handler": "eventLinkEvent",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:368",
+  "source": "nodeMailer/notifications.js:370",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "buttonLink",
@@ -11118,10 +11662,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/single-email-notification",
-  "routeFile": "routes/nodeMailer.js:88",
+  "routeFile": "routes/nodeMailer.js:115",
   "handler": "singleEmailNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:320",
+  "source": "nodeMailer/notifications.js:322",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -11145,10 +11689,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/staff_internal_notification",
-  "routeFile": "routes/nodeMailer.js:100",
+  "routeFile": "routes/nodeMailer.js:129",
   "handler": "staffInternalNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:352",
+  "source": "nodeMailer/notifications.js:354",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -11173,10 +11717,10 @@
  {
   "method": "POST",
   "endpoint": "/api/nodemailer/terms-and-conditions-acceptance",
-  "routeFile": "routes/nodeMailer.js:148",
+  "routeFile": "routes/nodeMailer.js:179",
   "handler": "termsAndConditionsAcceptanceNotification",
   "middlewares": [],
-  "source": "nodeMailer/notifications.js:717",
+  "source": "nodeMailer/notifications.js:724",
   "viaFactory": "createQueuedEmailController",
   "body": [
    "company",
@@ -11187,7 +11731,9 @@
   "params": [],
   "query": [],
   "headers": [],
-  "required": [],
+  "required": [
+   "consumer"
+  ],
   "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
@@ -11202,7 +11748,7 @@
   "routeFile": "routes/notificationLog.js:14",
   "handler": "feedNotificationLog",
   "middlewares": [],
-  "source": "controller/notificationLog.js:9",
+  "source": "controller/notificationLog.js:10",
   "viaFactory": "createQueuedJobController",
   "body": [],
   "params": [],
@@ -11227,7 +11773,7 @@
   "routeFile": "routes/notificationLog.js:17",
   "handler": "notificationLogList",
   "middlewares": [],
-  "source": "controller/notificationLog.js:11",
+  "source": "controller/notificationLog.js:12",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -11255,7 +11801,6 @@
   "viaFactory": null,
   "body": [
    "company_id",
-   "company_id?",
    "created_at?",
    "description?",
    "displayed_in?",
@@ -12424,27 +12969,18 @@
  {
   "method": "POST",
   "endpoint": "/api/registration/accept-invitation",
-  "routeFile": "routes/registration.js:43",
+  "routeFile": "routes/registration.js:45",
   "handler": "acceptInvitation",
-  "middlewares": [
-   "check(\"company.company_name\", \"company.company_name es requerido\").not().isEmpty()",
-   "validateFields"
-  ],
-  "source": "controller/registration.js:440",
+  "middlewares": [],
+  "source": "controller/registration.js:517",
   "viaFactory": null,
-  "body": [
-   "company",
-   "user"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
-  "required": [
-   "company",
-   "user"
-  ],
+  "required": [],
   "schemaTypes": {},
-  "ignoresBody": false,
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
@@ -12452,6 +12988,7 @@
   "statusCodes": [
    "400",
    "404",
+   "409",
    "500"
   ]
  },
@@ -12465,7 +13002,7 @@
    "check(\"company.website\", \"company.website es requerido\").not().isEmpty()",
    "validateFields"
   ],
-  "source": "controller/registration.js:299",
+  "source": "controller/registration.js:302",
   "viaFactory": null,
   "body": [
    "company",
@@ -12503,7 +13040,7 @@
    "check(\"company.website\", \"company.website es requerido\").not().isEmpty()",
    "validateFields"
   ],
-  "source": "controller/registration.js:143",
+  "source": "controller/registration.js:147",
   "viaFactory": null,
   "body": [
    "company",
@@ -12531,8 +13068,42 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/school/consent/list",
+  "routeFile": "mysql/routes/school.js:106",
+  "handler": "listCompanyConsents",
+  "middlewares": [
+   "canRead"
+  ],
+  "source": "mysql/controllers/school.js:1254",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "page",
+   "page_size",
+   "status"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "company_id"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/school/consent/public/respond",
-  "routeFile": "mysql/routes/school.js:80",
+  "routeFile": "mysql/routes/school.js:89",
   "handler": "publicRespondConsent",
   "middlewares": [],
   "source": "mysql/controllers/school.js:1149",
@@ -12567,7 +13138,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/consent/public/retrieve",
-  "routeFile": "mysql/routes/school.js:79",
+  "routeFile": "mysql/routes/school.js:88",
   "handler": "publicRetrieveConsent",
   "middlewares": [],
   "source": "mysql/controllers/school.js:984",
@@ -12594,7 +13165,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/consent/record",
-  "routeFile": "mysql/routes/school.js:76",
+  "routeFile": "mysql/routes/school.js:85",
   "handler": "recordConsent",
   "middlewares": [
    "canCreate"
@@ -12636,7 +13207,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/consent/request",
-  "routeFile": "mysql/routes/school.js:77",
+  "routeFile": "mysql/routes/school.js:86",
   "handler": "requestConsent",
   "middlewares": [
    "canCreate"
@@ -12674,7 +13245,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/consent/resend",
-  "routeFile": "mysql/routes/school.js:78",
+  "routeFile": "mysql/routes/school.js:87",
   "handler": "resendConsent",
   "middlewares": [
    "canCreate"
@@ -12709,12 +13280,12 @@
  {
   "method": "POST",
   "endpoint": "/api/school/consent/status",
-  "routeFile": "mysql/routes/school.js:82",
+  "routeFile": "mysql/routes/school.js:107",
   "handler": "consentStatus",
   "middlewares": [
    "canRead"
   ],
-  "source": "mysql/controllers/school.js:1229",
+  "source": "mysql/controllers/school.js:1334",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -12742,7 +13313,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/consent",
-  "routeFile": "mysql/routes/school.js:81",
+  "routeFile": "mysql/routes/school.js:104",
   "handler": "listMemberConsents",
   "middlewares": [
    "canRead"
@@ -12775,7 +13346,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/dashboard",
-  "routeFile": "mysql/routes/school.js:60",
+  "routeFile": "mysql/routes/school.js:69",
   "handler": "schoolDashboard",
   "middlewares": [
    "canRead"
@@ -12805,8 +13376,108 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/school/event-invitations/confirm",
+  "routeFile": "mysql/routes/school.js:102",
+  "handler": "confirmEventInvitation",
+  "middlewares": [
+   "publicInvitationRateLimit"
+  ],
+  "source": "controller/eventInvitation.js:276",
+  "viaFactory": null,
+  "body": [],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": true,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "401",
+   "410",
+   "422",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/school/event-invitations/response",
+  "routeFile": "mysql/routes/school.js:103",
+  "handler": "recordEventInvitationResponse",
+  "middlewares": [
+   "publicInvitationRateLimit"
+  ],
+  "source": "controller/eventInvitation.js:372",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "event_id",
+   "member_email",
+   "member_id",
+   "reason",
+   "responder_email",
+   "responder_role",
+   "response"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "201",
+   "400",
+   "401",
+   "404"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/school/event-invitations/send",
+  "routeFile": "mysql/routes/school.js:95",
+  "handler": "sendEventInvitations",
+  "middlewares": [
+   "validateJWT",
+   "checkTokenVersion",
+   "authorizePermission(\"member\", \"create\")"
+  ],
+  "source": "controller/eventInvitation.js:163",
+  "viaFactory": null,
+  "body": [
+   "company_id",
+   "event_id",
+   "member_ids"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "404",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/school/guardians/add",
-  "routeFile": "mysql/routes/school.js:69",
+  "routeFile": "mysql/routes/school.js:78",
   "handler": "addStudentGuardian",
   "middlewares": [
    "canCreate"
@@ -12852,7 +13523,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/guardians/search",
-  "routeFile": "mysql/routes/school.js:72",
+  "routeFile": "mysql/routes/school.js:81",
   "handler": "searchGuardians",
   "middlewares": [
    "canRead"
@@ -12889,7 +13560,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/guardians",
-  "routeFile": "mysql/routes/school.js:66",
+  "routeFile": "mysql/routes/school.js:75",
   "handler": "listStudentGuardians",
   "middlewares": [
    "canRead"
@@ -12921,8 +13592,76 @@
  },
  {
   "method": "POST",
+  "endpoint": "/api/school/reminders/resume",
+  "routeFile": "mysql/routes/school.js:120",
+  "handler": "resumeLeaseReminders",
+  "middlewares": [
+   "canUpdate"
+  ],
+  "source": "mysql/controllers/school.js:1513",
+  "viaFactory": "setLeaseReminders",
+  "body": [
+   "company_id",
+   "device_id",
+   "member_id"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "device_id"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "404",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
+  "endpoint": "/api/school/reminders/stop",
+  "routeFile": "mysql/routes/school.js:119",
+  "handler": "stopLeaseReminders",
+  "middlewares": [
+   "canUpdate"
+  ],
+  "source": "mysql/controllers/school.js:1512",
+  "viaFactory": "setLeaseReminders",
+  "body": [
+   "company_id",
+   "device_id",
+   "member_id"
+  ],
+  "params": [],
+  "query": [],
+  "headers": [],
+  "required": [
+   "device_id"
+  ],
+  "schemaTypes": {},
+  "ignoresBody": false,
+  "allowed": [],
+  "identifiers": [],
+  "dynamic": [],
+  "notes": [],
+  "statusCodes": [
+   "200",
+   "400",
+   "404",
+   "500"
+  ]
+ },
+ {
+  "method": "POST",
   "endpoint": "/api/school/roster",
-  "routeFile": "mysql/routes/school.js:63",
+  "routeFile": "mysql/routes/school.js:72",
   "handler": "schoolRoster",
   "middlewares": [
    "canRead"
@@ -12955,12 +13694,12 @@
  {
   "method": "POST",
   "endpoint": "/api/school/settings/consent-enforcement",
-  "routeFile": "mysql/routes/school.js:86",
+  "routeFile": "mysql/routes/school.js:111",
   "handler": "setConsentEnforcement",
   "middlewares": [
    "canUpdate"
   ],
-  "source": "mysql/controllers/school.js:1318",
+  "source": "mysql/controllers/school.js:1423",
   "viaFactory": null,
   "body": [
    "company_id",
@@ -12990,12 +13729,12 @@
  {
   "method": "POST",
   "endpoint": "/api/school/settings",
-  "routeFile": "mysql/routes/school.js:85",
+  "routeFile": "mysql/routes/school.js:110",
   "handler": "getSchoolSettings",
   "middlewares": [
    "canRead"
   ],
-  "source": "mysql/controllers/school.js:1276",
+  "source": "mysql/controllers/school.js:1381",
   "viaFactory": null,
   "body": [
    "company_id"
@@ -13021,7 +13760,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/student/access-log",
-  "routeFile": "mysql/routes/school.js:91",
+  "routeFile": "mysql/routes/school.js:116",
   "handler": "studentAccessLog",
   "middlewares": [
    "canRead"
@@ -13052,7 +13791,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/student/erase",
-  "routeFile": "mysql/routes/school.js:90",
+  "routeFile": "mysql/routes/school.js:115",
   "handler": "studentErase",
   "middlewares": [
    "canUpdate"
@@ -13083,7 +13822,7 @@
  {
   "method": "POST",
   "endpoint": "/api/school/student/export",
-  "routeFile": "mysql/routes/school.js:89",
+  "routeFile": "mysql/routes/school.js:114",
   "handler": "studentExport",
   "middlewares": [
    "canRead"
@@ -13321,17 +14060,26 @@
   "middlewares": [
    "validateJWT"
   ],
-  "source": "controller/staffActivityLog.js:188",
+  "source": "controller/staffActivityLog.js:228",
   "viaFactory": "createGetStaffActivityLogs",
   "body": [],
   "params": [],
   "query": [
    "action",
+   "actor_type",
+   "consumer",
    "end_date",
+   "event_id",
+   "include_automatic",
+   "item_id",
    "limit?",
+   "member_id",
    "page?",
+   "serial_number",
+   "source",
    "staff_member_id",
    "start_date",
+   "target_id",
    "target_model"
   ],
   "headers": [],
@@ -13351,154 +14099,64 @@
  {
   "method": "GET",
   "endpoint": "/api/staff/__staff-search",
-  "routeFile": "routes/staff.js:32",
-  "handler": "displayAllAdminUser",
+  "routeFile": "routes/staff.js:52",
+  "handler": "searchStaffByEmail",
   "middlewares": [],
-  "source": "controller/admin.js:671",
+  "source": "controller/admin.js:863",
   "viaFactory": null,
-  "body": [
-   "active?",
-   "agreedPlatformConditions?",
-   "companiesAssigned?",
-   "dailySummaries?",
-   "email?",
-   "emailNotifications?",
-   "eventReminder?",
-   "imageProfile?",
-   "lastName?",
-   "mfaEnabled?",
-   "mfaSecret?",
-   "multipleCompanies?",
-   "name?",
-   "online?",
-   "password?",
-   "phone?",
-   "role?",
-   "role_type?",
-   "subscriptionRenewals?",
-   "super_user?",
-   "tokenVersion?"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phone": "string",
-   "password": "string",
-   "role": "string",
-   "role_type": "string",
-   "active": "boolean",
-   "imageProfile": "string",
-   "mfaEnabled": "boolean",
-   "mfaSecret": "Record<string, unknown>",
-   "emailNotifications": "Record<string, unknown>",
-   "dailySummaries": "string",
-   "eventReminder": "string",
-   "subscriptionRenewals": "string",
-   "online": "boolean",
-   "super_user": "boolean",
-   "multipleCompanies": "boolean",
-   "companiesAssigned": "unknown[]",
-   "tokenVersion": "number",
-   "agreedPlatformConditions": "boolean"
-  },
+  "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `AdminUser.find()`: cualquier subconjunto de los campos de `models/AdminUser.js` (`{}` trae todo)"
-  ],
+  "notes": [],
   "statusCodes": [
    "201",
+   "400",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/staff/__staff-search",
-  "routeFile": "routes/staff.js:29",
-  "handler": "displayAllAdminUser",
+  "routeFile": "routes/staff.js:49",
+  "handler": "searchStaffByEmail",
   "middlewares": [],
-  "source": "controller/admin.js:671",
+  "source": "controller/admin.js:863",
   "viaFactory": null,
-  "body": [
-   "active?",
-   "agreedPlatformConditions?",
-   "companiesAssigned?",
-   "dailySummaries?",
-   "email?",
-   "emailNotifications?",
-   "eventReminder?",
-   "imageProfile?",
-   "lastName?",
-   "mfaEnabled?",
-   "mfaSecret?",
-   "multipleCompanies?",
-   "name?",
-   "online?",
-   "password?",
-   "phone?",
-   "role?",
-   "role_type?",
-   "subscriptionRenewals?",
-   "super_user?",
-   "tokenVersion?"
-  ],
+  "body": [],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "name": "string",
-   "lastName": "string",
-   "email": "string",
-   "phone": "string",
-   "password": "string",
-   "role": "string",
-   "role_type": "string",
-   "active": "boolean",
-   "imageProfile": "string",
-   "mfaEnabled": "boolean",
-   "mfaSecret": "Record<string, unknown>",
-   "emailNotifications": "Record<string, unknown>",
-   "dailySummaries": "string",
-   "eventReminder": "string",
-   "subscriptionRenewals": "string",
-   "online": "boolean",
-   "super_user": "boolean",
-   "multipleCompanies": "boolean",
-   "companiesAssigned": "unknown[]",
-   "tokenVersion": "number",
-   "agreedPlatformConditions": "boolean"
-  },
-  "ignoresBody": false,
+  "schemaTypes": {},
+  "ignoresBody": true,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
-  "notes": [
-   "el body se usa como FILTRO Mongo en `AdminUser.find()`: cualquier subconjunto de los campos de `models/AdminUser.js` (`{}` trae todo)"
-  ],
+  "notes": [],
   "statusCodes": [
    "201",
+   "400",
    "500"
   ]
  },
  {
   "method": "GET",
   "endpoint": "/api/staff/admin-users",
-  "routeFile": "routes/staff.js:18",
+  "routeFile": "routes/staff.js:19",
   "handler": "displayAllAdminUser",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"staff\", \"read\")"
   ],
-  "source": "controller/admin.js:671",
+  "source": "controller/admin.js:935",
   "viaFactory": null,
   "body": [
    "active?",
@@ -13517,6 +14175,7 @@
    "online?",
    "password?",
    "phone?",
+   "platform_observer?",
    "role?",
    "role_type?",
    "subscriptionRenewals?",
@@ -13545,6 +14204,7 @@
    "subscriptionRenewals": "string",
    "online": "boolean",
    "super_user": "boolean",
+   "platform_observer": "boolean",
    "multipleCompanies": "boolean",
    "companiesAssigned": "unknown[]",
    "tokenVersion": "number",
@@ -13565,14 +14225,14 @@
  {
   "method": "POST",
   "endpoint": "/api/staff/admin-users",
-  "routeFile": "routes/staff.js:21",
+  "routeFile": "routes/staff.js:22",
   "handler": "displayAllAdminUser",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"staff\", \"read\")"
   ],
-  "source": "controller/admin.js:671",
+  "source": "controller/admin.js:935",
   "viaFactory": null,
   "body": [
    "active?",
@@ -13591,6 +14251,7 @@
    "online?",
    "password?",
    "phone?",
+   "platform_observer?",
    "role?",
    "role_type?",
    "subscriptionRenewals?",
@@ -13619,6 +14280,7 @@
    "subscriptionRenewals": "string",
    "online": "boolean",
    "super_user": "boolean",
+   "platform_observer": "boolean",
    "multipleCompanies": "boolean",
    "companiesAssigned": "unknown[]",
    "tokenVersion": "number",
@@ -13639,10 +14301,10 @@
  {
   "method": "GET",
   "endpoint": "/api/staff/consumers/search",
-  "routeFile": "routes/staff.js:26",
+  "routeFile": "routes/staff.js:44",
   "handler": "searchCustomerByParameters",
   "middlewares": [],
-  "source": "controller/stripe.js:1017",
+  "source": "controller/stripe.js:1072",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -13665,14 +14327,14 @@
  {
   "method": "PATCH",
   "endpoint": "/api/staff/edit-admin/:id",
-  "routeFile": "routes/staff.js:23",
+  "routeFile": "routes/staff.js:41",
   "handler": "editOtherAdminUser",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
-   "authorizeMongoPermission(\"staff\", \"update\")"
+   "selfOrStaffUpdate"
   ],
-  "source": "controller/admin.js:479",
+  "source": "controller/admin.js:587",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -13696,21 +14358,21 @@
  {
   "method": "POST",
   "endpoint": "/api/staff/force-logout",
-  "routeFile": "routes/staff.js:35",
+  "routeFile": "routes/staff.js:63",
   "handler": "forceEndSession",
-  "middlewares": [],
-  "source": "controller/admin.js:828",
+  "middlewares": [
+   "tokenIfPresent"
+  ],
+  "source": "controller/admin.js:1119",
   "viaFactory": null,
   "body": [
-   "email",
-   "password"
+   "email"
   ],
   "params": [],
   "query": [],
   "headers": [],
   "required": [
-   "email",
-   "password"
+   "email"
   ],
   "schemaTypes": {},
   "ignoresBody": false,
@@ -13721,7 +14383,7 @@
   "statusCodes": [
    "200",
    "400",
-   "401",
+   "403",
    "404",
    "500"
   ]
@@ -13750,12 +14412,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/account_link",
-  "routeFile": "routes/stripe.js:71",
+  "routeFile": "routes/stripe.js:116",
   "handler": "stripeAccountLink",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:93",
+  "middlewares": [],
+  "source": "controller/stripe.js:124",
   "viaFactory": null,
   "body": [
    "connectedAccountId",
@@ -13779,12 +14439,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/account_sessions",
-  "routeFile": "routes/stripe.js:74",
+  "routeFile": "routes/stripe.js:119",
   "handler": "stripeAccountSession",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:118",
+  "middlewares": [],
+  "source": "controller/stripe.js:149",
   "viaFactory": null,
   "body": [
    "connectedAccountId"
@@ -13807,12 +14465,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/accounts",
-  "routeFile": "routes/stripe.js:68",
+  "routeFile": "routes/stripe.js:113",
   "handler": "stripeAccountCreate",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:52",
+  "middlewares": [],
+  "source": "controller/stripe.js:65",
   "viaFactory": null,
   "body": [
    "country",
@@ -13836,12 +14492,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/cancel/subscriptions/:id",
-  "routeFile": "routes/stripe.js:168",
+  "routeFile": "routes/stripe.js:205",
   "handler": "updateCancelSubscription",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:560",
+  "middlewares": [],
+  "source": "controller/stripe.js:605",
   "viaFactory": null,
   "body": [
    "cancelAtPeriodEnd",
@@ -13867,12 +14521,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/company-account-stripe/update",
-  "routeFile": "routes/stripe.js:282",
+  "routeFile": "routes/stripe.js:311",
   "handler": "stripeCompanyAccountUpdate",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:242",
+  "middlewares": [],
+  "source": "controller/stripe.js:273",
   "viaFactory": null,
   "body": [
    "connectedAccountId"
@@ -13899,12 +14551,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/company-account-stripe",
-  "routeFile": "routes/stripe.js:159",
+  "routeFile": "routes/stripe.js:196",
   "handler": "stripeCompanyAccountFound",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:982",
+  "middlewares": [],
+  "source": "controller/stripe.js:1037",
   "viaFactory": null,
   "body": [
    "company"
@@ -13927,12 +14577,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/create-payment-intent-customized",
-  "routeFile": "routes/stripe.js:87",
+  "routeFile": "routes/stripe.js:130",
   "handler": "stripePaymentIntentCustomized",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:324",
+  "middlewares": [],
+  "source": "controller/stripe.js:369",
   "viaFactory": null,
   "body": [
    "receipt_email",
@@ -13956,12 +14604,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/create-payment-intent-subscription",
-  "routeFile": "routes/stripe.js:90",
+  "routeFile": "routes/stripe.js:133",
   "handler": "stripePaymentIntentSubscription",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:350",
+  "middlewares": [],
+  "source": "controller/stripe.js:395",
   "viaFactory": null,
   "body": [
    "customerEmail",
@@ -13985,15 +14631,13 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/create-payment-intent",
-  "routeFile": "routes/stripe.js:77",
+  "routeFile": "routes/stripe.js:122",
   "handler": "stripePaymentIntent",
   "middlewares": [
-   "optionalJWT",
-   "publicPaymentRateLimit",
    "validatePublicPaymentPayload",
    "attachServerIdempotencyKey"
   ],
-  "source": "controller/stripe.js:273",
+  "source": "controller/stripe.js:304",
   "viaFactory": null,
   "body": [
    "customerEmail",
@@ -14018,12 +14662,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/create-subscriptions_no_trial",
-  "routeFile": "routes/stripe.js:103",
+  "routeFile": "routes/stripe.js:145",
   "handler": "createSubscriptionNoTrialPeriod",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:433",
+  "middlewares": [],
+  "source": "controller/stripe.js:478",
   "viaFactory": null,
   "body": [
    "items",
@@ -14048,12 +14690,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/create-subscriptions",
-  "routeFile": "routes/stripe.js:100",
+  "routeFile": "routes/stripe.js:142",
   "handler": "creatingSubscription",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:375",
+  "middlewares": [],
+  "source": "controller/stripe.js:420",
   "viaFactory": null,
   "body": [
    "items",
@@ -14078,10 +14718,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/customer",
-  "routeFile": "routes/stripe.js:65",
+  "routeFile": "routes/stripe.js:110",
   "handler": "stripeCustomer",
   "middlewares": [],
-  "source": "controller/stripe.js:17",
+  "source": "controller/stripe.js:30",
   "viaFactory": null,
   "body": [
    "email",
@@ -14106,14 +14746,14 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/customers/search",
-  "routeFile": "routes/stripe.js:139",
+  "routeFile": "routes/stripe.js:178",
   "handler": "searchCustomerId",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"read\")"
   ],
-  "source": "controller/stripe.js:734",
+  "source": "controller/stripe.js:779",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -14136,14 +14776,14 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/customers",
-  "routeFile": "routes/stripe.js:133",
+  "routeFile": "routes/stripe.js:172",
   "handler": "listAllCustomers",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"read\")"
   ],
-  "source": "controller/stripe.js:718",
+  "source": "controller/stripe.js:763",
   "viaFactory": null,
   "body": [
    "email?",
@@ -14176,14 +14816,14 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/customers",
-  "routeFile": "routes/stripe.js:136",
+  "routeFile": "routes/stripe.js:175",
   "handler": "listAllCustomers",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"read\")"
   ],
-  "source": "controller/stripe.js:718",
+  "source": "controller/stripe.js:763",
   "viaFactory": null,
   "body": [
    "email?",
@@ -14216,16 +14856,15 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/internal/partial-refund",
-  "routeFile": "routes/stripe.js:243",
+  "routeFile": "routes/stripe.js:273",
   "handler": "partialRefundStripePaymentIntent",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"update\")",
-   "validateRefundPayload",
-   "idempotencyMutationCache"
+   "validateRefundPayload"
   ],
-  "source": "controller/stripe.js:858",
+  "source": "controller/stripe.js:903",
   "viaFactory": null,
   "body": [
    "paymentIntent",
@@ -14249,16 +14888,15 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/internal/payment-intents/:id/cancel",
-  "routeFile": "routes/stripe.js:203",
+  "routeFile": "routes/stripe.js:237",
   "handler": "cancelStripePaymentIntent",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"update\")",
-   "validatePaymentIntentIdParam",
-   "idempotencyMutationCache"
+   "validatePaymentIntentIdParam"
   ],
-  "source": "controller/stripe.js:813",
+  "source": "controller/stripe.js:858",
   "viaFactory": null,
   "body": [
    "id"
@@ -14281,16 +14919,15 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/internal/payment-intents/:id/capture",
-  "routeFile": "routes/stripe.js:195",
+  "routeFile": "routes/stripe.js:230",
   "handler": "captureStripePaymentIntent",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"update\")",
-   "validatePaymentIntentIdParam",
-   "idempotencyMutationCache"
+   "validatePaymentIntentIdParam"
   ],
-  "source": "controller/stripe.js:788",
+  "source": "controller/stripe.js:833",
   "viaFactory": null,
   "body": [
    "amount_to_capture",
@@ -14314,16 +14951,15 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/internal/refund",
-  "routeFile": "routes/stripe.js:235",
+  "routeFile": "routes/stripe.js:266",
   "handler": "refundStripePaymentIntent",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"update\")",
-   "validateRefundPayload",
-   "idempotencyMutationCache"
+   "validateRefundPayload"
   ],
-  "source": "controller/stripe.js:837",
+  "source": "controller/stripe.js:882",
   "viaFactory": null,
   "body": [
    "paymentIntent"
@@ -14346,12 +14982,10 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/invoices",
-  "routeFile": "routes/stripe.js:162",
+  "routeFile": "routes/stripe.js:199",
   "handler": "displayAllPaidInvoicesPerSubscription",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:603",
+  "middlewares": [],
+  "source": "controller/stripe.js:648",
   "viaFactory": null,
   "body": [
    "subscriptionID"
@@ -14374,12 +15008,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/invoices",
-  "routeFile": "routes/stripe.js:165",
+  "routeFile": "routes/stripe.js:202",
   "handler": "displayAllPaidInvoicesPerSubscription",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:603",
+  "middlewares": [],
+  "source": "controller/stripe.js:648",
   "viaFactory": null,
   "body": [
    "subscriptionID"
@@ -14402,10 +15034,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/new-company-account",
-  "routeFile": "routes/stripe.js:97",
+  "routeFile": "routes/stripe.js:139",
   "handler": "companyInformationAccountStripe",
   "middlewares": [],
-  "source": "controller/stripe.js:159",
+  "source": "controller/stripe.js:190",
   "viaFactory": null,
   "body": [
    "companyName",
@@ -14431,14 +15063,13 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/partial-refund",
-  "routeFile": "routes/stripe.js:227",
+  "routeFile": "routes/stripe.js:259",
   "handler": "partialRefundStripePaymentIntent",
   "middlewares": [
-   "publicPaymentRateLimit",
-   "validateRefundPayload",
-   "idempotencyMutationCache"
+   "canMoveCollectedMoney",
+   "validateRefundPayload"
   ],
-  "source": "controller/stripe.js:858",
+  "source": "controller/stripe.js:903",
   "viaFactory": null,
   "body": [
    "paymentIntent",
@@ -14462,12 +15093,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/payment_intents/:id/update-payment-method",
-  "routeFile": "routes/stripe.js:120",
+  "routeFile": "routes/stripe.js:160",
   "handler": "updatePaymentMethodFromAdminDashboard",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:623",
+  "middlewares": [],
+  "source": "controller/stripe.js:668",
   "viaFactory": null,
   "body": [
    "newPaymentMethodID",
@@ -14491,12 +15120,10 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/payment_intents/:id",
-  "routeFile": "routes/stripe.js:142",
+  "routeFile": "routes/stripe.js:181",
   "handler": "retrievePaymentIntent",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:920",
+  "middlewares": [],
+  "source": "controller/stripe.js:967",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -14513,18 +15140,19 @@
   "notes": [],
   "statusCodes": [
    "201",
+   "400",
+   "401",
+   "404",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/stripe/payment_methods/:id/attach",
-  "routeFile": "routes/stripe.js:113",
+  "routeFile": "routes/stripe.js:154",
   "handler": "updateDefaultPaymentMethodInCustomer",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:664",
+  "middlewares": [],
+  "source": "controller/stripe.js:709",
   "viaFactory": null,
   "body": [
    "customerID"
@@ -14548,14 +15176,13 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/payment-intents/:id/cancel",
-  "routeFile": "routes/stripe.js:186",
+  "routeFile": "routes/stripe.js:222",
   "handler": "cancelStripePaymentIntent",
   "middlewares": [
-   "publicPaymentRateLimit",
-   "validatePaymentIntentIdParam",
-   "idempotencyMutationCache"
+   "canMoveCollectedMoney",
+   "validatePaymentIntentIdParam"
   ],
-  "source": "controller/stripe.js:813",
+  "source": "controller/stripe.js:858",
   "viaFactory": null,
   "body": [
    "id"
@@ -14578,14 +15205,13 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/payment-intents/:id/capture",
-  "routeFile": "routes/stripe.js:177",
+  "routeFile": "routes/stripe.js:214",
   "handler": "captureStripePaymentIntent",
   "middlewares": [
-   "publicPaymentRateLimit",
-   "validatePaymentIntentIdParam",
-   "idempotencyMutationCache"
+   "canMoveCollectedMoney",
+   "validatePaymentIntentIdParam"
   ],
-  "source": "controller/stripe.js:788",
+  "source": "controller/stripe.js:833",
   "viaFactory": null,
   "body": [
    "amount_to_capture",
@@ -14609,12 +15235,10 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/payment-intents/search",
-  "routeFile": "routes/stripe.js:127",
+  "routeFile": "routes/stripe.js:166",
   "handler": "searchStripeTransaction",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:684",
+  "middlewares": [],
+  "source": "controller/stripe.js:729",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -14635,12 +15259,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/payment-method/subscriptions/:id",
-  "routeFile": "routes/stripe.js:106",
+  "routeFile": "routes/stripe.js:148",
   "handler": "updateDefaultPaymentMethodInSubscription",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:644",
+  "middlewares": [],
+  "source": "controller/stripe.js:689",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -14662,14 +15284,13 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/refund",
-  "routeFile": "routes/stripe.js:218",
+  "routeFile": "routes/stripe.js:251",
   "handler": "refundStripePaymentIntent",
   "middlewares": [
-   "publicPaymentRateLimit",
-   "validateRefundPayload",
-   "idempotencyMutationCache"
+   "canMoveCollectedMoney",
+   "validateRefundPayload"
   ],
-  "source": "controller/stripe.js:837",
+  "source": "controller/stripe.js:882",
   "viaFactory": null,
   "body": [
    "paymentIntent"
@@ -14692,12 +15313,10 @@
  {
   "method": "DELETE",
   "endpoint": "/api/stripe/remove-duplicate/:id",
-  "routeFile": "routes/stripe.js:251",
+  "routeFile": "routes/stripe.js:280",
   "handler": "removeDuplicateEntries",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:900",
+  "middlewares": [],
+  "source": "controller/stripe.js:945",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -14720,12 +15339,10 @@
  {
   "method": "DELETE",
   "endpoint": "/api/stripe/removing/:id",
-  "routeFile": "routes/stripe.js:270",
+  "routeFile": "routes/stripe.js:299",
   "handler": "removeDuplicateEntry",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/transaction.js:185",
+  "middlewares": [],
+  "source": "controller/transaction.js:237",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -14742,32 +15359,29 @@
   "notes": [],
   "statusCodes": [
    "201",
+   "404",
+   "409",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/stripe/save-transaction-admin-dashboard",
-  "routeFile": "routes/stripe.js:258",
+  "routeFile": "routes/stripe.js:287",
   "handler": "saveTransactionAdmin",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/transaction.js:35",
+  "middlewares": [],
+  "source": "controller/transaction.js:79",
   "viaFactory": null,
   "body": [
    "active?",
    "clientSecret?",
    "company",
-   "company?",
    "consumerInfo",
-   "consumerInfo?",
    "created_at?",
    "date?",
    "device?",
    "eventSelected?",
    "event_id",
-   "event_id?",
    "paymentIntent?",
    "provider?",
    "type?"
@@ -14805,24 +15419,21 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/save-transaction-template-no-regular-user",
-  "routeFile": "routes/stripe.js:261",
+  "routeFile": "routes/stripe.js:290",
   "handler": "saveTransactionTemplateForNoRegularUser",
   "middlewares": [],
-  "source": "controller/transaction.js:59",
+  "source": "controller/transaction.js:103",
   "viaFactory": null,
   "body": [
    "active?",
    "clientSecret?",
    "company",
-   "company?",
    "consumerInfo",
-   "consumerInfo?",
    "created_at?",
    "date?",
    "device?",
    "eventSelected?",
    "event_id",
-   "event_id?",
    "paymentIntent?",
    "provider?",
    "type?"
@@ -14860,54 +15471,31 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/save-transaction",
-  "routeFile": "routes/stripe.js:255",
+  "routeFile": "routes/stripe.js:284",
   "handler": "saveTransaction",
   "middlewares": [],
-  "source": "controller/transaction.js:11",
+  "source": "controller/transaction.js:32",
   "viaFactory": null,
   "body": [
-   "active?",
-   "clientSecret?",
    "company",
-   "company?",
    "consumerInfo",
-   "consumerInfo?",
-   "created_at?",
-   "date?",
-   "device?",
-   "eventSelected?",
    "event_id",
-   "event_id?",
-   "paymentIntent?",
-   "provider?",
-   "type?"
+   "paymentIntent"
   ],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "device": "unknown[]",
-   "paymentIntent": "string",
-   "clientSecret": "string",
-   "consumerInfo": "Record<string, unknown>",
-   "eventSelected": "string",
-   "event_id": "string",
-   "provider": "string",
-   "date": "string",
-   "active": "boolean",
-   "company": "string",
-   "created_at": "number",
-   "type": "string"
-  },
+  "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
   "notes": [
-   "el body se pasa completo a `new Transaction()`: los campos son los del esquema `models/Transaction.js`"
+   "pasa `req.body` completo a otra capa (revisar el controlador para el detalle)"
   ],
   "statusCodes": [
+   "200",
    "201",
    "500"
   ]
@@ -14915,12 +15503,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/setup-search",
-  "routeFile": "routes/stripe.js:130",
+  "routeFile": "routes/stripe.js:169",
   "handler": "findSubscriptionIdBySetUpId",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:478",
+  "middlewares": [],
+  "source": "controller/stripe.js:523",
   "viaFactory": null,
   "body": [
    "setupId"
@@ -14944,14 +15530,14 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/stripe-transaction-admin",
-  "routeFile": "routes/stripe.js:174",
+  "routeFile": "routes/stripe.js:211",
   "handler": "saveStripeTransactionAdmin",
   "middlewares": [
    "validateJWT",
    "checkTokenVersion",
    "authorizeMongoPermission(\"billing\", \"update\")"
   ],
-  "source": "controller/stripe.js:770",
+  "source": "controller/stripe.js:815",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -14992,10 +15578,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/stripe-transaction-no-regular-user",
-  "routeFile": "routes/stripe.js:212",
+  "routeFile": "routes/stripe.js:245",
   "handler": "saveStripeTransactionTemplateForNoRegularUser",
   "middlewares": [],
-  "source": "controller/stripe.js:879",
+  "source": "controller/stripe.js:924",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -15036,12 +15622,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/stripe-transaction",
-  "routeFile": "routes/stripe.js:171",
+  "routeFile": "routes/stripe.js:208",
   "handler": "saveStripeTransaction",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:752",
+  "middlewares": [],
+  "source": "controller/stripe.js:797",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -15082,12 +15666,10 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/stripe-transactions-saved-list",
-  "routeFile": "routes/stripe.js:145",
+  "routeFile": "routes/stripe.js:184",
   "handler": "getListOfAllSavedStripeTransaction",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:965",
+  "middlewares": [],
+  "source": "controller/stripe.js:1020",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -15128,12 +15710,10 @@
  {
   "method": "POST",
   "endpoint": "/api/stripe/stripe-transactions-saved-list",
-  "routeFile": "routes/stripe.js:152",
+  "routeFile": "routes/stripe.js:190",
   "handler": "getListOfAllSavedStripeTransaction",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:965",
+  "middlewares": [],
+  "source": "controller/stripe.js:1020",
   "viaFactory": null,
   "body": [
    "clientSecret?",
@@ -15174,12 +15754,10 @@
  {
   "method": "DELETE",
   "endpoint": "/api/stripe/subscriptions/:id",
-  "routeFile": "routes/stripe.js:279",
+  "routeFile": "routes/stripe.js:308",
   "handler": "cancelSubscriptionCompany",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:584",
+  "middlewares": [],
+  "source": "controller/stripe.js:629",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15202,12 +15780,10 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/subscriptions/:id",
-  "routeFile": "routes/stripe.js:273",
+  "routeFile": "routes/stripe.js:302",
   "handler": "searchSubscriptions",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:524",
+  "middlewares": [],
+  "source": "controller/stripe.js:569",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15230,12 +15806,10 @@
  {
   "method": "GET",
   "endpoint": "/api/stripe/transaction",
-  "routeFile": "routes/stripe.js:267",
+  "routeFile": "routes/stripe.js:296",
   "handler": "getListOfAllSavedTransaction",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/transaction.js:115",
+  "middlewares": [],
+  "source": "controller/transaction.js:159",
   "viaFactory": null,
   "body": [
    "active?",
@@ -15284,12 +15858,10 @@
  {
   "method": "PATCH",
   "endpoint": "/api/stripe/updating-subscription/:id",
-  "routeFile": "routes/stripe.js:276",
+  "routeFile": "routes/stripe.js:305",
   "handler": "updateSubcriptionInCompanyAccount",
-  "middlewares": [
-   "optionalJWT"
-  ],
-  "source": "controller/stripe.js:540",
+  "middlewares": [],
+  "source": "controller/stripe.js:585",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15341,7 +15913,7 @@
   "routeFile": "routes/subscription.js:15",
   "handler": "createSubscriptionNoTrialPeriod",
   "middlewares": [],
-  "source": "controller/stripe.js:433",
+  "source": "controller/stripe.js:478",
   "viaFactory": null,
   "body": [
    "items",
@@ -15473,7 +16045,7 @@
   "routeFile": "routes/subscription.js:33",
   "handler": "retrieveSubscriptionID",
   "middlewares": [],
-  "source": "controller/stripe.js:938",
+  "source": "controller/stripe.js:993",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15499,7 +16071,7 @@
   "routeFile": "routes/subscription.js:27",
   "handler": "searchingSubscriptionInStripe",
   "middlewares": [],
-  "source": "controller/stripe.js:1001",
+  "source": "controller/stripe.js:1056",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15554,7 +16126,7 @@
   "routeFile": "routes/transactionAuditLog.js:15",
   "handler": "displayTransactionAuditLog",
   "middlewares": [],
-  "source": "controller/transactionAuditLog.js:24",
+  "source": "controller/transactionAuditLog.js:25",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -15578,7 +16150,7 @@
   "routeFile": "routes/transactionAuditLog.js:12",
   "handler": "createAuditLog",
   "middlewares": [],
-  "source": "controller/transactionAuditLog.js:5",
+  "source": "controller/transactionAuditLog.js:6",
   "viaFactory": null,
   "body": [
    "actionTaken?",
@@ -15611,10 +16183,12 @@
  {
   "method": "POST",
   "endpoint": "/api/transaction/check-and-release-deposit-transactions",
-  "routeFile": "routes/transaction.js:52",
+  "routeFile": "routes/transaction.js:67",
   "handler": "checkingAndReleasingDepositTransactions",
-  "middlewares": [],
-  "source": "controller/transaction.js:221",
+  "middlewares": [
+   "staffOnly"
+  ],
+  "source": "controller/transaction.js:282",
   "viaFactory": null,
   "body": [
    "company",
@@ -15638,10 +16212,12 @@
  {
   "method": "DELETE",
   "endpoint": "/api/transaction/remove-duplicate-transaction/:id",
-  "routeFile": "routes/transaction.js:43",
+  "routeFile": "routes/transaction.js:58",
   "handler": "removeDuplicateEntry",
-  "middlewares": [],
-  "source": "controller/transaction.js:185",
+  "middlewares": [
+   "optionalJWT"
+  ],
+  "source": "controller/transaction.js:237",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15658,30 +16234,31 @@
   "notes": [],
   "statusCodes": [
    "201",
+   "404",
+   "409",
    "500"
   ]
  },
  {
   "method": "POST",
   "endpoint": "/api/transaction/save-transaction-admin-dashboard",
-  "routeFile": "routes/transaction.js:25",
+  "routeFile": "routes/transaction.js:39",
   "handler": "saveTransactionAdmin",
-  "middlewares": [],
-  "source": "controller/transaction.js:35",
+  "middlewares": [
+   "staffOnly"
+  ],
+  "source": "controller/transaction.js:79",
   "viaFactory": null,
   "body": [
    "active?",
    "clientSecret?",
    "company",
-   "company?",
    "consumerInfo",
-   "consumerInfo?",
    "created_at?",
    "date?",
    "device?",
    "eventSelected?",
    "event_id",
-   "event_id?",
    "paymentIntent?",
    "provider?",
    "type?"
@@ -15719,24 +16296,23 @@
  {
   "method": "POST",
   "endpoint": "/api/transaction/save-transaction-template-no-regular-user",
-  "routeFile": "routes/transaction.js:28",
+  "routeFile": "routes/transaction.js:42",
   "handler": "saveTransactionTemplateForNoRegularUser",
-  "middlewares": [],
-  "source": "controller/transaction.js:59",
+  "middlewares": [
+   "staffOnly"
+  ],
+  "source": "controller/transaction.js:103",
   "viaFactory": null,
   "body": [
    "active?",
    "clientSecret?",
    "company",
-   "company?",
    "consumerInfo",
-   "consumerInfo?",
    "created_at?",
    "date?",
    "device?",
    "eventSelected?",
    "event_id",
-   "event_id?",
    "paymentIntent?",
    "provider?",
    "type?"
@@ -15774,54 +16350,33 @@
  {
   "method": "POST",
   "endpoint": "/api/transaction/save-transaction",
-  "routeFile": "routes/transaction.js:22",
+  "routeFile": "routes/transaction.js:36",
   "handler": "saveTransaction",
-  "middlewares": [],
-  "source": "controller/transaction.js:11",
+  "middlewares": [
+   "optionalJWT"
+  ],
+  "source": "controller/transaction.js:32",
   "viaFactory": null,
   "body": [
-   "active?",
-   "clientSecret?",
    "company",
-   "company?",
    "consumerInfo",
-   "consumerInfo?",
-   "created_at?",
-   "date?",
-   "device?",
-   "eventSelected?",
    "event_id",
-   "event_id?",
-   "paymentIntent?",
-   "provider?",
-   "type?"
+   "paymentIntent"
   ],
   "params": [],
   "query": [],
   "headers": [],
   "required": [],
-  "schemaTypes": {
-   "device": "unknown[]",
-   "paymentIntent": "string",
-   "clientSecret": "string",
-   "consumerInfo": "Record<string, unknown>",
-   "eventSelected": "string",
-   "event_id": "string",
-   "provider": "string",
-   "date": "string",
-   "active": "boolean",
-   "company": "string",
-   "created_at": "number",
-   "type": "string"
-  },
+  "schemaTypes": {},
   "ignoresBody": false,
   "allowed": [],
   "identifiers": [],
   "dynamic": [],
   "notes": [
-   "el body se pasa completo a `new Transaction()`: los campos son los del esquema `models/Transaction.js`"
+   "pasa `req.body` completo a otra capa (revisar el controlador para el detalle)"
   ],
   "statusCodes": [
+   "200",
    "201",
    "500"
   ]
@@ -15829,10 +16384,12 @@
  {
   "method": "GET",
   "endpoint": "/api/transaction/subscriptions/:id",
-  "routeFile": "routes/transaction.js:46",
+  "routeFile": "routes/transaction.js:61",
   "handler": "retrieveSubscriptionID",
-  "middlewares": [],
-  "source": "controller/stripe.js:938",
+  "middlewares": [
+   "staffOnly"
+  ],
+  "source": "controller/stripe.js:993",
   "viaFactory": null,
   "body": [],
   "params": [
@@ -15855,10 +16412,10 @@
  {
   "method": "GET",
   "endpoint": "/api/transaction/transaction",
-  "routeFile": "routes/transaction.js:37",
+  "routeFile": "routes/transaction.js:52",
   "handler": "gettingListOfSavedTransaction",
   "middlewares": [],
-  "source": "controller/transaction.js:131",
+  "source": "controller/transaction.js:183",
   "viaFactory": null,
   "body": [],
   "params": [],
@@ -15881,10 +16438,12 @@
  {
   "method": "POST",
   "endpoint": "/api/transaction/transaction",
-  "routeFile": "routes/transaction.js:34",
+  "routeFile": "routes/transaction.js:49",
   "handler": "getListOfAllSavedTransaction",
-  "middlewares": [],
-  "source": "controller/transaction.js:115",
+  "middlewares": [
+   "optionalJWT"
+  ],
+  "source": "controller/transaction.js:159",
   "viaFactory": null,
   "body": [
    "active?",
@@ -15933,10 +16492,12 @@
  {
   "method": "POST",
   "endpoint": "/api/transaction/update-multiple-documents",
-  "routeFile": "routes/transaction.js:49",
+  "routeFile": "routes/transaction.js:64",
   "handler": "updateMultipleDocuments",
-  "middlewares": [],
-  "source": "controller/transaction.js:167",
+  "middlewares": [
+   "staffOnly"
+  ],
+  "source": "controller/transaction.js:219",
   "viaFactory": null,
   "body": [
    "active?",
@@ -15987,10 +16548,12 @@
  {
   "method": "PATCH",
   "endpoint": "/api/transaction/update-transaction/:id",
-  "routeFile": "routes/transaction.js:40",
+  "routeFile": "routes/transaction.js:55",
   "handler": "updateTransaction",
-  "middlewares": [],
-  "source": "controller/transaction.js:82",
+  "middlewares": [
+   "staffOnly"
+  ],
+  "source": "controller/transaction.js:126",
   "viaFactory": null,
   "body": [],
   "params": [

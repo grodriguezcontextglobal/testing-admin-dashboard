@@ -34,45 +34,9 @@ const KNOWN_UNMATCHED = [
   // is still under discussion. The contract has DELETE and GET for
   // `/api/stripe/subscriptions/:id`, no POST.
   "POST /api/stripe/subscriptions/:x",
-  // Not implemented: editing a stored document does not exist on the client
-  // yet. Pending work, not a broken call.
-  "PUT /api/document/:x",
-  // Standby, pending a backend answer. The generator detects a payload for 451
-  // of the 484 mounted endpoints, so absence from the contract is not proof
-  // that the route is gone.
+  // Standby, pending a backend answer. The contract regenerated on 2026-10-16
+  // (server a1b7cd4, 507 endpoints) still does not carry it.
   "POST /api/admin/push/broadcast",
-  "POST /api/cloudinary/upload-image",
-  "POST /api/db_location/sub-location-path/delete",
-  // Live on the server since 2026-08-25, but newer than the generated
-  // artifacts in src/docs -- the backend regenerates those, we do not. Drop
-  // this line once api-payloads.json carries the route.
-  "POST /api/school/consent/list",
-  // Checks the session user's current password server-side, replacing the
-  // browser's compareSync (FRONTEND_password_reset_mfa_2026-10-13.md). On
-  // release/observabilidad, not deployed yet, so newer than src/docs. Drop
-  // this line once api-payloads.json carries the route.
-  "POST /api/admin/verify-password",
-  // Stop / resume the daily overdue reminder per device: the backend's
-  // 9d61857, not deployed yet, so newer than the generated artifacts in
-  // src/docs (FRONTEND_overdue_reminders_2026-10-07.md). Drop these lines once
-  // api-payloads.json carries the routes.
-  "POST /api/school/reminders/resume",
-  "POST /api/school/reminders/stop",
-  // Same shape: the branding-preview routes ship in the server's
-  // feat/school-consent-backend branch (nodeMailer/brandingPreview.js), which is
-  // newer than the generated artifacts in src/docs. The settings page needs the
-  // template list to populate its preview selector. Drop this line once
-  // api-payloads.json carries the route.
-  "GET /api/nodemailer/branding-preview/templates",
-  // One of the three inventory routes of the backend's 94d7076, committed but
-  // not deployed, and therefore newer than the generated artifacts in src/docs.
-  // It only runs behind FEATURE_INVENTORY_SERVER_PAGINATION, which is off in
-  // every deployed environment; ItemTable.test.jsx pins that the flag-off page
-  // never calls it. Its two siblings, inventory-page and inventory-facets, are
-  // POSTs assembled through the contract builders rather than object literals,
-  // so this check does not see them. Drop this line once api-payloads.json
-  // carries the route.
-  "GET /api/db_item/serial-suggest",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */
