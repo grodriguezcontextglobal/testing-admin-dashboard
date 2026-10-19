@@ -23,6 +23,7 @@ import DevitrakLoading from "./components/animation/DevitrakLoading";
 import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
 import { persistor } from "./store/Store";
+import { setSessionExpiredHandler } from "./api/sessionExpiry";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 // const InactivityLogout = lazyWithRetry(() =>
@@ -49,6 +50,20 @@ const App = () => {
   const openNotificationWithIcon = (type, msg) => {
     notify(type, msg);
   };
+
+  /* What ending an expired session does when devitrakApi sees one
+     (api/sessionExpiry.js). onLogout resets every slice, and with no session
+     the router's "/*" lands on /login, which returns to the saved page after
+     signing in again. */
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      clearSessionStorage();
+      dispatch(onLogout());
+      notify("warning", "Your session has expired", "Sign in again to continue where you were.");
+    });
+    return () => setSessionExpiredHandler(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
   const isTokenValid = (token) => {
     if (token) {

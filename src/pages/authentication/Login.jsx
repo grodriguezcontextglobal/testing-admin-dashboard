@@ -19,6 +19,7 @@ import {
   clearSessionStorage,
   persistCompanyHeaders,
 } from "../../api/sessionHeaders";
+import { takeReturnPath } from "../../api/sessionExpiry";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import FooterComponent from "../../components/general/FooterComponent";
 // import HidenIcon from "../../components/icons/HidenIcon";
@@ -204,7 +205,8 @@ const Login = () => {
           openNotificationWithIcon("error", "Failed to fetch event data.");
         }
       } else {
-        navigate("/");
+        // Back to the page an expired session interrupted, if any.
+        navigate(takeReturnPath() ?? "/");
       }
     },
     [navigate, addingEventState, openNotificationWithIcon],

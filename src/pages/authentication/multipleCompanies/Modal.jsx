@@ -10,6 +10,7 @@ import {
   clearSessionStorage,
   persistCompanyHeaders,
 } from "../../../api/sessionHeaders";
+import { takeReturnPath } from "../../../api/sessionExpiry";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { getRoleLabel, isAssistant } from "../../../config/roles";
 import { buildSetPermissionsPayload } from "../utils/loginUtils";
@@ -143,7 +144,8 @@ const ModalMultipleCompanies = ({
       dispatch(clearErrorMessage());
       queryClient.clear();
       openNotificationWithIcon("Success", "User logged in.");
-      navigate(isAssistant(selectedCompanySQL.roleType) ? "/events" : "/");
+      // Back to the page an expired session interrupted, if any.
+      navigate(isAssistant(selectedCompanySQL.roleType) ? "/events" : (takeReturnPath() ?? "/"));
       // }
     } catch (error) {
       console.log(

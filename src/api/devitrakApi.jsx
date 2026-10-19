@@ -4,6 +4,7 @@ import { getActiveServerSynchronously, switchServer, initializeActiveServer } fr
 import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
 import { guardRequest } from "./devPayloadGuard";
 import { isOfflineQueueableRequest } from "../config/offlineQueue";
+import { handleUnauthorized } from "./sessionExpiry";
 
 // Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads.
 const configuredApiOrigins = [
@@ -133,6 +134,11 @@ const setupResponseInterceptor = (instance) => {
         async (error) => {
             const { config, message } = error;
             const originalRequest = config;
+
+            // An authenticated request answered 401 is an expired session:
+            // end it once, globally, instead of leaving the screen half
+            // loaded (sessionExpiry.js). The error still reaches the caller.
+            if (error?.response?.status === 401) handleUnauthorized(error);
 
             if (
                 isOfflineQueueableRequest({
