@@ -793,7 +793,7 @@ describe("receiptQrValue — what the printed QR encodes", () => {
 
 describe("publicReceiptToTransaction — the reduced receipt a scan reads", () => {
   const publicReceipt = {
-    paymentIntent: "pi_1",
+    paymentIntent: "pi_3AbCdEfGhIjKlMnOpQrStUvW",
     active: true,
     status: "active",
     device: [{ deviceType: "iPad", deviceNeeded: 2, deviceValue: 150 }],
@@ -808,7 +808,8 @@ describe("publicReceiptToTransaction — the reduced receipt a scan reads", () =
   it("renders as a receipt with no consumer on it", () => {
     const receipt = mapTransactionToReceipt(publicReceiptToTransaction(publicReceipt));
     expect(receipt.payer).toEqual({ name: "", email: "" });
-    expect(receipt.status).toBe(RECEIPT_STATUS.PAID);
+    // Devices requested on a card: a deposit hold, not a charge.
+    expect(receipt.status).toBe(RECEIPT_STATUS.DEPOSIT_HELD);
     expect(receipt.total).toBe(150);
     expect(receipt.company).toBe("Lincoln High");
     expect(receipt.reference).toBe("Science Fair");
@@ -834,5 +835,87 @@ describe("publicReceiptToTransaction — the reduced receipt a scan reads", () =
   it("is null for a missing receipt", () => {
     expect(publicReceiptToTransaction(null)).toBeNull();
     expect(publicReceiptToTransaction(undefined)).toBeNull();
+  });
+});
+
+/* 2026-10-20, Gustavo: the receipt has to say what the payment intent is.
+   Every transaction used to print as "Paid" or "Voided", so a free checkout
+   and a card hold printed as if money had been taken. The shapes are the ones
+   describeTransactionKind already tells apart for the transactions table. */
+describe("mapTransactionToReceipt — status follows the payment intent", () => {
+  const CARD = "pi_3AbCdEfGhIjKlMnOpQrStUvW";
+  const FREE = "pi_AbCdEfGhIjKl";
+  const CASH = "pi_cash_amount:$50_received_by:**staff@school.edu**&abc";
+  const deposit = (paymentIntent, active) => ({
+    paymentIntent,
+    active,
+    device: [{ deviceType: "iPad", deviceNeeded: 2, deviceValue: 150 }],
+  });
+  const charge = (paymentIntent, active) => ({
+    paymentIntent,
+    active,
+    device: [{ deviceType: "Lost device fee", deviceNeeded: 0, deviceValue: 150 }],
+  });
+
+  it("prints a short id as no charge, whatever the device value", () => {
+    const receipt = mapTransactionToReceipt(deposit(FREE, true));
+    expect(receipt.status).toBe(RECEIPT_STATUS.NO_CHARGE);
+    expect(receipt.paymentMethod).toBe("No charge");
+    expect(mapTransactionToReceipt(deposit(FREE, false)).status).toBe(
+      RECEIPT_STATUS.NO_CHARGE
+    );
+  });
+
+  it("prints a pi_cash id as a cash deposit", () => {
+    const receipt = mapTransactionToReceipt(deposit(CASH, true));
+    expect(receipt.status).toBe(RECEIPT_STATUS.CASH_RECEIVED);
+    expect(receipt.paymentMethod).toBe("Cash deposit");
+    expect(mapTransactionToReceipt(deposit(CASH, false)).status).toBe(
+      RECEIPT_STATUS.CLOSED
+    );
+  });
+
+  it("shows the readable cash id, not the raw string", () => {
+    expect(mapTransactionToReceipt(deposit(CASH, true)).id).toBe(
+      "cash_amount:$50_staff@school.edu"
+    );
+    expect(mapTransactionToReceipt(deposit(CASH, true)).paymentIntent).toBe(CASH);
+  });
+
+  it("prints a card deposit as held, and closed once captured or released", () => {
+    const receipt = mapTransactionToReceipt(deposit(CARD, true));
+    expect(receipt.status).toBe(RECEIPT_STATUS.DEPOSIT_HELD);
+    expect(receipt.paymentMethod).toBe("Card deposit");
+    // A capture and a release both save active: false, so it cannot say which.
+    expect(mapTransactionToReceipt(deposit(CARD, false)).status).toBe(
+      RECEIPT_STATUS.CLOSED
+    );
+  });
+
+  it("prints a card charge as paid, and void once refunded", () => {
+    const receipt = mapTransactionToReceipt(charge(CARD, true));
+    expect(receipt.status).toBe(RECEIPT_STATUS.PAID);
+    expect(receipt.paymentMethod).toBe("Card charge");
+    expect(mapTransactionToReceipt(charge(CARD, false)).status).toBe(
+      RECEIPT_STATUS.VOID
+    );
+  });
+
+  it("still refuses to guess when the active flag is missing", () => {
+    expect(mapTransactionToReceipt(deposit(CARD, undefined)).status).toBe(
+      RECEIPT_STATUS.UNKNOWN
+    );
+    expect(mapTransactionToReceipt(deposit(CASH, undefined)).status).toBe(
+      RECEIPT_STATUS.UNKNOWN
+    );
+  });
+
+  it("does the same for the reduced receipt a scan reads", () => {
+    const scanned = publicReceiptToTransaction({
+      paymentIntent: CARD,
+      status: "refunded",
+      device: [{ deviceType: "iPad", deviceNeeded: 2, deviceValue: 150 }],
+    });
+    expect(mapTransactionToReceipt(scanned).status).toBe(RECEIPT_STATUS.CLOSED);
   });
 });

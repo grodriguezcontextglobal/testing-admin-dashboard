@@ -30,6 +30,22 @@ const BAND = {
     className: "receipt__band--void",
     label: "Declared lost — device was not recovered",
   },
+  [RECEIPT_STATUS.NO_CHARGE]: {
+    className: "receipt__band--open",
+    label: "No charge — nothing was paid",
+  },
+  [RECEIPT_STATUS.CASH_RECEIVED]: {
+    className: "receipt__band--paid",
+    label: "Cash deposit received",
+  },
+  [RECEIPT_STATUS.DEPOSIT_HELD]: {
+    className: "receipt__band--open",
+    label: "Deposit held on card — not charged",
+  },
+  [RECEIPT_STATUS.CLOSED]: {
+    className: "receipt__band--unknown",
+    label: "Deposit closed — captured or released",
+  },
 };
 
 /**
@@ -106,6 +122,12 @@ const ReceiptDocument = ({ receipt, qrValue }) => {
             <dd>{receipt.payer.email}</dd>
           </>
         )}
+        {receipt?.paymentMethod && (
+          <>
+            <dt>Payment</dt>
+            <dd>{receipt.paymentMethod}</dd>
+          </>
+        )}
         <dt>{receipt?.idLabel || "Reference ID"}</dt>
         <dd>{receipt?.id || "—"}</dd>
       </dl>
@@ -180,6 +202,7 @@ ReceiptDocument.propTypes = {
     date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
     reference: PropTypes.string,
     partyLabel: PropTypes.string,
+    paymentMethod: PropTypes.string,
     payer: PropTypes.shape({
       name: PropTypes.string,
       email: PropTypes.string,

@@ -16,6 +16,11 @@
  * way to show a figure off by 100 on a document someone signs.
  */
 
+import {
+  describeTransactionKind,
+  formatTransactionId,
+} from "../../events/quickGlance/consumer/utils/transactionTable";
+
 /** Route the QR points at. Registered in both route trees — see ReceiptPage. */
 export const RECEIPT_ROUTE = "/receipt";
 
@@ -60,6 +65,51 @@ export const RECEIPT_STATUS = {
   // A closed lease whose hardware never came back. Distinct from RETURNED so a
   // declaration cannot print a band that says the device was returned.
   DECLARED_LOST: "declared_lost",
+  // Transaction receipts whose payment intent is not a card charge.
+  NO_CHARGE: "no_charge",
+  CASH_RECEIVED: "cash_received",
+  DEPOSIT_HELD: "deposit_held",
+  // A deposit no longer held: a capture and a release both save active: false,
+  // so the record cannot say which of the two happened.
+  CLOSED: "closed",
+};
+
+/** How the receipt names each kind describeTransactionKind returns. */
+const PAYMENT_METHOD_LABEL = {
+  free: "No charge",
+  cash: "Cash deposit",
+  deposit: "Card deposit",
+  charge: "Card charge",
+};
+
+/**
+ * The receipt status of a transaction, read from its payment intent:
+ * - a short id (`pi_` + 12): nothing was charged;
+ * - `pi_cash_…`: a cash deposit, received or closed;
+ * - a Stripe id with devices requested: a card deposit, held or closed;
+ * - any other Stripe id: a card charge, paid or refunded (void).
+ *
+ * A missing `active` flag stays UNKNOWN for anything that moved money (see
+ * resolveReceiptStatus). A no-charge transaction needs no flag.
+ *
+ * @param {object} transaction
+ * @returns {string} one of RECEIPT_STATUS
+ */
+export const resolvePaymentReceiptStatus = (transaction) => {
+  const hasId = Boolean(`${transaction?.paymentIntent ?? ""}`.trim());
+  const kind = describeTransactionKind(transaction).key;
+  if (hasId && kind === "free") return RECEIPT_STATUS.NO_CHARGE;
+
+  const base = resolveReceiptStatus(transaction);
+  if (base === RECEIPT_STATUS.UNKNOWN || !hasId) return base;
+  const active = base === RECEIPT_STATUS.PAID;
+  if (kind === "cash") {
+    return active ? RECEIPT_STATUS.CASH_RECEIVED : RECEIPT_STATUS.CLOSED;
+  }
+  if (kind === "deposit") {
+    return active ? RECEIPT_STATUS.DEPOSIT_HELD : RECEIPT_STATUS.CLOSED;
+  }
+  return base;
 };
 
 export const RECEIPT_KIND = {
@@ -304,7 +354,14 @@ export const mapTransactionToReceipt = (transaction, { companyLogo } = {}) => {
     idLabel: "Transaction ID",
     partyLabel: "Billed to",
     paymentIntent: `${transaction?.paymentIntent ?? ""}`,
-    id: `${transaction?.paymentIntent ?? ""}`,
+    // A cash id is machine-readable noise; the readable form keeps the amount
+    // and who took the money.
+    id: transaction?.paymentIntent
+      ? formatTransactionId(transaction.paymentIntent)
+      : "",
+    paymentMethod: transaction?.paymentIntent
+      ? PAYMENT_METHOD_LABEL[describeTransactionKind(transaction).key] ?? ""
+      : "",
     date: `${transaction?.date ?? ""}`,
     payer: {
       name: [consumer?.name, consumer?.lastName].filter(Boolean).join(" ").trim(),
@@ -312,7 +369,7 @@ export const mapTransactionToReceipt = (transaction, { companyLogo } = {}) => {
     },
     lines,
     total: receiptTotal(transaction),
-    status: resolveReceiptStatus(transaction),
+    status: resolvePaymentReceiptStatus(transaction),
     company: `${transaction?.provider ?? ""}`,
     reference: `${transaction?.eventSelected ?? ""}`,
     logoUrl: resolveReceiptLogo(companyLogo),
