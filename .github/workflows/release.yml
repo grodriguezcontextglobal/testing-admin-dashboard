@@ -60,15 +60,17 @@ jobs:
         # Cada valor se lee de las Variables del environment o, si no está, de sus
         # Secrets: el 20-10 se añadieron y el build los seguía viendo vacíos. Son
         # valores públicos que acaban en el bundle de todas formas (URL de la API,
-        # clave publicable de Stripe, flags).
+        # clave publicable de Stripe, flags). Los tres flags que producción tiene
+        # encendidos en la VM (confirmado el 20-10) salen en 'true' si nadie los
+        # define; THEME_SWITCH sigue apagado.
         env:
           VITE_APP_DEVITRACK_API: ${{ vars.VITE_APP_DEVITRACK_API || secrets.VITE_APP_DEVITRACK_API }}
           VITE_APP_DEVITRACK_API_BACKUP: ${{ vars.VITE_APP_DEVITRACK_API_BACKUP || secrets.VITE_APP_DEVITRACK_API_BACKUP }}
           VITE_APP_PUBLIC_STRIPE_KEY: ${{ vars.VITE_APP_PUBLIC_STRIPE_KEY || secrets.VITE_APP_PUBLIC_STRIPE_KEY }}
-          VITE_APP_FEATURE_SCOPED_ROLES: ${{ vars.VITE_APP_FEATURE_SCOPED_ROLES || secrets.VITE_APP_FEATURE_SCOPED_ROLES }}
-          VITE_APP_FEATURE_MEMBER_FEES: ${{ vars.VITE_APP_FEATURE_MEMBER_FEES || secrets.VITE_APP_FEATURE_MEMBER_FEES }}
+          VITE_APP_FEATURE_SCOPED_ROLES: ${{ vars.VITE_APP_FEATURE_SCOPED_ROLES || secrets.VITE_APP_FEATURE_SCOPED_ROLES || 'true' }}
+          VITE_APP_FEATURE_MEMBER_FEES: ${{ vars.VITE_APP_FEATURE_MEMBER_FEES || secrets.VITE_APP_FEATURE_MEMBER_FEES || 'true' }}
           VITE_APP_FEATURE_THEME_SWITCH: ${{ vars.VITE_APP_FEATURE_THEME_SWITCH || secrets.VITE_APP_FEATURE_THEME_SWITCH }}
-          VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION: ${{ vars.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION || secrets.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION }}
+          VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION: ${{ vars.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION || secrets.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION || 'true' }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.
