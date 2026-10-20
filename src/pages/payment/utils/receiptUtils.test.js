@@ -17,6 +17,9 @@ import {
   mapFeeChargeToReceipt,
   receiptSignatures,
   resolveReceiptLogo,
+  readReceiptTokenFromSearch,
+  receiptQrValue,
+  publicReceiptToTransaction,
 } from "./receiptUtils";
 
 const transaction = {
@@ -738,5 +741,98 @@ describe("mapTransactionToReceipt — company letterhead", () => {
     });
     const without = mapTransactionToReceipt(transaction);
     expect({ ...withLogo, logoUrl: null }).toEqual(without);
+  });
+});
+
+/* 2026-10-20, server FRONTEND_receipt_link_2026-10-20.md: the QR used to carry
+   only the payment intent, and GET /transaction/transaction answered anyone who
+   knew it with the consumer's name and email. The printed QR now carries a
+   signed token (`rt`) and the public page reads a reduced receipt with it. */
+describe("readReceiptTokenFromSearch", () => {
+  it("reads the signed token the QR carries", () => {
+    expect(readReceiptTokenFromSearch("?tx=pi_1&rt=abc.def")).toBe("abc.def");
+    expect(readReceiptTokenFromSearch("tx=pi_1&rt=a%2Bb")).toBe("a+b");
+  });
+
+  it("is null when the link has no token, as on receipts printed before it", () => {
+    expect(readReceiptTokenFromSearch("?tx=pi_1")).toBeNull();
+    expect(readReceiptTokenFromSearch("?tx=pi_1&rt=%20")).toBeNull();
+    expect(readReceiptTokenFromSearch("")).toBeNull();
+    expect(readReceiptTokenFromSearch(undefined)).toBeNull();
+  });
+});
+
+describe("receiptQrValue — what the printed QR encodes", () => {
+  const url = "https://admin.devitrak.net/receipt?tx=pi_1";
+
+  it("adds the signed token when receipt-link issued one", () => {
+    expect(receiptQrValue(url, { status: 200, token: "a+b/c" })).toBe(
+      `${url}&rt=a%2Bb%2Fc`
+    );
+  });
+
+  it("prints the unsigned link when the event ended over 30 days ago (410)", () => {
+    expect(receiptQrValue(url, { status: 410 })).toBe(url);
+  });
+
+  it("prints no QR when the payment is not the company's or does not exist (404)", () => {
+    expect(receiptQrValue(url, { status: 404 })).toBe("");
+  });
+
+  it("falls back to the unsigned link on any other failure: only staff can open it", () => {
+    expect(receiptQrValue(url, { status: 500 })).toBe(url);
+    expect(receiptQrValue(url, { status: 403 })).toBe(url);
+    expect(receiptQrValue(url, undefined)).toBe(url);
+    expect(receiptQrValue(url, { status: 200 })).toBe(url);
+  });
+
+  it("stays empty when there was nothing to link to", () => {
+    expect(receiptQrValue("", { status: 200, token: "t" })).toBe("");
+  });
+});
+
+describe("publicReceiptToTransaction — the reduced receipt a scan reads", () => {
+  const publicReceipt = {
+    paymentIntent: "pi_1",
+    active: true,
+    status: "active",
+    device: [{ deviceType: "iPad", deviceNeeded: 2, deviceValue: 150 }],
+    amount: 300,
+    currency: "usd",
+    provider: "Lincoln High",
+    eventSelected: "Science Fair",
+    date: "2026-10-20T12:00:00.000Z",
+    type: "event",
+  };
+
+  it("renders as a receipt with no consumer on it", () => {
+    const receipt = mapTransactionToReceipt(publicReceiptToTransaction(publicReceipt));
+    expect(receipt.payer).toEqual({ name: "", email: "" });
+    expect(receipt.status).toBe(RECEIPT_STATUS.PAID);
+    expect(receipt.total).toBe(150);
+    expect(receipt.company).toBe("Lincoln High");
+    expect(receipt.reference).toBe("Science Fair");
+    expect(receipt.lines).toEqual([{ label: "iPad", amount: 150 }]);
+  });
+
+  it("reads the void flag from `status` when `active` is missing", () => {
+    const { active, ...rest } = publicReceipt;
+    expect(active).toBe(true);
+    expect(publicReceiptToTransaction({ ...rest, status: "refunded" }).active).toBe(false);
+    expect(publicReceiptToTransaction({ ...rest, status: "active" }).active).toBe(true);
+    expect(publicReceiptToTransaction({ ...rest, status: "odd" }).active).toBeUndefined();
+  });
+
+  it("drops any consumer data the server might add later", () => {
+    const tx = publicReceiptToTransaction({
+      ...publicReceipt,
+      consumerInfo: { name: "Ada", email: "ada@example.com" },
+    });
+    expect(tx.consumerInfo).toBeUndefined();
+  });
+
+  it("is null for a missing receipt", () => {
+    expect(publicReceiptToTransaction(null)).toBeNull();
+    expect(publicReceiptToTransaction(undefined)).toBeNull();
   });
 });

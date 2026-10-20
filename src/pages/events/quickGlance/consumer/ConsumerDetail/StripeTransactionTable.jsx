@@ -21,6 +21,7 @@ import ReceiptModal from "../../../../payment/components/ReceiptModal";
 import {
   buildReceiptUrl,
   mapTransactionToReceipt,
+  receiptQrValue,
 } from "../../../../payment/utils/receiptUtils";
 import "../consumerDetail.css";
 import {
@@ -98,6 +99,29 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
       }),
     staleTime: 1000 * 60 * 5,
     enabled: Boolean(event?.id && companyId && consumer?.id),
+  });
+
+  /* The printed QR carries a signed token, so whoever scans it reads the
+     receipt without a session and without the consumer's name or email
+     (server FRONTEND_receipt_link_2026-10-20.md). Failures are answers, not
+     errors: receiptQrValue turns each status into the QR to print. */
+  const receiptPaymentIntent = receiptTransaction?.paymentIntent;
+  const receiptLinkQuery = useQuery({
+    queryKey: ["receiptLink", companyId, receiptPaymentIntent],
+    queryFn: async () => {
+      try {
+        const { data } = await devitrakApi.post("/transaction/receipt-link", {
+          paymentIntent: receiptPaymentIntent,
+        });
+        return { status: 200, token: data?.token };
+      } catch (error) {
+        return { status: error?.response?.status };
+      }
+    },
+    // The token lasts until the event ends plus 30 days.
+    staleTime: 1000 * 60 * 30,
+    retry: false,
+    enabled: Boolean(receiptPaymentIntent),
   });
 
   const signatureProof = signaturesQuery.data
@@ -374,13 +398,22 @@ const StripeTransactionTable = ({ searchValue, triggering }) => {
           receipt={mapTransactionToReceipt(receiptTransaction, {
             companyLogo: user?.companyData?.company_logo,
           })}
-          qrValue={buildReceiptUrl(
-            window.location.origin,
-            receiptTransaction?.paymentIntent,
-            // Carried on the link so the scanned copy keeps the letterhead the
-            // printed one has.
-            { companyLogo: user?.companyData?.company_logo }
-          )}
+          // No QR until receipt-link answers, so nothing prints unsigned by
+          // accident.
+          qrValue={
+            receiptLinkQuery.isSuccess
+              ? receiptQrValue(
+                  buildReceiptUrl(
+                    window.location.origin,
+                    receiptPaymentIntent,
+                    // Carried on the link so the scanned copy keeps the
+                    // letterhead the printed one has.
+                    { companyLogo: user?.companyData?.company_logo }
+                  ),
+                  receiptLinkQuery.data
+                )
+              : ""
+          }
         />
       )}
     </>

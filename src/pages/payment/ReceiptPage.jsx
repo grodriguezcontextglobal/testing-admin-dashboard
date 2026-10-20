@@ -8,8 +8,10 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import ReceiptDocument from "./components/ReceiptDocument";
 import {
   mapTransactionToReceipt,
+  publicReceiptToTransaction,
   readPaymentIntentFromSearch,
   readReceiptLogoFromSearch,
+  readReceiptTokenFromSearch,
 } from "./utils/receiptUtils";
 
 /**
@@ -26,14 +28,14 @@ import {
  * Its job is to show the CURRENT state of the transaction, which is what makes
  * a void visible after the paper copy was already handed over.
  *
- * KNOWN LIMIT — the lookup goes through devitrakApi, which attaches the session
- * headers. If GET /transaction/transaction is auth-protected server-side (not
- * verified here — the backend is owned elsewhere), a logged-out scan gets a 401
- * and the sign-in state below. Making the scan work for a parent needs an
- * unauthenticated read keyed by an unguessable token, not by the payment intent:
- * these receipts carry a name and an email, so a guessable URL is an exposure,
- * not just an inconvenience. That is a backend ask, not something to paper over
- * here.
+ * Two reads (server FRONTEND_receipt_link_2026-10-20.md):
+ * - Without a session and with a signed token (`rt`) on the link:
+ *   GET /transaction/receipt?rt=…, a reduced receipt with no consumer name or
+ *   email. A 401 there means the link expired.
+ * - Otherwise GET /transaction/transaction?paymentIntent=…, the full document.
+ *   Once the server's RECEIPT_PUBLIC_READ_MODE is `enforce` it answers only
+ *   signed-in staff, so a QR printed before the token existed shows the sign-in
+ *   state below.
  */
 const ReceiptPage = () => {
   /* Empty for a viewer opening this from a QR scan, which is the point: the
@@ -41,11 +43,20 @@ const ReceiptPage = () => {
   const { user } = useSelector((state) => state.admin);
   const location = useLocation();
   const paymentIntent = readPaymentIntentFromSearch(location.search);
+  const receiptToken = readReceiptTokenFromSearch(location.search);
+  // Staff with a session keep the full document, consumer included.
+  const readSigned = Boolean(receiptToken) && !user?.uid;
 
   const receiptQuery = useQuery({
-    queryKey: ["receiptTransaction", paymentIntent],
-    enabled: Boolean(paymentIntent),
+    queryKey: ["receiptTransaction", paymentIntent, readSigned ? receiptToken : null],
+    enabled: Boolean(paymentIntent || readSigned),
     queryFn: async () => {
+      if (readSigned) {
+        const response = await devitrakApi.get(
+          `/transaction/receipt?rt=${encodeURIComponent(receiptToken)}`
+        );
+        return publicReceiptToTransaction(response?.data?.receipt);
+      }
       const response = await devitrakApi.get(
         `/transaction/transaction?paymentIntent=${encodeURIComponent(
           paymentIntent
@@ -75,7 +86,7 @@ const ReceiptPage = () => {
     </main>
   );
 
-  if (!paymentIntent) {
+  if (!paymentIntent && !readSigned) {
     return frame(
       <Alert
         type="error"
@@ -92,6 +103,16 @@ const ReceiptPage = () => {
 
   if (receiptQuery.isError) {
     const status = receiptQuery.error?.response?.status;
+    if (readSigned && (status === 401 || status === 404)) {
+      return frame(
+        <Alert
+          type="warning"
+          showIcon
+          message={status === 401 ? "This receipt link has expired" : "Receipt not found"}
+          description="Ask the company for a fresh copy of the receipt."
+        />
+      );
+    }
     const needsSignIn = status === 401 || status === 403;
     return frame(
       <>
@@ -121,7 +142,7 @@ const ReceiptPage = () => {
         type="warning"
         showIcon
         message="Receipt not found"
-        description={`No transaction matches ${paymentIntent}. It may have been issued by a different company account.`}
+        description={`No transaction matches ${paymentIntent || "this link"}. It may have been issued by a different company account.`}
       />
     );
   }

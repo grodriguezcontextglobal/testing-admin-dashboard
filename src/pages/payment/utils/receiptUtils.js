@@ -128,6 +128,69 @@ export const readReceiptLogoFromSearch = (search) => {
 };
 
 /**
+ * The signed receipt token (`rt`) the QR carries, or null.
+ *
+ * Receipts printed before 2026-10-20 have no token; those scans fall back to
+ * the session read, which the server only answers for signed-in staff once
+ * RECEIPT_PUBLIC_READ_MODE is `enforce`.
+ *
+ * @param {string} search location.search, with or without the leading "?"
+ * @returns {string|null}
+ */
+export const readReceiptTokenFromSearch = (search) => {
+  const raw = `${search ?? ""}`.replace(/^\?/, "");
+  if (!raw) return null;
+  const value = `${new URLSearchParams(raw).get("rt") ?? ""}`.trim();
+  return value || null;
+};
+
+/**
+ * What the printed QR encodes, given the answer of
+ * POST /transaction/receipt-link (server FRONTEND_receipt_link_2026-10-20.md).
+ *
+ * - 200 with a token: the link plus `&rt=<token>`, readable without a session.
+ * - 404: the payment is not this company's, or there is no transaction: no QR.
+ * - anything else (410 once the event ended over 30 days ago, a failed call):
+ *   the unsigned link, which only signed-in staff can open.
+ *
+ * @param {string} url the unsigned link from buildReceiptUrl
+ * @param {{status?: number, token?: string}} [outcome]
+ * @returns {string}
+ */
+export const receiptQrValue = (url, outcome) => {
+  if (!url) return "";
+  if (outcome?.status === 404) return "";
+  const token = `${outcome?.token ?? ""}`.trim();
+  if (outcome?.status === 200 && token) {
+    return `${url}&rt=${encodeURIComponent(token)}`;
+  }
+  return url;
+};
+
+/**
+ * The reduced receipt GET /transaction/receipt?rt= returns, in the transaction
+ * shape mapTransactionToReceipt reads.
+ *
+ * It has no consumerInfo by design: whoever scans a receipt sees the payment,
+ * the devices and the event, never the consumer's name or email. Any consumer
+ * field is dropped here too, so the public page cannot start showing one.
+ *
+ * @param {object} receipt `data.receipt`
+ * @returns {object|null}
+ */
+export const publicReceiptToTransaction = (receipt) => {
+  if (!receipt) return null;
+  // eslint-disable-next-line no-unused-vars
+  const { consumerInfo, ...rest } = receipt;
+  const fromStatus =
+    receipt.status === "active" ? true : receipt.status === "refunded" ? false : undefined;
+  return {
+    ...rest,
+    active: typeof receipt.active === "boolean" ? receipt.active : fromStatus,
+  };
+};
+
+/**
  * Paid, void, or unknown — deliberately three states.
  *
  * Only an explicit boolean counts. Transaction documents written before
