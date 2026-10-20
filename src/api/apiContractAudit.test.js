@@ -37,6 +37,9 @@ const KNOWN_UNMATCHED = [
   // Standby, pending a backend answer. The contract regenerated on 2026-10-16
   // (server a1b7cd4, 507 endpoints) still does not carry it.
   "POST /api/admin/push/broadcast",
+  // Added server-side on 2026-10-20 (FRONTEND_receipt_link_2026-10-20.md), after
+  // the contract was last regenerated. Remove once a new contract carries it.
+  "POST /api/transaction/receipt-link",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */
