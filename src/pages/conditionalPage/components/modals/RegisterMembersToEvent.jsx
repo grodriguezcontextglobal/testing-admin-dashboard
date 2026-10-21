@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { FEATURE_EVENT_INVITATIONS } from "../../../../config/featureFlags";
 import { hasPermission, resolveRoleType } from "../../../../config/roles";
 import renderingTitle from "../../../../components/general/renderingTitle";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
@@ -27,6 +28,7 @@ import {
   getDirectAddTarget,
   inviteSelectionCounts,
   registerConsumerToEvent,
+  registrationModes,
   selectableInviteKeys,
   invitationSendNotice,
   sendEventInvitations,
@@ -38,11 +40,9 @@ const stepClass = (done) =>
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 /* 2026-09-29 `46:06`: a waiver signed at the start of the semester can already
-   cover any event, so asking a guardian again is optional. */
-const MODES = [
-  { value: "consent", label: "Ask for guardian consent" },
-  { value: "direct", label: "Add directly" },
-];
+   cover any event, so asking a guardian again is optional. The modes on offer
+   come from registrationModes: FEATURE_EVENT_INVITATIONS can switch the
+   invitation off, leaving "Add directly". */
 
 /**
  * "Register [members] to event" — a Members page action.
@@ -71,7 +71,13 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
   const { notify, contextHolder } = useStatusNotification();
   const canAddDirectly = hasPermission("member:update", resolveRoleType(user));
 
-  const [mode, setMode] = useState("consent");
+  const modes = registrationModes({
+    invitationsEnabled: FEATURE_EVENT_INVITATIONS,
+    canAddDirectly,
+  });
+  const defaultMode = modes[0]?.value ?? "consent";
+
+  const [mode, setMode] = useState(defaultMode);
   const direct = mode === "direct";
   const [selectedEventOption, setSelectedEventOption] = useState(null);
   const [selectedKeys, setSelectedKeys] = useState([]);
@@ -130,7 +136,7 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
 
   const closeModal = () => {
     if (sending) return;
-    setMode("consent");
+    setMode(defaultMode);
     setSelectedEventOption(null);
     setSelectedKeys([]);
     setAlreadyInvitedKeys([]);
@@ -276,9 +282,9 @@ const RegisterMembersToEvent = ({ openModal, setOpenModal, audienceLabel = "memb
     <div className="action-form">
       {contextHolder}
 
-      {canAddDirectly && (
+      {modes.length > 1 && (
         <div className="action-form__toolbar">
-          <Segmented options={MODES} value={mode} onChange={changeMode} block />
+          <Segmented options={modes} value={mode} onChange={changeMode} block />
         </div>
       )}
 

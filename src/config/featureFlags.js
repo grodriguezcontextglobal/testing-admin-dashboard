@@ -56,3 +56,15 @@ export const FEATURE_THEME_SWITCH =
  */
 export const FEATURE_INVENTORY_SERVER_PAGINATION =
   import.meta.env.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION === "true";
+
+/**
+ * Signed event invitations from the Members page ("Ask for guardian consent",
+ * POST /school/event-invitations/send).
+ *
+ * A kill switch, so default ON: only the exact string "false" turns it off.
+ * Added 2026-10-21 because production answered `sent: 1` while no email
+ * arrived. With it off, "Add directly" is the only way to register members to
+ * an event, and the Members page button shows only to roles that may use it.
+ */
+export const FEATURE_EVENT_INVITATIONS =
+  import.meta.env.VITE_APP_FEATURE_EVENT_INVITATIONS !== "false";

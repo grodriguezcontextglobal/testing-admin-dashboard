@@ -71,6 +71,8 @@ jobs:
           VITE_APP_FEATURE_MEMBER_FEES: ${{ vars.VITE_APP_FEATURE_MEMBER_FEES || secrets.VITE_APP_FEATURE_MEMBER_FEES || 'true' }}
           VITE_APP_FEATURE_THEME_SWITCH: ${{ vars.VITE_APP_FEATURE_THEME_SWITCH || secrets.VITE_APP_FEATURE_THEME_SWITCH }}
           VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION: ${{ vars.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION || secrets.VITE_APP_FEATURE_INVENTORY_SERVER_PAGINATION || 'true' }}
+          # Kill switch for invitation emails (2026-10-21): set to 'false' to hide "Ask for guardian consent".
+          VITE_APP_FEATURE_EVENT_INVITATIONS: ${{ vars.VITE_APP_FEATURE_EVENT_INVITATIONS || secrets.VITE_APP_FEATURE_EVENT_INVITATIONS || 'true' }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.

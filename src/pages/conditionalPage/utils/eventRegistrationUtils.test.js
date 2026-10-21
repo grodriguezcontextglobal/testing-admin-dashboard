@@ -12,6 +12,7 @@ import {
   INVITATION_SEND_LIMIT,
   sendEventInvitations,
   invitationSendNotice,
+  registrationModes,
 } from "./eventRegistrationUtils";
 
 const adultMember = {
@@ -582,5 +583,27 @@ describe("invitationSendNotice", () => {
     expect(invitationSendNotice({ sent: 1, alreadyInvited: [], failures: [], total: 1 }).title).toBe(
       "1 invitation sent"
     );
+  });
+});
+
+describe("registrationModes", () => {
+  it("offers consent first, then direct, to someone allowed both", () => {
+    expect(
+      registrationModes({ invitationsEnabled: true, canAddDirectly: true }).map((m) => m.value)
+    ).toEqual(["consent", "direct"]);
+  });
+
+  it("offers only consent to someone who may not write consumers", () => {
+    expect(
+      registrationModes({ invitationsEnabled: true, canAddDirectly: false }).map((m) => m.value)
+    ).toEqual(["consent"]);
+  });
+
+  // The kill switch for invitation emails that are not being delivered.
+  it("drops the invitation when invitations are switched off", () => {
+    expect(
+      registrationModes({ invitationsEnabled: false, canAddDirectly: true }).map((m) => m.value)
+    ).toEqual(["direct"]);
+    expect(registrationModes({ invitationsEnabled: false, canAddDirectly: false })).toEqual([]);
   });
 });

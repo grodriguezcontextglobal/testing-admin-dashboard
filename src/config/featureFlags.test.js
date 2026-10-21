@@ -53,3 +53,32 @@ describe("FEATURE_MEMBER_FEES", () => {
     expect(FEATURE_MEMBER_FEES).toBe(true);
   });
 });
+
+describe("FEATURE_EVENT_INVITATIONS", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // Default ON, unlike the others: it is a kill switch for a live feature,
+  // so a build that forgets the variable keeps offering invitations.
+  it("defaults to true when the env var is unset", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_EVENT_INVITATIONS", undefined);
+    const { FEATURE_EVENT_INVITATIONS } = await import("./featureFlags");
+    expect(FEATURE_EVENT_INVITATIONS).toBe(true);
+  });
+
+  it("is false only for the exact string 'false'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_EVENT_INVITATIONS", "false");
+    const off = await import("./featureFlags");
+    expect(off.FEATURE_EVENT_INVITATIONS).toBe(false);
+
+    vi.resetModules();
+    vi.stubEnv("VITE_APP_FEATURE_EVENT_INVITATIONS", "0");
+    const on = await import("./featureFlags");
+    expect(on.FEATURE_EVENT_INVITATIONS).toBe(true);
+  });
+});

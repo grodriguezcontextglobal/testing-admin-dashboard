@@ -297,6 +297,16 @@ export const inviteSelectionCounts = (rows, selectedKeys) => {
  * and which event, and the server reads email, name and minor status from
  * members_info.
  */
+/**
+ * The ways this role can register members to an event, in the order offered:
+ * the signed invitation (unless switched off) and, with member:update, adding
+ * them directly. Empty means the Members page offers no button at all.
+ */
+export const registrationModes = ({ invitationsEnabled, canAddDirectly }) => [
+  ...(invitationsEnabled ? [{ value: "consent", label: "Ask for guardian consent" }] : []),
+  ...(canAddDirectly ? [{ value: "direct", label: "Add directly" }] : []),
+];
+
 export const EVENT_INVITATIONS_SEND_PATH = "/school/event-invitations/send";
 
 /** The most member ids the server takes in one call. */

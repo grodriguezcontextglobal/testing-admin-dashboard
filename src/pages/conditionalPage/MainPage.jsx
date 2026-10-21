@@ -13,6 +13,7 @@ import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../styles/global/OutlinedInputStyle";
 import { TextFontSize20LineHeight30 } from "../../styles/global/TextFontSize20HeightLine30";
 import { Title } from "../../styles/global/Title";
+import { FEATURE_EVENT_INVITATIONS } from "../../config/featureFlags";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import AddNewMember from "./components/modals/AddNewMember";
 import AdvanceGrades from "./components/modals/AdvanceGrades";
@@ -24,6 +25,7 @@ import MembersStatsRow from "./components/MembersStatsRow";
 import SchoolReadinessDashboard from "../school/dashboard/SchoolReadinessDashboard";
 import { getIndustryProfile } from "../../config/industryProfiles";
 import { buildManageMembersMenu } from "./utils/mainPageUtils";
+import { registrationModes } from "./utils/eventRegistrationUtils";
 import { MEMBERS_EXPORT_COLUMNS, buildMembersExportRows } from "./utils/memberExportUtils";
 
 const MainPage = () => {
@@ -48,6 +50,14 @@ const MainPage = () => {
   const canNotifyMembers = hasPermission("member:notify", roleType);
   const canExportMembers = hasPermission("member:read", roleType);
   const canAdvanceGrades = hasPermission("member:update", roleType);
+  // With invitations switched off only "Add directly" is left, which needs
+  // member:update: a role without it gets no button rather than an empty modal.
+  const canRegisterToEvent =
+    canNotifyMembers &&
+    registrationModes({
+      invitationsEnabled: FEATURE_EVENT_INVITATIONS,
+      canAddDirectly: canAdvanceGrades,
+    }).length > 0;
   const canManageMembers =
     canAddMembers || canDeleteMembers || canExportMembers || canAdvanceGrades;
 
@@ -170,7 +180,7 @@ const MainPage = () => {
             }
           />
 
-          {canNotifyMembers && (
+          {canRegisterToEvent && (
             <BlueButtonComponent
               title={`Register ${titleParams || "members"} to event`}
               iconLeading={<Icon icon="tabler:calendar-plus" width={18} />}
