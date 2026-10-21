@@ -71,6 +71,7 @@ import {
   needsMfaEnrollment,
   readMfaSetupChallenge,
 } from "./utils/mfaEnrollment";
+import { readLoginLockout } from "./utils/loginLockout";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
@@ -480,6 +481,17 @@ const Login = () => {
       pendingLogin.current = setupChallenge;
       dispatch(clearErrorMessage());
       setMfaEnrollmentOpen(true);
+      return;
+    }
+
+    /* A locked account, or the per-IP limit. Every attempt fails until the
+       wait is over, so the visitor stays on this step with the email kept,
+       and nothing is retried on its own. */
+    const lockout = readLoginLockout(error);
+    if (lockout) {
+      if (currentStep === "mfa") setValue("mfaCode", "");
+      dispatch(clearErrorMessage());
+      openNotificationWithIcon("error", lockout.message);
       return;
     }
 

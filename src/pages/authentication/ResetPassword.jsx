@@ -15,6 +15,8 @@ import { FormHelperText, FormLabel } from "@mui/material";
 import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
 import PasswordMfaStep from "./password/PasswordMfaStep";
 import {
+    PASSWORD_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
     buildPasswordUpdatePayload,
     newPasswordSchema,
     readPasswordMfaOutcome,
@@ -246,7 +248,7 @@ const ResetPassword = () => {
                         <p style={{ fontSize: "16px", color: "var(--gray-500, #667085)", lineHeight: "24px", margin: 0 }}>
                             {step === "mfa"
                                 ? "Enter the code from your authenticator app to confirm the change."
-                                : "Use at least 8 characters, with an uppercase and a lowercase letter, a number and a symbol."}
+                                : `Use ${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters. A few words in a row make a strong one.`}
                         </p>
                     </div>
                 </div>

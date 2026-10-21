@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { FormLabel, Grid, InputAdornment, TextField, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { Avatar, Progress } from "antd";
+import { Avatar } from "antd";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +19,8 @@ import { checkArray } from "../../components/utils/checkArray";
 import { UploadImagePlaceholder } from "../../components/icons/UpdateImagePlaceholder";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
 import Input from "../../components/UX/inputs/Input";
+import PasswordRequirements from "../../components/UX/password/PasswordRequirements";
+import { validatePasswordLength } from "./utils/passwordPolicy";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 // import "./style/authStyle.css";
 const Registration = () => {
@@ -38,7 +40,6 @@ const Registration = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMatch, setPasswordMatch] = useState(true);
 
   const watchPassword = watch("password");
@@ -134,31 +135,6 @@ const Registration = () => {
     }));
     navigate("/register/company-setup");
   }, [emailCheckDone, userExists.length]);
-
-  const calculatePasswordStrength = (password) => {
-    if (!password) return 0;
-    const checks = [
-      password.length >= 8,
-      /[a-z]/.test(password),
-      /[A-Z]/.test(password),
-      /\d/.test(password),
-      /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    ];
-    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  };
-
-  const getStrengthInfo = (strength) => {
-    if (strength < 40) return { text: "Weak", color: "#ff4d4f" };
-    if (strength < 70) return { text: "Fair", color: "#faad14" };
-    if (strength < 90) return { text: "Good", color: "#52c41a" };
-    return { text: "Strong", color: "#389e0d" };
-  };
-
-  const strengthInfo = getStrengthInfo(passwordStrength);
-
-  useEffect(() => {
-    setPasswordStrength(watchPassword ? calculatePasswordStrength(watchPassword) : 0);
-  }, [watchPassword]);
 
   useEffect(() => {
     if (watchPassword && watchPassword2) {
@@ -329,15 +305,11 @@ const Registration = () => {
                   <Input
                     {...register("password", {
                       required: "Password is required",
-                      minLength: { value: 8, message: "Password must be at least 8 characters" },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/,
-                        message: "Password must contain uppercase, lowercase, number, and special character",
-                      },
+                      validate: validatePasswordLength,
                     })}
                     error={!!errors.password}
                     helperText={errors.password?.message}
-                    placeholder="Enter a strong password"
+                    placeholder="At least 12 characters"
                     required
                     type={showPassword ? "text" : "password"}
                     fullWidth
@@ -353,18 +325,9 @@ const Registration = () => {
                       </InputAdornment>
                     }
                   />
-                  {watchPassword && (
-                    <div style={{ marginTop: "8px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <Typography style={{ fontSize: "12px", color: "var(--gray-500, #667085)" }}>Password strength</Typography>
-                        <Typography style={{ fontSize: "12px", color: strengthInfo.color, fontWeight: "500" }}>{strengthInfo.text}</Typography>
-                      </div>
-                      <Progress percent={passwordStrength} strokeColor={strengthInfo.color} showInfo={false} size="small" />
-                      <Typography style={{ fontSize: "11px", color: "var(--gray-500, #667085)", marginTop: "4px" }}>
-                        Use 8+ characters with uppercase, lowercase, numbers, and symbols
-                      </Typography>
-                    </div>
-                  )}
+                  <div style={{ marginTop: "8px" }}>
+                    <PasswordRequirements password={watchPassword} />
+                  </div>
                 </Grid>
 
                 <Grid marginY={"20px"} marginX={0} textAlign={"left"} item xs={12}>

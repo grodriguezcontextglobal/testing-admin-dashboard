@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  PASSWORD_LENGTH_MESSAGE,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   PASSWORD_RULES,
   buildPasswordUpdatePayload,
   buildResetEmailRequest,
@@ -10,45 +13,37 @@ import {
   readPasswordMfaOutcome,
 } from "./passwordPolicy";
 
-const ruleIds = (password) =>
-  checkPassword(password)
-    .rules.filter((rule) => !rule.met)
-    .map((rule) => rule.id);
-
 describe("checkPassword", () => {
-  it("lists the five rules in a fixed order", () => {
-    expect(PASSWORD_RULES.map((rule) => rule.id)).toEqual([
-      "length",
-      "uppercase",
-      "lowercase",
-      "number",
-      "symbol",
-    ]);
+  // FRONTEND_login_lockout_password_policy_2026-10-21.md §2: the server takes
+  // 12 to 128 characters of anything. Length is the only rule (NIST 800-63B).
+  it("has length as its only rule", () => {
+    expect(PASSWORD_RULES.map((rule) => rule.id)).toEqual(["length"]);
+    expect(PASSWORD_MIN_LENGTH).toBe(12);
+    expect(PASSWORD_MAX_LENGTH).toBe(128);
   });
 
-  it("accepts a password with one of each kind and eight characters", () => {
-    const result = checkPassword("Abcdef1!");
-    expect(result.isValid).toBe(true);
-    expect(result.metCount).toBe(5);
+  it("accepts 12 and 128 characters, and nothing outside them", () => {
+    expect(checkPassword("a".repeat(11)).isValid).toBe(false);
+    expect(checkPassword("a".repeat(12)).isValid).toBe(true);
+    expect(checkPassword("a".repeat(128)).isValid).toBe(true);
+    expect(checkPassword("a".repeat(129)).isValid).toBe(false);
   });
 
-  it("names every rule an empty password misses", () => {
-    const result = checkPassword("");
-    expect(result.isValid).toBe(false);
-    expect(result.metCount).toBe(0);
-    expect(ruleIds(undefined)).toHaveLength(5);
+  it("asks for no uppercase, number or symbol", () => {
+    expect(checkPassword("correct horse battery").isValid).toBe(true);
   });
 
-  it("asks for each missing kind on its own", () => {
-    expect(ruleIds("abcdef1!")).toEqual(["uppercase"]);
-    expect(ruleIds("ABCDEF1!")).toEqual(["lowercase"]);
-    expect(ruleIds("Abcdefg!")).toEqual(["number"]);
-    expect(ruleIds("Abcdefg1")).toEqual(["symbol"]);
-    expect(ruleIds("Abc1!")).toEqual(["length"]);
+  it("counts spaces like any other character, untrimmed", () => {
+    expect(checkPassword("  abcdefghij").isValid).toBe(true);
   });
 
-  it("does not count a space as a symbol", () => {
-    expect(ruleIds("Abcdefg1 ")).toEqual(["symbol"]);
+  it("refuses an empty or missing password", () => {
+    expect(checkPassword("")).toMatchObject({ isValid: false, metCount: 0 });
+    expect(checkPassword(undefined).isValid).toBe(false);
+  });
+
+  it("states the server's wording", () => {
+    expect(PASSWORD_LENGTH_MESSAGE).toBe("Password must have between 12 and 128 characters.");
   });
 });
 
@@ -57,11 +52,14 @@ describe("passwordStrength", () => {
     expect(passwordStrength("")).toEqual({ percent: 0, label: "", tone: "none" });
   });
 
-  it("grows with each rule met", () => {
-    expect(passwordStrength("a")).toMatchObject({ percent: 20, label: "Weak", tone: "danger" });
-    expect(passwordStrength("aB1")).toMatchObject({ percent: 60, label: "Fair", tone: "warning" });
-    expect(passwordStrength("aB1!")).toMatchObject({ percent: 80, label: "Fair", tone: "warning" });
-    expect(passwordStrength("Abcdef1!")).toMatchObject({ percent: 100, label: "Strong", tone: "success" });
+  it("fills with length until the minimum", () => {
+    expect(passwordStrength("abc")).toMatchObject({ percent: 25, label: "Too short", tone: "danger" });
+    expect(passwordStrength("a".repeat(9))).toMatchObject({ percent: 75, label: "Too short", tone: "warning" });
+    expect(passwordStrength("a".repeat(12))).toMatchObject({ percent: 100, label: "Long enough", tone: "success" });
+  });
+
+  it("flags a password over the maximum", () => {
+    expect(passwordStrength("a".repeat(129))).toMatchObject({ percent: 100, label: "Too long", tone: "danger" });
   });
 });
 
@@ -70,18 +68,22 @@ describe("newPasswordSchema", () => {
     newPasswordSchema
       .validate(values, { abortEarly: false })
       .then(() => [])
-      .catch((error) => error.inner.map((issue) => issue.path));
+      .catch((error) => error.inner.map((issue) => issue.message));
 
   it("passes a valid, confirmed password", async () => {
-    expect(await validate({ password: "Abcdef1!", password2: "Abcdef1!" })).toEqual([]);
+    expect(await validate({ password: "abcdefghijkl", password2: "abcdefghijkl" })).toEqual([]);
   });
 
-  it("rejects a password that breaks a rule", async () => {
-    expect(await validate({ password: "abcdef1!", password2: "abcdef1!" })).toEqual(["password"]);
+  it("rejects a short password with the length message", async () => {
+    expect(await validate({ password: "Abcdef1!", password2: "Abcdef1!" })).toEqual([
+      PASSWORD_LENGTH_MESSAGE,
+    ]);
   });
 
   it("rejects a confirmation that does not match", async () => {
-    expect(await validate({ password: "Abcdef1!", password2: "Abcdef1?" })).toEqual(["password2"]);
+    expect(await validate({ password: "abcdefghijkl", password2: "abcdefghijkm" })).toEqual([
+      "Passwords must match",
+    ]);
   });
 });
 

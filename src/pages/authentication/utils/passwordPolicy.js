@@ -4,31 +4,27 @@ import { normalizeMfaCode, readMfaSetupChallenge } from "./mfaEnrollment";
 /**
  * The password rule, and what a password change sends.
  *
- * Registration and the invitation landing already asked for eight characters
- * with an uppercase letter, a lowercase letter, a number and a symbol. The two
- * screens that change a password did not: the profile page took 6 to 12
- * characters of anything, and the reset link 6 to 20. Both now read the rule
- * from here, so it cannot drift again.
+ * 12 to 128 characters of anything, the same as the server
+ * (FRONTEND_login_lockout_password_policy_2026-10-21.md §2). No composition
+ * rules: NIST 800-63B, which IA-5 follows, advises length over character
+ * classes. Spaces count and nothing is trimmed.
  *
- * The symbol set is the one registration has always checked, so a password
- * accepted here is accepted everywhere else.
+ * Every screen that sets a password reads the rule from here — registration,
+ * the invitation landing, the reset link and the profile — so it cannot drift
+ * again. Sign-in does not: older, shorter passwords still sign in.
  */
 
-export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_MAX_LENGTH = 128;
+
+/** The server's own wording for the 400, so both say the same thing. */
+export const PASSWORD_LENGTH_MESSAGE = `Password must have between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters.`;
 
 export const PASSWORD_RULES = Object.freeze([
   {
     id: "length",
-    label: `At least ${PASSWORD_MIN_LENGTH} characters`,
-    test: (value) => value.length >= PASSWORD_MIN_LENGTH,
-  },
-  { id: "uppercase", label: "One uppercase letter", test: (value) => /[A-Z]/.test(value) },
-  { id: "lowercase", label: "One lowercase letter", test: (value) => /[a-z]/.test(value) },
-  { id: "number", label: "One number", test: (value) => /\d/.test(value) },
-  {
-    id: "symbol",
-    label: 'One symbol (!@#$%^&*(),.?":{}|<>)',
-    test: (value) => /[!@#$%^&*(),.?":{}|<>]/.test(value),
+    label: `${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters`,
+    test: (value) => value.length >= PASSWORD_MIN_LENGTH && value.length <= PASSWORD_MAX_LENGTH,
   },
 ]);
 
@@ -39,25 +35,25 @@ export const checkPassword = (password) => {
   return { rules, metCount, isValid: metCount === PASSWORD_RULES.length };
 };
 
-/** What the bar under the field shows: how far along, in words and a tone. */
+/** What the bar under the field shows: how close to the minimum, in words and a tone. */
 export const passwordStrength = (password) => {
-  if (!password) return { percent: 0, label: "", tone: "none" };
-  const { metCount } = checkPassword(password);
-  const percent = Math.round((metCount / PASSWORD_RULES.length) * 100);
-  if (metCount === PASSWORD_RULES.length) return { percent, label: "Strong", tone: "success" };
-  if (metCount >= 3) return { percent, label: "Fair", tone: "warning" };
-  return { percent, label: "Weak", tone: "danger" };
+  const length = String(password ?? "").length;
+  if (!length) return { percent: 0, label: "", tone: "none" };
+  if (length > PASSWORD_MAX_LENGTH) return { percent: 100, label: "Too long", tone: "danger" };
+  if (length >= PASSWORD_MIN_LENGTH) return { percent: 100, label: "Long enough", tone: "success" };
+  const percent = Math.round((length / PASSWORD_MIN_LENGTH) * 100);
+  return { percent, label: "Too short", tone: percent >= 50 ? "warning" : "danger" };
 };
+
+/** For react-hook-form `validate`, in the forms not built on a yup schema. */
+export const validatePasswordLength = (value) =>
+  checkPassword(value).isValid || PASSWORD_LENGTH_MESSAGE;
 
 export const newPasswordSchema = yup.object().shape({
   password: yup
     .string()
     .required("Password is required")
-    .test(
-      "password-policy",
-      "Password must have 8+ characters, an uppercase and a lowercase letter, a number and a symbol",
-      (value) => checkPassword(value).isValid,
-    ),
+    .test("password-policy", PASSWORD_LENGTH_MESSAGE, (value) => checkPassword(value).isValid),
   password2: yup
     .string()
     .oneOf([yup.ref("password")], "Passwords must match")
