@@ -7,6 +7,7 @@ import { useStatusNotification } from "../../../../../components/notification/al
 import DangerButtonConfirmationComponent from "../../../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../../../components/UX/buttons/GrayButton";
 import LightBlueButtonComponent from "../../../../../components/UX/buttons/LigthBlueButton";
+import LightBlueButtonConfirmationComponent from "../../../../../components/UX/buttons/LightBlueButtonConfirmation";
 import { onAddCustomerInfo } from "../../../../../store/slices/customerSlice";
 import { onAddDeviceToDisplayInQuickGlance } from "../../../../../store/slices/devicesHandleSlice";
 import {
@@ -21,8 +22,15 @@ import {
 } from "../../../../../store/slices/stripeSlice";
 import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import "../eventDeviceDetail.css";
-import { readDeviceSelection } from "../utils/eventDeviceDetail";
-import Choice from "../lostFee/Choice";
+import {
+  buildFoundUpdates,
+  markSelectionFound,
+  pickAssignment,
+  readDeviceSelection,
+  summarizeCollectedLostFee,
+} from "../utils/eventDeviceDetail";
+import Choice from "../../consumer/lostFee/Choice";
+import { formatCurrency } from "../../consumer/utils/lostFee";
 import { Replace } from "./Replace";
 import UpdateStatus from "./components/UpdateStatus";
 
@@ -161,18 +169,22 @@ const ActionsMainPage = ({ onChanged }) => {
   const handleReportLost = async () => {
     setBusy("lost");
     try {
+      // Same filter as Return: the assignment the unit is out on now. Taking
+      // the last record of any status could charge an old, returned one.
       const assigned = await devitrakApi.post("/receiver/receiver-assigned-list", {
         "device.serialNumber": device.serialNumber,
+        "device.status": true,
+        "device.deviceType": device.type,
         eventSelected: event.eventInfoDetail.eventName,
-        provider: event.company,
+        company: user.companyData.id,
       });
-      const record = assigned.data?.listOfReceivers?.at(-1);
+      const record = pickAssignment(assigned.data?.listOfReceivers, "active");
       if (!record) {
         notify("info", "This device has no assignment to charge a fee against.");
         return;
       }
 
-      const consumerQuery = await devitrakApi.post("/auth/users", {
+      const consumerQuery = await devitrakApi.post("/auth/user-query", {
         email: record.user,
       });
       const consumer = consumerQuery.data?.users?.at(-1);
@@ -201,6 +213,97 @@ const ActionsMainPage = ({ onChanged }) => {
     }
   };
 
+  /**
+   * The unit turned up after it was written off: back to the pool as an
+   * operational, free unit, and its lost assignment closed as returned. A fee
+   * already collected is not refunded here; the operator is told the amount
+   * and refunds it from the consumer's transaction if that is the call.
+   */
+  const handleFound = async () => {
+    setBusy("found");
+    try {
+      const pool = await devitrakApi.post("/receiver/receiver-pool-list", {
+        device: device.serialNumber,
+        type: device.type,
+        eventSelected: event.eventInfoDetail.eventName,
+        provider: event.company,
+      });
+      const poolRecords = pool.data?.receiversInventory ?? [];
+      const poolRecord =
+        [...poolRecords]
+          .reverse()
+          .find((entry) => String(entry?.status ?? "").toLowerCase() === "lost") ??
+        poolRecords.at(-1);
+
+      const assigned = await devitrakApi.post("/receiver/receiver-assigned-list", {
+        "device.serialNumber": device.serialNumber,
+        eventSelected: event.eventInfoDetail.eventName,
+        company: user.companyData.id,
+      });
+      const updates = buildFoundUpdates({
+        poolRecord,
+        assignment: pickAssignment(assigned.data?.listOfReceivers, "lost"),
+      });
+      if (!updates) {
+        notify(
+          "error",
+          "This device's record in the event pool could not be found. Nothing changed."
+        );
+        return;
+      }
+
+      await devitrakApi.patch(`/receiver/receivers-pool-update/${updates.pool.id}`, updates.pool);
+      if (updates.assignment) {
+        await devitrakApi.patch(
+          `/receiver/receiver-update/${updates.assignment.id}`,
+          updates.assignment
+        );
+      }
+
+      await Promise.allSettled([
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
+        ),
+        clearCacheMemory(`eventSelected=${event.id}&company=${user.companyData.id}`),
+        clearCacheMemory(
+          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
+        ),
+      ]);
+      queryClient.invalidateQueries({ queryKey: ["assignedDeviceListQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["deviceInPoolList"] });
+      dispatch(onAddDeviceToDisplayInQuickGlance(markSelectionFound(deviceInfoSelected)));
+      onChanged?.();
+
+      // Informational only: a failed lookup must not undo a restored device.
+      let collected = { collected: false, amount: 0 };
+      try {
+        const reports = await devitrakApi.post("/cash-report/cash-reports", {
+          event: event.id,
+          company: user.companyData.id,
+          "deviceLost.label": device.serialNumber,
+        });
+        collected = summarizeCollectedLostFee(reports.data?.report);
+      } catch {
+        // The restore stands; only the fee note is skipped.
+      }
+
+      if (collected.collected) {
+        notify(
+          "warning",
+          `${device.serialNumber} is back in the pool. A lost fee of ${formatCurrency(
+            collected.amount
+          )} was collected for it. Refund it from the consumer's transaction if needed.`
+        );
+      } else {
+        notify("success", `${device.serialNumber} is back in the pool.`);
+      }
+    } catch (error) {
+      notify("error", "The device was not restored. Nothing changed.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handleExchange = () => {
     dispatch(onTriggerModalToReplaceReceiver(true));
     dispatch(
@@ -215,10 +318,21 @@ const ActionsMainPage = ({ onChanged }) => {
   const actions = () => {
     if (device.isLost) {
       return (
-        <p className="device-rail__note">
-          This device is written off as lost. Nothing further can be done to it
-          from this event.
-        </p>
+        <>
+          <LightBlueButtonConfirmationComponent
+            title="Mark as found"
+            size="lg"
+            styles={{ width: "100%" }}
+            loadingState={busy === "found"}
+            confirmationTitle={`Mark ${device.serialNumber} as found?`}
+            confirmationDescription="The unit goes back to the event's pool as operational, and its lost assignment is closed as returned. A fee already collected is not refunded here."
+            okText="Mark as found"
+            func={handleFound}
+          />
+          <p className="device-rail__note">
+            This device is written off as lost. If it turns up, mark it as found.
+          </p>
+        </>
       );
     }
 
@@ -245,7 +359,7 @@ const ActionsMainPage = ({ onChanged }) => {
             styles={{ width: "100%" }}
             loadingState={busy === "lost"}
             confirmationTitle={`Report ${device.serialNumber} as lost?`}
-            confirmationDescription="The unit is written off, released from the pool, and the fee flow opens next. This cannot be undone."
+            confirmationDescription="The fee flow opens next: collect it in cash or by card, or waive it. The unit is written off once the fee is settled."
             okText="Report lost"
             func={handleReportLost}
           />

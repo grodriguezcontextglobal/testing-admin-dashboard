@@ -63,6 +63,9 @@ const Cash = lazyWithRetry(() =>
 const CreditCard = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/consumer/lostFee/actions/CreditCard")
 );
+const LostFeeWaiver = lazyWithRetry(() =>
+  import("../../pages/events/quickGlance/consumer/lostFee/actions/Waiver")
+);
 const AddNewItem = lazyWithRetry(() =>
   import("../../pages/inventory/actions/AddNewItem")
 );
@@ -345,6 +348,10 @@ const AuthRoutes = () => {
                 <Route
                   path="collect-lost-fee/credit-card-method"
                   element={<CreditCard />}
+                />
+                <Route
+                  path="collect-lost-fee/waiver-method"
+                  element={<LostFeeWaiver />}
                 />
               </Route>
 

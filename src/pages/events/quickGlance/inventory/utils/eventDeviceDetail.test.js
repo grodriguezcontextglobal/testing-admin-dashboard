@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   buildDeviceStatTiles,
+  buildFoundUpdates,
+  markSelectionFound,
+  pickAssignment,
+  summarizeCollectedLostFee,
   describeDeviceCondition,
   filterDeviceRows,
   readDeviceSelection,
@@ -348,5 +352,92 @@ describe("buildDeviceStatTiles", () => {
     const tiles = buildDeviceStatTiles({});
     expect(tiles).toHaveLength(4);
     expect(tiles.every((tile) => tile.label)).toBe(true);
+  });
+});
+
+describe("pickAssignment", () => {
+  const list = [
+    { id: "old", device: { serialNumber: "A1", status: false } },
+    { id: "live", device: { serialNumber: "A1", status: true } },
+    { id: "lost", device: { serialNumber: "A1", status: "Lost" } },
+  ];
+
+  // Reporting a device lost took `.at(-1)` of every assignment the serial ever
+  // had, so it could charge the fee against an old, already-returned one.
+  it("finds the assignment the device is out on now", () => {
+    expect(pickAssignment(list, "active")?.id).toBe("live");
+  });
+
+  it("finds the assignment it was written off on", () => {
+    expect(pickAssignment(list, "lost")?.id).toBe("lost");
+    expect(pickAssignment([{ id: "x", device: { status: "LOST" } }], "lost")?.id).toBe("x");
+  });
+
+  it("finds nothing rather than the wrong one", () => {
+    expect(pickAssignment([list[0]], "active")).toBeNull();
+    expect(pickAssignment(undefined, "lost")).toBeNull();
+  });
+});
+
+describe("buildFoundUpdates", () => {
+  it("puts the unit back in the pool as operational and closes its lost assignment", () => {
+    const updates = buildFoundUpdates({
+      poolRecord: { id: "pool_1", status: "Lost", activity: false },
+      assignment: { id: "rcv_1", device: { serialNumber: "A1", deviceType: "tablet", status: "Lost" } },
+      now: 1700000000000,
+    });
+    expect(updates).toEqual({
+      pool: { id: "pool_1", activity: false, status: "Operational", comment: "Device found" },
+      assignment: {
+        id: "rcv_1",
+        device: { serialNumber: "A1", deviceType: "tablet", status: false },
+        timeStamp: 1700000000000,
+      },
+    });
+  });
+
+  it("still restores the pool when no lost assignment is on record", () => {
+    expect(buildFoundUpdates({ poolRecord: { id: "pool_1" }, assignment: null }).assignment).toBeNull();
+  });
+
+  it("has nothing to restore without the pool record", () => {
+    expect(buildFoundUpdates({ poolRecord: null, assignment: null })).toBeNull();
+  });
+});
+
+describe("markSelectionFound", () => {
+  it("clears the LOST sentinel so the page shows the unit as available", () => {
+    const selection = {
+      activity: "LOST",
+      status: "Lost",
+      serialNumber: "A1",
+      entireData: { id: "pool_1", device: "A1", type: "tablet", status: "Lost", activity: false },
+    };
+    const found = markSelectionFound(selection);
+    expect(found).toMatchObject({
+      activity: false,
+      status: "Operational",
+      entireData: { status: "Operational", activity: false, comment: "Device found" },
+    });
+    expect(readDeviceSelection(found)).toMatchObject({ isLost: false, isAssigned: false });
+  });
+});
+
+describe("summarizeCollectedLostFee", () => {
+  it("adds up what was actually collected for the unit", () => {
+    expect(
+      summarizeCollectedLostFee([
+        { amount: "250", typeCollection: "Cash" },
+        { amount: "0", typeCollection: "Waived" },
+      ])
+    ).toEqual({ collected: true, amount: 250 });
+  });
+
+  it("treats a waiver or no report as nothing collected", () => {
+    expect(summarizeCollectedLostFee([{ amount: "0", typeCollection: "Waived" }])).toEqual({
+      collected: false,
+      amount: 0,
+    });
+    expect(summarizeCollectedLostFee(undefined)).toEqual({ collected: false, amount: 0 });
   });
 });

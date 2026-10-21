@@ -181,3 +181,70 @@ export function buildDeviceStatTiles({ assignments, issues, condition }) {
     },
   ];
 }
+
+/**
+ * The assignment record to act on, from every record the serial ever had at
+ * this event (oldest first): `"active"` is the one it is out on now,
+ * `"lost"` the one it was written off on. Null rather than a guess — taking
+ * the last record regardless let a lost fee land on an old, returned one.
+ */
+export function pickAssignment(receivers, which) {
+  const list = Array.isArray(receivers) ? receivers : [];
+  const matches = (record) => {
+    const status = record?.device?.status;
+    return which === "lost" ? isLostValue(status) : status === true;
+  };
+  return [...list].reverse().find(matches) ?? null;
+}
+
+/**
+ * The two writes that undo a write-off when the device turns up: the pool
+ * record goes back to an operational, free unit, and the lost assignment is
+ * closed as returned. The assignment is optional — a unit marked lost from an
+ * older screen may have none on record — the pool record is not.
+ */
+export function buildFoundUpdates({ poolRecord, assignment, now = Date.now() } = {}) {
+  if (!poolRecord?.id) return null;
+  return {
+    pool: {
+      id: poolRecord.id,
+      activity: false,
+      status: "Operational",
+      comment: "Device found",
+    },
+    assignment: assignment?.id
+      ? {
+          id: assignment.id,
+          device: { ...assignment.device, status: false },
+          timeStamp: now,
+        }
+      : null,
+  };
+}
+
+/** The page's selection after a found device is restored: free and operational. */
+export function markSelectionFound(selection) {
+  return {
+    ...selection,
+    activity: false,
+    status: "Operational",
+    entireData: {
+      ...(selection?.entireData ?? {}),
+      activity: false,
+      status: "Operational",
+      comment: "Device found",
+    },
+  };
+}
+
+/**
+ * What was collected for this unit's loss, from its cash reports. A waiver is
+ * a report of 0, so it adds nothing.
+ */
+export function summarizeCollectedLostFee(reports) {
+  const list = Array.isArray(reports) ? reports : [];
+  const cents = list
+    .filter((report) => report?.typeCollection !== "Waived")
+    .reduce((sum, report) => sum + Math.round((Number(report?.amount) || 0) * 100), 0);
+  return { collected: cents > 0, amount: cents / 100 };
+}

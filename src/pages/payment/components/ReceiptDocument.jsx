@@ -46,6 +46,10 @@ const BAND = {
     className: "receipt__band--unknown",
     label: "Deposit closed — captured or released",
   },
+  [RECEIPT_STATUS.WAIVED]: {
+    className: "receipt__band--open",
+    label: "Fee waived — nothing was charged",
+  },
 };
 
 /**

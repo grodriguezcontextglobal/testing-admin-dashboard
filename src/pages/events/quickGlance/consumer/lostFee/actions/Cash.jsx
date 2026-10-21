@@ -1,22 +1,17 @@
 import { InputAdornment, OutlinedInput } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { groupBy } from "lodash";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { useStatusNotification } from "../../../../../../components/notification/alerts/useStatusNotification";
 import BlueButtonComponent from "../../../../../../components/UX/buttons/BlueButton";
 import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayButton";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import ReceiptModal from "../../../../../payment/components/ReceiptModal";
 import "../../consumerDetail.css";
-import {
-  buildLostFeeReport,
-  normalizeAssignedReceiver,
-  resolveLostDeviceFee,
-} from "../../utils/lostFee";
+import { LOST_FEE_METHOD, describeSettleFailure } from "../../utils/lostFee";
+import { useLostFeeSettlement } from "../useLostFeeSettlement";
 import LostFeeScreen from "../components/LostFeeScreen";
 
 /**
@@ -41,20 +36,16 @@ import LostFeeScreen from "../components/LostFeeScreen";
  *   - The pool lookup no longer filters on `user.company` while the event
  *     stores `event.company`; it asks the endpoint for this event's pool and
  *     matches the serial.
+ *   - The write-off lives in useLostFeeSettlement, shared with the card and
+ *     waiver screens, and a receipt opens once the fee is recorded.
  */
 const Cash = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { event } = useSelector((state) => state.event);
-  const { user } = useSelector((state) => state.admin);
   const { customer } = useSelector((state) => state.customer);
-  const { receiverToReplaceObject } = useSelector((state) => state.helper);
-  const { paymentIntentReceiversAssigned } = useSelector((state) => state.stripe);
   const { notify, contextHolder } = useStatusNotification();
-
-  const device = receiverToReplaceObject;
-  const fee = resolveLostDeviceFee(event, device?.deviceType);
-  const receiver = normalizeAssignedReceiver(paymentIntentReceiversAssigned);
+  const { event, device, receiver, fee, settle } = useLostFeeSettlement({ customer });
+  const [receipt, setReceipt] = useState(null);
 
   const {
     handleSubmit,
@@ -62,112 +53,24 @@ const Cash = () => {
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues: { total: fee.amount ? String(fee.amount) : "" } });
 
-  const poolQuery = useQuery({
-    queryKey: ["lostFeePool", event?.eventInfoDetail?.eventName, device?.serialNumber],
-    queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-        device: device.serialNumber,
-        type: device.deviceType,
-      }),
-    enabled: Boolean(event?.eventInfoDetail?.eventName && device?.serialNumber),
-  });
-
   const goBack = () => {
     dispatch(onAddPaymentIntentSelected(""));
     navigate(`/events/event-attendees/${customer?.uid}/transactions-details`);
   };
 
-  const writeDeviceOff = async () => {
-    // 1 — the consumer's assigned record becomes a write-off
-    await devitrakApi.patch(`/receiver/receiver-update/${receiver.id}`, {
-      id: receiver.id,
-      device: { ...receiver.device, status: "Lost" },
-      active: false,
-    });
-
-    // 2 — the unit leaves circulation
-    const inPool = groupBy(
-      poolQuery.data?.data?.receiversInventory ?? [],
-      "device"
-    )[device.serialNumber]?.find((entry) => entry.activity === true);
-
-    if (inPool) {
-      await devitrakApi.patch(`/receiver/receivers-pool-update/${inPool.id}`, {
-        id: inPool.id,
-        activity: false,
-        comment: "Device lost",
-        status: "Lost",
-      });
-      await devitrakApi.post("/receiver/receiver-returned-issue", {
-        ...inPool,
-        activity: false,
-        comment: "Device lost",
-        status: "Lost",
-        user: customer?.email,
-        admin: user?.email,
-        timeStamp: Date.now(),
-      });
-    }
-  };
-
   const onSubmit = async (data) => {
     try {
-      await writeDeviceOff();
-
-      await devitrakApi.post(
-        "/cash-report/create-cash-report",
-        buildLostFeeReport({
-          amount: data.total,
-          method: "Cash",
-          device,
-          paymentIntent: receiver?.paymentIntent,
-          consumer: customer,
-          admin: user,
-          event,
-          companyId: user.companyData.id,
-        })
-      );
-
-      const stamp = new Date().toString().split(" ");
-      await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
-        consumer: {
-          name: `${customer.name} ${customer.lastName}`,
-          email: customer.email,
-        },
-        device: `${device.deviceType} - ${device.serialNumber}`,
-        amount: data.total,
-        event: event.eventInfoDetail.eventName,
-        company: event.company,
-        date: stamp.slice(0, 4),
-        time: stamp[4],
-        transaction: receiver?.paymentIntent,
-        link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
-      });
-
-      // All three keys are independent, so they clear concurrently.
-      await Promise.all([
-        clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-        ),
-        clearCacheMemory(
-          `eventSelected=${event.id}&company=${user.companyData.id}`
-        ),
-        clearCacheMemory(
-          `eventSelected=${event.eventInfoDetail.id}&company=${user.companyData.id}`
-        ),
-      ]);
-
-      notify("success", `Cash fee recorded for ${device.serialNumber}.`);
-      goBack();
-    } catch (error) {
-      // Was `console.error(error)` only: the operator saw an unchanged form and
-      // no indication that the device is still marked as in use.
+      const outcome = await settle({ method: LOST_FEE_METHOD.CASH, amount: data.total });
       notify(
-        "error",
-        "The fee was not recorded. The device is still marked as in use."
+        outcome.mailFailed ? "warning" : "success",
+        outcome.mailFailed
+          ? `Cash fee recorded for ${device.serialNumber}. The email did not send — print the receipt.`
+          : `Cash fee recorded for ${device.serialNumber}.`
       );
+      // Every charge leaves paper: the receipt opens before going back.
+      setReceipt(outcome.receipt);
+    } catch (error) {
+      notify("error", describeSettleFailure(error));
     }
   };
 
@@ -188,6 +91,15 @@ const Cash = () => {
   return (
     <>
       {contextHolder}
+      {receipt && (
+        <ReceiptModal
+          openModal={Boolean(receipt)}
+          setOpenModal={() => setReceipt(null)}
+          receipt={receipt}
+          title="Fee recorded — print the receipt?"
+          onClose={goBack}
+        />
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <LostFeeScreen
           title="Collect lost device fee · cash"

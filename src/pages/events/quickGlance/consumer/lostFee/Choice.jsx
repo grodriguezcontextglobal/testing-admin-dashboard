@@ -1,4 +1,4 @@
-import { Banknote, CreditCard } from "lucide-react";
+import { Ban, Banknote, CreditCard } from "lucide-react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +17,8 @@ import { formatCurrency, resolveLostDeviceFee } from "../utils/lostFee";
  *
  * The two methods are comparable choices, so they are comparable cards, and the
  * fee being collected is stated before the choice is made — previously you
- * picked a payment method without being told the amount.
+ * picked a payment method without being told the amount. A third card waives
+ * the fee: written off at $0, with the staff member and a reason on record.
  */
 const Choice = ({ openModal, setOpenModal }) => {
   const { event } = useSelector((state) => state.event);
@@ -57,7 +58,7 @@ const Choice = ({ openModal, setOpenModal }) => {
               <>
                 <strong>{receiverToReplaceObject.serialNumber}</strong> is being
                 written off at {formatCurrency(amount)}. Pick how the consumer is
-                paying.
+                paying, or waive the fee.
               </>
             ) : (
               "Pick how the consumer is paying."
@@ -98,6 +99,20 @@ const Choice = ({ openModal, setOpenModal }) => {
                 {hasMerchant
                   ? "Charge the card through Stripe."
                   : "Unavailable — no merchant account on this event."}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="method-card"
+              onClick={() => go("waiver-method")}
+            >
+              <span className="method-card__icon">
+                <Ban size={18} />
+              </span>
+              <span className="method-card__name">Waive fee</span>
+              <span className="method-card__hint">
+                Write it off at $0. Your name and a reason are recorded.
               </span>
             </button>
           </div>

@@ -1,6 +1,4 @@
 import { InputAdornment, OutlinedInput } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { groupBy } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,13 +11,10 @@ import { LostDeviceStripeElement } from "../../../../../../components/stripe/ele
 import { ProfileSkeleton } from "../../../../../../components/UX/profile";
 import { onAddPaymentIntentSelected } from "../../../../../../store/slices/stripeSlice";
 import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInputStyle";
-import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
+import ReceiptModal from "../../../../../payment/components/ReceiptModal";
 import "../../consumerDetail.css";
-import {
-  buildLostFeeReport,
-  normalizeAssignedReceiver,
-  resolveLostDeviceFee,
-} from "../../utils/lostFee";
+import { LOST_FEE_METHOD, describeSettleFailure } from "../../utils/lostFee";
+import { useLostFeeSettlement } from "../useLostFeeSettlement";
 import LostFeeScreen from "../components/LostFeeScreen";
 
 /**
@@ -47,73 +42,26 @@ const CreditCard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
-  const { event } = useSelector((state) => state.event);
-  const { user } = useSelector((state) => state.admin);
-  const { customer, paymentIntentReceiversAssigned } = useSelector(
-    (state) => state.stripe
-  );
-  const { receiverToReplaceObject } = useSelector((state) => state.helper);
+  const { customer } = useSelector((state) => state.stripe);
   const { notify, contextHolder } = useStatusNotification();
 
   const [clientSecret, setClientSecret] = useState("");
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
   const settledRef = useRef(false);
+  const [receipt, setReceipt] = useState(null);
 
-  const device = receiverToReplaceObject;
-  const fee = resolveLostDeviceFee(event, device?.deviceType);
-  const receiver = normalizeAssignedReceiver(paymentIntentReceiversAssigned);
+  const { event, device, receiver, fee, poolQuery, settle } = useLostFeeSettlement({
+    customer,
+  });
 
   const { handleSubmit, register, watch, formState: { errors } } = useForm({
     defaultValues: { total: fee.amount ? String(fee.amount) : "" },
   });
 
-  const poolQuery = useQuery({
-    queryKey: ["lostFeePool", event?.eventInfoDetail?.eventName, device?.serialNumber],
-    queryFn: () =>
-      devitrakApi.post("/receiver/receiver-pool-list", {
-        eventSelected: event.eventInfoDetail.eventName,
-        company: user.companyData.id,
-        device: device.serialNumber,
-        type: device.deviceType,
-      }),
-    enabled: Boolean(event?.eventInfoDetail?.eventName && device?.serialNumber),
-  });
-
   const goBack = () => {
     dispatch(onAddPaymentIntentSelected(""));
     navigate(`/events/event-attendees/${customer?.uid}/transactions-details`);
-  };
-
-  const writeDeviceOff = async () => {
-    await devitrakApi.patch(`/receiver/receiver-update/${receiver.id}`, {
-      id: receiver.id,
-      device: { ...receiver.device, status: "Lost" },
-      active: false,
-    });
-
-    const inPool = groupBy(
-      poolQuery.data?.data?.receiversInventory ?? [],
-      "device"
-    )[device.serialNumber]?.find((entry) => entry.activity === true);
-
-    if (inPool) {
-      await devitrakApi.patch(`/receiver/receivers-pool-update/${inPool.id}`, {
-        id: inPool.id,
-        activity: false,
-        comment: "Device lost",
-        status: "Lost",
-      });
-      await devitrakApi.post("/receiver/receiver-returned-issue", {
-        ...inPool,
-        activity: false,
-        comment: "Device lost",
-        status: "Lost",
-        user: customer?.email,
-        admin: user?.email,
-        timeStamp: Date.now(),
-      });
-    }
   };
 
   /** Step 1: name the amount and ask Stripe for an intent to collect it. */
@@ -146,64 +94,33 @@ const CreditCard = () => {
     settledRef.current = true;
     const amount = localStorage.getItem(TOTAL_KEY) ?? "";
 
-    const settle = async () => {
+    const run = async () => {
       setIsSettling(true);
       try {
-        await writeDeviceOff();
-        await devitrakApi.post(
-          "/cash-report/create-cash-report",
-          buildLostFeeReport({
-            amount,
-            method: "Credit Card",
-            device,
-            paymentIntent: receiver?.paymentIntent,
-            consumer: customer,
-            admin: user,
-            event,
-            companyId: user.companyData.id,
-          })
-        );
-
-        const stamp = new Date().toString().split(" ");
-        await devitrakApi.post("/nodemailer/lost-device-fee-notification", {
-          consumer: {
-            name: `${customer.name} ${customer.lastName}`,
-            email: customer.email,
-          },
-          device: `${device.deviceType} - ${device.serialNumber}`,
+        const outcome = await settle({
+          method: LOST_FEE_METHOD.CARD,
           amount,
-          event: event.eventInfoDetail.eventName,
-          company: event.company,
-          date: stamp.slice(0, 4),
-          time: stamp[4],
-          transaction: receiver?.paymentIntent,
-          link: `https://app.devitrak.net/authentication/${event.id}/${user.companyData.id}/${customer.uid}`,
+          // Stripe appends the charge's own intent to the return URL.
+          feePaymentIntent: searchParams.get("payment_intent") ?? undefined,
         });
-
-        await Promise.all([
-          clearCacheMemory(
-            `eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`
-          ),
-          clearCacheMemory(
-            `eventSelected=${event.id}&company=${user.companyData.id}`
-          ),
-        ]);
-
         localStorage.removeItem(TOTAL_KEY);
-        notify("success", `Card fee collected for ${device.serialNumber}.`);
-        goBack();
-      } catch (error) {
-        // The card was charged; the write-off was not recorded. Say exactly
-        // that, and do not navigate away from the evidence.
         notify(
-          "error",
-          "The card was charged but the device was not written off. Report this before retrying."
+          outcome.mailFailed ? "warning" : "success",
+          outcome.mailFailed
+            ? `Card fee collected for ${device.serialNumber}. The email did not send — print the receipt.`
+            : `Card fee collected for ${device.serialNumber}.`
         );
+        setReceipt(outcome.receipt);
+      } catch (error) {
+        // The card was charged; say exactly what is missing, and do not
+        // navigate away from the evidence.
+        notify("error", describeSettleFailure(error, { charged: true }));
+      } finally {
         setIsSettling(false);
       }
     };
 
-    settle();
+    run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, receiver?.id, device?.serialNumber, poolQuery.isLoading]);
 
@@ -221,19 +138,35 @@ const CreditCard = () => {
     );
   }
 
-  if (isSettling) {
+  if (isSettling || receipt) {
     return (
+      <>
+        {contextHolder}
+        {receipt && (
+          <ReceiptModal
+            openModal={Boolean(receipt)}
+            setOpenModal={() => setReceipt(null)}
+            receipt={receipt}
+            title="Fee collected — print the receipt?"
+            onClose={goBack}
+          />
+        )}
       <LostFeeScreen
         title="Collect lost device fee · card"
-        description="Payment received. Recording the write-off…"
+        description={
+          receipt
+            ? "Payment received and recorded."
+            : "Payment received. Recording the write-off…"
+        }
         device={device}
         amount={watch("total")}
         consumerName={`${customer?.name ?? ""} ${customer?.lastName ?? ""}`.trim()}
         eventName={event?.eventInfoDetail?.eventName}
         onCancel={goBack}
       >
-        <ProfileSkeleton lines={2} />
+        {isSettling && <ProfileSkeleton lines={2} />}
       </LostFeeScreen>
+      </>
     );
   }
 

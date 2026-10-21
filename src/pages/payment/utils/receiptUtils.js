@@ -72,6 +72,8 @@ export const RECEIPT_STATUS = {
   // A deposit no longer held: a capture and a release both save active: false,
   // so the record cannot say which of the two happened.
   CLOSED: "closed",
+  // A lost-device fee that staff chose not to charge: nothing was paid.
+  WAIVED: "waived",
 };
 
 /** How the receipt names each kind describeTransactionKind returns. */
@@ -529,6 +531,80 @@ export const mapFeeChargeToReceipt = ({
     status: RECEIPT_STATUS.PAID,
     company: `${company ?? ""}`,
     reference: billedGuardian ? "Paid by the guardian on file" : "",
+  };
+};
+
+const LOST_FEE_METHOD_LABEL = {
+  Cash: "Cash",
+  "Credit Card": "Card",
+  Waived: "Waived",
+};
+
+const personName = (person) =>
+  [person?.name, person?.lastName].filter(Boolean).join(" ").trim();
+
+/**
+ * Proof of a lost-device fee: cash, card, or waived.
+ *
+ * Settling a lost device used to leave no paper at all — the fee went into a
+ * cash report and an email, and the operator went straight back to the
+ * transactions tab. Like mapFeeChargeToReceipt there is no transaction
+ * document behind it, so no QR.
+ *
+ * The id is the fee's own card intent when it has one, else the consumer's
+ * transaction. A waiver prints as a zero charge, with who waived it and why.
+ * Amounts in DOLLARS.
+ */
+export const mapLostFeeToReceipt = ({
+  consumer,
+  device,
+  amount,
+  method,
+  paymentIntent,
+  feePaymentIntent,
+  company,
+  date,
+  admin,
+  waiverReason,
+} = {}) => {
+  const waived = method === "Waived";
+  const cents = waived ? 0 : dollarsToCents(amount);
+  const staff = personName(admin) || `${admin?.email ?? ""}`;
+  const parent = `${paymentIntent ?? ""}`.trim();
+  const own = `${feePaymentIntent ?? ""}`.trim();
+
+  let reference = staff ? `Collected by ${staff}` : "";
+  if (own && parent && own !== parent) {
+    reference = [reference, `for transaction ${parent}`].filter(Boolean).join(" · ");
+  }
+  if (waived) {
+    const email = admin?.email ? ` (${admin.email})` : "";
+    reference = `Waived by ${staff}${email}: ${`${waiverReason ?? ""}`.trim()}`;
+  }
+
+  return {
+    kind: RECEIPT_KIND.PAYMENT,
+    title: waived ? "Lost device — fee waived" : "Lost device fee receipt",
+    idLabel: "Transaction ID",
+    partyLabel: "Billed to",
+    paymentIntent: own || parent,
+    id: own || parent || "—",
+    date: `${date ?? ""}`,
+    payer: { name: personName(consumer), email: `${consumer?.email ?? ""}` },
+    paymentMethod: LOST_FEE_METHOD_LABEL[method] ?? `${method ?? ""}`,
+    lines: [
+      {
+        label:
+          [`${device?.deviceType ?? ""}`.trim(), `${device?.serialNumber ?? ""}`.trim()]
+            .filter(Boolean)
+            .join(" ") + " — not returned",
+        amount: cents / 100,
+      },
+    ],
+    total: cents / 100,
+    status: waived ? RECEIPT_STATUS.WAIVED : RECEIPT_STATUS.PAID,
+    company: `${company ?? ""}`,
+    reference,
   };
 };
 

@@ -15,6 +15,7 @@ import {
   receiptTotal,
   mapTransactionToReceipt,
   mapFeeChargeToReceipt,
+  mapLostFeeToReceipt,
   receiptSignatures,
   resolveReceiptLogo,
   readReceiptTokenFromSearch,
@@ -917,5 +918,68 @@ describe("mapTransactionToReceipt — status follows the payment intent", () => 
       device: [{ deviceType: "iPad", deviceNeeded: 2, deviceValue: 150 }],
     });
     expect(mapTransactionToReceipt(scanned).status).toBe(RECEIPT_STATUS.CLOSED);
+  });
+});
+
+describe("mapLostFeeToReceipt — every lost-device charge leaves a receipt", () => {
+  const base = {
+    consumer: { name: "Ana", lastName: "Ruiz", email: "ana@x.co" },
+    device: { serialNumber: "RRRRR001", deviceType: "Tablet" },
+    amount: "250",
+    method: "Cash",
+    paymentIntent: "pi_parent",
+    company: "Context Global",
+    date: "2026-10-21T15:00:00.000Z",
+    admin: { name: "Sam", lastName: "Lee", email: "staff@x.co" },
+  };
+
+  it("bills the consumer for the device that did not come back", () => {
+    const receipt = mapLostFeeToReceipt(base);
+    expect(receipt).toMatchObject({
+      kind: RECEIPT_KIND.PAYMENT,
+      title: "Lost device fee receipt",
+      status: RECEIPT_STATUS.PAID,
+      paymentMethod: "Cash",
+      payer: { name: "Ana Ruiz", email: "ana@x.co" },
+      lines: [{ label: "Tablet RRRRR001 — not returned", amount: 250 }],
+      total: 250,
+      id: "pi_parent",
+      company: "Context Global",
+      reference: "Collected by Sam Lee",
+    });
+  });
+
+  it("names a card charge by its own payment intent, and the transaction it settles", () => {
+    const receipt = mapLostFeeToReceipt({
+      ...base,
+      method: "Credit Card",
+      feePaymentIntent: "pi_fee",
+    });
+    expect(receipt).toMatchObject({
+      paymentMethod: "Card",
+      id: "pi_fee",
+      reference: "Collected by Sam Lee · for transaction pi_parent",
+    });
+  });
+
+  it("prints a waiver as a zero charge, with who waived it and why", () => {
+    const receipt = mapLostFeeToReceipt({
+      ...base,
+      method: "Waived",
+      amount: "250",
+      waiverReason: "Faulty unit",
+    });
+    expect(receipt).toMatchObject({
+      title: "Lost device — fee waived",
+      status: RECEIPT_STATUS.WAIVED,
+      paymentMethod: "Waived",
+      lines: [{ label: "Tablet RRRRR001 — not returned", amount: 0 }],
+      total: 0,
+      reference: "Waived by Sam Lee (staff@x.co): Faulty unit",
+    });
+  });
+
+  it("totals in cents, so a price with cents is not off by one", () => {
+    expect(mapLostFeeToReceipt({ ...base, amount: "19.99" }).total).toBe(19.99);
   });
 });
