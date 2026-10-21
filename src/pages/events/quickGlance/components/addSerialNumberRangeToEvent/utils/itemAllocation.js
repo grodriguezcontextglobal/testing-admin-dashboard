@@ -221,3 +221,34 @@ export const explainAllocationFailure = (error, deviceTitle) => {
     ? error.message
     : "The batch could not be allocated, and the server gave no reason.";
 };
+
+const ALLOCATE_TITLE = "Allocate Scanned Serial Numbers";
+
+/**
+ * The Allocate button of the scan list. After a success the list stays on
+ * screen as the record of what moved, and must not be sent again: the pool
+ * write (`/receiver/receivers-pool-bulk`) has no dedup, so a second click
+ * added every unit to the event twice.
+ */
+export const allocateButtonState = ({ count, status }) => {
+  if (status === "success") {
+    return { disabled: true, title: "Allocated — scan new serials to allocate more" };
+  }
+  return { disabled: count === 0 || status === "running", title: ALLOCATE_TITLE };
+};
+
+/**
+ * A scan added to the list. After an allocation the next scan starts a new
+ * list (`fresh`), so the units already allocated are never sent with it.
+ */
+export const addScannedSerial = (serials, serial, status) => {
+  if (status === "success") return { serials: [serial], fresh: true };
+  if (serials.includes(serial)) {
+    return {
+      serials,
+      fresh: false,
+      error: `Serial number "${serial}" has already been scanned.`,
+    };
+  }
+  return { serials: [...serials, serial], fresh: false };
+};

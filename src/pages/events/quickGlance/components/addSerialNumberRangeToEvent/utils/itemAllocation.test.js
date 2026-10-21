@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  addScannedSerial,
+  allocateButtonState,
   buildItemAllocationPayload,
   describeItemAllocation,
   explainAllocationFailure,
@@ -307,5 +309,50 @@ describe("explainAllocationFailure", () => {
     for (const value of [undefined, null, {}, new Error("")]) {
       expect(explainAllocationFailure(value, "Receiver").trim().length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("allocateButtonState", () => {
+  it("waits for at least one scan", () => {
+    expect(allocateButtonState({ count: 0, status: "idle" })).toEqual({
+      disabled: true,
+      title: "Allocate Scanned Serial Numbers",
+    });
+  });
+
+  it("allows allocating a scanned list", () => {
+    expect(allocateButtonState({ count: 3, status: "idle" }).disabled).toBe(false);
+  });
+
+  it("is disabled while the batches run", () => {
+    expect(allocateButtonState({ count: 3, status: "running" }).disabled).toBe(true);
+  });
+
+  // The list stayed on screen after a success and a second click sent it
+  // again: the pool write has no dedup, so every unit was added twice.
+  it("cannot send a list that was already allocated", () => {
+    expect(allocateButtonState({ count: 3, status: "success" })).toEqual({
+      disabled: true,
+      title: "Allocated — scan new serials to allocate more",
+    });
+  });
+});
+
+describe("addScannedSerial", () => {
+  it("adds a new serial to the list", () => {
+    expect(addScannedSerial(["A1"], "A2", "idle")).toEqual({ serials: ["A1", "A2"], fresh: false });
+  });
+
+  it("refuses a serial already in the list", () => {
+    expect(addScannedSerial(["A1"], "A1", "idle")).toEqual({
+      serials: ["A1"],
+      fresh: false,
+      error: 'Serial number "A1" has already been scanned.',
+    });
+  });
+
+  it("starts a new list after an allocation, so the allocated units are not sent again", () => {
+    expect(addScannedSerial(["A1", "A2"], "B1", "success")).toEqual({ serials: ["B1"], fresh: true });
+    expect(addScannedSerial(["A1"], "A1", "success")).toEqual({ serials: ["A1"], fresh: true });
   });
 });

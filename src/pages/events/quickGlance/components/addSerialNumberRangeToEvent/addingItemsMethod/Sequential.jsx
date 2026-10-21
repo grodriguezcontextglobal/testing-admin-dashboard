@@ -9,6 +9,8 @@ import GrayButtonComponent from "../../../../../../components/UX/buttons/GrayBut
 import { devitrakApi } from "../../../../../../api/devitrakApi";
 import { onAddEventData } from "../../../../../../store/slices/eventSlice";
 import {
+  addScannedSerial,
+  allocateButtonState,
   buildItemAllocationPayload,
   describeItemAllocation,
   explainAllocationFailure,
@@ -86,11 +88,17 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
   );
 
   const handleAddSerial = (serial) => {
-    if (scannedSerials.includes(serial)) {
-      setInputError(`Serial number "${serial}" has already been scanned.`);
+    const next = addScannedSerial(scannedSerials, serial, status);
+    if (next.error) {
+      setInputError(next.error);
       return;
     }
-    setScannedSerials((prev) => [...prev, serial]);
+    if (next.fresh) {
+      // The previous list was allocated: start over, so it is never re-sent.
+      setAllocationSummaries([]);
+      reset();
+    }
+    setScannedSerials(next.serials);
     setInputError(null);
   };
 
@@ -108,6 +116,7 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
   };
 
   const handleAllScannedSerialNumbers = async () => {
+    if (status === "success" || status === "running") return;
     if (scannedSerials.length === 0) {
       setInputError("Please scan serial numbers first.");
       return;
@@ -115,6 +124,11 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
     setAllocationSummaries([]);
     startProcessing();
   };
+
+  const allocateButton = allocateButtonState({
+    count: scannedSerials?.length ?? 0,
+    status,
+  });
 
   const allocationOutcome = describeItemAllocation(
     allocationSummaries,
@@ -179,9 +193,9 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
 
       <div style={{ marginTop: "2rem", width: "100%" }}>
         <LightBlueButtonComponent
-          title="Allocate Scanned Serial Numbers"
+          title={allocateButton.title}
           func={handleAllScannedSerialNumbers}
-          disabled={scannedSerials?.length === 0 || status === "running"}
+          disabled={allocateButton.disabled}
           buttonType="button"
           styles={{ width: "100%" }}
         />
