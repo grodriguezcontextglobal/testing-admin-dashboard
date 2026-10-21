@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 // import pkg from '@reduxjs/toolkit';
 // const {combineReducers, configureStore} = pkg;
-import storage from "redux-persist/es/storage";
+import { createSplitStorage } from "./splitStorage";
 import {
   persistReducer,
   FLUSH,
@@ -18,11 +18,31 @@ import {
 import { stripPasswordsTransform } from "./persistTransforms";
 import { rootReducer } from "./rootReducer";
 
+/* A storage that throws (blocked site data, some private windows) degrades to
+   no persistence instead of taking the app down. */
+const noopStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+const webStorage = (name) => {
+  try {
+    const candidate = window[name];
+    const probe = "__devitrak_storage_probe__";
+    candidate.setItem(probe, probe);
+    candidate.removeItem(probe);
+    return candidate;
+  } catch {
+    return noopStorage;
+  }
+};
+
 const persistConfig = {
   key: "root",
   version: 1,
-  storage,
-  // Passwords never reach localStorage (persistTransforms.js).
+  // The session in localStorage; people's records in sessionStorage, gone
+  // when the tab closes (splitStorage.js, FedRAMP F1.4).
+  storage: createSplitStorage({
+    persistent: webStorage("localStorage"),
+    session: webStorage("sessionStorage"),
+  }),
+  // Passwords never reach either (persistTransforms.js).
   transforms: [stripPasswordsTransform],
 };
 
