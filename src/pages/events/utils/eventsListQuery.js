@@ -18,3 +18,18 @@ export const eventsListCacheKey = (company) => `company=${company}&type=event`;
 /** The request that fetches it. */
 export const eventsListPath = (company) =>
   `/event/event-list-per-company?${eventsListCacheKey(company)}`;
+
+/**
+ * Fetches the list fresh. Creating an event does not clear the server's copy,
+ * so the new event only appeared after a page reload: clearing the key first,
+ * as deleting a draft already did, makes every visit and every manual refresh
+ * read the database. A failed clear still fetches.
+ */
+export const fetchEventsList = async (api, company) => {
+  try {
+    await api.post("/cache_update/remove-cache", { key: eventsListCacheKey(company) });
+  } catch {
+    // Better a possibly stale list than none.
+  }
+  return api.get(eventsListPath(company));
+};

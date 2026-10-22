@@ -4,9 +4,11 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { devitrakApi } from "../../api/devitrakApi";
-import { eventsListPath } from "./utils/eventsListQuery";
+import { fetchEventsList } from "./utils/eventsListQuery";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
+import { RotateCw } from "lucide-react";
 import BlueButtonComponent from "../../components/UX/buttons/BlueButton";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import EventsCarousel from "../../components/UX/carousel/EventsCarousel";
 import Chip from "../../components/UX/Chip/Chip";
 import { findEventManager } from "../inventory/utils/warehouseManagerUtils";
@@ -47,12 +49,28 @@ const MainPage = () => {
   // the cached list instantly while the refetch runs in the background —
   // gating the page on isRefetching swapped content back to a spinner on
   // every navigation, which read as a flicker mid page-transition.
-  const { isLoading, data: eventsData } = useQuery({
+  // fetchEventsList reads the list past the server's cache, so an event
+  // created a moment ago is there on the way back to this page, and the
+  // Refresh button below shows changes made elsewhere without a page reload.
+  const {
+    isLoading,
+    isFetching,
+    refetch: refetchEvents,
+    data: eventsData,
+  } = useQuery({
     queryKey: ["events"],
-    queryFn: () =>
-      devitrakApi.get(eventsListPath(user.company)),
+    queryFn: () => fetchEventsList(devitrakApi, user.company),
     enabled: !!user.companyData.id,
   });
+  const refreshButton = (
+    <GrayButtonComponent
+      title="Refresh"
+      iconLeading={<RotateCw size={16} />}
+      func={() => refetchEvents()}
+      loadingState={isFetching}
+      disabled={isFetching}
+    />
+  );
   const eventList = eventsData?.data?.list ?? [];
   const companyAccountStripeQuery = useQuery({
     queryKey: ["stripe_company_account"],
@@ -168,6 +186,7 @@ const MainPage = () => {
             lg={12}
           >
             {eventManagerPill}
+            {refreshButton}
             {/* /event/new_subscription */}
             <Link
               to="/create-event-page/event-detail"
@@ -221,6 +240,8 @@ const MainPage = () => {
               </Typography>
               {eventManagerPill}
             </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {refreshButton}
             {/* /event/new_subscription */}
             <Link to="/create-event-page/event-detail">
               {" "}
@@ -239,6 +260,7 @@ const MainPage = () => {
                 styles={{ width: "100%" }}
               />
             </Link>
+            </div>
           </Grid>
         </Grid>
         <Grid
