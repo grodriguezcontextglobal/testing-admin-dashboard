@@ -131,3 +131,15 @@ export function summarizeAssignment(record, assignedRows) {
 
   return { rows, totals, isComplete: totals.remaining === 0 };
 }
+
+/**
+ * The writes that close a transaction's receiver records once its deposit is
+ * released or captured. The server reads the id from the body, so a bare
+ * `{ active: false }` answered 500 "id is required".
+ */
+export function buildReceiverClosures(receivers) {
+  const list = Array.isArray(receivers) ? receivers : [];
+  return list
+    .filter((receiver) => receiver?.id)
+    .map((receiver) => ({ id: receiver.id, body: { id: receiver.id, active: false } }));
+}

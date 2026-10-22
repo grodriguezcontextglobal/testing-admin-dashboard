@@ -24,6 +24,7 @@ import {
   describeDepositState,
   formatCents,
 } from "../../../utils/depositAmount";
+import { buildReceiverClosures } from "../../../utils/transactionAssignment";
 
 /**
  * Capture or release a card deposit.
@@ -147,14 +148,12 @@ const DepositActionModal = ({ action, open, setOpen, onSettled }) => {
 
     // Awaited, unlike the original forEach(async …), so a failure here is a
     // failure of the whole action rather than a silent one.
+    // The id goes in the body too: the server reads it from there and
+    // answered 500 "id is required" to a bare { active: false }.
     await Promise.all(
-      receivers
-        .filter((receiver) => receiver?.id)
-        .map((receiver) =>
-          devitrakApi.patch(`/receiver/receiver-update/${receiver.id}`, {
-            active: false,
-          })
-        )
+      buildReceiverClosures(receivers).map(({ id, body }) =>
+        devitrakApi.patch(`/receiver/receiver-update/${id}`, body)
+      )
     );
   };
 

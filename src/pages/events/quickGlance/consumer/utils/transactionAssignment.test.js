@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildReceiverClosures,
   devicesForTransaction,
   summarizeAssignment,
   toDeviceRows,
@@ -229,5 +230,23 @@ describe("summarizeAssignment", () => {
 
   it("survives a missing record entirely", () => {
     expect(summarizeAssignment(undefined, undefined).totals.requested).toBe(0);
+  });
+});
+
+describe("buildReceiverClosures", () => {
+  // The server reads the id from the body: `{ active: false }` alone answered
+  // 500 "id is required" when a deposit was released or captured.
+  it("sends the receiver's id in the body of each closing write", () => {
+    expect(buildReceiverClosures([{ id: "r1" }, { id: "r2", device: {} }])).toEqual([
+      { id: "r1", body: { id: "r1", active: false } },
+      { id: "r2", body: { id: "r2", active: false } },
+    ]);
+  });
+
+  it("skips records without an id rather than sending a write that fails", () => {
+    expect(buildReceiverClosures([{ device: {} }, null, { id: "r3" }])).toEqual([
+      { id: "r3", body: { id: "r3", active: false } },
+    ]);
+    expect(buildReceiverClosures(undefined)).toEqual([]);
   });
 });
