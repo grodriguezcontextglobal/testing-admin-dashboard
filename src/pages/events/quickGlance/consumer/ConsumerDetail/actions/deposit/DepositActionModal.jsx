@@ -181,7 +181,15 @@ const DepositActionModal = ({ action, open, setOpen, onSettled }) => {
       );
       if (!response.data?.ok) throw new Error("Stripe refused the request");
 
-      await deactivateTransactionAndReceivers();
+      // Stripe has already moved the money here. A failure to close the
+      // records must not read as a failed capture/release: that message sends
+      // the operator to try the deposit again.
+      let recordsLeftOpen = false;
+      try {
+        await deactivateTransactionAndReceivers();
+      } catch {
+        recordsLeftOpen = true;
+      }
 
       const stamp = new Date().toString().split(" ");
       await devitrakApi.post(config.email, {
@@ -202,7 +210,14 @@ const DepositActionModal = ({ action, open, setOpen, onSettled }) => {
       queryClient.invalidateQueries({ queryKey: ["stripePaymentIntent", paymentIntent] });
       queryClient.invalidateQueries({ queryKey: ["consumerEventTransactions"] });
       onSettled?.();
-      notify("success", config.success);
+      if (recordsLeftOpen) {
+        notify(
+          "warning",
+          `${config.success} The transaction could not be closed, so it may still show as open. Do not repeat the ${config.operation}; report it.`
+        );
+      } else {
+        notify("success", config.success);
+      }
       close();
     } catch (error) {
       // A 409 means the first request is still running, so the deposit's state
