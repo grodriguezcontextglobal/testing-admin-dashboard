@@ -1,3 +1,5 @@
+import { connectedAccountFor } from "../../../../Profile/stripe_connected_account/utils/stripeConnectedAccount";
+
 /**
  * Whether this company can offer a merchant service on an event (requested
  * 2026-09-25): an event could be marked as needing one although the company
@@ -15,9 +17,7 @@ export const stripeAccountMode = (publishableKey) =>
   String(publishableKey ?? "").includes("test") ? "test" : "live";
 
 export const hasStripeConnectedAccount = (companyData, publishableKey) =>
-  Boolean(
-    `${companyData?.stripe_connected_account?.[stripeAccountMode(publishableKey)]?.id ?? ""}`.trim()
-  );
+  Boolean(connectedAccountFor(companyData, stripeAccountMode(publishableKey)));
 
 /** Where the account is created. */
 export const STRIPE_ACCOUNT_SETUP_ROUTE = "/profile/stripe_connected_account";

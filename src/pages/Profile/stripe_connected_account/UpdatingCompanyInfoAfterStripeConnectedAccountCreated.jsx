@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { useEffect } from "react";
-import { onLogin } from "../../../store/slices/adminSlice";
+import { onUpdateCompanyData } from "../../../store/slices/adminSlice";
 import { checkArray } from "../../../components/utils/checkArray";
 import Loading from "../../../components/animation/Loading";
 
@@ -23,12 +23,9 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = () => {
     if (companyDataQuery.data) {
       const triggerRedirection = async () => {
         const companyInfo = checkArray(companyDataQuery?.data?.data?.company)
-        dispatch(
-          onLogin({
-            ...user,
-            companyData: companyInfo,
-          })
-        );
+        // Merge, not onLogin: onLogin replaces the session and recomputes
+        // mfaEnabled from the payload (see onUpdateCompanyData).
+        dispatch(onUpdateCompanyData(companyInfo));
         navigate("/profile/stripe_connected_account");
       };
       triggerRedirection();

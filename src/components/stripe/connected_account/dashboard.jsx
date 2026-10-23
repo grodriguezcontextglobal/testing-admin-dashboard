@@ -13,6 +13,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import "./dashboard.css";
 import { Skeleton } from "antd";
 import { ConfigEnvExport } from "../../../config/ConfigEnvExport";
+import { connectedAccountFor } from "../../../pages/Profile/stripe_connected_account/utils/stripeConnectedAccount";
 const StripeConnectedAccountDashboard = () => {
   const { user } = useSelector((state) => state.admin);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +25,7 @@ const StripeConnectedAccountDashboard = () => {
     const fetchClientSecret = async () => {
       // Fetch the AccountSession client secret
       const response = await devitrakApi.post("/stripe/account_sessions", {
-        connectedAccountId: user.companyData.stripe_connected_account[stripeEnvMode.current].id,
+        connectedAccountId: connectedAccountFor(user.companyData, stripeEnvMode.current)?.id,
       });
       if (response.data.ok) {
         return response.data.client_secret;

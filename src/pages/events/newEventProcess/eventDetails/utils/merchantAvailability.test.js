@@ -37,3 +37,16 @@ describe("hasStripeConnectedAccount", () => {
     expect(hasStripeConnectedAccount(company({ live: { id: "" } }), "pk_live_x")).toBe(false);
   });
 });
+
+describe("hasStripeConnectedAccount — the old flat record", () => {
+  // Profile → Stripe account saved { id, login_links } without test/live until
+  // 2026-10-23, so a company that had registered could not offer a merchant.
+  it("counts an account saved flat by the old Profile screen", () => {
+    expect(
+      hasStripeConnectedAccount(
+        { stripe_connected_account: { id: "acct_flat", login_links: {} } },
+        "pk_live_123"
+      )
+    ).toBe(true);
+  });
+});

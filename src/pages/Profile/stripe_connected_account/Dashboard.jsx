@@ -13,6 +13,10 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import Header from "../components/Header";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
+import {
+  buildConnectedAccountUpdate,
+  connectedAccountFor,
+} from "./utils/stripeConnectedAccount";
 const Dashboard = () => {
   const stripeEnvMode = useRef(
     String(ConfigEnvExport.stripe_public_key).includes("test") ? "test" : "live"
@@ -24,9 +28,7 @@ const Dashboard = () => {
   const { register, watch, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
   useEffect(() => {
-    if (
-      user?.companyData?.stripe_connected_account?.[stripeEnvMode.current]?.id
-    ) {
+    if (connectedAccountFor(user?.companyData, stripeEnvMode.current)) {
       return setClientSecret(true);
     }
   }, []);
@@ -34,8 +36,7 @@ const Dashboard = () => {
   if (clientSecret) {
     return (
       <div style={{ width: "100%" }}>
-        {user?.companyData?.stripe_connected_account?.[stripeEnvMode.current]
-          ?.id &&
+        {connectedAccountFor(user?.companyData, stripeEnvMode.current) &&
           clientSecret && <StripeConnectedAccountDashboard />}
       </div>
     );
@@ -59,12 +60,14 @@ const Dashboard = () => {
         const [, responseCreateAccount] = await Promise.all([
           devitrakApi.patch(
             `/company/update-company/${user.companyData.id}`,
-            {
-              stripe_connected_account: {
-                id: newConnectedAccount.id,
-                login_links: newConnectedAccount.login_links,
-              },
-            }
+            // Under its environment, keeping the other one: a flat
+            // { id, login_links } erased test/live, and the company then
+            // looked like it had no account (2026-10-23).
+            buildConnectedAccountUpdate(
+              user.companyData.stripe_connected_account,
+              stripeEnvMode.current,
+              newConnectedAccount
+            )
           ),
           devitrakApi.post(
             "/stripe/account_link",
@@ -96,8 +99,7 @@ const Dashboard = () => {
         width: "100%",
       }}
     >
-      {!user?.companyData?.stripe_connected_account?.[stripeEnvMode.current]
-        ?.id &&
+      {!connectedAccountFor(user?.companyData, stripeEnvMode.current) &&
         !openModalStripeConnectedAccount && (
           <EmptyState
             icon="tabler:brand-stripe"

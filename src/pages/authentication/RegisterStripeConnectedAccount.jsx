@@ -10,6 +10,7 @@ import { devitrakApi } from "../../api/devitrakApi";
 import { checkArray } from "../../components/utils/checkArray";
 import { useSelector } from "react-redux";
 import { ConfigEnvExport } from "../../config/ConfigEnvExport";
+import { buildConnectedAccountUpdate } from "../Profile/stripe_connected_account/utils/stripeConnectedAccount";
 const RegisterStripeConnectedAccount = () => {
   const { register, handleSubmit, watch } = useForm();
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -36,24 +37,16 @@ const RegisterStripeConnectedAccount = () => {
         // 3. Define the environment (e.g., "test" or "live")
         const env = stripeEnvMode.current;
 
-        // 4. Initialize the account object with null placeholders
-        const stripeSessionAccount = {
-          test: null,
-          live: null,
-        };
-
-        // 5. Assign the new account details to the matching environment key
-        stripeSessionAccount[env] = {
-          id: newConnectedAccount.id,
-          login_links: newConnectedAccount.login_links,
-        };
-
-        // 6. Update the company data with the newly assigned environment key
+        // 4-6. Store it under its environment, keeping the other one: the
+        // old { test: null, live: null } template erased the other
+        // environment's account.
         await devitrakApi.patch(
           `/company/update-company/register-process/${user.companyData.id}`,
-          {
-            stripe_connected_account: stripeSessionAccount,
-          }
+          buildConnectedAccountUpdate(
+            user.companyData?.stripe_connected_account,
+            env,
+            newConnectedAccount
+          )
         );
 
         // 7. Generate a Stripe account link for onboarding
