@@ -27,8 +27,6 @@ import {
   stepOneSubmitLabel,
 } from "./utils/eventDetailsStep";
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../utils/eventLifecycle";
-import { hasStripeConnectedAccount } from "./utils/merchantAvailability";
-import { ConfigEnvExport } from "../../../../config/ConfigEnvExport";
 import { normalizeEventStaff } from "../../../../store/slices/eventSlice";
 const Form = () => {
   const { eventInfoDetail, staff, event } = useSelector((state) => state.event);
@@ -70,16 +68,11 @@ const Form = () => {
   const [numberOfPhoneNumbersPerEvent, setNumberOfPhoneNumbersPerEvent] =
     useState(eventInfoDetail.phoneNumber);
   const [merchant, setMerchant] = useState(eventInfoDetail.merchant);
-  // A merchant service needs the company's Stripe account to charge through.
-  const merchantAvailable = hasStripeConnectedAccount(
-    user?.companyData,
-    ConfigEnvExport.stripe_public_key
-  );
-  // A draft resumed, or an old default, may carry `true` from before the
-  // account was checked: it is not offerable, so it is not kept.
-  useEffect(() => {
-    if (!merchantAvailable && merchant) setMerchant(false);
-  }, [merchantAvailable, merchant]);
+  // Merchant service is offered whether or not the company has created its
+  // Stripe connected account (decided 2026-10-23, for the beta: Stripe runs in
+  // test mode in production). hasStripeConnectedAccount in
+  // utils/merchantAvailability.js is the check to put back here.
+  const merchantAvailable = true;
   const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
   const [daysBeforeEvent, setDaysBeforeEvent] = useState(
     eventInfoDetail.daysBeforeEvent
