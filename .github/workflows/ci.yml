@@ -42,6 +42,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Puerta de dependencias (FedRAMP A1 · RA-5): un aviso high o critical en
+      # las dependencias de producción bloquea, salvo que
+      # .github/audit-exceptions.json lo acepte con motivo y fecha de caducidad.
+      - name: Dependency audit
+        run: node scripts/audit-gate.js
+
       # Puerta con línea base (FedRAMP F1.3): los errores bloquean, y los
       # warnings no pueden pasar de los que había el 2026-10-21 (281: 268 de
       # react-hooks/exhaustive-deps y 13 de react-refresh). Al arreglar una
