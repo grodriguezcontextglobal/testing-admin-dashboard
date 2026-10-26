@@ -1,0 +1,1338 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Devitrak FedRAMP Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+  /* ============ TOKENS — light is the base, complete ============ */
+  :root {
+    --ground:        #fcfcfd;
+    --surface:       #ffffff;
+    --surface-sunk:  #f5f7fa;
+    --ink:           #101828;
+    --ink-soft:      #475467;
+    --ink-faint:     #667085;
+    --rule:          #e3e8ef;
+    --rule-strong:   #d0d5dd;
+
+    --brand:         #155eef;
+    --brand-deep:    #0040c1;
+    --brand-wash:    #eff4ff;
+    --brand-edge:    #d1e0ff;
+
+    --blocked:       #b42318;
+    --blocked-wash:  #fef3f2;
+    --blocked-edge:  #fecdca;
+    --caution:       #b54708;
+    --caution-wash:  #fffaeb;
+    --caution-edge:  #fedf89;
+    --clear:         #067647;
+    --clear-wash:    #ecfdf3;
+    --clear-edge:    #abefc6;
+
+    --shadow: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+    --measure: 68ch;
+    --gutter: clamp(18px, 4vw, 56px);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:        #0b0f19;
+      --surface:       #141922;
+      --surface-sunk:  #1b212c;
+      --ink:           #f2f4f7;
+      --ink-soft:      #b0b8c4;
+      --ink-faint:     #8a94a4;
+      --rule:          #262d3a;
+      --rule-strong:   #39414f;
+      --brand:         #84adff;
+      --brand-deep:    #b2ccff;
+      --brand-wash:    #131f38;
+      --brand-edge:    #1e3157;
+      --blocked:       #fda29b;
+      --blocked-wash:  #2a1412;
+      --blocked-edge:  #55201c;
+      --caution:       #fec84b;
+      --caution-wash:  #271a08;
+      --caution-edge:  #4e3410;
+      --clear:         #75e0a7;
+      --clear-wash:    #0b2119;
+      --clear-edge:    #14452f;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:        #0b0f19;
+    --surface:       #141922;
+    --surface-sunk:  #1b212c;
+    --ink:           #f2f4f7;
+    --ink-soft:      #b0b8c4;
+    --ink-faint:     #8a94a4;
+    --rule:          #262d3a;
+    --rule-strong:   #39414f;
+    --brand:         #84adff;
+    --brand-deep:    #b2ccff;
+    --brand-wash:    #131f38;
+    --brand-edge:    #1e3157;
+    --blocked:       #fda29b;
+    --blocked-wash:  #2a1412;
+    --blocked-edge:  #55201c;
+    --caution:       #fec84b;
+    --caution-wash:  #271a08;
+    --caution-edge:  #4e3410;
+    --clear:         #75e0a7;
+    --clear-wash:    #0b2119;
+    --clear-edge:    #14452f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+
+  /* ============ BASE ============ */
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-inline: var(--gutter);
+    padding-block: clamp(36px, 7vw, 76px) 96px;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: Newsreader, ui-serif, Georgia, serif;
+    font-weight: 500;
+    text-wrap: balance;
+    margin: 0;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+  }
+
+  p { margin: 0; max-width: var(--measure); }
+  strong { font-weight: 700; color: var(--ink); }
+
+  code, .mono {
+    font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.855em;
+    font-variant-ligatures: none;
+  }
+  code {
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.08em 0.36em;
+    color: var(--ink);
+    word-break: break-word;
+  }
+
+  a { color: var(--brand); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 3px; }
+
+  /* ============ MASTHEAD ============ */
+  .masthead { display: flex; flex-direction: column; gap: 20px; }
+
+  .kicker {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center;
+  }
+  .kicker .dot { color: var(--rule-strong); }
+
+  h1 { font-size: clamp(34px, 6.2vw, 55px); letter-spacing: -0.022em; }
+  h1 .sub {
+    display: block; font-style: italic; color: var(--ink-faint);
+    font-size: 0.5em; letter-spacing: -0.005em; margin-top: 12px; font-weight: 400;
+  }
+
+  .standfirst { font-size: 19.5px; line-height: 1.55; color: var(--ink-soft); max-width: 62ch; }
+
+  /* ============ VERDICT ============ */
+  .verdict {
+    margin-top: 40px;
+    border: 1px solid var(--rule-strong);
+    border-left: 3px solid var(--brand);
+    border-radius: 3px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: clamp(22px, 4vw, 34px);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .verdict-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 16px; }
+  .verdict-head h2 { font-size: 27px; }
+  .verdict p { max-width: 70ch; color: var(--ink-soft); }
+
+  /* ============ SECTIONS ============ */
+  section { margin-top: 72px; scroll-margin-top: 24px; }
+
+  .sec-head {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 26px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .sec-head h2 { font-size: clamp(25px, 4vw, 33px); }
+  .sec-head .eyebrow {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--brand); font-weight: 500;
+  }
+  .sec-head p { color: var(--ink-soft); font-size: 16px; }
+
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .stack-lg { display: flex; flex-direction: column; gap: 28px; }
+  h3.run { font-size: 21px; margin-top: 14px; }
+
+  /* ============ GATES ============ */
+  .gates { display: flex; flex-direction: column; gap: 14px; }
+
+  .gate {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 18px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .gate-mark {
+    grid-column: 1; grid-row: 1;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--blocked-wash);
+    border: 1px solid var(--blocked-edge);
+    color: var(--blocked);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 15px; font-weight: 700;
+  }
+  /* Content pins to column 2, so a card takes any number of paragraphs
+     without the badge needing to know the row count. */
+  .gate > *:not(.gate-mark) { grid-column: 2; min-width: 0; }
+
+  .gate h3 { font-size: 19.5px; }
+  .gate .rule-id {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; color: var(--ink-faint); letter-spacing: 0.03em;
+  }
+  .gate p { color: var(--ink-soft); font-size: 15.5px; max-width: 64ch; }
+
+  @media (max-width: 540px) {
+    .gate { grid-template-columns: 1fr; gap: 10px; }
+    .gate-mark, .gate > *:not(.gate-mark) { grid-column: 1; }
+    .gate-mark { grid-row: auto; }
+  }
+
+  /* ============ CHIPS ============ */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 3px;
+    border: 1px solid var(--rule-strong);
+    background: var(--surface-sunk); color: var(--ink-soft); white-space: nowrap;
+  }
+  .chip.blocked { background: var(--blocked-wash); border-color: var(--blocked-edge); color: var(--blocked); }
+  .chip.caution { background: var(--caution-wash); border-color: var(--caution-edge); color: var(--caution); }
+  .chip.clear   { background: var(--clear-wash);   border-color: var(--clear-edge);   color: var(--clear); }
+
+  /* ============ TABLES ============ */
+  .tscroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+    font-weight: 500; background: var(--surface-sunk); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .was { color: var(--ink-faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+  /* ============ FINDINGS ============ */
+  .findings { border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; background: var(--surface); }
+  .finding {
+    display: grid; grid-template-columns: 26px 1fr; gap: 4px 14px;
+    padding: 16px 18px; border-bottom: 1px solid var(--rule);
+  }
+  .finding:last-child { border-bottom: 0; }
+  .finding .n {
+    grid-column: 1; grid-row: 1;
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+    color: var(--blocked); font-weight: 700; padding-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .finding > *:not(.n) { grid-column: 2; min-width: 0; }
+  .finding .t { font-weight: 600; font-size: 15.5px; }
+  .finding .d { color: var(--ink-soft); font-size: 15px; max-width: 66ch; }
+
+  /* ============ PHASES ============ */
+  .phase {
+    display: grid; grid-template-columns: 124px 1fr; gap: 0 26px;
+    padding: 24px 0; border-top: 1px solid var(--rule);
+  }
+  .phase:last-child { border-bottom: 1px solid var(--rule); }
+  .phase-rail { display: flex; flex-direction: column; gap: 7px; }
+  .phase-id {
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand); font-weight: 700;
+  }
+  .phase-when { font-size: 13px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .phase-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .phase-body h3 { font-size: 21px; }
+  .phase-body p { color: var(--ink-soft); font-size: 15.5px; }
+  .unlocks {
+    font-size: 15px; padding: 11px 15px;
+    background: var(--brand-wash); border: 1px solid var(--brand-edge);
+    border-radius: 3px; color: var(--ink); max-width: 70ch;
+  }
+  .unlocks b {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand);
+    display: block; margin-bottom: 3px;
+  }
+  ul.tight {
+    margin: 0; padding-left: 1.15em; display: flex; flex-direction: column;
+    gap: 7px; color: var(--ink-soft); font-size: 15.5px; max-width: 68ch;
+  }
+  ul.tight li::marker { color: var(--rule-strong); }
+
+  @media (max-width: 620px) {
+    .phase { grid-template-columns: 1fr; gap: 12px; }
+    .phase-rail { flex-direction: row; align-items: baseline; gap: 12px; }
+  }
+
+  /* ============ DECISIONS ============ */
+  .decision {
+    border: 1px solid var(--rule); border-radius: 3px; background: var(--surface);
+    padding: 18px 20px; display: flex; flex-direction: column; gap: 9px;
+  }
+  .decision h3 { font-size: 18.5px; }
+  .decision p { font-size: 15.5px; color: var(--ink-soft); }
+  .rec { font-size: 15px; border-left: 2px solid var(--brand); padding-left: 13px; color: var(--ink); }
+  .rec b {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand);
+  }
+
+  /* ============ CALLOUT ============ */
+  .callout {
+    border: 1px solid var(--blocked-edge); background: var(--blocked-wash);
+    border-radius: 3px; padding: clamp(18px, 3.5vw, 26px);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .callout h3 { font-size: 21px; color: var(--ink); }
+  .callout p { color: var(--ink-soft); font-size: 15.5px; }
+
+  .deadline {
+    border: 1px solid var(--caution-edge); background: var(--caution-wash);
+    border-radius: 3px; padding: clamp(18px, 3.5vw, 24px);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .deadline h3 { font-size: 20px; color: var(--ink); }
+  .deadline p { color: var(--ink-soft); font-size: 15.5px; }
+
+  .note {
+    font-size: 14.5px; color: var(--ink-faint);
+    border-left: 2px solid var(--rule-strong); padding-left: 14px; max-width: 68ch;
+  }
+
+  footer {
+    margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--rule);
+    font-size: 14px; color: var(--ink-faint);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  footer p { font-size: 14px; max-width: 74ch; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">
+      <span>Readiness assessment</span>
+      <span class="dot">/</span>
+      <span>Research 16 Sept 2026</span>
+      <span class="dot">/</span>
+      <span>Cesar · Gustavo · Fredrik</span>
+    </div>
+    <h1>
+      Devitrak &amp; FedRAMP
+      <span class="sub">What it would take, what blocks it today, and the road that actually gets there</span>
+    </h1>
+    <p class="standfirst">
+      The program changed more in the last eighteen months than in the decade before it. Most of what
+      you would have read about FedRAMP a year ago is now wrong — including the part everyone quotes
+      about needing a federal agency to sponsor you.
+    </p>
+  </header>
+
+  <div class="verdict">
+    <div class="verdict-head">
+      <h2>Not yet — and not first</h2>
+      <span class="chip blocked">3 eligibility gates failed</span>
+    </div>
+    <p>
+      Devitrak is blocked at <strong>three independent eligibility gates</strong>, any one of which is
+      disqualifying on its own. None of them is about how good the security is; they are about
+      paperwork you don't have, a customer you don't have, and where the server runs. No amount of
+      remediation clears them this year.
+    </p>
+    <p>
+      But this is not a "no." The work that opens the FedRAMP door is almost exactly the work that
+      closes the Bridges PCS deal and every district deal behind it — and one of the cheap steps on
+      that road, <strong>GovRAMP</strong>, is itself an accepted FedRAMP entry credential. So the
+      sequence is not <em>K-12 versus federal</em>. It is one road, with revenue at the near end and
+      FedRAMP at the far end, and you are not yet standing on it.
+    </p>
+    <p>
+      The honest framing: <strong>the gating question is not "can we afford FedRAMP," it is "is there
+      a single federal dollar at the end of it."</strong> Today there isn't — though there is a real
+      federal market worth deciding about deliberately rather than by default.
+    </p>
+    <p>
+      One thing worth saying plainly, because the rest of this document is a long list of problems:
+      <strong>the instinct to start now is correct — it is the target that's wrong.</strong> Working
+      the arithmetic forward from zero compliance artifacts with two engineers, the long pole to any
+      serious credential is <strong>18–30 months</strong>, and almost none of that is government queue
+      time (FedRAMP's own review clock is roughly 30 days). It is all Devitrak's own readiness work.
+      If anything GovRAMP-gated or federal is plausible in 2028–29, starting now is roughly on
+      schedule. Nobody in this research said "too early" and then did the subtraction.
+    </p>
+  </div>
+
+  <!-- ===================== DEADLINE ===================== -->
+  <section id="deadline">
+    <div class="deadline">
+      <h3>One thing is time-sensitive right now</h3>
+      <p>
+        <strong>RFC-0033 comments close 9 October 2026.</strong> It contains
+        <em>Track 2: Expanding 20x to Self-Hosted or Hybrid-Hosted Services</em> — the scheduled
+        opening for gate 3, the one that currently disqualifies your Windows box. Full Phase 4
+        requirements are expected around 14 October, and a public RFC specifically on managing
+        self-hosted services lands <strong>4 November</strong>. Nothing else on this page has a
+        deadline attached; this does.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== URGENT ===================== -->
+  <section id="urgent">
+    <div class="sec-head">
+      <span class="eyebrow">Before anything else</span>
+      <h2>Eight live exposures that have nothing to do with FedRAMP</h2>
+      <p>
+        These surfaced during the gap analysis. They are active, they affect real student and payment
+        data, and every one is independent of which certification you eventually pursue. Several are
+        worse than anything previously on record.
+      </p>
+    </div>
+
+    <div class="stack">
+      <div class="callout">
+        <h3>The production secrets are published and have never been rotated</h3>
+        <p>
+          Mongo Atlas URI, PlanetScale password, the JWT signing seed, Stripe secret key, SendGrid
+          key, Cloudinary secret, AWS secret key and the Twilio auth token are a tracked
+          <code>.env</code> at the tip of remote branch <code>origin/archive/development-2026-03</code>
+          on a <em>personal</em> GitHub account. All eight were verified byte-identical to the values
+          in the live <code>.env</code>. Rotating the JWT seed alone invalidates every issued token,
+          so this needs a planned window — but it needs one.
+        </p>
+      </div>
+
+      <div class="findings">
+        <div class="finding">
+          <div class="n">02</div>
+          <div class="t">Four secrets ship inside the public JavaScript bundle</div>
+          <div class="d">
+            Vite inlines every <code>VITE_*</code> value at build time.
+            <code>VITE_APP_TWILIO_AUTH_TOKEN</code>, <code>VITE_APP_AWS_AUTHORIZER_TOKEN</code>,
+            <code>VITE_APP_HEADER_AUTH_TOKEN</code> and <code>VITE_APP_SECRETE_KEY_ENCRYPT</code> are
+            readable by anyone who opens devtools on <code>admin.devitrak.net</code>.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="n">03</div>
+          <div class="t">The consent gate is leaking its own bypass token</div>
+          <div class="d">
+            <code>NODE_ENV</code> is set nowhere — not in <code>.env</code>, not in
+            <code>.env.example</code> — so every <code>NODE_ENV === "production"</code> check is false
+            in production. At <code>mysql/controllers/school.js:214</code> the raw guardian-consent
+            one-time-code link is returned in the API response body, defeating the hash-only storage
+            that <code>mysql/helpers/consentOtc.js:20</code> exists to provide. The same missing
+            variable drops the <code>secure</code> flag from session cookies. One-line fix.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="n">04</div>
+          <div class="t">Every payment record is downloadable without authentication</div>
+          <div class="d">
+            <code>POST /api/admin/users</code> is mounted bare on <code>origin/main</code>
+            (<code>routes/admin.js:94</code>) and runs
+            <code>StripeTransaction.find(request.body).populate("user")</code> — an empty body returns
+            every payment record, including Stripe <code>clientSecret</code> values.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="n">05</div>
+          <div class="t">Any S3 object can be minted a download link, including signed consent PDFs</div>
+          <div class="d">
+            <code>POST /api/document/download/documentUrl</code>
+            (<code>routes/document.js:119</code>) is unauthenticated and takes an attacker-supplied S3
+            key, returning a presigned GET for <em>any</em> object in the bucket. Executed guardian
+            consent documents live in that bucket.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="n">06</div>
+          <div class="t">Admin password hashes are served to the browser by design</div>
+          <div class="d">
+            <code>AdminUser.find(request.body)</code> has no <code>.select("-password")</code>, so the
+            staff endpoint hands every admin's bcrypt hash to the client — and the frontend depends on
+            it, calling <code>compareSync</code> client-side in two places. Fixing the backend alone
+            breaks login; this needs both sides changed together.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="n">07</div>
+          <div class="t">Anyone on the internet can log out the entire platform</div>
+          <div class="d">
+            <code>POST /api/admin/invalidate-all-sessions</code> is mounted with
+            <code>optionalJWT</code>, which never rejects, and increments <code>tokenVersion</code> on
+            every AdminUser in every tenant.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="n">08</div>
+          <div class="t">The audit log is forgeable and publicly readable</div>
+          <div class="d">
+            <code>POST /api/transactionaudit_log/create-audit</code> takes raw <code>req.body</code>
+            with no auth, so audit records can be fabricated by anyone;
+            <code>GET /api/transactionaudit_log/audit-log</code> is unauthenticated with no filter and
+            no limit, returning a full cross-tenant dump.
+          </div>
+        </div>
+      </div>
+
+      <p class="note">
+        Scale, measured rather than estimated: <strong>297 of 510 route definitions (58.2%) carry no
+        authentication middleware</strong> on <code>origin/main</code>, counting router-level guards as
+        authenticated. Including the 40 <code>nodeMailer</code> routes whose guard defaults to
+        <code>warn</code> mode — which blocks nothing — the effective unauthenticated surface is
+        roughly <strong>337 of 510, or 66%</strong>. The clone serving the local stack is 217 commits
+        behind <code>origin/main</code> and is missing four security middlewares main has, so the
+        running box is worse than these figures.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== GATES ===================== -->
+  <section id="gates">
+    <div class="sec-head">
+      <span class="eyebrow">The blockers</span>
+      <h2>Three gates, all closed</h2>
+      <p>
+        FedRAMP's 2026 rules are published as a machine-readable ruleset. These are rule citations, not
+        interpretation.
+      </p>
+    </div>
+
+    <div class="gates">
+      <div class="gate">
+        <div class="gate-mark">1</div>
+        <h3>No qualifying prior certification</h3>
+        <div class="rule-id">FRC-CLA-ASF · Consolidated Rules for 2026</div>
+        <p>
+          Class A is the entry tier — the one designed for existing commercial products. It
+          <em>requires</em> a completed SOC 2 Type II, a GovRAMP certification, or a prior FedRAMP
+          Rev5/Ready, finished within the previous 12 months. Devitrak has none of the three. ISO 27001
+          is explicitly not on the list. And the one on-ramp that never required a prior attestation —
+          FedRAMP Ready — went legacy on 28 July 2026.
+        </p>
+      </div>
+
+      <div class="gate">
+        <div class="gate-mark">2</div>
+        <h3>No federal customer, and the Marketplace listing requires one</h3>
+        <div class="rule-id">FRC-APP-MLF · OMB M-24-15</div>
+        <p>
+          A Marketplace listing must be obtained <em>before</em> you can apply for certification, and an
+          Initial Implementation listing requires a demonstrated government-wide use case: direct use by
+          multiple federal agency customers, or indirect use inside another government-wide service.
+          FedRAMP's scope is cloud services handling federal information on behalf of a federal agency.
+          Bridges PCS is a DC public charter school. There is no federal customer and no federal
+          pipeline, so this fails outright — and no engineering work changes it.
+        </p>
+      </div>
+
+      <div class="gate">
+        <div class="gate-mark">3</div>
+        <h3>Self-hosting routes you to the path you cannot take</h3>
+        <div class="rule-id">Certification type is determined by hosting · closing date known</div>
+        <p>
+          FedRAMP routes providers who can deploy onto FedRAMP-certified infrastructure to <strong>20x</strong>,
+          and providers running their own infrastructure to <strong>modernized Rev5</strong>. Production
+          is a self-managed Windows Server VM behind IIS. That routes Devitrak to Rev5 — and Rev5 offers
+          only the Agency path, which needs the federal sponsor that gate 2 says you don't have. The two
+          narrow Rev5 Program lanes opened 10 August 2026 ("Lost Sponsor" and "Ready Conversion") each
+          require something you'd have to have had already.
+        </p>
+        <p>
+          <strong>This is the one gate with a scheduled opening.</strong> RFC-0033, opened 9 September
+          2026, includes <em>Track 2: Expanding 20x to Self-Hosted or Hybrid-Hosted Services</em> — and
+          FedRAMP's definition of self-hosted ("machine-based information resources primarily run on
+          physical infrastructure operated by the cloud service provider") describes Devitrak exactly.
+          The published milestones: a public RFC on managing self-hosted services <strong>4 November
+          2026</strong>, provider meetings January 2027, a draft rules RFC <strong>10 February
+          2027</strong>, and final-rule discussions March 2027. The direct-engagement track is limited
+          to providers who already hold Rev5 Class C or D, so Devitrak cannot join it — but the November
+          and February RFCs are open public comment.
+        </p>
+        <p>
+          <strong>Practical consequence: do not re-platform off the Windows box for FedRAMP reasons.</strong>
+          Move it for reliability, deploy safety, or because no-backups-and-no-alerting is untenable —
+          those arguments stand on their own. But "we must be on GovCloud to ever be eligible" is now a
+          question with a date on it rather than a settled fact.
+        </p>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top: 26px;">
+      One genuine surprise, worth recording because it contradicts the conventional wisdom: the 2026
+      ruleset contains <strong>no requirement to run on FedRAMP-authorized infrastructure</strong>. The
+      old Rev5-era language is gone, replaced by a Minimum Assessment Scope model in which non-scope
+      third parties need only be documented with justification and compensating controls. Real 20x
+      packages list Stripe, Twilio and SendGrid as <code>nonCertified</code> third-party resources and
+      are progressing normally. So <em>your commercial vendor stack is a documentation burden, not a
+      blocker</em>. What actually kills the Windows box is the physical and environmental control family
+      in the Rev5 baseline — PE-13 wants fire detection and suppression with an independent energy
+      source — which a machine in an unnamed facility cannot inherit from anyone.
+    </p>
+  </section>
+
+  <!-- ===================== THE DOOR ===================== -->
+  <section id="exclusion">
+    <div class="sec-head">
+      <span class="eyebrow">The door nobody mentions</span>
+      <h2>FedRAMP attaches to an agency's use case, not to a vendor</h2>
+      <p>This inverts the whole framing above, and it is the single most useful thing in this research.</p>
+    </div>
+
+    <div class="stack">
+      <p>
+        FedRAMP publishes six categories of work that fall <strong>outside its scope entirely</strong>.
+        Two of them describe a shape Devitrak could actually sell in:
+      </p>
+      <ul class="tight">
+        <li>
+          "Independent Software Vendor (ISV) applications developed and distributed for installation
+          within a single tenant of an infrastructure-as-a-service or platform-as-a-service offering
+          (the host service itself is within the scope of FedRAMP, but independent software is not)."
+        </li>
+        <li>
+          "Information systems that are only used for a single agency's operations, hosted on cloud
+          infrastructure or platform, and are not offered as a shared service or do not operate with a
+          shared responsibility model."
+        </li>
+      </ul>
+      <p>
+        And the governing sentence: <strong>"the specific agency use case for adoption is what matters,
+        not the service itself."</strong> A single-tenant Devitrak deployment running inside BIE's or
+        DoDEA's own cloud tenancy, operated by them, needs no certification, no Marketplace listing,
+        and no government-wide use case. All three gates disappear — not because you cleared them, but
+        because they never applied.
+      </p>
+      <p>
+        <strong>Supporting evidence, and it is the strongest datapoint in this document:</strong>
+        Infinite Campus won the BIE student-information-system recompete at <strong>$2.65M</strong>.
+        BIE is a federal agency. No FedRAMP certification for Infinite Campus could be found — the
+        Marketplace is a JavaScript application that resists direct search, so treat this as "no
+        evidence found" rather than "confirmed absent." But a federal agency buying multi-million-dollar
+        commercial K-12 SaaS from an apparently uncertified vendor is exactly what this exclusion predicts.
+      </p>
+      <p class="note">
+        Three caveats, all load-bearing. This is a <strong>business-model change</strong>, not a
+        compliance shortcut — different product, contract, support model and margin than multi-tenant
+        SaaS. "Outside FedRAMP scope" does not mean unassessed: the agency still runs its own FISMA ATO
+        and pushes its own control requirements down, and Devitrak's current auth posture would not
+        survive that review either. And <strong>only the agency can make this determination</strong> —
+        it cannot be self-declared.
+      </p>
+      <p>
+        The action is not to build anything. It is to <strong>ask</strong>. One email each to BIE's
+        Division of Acquisitions and DoDEA's Procurement Division asking whether a single-tenant
+        deployment in their own tenancy falls outside FedRAMP for their use case. Cost: zero. A yes
+        opens a real product conversation; a no closes the question permanently instead of leaving it
+        to recur every few months.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== WHAT CHANGED ===================== -->
+  <section id="changed">
+    <div class="sec-head">
+      <span class="eyebrow">Orientation</span>
+      <h2>Nearly every term you know has been renamed</h2>
+      <p>
+        The governing document is now the <strong>Consolidated Rules for 2026</strong>, version
+        2026.09.13.02, published as JSON on GitHub and rendered at fedramp.gov/2026. It launched
+        24 June 2026, took effect 4 July, and becomes mandatory 1 January 2027.
+      </p>
+    </div>
+
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>Was</th><th>Is now</th><th>Since</th></tr></thead>
+        <tbody>
+          <tr><td class="was">FedRAMP Authorized</td><td><strong>FedRAMP Certified</strong></td><td class="num">2026-05-04</td></tr>
+          <tr><td class="was">Low / Moderate / High</td><td><strong>Certification Classes A / B / C / D</strong> — assurance depth, explicitly <em>not</em> a remap of system sensitivity</td><td class="num">2026-05-04</td></tr>
+          <tr><td class="was">Agency sponsor required</td><td><strong>Not required</strong> for Classes A, B and C — you self-nominate. Class D still needs one</td><td class="num">2026</td></tr>
+          <tr><td class="was">FedRAMP Ready</td><td><strong>Legacy</strong> — no new submissions; existing listings removed 2027-12-31</td><td class="num">2026-07-28</td></tr>
+          <tr><td class="was">JAB / P-ATO</td><td><strong>FedRAMP Board</strong>; JAB path discontinued entirely</td><td class="num">2024-05</td></tr>
+          <tr><td class="was">SSP, SAP, SAR, POA&amp;M</td><td><strong>Certification Package Overview</strong> + <strong>Security Decision Record</strong>; POA&amp;Ms eliminated, replaced by Accepted Weaknesses</td><td class="num">2026-06-24</td></tr>
+          <tr><td class="was">Word / Excel templates</td><td><strong>JSON / OSCAL machine-readable packages</strong></td><td class="num">2026-06-24</td></tr>
+          <tr><td class="was">Monthly vulnerability scanning</td><td><strong>Key Security Indicators</strong> — continuous, automated validation</td><td class="num">2026</td></tr>
+          <tr><td class="was">FedRAMP Tailored / LI-SaaS</td><td>Gone — folded upward into Class B, and your data rules out a cheap tier regardless</td><td class="num">2026</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" style="margin-top: 26px;">
+      <h3 class="run">Where the pipelines actually stand</h3>
+      <p>
+        20x is no longer a pilot — FedRAMP's own words are <em>"The pilots are over. FedRAMP 20x is here
+        to stay."</em> Phase 1 (Low) ran April–September 2025 with 26 submissions and 13 authorizations;
+        Phase 2 (Moderate) closed March 2026; Phase 3 — wide-scale adoption — is active.
+        <strong>Class A opened 3 August 2026. Classes B and C opened 31 August 2026.</strong>
+      </p>
+      <p>
+        Temper that with the adoption reality: of 531 certified services, <strong>30 came through
+        20x</strong>, and <strong>24 of the 28 20x listings show zero agency reuse</strong>. There is
+        very little production track record to plan against yet.
+      </p>
+
+      <h3 class="run">Dates worth a calendar entry</h3>
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Date</th><th>What happens</th><th>Why it matters to you</th></tr></thead>
+          <tbody>
+            <tr><td class="num">2026-10-09</td><td>RFC-0033 and RFC-0034 comment periods close</td><td><strong>Imminent.</strong> Last chance to comment on Phase 4 scope</td></tr>
+            <tr><td class="num">2026-11-04</td><td>RFC published on managing self-hosted and hybrid-hosted services</td><td><strong>Directly addresses gate 3.</strong> Read it the week it lands</td></tr>
+            <tr><td class="num">2026-12-07</td><td>VDR/VER vulnerability regime becomes required (grace to 2027-03-07)</td><td>Class A is out of scope — relevant only from Class B up</td></tr>
+            <tr><td class="num">2027-01-01</td><td>Consolidated Rules for 2026 become mandatory for all stakeholders</td><td>Any advice written before this date needs re-checking</td></tr>
+            <tr><td class="num">2027-02-10</td><td>RFC published on 20x self-hosted / hybrid-hosted rules</td><td>The draft that decides whether the Windows box is ever viable</td></tr>
+            <tr><td class="num">2027-06-11</td><td>No new Rev5 certifications accepted</td><td>After this, 20x is the only door</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CATEGORIZATION ===================== -->
+  <section id="categorization">
+    <div class="sec-head">
+      <span class="eyebrow">Your data</span>
+      <h2>There is no cheap tier available to this system</h2>
+    </div>
+
+    <div class="stack">
+      <p>
+        Under FIPS 199 the gap analysis categorizes Devitrak at <strong>Moderate</strong> —
+        confidentiality Moderate, integrity Moderate, availability Low, taking the high-water mark. The
+        driver is the K-12 data: full name, date of birth, home address, grade and homeroom, a photo
+        URL, a district SIS identifier and named guardian contact details, for a PK3–5 population that
+        is essentially entirely under 13. NIST SP 800-122 escalates identified minors' PII on exactly
+        this basis, and FERPA and COPPA reinforce it.
+      </p>
+      <p>
+        Two consequences. First, <strong>any plan that starts "get listed at Low, it's cheaper" is
+        invalid for this system as built</strong> — the old Tailored/LI-SaaS tier excluded systems
+        holding PII beyond login credentials, and you store children's birthdates and photographs.
+        Second, availability being Low is the only thing keeping this off a High categorization, and
+        the current topology — one box, no load balancer, a documented 30–60 second outage on every
+        Windows Update reboot — could not support a Moderate availability rating anyway.
+      </p>
+      <p class="note">
+        A latent escalation to watch: there is a defined-but-unrouted Stripe connected-account schema
+        holding a government <code>id_number</code> and <code>ssn_last_4</code>. If that is ever wired
+        up, re-run the categorization — full government ID numbers push confidentiality toward High.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== COST ===================== -->
+  <section id="cost">
+    <div class="sec-head">
+      <span class="eyebrow">Money</span>
+      <h2>Every number below is vendor-sourced, and that is not fixable</h2>
+      <p>
+        FedRAMP proposed requiring providers and assessors to report assessment costs, then withdrew it
+        on 18 February 2026 after 48 comments, calling cost reporting "unreasonable." No government
+        source publishes FedRAMP pricing. Treat all of this as lead-generation-adjacent.
+      </p>
+    </div>
+
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>Source</th><th>Type</th><th>Figure</th><th>Dated</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>GAO-24-106591</td>
+            <td><span class="chip clear">Independent</span></td>
+            <td>"Tens of thousands to millions of dollars" — the only non-vendor dataset, and its finding was that OMB never issued cost-tracking guidance</td>
+            <td class="num">2024-01</td>
+          </tr>
+          <tr>
+            <td>Virtru, congressional testimony</td>
+            <td><span class="chip clear">First-hand</span></td>
+            <td><strong>20 months, ~$1.6M</strong> — "a significant percentage of annual revenue," from a 120-person DC company with federal-native founders</td>
+            <td class="num">—</td>
+          </tr>
+          <tr>
+            <td>Workstreet</td>
+            <td><span class="chip caution">Vendor</span></td>
+            <td>20x <em>starting from an existing SOC 2</em>: Class A ~$90–100k, B ~$125–135k, C ~$170–200k</td>
+            <td class="num">2026-08-18</td>
+          </tr>
+          <tr>
+            <td>Paramify</td>
+            <td><span class="chip caution">Vendor</span></td>
+            <td>Traditional Rev5 Moderate: $500k–$1.5M initial, $200k–$500k annually</td>
+            <td class="num">2026-01</td>
+          </tr>
+          <tr>
+            <td>fedrampcost.com (Digital Signet)</td>
+            <td><span class="chip caution">Vendor</span></td>
+            <td>Moderate $800k–$2M</td>
+            <td class="num">2026-04-28</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" style="margin-top: 26px;">
+      <h3 class="run">Why the attractive number doesn't apply to you</h3>
+      <p>
+        The $90–100k Class A figure is the one worth understanding, because it is the one that would
+        tempt you — and it prices a starting line Devitrak is not standing on. It assumes a company
+        that already holds a SOC 2 Type II, already runs cloud-native on certified infrastructure, and
+        is remediating findings against a fundamentally sound system. Add SOC 2 first. Add an
+        authentication and authorization rebuild for two engineers, which none of these figures include.
+        The real figure for Devitrak today is not $90k, and nobody can quote it honestly until the
+        prerequisites exist.
+      </p>
+      <p>
+        Set that against the published pricing: Starter $20/month, Business $350/month. Even the most
+        optimistic vendor number is multiples of plausible annual revenue.
+      </p>
+
+      <h3 class="run">Five things you should not be charged for</h3>
+      <ul class="tight">
+        <li><strong>No SSP, SAP or SAR.</strong> The rules state plainly that FedRAMP requires no separate Security Assessment Plan or Report for either 20x or Rev5 — they fold into the Security Decision Record. Anyone quoting to author those is selling a retired deliverable.</li>
+        <li><strong>No application fee.</strong> FedRAMP will "not request, store, or publish pricing information for cloud services, independent assessors, or advisory services."</li>
+        <li><strong>No FIPS 140-3 validated crypto below Class D.</strong> The string doesn't appear in the 2026 rules. What <em>is</em> a MUST for everyone is an inventory of every cryptographic module in use and whether it's CMVP-validated — which Devitrak lacks, and which is cheap to produce.</li>
+        <li><strong>No GovCloud requirement below Class D.</strong> AWS US East/West is Certified at Class C; Azure and Google commercial clouds at Class D. The expensive government-cloud migration everyone assumes is only forced at the top tier.</li>
+        <li><strong>No requirement to run on certified infrastructure.</strong> Third-party services just need documenting with justification and compensating controls.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== MARKET ===================== -->
+  <section id="market">
+    <div class="sec-head">
+      <span class="eyebrow">Demand</span>
+      <h2>What your buyers actually ask for</h2>
+    </div>
+
+    <div class="stack-lg">
+      <div class="stack">
+        <h3 class="run">K-12 districts do not ask for FedRAMP</h3>
+        <p>
+          Zero of the K-12 majors — PowerSchool, Clever, ClassLink, Instructure/Canvas, Jamf — appear
+          on the FedRAMP Marketplace. What districts actually require is contractual: a signed data
+          privacy agreement on the <strong>SDPC National Data Privacy Agreement</strong> (v2.2 is
+          current, supporting 222,000+ signed agreements across 13,000+ districts and 35 State
+          Alliances), a security questionnaire derived from HECVAT (<strong>CoSN K-12CVAT Lite
+          v4.1</strong>), and increasingly a SOC 2 Type II.
+        </p>
+        <p>
+          For Bridges specifically the binding instrument is <strong>DC Code § 38-831.02</strong>
+          (D.C. Law 21-218), which explicitly covers public charter schools. It mandates reasonable
+          security policies, breach notice to the LEA, deletion after termination, and bans sale,
+          targeted advertising and profiling. That is a contract and policy exercise, not a
+          certification — and it is the thing standing between you and the deal.
+        </p>
+      </div>
+
+      <div class="stack">
+        <h3 class="run">The competitive tell in your own category</h3>
+        <p>
+          CGI Federal's <strong>Sunflower Asset Management Cloud</strong> is the entrenched federal
+          incumbent for exactly your function — FedRAMP Certified since November 2023 at Class C,
+          4.2 million assets across 75+ federal entities, with task orders at DHS ($6.5M), DOJ/ATF,
+          HHS, DOE, DOT and Commerce/NIST. Meanwhile <strong>Asset Panda, EZOfficeInventory and
+          Snipe-IT are not on FedRAMP at all</strong> — and Asset Panda is pursuing GovRAMP instead.
+          Your direct commercial peers made the same call this assessment recommends.
+        </p>
+      </div>
+
+      <div class="stack">
+        <h3 class="run">Federal demand is real — but the reachable part isn't FedRAMP-gated</h3>
+        <p>
+          Two federal school systems buy commercial K-12 SaaS directly. The <strong>Bureau of Indian
+          Education</strong> runs 169 schools and ~40,000 students, contracts through its own Division
+          of Acquisitions, and awarded Infinite Campus the recompete at $2.65M. <strong>DoDEA</strong>
+          runs ~160 schools and 66,000+ students with its own Procurement Division, and had a live
+          small-business set-aside IDIQ whose scope names device management. Elsewhere, Peace Corps
+          bought asset-management SaaS at $1.56M and DOI at $214K — non-giants do win these.
+        </p>
+        <p>
+          Two cautions. There is <strong>no dollar threshold that bypasses FedRAMP</strong> — neither
+          the $15,000 micro-purchase threshold nor the $350,000 simplified acquisition threshold
+          exempts you. And E-Rate and ESSER funding do <em>not</em> flow FedRAMP down to districts.
+        </p>
+        <p>
+          The realistic beachhead is narrower and better: <strong>2 CFR 200.313</strong> requires
+          federal grant recipients to take a physical inventory of equipment every two years. Districts,
+          tribal grant schools and Head Start grantees all carry that obligation, and they buy
+          commercially. That is a product positioning worth building collateral around — and it
+          requires no FedRAMP at all.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GAP ===================== -->
+  <section id="gap">
+    <div class="sec-head">
+      <span class="eyebrow">The honest gap</span>
+      <h2>What an assessor would find</h2>
+      <p>
+        99 gaps were identified against the NIST 800-53 Rev5 families. These are the structural ones —
+        the problems that don't close with a remediation sprint because they are architecture, not
+        configuration.
+      </p>
+    </div>
+
+    <div class="tscroll">
+      <table>
+        <thead><tr><th>Family</th><th>Finding</th><th>Weight</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">AC-3</td>
+            <td>Authorization is <strong>opt-in per route</strong>, not default-deny. Routers mount bare; each of 510 routes must remember to list <code>validateJWT</code> itself, which is why 297 don't. The fix is an allowlist-of-public-routes architecture — a rewrite of the routing layer.</td>
+            <td><span class="chip blocked">Rearchitect</span></td>
+          </tr>
+          <tr>
+            <td class="mono">AC-4 / SC-4</td>
+            <td>Tenant isolation resolves from a <strong>client-supplied header with a request-body fallback</strong>. The frontend doesn't send that header at all, so tenant context arrives in request bodies — the least trustworthy source. On the 297 unguarded routes there is no company scoping whatsoever.</td>
+            <td><span class="chip blocked">Rearchitect</span></td>
+          </tr>
+          <tr>
+            <td class="mono">AC-2 / AC-6</td>
+            <td><strong>Three parallel, unreconciled authorization systems</strong> — Mongo-side, MySQL-side, and a legacy <code>AdminUser.role</code> still rendered by the frontend. They read company id from different headers and key off different identities. <code>super_user</code> is an unscoped, unaudited global bypass.</td>
+            <td><span class="chip blocked">Months</span></td>
+          </tr>
+          <tr>
+            <td class="mono">AU-9</td>
+            <td>The audit trail is <strong>mutable by its own subjects</strong>: same database, same application credentials, application-supplied timestamps, nothing append-only or signed. This control isn't partially met — it's inverted.</td>
+            <td><span class="chip blocked">Weeks</span></td>
+          </tr>
+          <tr>
+            <td class="mono">AU-4 / AU-11</td>
+            <td>Logs never leave the box and are <strong>size-capped, not time-capped</strong> — 25MB rotating on a near-full C: drive. FedRAMP expects 90 days online and one year retained. The only person who can read them is whoever RDPs in as Administrator: the same identity that deploys.</td>
+            <td><span class="chip caution">Weeks</span></td>
+          </tr>
+          <tr>
+            <td class="mono">CM-3 / CM-6</td>
+            <td><strong>13 of 1,328 backend commits (~1%) and 14 of 4,661 frontend commits (~0.3%) ever went through a pull request.</strong> Nothing lints, tests, builds, scans or signs before production. Worse, the production box <em>pushes to</em> <code>origin/main</code> — one such push silently deleted three files from the source of record.</td>
+            <td><span class="chip blocked">Weeks</span></td>
+          </tr>
+          <tr>
+            <td class="mono">CP-9</td>
+            <td><strong>There are no backups of anything.</strong> "backup", "restore", "RPO", "RTO", "disaster", "on-call", "Sentry", "Datadog" return zero operational hits across both repositories. Rollback is <code>git reset --hard</code> on the live working tree.</td>
+            <td><span class="chip blocked">Days</span></td>
+          </tr>
+          <tr>
+            <td class="mono">SI-4</td>
+            <td>No alerting. The team's own meeting notes state plainly <em>"no hay alertas"</em>, and a Go-worker port mismatch took inventory down for multiple weeks in August 2026 without detection.</td>
+            <td><span class="chip caution">Weeks</span></td>
+          </tr>
+          <tr>
+            <td class="mono">PE-*</td>
+            <td><strong>Nobody can say where the server physically is.</strong> The repo establishes Windows Server 2019 on a VMware virtual disk — which rules out AWS, Azure and GCP native hypervisors — but no provider, region, IP, colo or hosting contract appears anywhere. This single unknown decides whether the entire physical/environmental family is inheritable.</td>
+            <td><span class="chip blocked">Unknown</span></td>
+          </tr>
+          <tr>
+            <td class="mono">CA-3 / SA-9</td>
+            <td>Sixteen external services sit in the production data path with no interconnection agreement or vendor security review — plus one component with <strong>no source code at all</strong>: <code>app.devitrak.net</code>. It calls this API against the same student records and nobody knows which endpoints.</td>
+            <td><span class="chip blocked">Prerequisite</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stack" style="margin-top: 28px;">
+      <h3 class="run">What is genuinely good — and worth copying</h3>
+      <p>
+        The assessment should not read as uniformly negative, because it isn't. The
+        <code>/api/school</code> namespace is <strong>the best-engineered surface in the codebase</strong>:
+        every route carries <code>validateJWT</code> + <code>checkTokenVersion</code> +
+        <code>requireIndustry("Education")</code> + a <code>member:*</code> permission, a PII-access
+        audit middleware runs across the whole namespace, and FERPA-style export and erase endpoints
+        exist — with shared guardians deliberately preserved during erasure so one student's deletion
+        doesn't damage another's record. Whoever wrote that understood the problem. It is the pattern
+        the rest of the API should be rebuilt toward.
+      </p>
+      <ul class="tight">
+        <li>The consent one-time-code design is sound — 24 bytes from <code>crypto.randomBytes</code>, persisted only as a SHA-256 hash. The weakness is transport and the <code>NODE_ENV</code> leak, not the token.</li>
+        <li>SQL identifier injection is being actively remediated: four files already use an allowlist or identifier regex. <code>consumer.js</code> and <code>lease.js</code> are the stragglers, following a pattern the team has already written three times.</li>
+        <li><code>scripts/deploy-node.ps1</code> is genuinely good operational engineering — it encodes five real production traps in the right order and refuses to start on a half-installed tree.</li>
+        <li>57 backend test files including security-focused ones; Dependabot across npm, gomod and docker; <code>/health</code>, <code>/ready</code> and <code>/api/metrics</code>.</li>
+        <li>The staged-rollout discipline on security changes — shipping <code>warn</code> mode first, reading a day of real traffic before flipping to <code>enforce</code> — is a mature pattern most teams don't reach for.</li>
+      </ul>
+      <p class="note">
+        The quality exists as artifacts, not as enforced process. That distinction is precisely what an
+        assessment measures — and it is also the cheapest thing on this page to fix.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== ROADMAP ===================== -->
+  <section id="roadmap">
+    <div class="sec-head">
+      <span class="eyebrow">The road</span>
+      <h2>Sequenced so that every phase pays for itself</h2>
+      <p>
+        Ordered by when the commercial return arrives, not by compliance tidiness. Phases 0–2 are worth
+        doing even if FedRAMP is never mentioned again.
+      </p>
+    </div>
+
+    <div>
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 0</span>
+          <span class="phase-when">Now · days · ~$0</span>
+        </div>
+        <div class="phase-body">
+          <h3>Stop the bleeding</h3>
+          <ul class="tight">
+            <li>Rotate all eight leaked production secrets; purge <code>origin/archive/development-2026-03</code>.</li>
+            <li>Move the four <code>VITE_*</code> secrets server-side and rebuild the bundle.</li>
+            <li>Set <code>NODE_ENV=production</code> — one line, closes the consent-token leak and the insecure cookie.</li>
+            <li>Add authentication to the five worst routes: admin password update, admin users, the S3 presigner, invalidate-all-sessions, the audit log endpoints.</li>
+            <li>Stop returning password hashes to the browser (backend and frontend together).</li>
+          </ul>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            Ends live exposure of student, guardian and payment data — and makes the existing security
+            whitepaper safe to send to Bridges, which today it is not.
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 1</span>
+          <span class="phase-when">Q4 2026 – Q1 2027 · ~2 quarters</span>
+        </div>
+        <div class="phase-body">
+          <h3>Make the platform assessable</h3>
+          <ul class="tight">
+            <li>Default-deny routing with an explicit public allowlist, replacing per-route opt-in.</li>
+            <li>Reconcile the three authorization systems into one; scope tenancy server-side, not from a client header.</li>
+            <li>Centralized, append-only log shipping off the box with real retention.</li>
+            <li>CI with required review, a dependency gate, and a production box that pulls and never pushes.</li>
+            <li>An actual staging environment, and backups with a tested restore.</li>
+            <li>Answer the two open unknowns: where the box lives, and what <code>app.devitrak.net</code> calls (a day of access logs, not a code read).</li>
+          </ul>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            Survives a district security questionnaire. Hard prerequisite for every phase below — and
+            the single largest engineering investment on this page.
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 2</span>
+          <span class="phase-when">Parallel with 1 · weeks · ~$0</span>
+        </div>
+        <div class="phase-body">
+          <h3>Sign the paperwork districts actually want</h3>
+          <ul class="tight">
+            <li>Execute the SDPC National Data Privacy Agreement — v2.2 is the current standard. A v2.3 finished community review on 15 September 2026, so confirm which version your State Alliance is on before signing.</li>
+            <li>Add DC Code § 38-831.02 terms — security policy, LEA breach notice, deletion on termination, no sale or targeted advertising.</li>
+            <li>Complete a CoSN K-12CVAT Lite v4.1 questionnaire and keep it current.</li>
+            <li>Finish the draft Privacy Policy and Terms of Use sitting in Legal.</li>
+          </ul>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            Bridges PCS, and every district behind it. The cheapest revenue-bearing step on the page,
+            and almost entirely contract work rather than engineering.
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 2b</span>
+          <span class="phase-when">Q4 2026 · ~8 weeks · $1,500</span>
+        </div>
+        <div class="phase-body">
+          <h3>Buy the $1,500 independent read</h3>
+          <p>
+            A <strong>GovRAMP Single Security Snapshot</strong> ($1,000 plus $500 membership) scores you
+            against 40 NIST 800-53 Rev5 and MITRE ATT&amp;CK controls: a one-hour intake, 28 days to
+            upload evidence, about three weeks to a scored maturity letter. Crucially it is
+            <strong>confidential unless you choose to publish it</strong>, so a bad score carries no
+            external risk.
+          </p>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            A third-party-scored baseline to plan against instead of inference. Do this regardless of
+            which certification you eventually choose; it is what makes the SOC 2-versus-GovRAMP
+            decision a data question instead of an argument.
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 3</span>
+          <span class="phase-when">2027 · $25–150k + $20–50k/yr</span>
+        </div>
+        <div class="phase-body">
+          <h3>SOC 2 Type II</h3>
+          <p>
+            Requires an observation window over a functioning control environment, which is why it
+            cannot start before Phase 1 lands. The wide cost range reflects genuinely different scopes
+            and auditors — get three quotes.
+          </p>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            District and enterprise procurement on its own merits — <em>and</em> it is the literal
+            entry ticket for FedRAMP 20x Class A under rule FRC-CLA-ASF. This is the phase where the
+            K-12 road and the federal road become the same road.
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 4</span>
+          <span class="phase-when">2027 · $1.5k–$10.5k <em>per year</em></span>
+        </div>
+        <div class="phase-body">
+          <h3>GovRAMP</h3>
+          <p>
+            StateRAMP rebranded to GovRAMP in February 2025 — same organization, same fees, now covering
+            state, local, tribal, territorial <em>and educational</em> buyers. It is the framework that
+            actually governs K-12 and SLED sales, and it is the path Asset Panda chose. Fees are
+            revenue-tiered; at Devitrak's scale (under $1M) the ladder is:
+          </p>
+          <div class="tscroll">
+            <table>
+              <thead><tr><th>Tier</th><th>Controls</th><th>Annual fee, under $1M revenue</th></tr></thead>
+              <tbody>
+                <tr><td>Membership dues</td><td>—</td><td class="num">$500</td></tr>
+                <tr><td>Single Security Snapshot</td><td class="num">40</td><td class="num">$1,000</td></tr>
+                <tr><td>Progressing Snapshot</td><td class="num">40</td><td class="num">$9,000</td></tr>
+                <tr><td><strong>Core Verification</strong> — no 3PAO</td><td class="num">60</td><td class="num">$10,000</td></tr>
+                <tr><td>Ready</td><td class="num">80</td><td class="num">$3,500 + 3PAO</td></tr>
+                <tr><td>Authorized — needs a government sponsor</td><td class="num">300+</td><td class="num">$4,500 + 3PAO</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Two things to read off that table. These are <strong>recurring annual</strong> fees, not
+            one-time — Core is a $10,500/year commitment including dues, which is a subscription, not a
+            purchase. And <strong>Core is the sweet spot</strong>: 60 controls, no third-party assessor,
+            no government sponsor. Ready and Authorized have lower PMO fees but add 3PAO costs, and
+            Authorized reintroduces the same sponsor problem FedRAMP has.
+          </p>
+          <p class="note">
+            Confirm Core's fee before budgeting: the pricing overview says $10,000/year, while GovRAMP's
+            own Core page says a one-time $9,000 plus $250/quarter. Same order of magnitude, different
+            shape.
+          </p>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            A recognized security badge for SLED and K-12 buyers — and it double-counts, because
+            GovRAMP at any impact level is an accepted qualifying framework for FedRAMP Class A.
+          </div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail">
+          <span class="phase-id">Phase 5</span>
+          <span class="phase-when">2028–29 · conditional</span>
+        </div>
+        <div class="phase-body">
+          <h3>FedRAMP — only on a trigger</h3>
+          <p>
+            Attempt this only if a federal use case has actually materialized. Clearing gate 2 requires a
+            demonstrated government-wide use case. Clearing gate 3 means either re-platforming onto
+            certified infrastructure <em>or</em> waiting for the self-hosted rules RFC-0033 Track 2 is
+            scheduled to produce in 2027 — which is a real reason not to re-platform preemptively.
+          </p>
+          <p>
+            Class A is the door, not the destination. FedRAMP presumes Class A adequate only for
+            <em>"pilots, configuration and testing, extremely low or negligible risk, public
+            information, minimal users."</em> A federal deployment holding children's names, birthdates
+            and addresses is none of those; an agency would categorize it Moderate, which points at
+            <strong>Class C</strong> — a 2-week package refresh, at least two automated validation
+            methods per indicator, and six months of persistent validation history. The escalation is
+            forced: 12 months to begin transition once a federal customer is using the service. Class D
+            still requires an agency sponsor; the sponsorless path covers A, B and C only.
+          </p>
+          <div class="unlocks">
+            <b>Unlocks</b>
+            Federal sales — and statutory reciprocity under 44 U.S.C. § 3613(e), where agencies must
+            presume a FedRAMP package adequate at or below that impact level.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DECISIONS ===================== -->
+  <section id="decisions">
+    <div class="sec-head">
+      <span class="eyebrow">Open questions</span>
+      <h2>Decisions only you three can make</h2>
+    </div>
+
+    <div class="stack">
+      <div class="decision">
+        <h3>Why do you want FedRAMP?</h3>
+        <p>
+          Every track of this research assumed the goal is federal revenue. It might not be. The
+          plausible alternatives point to completely different answers: a prospect asked for it; an
+          investor or acquirer asked; Fredrik heard the word on a sales call and it became a requirement
+          by telephone; or it is standing in for <em>"our security is bad and we want a forcing
+          function."</em>
+        </p>
+        <div class="rec"><b>Recommendation</b> — answer this before anything else, because it can invalidate everything above. If it's the last one, say so: that is a completely legitimate reason, and the roadmap here delivers the forcing function far more cheaply than FedRAMP would.</div>
+      </div>
+
+      <div class="decision">
+        <h3>Are you already in breach of what you owe Bridges PCS?</h3>
+        <p>
+          DC Code § 38-831.02 binds Devitrak as an "operator" and requires "reasonable security policies
+          and procedures appropriate to the nature of the personally identifiable student information."
+          Devitrak has zero security policies, an unauthenticated admin takeover chain with no audit
+          record, and a consent gate emitting its own bypass token — against a population that is
+          essentially entirely under 13.
+        </p>
+        <div class="rec"><b>Recommendation</b> — this week, before any certification spend. Read the signed Bridges agreement and the marketing security whitepaper against what actually exists. This is the only question on this page with legal consequences already attached, and framing this work as <em>certification planning</em> actively displaces it.</div>
+      </div>
+
+      <div class="decision">
+        <h3>Where is the production server, physically?</h3>
+        <p>
+          Unanswerable from either repository. It is a VMware virtual disk, which rules out the big
+          three clouds' native hypervisors, but no provider, region, IP, colo or contract appears
+          anywhere. This blocks all physical-control scoping and any hosting conversation.
+        </p>
+        <div class="rec"><b>Recommendation</b> — Cesar or Gustavo answers this week. It costs nothing and gates everything. If it's a colo with its own SOC 2, get their report.</div>
+      </div>
+
+      <div class="decision">
+        <h3>What does <code>app.devitrak.net</code> actually call?</h3>
+        <p>
+          Its source isn't in the workspace. It is the stated reason two security middlewares are stuck
+          shipping in observe-only mode, and it makes an authorization boundary undrawable.
+        </p>
+        <div class="rec"><b>Recommendation</b> — treat as a business-continuity item, not a compliance footnote. One day of server access logs, not a source hunt. This is the same blocker already holding <code>NODEMAILER_AUTH_MODE</code> at <code>warn</code>; solving it once unblocks both.</div>
+      </div>
+
+      <div class="decision">
+        <h3>Do we test the federal single-tenant route?</h3>
+        <p>
+          The scope exclusion says a single-tenant deployment inside an agency's own tenancy falls
+          outside FedRAMP entirely. Only the agency can make that determination.
+        </p>
+        <div class="rec"><b>Recommendation</b> — send the email, don't build the product. One each to BIE's Division of Acquisitions and DoDEA's Procurement Division. Cost: zero. A yes opens a real product conversation; a no closes the question for good.</div>
+      </div>
+
+      <div class="decision">
+        <h3>K-12 or AV — the positioning question is still open</h3>
+        <p>
+          This is the same decision the GTM plan flagged for Fredrik and it has now blocked a second
+          workstream. Every recommendation above assumes K-12 is the answer. If AV rentals are the real
+          business, GovRAMP and the SDPC agreement are both wasted motion.
+        </p>
+        <div class="rec"><b>Recommendation</b> — Fredrik decides before any compliance spend is committed. The evidence keeps pointing the same way: the product investment, the consent spine and the only live deal are all K-12.</div>
+      </div>
+
+      <div class="decision">
+        <h3>Who owns compliance, and what gets dropped?</h3>
+        <p>
+          Continuous monitoring is permanent work. Three people cannot absorb it on top of shipping —
+          and Phase 1 is roughly two quarters of two-engineer time, against the Untitled UI migration,
+          the RFID workstream, the consent spine and an unshipped website.
+        </p>
+        <div class="rec"><b>Recommendation</b> — Phases 0, 2 and 2b (~3 engineer-weeks plus $1,500) should happen regardless and displace almost nothing. Phase 1 is a real trade and needs an explicit decision about what stops.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LIMITS ===================== -->
+  <section id="limits">
+    <div class="sec-head">
+      <span class="eyebrow">Confidence</span>
+      <h2>What this assessment could not verify</h2>
+    </div>
+
+    <ul class="tight">
+      <li><strong>GovRAMP Core's exact fee.</strong> The pricing overview says $10,000/year; GovRAMP's own Core page says a one-time $9,000 plus $250/quarter. Confirm before budgeting — the order of magnitude is solid, the structure isn't.</li>
+      <li><strong>Whether Infinite Campus holds a FedRAMP certification.</strong> No evidence found, but the Marketplace is a JavaScript application that resists direct search. This is the single highest-value open question here — it is direct evidence about whether federal K-12 agencies buy uncertified commercial SaaS.</li>
+      <li><strong>Whether GovRAMP accepts SOC 2 as a Core fast-track input.</strong> Vendor sources conflate this with TX-RAMP's SOC 2 fast track. One email settles it, and it changes the Phase 3-versus-Phase 4 ordering.</li>
+      <li><strong>Any end date for existing Rev5 certifications.</strong> The widely repeated "valid through 2028-12-31" appears on no reachable government page — that date is the 2026 ruleset's own expiry, a different thing.</li>
+      <li>Claims that the FedRAMP PMO is understaffed and queues are long could not be sourced. FedRAMP publishes no staffing, budget or backlog data, so that argument is left out rather than repeated.</li>
+      <li>Whether <code>NODEMAILER_AUTH_MODE=enforce</code> is set on the production box. It cannot be determined from any repository — only by logging in, because no configuration-monitoring control exists that would tell anyone.</li>
+      <li>The physical hosting of the production server, and therefore the entire physical-control picture.</li>
+      <li>The endpoint surface of <code>app.devitrak.net</code>, and so the true unauthenticated-route count and the true system boundary.</li>
+      <li>Every cost figure except the GAO numbers. No government source publishes FedRAMP pricing and, after the February 2026 withdrawal, none is coming.</li>
+      <li>How 20x Classes A, B and C behave in practice — the pipelines are weeks old and 24 of 28 listings show no agency reuse.</li>
+      <li>All findings are static analysis. No live endpoint was called and no file was modified.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>
+      Research conducted 15–16 September 2026 against <code>origin/main</code> @ <code>a92b942</code>
+      and the FedRAMP Consolidated Rules for 2026, version 2026.09.13.02. Program facts were read live
+      from fedramp.gov; claims about cost, requirements and program state were independently re-checked
+      by three verifiers each before inclusion, and refuted claims were dropped rather than softened.
+    </p>
+    <p>
+      The running backend clone is 217 commits behind <code>origin/main</code> and is missing four
+      security middlewares that main has. Every finding above is stated against <code>origin/main</code>
+      — the best case. The box actually serving traffic is worse.
+    </p>
+  </footer>
+
+</div>
+
+</body></html>
