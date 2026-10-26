@@ -12,6 +12,7 @@ import { onAddEventData } from "../../../../../store/slices/eventSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../../utils/eventLifecycle";
+import { staffToDeactivateAtEventEnd } from "../../staff/utils/eventStaffUtils";
 
 const ModalToDisplayFunctionInProgress = lazy(
   () => import("./endEvent/ModalToDisplayFunctionInProgress"),
@@ -224,30 +225,9 @@ const EndEventButton = () => {
   };
 
   const removingAccessFromStaffMemberOnly = async () => {
-    const checkCompanyUserSet = user.companyData.employees;
-    let employeesCompany = [...checkCompanyUserSet];
-    const adminStaff = event.staff.adminUser ?? [];
-    const headsetStaff = event.staff.headsetAttendees ?? [];
-    const employeesEvent = [...adminStaff, ...headsetStaff];
-
-    for (let data of employeesEvent) {
-      const checkRole = employeesCompany.findIndex(
-        (element) => element.user === data.email,
-      );
-      if (
-        Number(employeesCompany[checkRole].role) > 3 &&
-        employeesCompany[checkRole].active
-      ) {
-        staffRemoveAccessRef.current = [
-          ...staffRemoveAccessRef.current,
-          data.email,
-        ];
-        employeesCompany[checkRole] = {
-          ...employeesCompany[checkRole],
-          active: false,
-        };
-      }
-    }
+    const { employees: employeesCompany, removedEmails } =
+      staffToDeactivateAtEventEnd({ employees: user.companyData.employees, event });
+    staffRemoveAccessRef.current = removedEmails.map((email) => email.toLowerCase());
 
     const requestData = { employees: employeesCompany };
 
@@ -513,7 +493,7 @@ const EndEventButton = () => {
       const result = new Set();
 
       for (const data of allStaffEvent) {
-        if (!removingTemporalStaff.includes(data.email)) {
+        if (!removingTemporalStaff.includes(String(data.email ?? "").toLowerCase())) {
           result.add(data);
         }
       }

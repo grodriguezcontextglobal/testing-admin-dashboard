@@ -116,7 +116,9 @@ describe("guard — the numeric role is decided only in config/roles.js", () => 
   });
 
   it("no Number(x.role) outside config/roles.js", () => {
-    expect(offenders(/Number\(\s*[\w?.]*\.role\s*\)/)).toEqual([]);
+    // Brackets included: `Number(employees[i].role)` slipped past this guard
+    // in EndEventButton until 2026-10-26.
+    expect(offenders(/Number\(\s*[\w?.[\]]*\.role\s*\)/)).toEqual([]);
   });
 
   it("no LEGACY_ROLE_MAP lookups outside config/roles.js", () => {

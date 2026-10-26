@@ -7,6 +7,8 @@
  * assistant branches written out twice verbatim.
  */
 
+import { ROLE_LEVELS, resolveRoleType } from "../../../../../config/roles";
+
 const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const key = (value) => String(value ?? "").trim().toLowerCase();
@@ -191,6 +193,40 @@ export function describeEmailLookup({ email, isChecking, found, companyName }) {
     needsCreation: true,
     message: `New to ${companyName}. They will be invited to the company as an assistant, and added to this event.`,
   };
+}
+
+/* -------------------------------------------------------- Ending an event --- */
+
+/* Ranked below event manager (level 3): inventory manager, assistant, event
+   assistant. The scoped roles have no level yet (R1), so they keep access. */
+const losesAccessAtEventEnd = (employee) => {
+  const hasRole = Boolean(employee?.roleType) || key(employee?.role) !== "";
+  return hasRole && ROLE_LEVELS[resolveRoleType(employee)] > 3;
+};
+
+/**
+ * Company employees who lose access when an event ends: the active ones on
+ * the event's staff ranked below event manager.
+ *
+ * Was `Number(employees[i].role) > 3` inside EndEventButton (F1.1): it ignored
+ * `roleType`, so a promoted employee whose stale number still read 4 was
+ * locked out, and a staff email with no employee record threw on `[-1].role`.
+ * A record with no role at all keeps its access, as it did then.
+ */
+export function staffToDeactivateAtEventEnd({ employees, event }) {
+  const onEvent = new Set(
+    [...(event?.staff?.adminUser ?? []), ...(event?.staff?.headsetAttendees ?? [])].map(
+      (entry) => key(entry?.email)
+    )
+  );
+  const removedEmails = [];
+  const updated = (Array.isArray(employees) ? employees : []).map((employee) => {
+    if (!employee?.active || !onEvent.has(key(employee.user))) return employee;
+    if (!losesAccessAtEventEnd(employee)) return employee;
+    removedEmails.push(employee.user);
+    return { ...employee, active: false };
+  });
+  return { employees: updated, removedEmails };
 }
 
 /* ------------------------------------------------------- The staff table --- */

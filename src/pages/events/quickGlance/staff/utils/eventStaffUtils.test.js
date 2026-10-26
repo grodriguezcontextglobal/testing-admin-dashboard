@@ -6,6 +6,7 @@ import {
   mergeEventStaff,
   buildStaffRows,
   eventRoleFor,
+  staffToDeactivateAtEventEnd,
   staffInitials,
   validateNewStaff,
 } from "./eventStaffUtils";
@@ -470,5 +471,75 @@ describe("buildStaffRows", () => {
   it("returns an empty list for a response that carried nothing", () => {
     expect(buildStaffRows({ rows: undefined, event, accounts: adminUsers })).toEqual([]);
     expect(buildStaffRows({ rows: null, event, accounts: null })).toEqual([]);
+  });
+});
+
+describe("staffToDeactivateAtEventEnd", () => {
+  const eventWith = (...emails) => ({
+    staff: {
+      adminUser: [{ email: emails[0] }],
+      headsetAttendees: emails.slice(1).map((email) => ({ email })),
+    },
+  });
+
+  it("deactivates event staff ranked below event manager, by role type", () => {
+    const employees = [
+      { user: "inv@x.com", roleType: "inventory_manager", active: true },
+      { user: "asst@x.com", role: "5", active: true },
+      { user: "ea@x.com", roleType: "event_assistant", active: true },
+    ];
+    const result = staffToDeactivateAtEventEnd({
+      employees,
+      event: eventWith("inv@x.com", "asst@x.com", "ea@x.com"),
+    });
+    expect(result.removedEmails).toEqual(["inv@x.com", "asst@x.com", "ea@x.com"]);
+    expect(result.employees.every((e) => e.active === false)).toBe(true);
+  });
+
+  it("keeps managers and admins, whatever the stale number says", () => {
+    const employees = [
+      { user: "admin@x.com", role: "1", active: true },
+      { user: "mgr@x.com", roleType: "manager_event", active: true },
+      // roleType wins: this used to be read as level 4 and locked out.
+      { user: "promoted@x.com", role: "4", roleType: "admin", active: true },
+    ];
+    const result = staffToDeactivateAtEventEnd({
+      employees,
+      event: eventWith("admin@x.com", "mgr@x.com", "promoted@x.com"),
+    });
+    expect(result.removedEmails).toEqual([]);
+    expect(result.employees).toEqual(employees);
+  });
+
+  it("keeps scoped roles and records with no role at all", () => {
+    const employees = [
+      { user: "cat@x.com", role: "category_manager", active: true },
+      { user: "blank@x.com", role: "", active: true },
+    ];
+    const result = staffToDeactivateAtEventEnd({
+      employees,
+      event: eventWith("cat@x.com", "blank@x.com"),
+    });
+    expect(result.removedEmails).toEqual([]);
+  });
+
+  it("leaves people who are not on the event, and skips staff who are not employees", () => {
+    const employees = [
+      { user: "other@x.com", role: "5", active: true },
+      { user: "asst@x.com", role: "5", active: false },
+    ];
+    // ghost@x.com is on the event but not in the company: this used to throw.
+    const result = staffToDeactivateAtEventEnd({
+      employees,
+      event: eventWith("ghost@x.com", "asst@x.com"),
+    });
+    expect(result.removedEmails).toEqual([]);
+    expect(result.employees).toEqual(employees);
+  });
+
+  it("does not mutate the employees it was given", () => {
+    const employees = [{ user: "asst@x.com", role: "5", active: true }];
+    staffToDeactivateAtEventEnd({ employees, event: eventWith("asst@x.com") });
+    expect(employees[0].active).toBe(true);
   });
 });
