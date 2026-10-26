@@ -72,6 +72,7 @@ import {
   readMfaSetupChallenge,
 } from "./utils/mfaEnrollment";
 import { readAttemptsRemaining, readLoginLockout } from "./utils/loginLockout";
+import SystemUseNotice from "./login/SystemUseNotice";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
@@ -827,6 +828,8 @@ const Login = () => {
                   setCurrentStep={goToStep}
                 />
               )}
+
+              <SystemUseNotice />
 
               <div style={{ ...CenteringGrid }}>
                 <Typography
