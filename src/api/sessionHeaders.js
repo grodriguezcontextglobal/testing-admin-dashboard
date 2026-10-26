@@ -6,6 +6,8 @@
  * that happens when logout/cleanup sites forget about a header.
  */
 
+import { clearOfflineData } from "./offlineData";
+
 // Every localStorage key that belongs to an authenticated session.
 export const SESSION_STORAGE_KEYS = [
   "admin-token", // JWT (x-token)
@@ -65,9 +67,16 @@ export const ensureCompanyHeaders = (user) => {
   return SESSION_STORAGE_KEYS.map((key) => localStorage.getItem(key)).join("|") !== before;
 };
 
-/** Removes every session/auth key from localStorage on logout. */
+/**
+ * Removes every session/auth key from localStorage on logout, and starts
+ * clearing what the service worker kept (offlineData.js, FedRAMP A3).
+ *
+ * The keys go synchronously, as before. The returned promise settles once the
+ * service-worker data is gone; await it before reloading the page.
+ */
 export const clearSessionStorage = () => {
   SESSION_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  return clearOfflineData();
 };
 
 /**

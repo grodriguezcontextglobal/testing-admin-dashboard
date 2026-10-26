@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   SESSION_STORAGE_KEYS,
   buildRequestPath,
@@ -115,6 +115,21 @@ describe("clearSessionStorage", () => {
       expect(localStorage.getItem(key)).toBeNull(),
     );
     expect(localStorage.getItem("unrelated")).toBe("keep");
+  });
+
+  // FedRAMP A3: the service worker's API cache and write queue go with the session.
+  it("also clears what the service worker kept, and returns when it is done", async () => {
+    const names = new Set(["devitrak-recent-data", "workbox-precache-v2"]);
+    vi.stubGlobal("caches", {
+      keys: async () => [...names],
+      delete: async (name) => names.delete(name),
+    });
+    try {
+      await clearSessionStorage();
+      expect([...names]).toEqual(["workbox-precache-v2"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

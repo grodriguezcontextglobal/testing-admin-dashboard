@@ -89,13 +89,15 @@ const App = () => {
       dispatch(onResetBackgroundJobs());
       dispatch(onResetStripesInfo());
       dispatch(onResetSubscriptionInfo());
-      clearSessionStorage();
+      const offlineDataCleared = clearSessionStorage();
       dispatch(onLogout());
       openNotificationWithIcon("error", "Session has expired. Please sign in again.");
       /* onLogout resets every slice (store/rootReducer.js), but redux-persist
          writes to localStorage on a throttle: reloading straight away could
          rehydrate the old session from disk. Wait for the write. */
-      return persistor.flush().finally(() => window.location.reload(true));
+      return Promise.allSettled([persistor.flush(), offlineDataCleared]).finally(() =>
+        window.location.reload(true)
+      );
     }
   };
 
