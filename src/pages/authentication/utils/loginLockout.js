@@ -45,3 +45,17 @@ export const readLoginLockout = (error) => {
     message: "Too many sign-in attempts from this network. Wait a few minutes and try again.",
   };
 };
+
+/**
+ * The warning before the lock: a failed sign-in (wrong password, wrong MFA
+ * code or unknown email) carries `attemptsRemaining`, so a person no longer
+ * goes from "wrong password" straight to "locked". Absent when the server's
+ * counter is unavailable; then nothing is said.
+ */
+export const readAttemptsRemaining = (error) => {
+  const response = error?.response;
+  if (!response || response.status === 429) return null;
+  const left = Number(response.data?.attemptsRemaining);
+  if (!Number.isInteger(left) || left < 1) return null;
+  return `${left} ${left === 1 ? "attempt" : "attempts"} left before your account is temporarily locked.`;
+};

@@ -32,19 +32,20 @@ const text = (value) => String(value ?? "").trim();
  * then and is absent now. Worth knowing that the generated contract lists
  * `mfaCode` as required for this route; a first login has never sent one, so
  * either the generator over-reported or `validateFields` does not enforce it.
+ *
+ * No `rememberMe`: every staff session ends 12 h after sign-in (FedRAMP AC-12)
+ * and the server ignores the flag.
  */
 export const buildLoginPayload = ({
   step,
   data,
   userEmail,
   userPassword,
-  rememberMe,
   forceLogin,
 }) => {
   const payload = {
     email: userEmail,
     password: step === LOGIN_STEPS.PASSWORD ? data?.password : userPassword,
-    rememberMe: Boolean(rememberMe),
     forceLogin: Boolean(forceLogin),
   };
 

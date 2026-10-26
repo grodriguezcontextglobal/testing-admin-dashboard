@@ -71,14 +71,13 @@ import {
   needsMfaEnrollment,
   readMfaSetupChallenge,
 } from "./utils/mfaEnrollment";
-import { readLoginLockout } from "./utils/loginLockout";
+import { readAttemptsRemaining, readLoginLockout } from "./utils/loginLockout";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
 
 const Login = () => {
   const { register, handleSubmit, setValue } = useForm();
-  const [rememberMe, setRememberMe] = useState(false);
   const [updatePasswordModalState, setUpdatePasswordModalState] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -341,7 +340,6 @@ const Login = () => {
         data,
         userEmail,
         userPassword,
-        rememberMe,
         forceLogin,
       });
 
@@ -495,6 +493,10 @@ const Login = () => {
       return;
     }
 
+    // "2 attempts left…" rides along with whichever error is shown below.
+    const attemptsLeft = readAttemptsRemaining(error);
+    const withAttemptsLeft = (text) => (attemptsLeft ? `${text} ${attemptsLeft}` : text);
+
     // Check for MFA requirement with flexible property naming and status codes
     const responseData = error.response?.data;
     const isMfaRequired =
@@ -523,7 +525,7 @@ const Login = () => {
       if (currentStep === "mfa") {
         openNotificationWithIcon(
           "error",
-          responseData?.msg || "Invalid MFA Code",
+          withAttemptsLeft(responseData?.msg || "Invalid MFA Code"),
         );
       } else {
         goToStep(LOGIN_STEPS.MFA);
@@ -544,7 +546,7 @@ const Login = () => {
           return error.response?.data?.msg || "An error occurred";
       }
     };
-    openNotificationWithIcon("error", message());
+    openNotificationWithIcon("error", withAttemptsLeft(message()));
 
     // If we are in MFA step and the error is not a session conflict, allow retry
     if (
@@ -802,7 +804,6 @@ const Login = () => {
                   showPassword={showPassword}
                   setShowPassword={setShowPassword}
                   setUpdatePasswordModalState={setUpdatePasswordModalState}
-                  setRememberMe={setRememberMe}
                   handleBackToEmail={handleBackToEmail}
                 />
               )}

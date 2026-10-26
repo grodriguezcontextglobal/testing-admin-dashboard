@@ -1,5 +1,3 @@
-import { FormControlLabel } from "@mui/material";
-import { Checkbox } from "antd";
 import LightBlueButtonComponent from "../../../../components/UX/buttons/LigthBlueButton";
 import VisibleIcon from "../../../../components/icons/VisibleIcon";
 import HidenIcon from "../../../../components/icons/HidenIcon";
@@ -17,7 +15,6 @@ const Password = ({
   register,
   showPassword,
   setUpdatePasswordModalState,
-  setRememberMe,
   setShowPassword,
   handleBackToEmail,
 }) => {
@@ -75,34 +72,7 @@ const Password = ({
       >
         <Grid
           item
-          xs={6}
-          display={"flex"}
-          justifyContent={"flex-start"}
-          alignItems={"center"}
-          style={{ padding: "0rem 0rem 0rem 0.6rem" }}
-        >
-          <FormControlLabel
-            style={{
-              color: "#var(--gray-700, #344054)",
-              fontSize: "14px",
-              fontFamily: "Inter",
-              fontWeight: "500",
-              lineHeight: "20px",
-            }}
-            labelPlacement="end"
-            control={
-              <Checkbox
-                onChange={(e) => setRememberMe(e.target.checked)}
-                style={{ paddingRight: "0.5rem" }}
-              />
-            }
-            label={`${" "}Remember me for 30 days`}
-          />
-        </Grid>
-
-        <Grid
-          item
-          xs={6}
+          xs={12}
           display={"flex"}
           justifyContent={"flex-end"}
           alignItems={"center"}

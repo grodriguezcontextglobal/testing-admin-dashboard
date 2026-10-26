@@ -9,7 +9,6 @@ import {
 const base = {
   userEmail: "root@x.com",
   userPassword: "saved-pass",
-  rememberMe: false,
   forceLogin: false,
 };
 
@@ -24,7 +23,6 @@ describe("buildLoginPayload", () => {
     ).toEqual({
       email: "root@x.com",
       password: "typed-pass",
-      rememberMe: false,
       forceLogin: false,
     });
   });
@@ -71,16 +69,26 @@ describe("buildLoginPayload", () => {
     ).toBe("123456");
   });
 
-  it("carries rememberMe and forceLogin as booleans", () => {
+  it("carries forceLogin as a boolean", () => {
     const payload = buildLoginPayload({
       ...base,
-      rememberMe: true,
-      forceLogin: true,
+      forceLogin: 1,
       step: LOGIN_STEPS.PASSWORD,
       data: { password: "p" },
     });
-    expect(payload.rememberMe).toBe(true);
     expect(payload.forceLogin).toBe(true);
+  });
+
+  // FedRAMP AC-12: every staff session ends 12 h after sign-in and the server
+  // ignores rememberMe (FRONTEND_session_12h_2026-10-21.md, server reports).
+  it("never sends rememberMe", () => {
+    const payload = buildLoginPayload({
+      ...base,
+      rememberMe: true,
+      step: LOGIN_STEPS.PASSWORD,
+      data: { password: "p" },
+    });
+    expect(payload).not.toHaveProperty("rememberMe");
   });
 
   it("adds no field outside the contract", () => {
@@ -94,7 +102,6 @@ describe("buildLoginPayload", () => {
       "forceLogin",
       "mfaCode",
       "password",
-      "rememberMe",
     ]);
   });
 

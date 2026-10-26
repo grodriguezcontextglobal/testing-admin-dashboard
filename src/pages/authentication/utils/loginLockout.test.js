@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readLoginLockout } from "./loginLockout";
+import { readAttemptsRemaining, readLoginLockout } from "./loginLockout";
 
 // FRONTEND_login_lockout_password_policy_2026-10-21.md §1.
 const refused = (status, data, headers = {}) => ({ response: { status, data, headers } });
@@ -60,5 +60,30 @@ describe("readLoginLockout", () => {
     expect(readLoginLockout(refused(401, { accountLocked: true }))).toBeNull();
     expect(readLoginLockout(new Error("Network Error"))).toBeNull();
     expect(readLoginLockout(undefined)).toBeNull();
+  });
+});
+
+// attemptsRemaining on a failed sign-in (BACKEND_login_lockout_password_policy_REPLY_2026-10-21.md).
+describe("readAttemptsRemaining", () => {
+  it("warns how many attempts are left before the lock", () => {
+    expect(readAttemptsRemaining(refused(400, { attemptsRemaining: 2 }))).toBe(
+      "2 attempts left before your account is temporarily locked."
+    );
+    expect(readAttemptsRemaining(refused(401, { attemptsRemaining: 1 }))).toBe(
+      "1 attempt left before your account is temporarily locked."
+    );
+  });
+
+  it("says nothing when the field is missing, invalid or zero", () => {
+    // The server leaves it out when Redis does not answer.
+    expect(readAttemptsRemaining(refused(400, { msg: "x" }))).toBeNull();
+    expect(readAttemptsRemaining(refused(400, { attemptsRemaining: "two" }))).toBeNull();
+    expect(readAttemptsRemaining(refused(400, { attemptsRemaining: 0 }))).toBeNull();
+    expect(readAttemptsRemaining(refused(400, { attemptsRemaining: -1 }))).toBeNull();
+    expect(readAttemptsRemaining(undefined)).toBeNull();
+  });
+
+  it("leaves the 429 to readLoginLockout", () => {
+    expect(readAttemptsRemaining(refused(429, { attemptsRemaining: 3 }))).toBeNull();
   });
 });
