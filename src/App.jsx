@@ -26,9 +26,7 @@ import { persistor } from "./store/Store";
 import { setSessionExpiredHandler } from "./api/sessionExpiry";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
-// const InactivityLogout = lazyWithRetry(() =>
-//   import("./utils/CheckingInactivityAndTakeAction")
-// );
+const IdleSessionGuard = lazyWithRetry(() => import("./components/session/IdleSessionGuard"));
 const AuthRoutes = lazyWithRetry(() => import("./routes/authorized/AuthRoutes"));
 const NoAuthRoutes = lazyWithRetry(() => import("./routes/no-authorized/NoAuthRoutes"));
 const BackgroundJobsTracker = lazyWithRetry(() =>
@@ -163,10 +161,13 @@ const App = () => {
         {renderNetworkStatusMessage()}
         {contextHolder}
         {status === "authenticated" && adminToken ? (
-          // <InactivityLogout>
-          //   <AuthRoutes />
-          // </InactivityLogout>
           <>
+            <IdleSessionGuard
+              token={adminToken}
+              onSignedOut={() =>
+                notify("warning", "You were signed out", "There was no activity for 15 minutes.")
+              }
+            />
             <BackgroundJobsTracker />
             <OfflineIndicator />
             <AuthRoutes />

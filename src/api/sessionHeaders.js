@@ -15,6 +15,7 @@ export const SESSION_STORAGE_KEYS = [
   "s-token-lq", // staff member SQL id (attached on every request)
   "x-company-id", // Mongo ObjectId of the active company
   "s-company-lq", // SQL company_id of the active company
+  "devitrak-last-activity", // idle-timeout clock shared by tabs (hooks/idleSession.js)
 ];
 
 /**

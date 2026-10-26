@@ -49,12 +49,12 @@ jobs:
         run: node scripts/audit-gate.js
 
       # Puerta con línea base (FedRAMP F1.3): los errores bloquean, y los
-      # warnings no pueden pasar de los que había el 2026-10-21 (281: 268 de
-      # react-hooks/exhaustive-deps y 13 de react-refresh). Al arreglar una
+      # warnings no pueden pasar de la línea base (281 el 2026-10-21: 268 de
+      # react-hooks/exhaustive-deps y 13 de react-refresh; 280 el 26-10). Al arreglar una
       # tanda, bajar este número en el mismo commit; la meta sigue siendo
       # `npm run lint` (--max-warnings 0).
       - name: Lint
-        run: npx eslint . --ext js,jsx --max-warnings 281
+        run: npx eslint . --ext js,jsx --max-warnings 280
 
       - name: Unit tests
         run: npm run test:unit
