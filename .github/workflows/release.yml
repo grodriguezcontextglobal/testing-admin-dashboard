@@ -75,6 +75,8 @@ jobs:
           # /school/event-invitations/send answers sent: 1 and nothing arrives.
           # Back to 'true' once the server's mail is confirmed working.
           VITE_APP_FEATURE_EVENT_INVITATIONS: ${{ vars.VITE_APP_FEATURE_EVENT_INVITATIONS || secrets.VITE_APP_FEATURE_EVENT_INVITATIONS || 'false' }}
+          # FedRAMP A2: la CSP sale en Report-Only; 'true' la hace obligatoria.
+          VITE_APP_CSP_ENFORCE: ${{ vars.VITE_APP_CSP_ENFORCE }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.
@@ -82,6 +84,8 @@ jobs:
         run: |
           test -f dist/index.html
           test -f dist/web.config
+          # Las cabeceras de seguridad las escribe vite.config.js (FedRAMP A2).
+          grep -q 'Strict-Transport-Security' dist/web.config
 
       - name: Package
         id: package

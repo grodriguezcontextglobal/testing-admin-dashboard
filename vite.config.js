@@ -1,13 +1,35 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import fs from "node:fs";
+import path from "node:path";
 import { checkEnv, formatEnvReport } from "./src/config/envValidation.js";
+import { buildSecurityHeaders, injectSecurityHeaders } from "./src/config/securityHeaders.js";
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // 24h retention: long enough to survive a workday offline, bounded so the
 // background-sync queue doesn't grow unbounded.
 const MUTATION_QUEUE_RETENTION_MINUTES = 24 * 60;
+
+// FedRAMP A2: IIS serves the security headers from dist/web.config. They are
+// written at build time because the CSP names this environment's API origins.
+// closeBundle runs after Vite has copied public/ into the output directory.
+const securityHeadersPlugin = ({ apiOrigins, enforceCsp }) => {
+  let outDir;
+  return {
+    name: "devitrak-security-headers",
+    apply: "build",
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      const file = path.join(outDir, "web.config");
+      const headers = buildSecurityHeaders({ apiOrigins, enforceCsp });
+      fs.writeFileSync(file, injectSecurityHeaders(fs.readFileSync(file, "utf8"), headers));
+    },
+  };
+};
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_APP_");
@@ -41,6 +63,7 @@ export default defineConfig(({ command, mode }) => {
     },
     plugins: [
       react(),
+      securityHeadersPlugin({ apiOrigins, enforceCsp: env.VITE_APP_CSP_ENFORCE === "true" }),
       // Registered unconditionally, on purpose. This used to be wrapped in
       // `apiOriginPattern ? [...] : []`, so an environment without
       // VITE_APP_DEVITRACK_API (a fresh clone, CI) skipped the plugin
