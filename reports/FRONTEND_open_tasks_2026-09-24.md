@@ -27,9 +27,9 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **22** (recontado 2026-10-16 contra el código del dashboard y del servidor; +1 el 27-10: asistente para clientes; +1: Node 24) |
+| **Abierto, total** | **23** (recontado 2026-10-16 contra el código del dashboard y del servidor; +1 el 27-10: asistente para clientes; +1: Node 24; +1: suscripciones) |
 | — bloquea (§1) | 0 (el MFA lo exige el servidor desde el 05-10) |
-| — trabajo de producto (§2) | 6 |
+| — trabajo de producto (§2) | 7 |
 | — reunión del 29-09 (§2b) | 0 (2b.9 cerrado en código; sale con el despliegue) |
 | — contrato del backend 2026-10-01 (§2c) | 1 (2c.4: el servidor ya está; falta quitar nuestro 408 tras el despliegue) |
 | — plan FedRAMP (§2d) | 2 (F1.1 fase 2 y F1.2) — **en pausa desde el 16-10** |
@@ -576,6 +576,54 @@ uso por cuenta. **Es un producto aparte**, no una pantalla de este dashboard.
 
 Sin alcance ni fecha, y él mismo lo puso por detrás de FedRAMP en la frase
 siguiente. Queda como intención registrada, no como tarea lista para coger.
+
+### Sección de suscripción con dos planes
+
+Pedido por Gustavo el 2026-10-27:
+
+| Plan | Precio | Staff | Items de inventario |
+|---|---|---|---|
+| **Free** | $0 | 3 | hasta 2.000 |
+| **Paid** | $320/mes | 10 | hasta 10.000 |
+
+**Lo que ya existe, comprobado el 27-10, y no encaja:**
+
+- Hay una página `Profile → billing`, con ruta `billing` en `AuthRoutes.jsx`,
+  pero ninguna pestaña de `MainProfileSettings.jsx` enlaza a ella. Contiene
+  `PlanSubscriptionDetails.jsx`, `UpdatingSubscription.jsx` y las facturas.
+- Los planes están en `src/components/json/subscriptionList.json`: Basic,
+  Business ($30/mes) y Enterprise ($60/mes), con `adminUser` 1/5/ilimitado y
+  `database-limit`. `PlanSubscriptionDetails` además traduce importes en
+  céntimos: 32000 se muestra como "Business". Hay un tercer flujo viejo en
+  `pages/events/newEventProcess/subscription/` y `pages/subscription/`.
+- **No hay ningún límite aplicado** en ninguna parte: no se cuentan ni el staff
+  ni los items.
+
+**Antes de empezar hay que decidir:**
+
+- **Qué cuenta como staff:** todo miembro activo de la compañía, admin
+  incluido, o solo los invitados. ¿Cuentan los roles con alcance limitado?
+- **Qué cuenta como item:** todo el inventario de la compañía, o solo los
+  activos. ¿Cuentan los consumibles y los items retirados?
+- **Qué pasa al llegar al límite:** se bloquea crear staff o items y se ofrece
+  el plan Paid, o solo se avisa. ¿Y el import masivo que lo superaría?
+- **Si hay precio anual.**
+- **Qué pasa con las compañías que ya superan el límite Free.**
+- **Si el plan viejo se borra o se reaprovecha:** `subscriptionList.json`, los
+  tres flujos y las rutas `/subscription/*` del servidor.
+
+**El reparto del trabajo:** el límite lo tiene que aplicar el **servidor**,
+porque un límite que solo pone el cliente se salta con una llamada a la API.
+El servidor también crea el producto y el precio en Stripe y guarda el plan de
+cada compañía. El dashboard se encarga de:
+
+- la sección de suscripción con el plan actual y el uso (por ejemplo "2 de 3
+  staff", "1.840 de 2.000 items");
+- el cambio a Paid con Stripe Checkout o Elements;
+- los avisos al acercarse al límite y el bloqueo al llegar;
+- quitar el código viejo.
+
+Cuando estén las decisiones, escribir el pedido al backend.
 
 ### Asistente (bot) para clientes que responda desde la base de datos
 
