@@ -598,6 +598,12 @@ Casi todo el trabajo cae en el servidor (herramientas del bot, filtro por
 tenant, registro de cada pregunta en el audit log). La parte del dashboard es
 la ventana de chat.
 
+**2026-10-27:** Gustavo está montando un workflow en **n8n** que recibe la
+pregunta desde Devitrak, se la pasa a un agente y devuelve la respuesta. Para
+el dashboard: la URL del webhook de n8n y su credencial no pueden ir en el
+bundle (son públicos, ver F0.2). La llamada pasa por nuestro servidor, que
+añade la compañía y el rol del token y no el del cliente.
+
 ### R3 — la reconciliación de alcance por ubicación — a medias: falta el backfill
 
 **Revisado 2026-10-05: el lado de lectura se arregló el 2026-09-17, antes de
