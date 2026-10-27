@@ -10,6 +10,18 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    # Las versiones mayores (antd, MUI, react-redux, Vite...) son migraciones:
+    # se planifican y se hacen a mano, no como PR automático. Los avisos de
+    # seguridad siguen llegando, y la puerta de audit de la CI bloquea igual
+    # cualquier high/critical en producción.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+      # 0.5 exige ESLint 9; seguimos en ESLint 8 (rompe npm ci, PR #22).
+      - dependency-name: eslint-plugin-react-refresh
+        versions:
+          - ">=0.5.0"
     groups:
       npm-minor-and-patch:
         update-types:
@@ -28,9 +40,14 @@ updates:
         patterns:
           - "*"
 
-  # Dockerfile.dev: la imagen base de Node.
+  # Dockerfile.dev: la imagen base de Node. El salto de versión mayor de Node
+  # se hace a mano, junto con la CI (setup-node), que usa la misma versión.
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
       day: monday
+    ignore:
+      - dependency-name: node
+        update-types:
+          - version-update:semver-major
