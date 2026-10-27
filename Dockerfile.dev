@@ -1,4 +1,4 @@
-FROM node:20.19.5-alpine
+FROM node:26.12.1-alpine
 
 # Herramientas para compilar binarios nativos (esbuild, etc.)
 RUN apk add --no-cache python3 make g++
