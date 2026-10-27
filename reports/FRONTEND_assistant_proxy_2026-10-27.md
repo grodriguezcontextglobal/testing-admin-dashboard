@@ -27,8 +27,8 @@ Dashboard ──x-token──▶ server ──signed request──▶ n8n webhoo
 
 ### 2.1 One authenticated endpoint
 
-Suggested: `POST /api/admin/assistant/ask`, behind `validateJWT`, with the
-normal staff session headers (`x-token`, `x-company-id`). **No new header**,
+Suggested: `POST /api/admin/assistant/ask`, behind `validateJWT`, **staff
+sessions only** (confirmed, see §5 Q3), with the normal staff session headers (`x-token`, `x-company-id`). **No new header**,
 so nothing changes in the production CORS allow-list.
 
 Request from the dashboard:
@@ -111,7 +111,9 @@ traffic and not as user activity.
    another shape?
 2. Can you issue the short-lived, company-scoped, read-only token for the
    agent (§2.4)? If not, how do you want the agent to reach data safely?
-3. Who will use it first: company staff in the dashboard, or end consumers?
-   If consumers, it needs the consumer token instead and a separate endpoint.
+3. ~~Who will use it?~~ **Answered by Gustavo 2026-10-27: authenticated
+   staff sessions only.** No anonymous or public access, and no consumer
+   endpoint for now. The endpoint should reject anything without a valid staff
+   session (401), with no fallback mode.
 4. The `question` length cap and the rate limits you want.
 5. Do you store the question/answer text, and for how long?
