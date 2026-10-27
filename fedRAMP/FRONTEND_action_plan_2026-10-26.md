@@ -52,7 +52,10 @@ llegar a ese Snapshot con la parte del dashboard limpia.
 - **A3:** pendiente de decisión: quitar o no la caché GET y la cola offline.
 - **B2:** texto pendiente de legal. **B3–B7:** sin respuesta del backend al
   reporte del 26-10.
-- **C3, C7, C8:** hechos el 27-10. **C1:** `main` sigue sin protección
+- **Node 20 sin soporte desde abril de 2026** (SI-2): pasar a Node 24 LTS en
+  Docker, CI y `engines`. En el tracker, §3.
+- **C3, C7, C8:** hechos el 27-10, y las actions actualizadas a sus últimas
+  versiones mayores. Dependabot no propone versiones mayores. **C1:** `main` sigue sin protección
   (decisión). **C2:** 280 avisos. **C4–C6, D1–D5:** sin empezar.
 
 ---

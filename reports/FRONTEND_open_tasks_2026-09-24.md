@@ -27,14 +27,14 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **21** (recontado 2026-10-16 contra el código del dashboard y del servidor; +1 el 27-10: asistente para clientes) |
+| **Abierto, total** | **22** (recontado 2026-10-16 contra el código del dashboard y del servidor; +1 el 27-10: asistente para clientes; +1: Node 24) |
 | — bloquea (§1) | 0 (el MFA lo exige el servidor desde el 05-10) |
 | — trabajo de producto (§2) | 6 |
 | — reunión del 29-09 (§2b) | 0 (2b.9 cerrado en código; sale con el despliegue) |
 | — contrato del backend 2026-10-01 (§2c) | 1 (2c.4: el servidor ya está; falta quitar nuestro 408 tras el despliegue) |
 | — plan FedRAMP (§2d) | 2 (F1.1 fase 2 y F1.2) — **en pausa desde el 16-10** |
 | — surgido del 13 al 15-10 (§2f) | 3 |
-| — fuera de toda lista (§3) | 2 (paso 4 de dependencias, `quill`) |
+| — fuera de toda lista (§3) | 3 (paso 4 de dependencias, `quill`, Node 24) |
 | — no es código (§4) | 7 |
 
 > **Recontado 2026-10-15** con el mismo script (§2e no cuenta: sus `###` son
@@ -1522,6 +1522,24 @@ navegador.**
 ---
 
 ## 3. Abierto — de esta semana, fuera de toda lista
+
+### Node 20 → 24 LTS
+
+Apuntado el 2026-10-27. Node 20 llegó a su fin de soporte en abril de 2026 y
+ya no recibe parches de seguridad (FedRAMP SI-2). Los runners de GitHub ya lo
+marcan como obsoleto. **Ir a 24, que es LTS, no a 26**: Dependabot propuso 26
+(#20, cerrada) y ahora tiene ignorados los saltos mayores de Node.
+
+La versión está fijada en cuatro sitios, y los cuatro cambian en el mismo
+commit:
+
+- `Dockerfile.dev` (`FROM node:20.19.5-alpine`);
+- `package.json` (`engines`);
+- `ci.yml` y `release.yml` (`node-version`).
+
+Después hay que reconstruir la imagen dev, y todo el equipo tiene que hacer
+pull. Antes, comprobar en local con Node 24 `npm ci`, la suite, el lint y
+`vite build`. Al hacerlo con Vite 6 (A1), mejor por separado: una cosa cada vez.
 
 ### Paso 4 de dependencias — desbloqueado, en standby por decisión
 
