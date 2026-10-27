@@ -623,7 +623,12 @@ cada compañía. El dashboard se encarga de:
 - los avisos al acercarse al límite y el bloqueo al llegar;
 - quitar el código viejo.
 
-Cuando estén las decisiones, escribir el pedido al backend.
+**Pedido al backend escrito el 27-10:** `FRONTEND_subscription_plans_2026-10-27.md`
+(aquí y en `server-testing/reports`). Pide al servidor gestionar el plan de
+cada compañía con Stripe y webhooks, aplicar los límites al escribir (con un
+403 `PLAN_LIMIT_REACHED` y el import masivo todo o nada), en modo warn →
+enforce, y un `GET /api/company/subscription` con el plan y el uso. Las
+decisiones de arriba siguen abiertas; cambian qué se cuenta, no el diseño.
 
 ### Asistente (bot) para clientes que responda desde la base de datos
 
