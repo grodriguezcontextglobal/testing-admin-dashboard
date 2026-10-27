@@ -598,7 +598,7 @@ Casi todo el trabajo cae en el servidor (herramientas del bot, filtro por
 tenant, registro de cada pregunta en el audit log). La parte del dashboard es
 la ventana de chat.
 
-**2026-10-27:** Gustavo está montando un workflow en **n8n** que recibe la
+**2026-10-27:** pedido al backend en `FRONTEND_assistant_proxy_2026-10-27.md` (aquí y en `server-testing/reports`). Gustavo está montando un workflow en **n8n** que recibe la
 pregunta desde Devitrak, se la pasa a un agente y devuelve la respuesta. Para
 el dashboard: la URL del webhook de n8n y su credencial no pueden ir en el
 bundle (son públicos, ver F0.2). La llamada pasa por nuestro servidor, que
