@@ -30,10 +30,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # La misma versión que Dockerfile.dev.
           node-version: 20.19.5
@@ -56,8 +56,19 @@ jobs:
       - name: Lint
         run: npx eslint . --ext js,jsx --max-warnings 280
 
+      # Con cobertura (FedRAMP C8 · SA-11): el informe queda como artefacto de
+      # cada ejecución, como evidencia de qué cubren los tests.
       - name: Unit tests
-        run: npm run test:unit
+        run: npm run test:unit:coverage
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage-${{ github.run_id }}
+          path: coverage/
+          retention-days: 90
+          if-no-files-found: warn
 
       # Linux distingue mayúsculas en las rutas de import; Windows no. Valores
       # de relleno: vite.config.js exige las variables (src/config/envValidation.js),

@@ -39,3 +39,6 @@ vite.config.js.timestamp-*.mjs
 
 # Graphify knowledge graph — regenerated locally with `graphify update .`
 graphify-out/
+
+# Vitest coverage report (CI uploads it as an artifact)
+coverage/

@@ -2,15 +2,9 @@
   "_readme": "Risk acceptances for the CI dependency gate (scripts/audit-gate.js, FedRAMP plan A1 · RA-5). One entry per advisory and package, with why the risk is accepted and when the acceptance runs out. An expired entry fails CI again. Remove an entry once the advisory is fixed.",
   "exceptions": [
     {
-      "advisory": "GHSA-fx2h-pf6j-xcff",
-      "package": "vite",
-      "reason": "Dev-server only (server.fs.deny bypass on Windows paths). Vite is build tooling: none of it ships in the browser bundle, and the dev server runs only on developer machines, inside the Linux dev container. Fixed by the Vite 5 -> 6.4.4+ upgrade, tracked separately.",
-      "expires": "2026-12-31"
-    },
-    {
       "advisory": "GHSA-587h-7wmj-h5pm",
       "package": "vite",
-      "reason": "Dev-server only (launch-editor existence check). Same scope as the entry above; fixed by the same Vite upgrade.",
+      "reason": "Dev-server only (launch-editor existence check). Vite is build tooling: none of it ships in the browser bundle, and the dev server runs only on developer machines, inside the Linux dev container. Fixed by the Vite 5 -> 6.4.4+ upgrade, tracked separately.",
       "expires": "2026-12-31"
     },
     {
