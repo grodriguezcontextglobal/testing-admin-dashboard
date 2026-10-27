@@ -27,9 +27,9 @@ y se pasa por alto lo que de verdad queda.
 
 | | |
 |---|---|
-| **Abierto, total** | **20** (recontado 2026-10-16 contra el código del dashboard y del servidor) |
+| **Abierto, total** | **21** (recontado 2026-10-16 contra el código del dashboard y del servidor; +1 el 27-10: asistente para clientes) |
 | — bloquea (§1) | 0 (el MFA lo exige el servidor desde el 05-10) |
-| — trabajo de producto (§2) | 5 |
+| — trabajo de producto (§2) | 6 |
 | — reunión del 29-09 (§2b) | 0 (2b.9 cerrado en código; sale con el despliegue) |
 | — contrato del backend 2026-10-01 (§2c) | 1 (2c.4: el servidor ya está; falta quitar nuestro 408 tras el despliegue) |
 | — plan FedRAMP (§2d) | 2 (F1.1 fase 2 y F1.2) — **en pausa desde el 16-10** |
@@ -576,6 +576,27 @@ uso por cuenta. **Es un producto aparte**, no una pantalla de este dashboard.
 
 Sin alcance ni fecha, y él mismo lo puso por detrás de FedRAMP en la frase
 siguiente. Queda como intención registrada, no como tarea lista para coger.
+
+### Asistente (bot) para clientes que responda desde la base de datos
+
+Pedido por Gustavo el 2026-10-27: un asistente que responda preguntas y ayude
+a los clientes con datos sacados de la base de datos. **Sin alcance todavía.**
+Antes de empezar hay que decidir:
+
+- **Quién lo usa:** el staff de una compañía dentro del dashboard, o los
+  consumidores finales.
+- **Qué puede hacer:** solo responder (cuántos dispositivos tengo, qué vence
+  esta semana) o también actuar (asignar, devolver, enviar correos).
+- **De dónde lee:** las respuestas tienen que salir de endpoints del servidor
+  que ya filtran por compañía y por rol, nunca de consultas directas. Si no,
+  el bot enseña a un cliente los datos de otro.
+- **Qué modelo y dónde corre:** mandar datos de clientes a un LLM externo
+  entra en el perímetro de FedRAMP. El proveedor tiene que estar autorizado, o
+  el modelo tiene que correr dentro del perímetro.
+
+Casi todo el trabajo cae en el servidor (herramientas del bot, filtro por
+tenant, registro de cada pregunta en el audit log). La parte del dashboard es
+la ventana de chat.
 
 ### R3 — la reconciliación de alcance por ubicación — a medias: falta el backfill
 
