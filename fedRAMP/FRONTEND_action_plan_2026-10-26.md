@@ -42,8 +42,19 @@ llegar a ese Snapshot con la parte del dashboard limpia.
 
 ## Estado al 2026-10-28
 
-Producción sigue en el build del 23-10 (`curl -I` del 28-10: sin cabeceras,
-con `X-Powered-By: ASP.NET`). El resto, como el 27-10 (abajo).
+**Tarde del 28-10:** producción ya sirve el release `a318684` (20:31 GMT), con
+A1–A3, B1 y B2. `curl -I` muestra HSTS, nosniff, `X-Frame-Options`,
+`Referrer-Policy`, `Permissions-Policy` y la CSP en Report-Only, y ya no
+anuncia `X-Powered-By`. **La semana de CSP Report-Only empieza a contar el
+28-10.**
+
+- La CSP desplegada tenía `connect-src https://db.devitrak.net/api` (con ruta
+  y sin barra final), que solo permite la URL exacta `/api`: cada llamada a la
+  API era una violación y la API entera se bloquearía al pasar a enforce.
+  Arreglado en `securityHeaders.js` (solo el origen, sin duplicados); **hay que
+  desplegar ese release antes de contar la semana sin falsos positivos**.
+- PR #33 de Dependabot aplicada (`e2eeefd9`) y cerrada.
+- Botones del aviso de inactividad en una fila (`9e1ac25e`).
 
 **Nuevos pedidos del backend** (reportes del 27-10 en
 `server-testing/reports`, ninguno hecho todavía en el cliente):
