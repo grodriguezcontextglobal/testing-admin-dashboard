@@ -52,6 +52,20 @@ describe("buildContentSecurityPolicy", () => {
     expect(directive(loose, "connect-src")).toContain("https://api.devitrak.net ");
     expect(loose).not.toContain("undefined");
   });
+
+  // Production builds with VITE_APP_DEVITRACK_API=https://db.devitrak.net/api.
+  // A CSP source with a path and no trailing slash matches that exact URL
+  // only, so every /api/... call was a violation and would be blocked once
+  // the policy is enforced.
+  it("names API hosts by origin only, once, so every API path is allowed", () => {
+    const prod = buildContentSecurityPolicy({
+      apiOrigins: ["https://db.devitrak.net/api", "https://db.devitrak.net/api/"],
+    });
+    const connect = directive(prod, "connect-src");
+    expect(connect).toContain("https://db.devitrak.net ");
+    expect(connect).not.toMatch(/devitrak\.net\/api/);
+    expect(connect.match(/https:\/\/db\.devitrak\.net/g)).toHaveLength(1);
+  });
 });
 
 describe("buildSecurityHeaders", () => {

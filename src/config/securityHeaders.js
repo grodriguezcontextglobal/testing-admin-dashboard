@@ -20,10 +20,25 @@ const STRIPE_SCRIPTS = ["https://js.stripe.com", "https://*.js.stripe.com", "htt
 const STRIPE_FRAMES = [...STRIPE_SCRIPTS, "https://hooks.stripe.com", "https://connect.stripe.com"];
 const STRIPE_CONNECT = ["https://api.stripe.com", "https://connect-js.stripe.com", "https://merchant-ui-api.stripe.com"];
 
-const cleanOrigins = (origins) =>
-  (Array.isArray(origins) ? origins : [])
-    .map((origin) => String(origin ?? "").trim().replace(/\/+$/, ""))
-    .filter(Boolean);
+// The API env vars carry a path (https://db.devitrak.net/api). A CSP source
+// with a path and no trailing slash matches only that exact URL, so keep the
+// origin alone, once.
+const toOrigin = (value) => {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value.replace(/\/+$/, "");
+  }
+};
+
+const cleanOrigins = (origins) => [
+  ...new Set(
+    (Array.isArray(origins) ? origins : [])
+      .map((origin) => String(origin ?? "").trim())
+      .filter(Boolean)
+      .map(toOrigin)
+  ),
+];
 
 export const buildContentSecurityPolicy = ({ apiOrigins }) => {
   const directives = [
