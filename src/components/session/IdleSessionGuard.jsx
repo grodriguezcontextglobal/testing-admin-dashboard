@@ -39,10 +39,12 @@ const IdleSessionGuard = ({ token, onSignedOut }) => {
           been no activity.
         </p>
       }
-      footer={[
-        <GrayButtonComponent key="out" title="Sign out" func={logout} />,
-        <BlueButtonComponent key="stay" title="Stay signed in" func={staySignedIn} />,
-      ]}
+      footer={
+        <div style={{ display: "flex", flexDirection: "row", gap: 12, width: "100%" }}>
+          <GrayButtonComponent title="Sign out" func={logout} styles={{ flex: 1 }} />
+          <BlueButtonComponent title="Stay signed in" func={staySignedIn} styles={{ flex: 1 }} />
+        </div>
+      }
     />
   );
 };

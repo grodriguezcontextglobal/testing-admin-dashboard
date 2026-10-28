@@ -52,6 +52,17 @@ describe("IdleSessionGuard", () => {
     expect(onSignedOut).toHaveBeenCalledTimes(1);
   });
 
+  it("puts both buttons in one row, side by side", async () => {
+    render(<IdleSessionGuard token={token} />);
+    await advance(13 * MIN);
+    const out = screen.getByText("Sign out").closest("button");
+    const stay = screen.getByText("Stay signed in").closest("button");
+    const row = out.parentElement;
+    expect(stay.parentElement).toBe(row);
+    expect(row.style.display).toBe("flex");
+    expect(row.style.flexDirection).not.toBe("column");
+  });
+
   it("'Sign out' ends the session at once", async () => {
     render(<IdleSessionGuard token={token} />);
     await advance(13 * MIN);
