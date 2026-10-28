@@ -40,6 +40,33 @@ llegar a ese Snapshot con la parte del dashboard limpia.
 
 ---
 
+## Estado al 2026-10-28
+
+Producción sigue en el build del 23-10 (`curl -I` del 28-10: sin cabeceras,
+con `X-Powered-By: ASP.NET`). El resto, como el 27-10 (abajo).
+
+**Nuevos pedidos del backend** (reportes del 27-10 en
+`server-testing/reports`, ninguno hecho todavía en el cliente):
+
+| Reporte | Qué pide al dashboard | Control |
+|---|---|---|
+| `FRONTEND_fedramp_a2_lote2` | 1. `x-token` en `POST /admin/logout` de `multipleCompanies/Modal.jsx` (hoy basta el `uid` para cerrar la sesión de otro); avisar al backend cuando esté en producción. 2. `tokenHeaders` en `consulting-member` (opcional). 3. Mostrar el 429 en `MyDevicesPortal.jsx` | AC-3, AC-7 |
+| `FRONTEND_fedramp_a6_server_sessions` | Mensajes del 401 según `reason`: `idle` → "sesión cerrada por inactividad", `revoked` → "sesión cerrada desde otro sitio". El manejador global ya cierra la sesión | AC-12 |
+| `FRONTEND_fedramp_a5_mfa_recovery` | Mostrar los 10 códigos de recuperación al activar MFA (copiar/descargar + confirmación), login con `recoveryCode`, aviso de códigos restantes, regenerarlos desde la pantalla de seguridad | IA-2, IA-5 |
+| `FRONTEND_fedramp_a3_email_change` | Cambio de email de staff: mostrar el `msg` de 400/409/403 y no tocar el estado local si el PATCH falla | AC-2, IA-4 |
+
+**Orden de trabajo acordado el 28-10:**
+
+1. Cerrar la PR #33 de Dependabot (bumps aplicados a mano; falta `npm ci`,
+   tests, lint y build).
+2. A2 lote 2, punto 1 (logout con `x-token`) y los mensajes de A6: cambios
+   pequeños que cierran un hueco real.
+3. A5, recuperación de MFA.
+4. A3, errores del cambio de email.
+
+Después, lo que sigue sin empezar: Vite 6.4.4+ (antes del 31-12), Node 24,
+C2, C4–C6, D1–D5.
+
 ## Estado al 2026-10-27
 
 - **A1–A4, B1, B2:** en `main` y con release, pero **sin desplegar**:
