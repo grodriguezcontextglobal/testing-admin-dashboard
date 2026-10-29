@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -14,26 +14,24 @@ const profile = {
   companyData: { id: "co-1", employees: [] },
 };
 
+const viewer = {
+  email: "root@x.com",
+  uid: "u-root",
+  company: "Dev Co",
+  companyData: { id: "co-1", employees: [], roleLabels: {} },
+  roleType: "root_admin",
+  sqlInfo: { company_id: 7 },
+};
+
 vi.mock("react-redux", () => ({
   useDispatch: () => vi.fn(),
-  useSelector: (fn) =>
-    fn({
-      staffDetail: { profile },
-      admin: {
-        user: {
-          email: "root@x.com",
-          uid: "u-root",
-          company: "Dev Co",
-          companyData: { id: "co-1", employees: [], roleLabels: {} },
-          roleType: "root_admin",
-          sqlInfo: { company_id: 7 },
-        },
-      },
-    }),
+  useSelector: (fn) => fn({ staffDetail: { profile }, admin: { user: viewer } }),
 }));
 
+const adminPost = vi.fn();
 vi.mock("../../../api/devitrakApi", () => ({
   devitrakApi: { post: vi.fn().mockResolvedValue({ data: { list: [] } }), patch: vi.fn() },
+  devitrakApiAdmin: { post: (...args) => adminPost(...args) },
 }));
 
 vi.mock("./components/equipment_components/useStaffEquipmentData", () => ({
@@ -57,16 +55,20 @@ vi.mock("./components/equipment_components/useStaffEquipmentData", () => ({
 
 const { default: StaffDetail } = await import("./StaffDetail");
 
+const renderPage = () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={["/staff/au-1"]}>
+        <StaffDetail />
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+};
+
 describe("StaffDetail shell", () => {
   it("renders the person as the page heading, with tiles and tabs", async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={["/staff/au-1"]}>
-          <StaffDetail />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
+    renderPage();
 
     expect(await screen.findByTestId("profile-name")).toHaveTextContent("Ada Lovelace");
     expect(screen.getByText("Devices out")).toBeTruthy();
@@ -83,5 +85,29 @@ describe("StaffDetail shell", () => {
     expect(screen.queryByText("Manage")).toBeNull();
     expect(screen.getByText("Remove access")).toBeTruthy();
     expect(screen.getAllByText("$120.00").length).toBeGreaterThan(1);
+  });
+
+  it("lets an admin reset someone else's MFA, after a confirmation", async () => {
+    adminPost.mockResolvedValue({ data: { ok: true } });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Reset MFA" }));
+    expect(adminPost).not.toHaveBeenCalled();
+    expect(await screen.findByText(/confirming their identity another way/i)).toBeTruthy();
+
+    const confirm = screen.getAllByRole("button", { name: "Reset MFA" }).at(-1);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(adminPost).toHaveBeenCalledWith("/mfa/reset/au-1"));
+  });
+
+  it("does not offer it on your own profile", async () => {
+    viewer.email = "ada@x.com";
+    try {
+      renderPage();
+      await screen.findByTestId("profile-name");
+      expect(screen.queryByRole("button", { name: "Reset MFA" })).toBeNull();
+    } finally {
+      viewer.email = "root@x.com";
+    }
   });
 });

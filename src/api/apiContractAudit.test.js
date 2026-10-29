@@ -43,6 +43,8 @@ const KNOWN_UNMATCHED = [
   // Added server-side on 2026-10-27 (FRONTEND_fedramp_a5_mfa_recovery_2026-10-27.md),
   // after the contract was last regenerated. Remove once a new contract carries it.
   "POST /api/admin/mfa/recovery-codes",
+  // Same report, §2 (admin MFA reset). Remove once a new contract carries it.
+  "POST /api/admin/mfa/reset/:x",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */

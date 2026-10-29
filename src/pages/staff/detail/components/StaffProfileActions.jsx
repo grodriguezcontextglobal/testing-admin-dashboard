@@ -4,6 +4,7 @@ import BlueButtonComponent from "../../../../components/UX/buttons/BlueButton";
 import DangerButtonConfirmationComponent from "../../../../components/UX/buttons/DangerButtonConfirmation";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
 import GrayButtonConfirmationComponent from "../../../../components/UX/buttons/GrayButtonConfirmation";
+import { MFA_RESET_CONFIRMATION } from "../utils/mfaReset";
 import { staffProfileActionList } from "../utils/staffProfileActionList";
 
 /**
@@ -35,6 +36,7 @@ const StaffProfileActions = ({
   canResetPassword,
   canEditDetails,
   onEditDetails,
+  mfaReset,
   accessToggle,
 }) => {
   const navigate = useNavigate();
@@ -68,6 +70,18 @@ const StaffProfileActions = ({
           />
         );
       })}
+
+      {mfaReset && (
+        <DangerButtonConfirmationComponent
+          title="Reset MFA"
+          buttonType="button"
+          loadingState={mfaReset.isPending}
+          confirmationTitle={MFA_RESET_CONFIRMATION.title}
+          confirmationDescription={MFA_RESET_CONFIRMATION.description}
+          okText={MFA_RESET_CONFIRMATION.okText}
+          func={mfaReset.onReset}
+        />
+      )}
 
       {accessToggle &&
         (accessToggle.isActive ? (
@@ -106,6 +120,11 @@ StaffProfileActions.propTypes = {
   /** Name, email, phone and photo — a modal, not a route. */
   canEditDetails: PropTypes.bool,
   onEditDetails: PropTypes.func,
+  /** FedRAMP A5. `null` when the viewer may not reset it, or on their own profile. */
+  mfaReset: PropTypes.shape({
+    isPending: PropTypes.bool,
+    onReset: PropTypes.func,
+  }),
   /** `null` when the viewer may not change access, or on their own profile. */
   accessToggle: PropTypes.shape({
     isActive: PropTypes.bool,
