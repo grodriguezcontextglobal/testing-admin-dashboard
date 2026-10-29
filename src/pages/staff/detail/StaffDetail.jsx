@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { devitrakApi } from "../../../api/devitrakApi";
+import { devitrakApi, devitrakApiAdmin } from "../../../api/devitrakApi";
 import Breadcrumb from "../../../components/UX/breadcrumbs/Breadcrumb";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import {
@@ -25,6 +25,7 @@ import EditProfileModal from "./EditProfileModal";
 import AssignedDevicesTable from "./components/AssignedDevicesTable";
 import StaffEventsTable from "./components/StaffEventsTable";
 import StaffProfileActions from "./components/StaffProfileActions";
+import { mfaResetErrorMessage } from "./utils/mfaReset";
 import { useStaffEquipmentData } from "./components/equipment_components/useStaffEquipmentData";
 import {
   activeEventsForStaff,
@@ -200,6 +201,21 @@ const StaffDetail = () => {
         "Access unchanged",
         error?.response?.data?.msg || "The company record was not updated."
       );
+    },
+  });
+
+  // FedRAMP A5: for someone who lost the phone and the recovery codes.
+  const resetMfaMutation = useMutation({
+    mutationFn: () => devitrakApiAdmin.post(`/mfa/reset/${encodeURIComponent(staffId)}`),
+    onSuccess: () => {
+      notify(
+        "success",
+        "MFA reset.",
+        `${profile.firstName ?? "This person"} was signed out and will set up MFA again at the next sign-in.`
+      );
+    },
+    onError: (error) => {
+      notify("error", "MFA unchanged", mfaResetErrorMessage(error));
     },
   });
 
@@ -461,6 +477,16 @@ const StaffDetail = () => {
                 canResetPassword={hasPermission("staff:reset_password", roleType)}
                 canEditDetails={hasPermission("staff:update", roleType)}
                 onEditDetails={() => setIsEditingDetails(true)}
+                // The server allows `staff:update` (or super_user), never on
+                // yourself.
+                mfaReset={
+                  hasPermission("staff:update", roleType) && !isOwnProfile && staffId
+                    ? {
+                        isPending: resetMfaMutation.isPending,
+                        onReset: () => resetMfaMutation.mutate(),
+                      }
+                    : null
+                }
                 accessToggle={
                   hasPermission("staff:grant_access", roleType) && !isOwnProfile
                     ? {
