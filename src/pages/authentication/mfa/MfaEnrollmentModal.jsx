@@ -15,6 +15,8 @@ import {
   mfaRequestConfig,
   normalizeMfaCode,
 } from "../utils/mfaEnrollment";
+import { readRecoveryCodes } from "../utils/mfaRecovery";
+import RecoveryCodesPanel from "./RecoveryCodesPanel";
 
 /**
  * The one screen that turns MFA on, wherever an account is caught without it.
@@ -53,6 +55,7 @@ const MfaEnrollmentModal = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState(null);
   /* Read through a ref so a new callback from the parent does not rebuild
      `generate`, which would rerun the effect and replace the QR code. */
   const onEnrolledRef = useRef(onEnrolled);
@@ -97,6 +100,7 @@ const MfaEnrollmentModal = ({
     if (!open) return;
     setCode("");
     setError("");
+    setRecoveryCodes(null);
     generate();
   }, [open, generate]);
 
@@ -109,11 +113,19 @@ const MfaEnrollmentModal = ({
     try {
       setIsVerifying(true);
       setError("");
-      await devitrakApiAdmin.post(
+      const response = await devitrakApiAdmin.post(
         "/mfa/verify",
         { token: normalizeMfaCode(code) },
         mfaRequestConfig(authToken, setupToken)
       );
+      /* FedRAMP A5: the first verify returns the recovery codes, and this is
+         the only time they exist in readable form. They are shown before the
+         login goes on; a repeated verify brings none and goes straight on. */
+      const codes = readRecoveryCodes(response.data);
+      if (codes) {
+        setRecoveryCodes(codes);
+        return;
+      }
       onEnrolled();
     } catch (err) {
       console.error("MFA verify", err);
@@ -253,8 +265,19 @@ const MfaEnrollmentModal = ({
 
   return (
     <ModalUX
-      title="Set up two-step verification"
-      body={body}
+      title={recoveryCodes ? "Save your recovery codes" : "Set up two-step verification"}
+      body={
+        recoveryCodes ? (
+          <RecoveryCodesPanel
+            codes={recoveryCodes}
+            email={email}
+            onDone={() => onEnrolled()}
+            doneLabel="Continue"
+          />
+        ) : (
+          body
+        )
+      }
       openDialog={open}
       closeModal={onDismiss}
       closable={false}

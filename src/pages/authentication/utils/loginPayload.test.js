@@ -105,6 +105,27 @@ describe("buildLoginPayload", () => {
     ]);
   });
 
+  // FedRAMP A5 (FRONTEND_fedramp_a5_mfa_recovery_2026-10-27): a recovery code
+  // goes in place of the app code, never beside it.
+  it("sends a recovery code instead of the app code", () => {
+    const payload = buildLoginPayload({
+      ...base,
+      step: LOGIN_STEPS.MFA,
+      data: { mfaCode: "123456", recoveryCode: "  k3vq-7xpa-m2ne-tz5c " },
+    });
+    expect(payload.recoveryCode).toBe("k3vq-7xpa-m2ne-tz5c");
+    expect(payload).not.toHaveProperty("mfaCode");
+  });
+
+  it("never carries a recovery code off the MFA step", () => {
+    const payload = buildLoginPayload({
+      ...base,
+      step: LOGIN_STEPS.PASSWORD,
+      data: { password: "p", recoveryCode: "k3vq-7xpa-m2ne-tz5c" },
+    });
+    expect(payload).not.toHaveProperty("recoveryCode");
+  });
+
   it("does not throw on an empty form", () => {
     expect(buildLoginPayload({ ...base, step: LOGIN_STEPS.EMAIL, data: undefined }))
       .toMatchObject({ email: "root@x.com" });
@@ -122,7 +143,13 @@ describe("fieldsToClearFor", () => {
   });
 
   it("clears both the password and the code on a full reset", () => {
-    expect(fieldsToClearFor(LOGIN_STEPS.EMAIL)).toEqual(["password", "mfaCode"]);
+    expect(fieldsToClearFor(LOGIN_STEPS.EMAIL)).toEqual(["password", "mfaCode", "recoveryCode"]);
+  });
+
+  it("clears a recovery code on every step change, since each one works once", () => {
+    [LOGIN_STEPS.EMAIL, LOGIN_STEPS.PASSWORD, LOGIN_STEPS.MFA].forEach((step) =>
+      expect(fieldsToClearFor(step)).toContain("recoveryCode")
+    );
   });
 
   it("is empty for a step it does not know", () => {

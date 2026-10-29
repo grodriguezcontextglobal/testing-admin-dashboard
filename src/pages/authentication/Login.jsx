@@ -72,6 +72,7 @@ import {
   readMfaSetupChallenge,
 } from "./utils/mfaEnrollment";
 import { readAttemptsRemaining, readLoginLockout } from "./utils/loginLockout";
+import { readRecoveryCodeUse, stashRecoveryNotice } from "./utils/mfaRecovery";
 import SystemUseNotice from "./login/SystemUseNotice";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
@@ -379,6 +380,11 @@ const Login = () => {
         return;
       }
 
+      /* Signed in with a recovery code (FedRAMP A5): App says how many are
+         left once this screen has navigated away. */
+      const recoveryUse = readRecoveryCodeUse(loginResponse.data);
+      if (recoveryUse) stashRecoveryNotice(sessionStorage, recoveryUse);
+
       await continueAfterAuthentication({
         loginData,
         loginResponse,
@@ -488,7 +494,7 @@ const Login = () => {
        and nothing is retried on its own. */
     const lockout = readLoginLockout(error);
     if (lockout) {
-      if (currentStep === "mfa") setValue("mfaCode", "");
+      if (currentStep === "mfa") fieldsToClearFor(LOGIN_STEPS.MFA).forEach((field) => setValue(field, ""));
       dispatch(clearErrorMessage());
       openNotificationWithIcon("error", lockout.message);
       return;
@@ -555,8 +561,9 @@ const Login = () => {
       error.response?.data?.msg !==
       "Active session already exists for this account. If this is you, please use 'Force Login' to end the previous session."
     ) {
-      setValue("mfaCode", ""); // Clear invalid code
-      return; // Stay on MFA step
+      // Clear the invalid code, app or recovery, and stay on the MFA step.
+      fieldsToClearFor(LOGIN_STEPS.MFA).forEach((field) => setValue(field, ""));
+      return;
     }
 
     clearSessionStorage();
@@ -826,6 +833,7 @@ const Login = () => {
                      it was never passed, so its Back button threw on click —
                      leaving a refresh as the only way off this step. */
                   setCurrentStep={goToStep}
+                  setValue={setValue}
                 />
               )}
 

@@ -83,6 +83,28 @@ describe("verifying the code", () => {
     await waitFor(() => expect(onEnrolled).toHaveBeenCalledTimes(1));
   });
 
+  /* FedRAMP A5: the first verify returns the recovery codes, readable only
+     this once, so the login waits until the person confirms they kept them. */
+  it("shows the recovery codes and goes on only once they are saved", async () => {
+    const codes = ["aaaa-bbbb-cccc-dddd", "eeee-ffff-gggg-hhhh"];
+    const { onEnrolled } = renderModal();
+    await screen.findByAltText("Two-step verification setup code");
+    post.mockResolvedValueOnce({ data: { ok: true, reloginRequired: true, recoveryCodes: codes } });
+
+    fireEvent.change(screen.getByLabelText("Authentication code"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Verify and continue/ }));
+
+    await screen.findByText("Save your recovery codes");
+    codes.forEach((code) => expect(screen.getByText(code)).toBeTruthy());
+    expect(onEnrolled).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByLabelText(/i saved these codes/i));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(onEnrolled).toHaveBeenCalledTimes(1);
+  });
+
   /* A stale code and a mistyped one look identical to the user, so the message
      names the reason it is usually the former. */
   it("says why a code that was correct a minute ago is refused", async () => {
