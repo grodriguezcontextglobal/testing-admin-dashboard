@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { devitrakApi } from "../../api/devitrakApi";
 import { isMinorMember } from "../conditionalPage/utils/ageCalculationUtils";
+import { myDevicesLookupError } from "./utils/myDevicesLookup";
 
 /**
  * Public family portal — "My Devices".
@@ -85,10 +86,7 @@ const MyDevicesPortal = () => {
       );
       setResult(res.data);
     } catch (err) {
-      setError(
-        err?.response?.data?.msg ||
-          "No record found for that student ID and email."
-      );
+      setError(myDevicesLookupError(err));
     } finally {
       setLoading(false);
     }

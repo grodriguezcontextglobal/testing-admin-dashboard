@@ -44,6 +44,7 @@ import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice
 import { persistor } from "../../../store/Store";
 import { checkArray } from "../../../components/utils/checkArray";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
+import { signOutRequest } from "../utils/signOutRequest";
 
 const ModalMultipleCompanies = ({
   openMultipleCompanies,
@@ -179,9 +180,11 @@ const ModalMultipleCompanies = ({
 
   const logout = async () => {
     try {
-      await devitrakApi.post("/admin/logout", {
+      const { body, config } = signOutRequest({
         uid: dataPassed.respo.uid,
+        token: dataPassed.respo.token,
       });
+      await devitrakApi.post("/admin/logout", body, config);
     } catch (error) {
       message.error("Logout error:", error);
     } finally {
