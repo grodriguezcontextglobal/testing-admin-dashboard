@@ -56,6 +56,18 @@ anuncia `X-Powered-By`. **La semana de CSP Report-Only empieza a contar el
 - PR #33 de Dependabot aplicada (`e2eeefd9`) y cerrada.
 - Botones del aviso de inactividad en una fila (`9e1ac25e`).
 
+**Decisiones del 29-10 (Gustavo):**
+
+- **A3:** sin caché de respuestas GET de la API; la cola offline de POST/PUT
+  se queda con retención de **15 min** (la de la inactividad). Reglas en
+  `src/config/offlineCaching.js`, con test. Desbloquea D1.
+- **B2:** el texto actual se mantiene hasta que legal mande ajustes. Vive en
+  `src/config/legalNotices.js` (`approvedByLegal: false`); cambiarlo ahí lo
+  cambia en la pantalla de acceso.
+- **C1:** opción a, PR obligatoria con la CI ("Lint, tests y build") en verde,
+  sin revisión de una segunda persona. Lo activa Gustavo en GitHub (la cuenta
+  del `gh` local no es administradora). Desbloquea D3.
+
 **Nuevos pedidos del backend** (reportes del 27-10 en
 `server-testing/reports`, ninguno hecho todavía en el cliente):
 
