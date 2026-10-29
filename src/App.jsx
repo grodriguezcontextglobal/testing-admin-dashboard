@@ -24,6 +24,7 @@ import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
 import { persistor } from "./store/Store";
 import { setSessionExpiredHandler } from "./api/sessionExpiry";
+import { takeRecoveryNotice } from "./pages/authentication/utils/mfaRecovery";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 const IdleSessionGuard = lazyWithRetry(() => import("./components/session/IdleSessionGuard"));
@@ -62,6 +63,18 @@ const App = () => {
     return () => setSessionExpiredHandler(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
+
+  /* A sign-in with an MFA recovery code (FedRAMP A5) leaves a notice of the
+     codes left; the sign-in screen is gone by the time it can be read. */
+  useEffect(() => {
+    const notice = takeRecoveryNotice(sessionStorage);
+    if (!notice) return;
+    notify(notice.type, notice.title, {
+      description: notice.description,
+      duration: notice.persistent ? 0 : 10,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const isTokenValid = (token) => {
     if (token) {

@@ -40,6 +40,9 @@ const KNOWN_UNMATCHED = [
   // Added server-side on 2026-10-20 (FRONTEND_receipt_link_2026-10-20.md), after
   // the contract was last regenerated. Remove once a new contract carries it.
   "POST /api/transaction/receipt-link",
+  // Added server-side on 2026-10-27 (FRONTEND_fedramp_a5_mfa_recovery_2026-10-27.md),
+  // after the contract was last regenerated. Remove once a new contract carries it.
+  "POST /api/admin/mfa/recovery-codes",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */

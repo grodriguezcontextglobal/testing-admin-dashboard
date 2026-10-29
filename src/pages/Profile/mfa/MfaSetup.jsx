@@ -18,6 +18,9 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import Header from "../components/Header";
+import RecoveryCodesPanel from "../../authentication/mfa/RecoveryCodesPanel";
+import { readRecoveryCodes } from "../../authentication/utils/mfaRecovery";
+import RecoveryCodesSection from "./RecoveryCodesSection";
 
 const sectionTitleStyle = {
   ...TextFontsize18LineHeight28,
@@ -35,7 +38,8 @@ const MfaSetup = () => {
   const { register, handleSubmit, reset } = useForm();
   const { notify, contextHolder } = useStatusNotification();
   const dispatch = useDispatch();
-  const { mfaEnabled } = useSelector((state) => state.admin);
+  const { mfaEnabled, user } = useSelector((state) => state.admin);
+  const [newCodes, setNewCodes] = useState(null);
   const handleGenerateMfa = async () => {
     try {
       setLoading(true);
@@ -60,6 +64,8 @@ const MfaSetup = () => {
         token: data.token,
       });
       if (response.data) {
+        // FedRAMP A5: readable only now; RecoveryCodesSection shows them.
+        setNewCodes(readRecoveryCodes(response.data));
         dispatch(onUpdateMfaStatus(true));
         message.success("MFA is now active");
         notify(
@@ -210,6 +216,21 @@ const MfaSetup = () => {
                 Devitrak requires it on every account, so it cannot be turned
                 off. To move it to a different phone, contact support.
               </Typography>
+              {newCodes ? (
+                <div style={{ maxWidth: "560px" }}>
+                  <Typography sx={{ ...sectionTitleStyle, mb: 2 }}>
+                    Save your recovery codes
+                  </Typography>
+                  <RecoveryCodesPanel
+                    codes={newCodes}
+                    email={user?.email}
+                    onDone={() => setNewCodes(null)}
+                    doneLabel="Done"
+                  />
+                </div>
+              ) : (
+                <RecoveryCodesSection email={user?.email} />
+              )}
             </Grid>
           )}
         </Grid>

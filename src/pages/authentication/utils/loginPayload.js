@@ -49,8 +49,12 @@ export const buildLoginPayload = ({
     forceLogin: Boolean(forceLogin),
   };
 
+  /* A recovery code (FedRAMP A5) replaces the app code: the server takes one
+     or the other. Case, spaces and dashes do not matter to it. */
+  const recoveryCode = text(data?.recoveryCode);
   const code = text(data?.mfaCode);
-  if (step === LOGIN_STEPS.MFA && code) payload.mfaCode = code;
+  if (step === LOGIN_STEPS.MFA && recoveryCode) payload.recoveryCode = recoveryCode;
+  else if (step === LOGIN_STEPS.MFA && code) payload.mfaCode = code;
 
   return payload;
 };
@@ -63,9 +67,9 @@ export const buildLoginPayload = ({
  * code in the form.
  */
 const FIELDS_TO_CLEAR = {
-  [LOGIN_STEPS.EMAIL]: ["password", "mfaCode"],
-  [LOGIN_STEPS.PASSWORD]: ["mfaCode"],
-  [LOGIN_STEPS.MFA]: ["mfaCode"],
+  [LOGIN_STEPS.EMAIL]: ["password", "mfaCode", "recoveryCode"],
+  [LOGIN_STEPS.PASSWORD]: ["mfaCode", "recoveryCode"],
+  [LOGIN_STEPS.MFA]: ["mfaCode", "recoveryCode"],
 };
 
 export const fieldsToClearFor = (step) => FIELDS_TO_CLEAR[step] ?? [];
