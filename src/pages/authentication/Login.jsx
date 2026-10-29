@@ -421,10 +421,13 @@ const Login = () => {
       },
     };
 
-    // 1. Get staff_id first — this endpoint does NOT need sqlStaffId
+    // 1. Get staff_id first — this endpoint does NOT need sqlStaffId. It
+    // answers without a session too, but with one the call is logged under
+    // this user (FRONTEND_fedramp_a2_lote2_2026-10-27.md, point 2).
     const staffMemberResponse = await devitrakApi.post(
       "/db_staff/consulting-member",
-      { email: loginData.email });
+      { email: loginData.email },
+      tokenHeaders);
     const staffId = extractStaffId(staffMemberResponse.data);
     if (staffId) localStorage.setItem("s-token-lq", String(staffId));
 

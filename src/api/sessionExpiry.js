@@ -77,9 +77,31 @@ export const returnPathFrom = ({ pathname, search = "" }) => {
   return `${path}${search ?? ""}`;
 };
 
+/* Since 2026-10-27 the server ends sessions too
+   (FRONTEND_fedramp_a6_server_sessions_2026-10-27.md, AC-12), and its 401
+   says why: { sessionEnded: true, reason: "idle" | "revoked" | "no_sid" }. */
+const SIGN_IN_AGAIN = "Sign in again to continue where you were.";
+
+const SESSION_ENDED_NOTICES = {
+  idle: { title: "You were signed out for inactivity", description: SIGN_IN_AGAIN },
+  revoked: {
+    title: "Your session was ended elsewhere",
+    description: `You signed out or signed in on another device, or an administrator reset your access. ${SIGN_IN_AGAIN}`,
+  },
+};
+
+const EXPIRED_NOTICE = { title: "Your session has expired", description: SIGN_IN_AGAIN };
+
+/** What to tell the person, from the body of the 401 that ended the session. */
+export const sessionEndedNotice = (responseData) =>
+  SESSION_ENDED_NOTICES[responseData?.reason] ?? EXPIRED_NOTICE;
+
 let sessionExpiredHandler = null;
 
-/** App registers what ending the session does; null unregisters it. */
+/**
+ * App registers what ending the session does; null unregisters it. The
+ * handler receives the notice to show: { title, description }.
+ */
 export const setSessionExpiredHandler = (handler) => {
   sessionExpiredHandler = typeof handler === "function" ? handler : null;
 };
@@ -111,7 +133,7 @@ export const handleUnauthorized = (error) => {
   } catch {
     // Without sessionStorage the person signs in to the home page instead.
   }
-  sessionExpiredHandler?.();
+  sessionExpiredHandler?.(sessionEndedNotice(error?.response?.data));
   return true;
 };
 

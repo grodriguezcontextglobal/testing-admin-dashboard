@@ -55,10 +55,10 @@ const App = () => {
      the router's "/*" lands on /login, which returns to the saved page after
      signing in again. */
   useEffect(() => {
-    setSessionExpiredHandler(() => {
+    setSessionExpiredHandler(({ title, description }) => {
       clearSessionStorage();
       dispatch(onLogout());
-      notify("warning", "Your session has expired", "Sign in again to continue where you were.");
+      notify("warning", title, description);
     });
     return () => setSessionExpiredHandler(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
