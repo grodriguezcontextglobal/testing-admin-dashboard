@@ -5,6 +5,7 @@ import {
   handleUnauthorized,
   isSessionExpiry,
   returnPathFrom,
+  sessionEndedNotice,
   setSessionExpiredHandler,
   takeReturnPath,
 } from "./sessionExpiry";
@@ -141,5 +142,39 @@ describe("handleUnauthorized and takeReturnPath", () => {
   it("ignores a stored path that is not safe", () => {
     sessionStorage.setItem(RETURN_PATH_KEY, "//evil.example");
     expect(takeReturnPath()).toBeNull();
+  });
+
+  it("tells the handler why the server ended the session", () => {
+    const handler = vi.fn();
+    setSessionExpiredHandler(handler);
+    const idle = error(401);
+    idle.response.data = { ok: false, sessionEnded: true, reason: "idle" };
+    handleUnauthorized(idle);
+    expect(handler).toHaveBeenCalledWith(sessionEndedNotice({ reason: "idle" }));
+  });
+});
+
+/* 2026-10-27, FRONTEND_fedramp_a6_server_sessions (AC-12): the server ends
+   sessions too, and its 401 says why in `reason`. */
+describe("sessionEndedNotice", () => {
+  it("says the session closed for inactivity", () => {
+    expect(sessionEndedNotice({ sessionEnded: true, reason: "idle" }).title).toMatch(/inactivity/i);
+  });
+
+  it("says the session was closed from somewhere else", () => {
+    expect(sessionEndedNotice({ sessionEnded: true, reason: "revoked" }).title).toMatch(/elsewhere/i);
+  });
+
+  it("falls back to the plain expiry notice for anything else", () => {
+    const plain = sessionEndedNotice(undefined);
+    expect(plain.title).toBe("Your session has expired");
+    expect(sessionEndedNotice({ reason: "no_sid" })).toEqual(plain);
+    expect(sessionEndedNotice("<html>")).toEqual(plain);
+  });
+
+  it("always asks to sign in again", () => {
+    ["idle", "revoked", "no_sid"].forEach((reason) =>
+      expect(sessionEndedNotice({ reason }).description).toMatch(/sign in again/i)
+    );
   });
 });
