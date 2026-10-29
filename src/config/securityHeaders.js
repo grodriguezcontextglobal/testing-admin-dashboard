@@ -20,6 +20,11 @@ const STRIPE_SCRIPTS = ["https://js.stripe.com", "https://*.js.stripe.com", "htt
 const STRIPE_FRAMES = [...STRIPE_SCRIPTS, "https://hooks.stripe.com", "https://connect.stripe.com"];
 const STRIPE_CONNECT = ["https://api.stripe.com", "https://connect-js.stripe.com", "https://merchant-ui-api.stripe.com"];
 
+// @iconify/react fetches each icon at runtime from its API, falling back to
+// the other two hosts. Without them an enforced CSP blanks every icon the
+// browser has not cached yet.
+const ICONIFY_API = ["https://api.iconify.design", "https://api.simplesvg.com", "https://api.unisvg.com"];
+
 // The API env vars carry a path (https://db.devitrak.net/api). A CSP source
 // with a path and no trailing slash matches only that exact URL, so keep the
 // origin alone, once.
@@ -49,7 +54,7 @@ export const buildContentSecurityPolicy = ({ apiOrigins }) => {
     ["font-src", "'self'", "data:", "https://fonts.gstatic.com"],
     // Item, staff and company images come from several hosts (Cloudinary, S3, Stripe).
     ["img-src", "'self'", "data:", "blob:", "https:"],
-    ["connect-src", "'self'", ...cleanOrigins(apiOrigins), ...STRIPE_CONNECT, STATUS_ORIGIN],
+    ["connect-src", "'self'", ...cleanOrigins(apiOrigins), ...STRIPE_CONNECT, ...ICONIFY_API, STATUS_ORIGIN],
     ["frame-src", "'self'", "blob:", ...STRIPE_FRAMES],
     ["worker-src", "'self'", "blob:"],
     ["manifest-src", "'self'"],

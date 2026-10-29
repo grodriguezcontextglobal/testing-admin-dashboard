@@ -32,6 +32,16 @@ describe("buildContentSecurityPolicy", () => {
     expect(connect).not.toMatch(/(^|\s)https:(\s|$)/);
   });
 
+  // 2026-10-29: with the CSP enforced in production, @iconify/react could not
+  // fetch icons, and every icon not already cached in the browser vanished
+  // (the Events and Staff nav tabs first). It fetches from these three hosts.
+  it("lets @iconify/react fetch icons from its API and fallbacks", () => {
+    const connect = directive(policy, "connect-src");
+    ["https://api.iconify.design", "https://api.simplesvg.com", "https://api.unisvg.com"].forEach((host) =>
+      expect(connect).toContain(host)
+    );
+  });
+
   it("runs scripts from itself and Stripe only, never inline or eval", () => {
     const script = directive(policy, "script-src");
     expect(script).toContain("'self'");
