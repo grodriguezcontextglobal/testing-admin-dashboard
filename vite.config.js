@@ -5,12 +5,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { checkEnv, formatEnvReport } from "./src/config/envValidation.js";
 import { buildSecurityHeaders, injectSecurityHeaders } from "./src/config/securityHeaders.js";
+import { buildApiRuntimeCaching } from "./src/config/offlineCaching.js";
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// 24h retention: long enough to survive a workday offline, bounded so the
-// background-sync queue doesn't grow unbounded.
-const MUTATION_QUEUE_RETENTION_MINUTES = 24 * 60;
 
 // FedRAMP A2: IIS serves the security headers from dist/web.config. They are
 // written at build time because the CSP names this environment's API origins.
@@ -121,60 +118,14 @@ export default defineConfig(({ command, mode }) => {
         workbox: {
           // SPA shell: any navigation falls back to the cached index.html
           // when offline, so the client-side router can still render
-          // whichever screen the user reaches. "Recent screens" is then
-          // bounded naturally by the GET cache below, not by an
-          // allowlist of routes.
+          // whichever screen the user reaches. API data is not cached, so
+          // those screens show what the network gives them.
           navigateFallback: "/index.html",
-          // Every entry below keys off the API origins, so without them
-          // there is nothing to register. The service worker still ships —
-          // shell precache, manifest, update prompt — it just doesn't wrap
-          // the network layer.
-          runtimeCaching: apiOriginPattern ? [
-            {
-              urlPattern: apiOriginPattern,
-              method: "GET",
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "devitrak-recent-data",
-                networkTimeoutSeconds: 4,
-                expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 },
-              },
-            },
-            // Mutation queue: if the device has no network, queue the
-            // POST/PUT and auto-retry once connectivity returns.
-            // Complements (does not replace) the backend's own async
-            // job queue — see FRONTEND_task_queue_changes.md /
-            // backgroundJobsSlice.js.
-            {
-              urlPattern: apiOriginPattern,
-              method: "POST",
-              handler: "NetworkOnly",
-              options: {
-                // Workbox requires a unique Queue name per
-                // BackgroundSyncPlugin instance — one is created per
-                // runtimeCaching entry, so POST and PUT each need
-                // their own name even though they're conceptually the
-                // same "mutation queue" (reusing one name here throws
-                // duplicate-queue-name at service-worker startup and
-                // was silently breaking SW activation).
-                backgroundSync: {
-                  name: "devitrak-mutations-queue-post",
-                  options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
-                },
-              },
-            },
-            {
-              urlPattern: apiOriginPattern,
-              method: "PUT",
-              handler: "NetworkOnly",
-              options: {
-                backgroundSync: {
-                  name: "devitrak-mutations-queue-put",
-                  options: { maxRetentionTime: MUTATION_QUEUE_RETENTION_MINUTES },
-                },
-              },
-            },
-          ] : [],
+          // API calls: no response cache, and a short offline queue for
+          // writes (src/config/offlineCaching.js, FedRAMP A3). Without API
+          // origins nothing is registered; the service worker still ships —
+          // shell precache, manifest, update prompt.
+          runtimeCaching: buildApiRuntimeCaching(apiOriginPattern),
         },
       }),
     ],

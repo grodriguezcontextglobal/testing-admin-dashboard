@@ -2,11 +2,13 @@
  * What the service worker keeps on the device, removed when a session ends
  * (fedRAMP/FRONTEND_action_plan_2026-10-26.md, A3 · SC-28, AC-12).
  *
- * vite.config.js gives the service worker two stores that outlived a logout:
- * - Cache Storage "devitrak-recent-data": API GET responses for 24 h, which
- *   carry staff, consumer and student records;
+ * Two stores could outlive a logout:
+ * - Cache Storage "devitrak-recent-data": API GET responses, which carry
+ *   staff, consumer and student records. Builds since 2026-10-29 no longer
+ *   write it (src/config/offlineCaching.js); older builds left it behind;
  * - IndexedDB "workbox-background-sync": POST/PUT requests queued while
- *   offline, kept whole for 24 h, headers included, so with the x-token.
+ *   offline, kept whole for up to 15 min, headers included, so with the
+ *   x-token.
  *
  * The precached app shell (workbox-precache-*) holds no data and stays.
  * Nothing here throws: a logout must finish even if cleanup cannot.
