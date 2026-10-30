@@ -13,6 +13,7 @@ import {
 import "./Body.css";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import BodyRendering from "./BodyRendering.refactored";
+import { profileSaveErrorMessage } from "../../../staff/detail/utils/editProfileUtils";
 const Body = () => {
   const { eventsPerAdmin } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
@@ -264,13 +265,16 @@ const Body = () => {
           setLoading(false);
           return;
         }
+        // A 200 with `ok: false` used to fall through here and leave the
+        // button spinning. Nothing was saved, and the session is untouched.
+        setLoading(false);
+        message.error(profileSaveErrorMessage(resp));
       }
     } catch (error) {
+      // FedRAMP A3: 400/409/403 on the email save nothing at all, so the
+      // session is left as it was and the server's reason is shown.
       setLoading(false);
-      message.error(
-        error?.response?.data?.msg ||
-          "Failed to update personal info. Please try again."
-      );
+      message.error(profileSaveErrorMessage(error));
     }
   };
 

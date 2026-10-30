@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -34,10 +34,12 @@ const admin = {
   roleType: "root_admin",
   sqlInfo: { company_id: 7 },
   sqlMemberInfo: { staff_id: 3 },
+  adminUserInfo: { id: "au-1", phone: "+1 415 555 0172" },
 };
 
+const dispatch = vi.fn();
 vi.mock("react-redux", () => ({
-  useDispatch: () => vi.fn(),
+  useDispatch: () => dispatch,
   useSelector: (fn) => fn({ staffDetail: { profile }, admin: { user: admin } }),
 }));
 
@@ -79,8 +81,9 @@ const post = vi.fn((url) => {
   return Promise.resolve({ data: {} });
 });
 
+const patch = vi.fn();
 vi.mock("../../../api/devitrakApi", () => ({
-  devitrakApi: { post: (...a) => post(...a), patch: vi.fn(), get: vi.fn() },
+  devitrakApi: { post: (...a) => post(...a), patch: (...a) => patch(...a), get: vi.fn() },
 }));
 
 const { default: AssignStaffMemberToEvent } = await import(
@@ -164,5 +167,22 @@ describe("staff action forms render", () => {
   it("edit details", async () => {
     wrap(<EditProfileModal editProfile setEditProfile={vi.fn()} />);
     expect(await screen.findByText("Edit staff details")).toBeTruthy();
+  });
+});
+
+// FedRAMP A3 (FRONTEND_fedramp_a3_email_change_2026-10-27.md): the server can
+// refuse an email change, and then saves nothing at all.
+describe("EditProfileModal when the server refuses the change", () => {
+  it("shows the server's reason and leaves the profile as it was", async () => {
+    dispatch.mockClear();
+    patch.mockRejectedValueOnce({
+      response: { status: 409, data: { ok: false, msg: "That email is already in use." } },
+    });
+    wrap(<EditProfileModal editProfile setEditProfile={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Save details" }));
+
+    expect(await screen.findByText(/That email is already in use\./)).toBeTruthy();
+    await waitFor(() => expect(patch).toHaveBeenCalledWith("/admin/admin-user/au-1", expect.any(Object)));
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
