@@ -1,0 +1,23 @@
+# Findings already reviewed (fedRAMP C5, 2026-11-02). gitleaks scans the whole
+# history in CI; anything not listed here fails the build. Each line is a
+# finding's fingerprint: <commit>:<file>:<rule>:<line>.
+#
+# Stripe publishable keys (pk_test_/pk_live_) in the .env committed in
+# March 2024. Publishable keys are public by design; not secrets.
+2fdefb086f39c3e0d537d2aa9014c32acf936e0d:.env:generic-api-key:19
+2fdefb086f39c3e0d537d2aa9014c32acf936e0d:.env:generic-api-key:21
+34dbf64814332dea67fab26202625e30e156a7ae:.env:generic-api-key:8
+34dbf64814332dea67fab26202625e30e156a7ae:.env:generic-api-key:19
+34dbf64814332dea67fab26202625e30e156a7ae:.env:generic-api-key:21
+263edae560f26332d02f4c8aefc2b4bb509234cd:.env:generic-api-key:9
+263edae560f26332d02f4c8aefc2b4bb509234cd:.env:generic-api-key:20
+263edae560f26332d02f4c8aefc2b4bb509234cd:.env:generic-api-key:22
+#
+# VITE_APP_TWILIO_AUTH_TOKEN in the same .env (2024-03-08). A real secret,
+# public since then (public repo, and VITE_ variables are built into the
+# JavaScript bundle). Listed only because history cannot be rewritten
+# without breaking every clone; the remedy is rotating the token in Twilio.
+263edae560f26332d02f4c8aefc2b4bb509234cd:.env:generic-api-key:11
+#
+# A localStorage key name (STORAGE_KEY), not a secret. File since deleted.
+b2ac86d903270f7b6c23e03db64405d77c69efe3:src/pages/school/compliance/stagedProfileStore.js:generic-api-key:14
