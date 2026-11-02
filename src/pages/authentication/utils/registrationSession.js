@@ -15,3 +15,10 @@ export const signupNeedsPasswordAgain = (user) => {
   if (user.existing) return false;
   return !user.password;
 };
+
+/**
+ * Where a finished sign-up goes. The Stripe connected account is created only
+ * from Profile -> Stripe, in a signed-in session (2026-11-02); sign-up used to
+ * end on a public page that created it without one.
+ */
+export const SIGNUP_DONE_PATH = "/login";

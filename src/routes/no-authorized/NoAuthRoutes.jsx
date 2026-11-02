@@ -6,7 +6,6 @@ import ResetPassword from "../../pages/authentication/ResetPassword";
 import InvitationLanding from "../../pages/authentication/InvitationLanding";
 import Login from "../../pages/authentication/Login";
 import RegisterCompany from "../../pages/authentication/RegisterCompany";
-import RegisterStripeConnectedAccount from "../../pages/authentication/RegisterStripeConnectedAccount";
 import Register from "../../pages/authentication/Registration";
 import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
@@ -30,10 +29,6 @@ const NoAuthRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/authenticate" element={""} />
         <Route path="/register/company-setup" element={<RegisterCompany />} />
-        <Route
-          path="/register/connected-account"
-          element={<RegisterStripeConnectedAccount />}
-        />
         <Route path="/invitation" element={<InvitationLanding />} />
         <Route path="/force-logout" element={<ForceLogout />} />
         <Route path="/display-contracts" element={<LandingPageForDownloadableDocuments />} />
