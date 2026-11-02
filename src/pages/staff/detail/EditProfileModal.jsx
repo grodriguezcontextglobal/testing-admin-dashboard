@@ -21,6 +21,7 @@ import {
   buildStaffProfileUpdate,
   convertToBase64,
   editProfileSchema,
+  profileSaveErrorMessage,
   validateImageSize,
 } from "./utils/editProfileUtils";
 
@@ -105,8 +106,8 @@ const EditProfileModal = ({ editProfile, setEditProfile }) => {
         `${data.firstName} ${data.lastName} was saved.`
       );
       return closeModal();
-    } catch {
-      setNotice("The details were not saved. Nothing changed.");
+    } catch (error) {
+      setNotice(profileSaveErrorMessage(error));
     } finally {
       setIsSaving(false);
     }

@@ -100,3 +100,24 @@ export const buildLoginUpdate = (user, data, base64) => ({
   email: data.email,
   phone: data.phone,
 });
+
+/**
+ * What to say when PATCH /admin/admin-user/:id (or /staff/edit-admin/:id) does
+ * not save (FedRAMP A3). Since 2026-10-27 the server can refuse an email change:
+ * 400 for a malformed address, 409 when another account, membership or
+ * invitation already uses it, 403 when an admin edits someone who also belongs
+ * to other companies. Whatever the reason, *nothing* in the body is saved, not
+ * even the name or the phone, so the message says so and the caller must leave
+ * its local state alone.
+ *
+ * Takes a rejected axios error, or a resolved response whose `data.ok` is false.
+ */
+export const profileSaveErrorMessage = (errorOrResponse) => {
+  const response = errorOrResponse?.response ?? errorOrResponse;
+  const msg = response?.data?.msg;
+  if (msg) return `${msg} Nothing was saved.`;
+  if (response?.status === 403) {
+    return "Only Devitrak support can change this person's details. Nothing was saved.";
+  }
+  return "The details were not saved. Nothing changed.";
+};

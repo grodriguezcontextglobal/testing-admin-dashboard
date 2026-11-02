@@ -6,6 +6,7 @@ import {
   buildStaffProfileUpdate,
   buildLoginUpdate,
   MAX_IMAGE_BYTES,
+  profileSaveErrorMessage,
 } from "./editProfileUtils";
 
 // ─── editProfileSchema ──────────────────────────────────────────────────────
@@ -135,5 +136,36 @@ describe("buildLoginUpdate", () => {
     expect(result.data.name).toBe("Ada");
     expect(result.data.extra).toBe(1);
     expect(result.token).toBe("t");
+  });
+});
+
+// ─── profileSaveErrorMessage (FedRAMP A3) ──────────────────────────────────
+// On 400/409/403 the PATCH saves nothing, not even the name or phone.
+
+const refused = (status, msg) => ({ response: { status, data: { ok: false, msg } } });
+
+describe("profileSaveErrorMessage", () => {
+  it.each([
+    [400, "Invalid email."],
+    [409, "That email is already in use."],
+    [403, "This user also belongs to other companies; contact Devitrak support."],
+  ])("shows the server's reason for a %i and says nothing was saved", (status, msg) => {
+    expect(profileSaveErrorMessage(refused(status, msg))).toBe(`${msg} Nothing was saved.`);
+  });
+
+  it("explains a 403 without a reason", () => {
+    expect(profileSaveErrorMessage(refused(403))).toMatch(/support/i);
+  });
+
+  it("falls back when the server gives no reason", () => {
+    expect(profileSaveErrorMessage(new Error("Network Error"))).toBe(
+      "The details were not saved. Nothing changed."
+    );
+  });
+
+  it("reads a 200 that says ok: false as a refusal", () => {
+    expect(profileSaveErrorMessage({ data: { ok: false, msg: "Invalid email." } })).toBe(
+      "Invalid email. Nothing was saved."
+    );
   });
 });
