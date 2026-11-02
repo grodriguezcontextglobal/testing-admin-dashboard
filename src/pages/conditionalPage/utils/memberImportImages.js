@@ -90,13 +90,30 @@ export const fitWithin = (width, height, max) => {
  * @param {{reencode?: boolean}} [options]
  * @returns {Promise<string>}
  */
+/**
+ * Decodes a data URL in memory. fetch(dataUrl) would do the same, but the CSP's
+ * connect-src does not list data:, so an enforced policy refuses it.
+ * @param {string} dataUrl
+ * @returns {Blob}
+ */
+export const dataUrlToBlob = (dataUrl) => {
+  const comma = dataUrl.indexOf(",");
+  const meta = dataUrl.slice(5, comma).split(";");
+  const payload = dataUrl.slice(comma + 1);
+  if (!meta.includes("base64")) return new Blob([decodeURIComponent(payload)], { type: meta[0] });
+  const binary = atob(payload);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: meta[0] });
+};
+
 export const shrinkDataUrl = async (
   dataUrl,
   max = MEMBER_PHOTO_MAX_PX,
   { reencode = false } = {}
 ) => {
   try {
-    const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
+    const bitmap = await createImageBitmap(dataUrlToBlob(dataUrl));
     const { width, height } = fitWithin(bitmap.width, bitmap.height, max);
     if (!reencode && width === bitmap.width && height === bitmap.height) return dataUrl;
 

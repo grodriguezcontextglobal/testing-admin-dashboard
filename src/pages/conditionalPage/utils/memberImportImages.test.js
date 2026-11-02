@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildBulkMembersList,
   contentHash,
+  dataUrlToBlob,
   fitWithin,
+  shrinkDataUrl,
   uploadMemberImportImages,
 } from "./memberImportImages";
 
@@ -279,5 +281,35 @@ describe("buildBulkMembersList", () => {
       first_name: "Blaise",
       image_url: "",
     });
+  });
+});
+
+// The CSP's connect-src does not list data:, so fetch(dataUrl) is refused once
+// the policy is enforced and every photo would be uploaded at full size.
+describe("shrinkDataUrl under the CSP", () => {
+  it("decodes a base64 data URL without the network", async () => {
+    const blob = dataUrlToBlob("data:image/png;base64,AAEC/w==");
+    expect(blob.type).toBe("image/png");
+    expect([...new Uint8Array(await blob.arrayBuffer())]).toEqual([0, 1, 2, 255]);
+  });
+
+  it("decodes a percent-encoded data URL", async () => {
+    const blob = dataUrlToBlob("data:image/svg+xml,%3Csvg%2F%3E");
+    expect(blob.type).toBe("image/svg+xml");
+    expect(await blob.text()).toBe("<svg/>");
+  });
+
+  it("reads the picture without calling fetch", async () => {
+    const fetchSpy = vi.fn(() => Promise.reject(new TypeError("Refused by connect-src")));
+    const bitmapSpy = vi.fn(async () => ({ width: 10, height: 10 }));
+    vi.stubGlobal("fetch", fetchSpy);
+    vi.stubGlobal("createImageBitmap", bitmapSpy);
+    try {
+      await shrinkDataUrl("data:image/png;base64,AAAA", 100);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(bitmapSpy).toHaveBeenCalledWith(expect.any(Blob));
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
