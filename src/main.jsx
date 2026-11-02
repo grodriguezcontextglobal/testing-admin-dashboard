@@ -17,6 +17,12 @@ import DevitrakLoading from "./components/animation/DevitrakLoading.jsx";
 import ThemeShell from "./components/theme/ThemeShell.jsx";
 import EmptyState from "./components/UX/emptyState/EmptyState.jsx";
 import ServiceWorkerUpdateNotifier from "./components/serviceWorker/ServiceWorkerUpdateNotifier.jsx";
+import { addCollection } from "@iconify/react";
+import iconifyIcons from "./config/iconifyIcons.json";
+import { registerOfflineIcons } from "./config/iconifyIcons.js";
+
+// Every icon ships with the app; nothing is fetched from Iconify's API.
+registerOfflineIcons(addCollection, iconifyIcons);
 
 // Untitled UI empty state everywhere antd would render its default Empty
 // (tables, selects, lists). Compact variant keeps dropdowns tidy.
