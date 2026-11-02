@@ -494,7 +494,7 @@ const ModalAssignDeviceInEvent = ({
               startAdornment={
                 <InputAdornment position="start">
                   <Icon
-                    icon="radix-icons:dollar-sign-line"
+                    icon="tabler:currency-dollar"
                     color="#344054"
                     width={20}
                     height={19}
