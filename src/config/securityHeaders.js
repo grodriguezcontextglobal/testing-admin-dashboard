@@ -20,6 +20,15 @@ const STRIPE_SCRIPTS = ["https://js.stripe.com", "https://*.js.stripe.com", "htt
 const STRIPE_FRAMES = [...STRIPE_SCRIPTS, "https://hooks.stripe.com", "https://connect.stripe.com"];
 const STRIPE_CONNECT = ["https://api.stripe.com", "https://connect-js.stripe.com", "https://merchant-ui-api.stripe.com"];
 
+// Document viewers frame 5-minute signed S3 links (server helpers/s3Upload.js).
+// A bucket name with dots is signed path-style over https; the virtual-hosted
+// form is listed too, and both name this bucket only. The trailing slash makes
+// the path a prefix.
+const DOCUMENTS_BUCKET = [
+  "https://s3.us-east-2.amazonaws.com/devitrak.documents.admin.dashboard/",
+  "https://devitrak.documents.admin.dashboard.s3.us-east-2.amazonaws.com",
+];
+
 // The API env vars carry a path (https://db.devitrak.net/api). A CSP source
 // with a path and no trailing slash matches only that exact URL, so keep the
 // origin alone, once.
@@ -50,7 +59,7 @@ export const buildContentSecurityPolicy = ({ apiOrigins }) => {
     // Item, staff and company images come from several hosts (Cloudinary, S3, Stripe).
     ["img-src", "'self'", "data:", "blob:", "https:"],
     ["connect-src", "'self'", ...cleanOrigins(apiOrigins), ...STRIPE_CONNECT, STATUS_ORIGIN],
-    ["frame-src", "'self'", "blob:", ...STRIPE_FRAMES],
+    ["frame-src", "'self'", "blob:", ...STRIPE_FRAMES, ...DOCUMENTS_BUCKET],
     ["worker-src", "'self'", "blob:"],
     ["manifest-src", "'self'"],
     ["object-src", "'none'"],
