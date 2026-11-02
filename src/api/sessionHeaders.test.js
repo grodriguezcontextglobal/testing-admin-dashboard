@@ -117,6 +117,16 @@ describe("clearSessionStorage", () => {
     expect(localStorage.getItem("unrelated")).toBe("keep");
   });
 
+  // fedRAMP/FRONTEND_D1_client_side_data_2026-11-02.md, gap 2: an abandoned
+  // payment left the amount behind after logout.
+  it("removes a pending payment amount", () => {
+    localStorage.setItem("total", "200");
+    localStorage.setItem("devitrak.lostFee.total", "50");
+    clearSessionStorage();
+    expect(localStorage.getItem("total")).toBeNull();
+    expect(localStorage.getItem("devitrak.lostFee.total")).toBeNull();
+  });
+
   // FedRAMP A3: the service worker's API cache and write queue go with the session.
   it("also clears what the service worker kept, and returns when it is done", async () => {
     const names = new Set(["devitrak-recent-data", "workbox-precache-v2"]);

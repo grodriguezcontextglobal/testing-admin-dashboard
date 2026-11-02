@@ -16,6 +16,8 @@ export const SESSION_STORAGE_KEYS = [
   "x-company-id", // Mongo ObjectId of the active company
   "s-company-lq", // SQL company_id of the active company
   "devitrak-last-activity", // idle-timeout clock shared by tabs (hooks/idleSession.js)
+  "total", // amount of a card payment in progress (consumers' charge flows)
+  "devitrak.lostFee.total", // same, lost-device fee (quickGlance lostFee/actions/CreditCard.jsx)
 ];
 
 /**

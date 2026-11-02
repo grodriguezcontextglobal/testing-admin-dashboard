@@ -223,8 +223,8 @@ Son cortos, y salen de lo que ya está escrito en `reports/`.
 
 | | Documento | Control |
 |---|---|---|
-| **D1** | **Datos en el cliente**: qué guarda el dashboard (localStorage, sessionStorage, Cache Storage, IndexedDB), cuánto tiempo y cuándo se borra. Depende de A3 | SC-28, MP |
-| **D2** | **Terceros en el navegador**: Stripe, Cloudflare Turnstile, fuentes y CDNs, con qué datos ve cada uno. Alimenta S2.2 del backend | CA-3, SA-9 |
+| ~~**D1**~~ ✅ 02-11 `FRONTEND_D1_client_side_data_2026-11-02.md` | **Datos en el cliente**: qué guarda el dashboard (localStorage, sessionStorage, Cache Storage, IndexedDB), cuánto tiempo y cuándo se borra. Depende de A3 | SC-28, MP |
+| ~~**D2**~~ ✅ 02-11 `FRONTEND_D2_third_parties_in_browser_2026-11-02.md` | **Terceros en el navegador**: Stripe, Cloudflare Turnstile, fuentes y CDNs, con qué datos ve cada uno. Alimenta S2.2 del backend | CA-3, SA-9 |
 | **D3** | **Gestión de cambios del dashboard**: CI, release IIS, rollback, quién aprueba. Depende de C1 | CM-3, CM-4 |
 | **D4** | **Mantener el inventario criptográfico** cuando cambie la sesión (B3) | SC-13 |
 | **D5** | **Accesibilidad (Sección 508 / VPAT)**. No es FedRAMP, pero cualquier compra federal la pide. Solo si la Fase 5 del informe se activa | — |
