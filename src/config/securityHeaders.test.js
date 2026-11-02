@@ -40,6 +40,19 @@ describe("buildContentSecurityPolicy", () => {
     ["iconify.design", "simplesvg.com", "unisvg.com"].forEach((host) => expect(connect).not.toContain(host));
   });
 
+  // Signed contracts, profile documents, platform policies and school consent
+  // open in an <iframe> on a 5-minute S3 link from the server
+  // (server-testing helpers/s3Upload.js, getTemporaryDownloadUrl). The bucket
+  // name has dots, so over https the AWS SDK signs it path-style.
+  it("lets the document viewers frame the documents bucket, and no other bucket", () => {
+    const frame = directive(policy, "frame-src");
+    expect(frame).toContain("https://s3.us-east-2.amazonaws.com/devitrak.documents.admin.dashboard/");
+    expect(frame).toContain("https://devitrak.documents.admin.dashboard.s3.us-east-2.amazonaws.com");
+    expect(frame).not.toMatch(/(^|\s)https:\/\/s3\.us-east-2\.amazonaws\.com(\s|$)/);
+    expect(frame).not.toContain("*.s3");
+    expect(frame).not.toContain("*.amazonaws.com");
+  });
+
   it("runs scripts from itself and Stripe only, never inline or eval", () => {
     const script = directive(policy, "script-src");
     expect(script).toContain("'self'");
