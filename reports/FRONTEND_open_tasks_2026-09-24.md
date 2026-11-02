@@ -657,7 +657,7 @@ el dashboard: la URL del webhook de n8n y su credencial no pueden ir en el
 bundle (son públicos, ver F0.2). La llamada pasa por nuestro servidor, que
 añade la compañía y el rol del token y no el del cliente.
 
-### Cuenta conectada de Stripe: solo desde Profile → Stripe
+### ~~Cuenta conectada de Stripe: solo desde Profile → Stripe~~ — hecho 2026-11-02 (PR #46)
 
 Pedido por Gustavo el 2026-11-02: modificar la petición que crea la cuenta
 conectada de Stripe desde **Profile → Stripe**, y quitar la opción de crearla
@@ -688,8 +688,9 @@ durante el **registro del cliente**.
 1. **Registro:** al terminar el alta (con o sin MFA), ir a `/login` en vez de
    a `/register/connected-account`. Quitar la ruta de `NoAuthRoutes.jsx` y
    borrar `RegisterStripeConnectedAccount.jsx`.
-2. **Profile → Stripe:** el cambio en la petición está **por concretar con
-   Gustavo** (qué datos manda, qué pasa al volver del onboarding, mensajes).
+2. **Profile → Stripe:** se queda como está. Gustavo lo aclaró el 02-11: la
+   cuenta solo se crea con la sesión iniciada, desde Profile. Ya exige sesión,
+   y la vuelta del onboarding (`/return`, `/reauth`) también.
 3. **Backend:** si nadie más usa `PATCH /company/update-company/register-process/:id`
    para la cuenta conectada, avisar de que el dashboard dejó de llamarla, para
    que puedan retirarla o restringirla. Es una ruta del alta que escribe en
