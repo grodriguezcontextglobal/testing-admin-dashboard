@@ -42,3 +42,6 @@ graphify-out/
 
 # Vitest coverage report (CI uploads it as an artifact)
 coverage/
+
+# SBOM written by CI/release (FedRAMP C4)
+admin-sbom.cdx.json
