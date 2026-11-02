@@ -657,6 +657,46 @@ el dashboard: la URL del webhook de n8n y su credencial no pueden ir en el
 bundle (son públicos, ver F0.2). La llamada pasa por nuestro servidor, que
 añade la compañía y el rol del token y no el del cliente.
 
+### Cuenta conectada de Stripe: solo desde Profile → Stripe
+
+Pedido por Gustavo el 2026-11-02: modificar la petición que crea la cuenta
+conectada de Stripe desde **Profile → Stripe**, y quitar la opción de crearla
+durante el **registro del cliente**.
+
+**Lo que hay hoy, comprobado el 02-11:**
+
+- **Registro:** al terminar el alta, `RegisterCompany.jsx` manda siempre a
+  `/register/connected-account`, tanto si no hay token (línea 303) como al
+  cerrar o terminar la MFA (`handleEnrollmentClosed`, línea 319). Esa ruta es
+  pública (`NoAuthRoutes.jsx`) y carga `RegisterStripeConnectedAccount.jsx`,
+  que hace `POST /stripe/accounts`,
+  `PATCH /company/update-company/register-process/:id` con
+  `user.companyData.id` del store y `POST /stripe/account_link`, y redirige al
+  onboarding de Stripe. El mensaje anterior dice "Please log in", así que la
+  página trabaja sin sesión, y si algo falla se queda en silencio (el `catch`
+  solo quita el loading).
+- **Profile → Stripe:** `Profile/stripe_connected_account/Dashboard.jsx` hace
+  las mismas tres llamadas, pero con sesión, contra
+  `/company/update-company/:id` y mostrando el `msg` del servidor si falla.
+  Las dos comparten `buildConnectedAccountUpdate` (`utils/stripeConnectedAccount.js`).
+- **No confundir** con `actions/createStripeAccount.jsx`, que en el alta crea
+  el *customer* de Stripe de la compañía (`/stripe/company-account-stripe`,
+  para cobrarle). Esa no es la cuenta conectada y no entra en esta tarea.
+
+**Qué hacer:**
+
+1. **Registro:** al terminar el alta (con o sin MFA), ir a `/login` en vez de
+   a `/register/connected-account`. Quitar la ruta de `NoAuthRoutes.jsx` y
+   borrar `RegisterStripeConnectedAccount.jsx`.
+2. **Profile → Stripe:** el cambio en la petición está **por concretar con
+   Gustavo** (qué datos manda, qué pasa al volver del onboarding, mensajes).
+3. **Backend:** si nadie más usa `PATCH /company/update-company/register-process/:id`
+   para la cuenta conectada, avisar de que el dashboard dejó de llamarla, para
+   que puedan retirarla o restringirla. Es una ruta del alta que escribe en
+   una compañía (AC-3).
+4. Tests de `RegisterCompany` que comprueben el destino tras el alta, y de la
+   petición nueva de Profile en `utils/`.
+
 ### R3 — la reconciliación de alcance por ubicación — a medias: falta el backfill
 
 **Revisado 2026-10-05: el lado de lectura se arregló el 2026-09-17, antes de
