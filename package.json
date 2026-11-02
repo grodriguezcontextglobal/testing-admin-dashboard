@@ -78,7 +78,7 @@
     "uuid": "^11.1.1"
   },
   "engines": {
-    "node": "20.19.5"
+    "node": ">=24.22.2 <25"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
