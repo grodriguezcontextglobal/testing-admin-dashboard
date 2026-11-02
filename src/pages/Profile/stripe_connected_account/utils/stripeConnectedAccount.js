@@ -44,9 +44,9 @@ export function connectedAccountFor(companyData, mode) {
 }
 
 /**
- * The PATCH body for `/company/update-company/:id` (and its register-process
- * twin) after Stripe creates an account: the new account under its
- * environment, the other environment's account kept.
+ * The PATCH body for `/company/update-company/:id` after Stripe creates an
+ * account: the new account under its environment, the other environment's
+ * account kept. Only Profile -> Stripe creates one, signed in (2026-11-02).
  */
 export function buildConnectedAccountUpdate(existing, mode, account) {
   return {

@@ -20,7 +20,7 @@ import DevitrakTermsAndConditions, {
 } from "./actions/DevitrakTermsAndConditions";
 import CompanyRegistration from "./ux/CompanyRegistration";
 import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
-import { signupNeedsPasswordAgain } from "./utils/registrationSession";
+import { SIGNUP_DONE_PATH, signupNeedsPasswordAgain } from "./utils/registrationSession";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
@@ -300,7 +300,7 @@ const RegisterCompany = () => {
       }
 
       openNotificationWithIcon("success", "Account created.", "Your new account was created. Please log in.", 3);
-      navigate("/register/connected-account");
+      navigate(SIGNUP_DONE_PATH);
     } catch (error) {
       api.destroy("info");
       openNotificationWithIcon("error", "Action failed", `Please try again later. ${error}`, 3);
@@ -316,7 +316,7 @@ const RegisterCompany = () => {
    */
   const handleEnrollmentClosed = () => {
     setEnrollmentToken("");
-    navigate("/register/connected-account");
+    navigate(SIGNUP_DONE_PATH);
   };
 
   const handleEnrolled = () => {
