@@ -95,12 +95,23 @@ jobs:
           sha256sum admin-dist.zip | cut -d' ' -f1 > admin-dist.zip.sha256
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
+      # SBOM (FedRAMP C4 · CM-8, SR-4; el S2.3 del backend, del lado nuestro):
+      # las dependencias de producción en CycloneDX, sacadas del lockfile con el
+      # npm de la CI, sin herramientas nuevas. Se adjunta a cada release con la
+      # versión igual al tag, para casar el SBOM con el build desplegado.
+      - name: SBOM
+        env:
+          TAG: ${{ steps.package.outputs.tag }}
+        run: |
+          npm sbom --omit dev --package-lock-only --sbom-format cyclonedx --sbom-type application > "$RUNNER_TEMP/sbom.json"
+          node scripts/sbom-stamp.js "$RUNNER_TEMP/sbom.json" "$TAG" admin-sbom.cdx.json
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.package.outputs.tag }}
         run: |
-          gh release create "$TAG" admin-dist.zip admin-dist.zip.sha256 \
+          gh release create "$TAG" admin-dist.zip admin-dist.zip.sha256 admin-sbom.cdx.json \
             --target "$GITHUB_SHA" \
             --title "$TAG" \
             --notes "Build de ${GITHUB_SHA}. DEVITRACKAPP lo despliega en la siguiente pasada de Update-AdminSite.ps1." \
