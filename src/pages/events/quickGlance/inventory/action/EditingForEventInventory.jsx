@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { message, Space } from "antd";
-import { createContext, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -14,8 +14,7 @@ import clearCacheMemory from "../../../../../utils/actions/clearCacheMemory";
 import AddStockWizard from "./components/EditingInventoryUXOptions/AddStockWizard";
 import RenderingEventInventorySection from "./components/EditingInventoryUXOptions/RenderingEventInventorySection";
 import { buildStockRows } from "./utils/eventStockFlow";
-
-export const valueContext = createContext(null);
+import { valueContext } from "./valueContext";
 
 /**
  * The event-inventory editor: a three-step wizard for adding company stock, and

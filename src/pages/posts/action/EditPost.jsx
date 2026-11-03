@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput, styled } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Select } from "antd";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -18,7 +18,6 @@ import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import ImageUploaderUX from "../components/image/ImageUploaderUX";
 import "../style/rooter.css";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
-export const ImageUploaderContext = createContext();
 
 const CustomReactQuill = styled(ReactQuill)(() => ({
   width: "100%",
@@ -269,12 +268,10 @@ const EditPost = () => {
       </Grid>
 
       {/* Image uploader */}
-      {/* <ImageUploaderContext.Provider value={setImageUploadedValue}> */}
       <ImageUploaderUX
         CSS={stylingLabel}
         setImageUploadedValue={setImageUploadedValue}
       />
-      {/* </ImageUploaderContext.Provider> */}
 
       {/* Form content */}
       <form

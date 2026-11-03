@@ -24,7 +24,7 @@ import {
 import { BlueButton } from "../../../styles/global/BlueButton";
 import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
-import { SearchItemContext } from "../MainPage";
+import { SearchItemContext } from "../inventoryContexts";
 import "../style/details.css";
 import {
   filterInventoryByCategoryScope,

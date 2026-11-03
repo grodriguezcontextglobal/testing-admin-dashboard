@@ -15,7 +15,7 @@ import {
   onAddSearchParameters,
 } from "../../../../store/slices/searchBarResultSlice";
 import "../../../../styles/global/actionForm.css";
-import { AdvanceSearchContext } from "./RenderingFilters";
+import { AdvanceSearchContext } from "./advanceSearchContext";
 import { formatPeriodLabel } from "./forecastInventory/utils/forecastSummary";
 import {
   FILTER_FIELDS,

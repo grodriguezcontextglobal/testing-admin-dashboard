@@ -17,19 +17,6 @@ vi.mock("../../../api/devitrakApi", () => ({
   devitrakApi: { post: vi.fn(), get: vi.fn() },
 }));
 
-// ItemTable reads its context from MainPage, and MainPage lazily imports
-// ItemTable back — a cycle the app gets away with because the import is lazy.
-// Pulling MainPage in for real here drags the whole page behind it (exceljs,
-// the datepicker stylesheet, every modal) and the file never finishes loading.
-// Standing in for the two contexts breaks both the cycle and the weight.
-vi.mock("../MainPage", async () => {
-  const { createContext } = await import("react");
-  return {
-    SearchItemContext: createContext(),
-    FilterOptionsContext: createContext(),
-  };
-});
-
 // The three lazy children pull in the rest of the page; none of them is what
 // this test is about.
 vi.mock("./extras/RenderingFilters", () => ({ default: () => null }));
@@ -37,7 +24,7 @@ vi.mock("../actions/DownloadXlsx", () => ({ default: () => null }));
 vi.mock("../../../components/utils/BannerMsg", () => ({ default: () => null }));
 
 import { devitrakApi } from "../../../api/devitrakApi";
-import { SearchItemContext } from "../MainPage";
+import { SearchItemContext } from "../inventoryContexts";
 import ItemTable from "./ItemTable";
 
 const ROWS = [

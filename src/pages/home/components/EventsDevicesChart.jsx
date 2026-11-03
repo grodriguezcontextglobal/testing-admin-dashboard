@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import { getEventStatus } from "../../events/utils/getEventStatus";
-import { sumDeviceSetup } from "./HomeKpiSection";
+import { sumDeviceSetup } from "../utils/sumDeviceSetup";
 
 /**
  * Devices deployed per event (most recent 8). Live events highlighted in
