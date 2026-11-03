@@ -211,7 +211,7 @@ revisión.
 | ~~**C3**~~ ✅ 27-10 | **`.github/dependabot.yml`** para npm, github-actions y docker. Hoy no existe; solo llegan las alertas | 30 min |
 | ~~**C4**~~ ✅ 02-11 PR #50 | **SBOM** CycloneDX generado en `release.yml` y adjunto a cada release. Es el S2.3 del backend, del lado nuestro | medio día |
 | ~~**C5**~~ ✅ 02-11 PR #49 (secret scanning y push protection activos; falta rotar el token de Twilio del .env de 2024) | **Escaneo de secretos**: gitleaks en la CI sobre el diff, y push protection de GitHub si el plan lo incluye | medio día |
-| **C6** | **Análisis estático** con reglas de seguridad: `eslint-plugin-security` o Semgrep en la CI. CodeQL en repos privados requiere GitHub Advanced Security, que es de pago | 1 día |
+| ~~**C6**~~ ✅ 03-11 `codeql.yml` (CodeQL, gratis por ser repo público) | **Análisis estático** con reglas de seguridad: `eslint-plugin-security` o Semgrep en la CI. CodeQL en repos privados requiere GitHub Advanced Security, que es de pago | 1 día |
 | ~~**C7**~~ ✅ 27-10 | **Fijar las actions por SHA** en los tres workflows, contra ataques a la cadena de suministro | 1 h |
 | ~~**C8**~~ ✅ 27-10 | **Informe de cobertura** de Vitest como artefacto de CI. Es evidencia de SA-11 | 1 h |
 
