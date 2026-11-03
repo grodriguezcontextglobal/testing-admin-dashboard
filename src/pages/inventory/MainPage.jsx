@@ -3,7 +3,6 @@ import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Divider } from "antd";
 import {
-  createContext,
   lazy,
   Suspense,
   useCallback,
@@ -47,10 +46,9 @@ import DeleteGroups from "./actions/DeleteGroups";
 import ShippingInventoryModal from "./actions/ShippingInventoryModal";
 import { ShipmentRecord } from "./actions/ShipmentRecord";
 import PageSpinner from "../../components/utils/PageSpinner";
+import { FilterOptionsContext, SearchItemContext } from "./inventoryContexts";
 const BannerMsg = lazy(() => import("../../components/utils/BannerMsg"));
 const ItemTable = lazy(() => import("./table/ItemTable"));
-export const SearchItemContext = createContext();
-export const FilterOptionsContext = createContext();
 /**
  * MainPage Component
  *

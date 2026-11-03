@@ -15,9 +15,8 @@ import {
 } from "../../store/slices/adminSlice";
 import { Subtitle } from "../../styles/global/Subtitle";
 import createStripeAccount from "./actions/createStripeAccount";
-import DevitrakTermsAndConditions, {
-  agreedAgreement,
-} from "./actions/DevitrakTermsAndConditions";
+import DevitrakTermsAndConditions from "./actions/DevitrakTermsAndConditions";
+import { agreedAgreement } from "./actions/termsAgreement";
 import CompanyRegistration from "./ux/CompanyRegistration";
 import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
 import { SIGNUP_DONE_PATH, signupNeedsPasswordAgain } from "./utils/registrationSession";

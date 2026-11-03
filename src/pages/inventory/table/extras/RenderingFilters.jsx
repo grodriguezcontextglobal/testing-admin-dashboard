@@ -3,7 +3,7 @@ import { usePermission } from "../../../../hooks/usePermission";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Switch } from "antd";
 import { PropTypes } from "prop-types";
-import { createContext, useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 // import CreateSubLocationPathModal from "../../utils/CreateSubLocationPathModal";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -33,8 +33,8 @@ import SkeletonInventoryCards from "../../utils/SkeletonInventoryCards";
 import StaffMemberWrapper from "../../utils/StaffMemberWrapper";
 import AdvanceSearchModal from "./AdvanceSearchModal";
 import { forecastContextFromFacets } from "./forecastInventory/utils/forecastSearch";
-import { SearchItemContext } from "../../MainPage";
-export const AdvanceSearchContext = createContext();
+import { SearchItemContext } from "../../inventoryContexts";
+import { AdvanceSearchContext } from "./advanceSearchContext";
 
 const labelTranslations = {
   Locaciones: "Locations | Sub locations",

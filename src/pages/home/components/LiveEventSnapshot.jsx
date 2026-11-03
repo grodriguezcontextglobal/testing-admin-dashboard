@@ -5,7 +5,7 @@ import { devitrakApi } from "../../../api/devitrakApi";
 import checkTypeFetchResponse from "../../../components/utils/checkTypeFetchResponse";
 import EmptyState from "../../../components/UX/emptyState/EmptyState";
 import { getEventStatus } from "../../events/utils/getEventStatus";
-import { sumDeviceSetup } from "./HomeKpiSection";
+import { sumDeviceSetup } from "../utils/sumDeviceSetup";
 
 /**
  * Live-event snapshot for the home dashboard: which event is live right now

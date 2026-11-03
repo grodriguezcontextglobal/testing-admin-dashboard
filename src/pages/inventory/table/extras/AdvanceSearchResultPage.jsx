@@ -11,7 +11,7 @@ import {
 } from "../../../../store/slices/searchBarResultSlice";
 import UX from "./forecastInventory/UX";
 import { formatDay } from "./forecastInventory/utils/forecastSummary";
-import { AdvanceSearchContext } from "./RenderingFilters";
+import { AdvanceSearchContext } from "./advanceSearchContext";
 import { RightNarrowInCircle } from "../../../../components/icons/RightNarrowInCircle";
 import {
   onAddEventData,

@@ -89,12 +89,6 @@ KpiCard.propTypes = {
   hint: PropTypes.node,
 };
 
-export const sumDeviceSetup = (event) =>
-  (event?.deviceSetup ?? []).reduce(
-    (acc, d) => acc + (Number(d.quantity) || 0),
-    0
-  );
-
 /**
  * `showInventory` / `showEvents` come from homeLayout: a role that cannot read
  * one side neither sees its cards nor asks the server for it.

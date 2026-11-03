@@ -3,7 +3,7 @@ import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
 import { getLogisticStatusLabel } from "./logisticStatusConfig";
 import { useMemo, useCallback, memo, useContext, useState } from "react";
-import { FilterOptionsContext } from "../MainPage";
+import { FilterOptionsContext } from "../inventoryContexts";
 import { FEATURE_INVENTORY_SERVER_PAGINATION } from "../../../config/featureFlags";
 import useSerialSuggest from "./hooks/useSerialSuggest";
 // import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";

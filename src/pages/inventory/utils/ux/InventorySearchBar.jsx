@@ -13,7 +13,7 @@ import SearchLgIcon from "../../../../components/icons/SearchLgIcon";
 import XCloseIcon from "../../../../components/icons/XCloseIcon";
 import FilterOptionsUX from "../FilterOptionsUX";
 import { dicSelectedOptions, dictionary } from "../dicSelectedOptions";
-import { FilterOptionsContext } from "../../MainPage";
+import { FilterOptionsContext } from "../../inventoryContexts";
 
 const InventorySearchBar = ({
   companyHasInventoryQuery,

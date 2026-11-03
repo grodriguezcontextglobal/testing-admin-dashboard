@@ -4,19 +4,16 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { PersistGate } from "redux-persist/integration/react";
-import App from "./App.jsx";
+import AppLoader from "./AppLoader.jsx";
 import "./index.css";
 import "./styles/untitled-ui/tokens.css";
 import "./styles/untitled-ui/skin.css";
 import { persistor, store } from "./store/Store.js";
-import { configureApi } from "./api/devitrakApi.jsx";
 // import { ErrorBoundary } from "react-error-boundary";
 // import { ErrorBoundaryComponent, ErrorLogFetch } from "./components/utils/ErrorBoundaryComponent.jsx";
 import Loading from "./components/animation/Loading.jsx";
-import DevitrakLoading from "./components/animation/DevitrakLoading.jsx";
 import ThemeShell from "./components/theme/ThemeShell.jsx";
 import EmptyState from "./components/UX/emptyState/EmptyState.jsx";
-import ServiceWorkerUpdateNotifier from "./components/serviceWorker/ServiceWorkerUpdateNotifier.jsx";
 import { addCollection } from "@iconify/react";
 import iconifyIcons from "./config/iconifyIcons.json";
 import { registerOfflineIcons } from "./config/iconifyIcons.js";
@@ -72,21 +69,5 @@ if (container && !container._reactRootContainer) {
         </BrowserRouter>
       </React.StrictMode>
     </Provider>
-  );
-}
-
-function AppLoader() {
-  const [configured, setConfigured] = React.useState(false);
-  //https://standby.invoxia.cc/api
-  React.useEffect(() => {
-    configureApi().then(() => setConfigured(true));
-  }, []);
-
-  if (!configured) return <DevitrakLoading />;
-  return (
-    <>
-      <ServiceWorkerUpdateNotifier />
-      <App />
-    </>
   );
 }

@@ -15,20 +15,12 @@ vi.mock("../../../api/devitrakApi", () => ({
   devitrakApi: { post: vi.fn(), get: vi.fn() },
 }));
 
-vi.mock("../MainPage", async () => {
-  const { createContext } = await import("react");
-  return {
-    SearchItemContext: createContext(),
-    FilterOptionsContext: createContext(),
-  };
-});
-
 vi.mock("./extras/RenderingFilters", () => ({ default: () => null }));
 vi.mock("../actions/DownloadXlsx", () => ({ default: () => null }));
 vi.mock("../../../components/utils/BannerMsg", () => ({ default: () => null }));
 
 import { devitrakApi } from "../../../api/devitrakApi";
-import { SearchItemContext } from "../MainPage";
+import { SearchItemContext } from "../inventoryContexts";
 import ItemTable from "./ItemTable";
 
 const row = (item_id, serial_number, brand) => ({

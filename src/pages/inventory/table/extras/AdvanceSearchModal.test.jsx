@@ -19,7 +19,7 @@ vi.mock("../../../../api/devitrakApi", () => ({
   devitrakApi: { get: (...args) => get(...args) },
 }));
 
-const { AdvanceSearchContext } = await import("./RenderingFilters");
+const { AdvanceSearchContext } = await import("./advanceSearchContext");
 const { default: AdvanceSearchModal } = await import("./AdvanceSearchModal");
 
 const setOpen = vi.fn();

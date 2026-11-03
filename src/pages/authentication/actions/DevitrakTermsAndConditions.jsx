@@ -1,41 +1,12 @@
-import { message } from "antd";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import TextFontsize18LineHeight28 from "../../../styles/global/TextFontSize18LineHeight28";
-// Import PDF documents
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { devitrakApi } from "../../../api/devitrakApi";
-import document1 from "../../../assets/pdf/document_1.pdf";
-import document2 from "../../../assets/pdf/document_2.pdf";
-import document3 from "../../../assets/pdf/document_3.pdf";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
 import Input from "../../../components/UX/inputs/Input";
+import { agreedAgreement, policyDocuments } from "./termsAgreement";
 import ModalUX from "../../../components/UX/modal/ModalUX";
 import BaseTable from "../../../components/UX/tables/BaseTable";
-
-const policyDocuments = [
-  {
-    id: 1,
-    title: "Privacy Policy",
-    description: "Our privacy policy and data handling practices",
-    fileName: "document_1.pdf",
-    url: document1,
-  },
-  {
-    id: 2,
-    title: "Terms of Service",
-    description: "Terms and conditions for using our platform",
-    fileName: "document_2.pdf",
-    url: document2,
-  },
-  {
-    id: 3,
-    title: "User Agreement",
-    description: "User agreement and platform guidelines",
-    fileName: "document_3.pdf",
-    url: document3,
-  },
-];
 
 const DevitrakTermsAndConditions = ({
   open,
@@ -176,44 +147,3 @@ const DevitrakTermsAndConditions = ({
 };
 
 export default DevitrakTermsAndConditions;
-
-export const agreedAgreement = async ({
-  staffMember,
-  staffEmail,
-  setOpen,
-  setIsLoading,
-  setAcceptanceTermsAndPoliciesResult,
-}) => {
-  try {
-    setIsLoading(true);
-    const acceptanceTermsAndPolicies = await devitrakApi.post(
-      "/devitrak/new_acceptance",
-      {
-        signature: staffMember,
-        documentsAndPolicies: [
-          ...policyDocuments.map((item) => ({
-            url: item.url,
-            documentName: item.title,
-          })),
-        ],
-        email: staffEmail,
-      },
-    );
-    if (acceptanceTermsAndPolicies.data.ok) {
-      message.success("Agreement submitted successfully.");
-      setAcceptanceTermsAndPoliciesResult(acceptanceTermsAndPolicies.data);
-      return setOpen(false);
-    }
-  } catch (error) {
-    const errorMessage = error.responseerror.dataerror.message || error.message || error.msg || error;
-    // message.error(
-    //   "Error submitting agreement:",
-    //   errorMessage,
-    // );
-    //throw error; // Re-throw to be handled by the form submission
-    setOpen(false);
-    return errorMessage
-  } finally {
-    setIsLoading(false);
-  }
-};

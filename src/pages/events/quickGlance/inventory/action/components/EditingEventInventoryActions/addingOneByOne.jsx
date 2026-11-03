@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../../../api/devitrakApi";
 import { onAddEventData } from "../../../../../../../store/slices/eventSlice";
 import clearCacheMemory from "../../../../../../../utils/actions/clearCacheMemory";
-import { valueContext } from "../../EditingForEventInventory";
+import { valueContext } from "../../valueContext";
 import { checkAndUpdateGlobalEventStatus } from "./checkAndUpdateGlobalEventStatus";
 
 const useAddingItemsToEventInventoryOneByOne = ({

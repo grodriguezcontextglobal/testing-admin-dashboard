@@ -8,7 +8,7 @@ import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
 import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
-import { BodyComponent } from "../utils/dataStructuringFormat";
+import BodyComponent from "../UX/BodyComponent";
 const MainPageBrand = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,

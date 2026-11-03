@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput, styled } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Select } from "antd";
-import { createContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import ImageUploaderFormat from "../../../classes/imageCloudinaryFormat";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 
-export const ImageUploaderContext = createContext();
 
 const CustomReactQuill = styled(ReactQuill)(() => ({
   width: "100%",
@@ -251,12 +250,10 @@ const NewPost = () => {
       </Grid>
 
       {/* Image uploader */}
-      {/* <ImageUploaderContext.Provider value={{setImageUploadedValue}}> */}
       <ImageUploaderUX
         CSS={stylingLabel}
         setImageUploadedValue={setImageUploadedValue}
       />
-      {/* </ImageUploaderContext.Provider> */}
       {/* <Grid paddingLeft={0} item xs={12} id="image-uploader">
       </Grid> */}
 
