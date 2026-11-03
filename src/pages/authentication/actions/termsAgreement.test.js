@@ -4,8 +4,9 @@ const post = vi.fn();
 vi.mock("../../../api/devitrakApi", () => ({
   devitrakApi: { post: (...args) => post(...args) },
 }));
-vi.mock("antd", () => ({ message: { success: vi.fn() } }));
+vi.mock("antd", () => ({ message: { success: vi.fn(), error: vi.fn() } }));
 
+const { message } = await import("antd");
 const { agreedAgreement } = await import("./termsAgreement");
 
 const callbacks = () => ({
@@ -16,6 +17,7 @@ const callbacks = () => ({
 
 beforeEach(() => {
   post.mockReset();
+  message.error.mockClear();
 });
 
 describe("agreedAgreement", () => {
@@ -38,11 +40,36 @@ describe("agreedAgreement", () => {
     expect(await agreedAgreement({ staffMember: "", ...cb })).toBe("Signature required");
     expect(cb.setOpen).toHaveBeenCalledWith(false);
     expect(cb.setIsLoading).toHaveBeenLastCalledWith(false);
+    expect(message.error).toHaveBeenCalledWith(
+      "We couldn't record your agreement: Signature required",
+    );
   });
 
   it("falls back to the error's own message when the server sent none", async () => {
     post.mockRejectedValue(new Error("Network Error"));
     expect(await agreedAgreement({ ...callbacks() })).toBe("Network Error");
+    expect(message.error).toHaveBeenCalledWith(
+      "We couldn't record your agreement: Network Error",
+    );
+  });
+
+  it("tells the user when the server answers without ok", async () => {
+    post.mockResolvedValue({ data: { ok: false, msg: "Email not found" } });
+    const cb = callbacks();
+    expect(await agreedAgreement({ ...cb })).toBe("Email not found");
+    expect(message.error).toHaveBeenCalledWith(
+      "We couldn't record your agreement: Email not found",
+    );
+    expect(cb.setAcceptanceTermsAndPoliciesResult).not.toHaveBeenCalled();
+    expect(cb.setOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("shows a generic reason when the error carries no text", async () => {
+    post.mockRejectedValue({});
+    expect(await agreedAgreement({ ...callbacks() })).toBe("Please try again.");
+    expect(message.error).toHaveBeenCalledWith(
+      "We couldn't record your agreement: Please try again.",
+    );
   });
 
   // RegisterCompany records the acceptance fire-and-forget, with no result setter.
@@ -51,5 +78,6 @@ describe("agreedAgreement", () => {
     const setOpen = vi.fn();
     expect(await agreedAgreement({ setOpen, setIsLoading: vi.fn() })).toBeUndefined();
     expect(setOpen).toHaveBeenCalledWith(false);
+    expect(message.error).not.toHaveBeenCalled();
   });
 });

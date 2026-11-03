@@ -31,6 +31,14 @@ export const policyDocuments = [
   },
 ];
 
+// Tells the user the acceptance was not recorded, and returns the reason.
+const reportFailure = (reason) => {
+  const text =
+    typeof reason === "string" && reason.trim() ? reason : "Please try again.";
+  message.error(`We couldn't record your agreement: ${text}`);
+  return text;
+};
+
 export const agreedAgreement = async ({
   staffMember,
   staffEmail,
@@ -59,16 +67,15 @@ export const agreedAgreement = async ({
       setAcceptanceTermsAndPoliciesResult?.(acceptanceTermsAndPolicies.data);
       return setOpen(false);
     }
-  } catch (error) {
-    const errorMessage =
-      error?.response?.data?.message || error?.message || error?.msg || error;
-    // message.error(
-    //   "Error submitting agreement:",
-    //   errorMessage,
-    // );
-    //throw error; // Re-throw to be handled by the form submission
     setOpen(false);
-    return errorMessage
+    return reportFailure(
+      acceptanceTermsAndPolicies.data?.message || acceptanceTermsAndPolicies.data?.msg,
+    );
+  } catch (error) {
+    setOpen(false);
+    return reportFailure(
+      error?.response?.data?.message || error?.message || error?.msg,
+    );
   } finally {
     setIsLoading(false);
   }
