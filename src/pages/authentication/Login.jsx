@@ -74,6 +74,8 @@ import {
 import { readAttemptsRemaining, readLoginLockout } from "./utils/loginLockout";
 import { readRecoveryCodeUse, stashRecoveryNotice } from "./utils/mfaRecovery";
 import SystemUseNotice from "./login/SystemUseNotice";
+import MfaResetEmailNotice from "./login/MfaResetEmailNotice";
+import { readMfaResetEmailChallenge } from "./utils/mfaResetEmail";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
@@ -89,6 +91,8 @@ const Login = () => {
   const [forceLogin, setForceLogin] = useState(false);
   const [currentStep, setCurrentStep] = useState("email"); // "email" or "password"
   const [mfaEnrollmentOpen, setMfaEnrollmentOpen] = useState(false);
+  // Set when an admin reset this account's MFA: the way back in is the emailed link.
+  const [mfaResetNotice, setMfaResetNotice] = useState(null);
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const dispatch = useDispatch();
@@ -479,6 +483,17 @@ const Login = () => {
    * instead of a second copy of it.
    */
   const handleLoginFailure = (error) => {
+    /* An admin reset this account's MFA. The password was right, but there is
+       no setup token on purpose: the person enrols from the link the server
+       emailed them (FedRAMP A5). Read first, since the body also carries
+       `mfaSetupRequired`. */
+    const resetEmailChallenge = readMfaResetEmailChallenge(error);
+    if (resetEmailChallenge) {
+      dispatch(clearErrorMessage());
+      setMfaResetNotice(resetEmailChallenge);
+      return;
+    }
+
     /* The server's MFA gate. Not a failure: the password was right, and the
        answer carries the token to enrol with. It has to be read before the
        status branches below, which would take it for an expired session (401)
@@ -649,6 +664,7 @@ const Login = () => {
 
   // Function to go back to email step
   const handleBackToEmail = () => {
+    setMfaResetNotice(null);
     goToStep(LOGIN_STEPS.EMAIL);
     setEmailVerified(false);
     setUserEmail("");
@@ -795,6 +811,10 @@ const Login = () => {
                      leaving a refresh as the only way off this step. */
                   setCurrentStep={goToStep}
                 />
+              )}
+
+              {currentStep === "password" && mfaResetNotice && (
+                <MfaResetEmailNotice message={mfaResetNotice.message} email={userEmail} />
               )}
 
               {/* Password Step */}

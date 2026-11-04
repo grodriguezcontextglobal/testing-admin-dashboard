@@ -100,6 +100,15 @@ describe("StaffDetail shell", () => {
     await waitFor(() => expect(adminPost).toHaveBeenCalledWith("/mfa/reset/au-1"));
   });
 
+  it("warns the admin when the reset email could not be sent", async () => {
+    adminPost.mockResolvedValue({ data: { ok: true, resetEmailSent: false } });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Reset MFA" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Reset MFA" }).at(-1));
+    expect(await screen.findByText(/the email was not sent/i)).toBeTruthy();
+  });
+
   it("does not offer it on your own profile", async () => {
     viewer.email = "ada@x.com";
     try {

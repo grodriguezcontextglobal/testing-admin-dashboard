@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MFA_RESET_CONFIRMATION,
   mfaResetErrorMessage,
+  mfaResetSuccessNotice,
 } from "./mfaReset";
 
 // FedRAMP A5 · IA-5: POST /api/admin/mfa/reset/:adminUserId, for someone who
@@ -39,5 +40,30 @@ describe("mfaResetErrorMessage", () => {
 
   it("falls back to a generic message", () => {
     expect(mfaResetErrorMessage(new Error("Network Error"))).toMatch(/try again/i);
+  });
+});
+
+// The reset now emails the person a password-reset link, and says whether the
+// email was queued (BACKEND_fedramp_a5_reset_email_step_REPLY_2026-10-30.md §2).
+describe("mfaResetSuccessNotice", () => {
+  it("tells the admin the person got an email", () => {
+    const notice = mfaResetSuccessNotice({ ok: true, resetEmailSent: true }, "Ada");
+    expect(notice.type).toBe("success");
+    expect(notice.description).toMatch(/Ada/);
+    expect(notice.description).toMatch(/emailed/i);
+  });
+
+  it("warns, and says what to ask for, when the email could not be sent", () => {
+    const notice = mfaResetSuccessNotice({ ok: true, resetEmailSent: false }, "Ada");
+    expect(notice.type).toBe("warning");
+    expect(notice.title).toMatch(/not sent/i);
+    expect(notice.description).toMatch(/Forgot password/);
+  });
+
+  it("keeps the old wording against a server without the field", () => {
+    const notice = mfaResetSuccessNotice({ ok: true });
+    expect(notice.type).toBe("success");
+    expect(notice.description).toMatch(/This person/);
+    expect(notice.description).toMatch(/next sign-in/i);
   });
 });
