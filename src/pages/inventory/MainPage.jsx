@@ -8,6 +8,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -22,7 +23,6 @@ import { TextFontSize30LineHeight38 } from "../../styles/global/TextFontSize30Li
 // import AddInventoryFromXLSXFile from "./actions/AddInventoryFromXLSXFile";
 // import DownloadingXlslFile from "./actions/DownloadXlsx";
 import DisplayItemTypesPerLocationModal from "./utils/DisplayItemTypesPerLocationModal";
-import FilterOptionsUX from "./utils/FilterOptionsUX";
 import HeaderInventaryComponent from "./utils/HeaderInventaryComponent";
 import MobileActionsButtons from "./utils/MobileActionsButtons";
 // import LocationsList from "./utils/LocationsList";
@@ -154,35 +154,22 @@ const MainPage = () => {
   const [openAdvanceSearchModal, setOpenAdvanceSearchModal] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
 
-  const optionsUX = useMemo(
-    () => (
-      <FilterOptionsUX
-        setChosen={setChosenOption}
-        setOpenAdvanceSearchModal={setOpenAdvanceSearchModal}
-      />
-    ),
-    [chosenOption, dataFilterOptions],
-  );
-
-  const settingParamsForSearchResult = useMemo(
-    () => params,
-    [params, user.sqlInfo.company_id],
-  );
-
   useEffect(() => {
     setValue("searchItem", "");
     setRenderingData(false);
-    // companyHasInventoryQuery.refetch();
-  }, []);
+  }, [setValue]);
 
+  // The opening tab, chosen once from the first answer: the table when the
+  // company has inventory, the "add inventory" tab when it has none. A later
+  // refetch (after adding items) must not move someone off the tab they chose.
+  const inventoryCheckDone = companyHasInventoryQuery.isSuccess;
+  const companyInventoryTotal = companyHasInventoryQuery.data?.data?.total;
+  const openingTabChosen = useRef(false);
   useEffect(() => {
-    if (companyHasInventoryQuery.isSuccess) {
-      const total = companyHasInventoryQuery?.data?.data?.total;
-      setCurrentTab(total > 0 ? 1 : 2);
-      setIsLoadingState(true);
-      setIsLoadingState(false);
-    }
-  }, [companyHasInventoryQuery.isSuccess]);
+    if (!inventoryCheckDone || openingTabChosen.current) return;
+    openingTabChosen.current = true;
+    setCurrentTab(companyInventoryTotal > 0 ? 1 : 2);
+  }, [inventoryCheckDone, companyInventoryTotal]);
 
   // Update the callback to receive filtered data count
   const handleFilteredDataUpdate = useCallback((filteredData) => {
@@ -374,7 +361,7 @@ const MainPage = () => {
                 reference: null,
                 refreshFn: refetchingQueriesFn,
                 searchedResult: searchedResult,
-                searchItem: settingParamsForSearchResult,
+                searchItem: params,
                 setDataFilterOptions: setDataFilterOptions,
                 setOpenAdvanceSearchModal: setOpenAdvanceSearchModal,
                 setShipmentRecordModal: setShipmentRecordModal,

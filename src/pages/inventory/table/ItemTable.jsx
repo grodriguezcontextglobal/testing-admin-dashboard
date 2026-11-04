@@ -39,6 +39,7 @@ import {
 } from "../utils/activeFilterSummary";
 import { dictionary } from "../utils/dicSelectedOptions";
 import { facetsToFilterOptions } from "../utils/facetsToFilterOptions";
+import { datasetToFilterOptions } from "../utils/datasetToFilterOptions";
 import useInventoryFacets from "../utils/hooks/useInventoryFacets";
 import useInventoryPage from "../utils/hooks/useInventoryPage";
 import {
@@ -309,11 +310,6 @@ const ItemTable = ({
   );
 
   // Filtering helpers now use baseDataset
-  const filterOptionsBasedOnProps = (props) => {
-    const sortingByProps = groupBy(baseDataset, props);
-    return Object.keys(sortingByProps);
-  };
-
   useEffect(() => {
     if (
       Array.isArray(searchValues?.chosenOption) &&
@@ -445,27 +441,19 @@ const ItemTable = ({
     setDataFilterOptions(facetsToFilterOptions(facetOptionsQuery.facets));
   }, [facetOptionsQuery.facets, setDataFilterOptions]);
 
-  // Update filter options and report download only when inputs change
+  // Without server pagination, the option lists come from the rows in memory.
   useEffect(() => {
     if (FEATURE_INVENTORY_SERVER_PAGINATION) return;
-    setDataFilterOptions({
-      0: filterOptionsBasedOnProps("brand"),
-      1: filterOptionsBasedOnProps("item_group"),
-      2: filterOptionsBasedOnProps("serial_number"),
-      3: filterOptionsBasedOnProps("location"),
-      4: filterOptionsBasedOnProps("ownership"),
-      5: filterOptionsBasedOnProps("status"),
-      // 6 (Staff member) is gone: it was the one list not derived from the
-      // data — it came from companyData.employees — and it filtered on
-      // `assignedToStaffMember`, which is null on every row because
-      // warehouse-items has no `usage` column. Every name in it matched nothing.
-      7: filterOptionsBasedOnProps("logistic_status"),
-      8: filterOptionsBasedOnProps("category_name"),
-    });
+    setDataFilterOptions(datasetToFilterOptions(baseDataset));
+  }, [baseDataset, setDataFilterOptions]);
+
+  // The rows the report download will use: whatever the table shows now.
+  useEffect(() => {
+    if (FEATURE_INVENTORY_SERVER_PAGINATION) return;
     if (Array.isArray(dataToDisplayMemo) && dataToDisplayMemo.length > 0) {
       downloadDataReport(dataToDisplayMemo);
     }
-  }, [baseDataset, dataToDisplayMemo]);
+  }, [dataToDisplayMemo, downloadDataReport]);
 
   return (
     <Suspense

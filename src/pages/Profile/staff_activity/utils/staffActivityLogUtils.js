@@ -162,7 +162,7 @@ const byLastNameThenFirst = (a, b) => {
  *
  * The address is read from `email` OR `user`, because the employees array
  * stores it under `user` (Login.jsx queries `"employees.user"` with an email,
- * and useInventoryData matches `emp.user === user.email`) while other records
+ * and the inventory forms match `emp.user === user.email`) while other records
  * of the same person use `email`. Reading only one of the two would have made
  * this a no-op against the real payload.
  *

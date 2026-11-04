@@ -1,15 +1,19 @@
 import { groupBy, uniqueId } from "lodash";
 
+/**
+ * @param {Array} renderedListItems the listed items the table shows
+ * @param {Object} groupingByDeviceType item images grouped by `item_group`
+ * @param {Array|undefined} inventoryItems the inventory rows
+ *   (`warehouse-items` → `data.items`), not the query object, so a caller's
+ *   memo can depend on the rows alone
+ */
 export const dataStructuringFormat = (
   renderedListItems,
   groupingByDeviceType,
-  itemsInInventoryQuery
+  inventoryItems
 ) => {
   const resultFormatToDisplay = new Set();
-  const groupingBySerialNumber = groupBy(
-    itemsInInventoryQuery?.data?.data?.items,
-    "serial_number"
-  );
+  const groupingBySerialNumber = groupBy(inventoryItems, "serial_number");
   if (renderedListItems?.length > 0) {
     for (let data of renderedListItems) {
       if (groupingBySerialNumber[data.serial_number]) {

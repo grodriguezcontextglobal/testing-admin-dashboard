@@ -9,6 +9,7 @@ import CardInfo from "../UX/CardInfo";
 import Header from "../UX/header";
 import BodyComponent from "../UX/BodyComponent";
 import FilterBody from "../OwnershipDetail/components/suppliers/FilterBody";
+import { readDetailSearchValue } from "../utils/detailSearchParams";
 const MainPage = () => {
   const [referenceData, setReferenceData] = useState({
     totalDevices: 0,
@@ -18,26 +19,18 @@ const MainPage = () => {
   const [resultedData, setResultedData] = useState(null);
   const location = useLocation();
   const categoryName = location.search.split("&")[0];
+  const searchValue = readDetailSearchValue(location.search);
   const { register, watch, setValue, handleSubmit } = useForm({
     defaultValues: {
-      searchDevice: location.search.split("&")[1].split("=")[1] ?? "",
+      searchDevice: searchValue,
     },
   });
 
-  const checkSearchDeviceValueOnMounted = () => {
-    if (!decodeURI(categoryName[1].split("=")[1])) {
-      return setValue("searchDevice", "");
-    }
-    if (watch("searchDevice") === "undefined") {
-      return setValue("searchDevice", "");
-    }
-    if (watch("searchDevice") === null) {
-      return setValue("searchDevice", "");
-    }
-  };
+  // Follows the URL: opening another item of the same kind keeps this page
+  // mounted, and the box should show that link's search value.
   useEffect(() => {
-    checkSearchDeviceValueOnMounted();
-  }, [!categoryName, decodeURI(categoryName[1].split("=")[1])]);
+    setValue("searchDevice", searchValue);
+  }, [searchValue, setValue]);
 
   const [isLoadingComponent, setIsLoadingComponent] = useState(true);
   useEffect(() => {

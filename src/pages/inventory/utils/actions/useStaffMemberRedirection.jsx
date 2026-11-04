@@ -2,7 +2,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import { useNavigate } from "react-router-dom";
 import { onAddStaffProfile } from "../../../../store/slices/staffDetailSlide";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { buildStaffRedirectProfile } from "../staffRedirectProfile";
 
 const useStaffMemberRedirection = ({ staff }) => {
   const { user } = useSelector((state) => state.admin);
@@ -10,28 +11,31 @@ const useStaffMemberRedirection = ({ staff }) => {
   const navigate = useNavigate();
   const [staffMemberInfo, setStaffMemberInfo] = useState(null);
 
-  const fetchingStaffMemberInfo = async () => {
-    if (!staff) return; // guard when no staff selected
-    const individual = await devitrakApi.post("/staff/admin-users", {
-      email: staff,
-    });
-    if (individual.data) {
-      return setStaffMemberInfo({
-        ...user.companyData.employees.find(
-          (employee) => employee.user === staff
-        ),
-        email: staff,
-        status: user.companyData.employees.find(
-          (employee) => employee.user === staff
-        ).status,
-        adminUserInfo:individual?.data?.adminUsers[0],
-        companyData: user?.companyData,
-      });
-    }
-  };
+  // Read at answer time, not a dependency: a company update must not fetch
+  // again and navigate a second time.
+  const companyData = user?.companyData;
+  const companyDataRef = useRef(companyData);
+  useEffect(() => {
+    companyDataRef.current = companyData;
+  }, [companyData]);
 
   useEffect(() => {
-    fetchingStaffMemberInfo();
+    if (!staff) return undefined; // guard when no staff selected
+    let cancelled = false;
+    devitrakApi.post("/staff/admin-users", { email: staff }).then((individual) => {
+      if (cancelled || !individual.data) return;
+      setStaffMemberInfo(
+        buildStaffRedirectProfile({
+          staffEmail: staff,
+          companyData: companyDataRef.current,
+          adminUser: individual.data.adminUsers?.[0],
+        }),
+      );
+    });
+    // A newer selection wins over an answer still on its way.
+    return () => {
+      cancelled = true;
+    };
   }, [staff]);
 
   useEffect(() => {

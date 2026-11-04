@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../../api/devitrakApi";
@@ -32,13 +31,6 @@ const TableDetailPerDevice = ({ dataFound }) => {
     }
     return Array.from(renderingData.values());
   };
-  useEffect(() => {
-    const controller = new AbortController();
-    sortingAssignedDeviceTrack();
-    return () => {
-      controller.abort();
-    };
-  }, []);
   const handleDetailStaff = (record) => {
     dispatch(onAddStaffProfile(record));
     return navigate(`/staff/${record.adminUserInfo.id}/main`);

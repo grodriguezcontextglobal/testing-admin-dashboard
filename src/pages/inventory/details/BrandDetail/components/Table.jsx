@@ -114,6 +114,7 @@ const TableItemBrand = ({
     listItemsQuery?.data?.data?.result,
     user,
   ]);
+  const inventoryItems = itemsInInventoryQuery?.data?.data?.items;
 
   // Memoize structured data to prevent unnecessary processing
   const structuredDataRendering = useMemo(() => {
@@ -122,12 +123,12 @@ const TableItemBrand = ({
     return dataStructuringFormat(
       derivedData.renderedListItems,
       derivedData.groupingByDeviceType,
-      itemsInInventoryQuery,
+      inventoryItems,
     );
   }, [
     derivedData.renderedListItems,
     derivedData.groupingByDeviceType,
-    itemsInInventoryQuery?.data,
+    inventoryItems,
   ]);
 
   // Memoize calculations to prevent recalculation on every render

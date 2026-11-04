@@ -47,6 +47,10 @@ const describeRow = (row) =>
  * There is deliberately no DELETE-then-POST — a failed POST there left the case
  * emptied with nothing to put back.
  */
+// One empty list for every render, so the memos below do not see a new []
+// each time while the query has no data.
+const NO_ITEMS = [];
+
 const ContainerContent = ({
   openModal,
   closeModal,
@@ -83,7 +87,7 @@ const ContainerContent = ({
     refetchOnWindowFocus: false,
   });
 
-  const stock = stockQuery.data ?? [];
+  const stock = stockQuery.data ?? NO_ITEMS;
 
   // Items already in the case are no longer warehouse stock, so the right pane
   // has to resolve them from both sources.

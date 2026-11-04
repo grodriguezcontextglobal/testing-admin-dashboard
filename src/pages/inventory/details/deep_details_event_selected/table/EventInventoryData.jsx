@@ -1,6 +1,5 @@
 import { Typography } from "@mui/material";
 import { Table } from "antd";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import '../../../../../styles/global/ant-table.css';
 // import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -26,13 +25,6 @@ const EventInventoryTable = ({ dataFound }) => {
         }
         return Array.from(finalDatTodisplay)
     }
-    useEffect(() => {
-        const controller = new AbortController()
-        sortingAssignedDeviceTrack()
-        return () => {
-            controller.abort()
-        }
-    }, [])
 
     // const handleConsumerNavigation = async (record) => {
     //     const consumerData = await devitrakApi.post("/auth/users", {

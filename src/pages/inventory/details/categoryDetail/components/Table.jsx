@@ -112,6 +112,7 @@ const TableDeviceCategory = ({
     listItemsQuery?.data?.data?.result,
     user,
   ]);
+  const inventoryItems = itemsInInventoryQuery?.data?.data?.items;
 
   // Memoize structured data to prevent unnecessary processing
   const structuredDataRendering = useMemo(() => {
@@ -122,12 +123,12 @@ const TableDeviceCategory = ({
     return dataStructuringFormat(
       derivedData.renderedListItems,
       derivedData.groupingByDeviceType,
-      itemsInInventoryQuery,
+      inventoryItems,
     );
   }, [
     derivedData.renderedListItems,
     derivedData.groupingByDeviceType,
-    itemsInInventoryQuery?.data,
+    inventoryItems,
   ]);
 
   // Memoize calculations to prevent recalculation on every render
@@ -159,15 +160,19 @@ const TableDeviceCategory = ({
   }, [structuredDataRendering, searchItem]);
 
   // Update filtered count when data changes - Fix infinite loop
+  // Compared inside the updater, so the count is not a dependency and a page
+  // change elsewhere cannot send the table back to page 1.
   useEffect(() => {
-    if (dataRenderingMemo.length !== paginationState.filteredCount) {
-      setPaginationState((prev) => ({
-        ...prev,
-        filteredCount: dataRenderingMemo.length,
-        current: 1, // Reset to first page when data changes
-      }));
-    }
-  }, [dataRenderingMemo.length]); // Remove filteredDataCount from dependencies
+    setPaginationState((prev) =>
+      prev.filteredCount === dataRenderingMemo.length
+        ? prev
+        : {
+            ...prev,
+            filteredCount: dataRenderingMemo.length,
+            current: 1, // Reset to first page when data changes
+          },
+    );
+  }, [dataRenderingMemo.length]);
 
   // Memoized refresh handler
   const handleRefresh = useCallback(() => {
