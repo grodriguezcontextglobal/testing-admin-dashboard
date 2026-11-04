@@ -87,7 +87,7 @@ jobs:
       # tanda, bajar este número en el mismo commit; la meta sigue siendo
       # `npm run lint` (--max-warnings 0).
       - name: Lint
-        run: npx eslint . --ext js,jsx --max-warnings 155
+        run: npx eslint . --ext js,jsx --max-warnings 128
 
       # Con cobertura (FedRAMP C8 · SA-11): el informe queda como artefacto de
       # cada ejecución, como evidencia de qué cubren los tests.

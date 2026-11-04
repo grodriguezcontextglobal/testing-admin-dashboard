@@ -4,7 +4,7 @@ import { itemOptionsFrom } from "./utils/referenceLookup";
 import { useQuery } from "@tanstack/react-query";
 import { message } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -30,6 +30,7 @@ import NewSupplier from "./utils/suppliers/NewSupplier";
 import validatingInputFields from "./utils/validatingInputFields";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
+import { referenceGroupFormValues } from "./utils/referenceGroupFill";
 
 const options = OWNERSHIP_VALUES.map((value) => ({ value }));
 const AddNewItem = () => {
@@ -49,13 +50,10 @@ const AddNewItem = () => {
   const [valueObject, setValueObject] = useState("");
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
-  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
-    useState(false);
   const [displaySublocationFields, setDisplaySublocationFields] =
     useState(false);
   const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
-  const [isRented, setIsRented] = useState(false);
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
@@ -68,6 +66,11 @@ const AddNewItem = () => {
     control,
     formState: { errors },
   } = useForm();
+  // Watched once per render; the effects and memos below depend on these.
+  const [watchedLocation, referenceItemGroup, containerValue, costValue, ownershipValue, taxLocation] =
+    watch(["location", "reference_item_group", "container", "cost", "ownership", "tax_location"]);
+  const displayContainerSplotLimitField = String(containerValue).includes("Yes");
+  const isRented = ownershipValue === "Rent";
   const navigate = useNavigate();
   const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
@@ -233,13 +236,10 @@ const AddNewItem = () => {
       return 6;
     return 6;
   };
+  const inventoryItems = itemsInInventoryQuery.data?.data?.items;
   const subLocationsOptions = useMemo(
-    () =>
-      retrieveExistingSubLocationsForCompanyInventory(
-        itemsInInventoryQuery?.data?.data?.items,
-        watch("location")
-      ),
-    [watch("location")]
+    () => retrieveExistingSubLocationsForCompanyInventory(inventoryItems, watchedLocation),
+    [inventoryItems, watchedLocation]
   );
 const renderingOptionsForSubLocations = (item) => {
     if (typeof displaySublocationFields !== "boolean")
@@ -292,14 +292,13 @@ const renderingOptionsForSubLocations = (item) => {
     setValue("sub_location", "");
     return setSubLocationsSubmitted(result);
   };
+  // Fresh company and inventory data when the form opens.
+  const { refetch: refetchCompanies } = companiesQuery;
+  const { refetch: refetchInventoryItems } = itemsInInventoryQuery;
   useEffect(() => {
-    const controller = new AbortController();
-    companiesQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+    refetchCompanies();
+    refetchInventoryItems();
+  }, [refetchCompanies, refetchInventoryItems]);
   const acceptAndGenerateImage = async () => {
     try {
       if (
@@ -330,64 +329,18 @@ const renderingOptionsForSubLocations = (item) => {
       message.error("Failed to upload image: " + error.message);
     }
   };
+  // Picking a reference group fills the form from it (referenceGroupFill.js).
+  // Keyed on the reference alone: the inventory list is read when the pick
+  // happens, so a background refetch cannot overwrite what the user typed since.
+  const itemsByGroupRef = useRef(retrieveItemDataSelected);
   useEffect(() => {
-    const controller = new AbortController();
-    const newReference = watch("reference_item_group");
-    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
-      const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("reference_item_group")
-      );
-      if (Object.entries(dataToRetrieve).length > 0) {
-        Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (key === "enableAssignFeature" || key === "container" || key === "sub_location" || key === "location") {
-            return;
-          }
-          // if (key === "sub_location") {
-          //   setValue("sub_location", "");
-          //   const checkType =
-          //     typeof value === "string" ? JSON.parse(value) : value;
-          //   if (checkType.length > 0) {
-          //     return setSubLocationsSubmitted([...checkType]);
-          //   }
-          // }
-          if (key === "serial_number") return;
-          setValue(key, value);
-          setValue("quantity", 0);
-        });
-      }
-    } else {
-      setValue("item_group", newReference);
-    }
-    if (newReference?.length === 0) {
-      setValue("item_group", "");
-      setValue("photo", []);
-      setValue("category_name", "");
-      setValue("cost", "");
-      setValue("brand", "");
-      setValue("descript_item", "");
-      setValue("min_serial_number", "");
-      setValue("max_serial_number", "");
-      setValue("sub_location", "");
-      setValue("quantity", 0);
-      setValue("container", "");
-      setValue("containerSpotLimit", "0");
-      setValue("enabledAssignFeature", 1);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("reference_item_group")]);
+    itemsByGroupRef.current = retrieveItemDataSelected;
+  });
   useEffect(() => {
-    const controller = new AbortController();
-    if (String(watch("container")).includes("Yes")) {
-      setDisplayContainerSplotLimitField(true);
-    } else {
-      setDisplayContainerSplotLimitField(false);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("container")]);
+    referenceGroupFormValues(referenceItemGroup, itemsByGroupRef.current()).forEach(
+      ([key, value]) => setValue(key, value)
+    );
+  }, [referenceItemGroup, setValue]);
   useEffect(() => {
     const controller = new AbortController();
     if (!moreInfoDisplay) {
@@ -398,19 +351,8 @@ const renderingOptionsForSubLocations = (item) => {
     };
   }, [moreInfoDisplay]);
   useEffect(() => {
-    const controller = new AbortController();
-    costValueInputFormat({ props: watch("cost"), setValue });
-    return () => {
-      controller.abort();
-    };
-  }, [watch("cost")]);
-  useEffect(() => {
-    if (watch("ownership") === "Rent") {
-      setIsRented(true);
-    } else {
-      setIsRented(false);
-    }
-  }, [watch("ownership")]);
+    costValueInputFormat({ props: costValue, setValue });
+  }, [costValue, setValue]);
   useEffect(() => {
     if (imageUploadedValue?.length > 0) {
       const triggerImageInto64 = async () => {
@@ -426,8 +368,8 @@ const renderingOptionsForSubLocations = (item) => {
   }, [imageUploadedValue]);
 
   useEffect(() => {
-    setValue("location", watch("tax_location"));
-  }, [watch("tax_location")]);
+    setValue("location", taxLocation);
+  }, [taxLocation, setValue]);
 
   return (
     <Grid
