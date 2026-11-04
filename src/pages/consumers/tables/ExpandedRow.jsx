@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Space, message } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
@@ -32,6 +32,7 @@ import ExpandedLostButton from "../components/UI/ExpandedLostButtons";
 import ExpandedRowTableButtons from "../components/UI/ExpandedRowTableButtons";
 import "../localStyles.css";
 import { firstRecord } from "../utils/sqlLookups";
+import { buildTransactionDeviceRows } from "../utils/transactionDeviceRows";
 // import { ExpandedRowRender } from "./DocumentsTableSection";
 import RefreshButton from "../../../components/utils/UX/RefreshButton";
 import Chip from "../../../components/UX/Chip/Chip";
@@ -61,25 +62,10 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     refetchOnMount: false,
   });
   const queryClient = useQueryClient();
-  const matchingEventInventoryForValueItems = (props) => {
-    const { device, type } = checkArray(rowRecord["eventInfo"]);
-    if (type === "lease") {
-      return device?.filter((element) => element.group === props)?.at(-1)
-        ?.value;
-    }
-    return (
-      device?.filter((element) => element.group === props)?.at(-1)?.value ??
-      device[0]?.deviceValue
-    );
-  };
-
+  const { refetch: refetchAssignedDevices } = assignedDevicesQuery;
   useEffect(() => {
-    const controller = new AbortController();
-    assignedDevicesQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+    refetchAssignedDevices();
+  }, [refetchAssignedDevices]);
 
   const dispatch = useDispatch();
   const [messageApi, contextHolder] = message.useMessage();
@@ -107,45 +93,28 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
   };
 
-  const dataRendering = () => {
-    if (assignedDevicesQuery.data) {
-      const query = assignedDevicesQuery.data.data.listOfReceivers;
-      const dataForTable = new Set();
-      for (let data of query) {
-        const renderingCost =
-          matchingEventInventoryForValueItems(data?.device?.deviceType) ??
-          rowRecord.eventInfo[0].device[0].deviceValue;
-        dataForTable.add({
-          key: data._id,
-          serial_number: data?.device?.serialNumber,
-          type: data?.device?.deviceType,
-          deviceValue: renderingCost,
-          status: data?.device?.status,
-          timeStamp: data?.timeStamp,
-          entireData: data,
-          transactionData: rowRecord,
-        });
-      }
-      return Array.from(dataForTable);
-    }
-    return [];
-  };
-  const checkConsumerInfoSQLTable = async () => {
-    const responseConsumerInfo = await devitrakApi.post(
-      "/db_consumer/consulting-consumer",
-      {
-        email: customer.email,
-      },
-    );
-    return setConsumerSQLInfo(responseConsumerInfo.data.consumer);
-  };
+  // One row per assigned device (utils/transactionDeviceRows.js), built once
+  // per answer instead of on each of the six reads below.
+  const deviceRows = useMemo(
+    () =>
+      buildTransactionDeviceRows(
+        assignedDevicesQuery.data?.data?.listOfReceivers,
+        rowRecord,
+      ),
+    [assignedDevicesQuery.data, rowRecord],
+  );
+  const customerEmail = customer?.email;
   useEffect(() => {
-    dataRendering();
-  }, [assignedDevicesQuery.data, rowRecord.key]);
-
-  useEffect(() => {
-    checkConsumerInfoSQLTable();
-  }, []);
+    let cancelled = false;
+    devitrakApi
+      .post("/db_consumer/consulting-consumer", { email: customerEmail })
+      .then((responseConsumerInfo) => {
+        if (!cancelled) setConsumerSQLInfo(responseConsumerInfo.data.consumer);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [customerEmail]);
 
   const handleReturnItemInTransaction = async (props) => {
     try {
@@ -282,28 +251,9 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     }
   };
 
-  const checkTransaction = async () => {
-    const transactionInfo = await devitrakApi.post("/transaction/transaction", {
-      paymentIntent: rowRecord.key,
-      active: true,
-    });
-    const result = await transactionInfo.data.list.at(-1);
-    if (result.active) {
-      return setOpenModalReleasingDeposit(true);
-    }
-    return null;
-  };
-  useEffect(() => {
-    if (assignedDevicesQuery.data && !rowRecord) {
-      const data = [...assignedDevicesQuery.data.data.listOfReceivers];
-      if (
-        !data.some((item) => item.device.status === true) &&
-        rowRecord.paymentIntent.length > 15
-      ) {
-        checkTransaction();
-      }
-    }
-  }, [refetching, assignedDevicesQuery.data]);
+  // Removed 2026-11-04: an effect that checked the deposit when nothing was
+  // still out. Its guard required `!rowRecord` and then read
+  // `rowRecord.paymentIntent`, so it either did nothing or threw.
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -312,16 +262,10 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
   };
 
   useEffect(() => {
-    const selectedDeviceInfo = () => {
-      const data = dataRendering();
-      const result = data.filter((element) =>
-        selectedRowKeys.includes(element.key),
-      );
-      return setSelectedRows(result);
-    };
-
-    selectedDeviceInfo();
-  }, [selectedRowKeys.length]);
+    setSelectedRows(
+      deviceRows.filter((element) => selectedRowKeys.includes(element.key)),
+    );
+  }, [deviceRows, selectedRowKeys]);
 
   const rowSelection = {
     selectedRowKeys,
@@ -391,7 +335,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
     setOpenModal(true);
   };
 
-  const showActions = dataRendering()?.some(
+  const showActions = deviceRows?.some(
     (item) => item.status !== false
   );
 
@@ -514,7 +458,7 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
             id={rowRecord.key}
             key={rowRecord.key}
             columns={columns}
-            dataSource={dataRendering()}
+            dataSource={deviceRows}
             className="table-ant-expanded-row-customized"
             rowSelection={rowSelection}
             virtual={false}
@@ -528,9 +472,9 @@ const ExpandedRow = ({ rowRecord, refetching, paymentIntentInfoRetrieved }) => {
               handleLostSingleDevice={handleLostSingleDevice}
               dataRendering={rowRecord}
               returningDevice={handleReturnItemInTransaction}
-              formattedData={dataRendering()}
+              formattedData={deviceRows}
               paymentIntentInfoRetrieved={paymentIntentInfoRetrieved}
-              deviceListInfo={dataRendering()}
+              deviceListInfo={deviceRows}
               selectedItems={selectedRows}
               setSelectedItems={setSelectedRows}
               refetchingDevicePerTransaction={refetchingQueries}

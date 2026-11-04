@@ -308,17 +308,18 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
       </>
     );
   };
+  const startingNumber = watch("startingNumber");
   useEffect(() => {
     const checkingSerialNumberInputted = async () => {
       const data = JSON.parse(valueItemSelected?.data);
-      if (watch("startingNumber").length === data[0].serial_number.length) {
+      if (startingNumber.length === data[0].serial_number.length) {
         setCheckingSerialNumberInputted(
-          data.some((item) => item.serial_number === watch("startingNumber"))
+          data.some((item) => item.serial_number === startingNumber)
         );
       }
     };
     checkingSerialNumberInputted();
-  }, [watch("startingNumber"), valueItemSelected]);
+  }, [startingNumber, valueItemSelected]);
 
   return (
     <>

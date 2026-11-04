@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Avatar } from "antd";
 import { groupBy } from "lodash";
 import { PropTypes } from "prop-types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -155,13 +155,16 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     return setResponseData(final);
   };
 
+  // Reloads when the consumer or the transactions change. The loader is read
+  // through a ref (it is a new function on every render) so that those three
+  // stay the only triggers.
+  const fetchingDataRef = useRef(fetchingDataPerAllowed);
   useEffect(() => {
-    const controller = new AbortController();
-    fetchingDataPerAllowed();
-    return () => {
-      controller.abort();
-    };
-  }, [customer.id, customer.uid, data]); // Add dependencies to trigger refresh
+    fetchingDataRef.current = fetchingDataPerAllowed;
+  });
+  useEffect(() => {
+    fetchingDataRef.current();
+  }, [customer.id, customer.uid, data]);
 
   // Fetch live Stripe statuses so Capture/Release buttons reflect each
   // card payment intent's current state.

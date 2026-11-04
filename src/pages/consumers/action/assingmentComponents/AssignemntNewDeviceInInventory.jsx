@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
@@ -27,6 +27,7 @@ import {
 import { createNewLease } from "../../../staff/detail/components/equipment_components/assingmentComponents/components/newDevice/actions/CreateNewLease";
 import { singleItemInserting } from "../../../staff/detail/components/equipment_components/assingmentComponents/components/newDevice/actions/SingleItemInserting";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import { assignmentReferenceFill } from "../../utils/assignmentReferenceFill";
 
 const options = [
   { value: "Select an option" },
@@ -43,13 +44,10 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
   const [valueObject, setValueObject] = useState("");
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
-  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
-    useState(false);
   const [displaySublocationFields, setDisplaySublocationFields] =
     useState(false);
   const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
   const [imageUrlGenerated, setImageUrlGenerated] = useState(null);
-  const [isRented, setIsRented] = useState(false);
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
@@ -94,6 +92,11 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
     control,
     formState: { errors },
   } = useForm();
+  // Watched once per render; the effects and memos below depend on these.
+  const [watchedLocation, referenceItemGroup, containerValue, costValue, ownershipValue] =
+    watch(["location", "reference_item_group", "container", "cost", "ownership"]);
+  const displayContainerSplotLimitField = String(containerValue).includes("Yes");
+  const isRented = ownershipValue === "Rent";
   const queryClient = useQueryClient();
   const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = useCallback(
@@ -328,13 +331,10 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       return 6;
     return 6;
   };
+  const inventoryItems = itemsInInventoryQuery.data?.data?.items;
   const subLocationsOptions = useMemo(
-    () =>
-      retrieveExistingSubLocationsForCompanyInventory(
-        itemsInInventoryQuery?.data?.data?.items,
-        watch("location")
-      ),
-    [watch("location")]
+    () => retrieveExistingSubLocationsForCompanyInventory(inventoryItems, watchedLocation),
+    [inventoryItems, watchedLocation]
   );
   const renderingOptionsForSubLocations = (item) => {
     const addSublocationButton = () => {
@@ -419,13 +419,10 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
     setValue("sub_location", "");
     return setSubLocationsSubmitted(result);
   };
+  const { refetch: refetchInventoryItems } = itemsInInventoryQuery;
   useEffect(() => {
-    const controller = new AbortController();
-    itemsInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+    refetchInventoryItems();
+  }, [refetchInventoryItems]);
   useEffect(() => {
     const suppliersOptionsRendering = () => {
       let result = [];
@@ -434,7 +431,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
           result.push({ value: item.companyName });
         });
       }
-      return setSupplierList([...supplierList, ...result]);
+      return setSupplierList((list) => [...list, ...result]);
     };
     const diccionarySuppliers = () => {
       const dic = new Map();
@@ -482,47 +479,22 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       message.error("Failed to upload image: " + error.message);
     }
   };
+  // Picking a reference group fills the form from it (assignmentReferenceFill).
+  // Keyed on the reference alone: the inventory is read when the pick happens,
+  // so a background refetch cannot overwrite what the user typed since.
+  const itemsByGroupRef = useRef(retrieveItemDataSelected);
   useEffect(() => {
-    const controller = new AbortController();
-    if (retrieveItemDataSelected().has(watch("reference_item_group"))) {
-      const dataToRetrieve = retrieveItemDataSelected().get(
-        watch("reference_item_group")
-      );
-      if (Object.entries(dataToRetrieve).length > 0) {
-        Object.entries(dataToRetrieve).forEach(([key, value]) => {
-          if (key === "container") {
-            return;
-          }
-          if (key === "enableAssignFeature") return setValue(key, "Enabled");
-          if (key === "sub_location") {
-            const checkType =
-              typeof value === "string" ? JSON.parse(value) : value;
-            if (checkType.length > 0) {
-              return setSubLocationsSubmitted([...checkType]);
-            }
-          }
-          if (key === "serial_number") return;
-          setValue(key, value);
-          setValue("quantity", 0);
-        });
-      }
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("reference_item_group")]);
+    itemsByGroupRef.current = retrieveItemDataSelected;
+  });
+  useEffect(() => {
+    const { values, subLocations } = assignmentReferenceFill(
+      referenceItemGroup,
+      itemsByGroupRef.current()
+    );
+    values.forEach(([key, value]) => setValue(key, value));
+    if (subLocations) setSubLocationsSubmitted(subLocations);
+  }, [referenceItemGroup, setValue]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (String(watch("container")).includes("Yes")) {
-      setDisplayContainerSplotLimitField(true);
-    } else {
-      setDisplayContainerSplotLimitField(false);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("container")]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -534,19 +506,8 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
     };
   }, [moreInfoDisplay]);
   useEffect(() => {
-    const controller = new AbortController();
-    costValueInputFormat({ props: watch("cost"), setValue });
-    return () => {
-      controller.abort();
-    };
-  }, [watch("cost")]);
-  useEffect(() => {
-    if (watch("ownership") === "Rent") {
-      setIsRented(true);
-    } else {
-      setIsRented(false);
-    }
-  }, [watch("ownership")]);
+    costValueInputFormat({ props: costValue, setValue });
+  }, [costValue, setValue]);
   useEffect(() => {
     if (imageUploadedValue?.length > 0) {
       const triggerImageInto64 = async () => {

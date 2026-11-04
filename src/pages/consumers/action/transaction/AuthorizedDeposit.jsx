@@ -286,9 +286,14 @@ const AuthorizedDeposit = () => {
     }
   };
 
+  // Once per mount. Under StrictMode the effect runs twice in development,
+  // and this one writes a transaction; the ref keeps it to one.
+  const transactionStarted = useRef(false);
   useEffect(() => {
+    if (transactionStarted.current) return;
+    transactionStarted.current = true;
     newTransaction();
-  }, []);
+  });
 
   // ── UI ────────────────────────────────────────────────────────────────────
   if (status === "no-transaction") {

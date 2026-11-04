@@ -1,7 +1,7 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { message } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
@@ -50,8 +50,6 @@ const FooterExpandedRow = ({
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [openChargeAllLostDevicesModal, setOpenChargeAllLostDevicesModal] =
     useState(false);
-  const [selectedItemsToMarkAsReturned, setSelectedItemsToMarkAsReturned] =
-    useState([]);
   const returningAllItemsAtOnce = async (props) => {
     setIsLoadingState(true);
     await returningItemsInBulkMethod({
@@ -70,26 +68,29 @@ const FooterExpandedRow = ({
   };
   const [ccInfo, setCcInfo] = useState([]);
   const [expressCheckoutModal, setExpressCheckoutModal] = useState(false);
-  const retrieveCCInfo = async () => {
-    const resp = await devitrakApi
-      .get(`/stripe/payment_intents/${dataRendering.paymentIntent}`)
-      .then((response) => response.data);
-    paymentIntentInfoRetrieved(resp.paymentIntent);
-    return setCcInfo(resp.paymentIntent);
-  };
   const dispatch = useDispatch();
+  // Card details for a Stripe payment intent (cash ones have none). The
+  // parent's callback is read through a ref: it is a new function on each of
+  // its renders, and as a dependency it would fetch again every time.
+  const paymentIntent = dataRendering?.paymentIntent;
+  const onPaymentIntentRef = useRef(paymentIntentInfoRetrieved);
   useEffect(() => {
-    const controller = new AbortController();
-    if (
-      dataRendering.paymentIntent.length > 15 &&
-      !String(dataRendering.paymentIntent).includes("cash")
-    ) {
-      retrieveCCInfo();
+    onPaymentIntentRef.current = paymentIntentInfoRetrieved;
+  });
+  useEffect(() => {
+    if (!(String(paymentIntent ?? "").length > 15) || String(paymentIntent).includes("cash")) {
+      return undefined;
     }
+    let cancelled = false;
+    devitrakApi.get(`/stripe/payment_intents/${paymentIntent}`).then((response) => {
+      if (cancelled) return;
+      onPaymentIntentRef.current?.(response.data.paymentIntent);
+      setCcInfo(response.data.paymentIntent);
+    });
     return () => {
-      controller.abort();
+      cancelled = true;
     };
-  }, []);
+  }, [paymentIntent]);
 
   const reportTemplate = {
     customerInfo: dataRendering?.eventInfo[0]?.consumerInfo,
@@ -472,24 +473,28 @@ const FooterExpandedRow = ({
     ]);
   };
 
+  // Loads the transaction's devices, and again whenever the parent hands down
+  // a new refetch function (that is how it signals a refresh). The loader is
+  // read through a ref so it is not a dependency itself.
+  const formatItemsRef = useRef(formatItemsInfoAsProps);
   useEffect(() => {
-    formatItemsInfoAsProps();
+    formatItemsRef.current = formatItemsInfoAsProps;
+  });
+  useEffect(() => {
+    formatItemsRef.current();
   }, [refetchingDevicePerTransaction]);
 
-  useMemo(() => {
-    let result = new Set();
-    transactionDeviceData.forEach((item) => {
-      if (
+  // The selected rows, as the receiver records the return flow needs.
+  const selectedItemsToMarkAsReturned = useMemo(
+    () =>
+      transactionDeviceData.filter((item) =>
         selectedItems.some(
           (c) =>
             c.serial_number === item.serialNumber && c.type === item.deviceType,
-        )
-      ) {
-        result.add(item);
-      }
-    });
-    return setSelectedItemsToMarkAsReturned(Array.from(result));
-  }, [selectedItems]);
+        ),
+      ),
+    [transactionDeviceData, selectedItems],
+  );
 
   return (
     <>
