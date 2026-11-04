@@ -17,20 +17,19 @@
  */
 
 /**
- * @param {{companyId: number|string, role: unknown, locations?: string[]|null,
+ * @param {{companyId: number|string, locations?: string[]|null,
  *   fallbackPreference?: unknown}} params
- * @returns {{company_id: unknown, role: unknown, preference: unknown}} the same
- *   body the table sent for years; `preference` keeps its fallback because an
+ * @returns {{company_id: unknown, preference: unknown}} the body the table
+ *   sends; no `role`, the server reads it from the session (FedRAMP B5).
+ *   `preference` keeps its fallback because an
  *   empty array reads as "scoped to zero locations", not "unscoped"
  */
 export const buildInventoryExportBody = ({
   companyId,
-  role,
   locations,
   fallbackPreference,
 }) => ({
   company_id: companyId,
-  role,
   preference:
     Array.isArray(locations) && locations.length > 0
       ? locations

@@ -11,7 +11,7 @@ import BaseTable from "../../../../components/UX/tables/BaseTable";
 const TableLocations = () => {
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
-  const { isAdmin, role, employee } = useStaffRoleAndLocations();
+  const { employee } = useStaffRoleAndLocations();
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInInventoryCheckingQuery"],
     queryFn: () =>
@@ -19,7 +19,6 @@ const TableLocations = () => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: isAdmin ? "0" : role,
           preference: employee?.preference,
         }
       ),

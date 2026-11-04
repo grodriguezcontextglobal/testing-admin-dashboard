@@ -5,16 +5,16 @@ import {
 } from "./inventoryExport";
 
 describe("buildInventoryExportBody", () => {
-  it("asks warehouse-items the way the table always asked it", () => {
+  // B5: the server takes the role from company_staff via the JWT and ignores
+  // `role` in the body (BACKEND_fedramp_backend_blockers_REPLY_2026-11-04.md §1.2).
+  it("asks warehouse-items for the company and location scope, without a role", () => {
     expect(
       buildInventoryExportBody({
         companyId: 62,
-        role: "0",
         locations: ["Main warehouse", "Aisle 3"],
       }),
-    ).toEqual({
+    ).toStrictEqual({
       company_id: 62,
-      role: "0",
       preference: ["Main warehouse", "Aisle 3"],
     });
   });
@@ -23,14 +23,13 @@ describe("buildInventoryExportBody", () => {
   // page used, or nothing. Sending [] would read as "scoped to zero locations".
   it("falls back rather than sending an empty scope", () => {
     expect(
-      buildInventoryExportBody({ companyId: 62, role: "2", locations: [] })
+      buildInventoryExportBody({ companyId: 62, locations: [] })
         .preference,
     ).toBeUndefined();
 
     expect(
       buildInventoryExportBody({
         companyId: 62,
-        role: "2",
         locations: null,
         fallbackPreference: "Main warehouse",
       }).preference,

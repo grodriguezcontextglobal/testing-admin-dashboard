@@ -9,14 +9,13 @@ import DevitrakLoading from "../../../../components/animation/DevitrakLoading";
 import { useStaffRoleAndLocations } from "../../../../utils/checkStaffRoleAndLocations";
 const TableCategories = () => {
   const { user } = useSelector((state) => state.admin);
-  const { isAdmin, role, locationsViewPermission } = useStaffRoleAndLocations();
+  const { isAdmin, locationsViewPermission } = useStaffRoleAndLocations();
   const navigate = useNavigate();
   const consumersQuery = useQuery({
     queryKey: ["consumersPerCompanyQuery"],
     queryFn: () =>
       devitrakApi.post(`/db_company/company-inventory-structure`, {
         company_id: user.sqlInfo.company_id,
-        role: isAdmin ? "0" : role,
         preference: {
           inventory_location: isAdmin ? [] : locationsViewPermission,
         },

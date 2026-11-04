@@ -17,7 +17,6 @@ export const fetchExistingLocations = async (companyId, queryClient) => {
   const queryFn = () =>
     devitrakApi.post(`/db_location/companies/${companyId}/locations`, {
       company_id: companyId,
-      role: 0,
       preference: [],
     });
 
@@ -103,7 +102,6 @@ const useVerifyLocationBeforeCreateNewInventory = () => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: 0,
           preference: [],
         }
       ),

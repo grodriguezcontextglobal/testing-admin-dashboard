@@ -18,9 +18,6 @@ const useCompanyLocations = () => {
       const response = await devitrakApi.post(
         `/db_location/companies/${companyId}/locations`,
         {
-          role: user.companyData.employees.find(
-            (emp) => emp.user === user?.email
-          )?.role,
           preference:
             user.companyData.employees.find((emp) => emp.user === user?.email)
               ?.preference || [],
