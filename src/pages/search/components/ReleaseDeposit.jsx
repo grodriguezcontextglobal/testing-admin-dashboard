@@ -18,6 +18,10 @@ import { BlueButtonText } from "../../../styles/global/BlueButtonText";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { describePaymentError } from "../../../utils/paymentRequestState";
 import { paymentIdempotencyHeaders } from "../../../utils/paymentIdempotency";
+import {
+  depositStatusNotice,
+  releaseDepositQueryKeys,
+} from "../utils/searchQueries";
 
 const ReleaseDeposit = ({
   openCancelingDepositModal,
@@ -34,49 +38,33 @@ const ReleaseDeposit = ({
   );
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  const paymentIntent = paymentIntentDetailSelected?.paymentIntent;
+  const queryKeys = releaseDepositQueryKeys(paymentIntent);
   const stripeTransactionQuery = useQuery({
-    queryKey: ["oneStripeTransaction"],
-    queryFn: () =>
-      devitrakApi.get(
-        `/stripe/payment_intents/${paymentIntentDetailSelected.paymentIntent}`
-      ),
-    refetchOnMount: false,
+    queryKey: queryKeys.intent,
+    queryFn: () => devitrakApi.get(`/stripe/payment_intents/${paymentIntent}`),
+    enabled: Boolean(paymentIntent),
   });
   const transactionQuery = useQuery({
-    queryKey: ["transaction"],
+    queryKey: queryKeys.transaction,
     queryFn: () =>
       devitrakApi.get(
-        `/transaction/transaction?paymentIntent=${
-          paymentIntentDetailSelected.paymentIntent
-        }&active=${true}`
+        `/transaction/transaction?paymentIntent=${paymentIntent}&active=true`
       ),
-    refetchOnMount: false,
+    enabled: Boolean(paymentIntent),
   });
   const queryClient = useQueryClient();
   const maxAmount = stripeTransactionQuery?.data?.data?.paymentIntent?.amount;
   const amountWithNoDecimal = String(maxAmount).slice(0, -2);
 
+  const paymentStatus = stripeTransactionQuery.data?.data?.paymentIntent?.status;
   useEffect(() => {
-    stripeTransactionQuery.refetch();
-    transactionQuery.refetch();
-  }, []);
-  useEffect(() => {
-    if (stripeTransactionQuery.data) {
-      if (
-        stripeTransactionQuery.data.data.paymentIntent.status === "canceled"
-      ) {
-        setTransactionStatus(true);
-        setOpenCancelingDepositModal(false);
-        return alert("This transaction has been released or canceled already.");
-      }
-      if (
-        stripeTransactionQuery.data.data.paymentIntent.status === "succeeded"
-      ) {
-        setTransactionStatus(true);
-        return alert("This transaction has been captured already.");
-      }
-    }
-  }, [stripeTransactionQuery?.data?.data?.paymentIntent?.status]);
+    const notice = depositStatusNotice(paymentStatus);
+    if (!notice) return;
+    setTransactionStatus(true);
+    if (notice.closeModal) setOpenCancelingDepositModal(false);
+    alert(notice.text);
+  }, [paymentStatus, setOpenCancelingDepositModal]);
 
   const renderingTitle = () => {
     return (

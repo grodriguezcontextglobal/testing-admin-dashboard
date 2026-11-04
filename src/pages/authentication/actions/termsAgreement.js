@@ -55,11 +55,13 @@ export const agreedAgreement = async ({
     );
     if (acceptanceTermsAndPolicies.data.ok) {
       message.success("Agreement submitted successfully.");
-      setAcceptanceTermsAndPoliciesResult(acceptanceTermsAndPolicies.data);
+      // RegisterCompany records the acceptance without a result setter.
+      setAcceptanceTermsAndPoliciesResult?.(acceptanceTermsAndPolicies.data);
       return setOpen(false);
     }
   } catch (error) {
-    const errorMessage = error.responseerror.dataerror.message || error.message || error.msg || error;
+    const errorMessage =
+      error?.response?.data?.message || error?.message || error?.msg || error;
     // message.error(
     //   "Error submitting agreement:",
     //   errorMessage,

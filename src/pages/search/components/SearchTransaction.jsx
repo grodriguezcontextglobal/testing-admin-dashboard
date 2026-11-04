@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -20,48 +20,20 @@ import CenteringGrid from "../../../styles/global/CenteringGrid";
 import { TextFontSize20LineHeight30 } from "../../../styles/global/TextFontSize20HeightLine30";
 import { TextFontSize30LineHeight38 } from "../../../styles/global/TextFontSize30LineHeight38";
 import NoDataFound from "../utils/NoDataFound";
+import { transactionSearchQueryKey } from "../utils/searchQueries";
 const SearchTransaction = ({ searchParams }) => {
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const staffMembersQuery = useQuery({
-    queryKey: ["listOfPaymentIntent"],
+    queryKey: transactionSearchQueryKey(user.company, searchParams),
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         company: user.company,
         paymentIntent: searchParams,
       }),
-    refetchOnMount: false,
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const controller = new AbortController();
-    staffMembersQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [searchParams]);
-
-  const sortAndRenderFoundData = () => {
-    if (staffMembersQuery.data) {
-      const foundData = staffMembersQuery.data.data.listOfReceivers;
-      const result = foundData?.filter((element) =>
-        JSON.stringify(element)
-          .toLowerCase()
-          .includes(`${searchParams}`.toLowerCase())
-      );
-      return result;
-    }
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    sortAndRenderFoundData();
-    return () => {
-      controller.abort();
-    };
-  }, [searchParams]);
 
   const handleTransactionSearch = useCallback(async () => {
     setLoading(true);
