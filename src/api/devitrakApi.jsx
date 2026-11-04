@@ -86,9 +86,6 @@ const createDevitrakApiInstance = (suffix = "") => {
         if (localStorage.getItem("admin-token")) {
             config.headers["x-token"] = localStorage.getItem("admin-token");
         }
-        if (localStorage.getItem("s-token-lq")) {
-            config.headers["s-token-lq"] = localStorage.getItem("s-token-lq");
-        }
         // Route-scoped company headers:
         //   x-company-id → /api/staff|admin|company|stripe
         //   s-company-lq → /api/db_*

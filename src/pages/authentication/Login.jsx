@@ -429,7 +429,6 @@ const Login = () => {
       { email: loginData.email },
       tokenHeaders);
     const staffId = extractStaffId(staffMemberResponse.data);
-    if (staffId) localStorage.setItem("s-token-lq", String(staffId));
 
     // 2. Now call companies with sqlStaffId available
     const sqlCompaniesResponse = await devitrakApi.get("/db_staff/companies", {

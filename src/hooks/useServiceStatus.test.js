@@ -16,7 +16,7 @@ import {
  * - A failed request is `unknown`, never `operational`. A status page that
  *   shows green when it cannot reach the service is worse than no page.
  * - The endpoint is a third party. It must not be called through devitrakApi,
- *   whose request interceptor attaches `x-token` and `s-token-lq` from
+ *   whose request interceptor attaches `x-token` from
  *   localStorage to every request — that would hand our session tokens to
  *   another origin.
  * - No more than one request a minute. The worker refreshes once a minute and
