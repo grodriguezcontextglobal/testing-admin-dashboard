@@ -25,7 +25,7 @@ import EditProfileModal from "./EditProfileModal";
 import AssignedDevicesTable from "./components/AssignedDevicesTable";
 import StaffEventsTable from "./components/StaffEventsTable";
 import StaffProfileActions from "./components/StaffProfileActions";
-import { mfaResetErrorMessage } from "./utils/mfaReset";
+import { mfaResetErrorMessage, mfaResetSuccessNotice } from "./utils/mfaReset";
 import { useStaffEquipmentData } from "./components/equipment_components/useStaffEquipmentData";
 import {
   activeEventsForStaff,
@@ -207,12 +207,9 @@ const StaffDetail = () => {
   // FedRAMP A5: for someone who lost the phone and the recovery codes.
   const resetMfaMutation = useMutation({
     mutationFn: () => devitrakApiAdmin.post(`/mfa/reset/${encodeURIComponent(staffId)}`),
-    onSuccess: () => {
-      notify(
-        "success",
-        "MFA reset.",
-        `${profile.firstName ?? "This person"} was signed out and will set up MFA again at the next sign-in.`
-      );
+    onSuccess: (response) => {
+      const notice = mfaResetSuccessNotice(response?.data, profile.firstName);
+      notify(notice.type, notice.title, notice.description);
     },
     onError: (error) => {
       notify("error", "MFA unchanged", mfaResetErrorMessage(error));
