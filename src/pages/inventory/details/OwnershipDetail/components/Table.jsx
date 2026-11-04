@@ -28,8 +28,6 @@ const TableItemOwnership = ({
   const { user } = useSelector((state) => state.admin);
   const navigate = useNavigate();
 
-  // State to track filtered data count for dynamic pagination
-  const [filteredDataCount, setFilteredDataCount] = useState(0);
   const listItemsQuery = useQuery({
     queryKey: [
       "currentStateDevicePerGroupName",
@@ -78,13 +76,14 @@ const TableItemOwnership = ({
   const [structuredDataRendering, setStructuredDataRendering] = useState([]);
 
   // Fix: Memoize the structured data to prevent unnecessary re-calculations
+  const inventoryItems = itemsInInventoryQuery?.data?.data?.items;
   const memoizedStructuredData = useMemo(() => {
     return dataStructuringFormat(
       renderedListItems,
       groupingByDeviceType,
-      itemsInInventoryQuery,
+      inventoryItems,
     );
-  }, [renderedListItems, groupingByDeviceType, itemsInInventoryQuery?.data]);
+  }, [renderedListItems, groupingByDeviceType, inventoryItems]);
 
   // Fix: Update state only when memoized data actually changes
   useEffect(() => {
@@ -120,14 +119,10 @@ const TableItemOwnership = ({
     referenceData(data);
   }, [memoizedReferenceData, referenceData]);
 
-  const dataRenderingMemo = useMemo(() => {
-    const result = dataToDisplay(structuredDataRendering, searchItem);
-    // Initialize filtered count with the full data length
-    if (filteredDataCount === 0) {
-      setFilteredDataCount(result.length);
-    }
-    return result;
-  }, [structuredDataRendering, searchItem]);
+  const dataRenderingMemo = useMemo(
+    () => dataToDisplay(structuredDataRendering, searchItem),
+    [structuredDataRendering, searchItem],
+  );
 
   return (
     <Suspense

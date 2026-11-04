@@ -38,6 +38,10 @@ import {
  * dropped in as direct children of a spacing grid, and a page-wide "no results"
  * message placed *last* — under a screen already full of empty cards.
  */
+// Stable empty list, so the KPI memos do not recompute on every render when
+// the forecast has no daily analysis.
+const NO_DAYS = [];
+
 const UX = ({
   allItems,
   dailyAnalysis,
@@ -61,7 +65,7 @@ const UX = ({
   uniqueEvents,
   uniqueItemGroupsCount,
 }) => {
-  const daily = Array.isArray(dailyAnalysis) ? dailyAnalysis : [];
+  const daily = Array.isArray(dailyAnalysis) ? dailyAnalysis : NO_DAYS;
 
   const kpis = useMemo(
     () =>

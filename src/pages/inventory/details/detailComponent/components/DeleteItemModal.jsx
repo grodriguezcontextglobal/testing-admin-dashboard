@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -80,57 +80,53 @@ const DeleteItemModal = ({
       ownership: dataFound[0].ownership,
     },
   });
+  // Fresh data every time the modal opens or points at another item. The
+  // refetch functions are stable, so they are safe dependencies.
+  const itemId = dataFound[0].item_id;
+  const { refetch: refetchCompanies } = companiesQuery;
+  const { refetch: refetchItem } = itemsInInventoryQuery;
+  const { refetch: refetchCompanyInfo } = companyInfoQuery;
   useEffect(() => {
-    const controller = new AbortController();
-    companiesQuery.refetch();
-    itemsInInventoryQuery.refetch();
-    companyInfoQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [dataFound[0].item_id, openDeleteItemModal]);
+    refetchCompanies();
+    refetchItem();
+    refetchCompanyInfo();
+  }, [itemId, openDeleteItemModal, refetchCompanies, refetchItem, refetchCompanyInfo]);
 
-  const retrieveItemInfoForEdit = useCallback(() => {
-    if (itemsInInventoryQuery.data) {
+  // The form shows what the server has for the item once it arrives.
+  const itemData = itemsInInventoryQuery.data;
+  useEffect(() => {
+    if (itemData) {
       setValue(
         "category_name",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.category_name}`,
+        `${itemData?.data?.items[0]?.category_name}`,
       );
-      setValue("cost", `${itemsInInventoryQuery?.data?.data?.items[0]?.cost}`);
+      setValue("cost", `${itemData?.data?.items[0]?.cost}`);
       setValue(
         "brand",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.brand}`,
+        `${itemData?.data?.items[0]?.brand}`,
       );
       setValue(
         "descript_item",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.descript_item}`,
+        `${itemData?.data?.items[0]?.descript_item}`,
       );
       setValue(
         "serial_number",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.serial_number}`,
+        `${itemData?.data?.items[0]?.serial_number}`,
       );
       setValue(
         "ownership",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.ownership}`,
+        `${itemData?.data?.items[0]?.ownership}`,
       );
       setValue(
         "main_warehouse",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.main_warehouse}`,
+        `${itemData?.data?.items[0]?.main_warehouse}`,
       );
       setValue(
         "location",
-        `${itemsInInventoryQuery?.data?.data?.items[0]?.location}`,
+        `${itemData?.data?.items[0]?.location}`,
       );
     }
-  }, [itemsInInventoryQuery.data]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    retrieveItemInfoForEdit();
-    return () => {
-      controller.abort();
-    };
-  }, [itemsInInventoryQuery.data]);
+  }, [itemData, setValue]);
 
   /**
    * Everything that still holds the deleted item.

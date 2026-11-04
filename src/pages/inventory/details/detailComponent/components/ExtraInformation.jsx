@@ -39,6 +39,10 @@ const CaseIcon = ({ size = 20 }) => (
  * the write is one full-replace PUT instead of the DELETE-then-POST that could
  * leave the case emptied when the POST failed.
  */
+// Stable empty list, so the memos do not recompute on every render while the
+// contents query has no data.
+const NO_ITEMS = [];
+
 const ExtraInformation = ({ dataFound, containerInfo }) => {
   const [stagedIds, setStagedIds] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -71,7 +75,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
     refetchOnWindowFocus: false,
   });
 
-  const persistedItems = contentsQuery.data ?? [];
+  const persistedItems = contentsQuery.data ?? NO_ITEMS;
   const persistedIds = useMemo(
     () => persistedItems.map((row) => row?.item_id),
     [persistedItems],

@@ -207,7 +207,7 @@ revisión.
 | | Qué | Esfuerzo |
 |---|---|---|
 | **C1** | **Proteger `main`.** Como mínimo, *required status checks* (la CI tiene que pasar para que entre un push). Lo que pide CC8.1 es revisión por una segunda persona vía PR. Con dos personas es viable si los PR son pequeños. **Decisión de Gustavo**: choca con el push directo actual | decisión + 10 min |
-| **C2** (03-11: 243 — tanda 1 sin react-refresh; tanda 2 pages/search a 0) | **Lint de 281 a 0.** Son 268 `react-hooks/exhaustive-deps` y 13 `react-refresh`. Por tandas, por carpeta, bajando la línea base de `ci.yml` en el mismo commit. Cada arreglo de dependencias de un hook se prueba, porque cambia cuándo se ejecuta | 2–3 semanas repartidas |
+| **C2** (04-11: 155 — tanda 1 sin react-refresh; tanda 2 pages/search a 0; tanda 3 pages/inventory salvo AddNewItem y EditItemModal) | **Lint de 281 a 0.** Son 268 `react-hooks/exhaustive-deps` y 13 `react-refresh`. Por tandas, por carpeta, bajando la línea base de `ci.yml` en el mismo commit. Cada arreglo de dependencias de un hook se prueba, porque cambia cuándo se ejecuta | 2–3 semanas repartidas |
 | ~~**C3**~~ ✅ 27-10 | **`.github/dependabot.yml`** para npm, github-actions y docker. Hoy no existe; solo llegan las alertas | 30 min |
 | ~~**C4**~~ ✅ 02-11 PR #50 | **SBOM** CycloneDX generado en `release.yml` y adjunto a cada release. Es el S2.3 del backend, del lado nuestro | medio día |
 | ~~**C5**~~ ✅ 02-11 PR #49 (secret scanning y push protection activos; falta rotar el token de Twilio del .env de 2024) | **Escaneo de secretos**: gitleaks en la CI sobre el diff, y push protection de GitHub si el plan lo incluye | medio día |

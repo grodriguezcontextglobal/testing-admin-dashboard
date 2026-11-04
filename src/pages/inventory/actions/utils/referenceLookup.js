@@ -126,9 +126,9 @@ export const narrowReferenceOptions = (inventoryItems, criteria = {}) => {
  * The distinct values a field takes across the company's units, optionally
  * narrowed to the units matching some criteria.
  *
- * This body existed four times, byte for byte — in useInventoryData,
- * useBulkActionLogic, AddNewItem and edit/useLogic — so the cascade would have
- * had to be added four times too.
+ * This body existed four times, byte for byte (useBulkActionLogic, AddNewItem
+ * and two hooks since deleted as unused), so the cascade would have had to be
+ * added four times too.
  *
  * It also drops blanks. The old copies used `groupBy` and read back
  * `Object.keys`, which turns a missing field into the *string* "undefined" and

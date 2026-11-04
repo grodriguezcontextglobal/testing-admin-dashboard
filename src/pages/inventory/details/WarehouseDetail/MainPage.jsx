@@ -19,6 +19,7 @@ import TableDeviceLocation from "./components/Table";
 import TotalInventoryCard from "./components/TotalInventoryCard";
 import TotalValueDevicesLocation from "./components/TotalValueDevices";
 import TotalAvailableItem from "../../utils/TotalAvailableItem";
+import { readDetailSearchValue } from "../utils/detailSearchParams";
 
 const MainPageWarehouse = () => {
   const [referenceData, setReferenceData] = useState({
@@ -28,9 +29,10 @@ const MainPageWarehouse = () => {
   });
   const location = useLocation();
   const warehouse = location.search.split("&");
+  const searchValue = readDetailSearchValue(location.search);
   const { register, watch, setValue } = useForm({
     defaultValues: {
-      searchDevice: decodeURI(warehouse[1].split("=")[1]),
+      searchDevice: searchValue,
     },
   });
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
@@ -39,11 +41,10 @@ const MainPageWarehouse = () => {
   );
   const navigate = useNavigate();
 
+  // Follows the URL, like the category, group, brand and ownership pages.
   useEffect(() => {
-    if (watch("searchDevice") === "undefined") {
-      setValue("searchDevice", "");
-    }
-  }, [warehouse]);
+    setValue("searchDevice", searchValue);
+  }, [searchValue, setValue]);
 
   return (
     <Grid
