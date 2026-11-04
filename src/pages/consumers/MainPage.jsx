@@ -95,7 +95,8 @@ const MainPage = () => {
       }
       return returnValues;
     },
-    [allConsumersBasedOnEventsPerCompany.data],
+    // Pure: it only reads its argument.
+    [],
   );
 
   useEffect(() => {

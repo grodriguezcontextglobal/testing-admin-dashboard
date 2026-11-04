@@ -46,13 +46,10 @@ const ModalAssignDeviceInEvent = ({
     refetchOnMount: false,
   });
 
+  const { refetch: refetchStaffEvents } = eventsWhereStaffIsAssigned;
   useEffect(() => {
-    const controller = new AbortController();
-    eventsWhereStaffIsAssigned.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+    refetchStaffEvents();
+  }, [refetchStaffEvents]);
 
   const closeModal = () => {
     return setAssignDevice(false);

@@ -1,6 +1,6 @@
 import { nanoid } from "@reduxjs/toolkit";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { devitrakApi } from "../../../../api/devitrakApi";
 
 const NoDepositTransaction = ({
@@ -27,11 +27,23 @@ const NoDepositTransaction = ({
     refetchOnMount: false,
   });
 
+  // Runs the transaction once, as soon as this mounts. It used to start inside
+  // a useMemo, that is during render (twice under StrictMode). The effect
+  // after it unmounts this component through triggering(0), so it has to
+  // start in the same commit; the ref stops a second run.
+  const transactionStarted = useRef(false);
   useEffect(() => {
-    deviceInventoryEventQuery.refetch();
+    if (transactionStarted.current) return;
+    transactionStarted.current = true;
+    newTransaction();
+  });
+
+  const { refetch: refetchPool } = deviceInventoryEventQuery;
+  useEffect(() => {
+    refetchPool();
     triggering(0);
     loadingState(false);
-  }, []);
+  }, [refetchPool, triggering, loadingState]);
 
   const reference = useRef(null);
   const queryClient = useQueryClient();
@@ -183,8 +195,5 @@ const NoDepositTransaction = ({
       return alert(error);
     }
   };
-  useMemo(() => {
-    return newTransaction();
-  }, []);
 };
 export default NoDepositTransaction;
