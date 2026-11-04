@@ -180,9 +180,6 @@ const EventQuickGlanceMainPage = lazyWithRetry(() =>
 const CustomerDetailInEvent = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/consumer/CustomerDetail")
 );
-const NewEventSubscription = lazyWithRetry(() =>
-  import("../../pages/events/newEventProcess/subscription/Main")
-);
 const DeviceDetail = lazyWithRetry(() =>
   import("../../pages/events/quickGlance/inventory/DeviceDetail")
 );
@@ -355,10 +352,6 @@ const AuthRoutes = () => {
                 />
               </Route>
 
-              <Route
-                path="/event/new_subscription"
-                element={<NewEventSubscription />}
-              />
               <Route
                 path="create-event-page"
                 element={<MainPageEventCreation />}

@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react";
 import { Typography } from "@mui/material";
 import { Space, Tooltip } from "antd";
-import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFetchResponse";
@@ -262,13 +261,6 @@ const DeviceDatabase = ({ searchDevice, eventInventoryData }) => {
     }
     return [];
   };
-  useEffect(() => {
-    const controller = new AbortController();
-    sortDataPerEventAndCompany();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const getInfoNeededToBeRenderedInTable = () => {
     const result = new Set();

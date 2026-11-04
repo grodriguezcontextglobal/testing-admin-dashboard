@@ -17,6 +17,7 @@ import { OutlinedInputStyle } from "../../../../../../styles/global/OutlinedInpu
 import clearCacheMemory from "../../../../../../utils/actions/clearCacheMemory";
 import "../../consumerDetail.css";
 import { useDeviceStatus } from "./hooks/useDeviceStatus";
+import { deviceTypeKey, requestedDevicesByType } from "./utils/requestedDevices";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
 
 function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
@@ -46,94 +47,16 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
 
   const { notify, contextHolder } = useStatusNotification();
 
-  // Normalize and aggregation helpers
-  const normalizeType = (t) =>
-    String(t ?? "")
-      .trim()
-      .replace(/\s+/g, " ");
-  const KNOWN_CATEGORIES = [...event.deviceSetup.map((ds) => ds.category)];
-  const extractCategoryAndGroup = (typeRaw) => {
-    const t = normalizeType(typeRaw);
-    for (const cat of KNOWN_CATEGORIES) {
-      // const prefix = `${cat} `;
-      if (t) {
-        const group = t; //.slice(prefix.length).trim();
-        return { category: cat, group };
-      }
-      if (t === cat) {
-        return { category: cat, group: "" };
-      }
-    }
-    return { category: "", group: t };
-  };
+  // How many of each type the transaction asked for.
+  const requestedByType = useMemo(
+    () => requestedDevicesByType(record),
+    [record],
+  );
 
-  // Build group → category map using event.deviceSetup
-  const groupToCategory = useMemo(() => {
+  // How many of each type are already assigned to the payment intent. Asked
+  // at submit time, so the limit check always uses the server's latest count.
+  const fetchAssignedByType = async () => {
     const map = {};
-    const setup = Array.isArray(event?.deviceSetup) ? event.deviceSetup : [];
-    for (const ds of setup) {
-      const group = normalizeType(ds?.group);
-      const category = normalizeType(ds?.category);
-      if (group && category) {
-        map[group] = category;
-      }
-    }
-    return map;
-  }, [event?.deviceSetup]);
-
-  const makeCanonicalKey = (group) => {
-    // const c = normalizeType(category);
-    const g = normalizeType(group);
-    return g ? `${g}` : g;
-  };
-
-  const requestedByType = useMemo(() => {
-    const map = {};
-    try {
-      const root = Array.isArray(record?.device) ? record.device : [];
-      for (const entry of root) {
-        if (Array.isArray(entry?.device)) {
-          for (const d of entry.device) {
-            const rawType = d?.deviceType;
-            const needed = Number(d?.deviceNeeded) || 0;
-            const lowered = String(rawType ?? "").toLowerCase();
-            if (needed > 0 && lowered !== "undefined") {
-              const { category, group } = extractCategoryAndGroup(rawType);
-              const key =
-                category && group
-                  ? makeCanonicalKey(group)
-                  : makeCanonicalKey(group);
-              const finalKey = normalizeType(key);
-              if (finalKey) {
-                map[finalKey] = (map[finalKey] || 0) + needed;
-              }
-            }
-          }
-        }
-        const rawTypeFlat = entry?.deviceType;
-        const neededFlat = Number(entry?.deviceNeeded) || 0;
-        const loweredFlat = String(rawTypeFlat ?? "").toLowerCase();
-        if (neededFlat > 0 && loweredFlat !== "undefined") {
-          const { category, group } = extractCategoryAndGroup(rawTypeFlat);
-          const key =
-            category && group
-              ? makeCanonicalKey(group)
-              : makeCanonicalKey(group);
-          const finalKey = normalizeType(key);
-          if (finalKey) {
-            map[finalKey] = (map[finalKey] || 0) + neededFlat;
-          }
-        }
-      }
-    } catch (_) {
-      return;
-    }
-    return map;
-  }, [record, groupToCategory]);
-
-  const assignedByType = useMemo(async () => {
-    const map = {};
-    // try {
     const checkAssignedDevicesToTransactionIntent = await devitrakApi.post(
       "/receiver/receiver-assigned",
       {
@@ -148,15 +71,8 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
         map[key] = grouping[key].length;
       }
     }
-    // } catch (_) {
-    //   return;
-    // }
     return map;
-  }, [
-    devicesInPool, // Updated dependency
-    record?.paymentIntent,
-    groupToCategory,
-  ]);
+  };
 
   let serialNumber = watch("serialNumber");
 
@@ -307,11 +223,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
     const rawType =
       checkArray(refDeviceObjectRetrieve.current)?.type ||
       checkArray(refDeviceObjectRetrieve.current)?.deviceType;
-    const parsed = extractCategoryAndGroup(rawType);
-    const currentKey = parsed.group
-      ? makeCanonicalKey(parsed.group)
-      : makeCanonicalKey(parsed.group);
-    const canonicalKey = normalizeType(currentKey);
+    const canonicalKey = deviceTypeKey(rawType);
     // Enforce requested type and quantity limits
     const requestedCount = requestedByType[canonicalKey];
     if (!requestedCount) {
@@ -324,7 +236,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
       refetchingFn?.();
       return setSubmittedAction(false);
     }
-    const alreadyAssignedCheck = await assignedByType;
+    const alreadyAssignedCheck = await fetchAssignedByType();
     const alreadyAssigned = alreadyAssignedCheck?.[canonicalKey] || 0;
     if (alreadyAssigned >= requestedCount) {
       const remaining = Math.max(requestedCount - alreadyAssigned, 0);

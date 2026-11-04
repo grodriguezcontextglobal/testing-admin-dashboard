@@ -1,50 +1,51 @@
 import { useQuery } from "@tanstack/react-query";
 import { message } from "antd";
 import { groupBy } from "lodash";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
 import { devitrakApi } from "../../../../api/devitrakApi";
 import checkTypeFetchResponse from "../../../../components/utils/checkTypeFetchResponse";
 import GrayButtonComponent from "../../../../components/UX/buttons/GrayButton";
+const NO_ROWS = [];
+
+// Every query key carries the event, so one event's cached rows are never
+// exported for another. The four queries the old mount effect refetched by
+// hand use refetchOnMount: "always" instead.
 const SpreadSheet = () => {
   const [fileName, setFileName] = useState("");
-  const [itemsUsers, setItemsUsers] = useState([]);
-  const [allTransaction, setAllTransaction] = useState([]);
-  const [allServiceTransaction, setAllServiceTransaction] = useState([]);
-  const [defectedItems, setDefectedItems] = useState([]);
-  const [reportCash, setReportCash] = useState([]);
-  const [eventInventory, setEventInventory] = useState([]);
   const { event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
+  const eventName = event.eventInfoDetail.eventName;
+  const companyId = user.companyData.id;
   const inventoryEventStatus = useQuery({
-    queryKey: ["event_inventory_query"],
+    queryKey: ["event_inventory_query", event.sql?.event_id],
     queryFn: () =>
       devitrakApi.get(`/db_event/event-inventory/${event.sql.event_id}`),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
 
   const transactionDeviceRecordInEvent = useQuery({
-    queryKey: ["transactionAndDeviceRecord"],
+    queryKey: ["transactionAndDeviceRecord", eventName, companyId],
     queryFn: () =>
       devitrakApi.get(
         `/receiver/receiver-pool-list?eventSelected=${event.eventInfoDetail.eventName}&company=${user.companyData.id}`,
       ),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
 
   const transactionPlusUserInfo = useQuery({
-    queryKey: ["transactionPlusUserInfo"],
+    queryKey: ["transactionPlusUserInfo", eventName, companyId],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-users-list", {
         eventSelected: event.eventInfoDetail.eventName,
         company: user.companyData.id,
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
 
   const transactionInfo = useQuery({
-    queryKey: ["transactionInfo"],
+    queryKey: ["transactionInfo", eventName, event.company],
     queryFn: () =>
       devitrakApi.post("/transaction/transaction", {
         eventSelected: event.eventInfoDetail.eventName,
@@ -55,7 +56,7 @@ const SpreadSheet = () => {
   });
 
   const cashReportQuery = useQuery({
-    queryKey: ["cashReportPerEvent"],
+    queryKey: ["cashReportPerEvent", event.id, companyId],
     queryFn: () =>
       devitrakApi.post("/cash-report/cash-reports", {
         event: event.id,
@@ -65,55 +66,44 @@ const SpreadSheet = () => {
   });
 
   const consumersDataQuery = useQuery({
-    queryKey: ["consumersDataQuery"],
+    queryKey: ["consumersDataQuery", event.id, companyId],
     queryFn: () =>
       devitrakApi.get(
         `/auth/user-query?event_providers=${event.id}&company_providers=${user.companyData.id}`,
       ),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    transactionDeviceRecordInEvent.refetch();
-    transactionPlusUserInfo.refetch();
-    consumersDataQuery.refetch();
-    inventoryEventStatus.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (
-      transactionDeviceRecordInEvent.data &&
+  // The rows stay empty until every source has answered.
+  const reportReady = Boolean(
+    transactionDeviceRecordInEvent.data &&
       transactionPlusUserInfo.data &&
       transactionInfo.data &&
       cashReportQuery.data &&
-      inventoryEventStatus.data
-    ) {
-      setAllTransaction(transactionPlusUserInfo.data.data.listOfReceivers);
-      setItemsUsers(transactionPlusUserInfo.data.data.listOfReceivers);
-      setDefectedItems(
-        transactionDeviceRecordInEvent.data.data.receiversInventory,
-      );
-      setAllServiceTransaction(transactionInfo.data.data.list);
-      setReportCash(cashReportQuery.data.data.report);
-      setEventInventory(inventoryEventStatus.data.data.result);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [transactionPlusUserInfo.data, transactionDeviceRecordInEvent.data]);
+      inventoryEventStatus.data,
+  );
+  const allTransaction = reportReady
+    ? transactionPlusUserInfo.data.data.listOfReceivers
+    : NO_ROWS;
+  const itemsUsers = allTransaction;
+  const defectedItems = reportReady
+    ? transactionDeviceRecordInEvent.data.data.receiversInventory
+    : NO_ROWS;
+  const allServiceTransaction = reportReady
+    ? transactionInfo.data.data.list
+    : NO_ROWS;
+  const reportCash = reportReady ? cashReportQuery.data.data.report : NO_ROWS;
+  const eventInventory = reportReady
+    ? inventoryEventStatus.data.data.result
+    : NO_ROWS;
 
   const [messageApi, contextHolder] = message.useMessage();
-  const success = () => {
+  const success = useCallback(() => {
     messageApi.open({
       type: "success",
       content: "xlsx file generated and downloading.",
     });
-  };
+  }, [messageApi]);
 
   const defectedDevicesInfo = () => {
     const result = new Set();
@@ -474,17 +464,13 @@ const SpreadSheet = () => {
   };
 
   useEffect(() => {
-    const controller = new AbortController();
-    if (fileName !== "") {
-      success();
-      setTimeout(() => {
-        setFileName("");
-      }, 3000);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [fileName]);
+    if (fileName === "") return undefined;
+    success();
+    const timer = setTimeout(() => {
+      setFileName("");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [fileName, success]);
 
   return (
     <div style={{ margin: "0 0 0.5rem" }}>

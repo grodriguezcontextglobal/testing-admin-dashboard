@@ -30,23 +30,17 @@ const Services = ({
   const handleExtraServiceNeeded = async () => {
     return setExtraServicesNeeded(!extraServicesNeeded);
   };
-  const clearForm = () => {
-    setValue("service", "");
-    setValue("deposit", "");
-    return;
-  };
 
   useEffect(() => {
     dispatch(onAddExtraServiceNeeded(extraServicesNeeded));
   }, [extraServicesNeeded, dispatch]);
 
+  // Clears the fields each time a service is added or removed.
+  const servicesCount = extraServiceAdded.length;
   useEffect(() => {
-    const controller = new AbortController();
-    clearForm();
-    return () => {
-      controller.abort();
-    };
-  }, [extraServiceAdded.length]);
+    setValue("service", "");
+    setValue("deposit", "");
+  }, [servicesCount, setValue]);
 
   const triggerFilledFields = () => {
     const depositField = watch("deposit") !== "";

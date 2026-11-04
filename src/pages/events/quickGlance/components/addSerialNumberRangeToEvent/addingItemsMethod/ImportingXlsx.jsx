@@ -66,7 +66,6 @@ const isYes = (val) => {
 };
 
 const ImportingXlsx = ({
-  addingDeviceFromLocations,
   blockingButton,
   itemQuery,
   Subtitle,
@@ -316,7 +315,13 @@ const ImportingXlsx = ({
         setLoadingState(false);
       }
     },
-    [addingDeviceFromLocations, validSerialsByLocation, deviceTitle, closeModal]
+    [
+      validSerialsByLocation,
+      deviceTitle,
+      dispatch,
+      event,
+      user.sqlInfo.company_id,
+    ]
   );
 
   return (

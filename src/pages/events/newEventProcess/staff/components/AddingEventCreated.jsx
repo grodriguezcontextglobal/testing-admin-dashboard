@@ -1,14 +1,19 @@
 import { useDispatch, useSelector } from "react-redux";
 import { onAddEventStaff } from "../../../../../store/slices/eventSlice";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const AddingEventCreated = () => {
   const { staff } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
-  const headsetAttendeesStaff = staff.headsetAttendees ?? [];
-  const adminStaffMembers = user.adminUser ?? [];
-  const handleEventInfo = () => {
+  // Adds the signed-in person as the event's admin staff, once. The dispatch
+  // changes `staff`, so without the guard it would run again.
+  const added = useRef(false);
+  useEffect(() => {
+    if (added.current) return;
+    added.current = true;
+    const headsetAttendeesStaff = staff.headsetAttendees ?? [];
+    const adminStaffMembers = user.adminUser ?? [];
     const checkingExistingStaffMemberAddedToEventStaffing =
       adminStaffMembers?.find(
         (staffMember) => staffMember?.email === user?.email
@@ -25,11 +30,7 @@ const AddingEventCreated = () => {
       headsetAttendees: headsetAttendeesStaff,
     };
     dispatch(onAddEventStaff(format));
-  };
-
-  useEffect(() => {
-    handleEventInfo();
-  }, []);
+  }, [staff, user, dispatch]);
 
   return null;
 };

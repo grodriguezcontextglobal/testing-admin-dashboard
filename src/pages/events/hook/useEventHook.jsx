@@ -52,26 +52,17 @@ export const useEventHook = ({ eventList = [], searchValue = "" }) => {
         )?.role;
     }, [user]);
 
-    const filterEventsByEmail = (events = [], key = null) => {
+    const permittedEvents = useMemo(() => {
+        const events = dataPerCompany ?? [];
         if (userRole < 1) return events;
 
         return events.filter((event) => {
-            if (key) {
-                return event?.staff?.[key]?.some(
-                    (member) => member.email === user.email
-                );
-            }
-
             const adminUser = event?.staff?.adminUser ?? [];
             const headsetAttendees = event?.staff?.headsetAttendees ?? [];
             const staff = [...adminUser, ...headsetAttendees];
 
             return staff.some((member) => member.email === user.email);
         });
-    };
-
-    const permittedEvents = useMemo(() => {
-        return filterEventsByEmail(dataPerCompany);
     }, [dataPerCompany, userRole, user.email]);
 
     const removeDuplicatesById = (events = []) => {

@@ -1,57 +1,33 @@
 import { Grid, InputLabel } from "@mui/material";
 import { Checkbox, Table, Tooltip } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddDeviceSetup } from "../../../../../store/slices/eventSlice";
 import GrayButtonText from "../../../../../styles/global/GrayButtonText";
 import TextFontsize18LineHeight28 from "../../../../../styles/global/TextFontSize18LineHeight28";
 import { TextFontSize20LineHeight30 } from "../../../../../styles/global/TextFontSize20HeightLine30";
+import { initialDeviceReviewState } from "../utils/deviceReviewState";
 
 const Device = () => {
   const { deviceSetup } = useSelector((state) => state.event);
-  const [dataToRender, setDataToRender] = useState([]);
-  const [container, setContainer] = useState([]);
-  const [checkConsumerUses, setCheckConsumerUses] = useState([]);
-  const [allConsumerUsesChecked, setAllConsumerUsesChecked] = useState(false);
-  const [allContainersChecked, setAllContainersChecked] = useState(false);
+  // Read once from the store on mount; later edits live in local state and
+  // are pushed back with updateGlobalStore.
+  const [initial] = useState(() => initialDeviceReviewState(deviceSetup));
+  const [dataToRender, setDataToRender] = useState(initial.dataToRender);
+  const [container, setContainer] = useState(initial.container);
+  const [checkConsumerUses, setCheckConsumerUses] = useState(
+    initial.checkConsumerUses
+  );
+  const [allConsumerUsesChecked, setAllConsumerUsesChecked] = useState(
+    initial.allConsumerUsesChecked
+  );
+  const [allContainersChecked, setAllContainersChecked] = useState(
+    initial.allContainersChecked
+  );
   const dispatch = useDispatch();
-  useEffect(() => {
-    const controller = new AbortController();
-    const formattingData = () => {
-      const result = new Set();
-      for (let data of deviceSetup) {
-        if (!result.has(data.category_name)) {
-          result.add(data);
-        }
-      }
-      return Array.from(result);
-    };
-
-    const formattedData = formattingData();
-    setDataToRender(formattedData);
-
-    // Initialize checkConsumerUses and container based on initial data
-    const initialConsumerUses = formattedData.map((item, index) => item.consumerUses ? index : -1).filter(index => index !== -1);
-    setCheckConsumerUses(initialConsumerUses);
-
-    const initialContainers = formattedData.map((item, index) => item.isItSetAsContainerForEvent ? index : -1).filter(index => index !== -1);
-    setContainer(initialContainers);
-
-    // Initialize allConsumerUsesChecked
-    const initialAllConsumerUsesChecked = formattedData.length > 0 && formattedData.every(item => item.consumerUses);
-    setAllConsumerUsesChecked(initialAllConsumerUsesChecked);
-
-    // Initialize allContainersChecked
-    const initialAllContainersChecked = formattedData.length > 0 && formattedData.every(item => item.isItSetAsContainerForEvent);
-    setAllContainersChecked(initialAllContainersChecked);
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
   const updateGlobalStore = useCallback((data) => {
     return dispatch(onAddDeviceSetup(data));
-  }, []);
+  }, [dispatch]);
   const updateDeviceFeatures = (data) => {
     let copyData = [...dataToRender];
     let newCheckConsumerUses;

@@ -31,7 +31,11 @@ const Form = () => {
     extraServiceListSetup ?? []
   );
   const [assignAllDevices, setAssignAllDevices] = useState(false);
-  const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
+  // True when the event being created has no admin staff yet. Decided once,
+  // on mount.
+  const [triggerAddingAdminStaff] = useState(
+    () => normalizeEventStaff(staff).adminUser.length === 0
+  );
   const [filled, setFilled] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -77,16 +81,6 @@ const Form = () => {
     enabled: !!user.sqlInfo.company_id,
     staleTime: 1 * 60 * 100, // 1 minutes
   });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (normalizeEventStaff(staff).adminUser.length === 0) {
-      return setTriggerAddingAdminStaff(true);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const onChange = (value) => {
     const optionRendering = JSON.parse(value);

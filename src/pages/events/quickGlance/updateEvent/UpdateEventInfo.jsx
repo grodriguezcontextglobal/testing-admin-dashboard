@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Modal } from "antd";
 import { Grid, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
@@ -15,24 +15,22 @@ import { useStatusNotification } from "../../../../components/notification/alert
 
 const UpdateEventInfo = ({ openUpdateEventModal, setOpenUpdateEventModal }) => {
   const { user } = useSelector((state) => state.admin);
+  const { event } = useSelector((state) => state.event);
   const eventInventoryQuery = useQuery({
-    queryKey: ["eventInventoryQuery"],
+    // Keyed on the event; "always" keeps the refetch the mount effect did.
+    queryKey: [
+      "eventInventoryQuery",
+      event?.eventInfoDetail?.eventName,
+      user.companyData.id,
+    ],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         company: user.companyData.id,
         eventSelected: event.eventInfoDetail.eventName,
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
-  useEffect(() => {
-    const controller = new AbortController();
-    eventInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
-  const { event } = useSelector((state) => state.event);
   const [begin, setBegin] = useState(
     new Date(event?.eventInfoDetail?.dateBegin) ?? new Date()
   );

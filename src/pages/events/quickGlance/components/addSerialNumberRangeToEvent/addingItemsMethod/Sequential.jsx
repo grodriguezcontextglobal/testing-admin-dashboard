@@ -1,5 +1,5 @@
 import { Alert, Divider, Progress, Typography } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import LightBlueButtonComponent from "../../../../../../components/UX/buttons/LigthBlueButton";
 import ScannedSerialsList from "./ScannedSerialsList";
 import SerialNumberInput from "./SerialNumberInput";
@@ -32,6 +32,12 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
         deviceSetup:updatedEventInventory.data.updatedEventInventary
       }))
   }
+  // Latest version, read through a ref: it dispatches a new `event`, so as a
+  // dependency it would re-run the effect below after every call.
+  const finalizeRef = useRef(finalizeProcessAndUpdateEventInventory);
+  useEffect(() => {
+    finalizeRef.current = finalizeProcessAndUpdateEventInventory;
+  });
 
   const processBatch = useCallback(
     async (batch) => {
@@ -77,7 +83,7 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
         // nosql - deviceList, status, activity, comment, eventSelected, provider, type, company
         await devitrakApi.post("/receiver/receivers-pool-bulk", noSqlTemplate);
       }
-      await finalizeProcessAndUpdateEventInventory()
+      await finalizeRef.current()
     },
     [event, deviceTitle, user]
   );
@@ -135,9 +141,10 @@ const Sequential = ({ deviceTitle, Subtitle }) => {
     deviceTitle
   );
 
+  const allocationSucceeded = status === "success";
   useEffect(() => {
-    finalizeProcessAndUpdateEventInventory()
-  }, [status === "success"])
+    finalizeRef.current()
+  }, [allocationSucceeded])
   
   return (
     <div style={{ width: "100%" }}>

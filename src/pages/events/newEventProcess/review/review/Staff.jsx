@@ -1,5 +1,5 @@
 import { Grid, InputLabel } from "@mui/material";
-import { useCallback, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { onAddContactInfo } from "../../../../../store/slices/eventSlice";
 import { dicStaff } from "../../staff/components/dictionary";
@@ -7,24 +7,22 @@ import { dicStaff } from "../../staff/components/dictionary";
 const Staff = () => {
   const { staff, contactInfo } = useSelector((state) => state.event);
   const dispatch = useDispatch();
-  const settingContactInfo = useCallback(() => {
-    if (staff.adminUser) {
-      dispatch(
-        onAddContactInfo({
-          ...contactInfo,
-          name: `${staff.adminUser[0].firstName} ${staff.adminUser[0].lastName}`,
-          email: staff.adminUser[0].email,
-        })
-      );
-    }
-  }, []);
+  // Fills the event contact from the first admin staff member, once. The
+  // dispatch changes contactInfo, so without the guard it would run again.
+  const contactInfoFilled = useRef(false);
   useEffect(() => {
-    const controller = new AbortController();
-    settingContactInfo();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+    if (contactInfoFilled.current) return;
+    contactInfoFilled.current = true;
+    const admin = staff?.adminUser?.[0];
+    if (!admin) return;
+    dispatch(
+      onAddContactInfo({
+        ...contactInfo,
+        name: `${admin.firstName} ${admin.lastName}`,
+        email: admin.email,
+      })
+    );
+  }, [staff, contactInfo, dispatch]);
 
   const styleTitle = {
     textTransform: "none",
