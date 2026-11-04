@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { message } from "antd";
 import { groupBy } from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,12 +48,9 @@ const EditItemModal = ({
   const [moreInfo, setMoreInfo] = useState([]);
   const [returningDate, setReturningDate] = useState(new Date());
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
-  const [displayContainerSplotLimitField, setDisplayContainerSplotLimitField] =
-    useState(false);
   const [displaySublocationFields, setDisplaySublocationFields] =
     useState(false);
   const [subLocationsSubmitted, setSubLocationsSubmitted] = useState([]);
-  const [isRented, setIsRented] = useState(false);
   const [displayPreviewImage, setDisplayPreviewImage] = useState(false);
   const [convertImageTo64ForPreview, setConvertImageTo64ForPreview] =
     useState(null);
@@ -79,6 +76,15 @@ const EditItemModal = ({
     control,
     formState: { errors },
   } = useForm();
+  // Watched once per render; the effects and memos below depend on these.
+  const [watchedLocation, containerValue, costValue, ownershipValue] = watch([
+    "location",
+    "container",
+    "cost",
+    "ownership",
+  ]);
+  const displayContainerSplotLimitField = String(containerValue).includes("Yes");
+  const isRented = ownershipValue === "Rent";
   const closeModal = () => {
     return setOpenEditItemModal(false);
   };
@@ -295,13 +301,10 @@ const EditItemModal = ({
     return setMoreInfo(removingResult);
   };
 
+  const inventoryItems = itemsInInventoryQuery.data?.data?.items;
   const subLocationsOptions = useMemo(
-    () =>
-      retrieveExistingSubLocationsForCompanyInventory(
-        itemsInInventoryQuery?.data?.data?.items,
-        watch("location"),
-      ),
-    [watch("location")],
+    () => retrieveExistingSubLocationsForCompanyInventory(inventoryItems, watchedLocation),
+    [inventoryItems, watchedLocation],
   );
   /**
    * The two sub-location buttons, rendered into one row by EditItemForm.
@@ -411,12 +414,17 @@ const EditItemModal = ({
    * away whatever the user had already typed. The supplier name is filled in by
    * the follow-up effect below.
    */
+  const itemId = dataFound[0]?.item_id;
+  const latestSeedInputs = useRef({ item: dataFound[0], dicSuppliers });
   useEffect(() => {
-    const item = dataFound[0];
+    latestSeedInputs.current = { item: dataFound[0], dicSuppliers };
+  });
+  useEffect(() => {
+    const { item, dicSuppliers: suppliersAtSeed } = latestSeedInputs.current;
     if (!item) return;
 
     const values = buildEditItemFormValues(item, {
-      supplierName: resolveSupplierName(dicSuppliers, item.supplier_info),
+      supplierName: resolveSupplierName(suppliersAtSeed, item.supplier_info),
     });
     Object.entries(values).forEach(([key, value]) => setValue(key, value));
 
@@ -434,7 +442,7 @@ const EditItemModal = ({
     // the save wrote that back.
     const storedReturnDate = parseReturnDate(item.return_date);
     if (storedReturnDate) setReturningDate(storedReturnDate);
-  }, [dataFound[0]?.item_id]);
+  }, [itemId, setValue]);
 
   /**
    * Supplier name, once the provider list resolves.
@@ -443,23 +451,12 @@ const EditItemModal = ({
    * overwrite a supplier the user just picked.
    */
   useEffect(() => {
-    const item = dataFound[0];
+    const { item } = latestSeedInputs.current;
     if (!item || getValues("supplier")) return;
     const name = resolveSupplierName(dicSuppliers, item.supplier_info);
     if (name) setValue("supplier", name);
-  }, [dataFound[0]?.item_id, dicSuppliers]);
+  }, [itemId, dicSuppliers, getValues, setValue]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (String(watch("container")).includes("Yes")) {
-      setDisplayContainerSplotLimitField(true);
-    } else {
-      setDisplayContainerSplotLimitField(false);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [watch("container")]);
 
   // Collapsing the "Add more information" panel used to empty moreInfo. That
   // was survivable while the list only ever held newly typed entries; now that
@@ -468,20 +465,8 @@ const EditItemModal = ({
   // each entry is what removes one.
 
   useEffect(() => {
-    const controller = new AbortController();
-    costValueInputFormat({ props: watch("cost"), setValue });
-    return () => {
-      controller.abort();
-    };
-  }, [watch("cost")]);
-
-  useEffect(() => {
-    if (watch("ownership") === "Rent") {
-      setIsRented(true);
-    } else {
-      setIsRented(false);
-    }
-  }, [watch("ownership")]);
+    costValueInputFormat({ props: costValue, setValue });
+  }, [costValue, setValue]);
 
   useEffect(() => {
     if (imageUploadedValue?.length > 0) {
@@ -497,11 +482,7 @@ const EditItemModal = ({
       setDisplayPreviewImage(false);
       setImageUrlGenerated(null);
     }
-  }, [
-    watch("image_uploader")?.length,
-    imageUploadedValue?.length,
-    removeImage,
-  ]);
+  }, [imageUploadedValue, removeImage]);
   const modalBodyUI = () => {
     return (
       <ReusableCard>
