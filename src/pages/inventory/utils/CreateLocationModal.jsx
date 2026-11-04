@@ -39,9 +39,6 @@ const CreateLocationModal = ({ openModal, setOpenModal, user }) => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: Number(
-            user.companyData.employees?.find((e) => e.user === user.email)?.role
-          ),
           preference:
             user.companyData.employees?.find((e) => e.user === user.email)
               ?.preference || [],

@@ -190,7 +190,6 @@ const ItemTable = ({
     queryFn: () =>
       devitrakApi.post(`/db_item/warehouse-items`, {
         company_id: user.sqlInfo.company_id,
-        role: user.role,
         preference:
           user.companyData.employees
             .find((item) => item.user === user.email)
@@ -397,7 +396,6 @@ const ItemTable = ({
           devitrakApi,
           buildInventoryExportBody({
             companyId: user.sqlInfo.company_id,
-            role: user.role,
             locations: userPreferences?.managerLocation?.map(
               (item) => item.location,
             ),

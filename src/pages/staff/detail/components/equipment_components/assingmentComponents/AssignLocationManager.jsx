@@ -14,7 +14,6 @@ import Label from "../../../../../../components/UX/inputs/Label";
 import ModalUX from "../../../../../../components/UX/modal/ModalUX";
 import { ProfileSkeleton, StatusChip } from "../../../../../../components/UX/profile";
 import BaseTable from "../../../../../../components/UX/tables/BaseTable";
-import { ROLE_LEVELS, resolveRoleType } from "../../../../../../config/roles";
 import { onAddStaffProfile } from "../../../../../../store/slices/staffDetailSlide";
 import { AntSelectorStyle } from "../../../../../../styles/global/AntSelectorStyle";
 import "../../../../../../styles/global/actionForm.css";
@@ -71,7 +70,6 @@ const AssignLocationManager = () => {
   const [notice, setNotice] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const roleType = resolveRoleType(user);
 
   const companyQuery = useQuery({
     queryKey: ["companyData", user.companyData.id, { type: "done" }],
@@ -87,7 +85,6 @@ const AssignLocationManager = () => {
         `/db_location/companies/${user.sqlInfo.company_id}/locations`,
         {
           company_id: user.sqlInfo.company_id,
-          role: ROLE_LEVELS[roleType] ?? 5,
           preference:
             user.companyData.employees.find((emp) => emp.user === user.email)
               ?.preference || [],
