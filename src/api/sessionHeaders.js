@@ -12,7 +12,7 @@ import { clearOfflineData } from "./offlineData";
 export const SESSION_STORAGE_KEYS = [
   "admin-token", // JWT (x-token)
   "sqlStaffId", // staff SQL id decoded from the JWT
-  "s-token-lq", // staff member SQL id (attached on every request)
+  "s-token-lq", // retired header (B4); kept so logout clears values from older builds
   "x-company-id", // Mongo ObjectId of the active company
   "s-company-lq", // SQL company_id of the active company
   "devitrak-last-activity", // idle-timeout clock shared by tabs (hooks/idleSession.js)

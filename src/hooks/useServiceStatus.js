@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
  *
  * `CLAUDE.md` says to import API clients from `src/api/devitrakApi.jsx` and
  * never to build one ad hoc. **This is the documented exception.** That
- * client's request interceptor attaches `x-token` and `s-token-lq` from
+ * client's request interceptor attaches `x-token` from
  * localStorage to every request it makes, with no check on the origin, so
  * pointing it at the status worker would hand our session tokens to a third
  * party. `credentials: "omit"` says the same thing to the browser.
