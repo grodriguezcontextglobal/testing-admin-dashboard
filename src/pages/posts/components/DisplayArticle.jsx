@@ -1,6 +1,6 @@
 import { devitrakApi } from "../../../api/devitrakApi";
 import { Grid } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import DOMPurify from "dompurify";
 import Header from "./Header";
@@ -9,36 +9,33 @@ import { useSelector } from "react-redux";
 const DisplayArticle = () => {
   const location = useLocation();
   const [article, setArticle] = useState({});
-  const [clean, setClean] = useState({});
   const { user } = useSelector((state) => state.admin)
+  const postId = location.state?.id;
+  const companyId = user.companyData.id;
   useEffect(() => {
-    const controller = new AbortController();
+    let cancelled = false;
     const first = async () => {
       const response = await devitrakApi.post(`/post/posts`, {
-        _id: location.state.id,
-        company_id:user.companyData.id
+        _id: postId,
+        company_id: companyId,
       });
-      if (response.data) {
+      if (!cancelled && response.data) {
         setArticle(response.data.companyPosts[0]);
       }
     };
-    first();
+    first().catch((error) => console.error("Loading the post:", error));
     return () => {
-      controller.abort();
+      cancelled = true;
     };
-  }, []);
+  }, [postId, companyId]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (article.description) {
-      const sanitized = DOMPurify.sanitize(article.description);
-      setClean(sanitized);
-    }
-
-    return () => {
-      controller.abort();
-    };
-  }, [article.description && article.description.length > 0]);
+  // The post body is HTML written in the editor: always sanitized before it
+  // is rendered.
+  const description = article?.description;
+  const clean = useMemo(
+    () => (description ? DOMPurify.sanitize(description) : ""),
+    [description]
+  );
 
   return (
     <Grid container>

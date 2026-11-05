@@ -1,7 +1,7 @@
 import { Grid, OutlinedInput, styled } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Button, message, Select } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -68,43 +68,28 @@ const CustomReactQuill = styled(ReactQuill)(() => ({
   },
 }));
 
+const NO_EVENTS = [];
+
 const NewPost = () => {
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const { register, handleSubmit } = useForm();
   const [value, setValue] = useState("");
-  const [eventList, setEventList] = useState([]);
   const [assignedEvent, setAssignedEvent] = useState([]);
   const [isLoadingState, setIsLoadingState] = useState(false);
   const { user } = useSelector((state) => state.admin);
   const imageUploadedRef = useRef(null);
   const eventsCompanyList = useQuery({
-    queryKey: ["eventsCompanyList"],
+    queryKey: ["eventsCompanyList", user.companyData.company_name],
     queryFn: () =>
       devitrakApi.get(`/event/event-list-per-company?company=${user.companyData.company_name}&type=event`, {
         // company_id: user.companyData.id,
         // type:"event",
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
+  const eventList = eventsCompanyList.data?.data?.list ?? NO_EVENTS;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    eventsCompanyList.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (eventsCompanyList.data) {
-      setEventList(eventsCompanyList.data.data.list);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [eventsCompanyList.data]);
 
   const stylingLabel = {
     width: "100%",

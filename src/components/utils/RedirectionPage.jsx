@@ -27,9 +27,6 @@ const RedirectionPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { notify, contextHolder } = useStatusNotification();
-  const openNotification = () => {
-    notify("info", "Company has been created. Please log in.", 2);
-  };
   const flow = async () => {
     await devitrakApi.patch(`/staff/edit-admin/${user.uid}`, {
       online: false,
@@ -49,9 +46,9 @@ const RedirectionPage = () => {
     dispatch(onLogout());
     return navigate("/login");
   };
-useEffect(() => {
-  openNotification()
-}, [])
+  useEffect(() => {
+    notify("info", "Company has been created. Please log in.", 2);
+  }, [notify]);
 
   return (
     <div style={CenteringGrid}>

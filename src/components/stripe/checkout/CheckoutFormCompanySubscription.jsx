@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   useStripe,
   useElements,
@@ -39,32 +39,6 @@ const CheckoutFormCompanySubscription = ({ clientSecret, type, total }) => {
   const paymentElementStyle = {
     style: iFrameStyle,
   };
-
-  useEffect(() => {
-    if (!stripe) {
-      return;
-    }
-    if (!clientSecret) {
-      return;
-    }
-
-    // stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
-    //   switch (paymentIntent.status) {
-    //     case "succeeded":
-    //       setErrorMessage("Payment succeeded!");
-    //       break;
-    //     case "processing":
-    //       setErrorMessage("Your payment is processing.");
-    //       break;
-    //     case "requires_payment_method":
-    //       setErrorMessage("Your payment was not successful, please try again.");
-    //       break;
-    //     default:
-    //       setErrorMessage("Something went wrong.");
-    //       break;
-    //   }
-    // });
-  }, [stripe]);
 
   const handleSubmit = async (event) => {
     // We don't want to let default form submission happen here,
