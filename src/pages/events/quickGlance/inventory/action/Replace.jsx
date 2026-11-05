@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -33,8 +33,16 @@ export const Replace = () => {
   const { register, setValue, watch, handleSubmit } = useForm();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+  // Both keys carry the device, so another device's cached record never shows
+  // here; "always" keeps the refetch the mount effect used to do.
+  const selectedDevice = deviceInfoSelected?.entireData ?? {};
   const deviceInPoolQuery = useQuery({
-    queryKey: ["deviceInPool"],
+    queryKey: [
+      "deviceInPool",
+      selectedDevice.eventSelected,
+      selectedDevice.device,
+      selectedDevice.type,
+    ],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-pool-list", {
         eventSelected: deviceInfoSelected.entireData.eventSelected, //pass event id
@@ -43,13 +51,17 @@ export const Replace = () => {
         type: deviceInfoSelected.entireData.type,
         activity: deviceInfoSelected.entireData.activity,
       }),
-    // enabled: false,
-    refetchOnMount: false,
+    refetchOnMount: "always",
     cacheTime: 1000 * 60 * 2,
   });
 
   const deviceInTransactionQuery = useQuery({
-    queryKey: ["deviceInTransation"],
+    queryKey: [
+      "deviceInTransation",
+      selectedDevice.eventSelected,
+      selectedDevice.device,
+      selectedDevice.type,
+    ],
     queryFn: () =>
       devitrakApi.post("/receiver/receiver-assigned-list", {
         eventSelected: deviceInfoSelected.entireData.eventSelected,
@@ -58,19 +70,9 @@ export const Replace = () => {
         "device.deviceType": deviceInfoSelected.entireData.type,
         "device.status": true,
       }),
-    // enabled: false,
-    refetchOnMount: false,
+    refetchOnMount: "always",
     cacheTime: 1000 * 60 * 2,
   });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    deviceInPoolQuery.refetch();
-    deviceInTransactionQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   function closeModal() {
     setValue("serialNumber", "");

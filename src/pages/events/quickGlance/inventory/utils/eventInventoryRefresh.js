@@ -25,7 +25,7 @@ const text = (value) => String(value ?? "").trim();
  *
  * The company is always its **id**. Every request that writes this cache sends
  * `company=<companyData.id>`: the pool list in MainPageQuickGlance,
- * GraphicInventoryEventActivity, SpreadSheet, FormatToDisplayDetail. A key
+ * SpreadSheet, FormatToDisplayDetail. A key
  * built from a company *name* clears nothing — which is what the previous
  * version did, using a `companyName` field the session does not even carry, so
  * it posted `company=undefined` twice on every press.

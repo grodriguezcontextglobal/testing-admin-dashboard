@@ -64,15 +64,14 @@ const ButtonSections = () => {
       }),
   });
 
+  const { refetch: refetchInventories } = listOfInventoryQuery;
+  const { refetch: refetchItems } = listOfItemsInInventoryQuery;
+  const { refetch: refetchItemsInPool } = ItemsInPoolQuery;
   useEffect(() => {
-    const controller = new AbortController();
-    listOfInventoryQuery.refetch();
-    listOfItemsInInventoryQuery.refetch();
-    ItemsInPoolQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
+    refetchInventories();
+    refetchItems();
+    refetchItemsInPool();
+  }, [refetchInventories, refetchItems, refetchItemsInPool]);
 
   const options = [
     {

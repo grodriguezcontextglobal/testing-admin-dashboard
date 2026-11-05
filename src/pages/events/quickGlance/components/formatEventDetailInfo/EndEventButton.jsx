@@ -203,21 +203,29 @@ const EndEventButton = () => {
     refetchOnMount: false,
   });
 
-  let trigger = false;
-
+  // Fresh data when the button mounts. The refetch functions are stable, so
+  // this runs once.
+  const { refetch: refetchInventories } = listOfInventoryQuery;
+  const { refetch: refetchItems } = listOfItemsInInventoryQuery;
+  const { refetch: refetchEventPool } = eventInventoryQuery;
+  const { refetch: refetchTransactions } = transactionsRecordQuery;
+  const { refetch: refetchCompanyStock } = sqlDBCompanyStockQuery;
+  const { refetch: refetchSqlEventInventory } = sqlDBInventoryEventQuery;
   useEffect(() => {
-    const controller = new AbortController();
-    listOfInventoryQuery.refetch();
-    listOfItemsInInventoryQuery.refetch();
-    // itemsInPoolQuery.refetch();
-    eventInventoryQuery.refetch();
-    transactionsRecordQuery.refetch();
-    sqlDBCompanyStockQuery.refetch();
-    sqlDBInventoryEventQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, [trigger === true]);
+    refetchInventories();
+    refetchItems();
+    refetchEventPool();
+    refetchTransactions();
+    refetchCompanyStock();
+    refetchSqlEventInventory();
+  }, [
+    refetchInventories,
+    refetchItems,
+    refetchEventPool,
+    refetchTransactions,
+    refetchCompanyStock,
+    refetchSqlEventInventory,
+  ]);
 
   const { notify, contextHolder } = useStatusNotification();
   const openNotificationWithIcon = (type, msg) => {

@@ -44,6 +44,8 @@ const ModalAddAndUpdateDeviceSetup = ({
   const { user } = useSelector((state) => state.admin);
   const { event } = useSelector((state) => state.event);
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+  const companyName = user.companyData.company_name;
   const eventInventoryRef = useCallback(
     async ({ device = null, database = null, checking = null }) => {
       const eventInventoryRef = await devitrakApi.post("/event/event-list", {
@@ -83,13 +85,13 @@ const ModalAddAndUpdateDeviceSetup = ({
           group: database[0].item_group,
           value: database[0].cost,
           description: database[0].descript_item,
-          company: user.companyData.company_name,
+          company: companyName,
           quantity: database.length,
           ownership: database[0].ownership,
           createdBy: new Date().toISOString(),
           key: database[0].id,
           dateCreated: new Date().toISOString(),
-          resume: `${database[0].category_name} ${database[0].item_group} ${database[0].cost} ${database[0].descript_item} ${user.companyData.company_name} ${database[0].ownership}`,
+          resume: `${database[0].category_name} ${database[0].item_group} ${database[0].cost} ${database[0].descript_item} ${companyName} ${database[0].ownership}`,
           consumerUses: false,
           startingNumber: checking.data.receiversInventory[0].device,
           endingNumber: checking.data.receiversInventory.at(-1).device,
@@ -114,10 +116,9 @@ const ModalAddAndUpdateDeviceSetup = ({
         })
       );
     },
-    []
+    [event, companyName, dispatch]
   );
   const { register, handleSubmit, watch, setValue } = useForm();
-  const dispatch = useDispatch();
   const closeModal = () => {
     return setOpenModalDeviceSetup(false);
   };
@@ -164,7 +165,7 @@ const ModalAddAndUpdateDeviceSetup = ({
   });
 
   const eventInfoSqlDB = useQuery({
-    queryKey: ["eventInfoSqlDB"],
+    queryKey: ["eventInfoSqlDB", eventName],
     queryFn: () =>
       devitrakApi.post("/db_event/consulting-event", {
         // company_assigned_event_id: user.sqlInfo.company_id,
@@ -174,16 +175,21 @@ const ModalAddAndUpdateDeviceSetup = ({
   });
 
   // Only refetch data when modal opens
+  const { refetch: refetchItems } = itemQuery;
+  const { refetch: refetchPoolRecords } = recordNoSqlDevicesQuery;
+  const { refetch: refetchEventInfoSql } = eventInfoSqlDB;
   useEffect(() => {
     if (openModalDeviceSetup) {
-      itemQuery.refetch();
-      recordNoSqlDevicesQuery.refetch();
-      eventInfoSqlDB.refetch();
+      refetchItems();
+      refetchPoolRecords();
+      refetchEventInfoSql();
     }
-  }, [openModalDeviceSetup]);
+  }, [openModalDeviceSetup, refetchItems, refetchPoolRecords, refetchEventInfoSql]);
 
-  const existingDevice =
-    recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [];
+  const existingDevice = useMemo(
+    () => recordNoSqlDevicesQuery?.data?.data?.receiversInventory ?? [],
+    [recordNoSqlDevicesQuery?.data]
+  );
 
   // Memoize the select options to prevent recalculation on every render
   const selectOptions = useMemo(() => {
@@ -248,7 +254,8 @@ const ModalAddAndUpdateDeviceSetup = ({
     }
   }, [watch, valueItemSelected]);
 
-  const fullDetailForSelectedData = async (props) => {
+  const sqlCompanyId = user.sqlInfo.company_id;
+  const fullDetailForSelectedData = useCallback(async (props) => {
     try {
       if (
         !props.location ||
@@ -261,7 +268,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         "/db_event/retrieve-item-location-quantity-full-details",
         {
           location: props.location,
-          company_id: user.sqlInfo.company_id,
+          company_id: sqlCompanyId,
           warehouse: 1,
           item_group: deviceTitle,
           enableAssignFeature: 1,
@@ -276,7 +283,7 @@ const ModalAddAndUpdateDeviceSetup = ({
     } catch (error) {
       return message.error(JSON.stringify(error));
     }
-  };
+  }, [sqlCompanyId, deviceTitle, category_name]);
 
   const addingDeviceFromLocations = useCallback(
     async (data) => {
@@ -326,8 +333,14 @@ const ModalAddAndUpdateDeviceSetup = ({
         console.error("Error adding device from location:", error);
       }
     },
-    [existingDevice, quantity, valueItemSelected, listOfLocations, setValue]
-    // REMOVED listOfLocations from dependencies to prevent stale closure
+    [
+      existingDevice,
+      quantity,
+      valueItemSelected,
+      listOfLocations,
+      setValue,
+      fullDetailForSelectedData,
+    ]
   );
 
   const removeItem = useCallback((index) => {

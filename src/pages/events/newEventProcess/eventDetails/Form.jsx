@@ -73,7 +73,11 @@ const Form = () => {
   // test mode in production). hasStripeConnectedAccount in
   // utils/merchantAvailability.js is the check to put back here.
   const merchantAvailable = true;
-  const [triggerAddingAdminStaff, setTriggerAddingAdminStaff] = useState(false);
+  // Opens the "add yourself as admin staff" step when the event being created
+  // has no admin staff yet. Decided once, on mount.
+  const [triggerAddingAdminStaff] = useState(
+    () => normalizeEventStaff(staff).adminUser.length === 0
+  );
   const [daysBeforeEvent, setDaysBeforeEvent] = useState(
     eventInfoDetail.daysBeforeEvent
   );
@@ -82,22 +86,12 @@ const Form = () => {
   );
 
   useEffect(() => {
-    const controller = new AbortController();
-    if (normalizeEventStaff(staff).adminUser.length === 0) {
-      return setTriggerAddingAdminStaff(true);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
     setEnd(
       eventInfoDetail.dateEnd
         ? new Date(eventInfoDetail.dateEnd)
         : new Date(begin)
     );
-  }, [begin, eventInfoDetail.dateBegin]);
+  }, [begin, eventInfoDetail.dateBegin, eventInfoDetail.dateEnd]);
 
   const addingPhoneNumber = () => {
     const result = [...numberOfPhoneNumbersPerEvent, contactPhoneNumber];

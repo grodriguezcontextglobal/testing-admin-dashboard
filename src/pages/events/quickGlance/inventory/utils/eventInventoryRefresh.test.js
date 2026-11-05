@@ -18,7 +18,7 @@ describe("eventCacheKeys", () => {
 
   it("keys on the company id, which is what every request sends", () => {
     // Not the company name. Every call that WRITES this cache -- the pool list
-    // in MainPageQuickGlance, GraphicInventoryEventActivity, SpreadSheet,
+    // in MainPageQuickGlance, SpreadSheet,
     // FormatToDisplayDetail -- sends `company=<companyData.id>`. A key built
     // from a name clears nothing, whatever the name field is called.
     expect(eventCacheKeys(args).every((key) => key.endsWith("company=co-9"))).toBe(

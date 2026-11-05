@@ -43,6 +43,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
       throw error;
     }
   };
+  const companyName = user.companyData.company_name;
   const eventInventoryRef = useCallback(
     async ({ device = null, database = null, checking = null }) => {
       const eventInventoryRef = await devitrakApi.post("/event/event-list", {
@@ -82,13 +83,13 @@ const useAddingItemsToEventInventoryOneByOne = ({
           group: database[0].item_group,
           value: database[0].cost,
           description: database[0].descript_item,
-          company: user.companyData.company_name,
+          company: companyName,
           quantity: database.length,
           ownership: database[0].ownership,
           createdBy: new Date().toISOString(),
           key: database[0].id,
           dateCreated: new Date().toISOString(),
-          resume: `${database[0].category_name} ${database[0].item_group} ${database[0].cost} ${database[0].descript_item} ${user.companyData.company_name} ${database[0].ownership}`,
+          resume: `${database[0].category_name} ${database[0].item_group} ${database[0].cost} ${database[0].descript_item} ${companyName} ${database[0].ownership}`,
           consumerUses: false,
           startingNumber: checking.data.receiversInventory[0].device,
           endingNumber: checking.data.receiversInventory.at(-1).device,
@@ -111,7 +112,7 @@ const useAddingItemsToEventInventoryOneByOne = ({
         );
       }
     },
-    []
+    [eventInfo, companyName, dispatch]
   );
 
   const gettingItemsInContainer = async (props) => {

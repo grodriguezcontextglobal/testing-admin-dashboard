@@ -9,7 +9,6 @@ import { onAddEventStaff } from "../../../../store/slices/eventSlice";
 import "../../../../styles/global/ant-select.css";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import FormFields from "./components/FormFields";
-import AddingEventCreated from "./components/AddingEventCreated";
 import { devitrakApi } from "../../../../api/devitrakApi";
 const schema = yup.object().shape({
   firstName: yup.string().required("First name is required"),
@@ -72,11 +71,7 @@ const Form = () => {
       setValue("email", selectedEmployee.user ?? ""); // 'user' holds email in schema
       // Keep role manual unless you want to map company role codes
     }
-  }, [selectedEmployee, isAddingNewMember]);
-
-  useEffect(() => {
-    <AddingEventCreated />;
-  }, [adminStaff.length]);
+  }, [selectedEmployee, isAddingNewMember, setValue]);
 
   const onSelectEmployee = (idOrNew) => {
     if (idOrNew === "__new__") {
