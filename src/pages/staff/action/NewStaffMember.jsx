@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { yupResolver } from "@hookform/resolvers/yup";
 import { MenuItem, Select } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

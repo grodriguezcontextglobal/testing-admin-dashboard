@@ -148,7 +148,6 @@ const ImportingXlsx = ({
   ];
 
   const handleDownloadTemplate = () => {
-    // eslint-disable-next-line no-unused-vars
     const dataToExport = tourData.map(({ key, ...rest }) => rest);
     const ws = utils.json_to_sheet(dataToExport);
     const wb = utils.book_new();

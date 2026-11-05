@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-escape */
 /**
  * Pure logic for the XLSX bulk member import: header normalization, alias
  * resolution, and row validation/normalization. Kept out of the component so

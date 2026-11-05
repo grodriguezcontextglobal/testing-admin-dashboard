@@ -230,7 +230,6 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
       ...(registerByStatus.pending?.consents ?? []),
       ...(registerByStatus.agreed?.consents ?? []),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       registerByStatus.refused,
       registerByStatus.expired,

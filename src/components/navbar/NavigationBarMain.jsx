@@ -67,7 +67,6 @@ const getHomeRoute = (roleType) => {
 };
 
 const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
-  // eslint-disable-next-line no-unused-vars
   // const [{ x, y }, scrollTo] = useWindowScroll();
   // const { register, handleSubmit, watch } = useForm()
   const { window } = props;

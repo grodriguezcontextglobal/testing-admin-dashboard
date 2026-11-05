@@ -24,23 +24,33 @@ const SignedContractViewHigherPermissionLevel = () => {
     },
   });
   const [url, setUrl] = useState(null);
-  const downloadDocument = async (x) => {
-    try {
+  // What the staff profile passed in navigation state.
+  const contractUrl = location.state?.contract_url;
+  const verificationId = location.state?.verificationId;
+  const verification_id = location.state?.verification_id;
+  const companyId = location.state?.company_id;
+  const staffMemberId = profile?.adminUserInfo?.id;
+
+  // One download link per contract. There were two effects asking for it,
+  // one on mount and one on contract_url, so it was fetched twice.
+  useEffect(() => {
+    let cancelled = false;
+    const downloadDocument = async () => {
       const response = await devitrakApi.post(
         `/document/download/documentUrl`,
         {
-          documentUrl: x,
+          documentUrl: contractUrl,
         }
       );
-      return setUrl(response.data.downloadUrl);
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
-
-  useEffect(() => {
-    downloadDocument(location.state.contract_url);
-  }, []);
+      if (!cancelled) setUrl(response.data.downloadUrl);
+    };
+    downloadDocument().catch((error) =>
+      console.error("Contract download link:", error)
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [contractUrl]);
 
   useEffect(() => {
     const checkIfDocumentIsSignedAlready = async () => {
@@ -51,16 +61,16 @@ const SignedContractViewHigherPermissionLevel = () => {
           devitrakApi.post(
             `/document/verification/staff_member/check_signed_document`,
             {
-              verificationID: location.state.verificationId,
+              verificationID: verificationId,
             }
           ),
           devitrakApi.post(
             "/company/consulting-signatures",
             {
-              staff_member_id: profile.adminUserInfo.id,
-              company_id: location.state.company_id,
-              contract_url: location.state.contract_url,
-              verification_id: location.state.verification_id,
+              staff_member_id: staffMemberId,
+              company_id: companyId,
+              contract_url: contractUrl,
+              verification_id,
             }
           ),
         ]);
@@ -77,44 +87,38 @@ const SignedContractViewHigherPermissionLevel = () => {
       }
     };
     checkIfDocumentIsSignedAlready();
-  }, []);
+  }, [verificationId, staffMemberId, companyId, contractUrl, verification_id]);
 
   useEffect(() => {
-    if (location.state.verificationId && location.state.contract_url) {
-      fetchVerification();
-    }
-  }, [location.state.verificationId, location.state.contract_url]);
-
-  useEffect(() => {
-    downloadDocument(location.state.contract_url);
-  }, [location.state.contract_url]);
-
-  const fetchVerification = async () => {
-    try {
-      const response = await devitrakApi.post(
-        "/document/verification/staff_member/check_signed_document",
-        {
-          verificationID: location.state.verificationId,
-          contract_url: location.state.contract_url, // "document ir" interpreted as document URL
+    if (!verificationId || !contractUrl) return;
+    const fetchVerification = async () => {
+      try {
+        const response = await devitrakApi.post(
+          "/document/verification/staff_member/check_signed_document",
+          {
+            verificationID: verificationId,
+            contract_url: contractUrl, // "document ir" interpreted as document URL
+          }
+        );
+        if (response.data?.ok) {
+          setContractInfo({
+            contract_info: response.data.contract_info,
+            document_info: response.data.document,
+          });
         }
-      );
-      if (response.data?.ok) {
-        setContractInfo({
-          contract_info: response.data.contract_info,
-          document_info: response.data.document,
-        });
+      } catch (error) {
+        message.error("Failed to load contract verification");
       }
-    } catch (error) {
-      message.error("Failed to load contract verification");
-    }
-  };
+    };
+    fetchVerification();
+  }, [verificationId, contractUrl]);
 
   useEffect(() => {
     if (signatureInfo) {
       setValue("signature", signatureInfo.signature);
       setValue("date", new Date(signatureInfo.date).toLocaleString());
     }
-  }, [signatureInfo])
+  }, [signatureInfo, setValue])
   
 
   // Derive display values from verification; fall back to staff info when needed

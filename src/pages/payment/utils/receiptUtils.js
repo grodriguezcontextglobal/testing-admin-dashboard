@@ -232,7 +232,6 @@ export const receiptQrValue = (url, outcome) => {
  */
 export const publicReceiptToTransaction = (receipt) => {
   if (!receipt) return null;
-  // eslint-disable-next-line no-unused-vars
   const { consumerInfo, ...rest } = receipt;
   const fromStatus =
     receipt.status === "active" ? true : receipt.status === "refunded" ? false : undefined;

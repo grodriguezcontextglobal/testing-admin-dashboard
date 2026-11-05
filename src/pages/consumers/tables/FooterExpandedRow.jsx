@@ -328,7 +328,6 @@ const FooterExpandedRow = ({
       render: () => {
         // const lostItemsList = groupBy(formattedData, "status")["Lost"];
         const groupingByStatus = groupBy(transactionDeviceData, "status");
-        // eslint-disable-next-line no-unused-vars
         const { color, ...SubtitleWithColor } = Subtitle
         const items = [
           {

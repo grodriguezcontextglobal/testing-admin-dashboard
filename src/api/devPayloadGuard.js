@@ -97,7 +97,6 @@ export function guardRequest(config) {
   ensureContract();
   const problem = inspectRequest(config);
   if (problem) {
-    // eslint-disable-next-line no-console
     console.warn(
       `[api-contract] ${problem.endpoint} is missing ${problem.missing.join(", ")}.\n` +
         `  sent:     ${problem.sent.join(", ") || "(nothing)"}\n` +

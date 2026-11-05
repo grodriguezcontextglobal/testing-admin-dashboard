@@ -16,7 +16,6 @@ import DocumentAssignmentBoard from "./DocumentAssignmentBoard";
 import { assignDocument, unassignedDocuments } from "./utils/documentAssignment";
 
 const FormDocuments = () => {
-  // eslint-disable-next-line no-unused-vars
   const { eventInfoDetail, event } = useSelector((state) => state.event);
   const { user } = useSelector((state) => state.admin);
   // const [activeTab, setActiveTab] = useState(1);

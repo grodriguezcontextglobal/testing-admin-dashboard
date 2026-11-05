@@ -73,16 +73,16 @@ const MembersStatsRow = ({ audienceLabel = "members" }) => {
     enabled: !!companyId,
   });
 
-  const members = membersQuery?.data?.data?.members || [];
+  const membersList = membersQuery?.data?.data?.members;
   const { minors, minorsMissingRep } = useMemo(() => {
-    const m = members.filter((x) => Number(x.minor) === 1);
+    const m = (membersList || []).filter((x) => Number(x.minor) === 1);
     return {
       minors: m.length,
       minorsMissingRep: m.filter(
         (x) => !x.parent_guardian_email || !String(x.parent_guardian_email).trim()
       ).length,
     };
-  }, [members]);
+  }, [membersList]);
 
   const outstanding = outstandingQuery?.data?.data?.rows?.length ?? 0;
   const overdue = overdueQuery?.data?.data?.count ?? 0;
@@ -101,7 +101,7 @@ const MembersStatsRow = ({ audienceLabel = "members" }) => {
         <p style={labelStyle}>
           <Icon icon="tabler:users" width={16} /> Total {audienceLabel}
         </p>
-        <p style={valueStyle}>{members.length}</p>
+        <p style={valueStyle}>{membersList?.length ?? 0}</p>
       </div>
       <div style={tileStyle}>
         <p style={labelStyle}>
