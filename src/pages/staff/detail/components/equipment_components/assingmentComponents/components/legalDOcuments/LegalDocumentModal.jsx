@@ -143,7 +143,7 @@ const LegalDocumentModal = ({
       const { data } = await devitrakApi.get(
         `/document/download/${id}/${user.uid}`
       );
-      window.open(data.downloadUrl, "_blank");
+      window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
       if (!data?.ok || !data?.downloadUrl) {
         throw new Error("Invalid or missing download URL");
       }

@@ -11,6 +11,7 @@ import Input from "../../../../../components/UX/inputs/Input";
 import { useMutation } from "@tanstack/react-query";
 import ReusableTextArea from "../../../../../components/UX/inputs/TextArea";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 /**
  * Push-notification broadcast to everyone attending this event who opted in
@@ -51,7 +52,7 @@ const PushNotificationModal = ({
     },
     onError: (error) => {
       setLoadingState(false);
-      openNotificationWithIcon("Error", `${error}`);
+      openNotificationWithIcon("Error", userFacingError(error));
     },
   });
   const { notify, contextHolder } = useStatusNotification();
@@ -82,7 +83,7 @@ const PushNotificationModal = ({
       await fetchingNewPushNotification.mutateAsync(pushNotificationProfile);
     } catch (error) {
       setLoadingState(false);
-      openNotificationWithIcon("Error", `${error}`);
+      openNotificationWithIcon("Error", userFacingError(error));
     }
   };
   const body = () => {

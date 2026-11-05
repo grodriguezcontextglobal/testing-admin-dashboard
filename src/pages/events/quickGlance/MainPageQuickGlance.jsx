@@ -31,6 +31,7 @@ import HighlightedPill from "./components/ux/HighlightedPill";
 import CustomerInformationSection from "./consumer/CustomerInformationSection";
 import DevicesInformationSection from "./inventory/DevicesInformationSection";
 import StaffMainPage from "./staff/StaffMainPage";
+import { userFacingError } from "../../../utils/userFacingError";
 
 const sectionHeaderStyle = {
   fontFamily: "Inter",
@@ -217,7 +218,7 @@ const MainPageQuickGlance = () => {
           message.success("Image uploaded successfully");
         }
       } catch (error) {
-        message.error(`Upload failed: ${error.message}`);
+        message.error(`Upload failed: ${userFacingError(error)}`);
       } finally {
         setIsLoading(false);
       }

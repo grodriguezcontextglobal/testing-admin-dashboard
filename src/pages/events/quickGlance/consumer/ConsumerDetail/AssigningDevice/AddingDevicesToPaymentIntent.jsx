@@ -19,6 +19,7 @@ import "../../consumerDetail.css";
 import { useDeviceStatus } from "./hooks/useDeviceStatus";
 import { deviceTypeKey, requestedDevicesByType } from "./utils/requestedDevices";
 // import EmailStructureUpdateItem from "../../../../../../classes/emailStructureUpdateItem";
+import { userFacingError } from "../../../../../../utils/userFacingError";
 
 function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
   const [submittedAction, setSubmittedAction] = useState(false);
@@ -93,7 +94,7 @@ function AddingDevicesToPaymentIntent({ record, refetchingFn }) {
       });
       message.success("Assignment email queued and will be sent shortly");
     } catch (error) {
-      message.error(`There was an error. ${error}`);
+      message.error(userFacingError(error));
     }
   };
 

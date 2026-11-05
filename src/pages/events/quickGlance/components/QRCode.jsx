@@ -7,6 +7,7 @@ import { DownloadIcon } from "../../../../components/icons/DownloadIcon";
 import CenteringGrid from "../../../../styles/global/CenteringGrid";
 import { Subtitle } from "../../../../styles/global/Subtitle";
 import TextLink from "../../../../components/UX/buttons/TextLink";
+import { userFacingError } from "../../../../utils/userFacingError";
 
 const DEVITRAK_LOGO =
   "https://res.cloudinary.com/dpdzkhh07/image/upload/v1729629315/maskable_icon_white_background_t80s7n.png";
@@ -45,7 +46,7 @@ const QRCodeDisplay = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(svgUrl);
     } catch (error) {
-      message.error(`Error generating QR code: ${error.message}`);
+      message.error(`Error generating QR code: ${userFacingError(error)}`);
     }
   };
 

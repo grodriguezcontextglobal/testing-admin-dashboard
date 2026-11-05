@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import insertDeviceIntoEventTableRecord from "./addSerialNumberRangeToEvent/addingItemsMethod/actions/useInsertDeviceIntoEventTableRecord";
 import insertItemsIntoInventoryEvent from "./addSerialNumberRangeToEvent/addingItemsMethod/actions/useInsertItemsIntoInventoryEvent";
 import { updateGlobalEventInventoryFromPool } from "../inventory/action/components/EditingEventInventoryActions/updateEventInventoryBasedOnXLSXFileSubmitted";
+import { userFacingError } from "../../../../utils/userFacingError";
 const normalizeHeader = (key) =>
   String(key || "")
     .trim()
@@ -217,7 +218,7 @@ const ImportingXLSXFile = ({
       setErrors(errs);
       setRows(normalized);
     } catch (err) {
-      setErrors([`Failed to read file: ${err?.message || String(err)}`]);
+      setErrors([`Failed to read file: ${userFacingError(err)}`]);
       setRows([]);
     }
   };

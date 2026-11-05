@@ -35,6 +35,7 @@ import Dropdown from "../../../components/UX/dropdown/DropDownComponent";
 import { Subtitle } from "../../../styles/global/Subtitle";
 import ChargeOptionsModal from "../action/chargeAllDevicesFolder/ChargeOptionsModal";
 import "../localStyles.css";
+import { userFacingError } from "../../../utils/userFacingError";
 const FooterExpandedRow = ({
   dataRendering,
   formattedData,
@@ -120,7 +121,7 @@ const FooterExpandedRow = ({
       await itemReportForClient(reportTemplate);
       return setIsLoadingState(false);
     } catch (error) {
-      message.error(`There was an error. ${error}`);
+      message.error(userFacingError(error));
       return setIsLoadingState(false);
     }
   };

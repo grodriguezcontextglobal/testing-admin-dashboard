@@ -9,6 +9,7 @@ import checkGlobalForUpdateEventInventory from "./actions/checkGlobalForUpdateEv
 import insertDeviceIntoEventTableRecord from "./actions/useInsertDeviceIntoEventTableRecord";
 import insertItemsIntoInventoryEvent from "./actions/useInsertItemsIntoInventoryEvent";
 import updateItemWarehouseStatus from "./actions/useUpdateItemWarehouseStatus";
+import { userFacingError } from "../../../../../../utils/userFacingError";
 
 // Normalize header names to snake_case-like keys
 const normalizeHeader = (key) =>
@@ -230,7 +231,7 @@ const ImportingXlsx = ({
       setErrors(errs);
       setRows(normalized);
     } catch (err) {
-      setErrors([`Failed to read file: ${err?.message || String(err)}`]);
+      setErrors([`Failed to read file: ${userFacingError(err)}`]);
       setRows([]);
     }
   };
@@ -308,7 +309,7 @@ const ImportingXlsx = ({
       } catch (error) {
         return message.error(
           `Failed to add items from '${location}': ${
-            error?.message || String(error)
+            userFacingError(error)
           }`
         );
       } finally {

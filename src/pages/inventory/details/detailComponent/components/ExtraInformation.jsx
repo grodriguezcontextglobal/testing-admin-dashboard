@@ -13,6 +13,7 @@ import {
   groupContainerItems,
   summarizeCapacity,
 } from "../utils/containerContentUtils";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 const CaseIcon = ({ size = 20 }) => (
   <svg
@@ -114,7 +115,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
       invalidateAll();
     },
     onError: (error) =>
-      message.error(`The case could not be updated: ${error.message}`),
+      message.error(`The case could not be updated: ${userFacingError(error)}`),
   });
 
   const emptyMutation = useMutation({
@@ -127,7 +128,7 @@ const ExtraInformation = ({ dataFound, containerInfo }) => {
     },
     onError: (error) => {
       setConfirmOpen(false);
-      message.error(`The case could not be emptied: ${error.message}`);
+      message.error(`The case could not be emptied: ${userFacingError(error)}`);
     },
   });
 

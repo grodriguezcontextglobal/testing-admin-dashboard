@@ -13,6 +13,7 @@ import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../../utils/eventLifecycle";
 import { staffToDeactivateAtEventEnd } from "../../staff/utils/eventStaffUtils";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 const ModalToDisplayFunctionInProgress = lazy(
   () => import("./endEvent/ModalToDisplayFunctionInProgress"),
@@ -535,7 +536,7 @@ const EndEventButton = () => {
         return;
       }
     } catch (error) {
-      openNotificationWithIcon("error", `${error.message}`);
+      openNotificationWithIcon("error", userFacingError(error));
     }
   };
 
@@ -683,7 +684,7 @@ const EndEventButton = () => {
     } catch (error) {
       openNotificationWithIcon(
         "error",
-        `Event closure failed: ${error.message}`,
+        `Event closure failed: ${userFacingError(error)}`,
       );
       setOpenEndingEventModal(false);
     }

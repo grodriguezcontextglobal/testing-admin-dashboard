@@ -33,6 +33,7 @@ import Choice from "../../consumer/lostFee/Choice";
 import { formatCurrency } from "../../consumer/utils/lostFee";
 import { Replace } from "./Replace";
 import UpdateStatus from "./components/UpdateStatus";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 /**
  * What can be done to this device, as the identity card's action rail.
@@ -207,7 +208,7 @@ const ActionsMainPage = ({ onChanged }) => {
       );
       setOpenLostModal(true);
     } catch (error) {
-      notify("error", `Something went wrong. ${error.message}`);
+      notify("error", userFacingError(error));
     } finally {
       setBusy(null);
     }

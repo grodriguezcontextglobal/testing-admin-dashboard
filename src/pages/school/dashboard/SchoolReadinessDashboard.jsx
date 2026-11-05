@@ -25,6 +25,7 @@ import {
   summarizeConsentTotals,
   summarizeCoverage,
 } from "./consentRecords";
+import { userFacingError } from "../../../utils/userFacingError";
 
 /**
  * School compliance-readiness dashboard.
@@ -333,7 +334,7 @@ const SchoolReadinessDashboard = ({ audienceLabel = "students" }) => {
             message.success(msg);
           }
         } catch (e) {
-          message.error(`Demo seed failed: ${e.message}`);
+          message.error(`Demo seed failed: ${userFacingError(e)}`);
         }
       },
     });

@@ -28,6 +28,7 @@ import { createNewLease } from "../../../staff/detail/components/equipment_compo
 import { singleItemInserting } from "../../../staff/detail/components/equipment_components/assingmentComponents/components/newDevice/actions/SingleItemInserting";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { assignmentReferenceFill } from "../../utils/assignmentReferenceFill";
+import { userFacingError } from "../../../../utils/userFacingError";
 
 const options = [
   { value: "Select an option" },
@@ -216,7 +217,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
         }
       );
     } catch (error) {
-      return openNotificationWithIcon(`${error.message}`);
+      return openNotificationWithIcon(userFacingError(error));
     }
   };
   const savingNewItem = async (data) => {
@@ -307,7 +308,7 @@ const AssignemntNewDeviceInInventory = ({ closeModal }) => {
       setLoadingStatus(false);
       return closeModal();
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      openNotificationWithIcon(userFacingError(error));
       setLoadingStatus(false);
     }
   };

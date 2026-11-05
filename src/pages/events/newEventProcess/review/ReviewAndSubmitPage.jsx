@@ -14,6 +14,7 @@ import Service from "./review/service";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
 import { syncEventStaff } from "./utils/eventStaffSync";
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../utils/eventLifecycle";
+import { userFacingError } from "../../../../utils/userFacingError";
 const Device = lazy(() => import("./review/Device"));
 const Event = lazy(() => import("./review/Event"));
 const Staff = lazy(() => import("./review/Staff"));
@@ -140,7 +141,7 @@ const ReviewAndSubmitEvent = () => {
       notify("success", "Event information created.");
       return navigate("/events");
     } catch (error) {
-      notify("error", `${error.message}`);
+      notify("error", userFacingError(error));
       setLoadingStatus(false);
       setButtonDisable(false);
       setTimeout(() => api.destroy(), 4000);

@@ -231,6 +231,22 @@ Son cortos, y salen de lo que ya está escrito en `reports/`.
 
 ---
 
+## Fase E — Revisión del 05-11 (lo que un evaluador marcaría y no estaba en el plan)
+
+Revisión del código buscando lo que suele salir en un Snapshot o un pentest de
+la parte web: errores mostrados al usuario, consola, HTML sin sanear,
+redirecciones, enlaces a otras pestañas, `eval` y dependencias.
+
+| | Qué | Control | Estado |
+|---|---|---|---|
+| **E1** | **Errores crudos en pantalla.** 41 sitios mostraban `${error}`, `error.message` o `JSON.stringify(error)`. El de axios incluye la config de la petición, **con la cabecera `x-token`**, y salía en un `message.error` (`ModalAddAndUpdateDeviceSetup`). Ahora todo pasa por `src/utils/userFacingError.js` (el `msg` del servidor, un aviso de red o un texto genérico; nunca el objeto), con un test de guarda que impide volver a escribirlo | SI-11 | PR del 05-11 |
+| **E2** | **Pestañas nuevas sin `noopener`.** 7 `window.open(url, "_blank")` (URLs firmadas de S3) daban a la página abierta acceso a `window.opener`. Ahora con `"noopener,noreferrer"`, y un test de guarda para `window.open` y `target="_blank"` | SC-18, SI-10 | PR del 05-11 |
+| E3 | `console.error` y `console.warn` siguen en producción (75 llamadas; `log`, `info` y `debug` ya se quitan al construir). Algunas imprimen el error de axios entero, con cabeceras. Solo se ve con DevTools en el mismo equipo | SI-11, AU-9 | por decidir |
+| E4 | `npm audit --omit=dev`: 4 moderadas y 4 bajas (`quill` 2.0.3, `deepmerge`). La puerta de la CI es `high`, así que no la rompen; revisar con Dependabot | RA-5 | vigilar |
+| — | Sin hallazgos: `eval`/`new Function` (0), `dangerouslySetInnerHTML` solo con DOMPurify, redirecciones tras el login solo a rutas propias (`returnPathFrom`), los `target="_blank"` ya llevaban `rel` | | |
+
+---
+
 ## Secuencia
 
 | Semana | Trabajo | Resultado |

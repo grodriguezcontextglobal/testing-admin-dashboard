@@ -89,7 +89,7 @@ const DevitrakTermsAndConditions = ({
   const handleViewDocument = (document) => {
     try {
       // Open PDF in new tab
-      window.open(document, "_blank");
+      window.open(document, "_blank", "noopener,noreferrer");
     } catch (error) {
       console.error("Error opening document:", error);
     }

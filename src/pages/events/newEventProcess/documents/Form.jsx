@@ -67,7 +67,7 @@ const FormDocuments = () => {
       if (!data?.ok || !data?.downloadUrl) {
         throw new Error("Invalid or missing download URL");
       }
-      window.open(data.downloadUrl, "_blank");
+      window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
       return message.success("Document displayed successfully");
     } catch (error) {
       message.error("Failed to download document");

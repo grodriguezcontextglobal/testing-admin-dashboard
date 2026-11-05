@@ -1,5 +1,6 @@
 import { message } from "antd";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { userFacingError } from "../../../utils/userFacingError";
 
 const itemReportForClient = async ({
   customerInfo,
@@ -38,7 +39,7 @@ const itemReportForClient = async ({
       );
     }
   } catch (error) {
-    return message.error(`There was an error. ${error}`);
+    return message.error(userFacingError(error));
   }
 };
 

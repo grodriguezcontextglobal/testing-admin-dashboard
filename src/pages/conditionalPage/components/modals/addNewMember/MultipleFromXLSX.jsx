@@ -32,6 +32,7 @@ import {
   columnRequirementLabel,
   validateAndNormalizeRows,
 } from "../../../utils/xlsxImportUtils";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 const ROW_STATUS = {
   ready: { label: "Ready", tone: "success" },
@@ -131,7 +132,7 @@ const MultipleFromXLSX = ({ onClose, companyId = null }) => {
     } catch (error) {
       setParsed({
         rows: [],
-        errors: [`Failed to read file: ${error?.message || String(error)}`],
+        errors: [`Failed to read file: ${userFacingError(error)}`],
         warnings: [],
         columnsDetected: [],
       });
