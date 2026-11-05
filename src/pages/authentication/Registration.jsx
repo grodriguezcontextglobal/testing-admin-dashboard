@@ -134,7 +134,7 @@ const Registration = () => {
       },
     }));
     navigate("/register/company-setup");
-  }, [emailCheckDone, userExists.length]);
+  }, [emailCheckDone, userExists, dispatch, navigate]);
 
   useEffect(() => {
     if (watchPassword && watchPassword2) {

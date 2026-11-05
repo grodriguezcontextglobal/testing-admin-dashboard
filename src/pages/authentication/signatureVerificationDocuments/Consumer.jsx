@@ -10,24 +10,21 @@ import { checkArray } from "../../../components/utils/checkArray";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import "../style/authStyle.css";
+import { readSignatureLinkParams } from "../utils/signatureLinkParams";
 
 const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
-  const company_id = new URLSearchParams(window.location.search).get(
-    "company_id"
-  );
-  const documentUrl = new URLSearchParams(window.location.search).get(
-    "contract_url"
-  );
-  const date_reference = new URLSearchParams(window.location.search).get(
-    "date_reference"
-  );
-  const verification_id = new URLSearchParams(window.location.search).get(
-    "ver_id"
-  );
-  const consumer_info = new URLSearchParams(window.location.search).get(
-    "consumer_member_id"
-  );
-  const item_ids = new URLSearchParams(window.location.search).get("item_ids");
+  // Read once: the link's fields don't change while the page is open, so the
+  // effects below that depend on them run once.
+  const [
+    {
+      company_id,
+      documentUrl,
+      date_reference,
+      verification_id,
+      consumer_info,
+      item_ids,
+    },
+  ] = useState(() => readSignatureLinkParams(window.location.search));
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [checkIfDocumentIsSignedAlready, setCheckIfDocumentIsSignedAlready] =
     useState(false);
@@ -39,23 +36,20 @@ const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
     },
   });
   const [url, setUrl] = useState(null);
-  const downloadDocument = async (x) => {
-    try {
+  useEffect(() => {
+    const downloadDocument = async () => {
       const response = await devitrakApi.post(
         `/document/download/documentUrl`,
         {
-          documentUrl: x,
+          documentUrl,
         }
       );
-      return setUrl(response.data.downloadUrl);
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
-
-  useEffect(() => {
-    downloadDocument(documentUrl);
-  }, []);
+      setUrl(response.data.downloadUrl);
+    };
+    downloadDocument().catch((error) =>
+      console.error("Contract download link:", error)
+    );
+  }, [documentUrl]);
 
   useEffect(() => {
     const checkIfDocumentIsSignedAlready = async () => {
@@ -124,10 +118,10 @@ const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
       }
     };
     checkIfDocumentIsSignedAlready();
-  }, []);
+  }, [company_id, documentUrl, consumer_info, date_reference, item_ids, setValue]);
 
   const consumerMemberInfoQuery = useQuery({
-    queryKey: ["consumerMemberInfoQuery"],
+    queryKey: ["consumerMemberInfoQuery", consumer_info],
     queryFn: () => devitrakApi.get(`/auth/${consumer_info}`),
   });
   useEffect(() => {
@@ -139,7 +133,7 @@ const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
     } else {
       setIsLoading(false);
     }
-  }, [consumerMemberInfoQuery.data]);
+  }, [consumerMemberInfoQuery.data, setValue]);
 
   if (consumerMemberInfoQuery.isLoading)
     return <DevitrakLoading fullscreen />;

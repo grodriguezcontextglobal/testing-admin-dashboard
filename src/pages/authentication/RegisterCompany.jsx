@@ -41,7 +41,6 @@ const RegisterCompany = () => {
   const { user } = useSelector((state) => state.admin);
   const [listCompany, setListCompany] = useState([]);
   const [companyValue, setCompanyValue] = useState();
-  const [companyExists, setCompanyExists] = useState(false);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [industry, setIndustry] = useState("");
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -64,15 +63,8 @@ const RegisterCompany = () => {
   const industryListQuery = useQuery({
     queryKey: ["companyInfoList"],
     queryFn: () => devitrakApi.post("/db_company/industry"),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
-  useEffect(() => {
-    const controller = new AbortController();
-    industryListQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
   const callAPiUserCompany = useCallback(async () => {
     const resp = await devitrakApi.post("/company/companies");
     if (resp) {
@@ -95,18 +87,19 @@ const RegisterCompany = () => {
     return Array.from(result);
   }, [listCompany]);
   companies();
-  useEffect(() => {
-    if (!companyValue) { setCompanyExists(false); return; }
-    const found = listCompany.some(
+  const companyExists =
+    Boolean(companyValue) &&
+    listCompany.some(
       (c) => String(c.company_name).toLowerCase() === String(companyValue).toLowerCase(),
     );
-    if (found) {
-      setCompanyExists(true);
-      openNotificationWithIcon("error", "Company exists!", "Company already exists in our records.", 5);
-    } else {
-      setCompanyExists(false);
-    }
-  }, [companyValue, listCompany.length]);
+  useEffect(() => {
+    if (!companyExists) return;
+    notify("error", "Company exists!", {
+      description: "Company already exists in our records.",
+      duration: 5,
+      key: "error",
+    });
+  }, [companyExists, companyValue, notify]);
   const retrieveIndustryOptions = () => {
     const result = new Set();
     if (industryListQuery.data) {
