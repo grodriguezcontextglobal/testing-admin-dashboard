@@ -12,7 +12,7 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const companyDataQuery = useQuery({
-    queryKey: ["companyDataQuery"],
+    queryKey: ["companyDataQuery", user.companyData.stripe_customer_id],
     queryFn: () =>
       devitrakApi.post("/company/search-company", {
         stripe_customer_id: user.companyData.stripe_customer_id,
@@ -33,7 +33,7 @@ const UpdatingCompanyInfoAfterStripeConnectedAccountCreated = () => {
     return () => {
       controller.abort();
     };
-  }, [companyDataQuery.data]);
+  }, [companyDataQuery.data, dispatch, navigate]);
 
   return (
     <div

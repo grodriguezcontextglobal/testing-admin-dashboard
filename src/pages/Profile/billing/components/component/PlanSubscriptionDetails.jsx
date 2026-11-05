@@ -1,6 +1,6 @@
 import { Chip, Grid, Typography } from "@mui/material";
 import { Card, Progress } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import _ from 'lodash';
@@ -13,43 +13,30 @@ const PlanSubscriptionDetails = () => {
   const [updatingSubscriptionModal, setUpdatingSubscriptionModal] =
     useState(false);
   const [details, setDetails] = useState([])
-  const [subscriptionDetailFetched, setSubscriptionDetailFetched] = useState(null)
   const { subscriptionRecord } = useSelector((state) => state.subscription);
-  const retrieveSubscriptionPerCompany = async () => {
-    try {
-      if (subscriptionRecord?.company) {
-        const responseSubs = await devitrakApi.post(`/subscription/search_subscription`, { company: subscriptionRecord.company })
-        return setSubscriptionDetailFetched(responseSubs?.data?.subscription ?? null)
-      }
-    } catch (error) {
-      // subscription info is optional for rendering this card
-    }
-  }
-  const renderActiveSubscriptionDetail = useCallback(async () => {
-    try {
-      if (!subscriptionDetailFetched) {
-        const groupingActive = _.groupBy(subscriptionRecord?.record, 'active')
-        const active = groupingActive[true]
+  // Details of the active subscription, from Stripe through the server.
+  // Fetched again whenever the stored subscription record changes.
+  const subscriptionRecords = subscriptionRecord?.record;
+  useEffect(() => {
+    let cancelled = false;
+    const loadActiveSubscriptionDetail = async () => {
+      try {
+        const active = _.groupBy(subscriptionRecords, 'active')[true]
         if (active?.[0]?.subscription_id) {
           const response = await devitrakApi.get(`/subscription/subscriptions/${active[0].subscription_id}`)
-          if (response?.data?.ok) {
-            return setDetails(response.data.subscriptions)
+          if (!cancelled && response?.data?.ok) {
+            setDetails(response.data.subscriptions)
           }
         }
+      } catch (error) {
+        // keep the card rendered with empty details
       }
-    } catch (error) {
-      // keep the card rendered with empty details
     }
-  }, [subscriptionRecord.company, details])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    retrieveSubscriptionPerCompany()
-    renderActiveSubscriptionDetail()
+    loadActiveSubscriptionDetail()
     return () => {
-      controller.abort()
+      cancelled = true
     }
-  }, [subscriptionRecord?.record])
+  }, [subscriptionRecords])
 
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isLargeDevice = useMediaQuery(

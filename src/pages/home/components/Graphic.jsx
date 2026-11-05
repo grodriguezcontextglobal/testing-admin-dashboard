@@ -1,7 +1,7 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "lodash";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
@@ -12,13 +12,15 @@ const FormatQuickGlanceCardGraphRender = lazy(() =>
 );
 const Graphic = () => {
   const { user } = useSelector((state) => state.admin);
+  // Its own key: "listOfreceiverInPool" is an event's receiver pool elsewhere,
+  // a different request, so sharing it mixed the two answers in the cache.
   const itemInInventoryQuery = useQuery({
-    queryKey: ["listOfreceiverInPool"],
+    queryKey: ["homeInventoryByWarehouse", user.sqlInfo.company_id],
     queryFn: () =>
       devitrakApi.post("/db_item/consulting-item", {
         company_id: user.sqlInfo.company_id,
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
 
   const foundAllDevicesGivenInEvent = () => {
@@ -37,16 +39,6 @@ const Graphic = () => {
     }
     return [];
   };
-  useEffect(() => {
-    const controller = new AbortController();
-    // foundAllNoOperatingDeviceInEvent();
-    foundAllDevicesGivenInEvent()
-    // lostDeviceInEvent();
-    itemInInventoryQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const foundDevicesOut = () => {
     const check = foundAllDevicesGivenInEvent()['out'];

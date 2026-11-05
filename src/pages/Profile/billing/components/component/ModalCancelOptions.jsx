@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { Input, Modal, Popconfirm, Tooltip } from "antd";
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Icon } from "@iconify/react";
 import { devitrakApi } from "../../../../../api/devitrakApi";
@@ -15,7 +15,6 @@ const ModalCancelOptions = ({
   const [openOptionFromDueDate, setOpenOptionFromDueDate] = useState(false);
   const { companyAccountStripe } = useSelector((state) => state.admin);
   const [feedbackCancellation, setFeedbackCancellation] = useState("");
-  const priceRefToPass = useRef(null);
   const dispatch = useDispatch();
   const closeModal = () => {
     setOpenCancelOptionsModal(false);
@@ -41,32 +40,6 @@ const ModalCancelOptions = ({
     notify(type, msg, dscpt);
   };
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const priceOptions = [
-    { 3000: "price_1NzOBaJAluu3aB96XWZfQrBt" },
-    { 6000: "price_1O6xsWJAluu3aB96sZsWjLGl" },
-    { 36000: "price_1NzOBaJAluu3aB96XWZfQrBt" },
-    { 72000: "price_1O6xuIJAluu3aB96AcmN6vtH" },
-  ];
-  const foundPriceRefToPass = useCallback(() => {
-    for (let data of priceOptions) {
-      if (
-        data[
-          companyAccountStripe?.subscriptionHistory?.at(-1)?.latest_invoice
-            ?.total
-        ]
-      ) {
-        return (priceRefToPass.current =
-          data[
-            companyAccountStripe?.subscriptionHistory?.at(
-              -1
-            )?.latest_invoice?.total
-          ]);
-      }
-    }
-  }, []);
-
-  foundPriceRefToPass();
-
   const showPopconfirmOptionFromDueDate = () => {
     setOpenOptionFromDueDate(true);
   };

@@ -27,11 +27,12 @@ const Dashboard = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const { register, watch, handleSubmit } = useForm();
   const { user } = useSelector((state) => state.admin);
+  const companyData = user?.companyData;
   useEffect(() => {
-    if (connectedAccountFor(user?.companyData, stripeEnvMode.current)) {
-      return setClientSecret(true);
+    if (connectedAccountFor(companyData, stripeEnvMode.current)) {
+      setClientSecret(true);
     }
-  }, []);
+  }, [companyData]);
 
   if (clientSecret) {
     return (

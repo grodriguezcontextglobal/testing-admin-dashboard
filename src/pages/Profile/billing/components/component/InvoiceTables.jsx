@@ -9,13 +9,15 @@ import EmptyState from "../../../../../components/UX/emptyState/EmptyState";
 const InvoiceTables = () => {
   const { companyAccountStripe } = useSelector((state) => state.admin);
   const [listOfInvoices, setListOfInvoices] = useState([]);
+  // The invoices shown are the latest subscription's.
+  const latestSubscriptionId =
+    companyAccountStripe?.subscriptionHistory?.at(-1)?.subscription;
   const generateInvoicesHistoryPerSubscription = useCallback(async () => {
     try {
-      if (companyAccountStripe?.subscriptionHistory?.length > 0) {
+      if (latestSubscriptionId) {
         const respInvoicesList = await devitrakApi.get("/stripe/invoices", {
           params: {
-            subscriptionID:
-              companyAccountStripe.subscriptionHistory.at(-1)?.subscription,
+            subscriptionID: latestSubscriptionId,
           },
         });
         if (respInvoicesList?.data?.ok) {
@@ -25,7 +27,7 @@ const InvoiceTables = () => {
     } catch (error) {
       setListOfInvoices([]);
     }
-  }, []);
+  }, [latestSubscriptionId]);
 
   useEffect(() => {
     generateInvoicesHistoryPerSubscription();
@@ -35,10 +37,7 @@ const InvoiceTables = () => {
     const resultPerIteration = new Set();
     if (listOfInvoices.length > 0) {
       for (let data of listOfInvoices) {
-        if (
-          data.subscription ===
-          companyAccountStripe?.subscriptionHistory?.at(-1)?.subscription
-        ) {
+        if (data.subscription === latestSubscriptionId) {
           resultPerIteration.add({
             key: data.charge,
             action: { download: data.invoice_pdf },
@@ -54,7 +53,7 @@ const InvoiceTables = () => {
     } else {
       return listOfInvoices;
     }
-  }, [listOfInvoices]);
+  }, [listOfInvoices, latestSubscriptionId]);
 
   const columns = [
     {
