@@ -2,7 +2,7 @@
 import { Grid } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Result } from "antd";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,14 @@ import {
 import { checkArray } from "../../utils/checkArray";
 import BlueButtonComponent from "../../UX/buttons/BlueButton";
 // import "../../style/pages/admin/confirmedPaymentAdmin.css";
+const SUBSCRIPTION_ACTIVE_BY_STATUS = {
+  trialing: true,
+  completed: true,
+  active: true,
+  canceled: false,
+};
+const renderingStatus = (status) => SUBSCRIPTION_ACTIVE_BY_STATUS[status];
+
 const ConfirmSubscription = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
@@ -21,74 +29,50 @@ const ConfirmSubscription = () => {
   const setup_intent = new URLSearchParams(window.location.search).get(
     "setup_intent"
   );
-  const setup_intent_client_secret = new URLSearchParams(
-    window.location.search
-  ).get("setup_intent_client_secret");
 
+  // Stripe sends the person back here with ?setup_intent=…; without it there
+  // is nothing to look up.
   const stripeCustomerInfoQuery = useQuery({
-    queryKey: ["stripeCustomerInfo"],
+    queryKey: ["stripeCustomerInfo", setup_intent],
     queryFn: () =>
       devitrakApi.post("/stripe/setup-search", {
         setupId: setup_intent,
       }),
-    enabled: false,
+    enabled: Boolean(setup_intent),
     refetchOnMount: false,
   });
+
+  // Saves the subscription once it is known, once per page visit. It used to
+  // run on mount too, before the data arrived, and threw reading it.
+  const subscriptionData = stripeCustomerInfoQuery.data?.data?.subscription;
+  const company = user.company;
+  const saved = useRef(false);
   useEffect(() => {
-    if (setup_intent.length < 1) return null;
-    stripeCustomerInfoQuery.refetch();
-  }, [setup_intent, setup_intent_client_secret]);
-
-
-  const renderingStatus = (props) => {
-    const status = {
-      trialing: true,
-      completed: true,
-      active: true,
-      canceled: false,
+    if (!subscriptionData || saved.current) return;
+    saved.current = true;
+    const subscriptionInfo = checkArray(subscriptionData);
+    const record = {
+      subscription_id: subscriptionInfo.id,
+      active: renderingStatus(subscriptionInfo.status),
+      cancel_at: subscriptionInfo.cancel_at,
+      created_at: subscriptionInfo.created,
+      subscription_type: subscriptionInfo.plan.interval,
     };
-    return status[props];
-  };
-  const savingSubscriptionInformation = async () => {
-    const subscriptionInfo = checkArray(
-      stripeCustomerInfoQuery.data.data.subscription
-    );
-    const subscriptionResponse = await devitrakApi.post(
-      "/subscription/new_subscription",
-      {
-        company: user.company,
-        record: [
-          {
-            subscription_id: subscriptionInfo.id,
-            active: renderingStatus(subscriptionInfo.status),
-            cancel_at: subscriptionInfo.cancel_at,
-            created_at: subscriptionInfo.created,
-            subscription_type: subscriptionInfo.plan.interval,
-          },
-        ],
-      }
-    );
-    dispatch(
-      onAddSubscriptionRecord([
+    const savingSubscriptionInformation = async () => {
+      const subscriptionResponse = await devitrakApi.post(
+        "/subscription/new_subscription",
         {
-          subscription_id: subscriptionInfo.id,
-          active: renderingStatus(subscriptionInfo.status),
-          cancel_at: subscriptionInfo.cancel_at,
-          created_at: subscriptionInfo.created,
-          subscription_type: subscriptionInfo.plan.interval,
-        },
-      ])
-    );
-    dispatch(onAddNewSubscription(subscriptionResponse.data));
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    savingSubscriptionInformation();
-    return () => {
-      controller.abort();
+          company,
+          record: [record],
+        }
+      );
+      dispatch(onAddSubscriptionRecord([record]));
+      dispatch(onAddNewSubscription(subscriptionResponse.data));
     };
-  }, [stripeCustomerInfoQuery.data]);
+    savingSubscriptionInformation().catch((error) =>
+      console.error("Saving the subscription:", error)
+    );
+  }, [subscriptionData, company, dispatch]);
 
   if (stripeCustomerInfoQuery.data) {
     return (

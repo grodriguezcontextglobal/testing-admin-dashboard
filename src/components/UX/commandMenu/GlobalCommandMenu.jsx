@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CommandMenu from "./CommandMenu";
 import { useSelector } from "react-redux";
@@ -46,7 +46,10 @@ const GlobalCommandMenu = () => {
     };
   }, []);
 
-  const isTabVisible = (id) => !hiddenNavTabs.includes(id);
+  const isTabVisible = useCallback(
+    (id) => !hiddenNavTabs.includes(id),
+    [hiddenNavTabs]
+  );
   const groups = useMemo(
     () => [
       {
@@ -137,7 +140,7 @@ const GlobalCommandMenu = () => {
         ],
       },
     ],
-    [navigate, hiddenNavTabs, membersAudience, membersSingular, industryProfile.icon, user]
+    [navigate, isTabVisible, membersAudience, membersSingular, industryProfile.icon, user]
   );
 
   return (

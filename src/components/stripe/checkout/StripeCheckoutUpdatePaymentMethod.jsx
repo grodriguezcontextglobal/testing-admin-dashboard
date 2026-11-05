@@ -35,7 +35,7 @@ export const StripeCheckoutUpdatePaymentMethod = ({ clientSecret, paymentIntentI
           break;
       }
     });
-  }, [stripe]);
+  }, [stripe, clientSecret]);
 
   const iFrameStyle = {
     base: {

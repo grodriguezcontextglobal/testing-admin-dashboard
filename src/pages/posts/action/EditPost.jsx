@@ -67,6 +67,8 @@ const CustomReactQuill = styled(ReactQuill)(() => ({
   },
 }));
 
+const NO_EVENTS = [];
+
 const EditPost = () => {
   const [imageUploadedValue, setImageUploadedValue] = useState(null);
   const { register, handleSubmit, setValue } = useForm({
@@ -79,49 +81,34 @@ const EditPost = () => {
     },
   });
   const [valueDescription, setValueDescription] = useState("");
-  const [eventList, setEventList] = useState([]);
   const [assignedEvent, setAssignedEvent] = useState([]);
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [article, setArticle] = useState({});
   const { user } = useSelector((state) => state.admin);
   const eventsCompanyList = useQuery({
-    queryKey: ["eventsCompanyList"],
+    queryKey: ["eventsCompanyList", user.companyData.company_name],
     queryFn: () =>
       devitrakApi.get(`/event/event-list-per-company?company=${user.companyData.company_name}&type=event`, {
         // company_id: user.companyData.id,
         // type:"event",
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
+  const eventList = eventsCompanyList.data?.data?.list ?? NO_EVENTS;
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const controller = new AbortController();
-    eventsCompanyList.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
+  const postId = location.state?.id;
+  const companyId = user.companyData.id;
   useEffect(() => {
-    const controller = new AbortController();
-    if (eventsCompanyList.data) {
-      setEventList(eventsCompanyList.data.data.list);
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [eventsCompanyList.data]);
-
-  useEffect(() => {
-    const controller = new AbortController();
+    let cancelled = false;
     const gettingArticle = async () => {
       const response = await devitrakApi.post(`/post/posts`, {
-        _id: location.state.id,
-        company_id: user.companyData.id,
+        _id: postId,
+        company_id: companyId,
       });
-      if (response.data.ok) {
+      if (!cancelled && response.data.ok) {
         setArticle(response.data.companyPosts[0]);
         setValue("title", response.data.companyPosts[0].title);
         setValue("subtitle", response.data.companyPosts[0].subtitle);
@@ -130,12 +117,12 @@ const EditPost = () => {
         setValue("media", response.data.companyPosts[0].media);
       }
     };
-    gettingArticle();
+    gettingArticle().catch((error) => console.error("Loading the post:", error));
 
     return () => {
-      controller.abort();
+      cancelled = true;
     };
-  }, []);
+  }, [postId, companyId, setValue]);
 
   const stylingLabel = {
     width: "100%",
