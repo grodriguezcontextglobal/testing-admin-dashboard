@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { resolveRoleType } from "../../../config/roles";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { onAddListEventPermitPerAdmin } from "../../../store/slices/eventSlice";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 import EventsCarousel from "../../../components/UX/carousel/EventsCarousel";
@@ -14,36 +14,23 @@ const MainPage = () => {
   const { user } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
 
+  // Its own key: the events page caches a different request as ["events"].
+  // Refetched on every mount, so it needs no invalidation from other screens.
   const eventQuery = useQuery({
-    queryKey: ["events"],
+    queryKey: ["homeEvents", user.companyData.company_name],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.companyData.company_name,
         type:'event'
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    eventQuery.refetch();
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const dataPerCompany = () => {
     const groupOfCompanies = eventQuery?.data?.data?.list;
     if (groupOfCompanies) return groupOfCompanies;
     return undefined;
   };
-  useEffect(() => {
-    const controller = new AbortController();
-    dataPerCompany();
-    return () => {
-      controller.abort();
-    };
-  }, [eventQuery.data]);
 
   if (eventQuery.data) {
     const renderingDataBasedOnStaffAndActiveEvent = () => {

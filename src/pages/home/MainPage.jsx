@@ -12,7 +12,7 @@ import { GrayButton } from "../../styles/global/GrayButton";
 import GrayButtonText from "../../styles/global/GrayButtonText";
 // import BannerNotificationTemplate from "../../components/notification/alerts/BannerNotificationTemplate";
 import { useQuery } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
@@ -27,6 +27,7 @@ import EventsDevicesChart from "./components/EventsDevicesChart";
 import LiveEventSnapshot from "./components/LiveEventSnapshot";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import { homeLayout } from "./utils/homeLayout";
+import { hasOverdueRentals } from "./utils/overdueRentals";
 const BannerMsg = lazy(() => import("./utils/bannerMsg"));
 const InventoryMainPage = lazy(() => import("./inventory/MainPage"));
 const ActiveEventMainPage = lazy(() => import("./events/MainPage"));
@@ -34,8 +35,9 @@ const BannerNotificationTemplate = lazy(() =>
   import("../../components/notification/alerts/BannerNotificationTemplate")
 );
 
+const NO_ITEMS = [];
+
 const MainPage = () => {
-  const [inventory, setInventory] = useState([]);
   const [notificationStatus, setNotificationStatus] = useState(false);
   const [
     leasedEquipmentNotificationStatus,
@@ -68,12 +70,8 @@ const MainPage = () => {
     roleType,
     inventoryCount: inventoryQuery?.data?.data?.items?.length ?? 0,
   });
-  const totalConsumers = async () => {
-    if (inventoryQuery.data) {
-      setNotificationStatus(inventoryQuery.data.data.items.length < 1);
-      return setInventory(inventoryQuery.data.data.items);
-    }
-  };
+  const inventoryItems = inventoryQuery.data?.data?.items;
+  const inventory = useMemo(() => inventoryItems ?? NO_ITEMS, [inventoryItems]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -85,30 +83,16 @@ const MainPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Both banners can be dismissed, so they stay state; each answer from the
+  // server opens them again when they apply.
   useEffect(() => {
-    const controller = new AbortController();
-    totalConsumers();
-    return () => {
-      controller.abort();
-    };
-  }, [inventoryQuery.data]);
+    if (inventoryItems) setNotificationStatus(inventoryItems.length < 1);
+  }, [inventoryItems]);
 
-  const displayingLeasedInventory = () => {
-    const checking = inventory.filter(
-      (item) =>
-        String(item.ownership).toLowerCase() === "rent" &&
-        new Date(`${item.return_date}`).getTime() < new Date().getTime()
-    );
-    return setLeasedEquipmentNotificationStatus(checking.length > 0);
-  };
-
+  const overdueRentals = useMemo(() => hasOverdueRentals(inventory), [inventory]);
   useEffect(() => {
-    const controller = new AbortController();
-    displayingLeasedInventory();
-    return () => {
-      controller.abort();
-    };
-  }, [inventory.length > 0]);
+    setLeasedEquipmentNotificationStatus(overdueRentals);
+  }, [overdueRentals]);
 
   const checkUserAssignedCompanies = () => {
     const result = new Set();

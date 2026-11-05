@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { message } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApiAdmin } from "../../../api/devitrakApi";
@@ -90,9 +90,18 @@ const MfaSetup = () => {
      > "let's force that you have to have the multi-factor authentication
      > activated" — beta testing 2026-09-18, part 1 `6:38`. */
 
+  // Opening the page without MFA starts enrolment (the QR code) once.
+  // handleGenerateMfa is read through a ref: it is a new function each render.
+  const generateMfaRef = useRef(handleGenerateMfa);
   useEffect(() => {
-    !mfaEnabled && handleGenerateMfa();
-  }, [])
+    generateMfaRef.current = handleGenerateMfa;
+  });
+  const enrolmentStarted = useRef(false);
+  useEffect(() => {
+    if (enrolmentStarted.current || mfaEnabled) return;
+    enrolmentStarted.current = true;
+    generateMfaRef.current();
+  }, [mfaEnabled])
   
   return (
     <Grid

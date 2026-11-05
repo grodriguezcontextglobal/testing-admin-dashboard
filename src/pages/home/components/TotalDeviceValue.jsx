@@ -1,46 +1,39 @@
 import { useSelector } from "react-redux";
 import { devitrakApi } from "../../../api/devitrakApi";
 // import CardRendered from "../../events/quickGlance/components/CardRendered"
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../../styles/global/CenteringGrid";
 const ReusableCard = lazy(() =>
   import("../../../components/UX/cards/ReusableCard")
     // "../../../components/UX/cards/ReusableCard")
 );
+/** The inventory's total cost, formatted as dollars ("$1,234"). */
+const formatTotalDeviceValue = (items) => {
+  const total = items.reduce((accu, { cost }) => accu + Number(cost), 0);
+  return `$${Number(total).toLocaleString("en-US")}`;
+};
+
 const TotalDevice = () => {
   const { user } = useSelector((state) => state.admin);
   const [device, setDevice] = useState("");
-  const totalConsumers = useCallback(async () => {
-    const response = await devitrakApi.post("db_item/consulting-item", {
-      company_id: user.sqlInfo.company_id,
-    });
-    if (response.data.ok) {
-      sortingDataFetched(response.data.items);
-    }
-  }, []);
+  const companyId = user.sqlInfo.company_id;
 
   useEffect(() => {
-    const controller = new AbortController();
-    totalConsumers();
-
-    return () => {
-      controller.abort();
+    let cancelled = false;
+    const loadTotal = async () => {
+      const response = await devitrakApi.post("db_item/consulting-item", {
+        company_id: companyId,
+      });
+      if (!cancelled && response.data.ok) {
+        setDevice(formatTotalDeviceValue(response.data.items));
+      }
     };
-  }, []);
-
-  const sortingDataFetched = (props) => {
-    const result = new Set();
-    for (let data of props) {
-      result.add({ key: data.item_id, ...data });
-    }
-    const total = Array.from(result).reduce(
-      (accu, { cost }) => accu + Number(cost),
-      0
-    );
-    const format = Number(total).toLocaleString("en-US");
-    return setDevice(`$${format}`);
-  };
+    loadTotal().catch((error) => console.error("Total device value:", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
 
   return (
     <Suspense
