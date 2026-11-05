@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import "./style/authStyle.css";
 import StaffMemberVerificationSignatureAndSignatureStampComponent from "./signatureVerificationDocuments/StaffMember";
@@ -13,11 +13,8 @@ const LandingPageForDownloadableDocuments = () => {
     "consumer_member_id"
   );
   const [isLoading, setIsLoading] = useState(true);
-  const [staffMember, setStaffMember] = useState(true);
-  useMemo(
-    () => (!staff_member_id ? setStaffMember(false) : setStaffMember(true)),
-    [staff_member_id, consumer_info]
-  );
+  // A link with a staff member id is a staff contract; any other, a consumer's.
+  const staffMember = Boolean(staff_member_id);
 
   useEffect(() => {
     setIsLoading(false);

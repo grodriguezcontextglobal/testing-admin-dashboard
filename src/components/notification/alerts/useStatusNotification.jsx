@@ -1,4 +1,5 @@
 import { notification } from "antd";
+import { useCallback } from "react";
 import { dicIconNotification } from "../../../utils/dicIconNotification";
 
 const iconWrapperStyle = {
@@ -61,9 +62,13 @@ const parseExtra = (extra) => {
 export function useStatusNotification() {
   const [api, contextHolder] = notification.useNotification();
 
-  const notify = (type, message, extra) => {
-    api.open({ message: buildMessage(type, message), ...parseExtra(extra) });
-  };
+  // Stable across renders (antd's `api` is), so effects can depend on it.
+  const notify = useCallback(
+    (type, message, extra) => {
+      api.open({ message: buildMessage(type, message), ...parseExtra(extra) });
+    },
+    [api],
+  );
 
   return { notify, contextHolder, api };
 }

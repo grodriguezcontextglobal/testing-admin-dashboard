@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "../style/authStyle.css";
+import { readSignatureLinkParams } from "../utils/signatureLinkParams";
 import { devitrakApi } from "../../../api/devitrakApi";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import GrayButtonComponent from "../../../components/UX/buttons/GrayButton";
@@ -24,22 +25,18 @@ import HidenIcon from "../../../components/icons/HidenIcon";
 const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
   const navigate = useNavigate();
   const signedInEmail = useSelector((state) => state.admin?.user?.email);
-  const company_id = new URLSearchParams(window.location.search).get(
-    "company_id"
-  );
-  const documentUrl = new URLSearchParams(window.location.search).get(
-    "contract_url"
-  );
-  const staff_member_id = new URLSearchParams(window.location.search).get(
-    "staff_member_id"
-  );
-  const date_reference = new URLSearchParams(window.location.search).get(
-    "date_reference"
-  );
-  const verification_id = new URLSearchParams(window.location.search).get(
-    "ver_id"
-  );
-  const item_ids = new URLSearchParams(window.location.search).get("item_ids");
+  // Read once: the link's fields don't change while the page is open, so the
+  // effects below that depend on them run once.
+  const [
+    {
+      company_id,
+      documentUrl,
+      staff_member_id,
+      date_reference,
+      verification_id,
+      item_ids,
+    },
+  ] = useState(() => readSignatureLinkParams(window.location.search));
   const [token, setToken] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [checkIfDocumentIsSignedAlready, setCheckIfDocumentIsSignedAlready] =
@@ -56,23 +53,20 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
     },
   });
   const [url, setUrl] = useState(null);
-  const downloadDocument = async (x) => {
-    try {
+  useEffect(() => {
+    const downloadDocument = async () => {
       const response = await devitrakApi.post(
         `/document/download/documentUrl`,
         {
-          documentUrl: x,
+          documentUrl,
         }
       );
-      return setUrl(response.data.downloadUrl);
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
-
-  useEffect(() => {
-    downloadDocument(documentUrl);
-  }, []);
+      setUrl(response.data.downloadUrl);
+    };
+    downloadDocument().catch((error) =>
+      console.error("Contract download link:", error)
+    );
+  }, [documentUrl]);
 
   useEffect(() => {
     const checkIfDocumentIsSignedAlready = async () => {
@@ -139,10 +133,10 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
       }
     };
     checkIfDocumentIsSignedAlready();
-  }, []);
+  }, [company_id, documentUrl, staff_member_id, date_reference, item_ids, setValue]);
 
   const adminStaffQuery = useQuery({
-    queryKey: ["staffMember"],
+    queryKey: ["staffMember", staff_member_id],
     queryFn: () =>
       devitrakApi.post("/staff/admin-users", {
         _id: staff_member_id,
@@ -162,7 +156,7 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
     } else {
       setIsLoading(false);
     }
-  }, [adminStaffQuery.data]);
+  }, [adminStaffQuery.data, setValue]);
 
   if (adminStaffQuery.isLoading)
     return <DevitrakLoading fullscreen />;
