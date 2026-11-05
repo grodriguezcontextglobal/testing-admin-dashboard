@@ -11,6 +11,7 @@ import Input from "../../UX/inputs/Input";
 import { useMutation } from "@tanstack/react-query";
 import ReusableTextArea from "../../UX/inputs/TextArea";
 import { useStatusNotification } from "../alerts/useStatusNotification";
+import { userFacingError } from "../../../utils/userFacingError";
 
 const EmailNotification = ({
   customizedEmailNotificationModal,
@@ -44,7 +45,7 @@ const EmailNotification = ({
     },
     onError: (error) => {
       setLoadingState(false);
-      openNotificationWithIcon("Error", `${error}`);
+      openNotificationWithIcon("Error", userFacingError(error));
     },
   });
   const { notify, contextHolder } = useStatusNotification();
@@ -76,7 +77,7 @@ const EmailNotification = ({
       await fetchingNewEmail.mutateAsync(emailNotificationProfile);
     } catch (error) {
       setLoadingState(false);
-      openNotificationWithIcon("Error", `${error}`);
+      openNotificationWithIcon("Error", userFacingError(error));
     }
   };
   const body = () => {

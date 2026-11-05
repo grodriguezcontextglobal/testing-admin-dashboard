@@ -156,7 +156,9 @@ const DownLoadReportButton = () => {
       await exportToXLSX(dataset);
       return setIsLoadingState(false)
     } catch (error) {
-      alert("Something went wrong, please try again later!", JSON.stringify(error))
+      // alert() shows only its first argument; the error is for the console.
+      console.error("Staff report download:", error)
+      alert("Something went wrong, please try again later!")
       return setIsLoadingState(false)
     }
 

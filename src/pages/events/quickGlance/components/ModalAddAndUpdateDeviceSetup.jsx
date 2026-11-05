@@ -32,6 +32,7 @@ import clearCacheMemory from "../../../../utils/actions/clearCacheMemory";
 import ItemForm from "./addSerialNumberRangeToEvent/ItemForm";
 import ContainerForm from "./addSerialNumberRangeToEvent/ContainerForm";
 import ModalUX from "../../../../components/UX/modal/ModalUX";
+import { userFacingError } from "../../../../utils/userFacingError";
 
 const ModalAddAndUpdateDeviceSetup = ({
   openModalDeviceSetup,
@@ -281,7 +282,7 @@ const ModalAddAndUpdateDeviceSetup = ({
         return response.data.data;
       }
     } catch (error) {
-      return message.error(JSON.stringify(error));
+      return message.error(userFacingError(error));
     }
   }, [sqlCompanyId, deviceTitle, category_name]);
 

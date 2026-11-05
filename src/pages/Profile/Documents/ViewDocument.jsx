@@ -91,7 +91,7 @@ const ViewDocument = () => {
 
   const handleDownload = () => {
     if (pdfUrl) {
-      window.open(pdfUrl, "_blank");
+      window.open(pdfUrl, "_blank", "noopener,noreferrer");
     } else {
       message.info(
         "The document file is not available yet. Please try again in a moment."

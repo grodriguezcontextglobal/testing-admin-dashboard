@@ -37,6 +37,7 @@ import {
   resolveSupplierId,
   resolveSupplierName,
 } from "../../utils/editItemFormModel";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 const options = [{ value: "Permanent" }, { value: "Rent" }, { value: "Resale" }];
 const EditItemModal = ({
@@ -282,7 +283,7 @@ const EditItemModal = ({
       );
       return closeModal();
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      openNotificationWithIcon(userFacingError(error));
     } finally {
       setLoadingStatus(false);
     }

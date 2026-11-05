@@ -21,6 +21,7 @@ import CompanyRegistration from "./ux/CompanyRegistration";
 import MfaEnrollmentModal from "./mfa/MfaEnrollmentModal";
 import { SIGNUP_DONE_PATH, signupNeedsPasswordAgain } from "./utils/registrationSession";
 import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
+import { userFacingError } from "../../utils/userFacingError";
 const RegisterCompany = () => {
   const isSmallDevice = useMediaQuery("only screen abd (max-width: 768px)");
   const isMediumDevice = useMediaQuery(
@@ -295,8 +296,8 @@ const RegisterCompany = () => {
       navigate(SIGNUP_DONE_PATH);
     } catch (error) {
       api.destroy("info");
-      openNotificationWithIcon("error", "Action failed", `Please try again later. ${error}`, 3);
-      dispatch(onAddErrorMessage(error?.message ?? String(error)));
+      openNotificationWithIcon("error", "Action failed", userFacingError(error), 3);
+      dispatch(onAddErrorMessage(userFacingError(error)));
       setLoadingStatus(false);
     }
   };

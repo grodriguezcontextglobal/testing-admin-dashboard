@@ -17,6 +17,7 @@ import {
   memberServerErrorMessage,
   memberServerFieldErrors,
 } from "../../../utils/memberContactRules";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 /**
  * MySQL DATE columns arrive as full ISO timestamps ("2010-11-21T05:00:00.000Z").
@@ -146,7 +147,7 @@ const StudentInfoSection = ({
       setNewImageProfileURL(null);
     },
     onError: (error) => {
-      setErrors([`Failed to update student: ${error?.message || String(error)}`]);
+      setErrors([`Failed to update student: ${userFacingError(error)}`]);
     },
   });
 

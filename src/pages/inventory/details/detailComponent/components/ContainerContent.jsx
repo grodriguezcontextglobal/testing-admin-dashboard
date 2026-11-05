@@ -13,6 +13,7 @@ import {
   filterWarehouseItems,
   summarizeCapacity,
 } from "../utils/containerContentUtils";
+import { userFacingError } from "../../../../../utils/userFacingError";
 
 const FILTERS = [
   { key: "category_name", anyLabel: "Any category" },
@@ -141,7 +142,7 @@ const ContainerContent = ({
       closeModal();
     },
     onError: (error) =>
-      message.error(`The case could not be saved: ${error.message}`),
+      message.error(`The case could not be saved: ${userFacingError(error)}`),
   });
 
   const addItem = (itemId) => setStagedIds(stagedIds.concat([itemId]));

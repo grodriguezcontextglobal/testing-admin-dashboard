@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { userFacingError } from "../../../../../../../utils/userFacingError";
 
 const useBatchProcessor = (
   items,
@@ -33,7 +34,7 @@ const useBatchProcessor = (
         );
         setProgress(currentProgress);
       } catch (err) {
-        setError(`Batch ${i / batchSize + 1} failed: ${err.message}`);
+        setError(`Batch ${i / batchSize + 1} failed: ${userFacingError(err)}`);
         setStatus("error");
         return;
       }

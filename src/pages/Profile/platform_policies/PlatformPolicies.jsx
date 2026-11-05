@@ -41,7 +41,7 @@ const PlatformPolicies = () => {
     try {
       setLoading(true);
       // Open PDF in new tab
-      window.open(document.url, "_blank");
+      window.open(document.url, "_blank", "noopener,noreferrer");
     } catch (error) {
       console.error("Error opening document:", error);
     } finally {

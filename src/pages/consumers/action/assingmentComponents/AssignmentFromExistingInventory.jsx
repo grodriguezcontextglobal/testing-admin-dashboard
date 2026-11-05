@@ -39,6 +39,7 @@ import {
 } from "./actions";
 import "./style.css";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
+import { userFacingError } from "../../../../utils/userFacingError";
 
 const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
   const { register, watch, setValue, handleSubmit } = useForm({
@@ -267,7 +268,7 @@ const AssignmentFromExistingInventory = ({ consumerInfoSqlDb, closeModal }) => {
         }
       }
     } catch (error) {
-      notify("error", `${error.message}`);
+      notify("error", userFacingError(error));
     } finally {
       setLoadingStatus(false);
     }

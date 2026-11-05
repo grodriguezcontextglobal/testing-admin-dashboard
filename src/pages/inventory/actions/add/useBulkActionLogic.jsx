@@ -34,6 +34,7 @@ import {
   trackedFieldLabel,
 } from "../utils/updateInventoryMatchSummary";
 import { parseSubLocationPath } from "../utils/SubLocationRenderer";
+import { userFacingError } from "../../../../utils/userFacingError";
 
 const useBulkActionLogic = () => {
   const {
@@ -247,7 +248,7 @@ const useBulkActionLogic = () => {
       }
       return setLoadingStatus(false);
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      openNotificationWithIcon(userFacingError(error));
       setLoadingStatus(false);
     }
   };
@@ -284,7 +285,7 @@ const useBulkActionLogic = () => {
         updateAll,
       });
     } catch (error) {
-      openNotificationWithIcon(`${error.message}`);
+      openNotificationWithIcon(userFacingError(error));
       setLoadingStatus(false);
     } finally {
       setLoadingStatus(false);

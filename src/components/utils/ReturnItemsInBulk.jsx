@@ -1,6 +1,7 @@
 import { message } from "antd";
 import { devitrakApi } from "../../api/devitrakApi";
 import clearCacheMemory from "../../utils/actions/clearCacheMemory";
+import { userFacingError } from "../../utils/userFacingError";
 
 const returningItemsInBulkMethod = ({
   user,
@@ -54,7 +55,7 @@ const returningItemsInBulkMethod = ({
       setSelectedItems([]);
       return null;
     } catch (error) {
-      message.error(`There was an error. ${error}`);
+      message.error(userFacingError(error));
     }
   };
   return handleReturnDevices();

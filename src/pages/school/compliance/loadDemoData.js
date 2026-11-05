@@ -30,6 +30,7 @@ import {
   selectGuardianByEmail,
 } from "../../conditionalPage/utils/guardianConsentUtils";
 import { calculateStudentAgeFlags } from "../../conditionalPage/utils/ageCalculationUtils";
+import { userFacingError } from "../../../utils/userFacingError";
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
@@ -107,7 +108,7 @@ export const loadDemoData = async ({ companyId }) => {
   try {
     existing = await fetchMembers(companyId);
   } catch (e) {
-    summary.errors.push(`Could not read existing members: ${e.message}`);
+    summary.errors.push(`Could not read existing members: ${userFacingError(e)}`);
     return summary;
   }
   const idByEmail = new Map(
@@ -130,7 +131,7 @@ export const loadDemoData = async ({ companyId }) => {
       const createdId = extractCreatedMemberId(res?.data ?? res);
       if (createdId) idByEmail.set(email, createdId);
     } catch (e) {
-      summary.errors.push(`Create ${student.email}: ${e.message}`);
+      summary.errors.push(`Create ${student.email}: ${userFacingError(e)}`);
     }
   }
 
@@ -148,7 +149,7 @@ export const loadDemoData = async ({ companyId }) => {
         if (!idByEmail.has(email)) idByEmail.set(email, m.member_id ?? m.id);
       });
     } catch (e) {
-      summary.errors.push(`Could not re-read members after create: ${e.message}`);
+      summary.errors.push(`Could not re-read members after create: ${userFacingError(e)}`);
     }
   }
 
@@ -169,7 +170,7 @@ export const loadDemoData = async ({ companyId }) => {
       await linkGuardian({ companyId, memberId, guardian: student.guardian });
       summary.guardiansLinked += 1;
     } catch (e) {
-      summary.errors.push(`Link guardian for ${student.email}: ${e.message}`);
+      summary.errors.push(`Link guardian for ${student.email}: ${userFacingError(e)}`);
     }
   }
 

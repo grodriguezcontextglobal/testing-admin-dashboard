@@ -31,6 +31,7 @@ import validatingInputFields from "./utils/validatingInputFields";
 import DangerButtonComponent from "../../../components/UX/buttons/DangerButton";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { referenceGroupFormValues } from "./utils/referenceGroupFill";
+import { userFacingError } from "../../../utils/userFacingError";
 
 const options = OWNERSHIP_VALUES.map((value) => ({ value }));
 const AddNewItem = () => {
@@ -212,7 +213,7 @@ const AddNewItem = () => {
       return setLoadingStatus(false);
     } catch (error) {
       // console.log(error);
-      openNotificationWithIcon(`${error.message}`);
+      openNotificationWithIcon(userFacingError(error));
       setLoadingStatus(false);
     }
   };
