@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { FormLabel, Grid, InputAdornment, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";

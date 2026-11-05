@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { Grid } from "@mui/material";
 import { Avatar, Card } from "antd";
 import { useSelector } from "react-redux";

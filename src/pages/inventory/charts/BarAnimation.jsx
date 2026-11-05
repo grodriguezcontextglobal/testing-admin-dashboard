@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { Card } from "antd";
 import ReactECharts from "echarts-for-react";
 import { PropTypes } from "prop-types";

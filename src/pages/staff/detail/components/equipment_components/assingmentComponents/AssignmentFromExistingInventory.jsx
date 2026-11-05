@@ -175,7 +175,6 @@ const AssignmentFromExistingInventory = () => {
     setPendingSerial(handedOverDevice.serial_number);
     handleSelectGroup(option.value);
     // handleSelectGroup is recreated every render and this must run once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options, handedOverDevice]);
 
   /* Step 2: the serials arrive asynchronously, so the unit can only be picked

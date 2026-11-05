@@ -1,7 +1,7 @@
 import { Box, Grid, Tab, Tabs } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Divider } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../api/devitrakApi";
 import {
@@ -24,21 +24,13 @@ const SubscriptionMainPage = () => {
     setValue(newValue);
   };
   const checkEventsPerCompany = useQuery({
-    queryKey: ["eventsPerCompany"],
+    queryKey: ["eventsPerCompany", user.company],
     queryFn: () =>
       devitrakApi.post("/event/event-list", {
         company: user.company,
       }),
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
-  useEffect(() => {
-    const controller = new AbortController();
-    checkEventsPerCompany.refetch();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const eventsList = checkEventsPerCompany?.data?.data?.list;
   const handleSubmitEventPayment = async (props) => {

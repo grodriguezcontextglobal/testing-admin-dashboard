@@ -362,7 +362,6 @@ const useBulkActionLogic = () => {
       });
       return merged.sort((a, b) => a.value.localeCompare(b.value));
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [watch("location"), locationPathsTreeQuery.data, itemsInInventoryQuery.data],
   );
 
@@ -783,7 +782,6 @@ const useBulkActionLogic = () => {
       setValue("sub_location", subs[subs.length - 1]);
       setDisplaySublocationFields(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

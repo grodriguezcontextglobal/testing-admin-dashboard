@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { lazyWithRetry } from "./routes/lazyWithRetry";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
@@ -46,9 +46,6 @@ const App = () => {
   // const currentVersion = "1.0.0"; // Replace this with the current version of your app
   // useVersionCheck(currentVersion);
   const { notify, contextHolder } = useStatusNotification();
-  const openNotificationWithIcon = (type, msg) => {
-    notify(type, msg);
-  };
 
   /* What ending an expired session does when devitrakApi sees one
      (api/sessionExpiry.js). onLogout resets every slice, and with no session
@@ -88,7 +85,8 @@ const App = () => {
     return false;
   };
 
-  const dispatchActionBasedOnTokenValidation = () => {
+  // Stable while the token is the same, so the effect below can list it.
+  const dispatchActionBasedOnTokenValidation = useCallback(() => {
     if (adminToken && !isTokenValid(adminToken)) {
       dispatch(onResetArticleEdited());
       dispatch(onResetCustomer());
@@ -102,7 +100,7 @@ const App = () => {
       dispatch(onResetSubscriptionInfo());
       const offlineDataCleared = clearSessionStorage();
       dispatch(onLogout());
-      openNotificationWithIcon("error", "Session has expired. Please sign in again.");
+      notify("error", "Session has expired. Please sign in again.");
       /* onLogout resets every slice (store/rootReducer.js), but redux-persist
          writes to localStorage on a throttle: reloading straight away could
          rehydrate the old session from disk. Wait for the write. */
@@ -110,7 +108,7 @@ const App = () => {
         window.location.reload(true)
       );
     }
-  };
+  }, [adminToken, dispatch, notify]);
 
   const [connectionType, setConnectionType] = useState("");
 
@@ -160,7 +158,9 @@ const App = () => {
     return () => {
       controller.abort();
     };
-  }, [status, adminToken, user, location.pathname]);
+    // location.pathname is not read here: it re-checks the token on every
+    // navigation.
+  }, [status, adminToken, user, location.pathname, dispatchActionBasedOnTokenValidation]);
 
   return (
     <InstallPromptProvider>

@@ -173,7 +173,6 @@ const StripeTransactionPerConsumer = ({ data, refetching }) => {
     if (paymentIntents.length > 0) {
       fetchStripeStatusesForPaymentIntents(paymentIntents);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const refetchingAfterReturnDeviceInRow = async () => {

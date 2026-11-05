@@ -17,7 +17,6 @@ import { createTransform } from "redux-persist";
  */
 const withoutPassword = (record) => {
   if (!record || typeof record !== "object" || Array.isArray(record)) return record;
-  // eslint-disable-next-line no-unused-vars
   const { password, ...rest } = record;
   return rest;
 };
