@@ -2,7 +2,7 @@ import { jwtDecode } from "jwt-decode";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { lazyWithRetry } from "./routes/lazyWithRetry";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./App.css";
 // import AuthRoutes from "./routes/authorized/AuthRoutes";
 // import NoAuthRoutes from "./routes/no-authorized/NoAuthRoutes";
@@ -24,6 +24,10 @@ import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
 import { persistor } from "./store/Store";
 import { setSessionExpiredHandler } from "./api/sessionExpiry";
+import { planLimitNotice, setPlanLimitHandler } from "./api/planLimit";
+import { FEATURE_SUBSCRIPTION_PLANS } from "./config/featureFlags";
+import { hasPermission, resolveRoleType } from "./config/roles";
+import BlueButtonComponent from "./components/UX/buttons/BlueButton";
 import { takeRecoveryNotice } from "./pages/authentication/utils/mfaRecovery";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
@@ -43,6 +47,7 @@ const App = () => {
   const adminToken = localStorage.getItem("admin-token");
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   // const currentVersion = "1.0.0"; // Replace this with the current version of your app
   // useVersionCheck(currentVersion);
   const { notify, contextHolder } = useStatusNotification();
@@ -60,6 +65,33 @@ const App = () => {
     return () => setSessionExpiredHandler(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
+
+  /* A new staff member or item refused for the company's plan
+     (api/planLimit.js). One notice at a time, keyed, so a burst of refusals
+     from an import does not stack them. */
+  const canManageBilling = hasPermission("profile:billing", resolveRoleType(user));
+  useEffect(() => {
+    setPlanLimitHandler((limit) => {
+      const { title, description, action } = planLimitNotice(limit, {
+        canManageBilling,
+        plansPageEnabled: FEATURE_SUBSCRIPTION_PLANS,
+      });
+      notify("warning", title, {
+        description,
+        key: "plan-limit-reached",
+        duration: 10,
+        btn: action ? (
+          <BlueButtonComponent
+            size="sm"
+            title={action.label}
+            href={action.href ?? null}
+            func={action.to ? () => navigate(action.to) : null}
+          />
+        ) : undefined,
+      });
+    });
+    return () => setPlanLimitHandler(null);
+  }, [canManageBilling, navigate, notify]);
 
   /* A sign-in with an MFA recovery code (FedRAMP A5) leaves a notice of the
      codes left; the sign-in screen is gone by the time it can be read. */
