@@ -43,7 +43,7 @@ const useLogout = () => {
     ]);
     results
       .filter((result) => result.status === "rejected")
-      .forEach((result) => console.error("Logout error:", result.reason));
+      .forEach((result) => { console.error("Logout error:", result.reason); });
 
     persistor.purge();
     dispatch(onResetArticleEdited());

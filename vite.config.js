@@ -6,6 +6,7 @@ import path from "node:path";
 import { checkEnv, formatEnvReport } from "./src/config/envValidation.js";
 import { buildSecurityHeaders, injectSecurityHeaders } from "./src/config/securityHeaders.js";
 import { buildApiRuntimeCaching } from "./src/config/offlineCaching.js";
+import { PRODUCTION_STRIPPED_CONSOLE } from "./src/config/productionConsole.js";
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -139,14 +140,15 @@ export default defineConfig(({ command, mode }) => {
       },
       chunkSizeWarningLimit: 600,
     },
-    // Strip debug logging from the production bundle. `terserOptions` used to
+    // Strip console output from the production bundle. `terserOptions` used to
     // ask for this, but Vite minifies with esbuild unless `minify: "terser"`,
     // so it never ran — and terser is not a dependency of this project. `pure`
-    // lets esbuild drop the calls whose result is unused. warn and error stay:
-    // they are what a production console is for.
+    // lets esbuild drop the calls whose result is unused. Since 2026-11-06 that
+    // includes warn and error (FedRAMP E3): some printed a whole axios error,
+    // session header included. See src/config/productionConsole.js.
     esbuild:
       command === "build"
-        ? { pure: ["console.log", "console.info", "console.debug", "console.trace"] }
+        ? { pure: PRODUCTION_STRIPPED_CONSOLE }
         : undefined,
   };
 });

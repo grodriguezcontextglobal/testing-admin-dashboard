@@ -44,9 +44,9 @@ const SignedContractViewHigherPermissionLevel = () => {
       );
       if (!cancelled) setUrl(response.data.downloadUrl);
     };
-    downloadDocument().catch((error) =>
-      console.error("Contract download link:", error)
-    );
+    downloadDocument().catch((error) => {
+      console.error("Contract download link:", error);
+    });
     return () => {
       cancelled = true;
     };

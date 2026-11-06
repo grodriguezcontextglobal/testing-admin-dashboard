@@ -8,14 +8,13 @@
 
 ## 1. Summary
 
-The client side is **ready for the Snapshot, with three open rows**: two wait on the backend, and one on a decision about console output. Nothing open is a known active exposure.
+The client side is **ready for the Snapshot, with two open rows**, both waiting on the backend. Nothing open is a known active exposure.
 
 | Rows in §2 | Count | Which |
 |---|---|---|
-| Met, with evidence | 18 | |
+| Met, with evidence | 19 | |
 | Partial: works today, the stronger form depends on someone else | 6 | AC-4 (B7), AC-8 text, recovery-codes banner, CSP enforce, second-person review, Twilio rotation |
 | Open, waiting on the backend | 2 | SC-23 cookie (B3), event-end access removal (B6) |
-| Open, waiting on a decision | 1 | E3 console output |
 
 What changed since the last report to the backend (`FRONTEND_fedramp_dashboard_status_2026-10-26.md`):
 - PRs #51–#67 merged and released (production `Last-Modified` 2026-11-05 17:23 GMT).
@@ -69,7 +68,7 @@ Status: **Met** · **Partial** · **Open** (with the owner).
 | SI-2, RA-5 Flaw remediation, vulnerability scanning | **Met** | `npm audit --omit=dev`: **0 critical, 0 high**, 4 moderate, 4 low (`quill` 2.0.3, `deepmerge`). CI fails on a new high or critical unless `.github/audit-exceptions.json` accepts it with a reason and expiry (list empty today). Dependabot for npm, actions and Docker. CodeQL on every PR | CI log, `audit-exceptions.json`, `codeql.yml` |
 | SI-10 Input handling / XSS | **Met** | The only HTML insertion goes through DOMPurify; no `eval` or `new Function`; post-login redirects only to own routes (`returnPathFrom`) | Code review 2026-11-05 |
 | SI-11 Error handling | **Met** (2026-11-05) | Messages shown to people go through `src/utils/userFacingError.js`: the server's `msg`, a network notice, or a generic text, never the error object. This closed a case where `JSON.stringify(error)` put the `x-token` in a toast. Guard test forbids the old patterns | `userFacingError.test.js`, `userFacingErrorGuard.test.js`, PR #67 |
-| SI-11, AU-9 Console output | **Open — decision** (E3) | `console.log/info/debug` are stripped from the build. 75 `console.error`/`console.warn` remain; some print a full axios error with headers. Visible only with DevTools on the same machine | Plan item E3 |
+| SI-11, AU-9 Console output | **Met** (2026-11-06, E3) | The production build drops every `console` method (`src/config/productionConsole.js`, passed to esbuild as `pure`). Before, 125 `console.error` and 45 `console.warn` reached the bundle, and some printed a whole axios error with its headers. A guard test forbids arrow functions that return a console call, which esbuild cannot drop. Left: 5 `console.error` inside the `xlsx` library (WK1 opcode messages, no data) | `productionConsole.test.js` |
 
 ### Configuration, change management and development (CM, SA, SR)
 
@@ -104,7 +103,6 @@ Status: **Met** · **Partial** · **Open** (with the owner).
 | 4 | Company by id at login | AC-4 | Backend, then dashboard | `sqlCompanyId` and `companies[]` in the login response; the selector stops matching by name |
 | 5 | Recovery-codes banner | IA-2 | Backend, then dashboard | `recoveryCodesRemaining` on every login |
 | 6 | System use notice text | AC-8 | Gustavo / legal | Approve the text in `legalNotices.js` and set `approvedByLegal: true` |
-| 7 | Console output in production | SI-11, AU-9 | Gustavo (decision), then dashboard | Strip `console.error`/`warn` from the build, or keep them but never print headers |
 | 8 | Twilio token rotation | IA-5(7) | Gustavo | Rotate at Twilio, update the VM `.env` |
 | 9 | `SESSION_MODE=enforce`, `DB_COMPANY_PUBLIC_MODE=enforce` | AC-12, AC-3 | Gustavo (date), backend | `.env` change on the VM; the dashboard needs no change |
 | 10 | Moderate advisories (`quill`, `deepmerge`) | RA-5 | Dashboard | Watch Dependabot; take the fix when released |

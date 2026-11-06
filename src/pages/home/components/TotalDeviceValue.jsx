@@ -29,7 +29,7 @@ const TotalDevice = () => {
         setDevice(formatTotalDeviceValue(response.data.items));
       }
     };
-    loadTotal().catch((error) => console.error("Total device value:", error));
+    loadTotal().catch((error) => { console.error("Total device value:", error); });
     return () => {
       cancelled = true;
     };

@@ -10,7 +10,7 @@ import { onAddTransactionInfo } from "../../../../store/slices/customerSlice";
 const LOG = (...args) => {
   console.log("[AuthorizedDeposit]", ...args);
 };
-const ERR = (...args) => console.error("[AuthorizedDeposit]", ...args);
+const ERR = (...args) => { console.error("[AuthorizedDeposit]", ...args); };
 
 const AuthorizedDeposit = () => {
   const { transaction } = useSelector((state) => state.customer);

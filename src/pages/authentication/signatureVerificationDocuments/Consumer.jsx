@@ -46,9 +46,9 @@ const ConsumerMemberVerificationSignatureAndSignatureStampComponent = () => {
       );
       setUrl(response.data.downloadUrl);
     };
-    downloadDocument().catch((error) =>
-      console.error("Contract download link:", error)
-    );
+    downloadDocument().catch((error) => {
+      console.error("Contract download link:", error);
+    });
   }, [documentUrl]);
 
   useEffect(() => {
