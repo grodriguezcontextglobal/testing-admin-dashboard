@@ -36,6 +36,10 @@ const BackgroundJobsTracker = lazyWithRetry(() =>
 const OfflineIndicator = lazyWithRetry(() =>
   import("./components/offlineStatus/OfflineIndicator")
 );
+// Lazy on purpose: see PlanLimitNotice. Nothing App imports may bring CSS.
+const PlanLimitNotice = lazyWithRetry(() =>
+  import("./components/subscription/PlanLimitNotice")
+);
 
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
@@ -183,6 +187,7 @@ const App = () => {
             />
             <BackgroundJobsTracker />
             <OfflineIndicator />
+            <PlanLimitNotice />
             <AuthRoutes />
           </>
         ) : (

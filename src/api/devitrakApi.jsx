@@ -5,6 +5,7 @@ import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
 import { guardRequest } from "./devPayloadGuard";
 import { isOfflineQueueableRequest } from "../config/offlineQueue";
 import { handleUnauthorized } from "./sessionExpiry";
+import { handlePlanLimit } from "./planLimit";
 
 // Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads.
 const configuredApiOrigins = [
@@ -136,6 +137,11 @@ const setupResponseInterceptor = (instance) => {
             // end it once, globally, instead of leaving the screen half
             // loaded (sessionExpiry.js). The error still reaches the caller.
             if (error?.response?.status === 401) handleUnauthorized(error);
+
+            // A new staff member or item refused for the company's plan: the
+            // screen shows its own error, App shows the way to upgrade
+            // (planLimit.js). The error still reaches the caller.
+            handlePlanLimit(error);
 
             if (
                 isOfflineQueueableRequest({
