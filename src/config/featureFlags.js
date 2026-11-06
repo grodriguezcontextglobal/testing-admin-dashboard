@@ -68,3 +68,16 @@ export const FEATURE_INVENTORY_SERVER_PAGINATION =
  */
 export const FEATURE_EVENT_INVITATIONS =
   import.meta.env.VITE_APP_FEATURE_EVENT_INVITATIONS !== "false";
+
+/**
+ * Subscription plans in Profile (Free / Pro / Enterprise, set 2026-11-06).
+ *
+ * Default OFF until the backend ships the plan record and Stripe checkout
+ * (server-testing/reports/FRONTEND_subscription_plans_update_2026-11-06.md):
+ * GET /company/subscription and POST /company/subscription/checkout answer 404
+ * today, so the page could show plans but not take a payment.
+ *
+ * Set VITE_APP_FEATURE_SUBSCRIPTION_PLANS=true in .env.dev to work on it.
+ */
+export const FEATURE_SUBSCRIPTION_PLANS =
+  import.meta.env.VITE_APP_FEATURE_SUBSCRIPTION_PLANS === "true";

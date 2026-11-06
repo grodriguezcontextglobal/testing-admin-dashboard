@@ -45,6 +45,11 @@ const KNOWN_UNMATCHED = [
   "POST /api/admin/mfa/recovery-codes",
   // Same report, §2 (admin MFA reset). Remove once a new contract carries it.
   "POST /api/admin/mfa/reset/:x",
+  // Asked of the backend on 2026-11-06 (FRONTEND_subscription_plans_update_2026-11-06.md
+  // §2–3), not built yet. Only SubscriptionPlansPage calls them, and its route is
+  // off behind FEATURE_SUBSCRIPTION_PLANS. Remove once a new contract carries them.
+  "GET /api/company/subscription",
+  "POST /api/company/subscription/checkout",
 ];
 
 /** Literal payloads that omit a field the handler rejects the request without. */
