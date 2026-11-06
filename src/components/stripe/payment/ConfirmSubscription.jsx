@@ -69,9 +69,9 @@ const ConfirmSubscription = () => {
       dispatch(onAddSubscriptionRecord([record]));
       dispatch(onAddNewSubscription(subscriptionResponse.data));
     };
-    savingSubscriptionInformation().catch((error) =>
-      console.error("Saving the subscription:", error)
-    );
+    savingSubscriptionInformation().catch((error) => {
+      console.error("Saving the subscription:", error);
+    });
   }, [subscriptionData, company, dispatch]);
 
   if (stripeCustomerInfoQuery.data) {

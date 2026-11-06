@@ -117,7 +117,7 @@ const EditPost = () => {
         setValue("media", response.data.companyPosts[0].media);
       }
     };
-    gettingArticle().catch((error) => console.error("Loading the post:", error));
+    gettingArticle().catch((error) => { console.error("Loading the post:", error); });
 
     return () => {
       cancelled = true;

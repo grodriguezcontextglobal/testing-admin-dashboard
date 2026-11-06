@@ -23,7 +23,7 @@ const DisplayArticle = () => {
         setArticle(response.data.companyPosts[0]);
       }
     };
-    first().catch((error) => console.error("Loading the post:", error));
+    first().catch((error) => { console.error("Loading the post:", error); });
     return () => {
       cancelled = true;
     };
