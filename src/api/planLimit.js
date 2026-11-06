@@ -1,4 +1,4 @@
-import { SALES_EMAIL } from "../config/subscriptionPlans";
+import { LIMIT_NOUNS, reachedLimits, SALES_EMAIL } from "../config/subscriptionPlans";
 
 /**
  * What a write refused for the company's plan means when it reaches
@@ -17,7 +17,11 @@ import { SALES_EMAIL } from "../config/subscriptionPlans";
 export const PLAN_LIMIT_CODE = "PLAN_LIMIT_REACHED";
 export const PLANS_PAGE_PATH = "/profile/subscription";
 
-const RESOURCE_NOUNS = { staff: "staff members", items: "inventory items" };
+const RESOURCE_NOUNS = LIMIT_NOUNS;
+
+/** The plans page, told which cap sent the person there so it can say so. */
+export const plansPagePath = (resource) =>
+  Object.hasOwn(RESOURCE_NOUNS, resource) ? `${PLANS_PAGE_PATH}?limit=${resource}` : PLANS_PAGE_PATH;
 
 const count = (value) => (Number.isFinite(value) && value >= 0 ? value : null);
 
@@ -49,7 +53,8 @@ const describeLimit = ({ resource, limit, current, requested }) => {
 };
 
 /**
- * The notice to show: who can pay is sent to the plans page (or to sales,
+ * The notice to show: who can pay is sent to the plans page, where "Upgrade
+ * to Pro" opens Stripe Checkout (or to sales,
  * while that page is behind its flag); anyone else is told who to ask.
  */
 export const planLimitNotice = (limit, { canManageBilling, plansPageEnabled }) => {
@@ -66,8 +71,25 @@ export const planLimitNotice = (limit, { canManageBilling, plansPageEnabled }) =
     title: "Plan limit reached",
     description,
     action: plansPageEnabled
-      ? { label: "View plans", to: PLANS_PAGE_PATH }
+      ? { label: "Upgrade plan", to: plansPagePath(limit.resource) }
       : { label: "Contact sales", href: `mailto:${SALES_EMAIL}?subject=${subject}` },
+  };
+};
+
+/**
+ * The first cap the server's record (GET /company/subscription, §5) reports as
+ * reached, shaped like a refusal so the same notice can say it before any
+ * write fails. Null while there is room.
+ */
+export const reachedLimitFrom = (subscription) => {
+  const [resource] = reachedLimits(subscription);
+  if (!resource) return null;
+  return {
+    resource,
+    limit: subscription.limits[resource],
+    current: subscription.usage[resource],
+    requested: null,
+    plan: typeof subscription.plan === "string" ? subscription.plan : null,
   };
 };
 

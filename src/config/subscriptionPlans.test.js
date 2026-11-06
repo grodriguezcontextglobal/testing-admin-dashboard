@@ -139,3 +139,54 @@ describe("isStripeCheckoutUrl", () => {
     expect(isStripeCheckoutUrl(url)).toBe(false);
   });
 });
+
+describe("reachedLimits", () => {
+  it("lists every resource whose usage is at or over its cap", async () => {
+    const { reachedLimits } = await import("./subscriptionPlans");
+    expect(
+      reachedLimits({ limits: { staff: 3, items: 1000 }, usage: { staff: 3, items: 1200 } }),
+    ).toEqual(["staff", "items"]);
+    expect(reachedLimits({ limits: { staff: 3, items: 1000 }, usage: { staff: 2, items: 999 } })).toEqual([]);
+  });
+
+  it("treats a null cap as no cap, and a missing record as nothing reached", async () => {
+    const { reachedLimits } = await import("./subscriptionPlans");
+    expect(reachedLimits({ limits: { staff: null, items: null }, usage: { staff: 50, items: 9000 } })).toEqual([]);
+    expect(reachedLimits({ plan: "free" })).toEqual([]);
+    expect(reachedLimits(undefined)).toEqual([]);
+  });
+});
+
+describe("limitFromSearch", () => {
+  it("reads the resource the notice sent the person here for", async () => {
+    const { limitFromSearch } = await import("./subscriptionPlans");
+    expect(limitFromSearch("?limit=staff")).toBe("staff");
+    expect(limitFromSearch("?limit=items&x=1")).toBe("items");
+  });
+
+  it("ignores anything else", async () => {
+    const { limitFromSearch } = await import("./subscriptionPlans");
+    expect(limitFromSearch("?limit=<script>")).toBeNull();
+    expect(limitFromSearch("")).toBeNull();
+    expect(limitFromSearch(undefined)).toBeNull();
+  });
+});
+
+describe("limitReachedMessage", () => {
+  it("names the cap and the plan when the record has them", async () => {
+    const { limitReachedMessage } = await import("./subscriptionPlans");
+    expect(limitReachedMessage("staff", { plan: "free", limits: { staff: 3 } })).toBe(
+      "You've reached the 3 staff members included in your Free plan. Upgrade to add more.",
+    );
+    expect(limitReachedMessage("items", { plan: "pro", limits: { items: 4000 } })).toBe(
+      "You've reached the 4,000 inventory items included in your Pro plan. Upgrade to add more.",
+    );
+  });
+
+  it("still reads without a record", async () => {
+    const { limitReachedMessage } = await import("./subscriptionPlans");
+    expect(limitReachedMessage("staff", undefined)).toBe(
+      "You've reached your plan's limit of staff members. Upgrade to add more.",
+    );
+  });
+});

@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { handlePlanLimit, planLimitFrom, planLimitNotice, setPlanLimitHandler } from "./planLimit";
+import {
+  handlePlanLimit,
+  planLimitFrom,
+  planLimitNotice,
+  reachedLimitFrom,
+  setPlanLimitHandler,
+} from "./planLimit";
 
 const refusal = (data, status = 403) => ({ isAxiosError: true, response: { status, data } });
 
@@ -50,7 +56,7 @@ describe("planLimitNotice", () => {
     expect(planLimitNotice(limit, { canManageBilling: true, plansPageEnabled: true })).toEqual({
       title: "Plan limit reached",
       description: "Upgrade your plan to add more staff members.",
-      action: { label: "View plans", to: "/profile/subscription" },
+      action: { label: "Upgrade plan", to: "/profile/subscription?limit=staff" },
     });
   });
 
@@ -82,12 +88,39 @@ describe("planLimitNotice", () => {
     );
   });
 
+  it("opens the plans page without a reason when the resource is unknown", () => {
+    const notice = planLimitNotice(
+      { resource: null, limit: null, current: null, requested: null, plan: null },
+      { canManageBilling: true, plansPageEnabled: true },
+    );
+    expect(notice.action).toEqual({ label: "Upgrade plan", to: "/profile/subscription" });
+  });
+
   it("still reads when the server left the resource out", () => {
     const notice = planLimitNotice(
       { resource: null, limit: null, current: null, requested: null, plan: null },
       { canManageBilling: true, plansPageEnabled: true },
     );
     expect(notice.description).toBe("Upgrade your plan to add more.");
+  });
+});
+
+describe("reachedLimitFrom", () => {
+  it("turns a cap the server reports as reached into the notice's input", () => {
+    expect(
+      reachedLimitFrom({
+        plan: "free",
+        limits: { staff: 3, items: 1000 },
+        usage: { staff: 3, items: 20 },
+      }),
+    ).toEqual({ resource: "staff", limit: 3, current: 3, requested: null, plan: "free" });
+  });
+
+  it("is null while there is room, or with no record", () => {
+    expect(
+      reachedLimitFrom({ plan: "free", limits: { staff: 3, items: 1000 }, usage: { staff: 2, items: 20 } }),
+    ).toBeNull();
+    expect(reachedLimitFrom(undefined)).toBeNull();
   });
 });
 

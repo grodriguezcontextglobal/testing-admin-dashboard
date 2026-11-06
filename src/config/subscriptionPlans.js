@@ -85,6 +85,43 @@ export const currentPlanId = (subscription) => {
   return planById(plan) ? plan : "free";
 };
 
+/** The resources a plan caps, and how a person reads each one. */
+export const LIMIT_NOUNS = { staff: "staff members", items: "inventory items" };
+
+const isLimitResource = (value) => Object.hasOwn(LIMIT_NOUNS, value);
+
+/**
+ * The resources the company is at or over the cap for, from the server's
+ * record (§5: effective `limits`, `usage`). A null cap is no cap.
+ */
+export const reachedLimits = (subscription) => {
+  const limits = subscription?.limits ?? {};
+  const usage = subscription?.usage ?? {};
+  return Object.keys(LIMIT_NOUNS).filter(
+    (resource) =>
+      Number.isFinite(limits[resource]) &&
+      Number.isFinite(usage[resource]) &&
+      usage[resource] >= limits[resource],
+  );
+};
+
+/** The resource in `?limit=` that sent the person to the plans page, or null. */
+export const limitFromSearch = (search) => {
+  const value = new URLSearchParams(search ?? "").get("limit");
+  return isLimitResource(value) ? value : null;
+};
+
+/** The banner at the top of the plans page when a cap has been reached. */
+export const limitReachedMessage = (resource, subscription) => {
+  const noun = LIMIT_NOUNS[resource] ?? "items";
+  const cap = subscription?.limits?.[resource];
+  const plan = planById(subscription?.plan);
+  if (Number.isFinite(cap) && plan) {
+    return `You've reached the ${cap.toLocaleString("en-US")} ${noun} included in your ${plan.name} plan. Upgrade to add more.`;
+  }
+  return `You've reached your plan's limit of ${noun}. Upgrade to add more.`;
+};
+
 /** mailto: link for the Enterprise "Contact sales" button. */
 export const enterpriseContactHref = (companyName) => {
   const name = (companyName ?? "").trim();
