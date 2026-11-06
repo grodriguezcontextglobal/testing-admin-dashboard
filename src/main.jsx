@@ -4,10 +4,8 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { PersistGate } from "redux-persist/integration/react";
+// The global CSS loads inside AppLoader, in the order it has to (see there).
 import AppLoader from "./AppLoader.jsx";
-import "./index.css";
-import "./styles/untitled-ui/tokens.css";
-import "./styles/untitled-ui/skin.css";
 import { persistor, store } from "./store/Store.js";
 // import { ErrorBoundary } from "react-error-boundary";
 // import { ErrorBoundaryComponent, ErrorLogFetch } from "./components/utils/ErrorBoundaryComponent.jsx";
