@@ -20,7 +20,7 @@ Every change to production goes through one path: a pull request into `main`, a 
 1. **Secret scan:** gitleaks over the full history; a new finding fails the run (`.gitleaksignore` lists the reviewed old ones).
 2. **Dependency audit:** a high or critical advisory in a production dependency fails the run, unless `.github/audit-exceptions.json` accepts it with a reason and an expiry date.
 3. **SBOM:** CycloneDX of the production dependencies; a PR that breaks it fails.
-4. **Lint:** errors fail; warnings may not rise above the baseline in `ci.yml` (280 on 2026-10-26, going to 0, plan item C2).
+4. **Lint:** `npm run lint` with `--max-warnings 0`: any error or warning fails the run, and so does an `eslint-disable` comment that is no longer needed. Zero since 2026-11-05 (plan item C2; it was 280 on 2026-10-26).
 5. **Unit tests** with coverage (Vitest).
 6. **Production build**, on Linux, so case-sensitive import paths are caught.
 
@@ -75,10 +75,10 @@ There is no bypass. A hotfix is a normal PR that waits for the same CI run. If t
 |---|---|---|
 | No second-person review on `main` | Decided 2026-10-29: PR + green CI only, given a two-person team | SOC 2 CC8.1 expects independent review. To close it: set "Required approvals" to 1 in the ruleset |
 | `production` environment has no required reviewers | Not configured | Every merge to `main` that passes CI reaches production about 5 minutes after the release. To close it: add a required reviewer to the environment |
-| Lint warnings above zero | Plan item C2, in progress | The baseline only stops them growing |
 
 ## Sources
 
-- Ruleset "Main" and environment `production`: GitHub API, read 2026-11-03.
+- Ruleset "Main" and environment `production`: GitHub API, read 2026-11-03; the ruleset read again on 2026-11-06, unchanged.
+- Lint step: `ci.yml` on `main` at `4442a29a` (2026-11-05).
 - `.github/workflows/ci.yml`, `release.yml`, `codeql.yml`, `.github/dependabot.yml`.
 - `deploy/iis/README.md`, `deploy/iis/Update-AdminSite.ps1`.
