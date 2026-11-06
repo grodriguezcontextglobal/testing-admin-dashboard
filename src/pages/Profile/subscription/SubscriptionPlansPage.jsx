@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import SectionHeader from "../../../components/documents/new_form_components/SectionHeader";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
@@ -12,8 +13,11 @@ import {
   currentPlanId,
   enterpriseContactHref,
   isStripeCheckoutUrl,
+  limitFromSearch,
+  limitReachedMessage,
   planLimitLines,
   planPrice,
+  reachedLimits,
   SUBSCRIPTION_PLANS,
 } from "../../../config/subscriptionPlans";
 import { userFacingError } from "../../../utils/userFacingError";
@@ -31,6 +35,20 @@ const cardStyle = (highlighted) => ({
   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
   textAlign: "left",
 });
+
+const limitBannerStyle = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "12px",
+  padding: "16px",
+  borderRadius: "12px",
+  border: "1px solid var(--warning-300, #FEC84B)",
+  background: "var(--warning-25, #FFFCF5)",
+  color: "var(--warning-700, #B54708)",
+  fontSize: "14px",
+  fontWeight: 500,
+  textAlign: "left",
+};
 
 const PlanCard = ({ plan, interval, isCurrent, action }) => {
   const price = planPrice(plan, interval);
@@ -107,6 +125,11 @@ const SubscriptionPlansPage = () => {
     retry: false,
   });
   const currentPlan = currentPlanId(subscriptionQuery.data);
+  /* Why the person is here: the cap the plan-limit notice sent them for
+     (api/planLimit.js), or one the server already reports as reached. */
+  const { search } = useLocation();
+  const reachedResource =
+    limitFromSearch(search) ?? reachedLimits(subscriptionQuery.data)[0] ?? null;
 
   const checkout = useMutation({
     mutationFn: async ({ plan, billingInterval }) => {
@@ -176,6 +199,13 @@ const SubscriptionPlansPage = () => {
             );
           })}
         </div>
+
+        {reachedResource && (
+          <div role="status" style={limitBannerStyle}>
+            <AlertTriangle size={20} aria-hidden="true" style={{ flexShrink: 0 }} />
+            <span>{limitReachedMessage(reachedResource, subscriptionQuery.data)}</span>
+          </div>
+        )}
 
         {subscriptionQuery.isError && (
           <p style={{ margin: 0, fontSize: "14px", color: "var(--gray-600, #475467)", textAlign: "left" }}>

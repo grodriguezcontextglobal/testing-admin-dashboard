@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { configureStore } from "@reduxjs/toolkit";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { Provider } from "react-redux";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import SubscriptionPlansPage from "./SubscriptionPlansPage";
 import { devitrakApi } from "../../../api/devitrakApi";
@@ -18,11 +19,13 @@ const store = configureStore({
   },
 });
 
-const renderPage = () =>
+const renderPage = (entry = "/profile/subscription") =>
   render(
     <Provider store={store}>
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <SubscriptionPlansPage />
+        <MemoryRouter initialEntries={[entry]}>
+          <SubscriptionPlansPage />
+        </MemoryRouter>
       </QueryClientProvider>
     </Provider>,
   );
@@ -97,6 +100,38 @@ describe("SubscriptionPlansPage", () => {
     await waitFor(() => expect(devitrakApi.post).toHaveBeenCalled());
     expect(await screen.findByText("We couldn't open the payment page.")).toBeTruthy();
     expect(assign).not.toHaveBeenCalled();
+  });
+
+  it("explains the limit the notice sent the person here for", async () => {
+    devitrakApi.get.mockResolvedValue({ data: { plan: "free", limits: { staff: 3, items: 1000 } } });
+    renderPage("/profile/subscription?limit=staff");
+    expect(
+      await screen.findByText(
+        "You've reached the 3 staff members included in your Free plan. Upgrade to add more.",
+      ),
+    ).toBeTruthy();
+    expect(within(card("Pro")).getByText("Upgrade to Pro")).toBeTruthy();
+  });
+
+  it("shows the same message from the usage the server reports", async () => {
+    devitrakApi.get.mockResolvedValue({
+      data: { plan: "free", limits: { staff: 3, items: 1000 }, usage: { staff: 1, items: 1000 } },
+    });
+    renderPage();
+    expect(
+      await screen.findByText(
+        "You've reached the 1,000 inventory items included in your Free plan. Upgrade to add more.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("shows no limit message while there is room", async () => {
+    devitrakApi.get.mockResolvedValue({
+      data: { plan: "free", limits: { staff: 3, items: 1000 }, usage: { staff: 1, items: 10 } },
+    });
+    renderPage();
+    await waitFor(() => expect(devitrakApi.get).toHaveBeenCalled());
+    expect(screen.queryByText(/You've reached/)).toBeNull();
   });
 
   it("sends Enterprise to sales by email", async () => {
