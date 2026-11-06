@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { NavLink, Outlet } from "react-router-dom";
 import useLogout from "../../hooks/useLogout";
 import DangerButtonComponent from "../../components/UX/buttons/DangerButton";
+import { FEATURE_SUBSCRIPTION_PLANS } from "../../config/featureFlags";
 import { hasPermission, resolveRoleType } from "../../config/roles";
 import { useStaffRoleAndLocations } from "../../utils/checkStaffRoleAndLocations";
 import MainHeaders from "./ui/MainHeaders";
@@ -21,6 +22,7 @@ const MainProfileSettings = () => {
     { label: "Email branding",  route: "email-branding",           permission: "profile:company_settings"},
     { label: "Roles",           route: "roles",                    permission: "staff:assign_role"      },
     { label: "Audit trail",     route: "staff-activity",           permission: "staff:read"             },
+    { label: "Subscription",    route: "subscription",             permission: "profile:billing",         flag: FEATURE_SUBSCRIPTION_PLANS },
     { label: "Stripe account",  route: "stripe_connected_account", permission: "profile:billing"        },
     { label: "Documents",       route: "documents",                permission: "profile:staff_settings" },
     { label: "Suppliers",       route: "providers",                permission: "profile:staff_settings" },
@@ -76,6 +78,7 @@ const MainProfileSettings = () => {
             ? isSuperUser
             : hasPermission(option.permission, resolveRoleType(user));
           if (!isAllowed) return null;
+          if (option.flag === false) return null;
           if (option.industry && user?.companyData?.industry !== option.industry) return null;
           return (
             <NavLink

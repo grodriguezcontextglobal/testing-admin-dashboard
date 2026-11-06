@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
 import IndustryTabGuard from "./IndustryTabGuard";
+import { FEATURE_SUBSCRIPTION_PLANS } from "../../config/featureFlags";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import ErrorBoundary from "../../components/utils/ErrorBoundary";
@@ -94,6 +95,9 @@ const ParentRenderingChildrenPage = lazyWithRetry(() =>
 const Confirmation = lazyWithRetry(() => import("../../pages/payment/Confirmation"));
 const BillingMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/billing/BillingMainPage")
+);
+const SubscriptionPlansPage = lazyWithRetry(() =>
+  import("../../pages/Profile/subscription/SubscriptionPlansPage")
 );
 const MyDetailsMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/my_details/MyDetailsMainPage")
@@ -497,6 +501,11 @@ const AuthRoutes = () => {
                   element={<NotificationsMainPage />}
                 />
                 <Route path="billing" element={<BillingMainPage />} />
+                {FEATURE_SUBSCRIPTION_PLANS && (
+                  <Route element={<PermissionGuard action="profile:billing" />}>
+                    <Route path="subscription" element={<SubscriptionPlansPage />} />
+                  </Route>
+                )}
                 <Route element={<PermissionGuard action="staff:read" />}>
                   <Route
                     path="staff-activity"

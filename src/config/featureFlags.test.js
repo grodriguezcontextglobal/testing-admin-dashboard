@@ -82,3 +82,25 @@ describe("FEATURE_EVENT_INVITATIONS", () => {
     expect(on.FEATURE_EVENT_INVITATIONS).toBe(true);
   });
 });
+
+describe("FEATURE_SUBSCRIPTION_PLANS", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("defaults to false when the env var is unset", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_SUBSCRIPTION_PLANS", undefined);
+    const { FEATURE_SUBSCRIPTION_PLANS } = await import("./featureFlags");
+    expect(FEATURE_SUBSCRIPTION_PLANS).toBe(false);
+  });
+
+  it("is true only when the env var is the string 'true'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_SUBSCRIPTION_PLANS", "true");
+    const { FEATURE_SUBSCRIPTION_PLANS } = await import("./featureFlags");
+    expect(FEATURE_SUBSCRIPTION_PLANS).toBe(true);
+  });
+});
