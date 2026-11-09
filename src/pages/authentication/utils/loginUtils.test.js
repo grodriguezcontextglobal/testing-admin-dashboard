@@ -6,6 +6,9 @@ import {
   buildActiveCompaniesFromSQL,
   buildSetPermissionsPayload,
   extractStaffId,
+  findActiveCompany,
+  pickCompanyRecord,
+  resolveMongoCompany,
 } from "./loginUtils";
 
 // ─── deriveRoleType ───────────────────────────────────────────────────────────
@@ -239,6 +242,100 @@ describe("buildActiveCompaniesFromSQL", () => {
     const input = [{ company_name: "Solo", company_id: 3, roleType: "assistant", role_level: 5 }];
     const result = buildActiveCompaniesFromSQL(input);
     expect(result[0].categories).toEqual([]);
+  });
+});
+
+// ─── Company chosen by id (GovRAMP #4, AC-4) ──────────────────────────────────
+// The SQL company the session works in (s-company-lq) used to be looked up by
+// name, taking the last row with that name. /db_staff/companies already
+// returns each active company's company_id, so the choice is made by id and
+// the name is only a label.
+
+describe("buildActiveCompaniesFromSQL keeps the SQL company id", () => {
+  it("carries company_id as sqlCompanyId", () => {
+    const result = buildActiveCompaniesFromSQL([
+      { company_name: "Acme Corp", company_id: 1, roleType: "admin", role_level: 1 },
+      { company_name: "Acme Corp", company_id: 9, roleType: "assistant", role_level: 5 },
+    ]);
+    expect(result.map((c) => c.sqlCompanyId)).toEqual([1, 9]);
+  });
+
+  it("drops a row without a usable company id, since it cannot be signed into", () => {
+    const result = buildActiveCompaniesFromSQL([
+      { company_name: "No id", roleType: "admin", role_level: 1 },
+      { company_name: "Bad id", company_id: "abc", roleType: "admin", role_level: 1 },
+      { company_name: "Ok", company_id: "7", roleType: "admin", role_level: 1 },
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].sqlCompanyId).toBe(7);
+  });
+});
+
+describe("findActiveCompany", () => {
+  const active = buildActiveCompaniesFromSQL([
+    { company_name: "Twin", company_id: 1, roleType: "admin", role_level: 1 },
+    { company_name: "Twin", company_id: 2, roleType: "assistant", role_level: 5 },
+  ]);
+
+  it("picks by id, so two companies with the same name stay apart", () => {
+    expect(findActiveCompany(active, 2).roleType).toBe("assistant");
+    expect(findActiveCompany(active, "1").roleType).toBe("admin");
+  });
+
+  it("is null for an id the account does not belong to", () => {
+    expect(findActiveCompany(active, 3)).toBeNull();
+    expect(findActiveCompany(active, null)).toBeNull();
+  });
+});
+
+describe("pickCompanyRecord", () => {
+  it("returns the consulting-company row with the asked id", () => {
+    const rows = [{ company_id: 2, company_name: "Twin" }, { company_id: 1, company_name: "Twin" }];
+    expect(pickCompanyRecord(rows, 2)).toEqual(rows[0]);
+    expect(pickCompanyRecord({ company: [{ company_id: 1 }] }, "1")).toEqual({ company_id: 1 });
+    expect(pickCompanyRecord({ company: { company_id: 1 } }, 1)).toEqual({ company_id: 1 });
+  });
+
+  it("never falls back to another company's row", () => {
+    expect(pickCompanyRecord([{ company_id: 1 }], 2)).toBeNull();
+    expect(pickCompanyRecord([], 2)).toBeNull();
+    expect(pickCompanyRecord(undefined, 2)).toBeNull();
+  });
+});
+
+// The Mongo company (x-company-id) has no SQL id, so the name is still the
+// link there. It must be unambiguous: no guessing between two documents.
+describe("resolveMongoCompany", () => {
+  const EMAIL = "ana@x.com";
+  const mongo = (id, name, active = true) => ({
+    id,
+    company_name: name,
+    employees: [{ user: EMAIL, active }],
+  });
+
+  it("matches the SQL company's name, ignoring case and spaces around it", () => {
+    const companies = [mongo("a", "Acme Corp"), mongo("b", "Globex")];
+    expect(resolveMongoCompany(companies, { companyName: " globex ", email: EMAIL }).id).toBe("b");
+  });
+
+  it("prefers the company where the account is an active employee", () => {
+    const companies = [mongo("old", "Twin", false), mongo("new", "Twin", true)];
+    expect(resolveMongoCompany(companies, { companyName: "Twin", email: EMAIL }).id).toBe("new");
+  });
+
+  it("refuses to guess between two active companies with the same name", () => {
+    const companies = [mongo("a", "Twin"), mongo("b", "Twin")];
+    expect(() => resolveMongoCompany(companies, { companyName: "Twin", email: EMAIL })).toThrow(/contact support/i);
+  });
+
+  it("keeps the only company of a single-company account when the names differ", () => {
+    expect(resolveMongoCompany([mongo("a", "Acme Inc.")], { companyName: "Acme", email: EMAIL }).id).toBe("a");
+  });
+
+  it("refuses when several companies exist and none has the name", () => {
+    const companies = [mongo("a", "Acme"), mongo("b", "Globex")];
+    expect(() => resolveMongoCompany(companies, { companyName: "Initech", email: EMAIL })).toThrow(/contact support/i);
+    expect(() => resolveMongoCompany([], { companyName: "Initech", email: EMAIL })).toThrow(/contact support/i);
   });
 });
 

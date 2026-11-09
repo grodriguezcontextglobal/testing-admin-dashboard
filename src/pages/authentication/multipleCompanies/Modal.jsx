@@ -13,7 +13,12 @@ import {
 import { takeReturnPath } from "../../../api/sessionExpiry";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { getRoleLabel, isAssistant } from "../../../config/roles";
-import { buildSetPermissionsPayload } from "../utils/loginUtils";
+import {
+  buildSetPermissionsPayload,
+  findActiveCompany,
+  pickCompanyRecord,
+  resolveMongoCompany,
+} from "../utils/loginUtils";
 import { ProfileIcon } from "../../../components/icons/ProfileIcon";
 import BlueButtonComponent from "../../../components/UX/buttons/BlueButton";
 import ModalUX from "../../../components/UX/modal/ModalUX";
@@ -42,7 +47,6 @@ import { onResetBackgroundJobs } from "../../../store/slices/backgroundJobsSlice
 import { onResetStripesInfo } from "../../../store/slices/stripeSlice";
 import { onResetSubscriptionInfo } from "../../../store/slices/subscriptionSlice";
 import { persistor } from "../../../store/Store";
-import { checkArray } from "../../../components/utils/checkArray";
 import { useStatusNotification } from "../../../components/notification/alerts/useStatusNotification";
 import { signOutRequest } from "../utils/signOutRequest";
 
@@ -63,16 +67,22 @@ const ModalMultipleCompanies = ({
     notify(type.toLowerCase(), msg, 0);
   };
   const queryClient = useQueryClient();
-  const findingCompanyInfoBasedOnSelection = (props) => {
-    const result = dataPassed.company_data.find(
-      (element) => element.company_name === props,
-    );
-    return result;
-  };
 
+  /* The choice is the SQL company id (GovRAMP #4, AC-4): two companies can
+     share a name, and the old lookup by name took whichever came last. The
+     name is only the label, and the link to the Mongo company document,
+     which has no SQL id; resolveMongoCompany refuses to guess there. */
   const loginIntoOneCompanyAccount = async () => {
     try {
       setIsLoading(true);
+      const selectedCompanySQL = findActiveCompany(dataPassed.companyInfo, selection);
+      if (!selectedCompanySQL) {
+        throw new Error("Select the account you want to open.");
+      }
+      const selectedCompanyData = resolveMongoCompany(dataPassed.company_data, {
+        companyName: selectedCompanySQL.company,
+        email: dataPassed.email,
+      });
       localStorage.setItem("admin-token", dataPassed.respo.token);
       const _decoded = jwtDecode(dataPassed.respo.token);
       if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
@@ -88,25 +98,20 @@ const ModalMultipleCompanies = ({
       const companyInfoTable = await devitrakApi.post(
         "/db_company/consulting-company",
         {
-          company_name: selection,
+          company_id: selectedCompanySQL.sqlCompanyId,
         },
       );
-      const rawCompanyData = companyInfoTable.data.companies;
-      const companyRecord = Array.isArray(rawCompanyData)
-        ? rawCompanyData.at(-1)
-        : checkArray(rawCompanyData?.company);
-      if (!companyRecord?.company_id) {
+      const companyRecord = pickCompanyRecord(
+        companyInfoTable.data.companies,
+        selectedCompanySQL.sqlCompanyId,
+      );
+      if (!companyRecord) {
         throw new Error("Company SQL record not found. Please contact support.");
       }
       localStorage.setItem("s-company-lq", companyRecord.company_id);
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyRecord.company_id,
       });
-
-      const selectedCompanyData = findingCompanyInfoBasedOnSelection(selection);
-      const selectedCompanySQL = dataPassed.companyInfo.find(
-        (item) => item.company === selection,
-      );
 
       // Set the company-scoped default headers for subsequent requests.
       persistCompanyHeaders({
@@ -127,7 +132,7 @@ const ModalMultipleCompanies = ({
           role: selectedCompanySQL.role,
           roleType: selectedCompanySQL.roleType,
           phone: dataPassed.respo.phone,
-          company: selection,
+          company: selectedCompanySQL.company,
           companyData: selectedCompanyData,
           token: dataPassed.respo.token,
           online: true,
@@ -165,17 +170,18 @@ const ModalMultipleCompanies = ({
     return setSelection(value);
   };
 
-  const renderingExtraCompanyInfo = (props) => {
-    const result = dataPassed.company_data.filter(
-      (item) => item.company_name === props,
-    );
-    const employeeRoleInCompany = result[0]?.employees?.find(
-      (item) => item.user === dataPassed.respo.email,
-    );
-    return {
-      company_logo: result[0]?.company_logo ?? "",
-      employeeRoleInCompany: employeeRoleInCompany?.roleType,
-    };
+  // Only the logo comes from the Mongo document; without a clear match the
+  // option shows the generic icon. The role is the SQL one, the same that
+  // sets the permissions.
+  const companyLogo = (company) => {
+    try {
+      return resolveMongoCompany(dataPassed.company_data, {
+        companyName: company.company,
+        email: dataPassed.email,
+      })?.company_logo ?? "";
+    } catch {
+      return "";
+    }
   };
 
   const logout = async () => {
@@ -312,7 +318,7 @@ const ModalMultipleCompanies = ({
           onChange={handleChange}
           options={[
             ...dataPassed.companyInfo.filter((item) => item.company).map((item) => ({
-              value: item.company,
+              value: item.sqlCompanyId,
               label: (
                 <p
                   style={{
@@ -331,8 +337,8 @@ const ModalMultipleCompanies = ({
                       objectPosition: "center",
                     }}
                     src={
-                      renderingExtraCompanyInfo(item.company).company_logo?.length > 0
-                        ? renderingExtraCompanyInfo(item.company).company_logo
+                      companyLogo(item).length > 0
+                        ? companyLogo(item)
                         : "https://res.cloudinary.com/dsuynhcgd/image/upload/c_thumb,w_200,g_face/v1738169822/material-symbols--enterprise-outline_vmmi7y.svg"
                     }
                     alt={item.company}
@@ -358,12 +364,7 @@ const ModalMultipleCompanies = ({
                       lineHeight: "24px",
                     }}
                   >
-                    {
-                      getRoleLabel(
-                        renderingExtraCompanyInfo(item.company)
-                          .employeeRoleInCompany
-                      )
-                    }
+                    {getRoleLabel(item.roleType)}
                   </span>
                 </p>
               ),
