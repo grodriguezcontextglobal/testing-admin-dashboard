@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import { devitrakApi } from "../../../../api/devitrakApi";
-import { ROLE_LEVELS } from "../../../../config/roles";
+import { employeeWithRoleType, ROLE_LEVELS } from "../../../../config/roles";
 import { onLogin } from "../../../../store/slices/adminSlice";
 import { extractStaffId } from "../../../authentication/utils/loginUtils";
 import { useStatusNotification } from "../../../../components/notification/alerts/useStatusNotification";
@@ -51,11 +51,7 @@ export const useRoleReassignment = () => {
       const idx = employees.findIndex((el) => el.user === employee.user);
       const updatedEmployees =
         idx > -1
-          ? employees.toSpliced(idx, 1, {
-              ...employees[idx],
-              role: String(newLevel),
-              roleType: toGroupKey,
-            })
+          ? employees.toSpliced(idx, 1, employeeWithRoleType(employees[idx], toGroupKey))
           : employees;
 
       return devitrakApi.patch(

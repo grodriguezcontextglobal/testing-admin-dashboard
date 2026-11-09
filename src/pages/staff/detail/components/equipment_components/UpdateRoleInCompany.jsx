@@ -12,6 +12,7 @@ import ReusableCardWithHeaderAndFooter from "../../../../../components/UX/cards/
 import ModalUX from "../../../../../components/UX/modal/ModalUX";
 import { onLogin } from "../../../../../store/slices/adminSlice";
 import {
+  employeeWithRoleType,
   isCoordinatorLevel,
   legacyRoleType,
   ROLE_LEVELS,
@@ -152,11 +153,11 @@ const UpdateRoleInCompany = () => {
       );
       const employees =
         foundStaffIdx > -1
-          ? profile.companyData.employees.toSpliced(foundStaffIdx, 1, {
-              ...profile.companyData.employees[foundStaffIdx],
-              role: roleType,
-              roleType,
-            })
+          ? profile.companyData.employees.toSpliced(
+              foundStaffIdx,
+              1,
+              employeeWithRoleType(profile.companyData.employees[foundStaffIdx], roleType),
+            )
           : profile.companyData.employees;
 
       return devitrakApi.patch(
@@ -204,11 +205,11 @@ const UpdateRoleInCompany = () => {
     );
     const employees =
       foundStaffIdx > -1
-        ? profile.companyData.employees.toSpliced(foundStaffIdx, 1, {
-            ...profile.companyData.employees[foundStaffIdx],
-            role: String(newRole),
-            roleType,
-          })
+        ? profile.companyData.employees.toSpliced(
+            foundStaffIdx,
+            1,
+            employeeWithRoleType(profile.companyData.employees[foundStaffIdx], roleType),
+          )
         : profile.companyData.employees;
 
     updateRole({ role_level: Number(newRole), roleType, employees });
@@ -238,7 +239,8 @@ const UpdateRoleInCompany = () => {
   const scopeValidation = validateScopeSelection(newRole, scopeSelection);
 
   const bodyModal = () => {
-    const role = roleLabel(profile.role)
+    // Entries written since GovRAMP #7 carry roleType only.
+    const role = roleLabel(resolveRoleType(profile))
     const saveButton = (
       <BlueButtonComponent
         form="update-role-form"

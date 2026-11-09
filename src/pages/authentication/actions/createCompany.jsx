@@ -43,7 +43,6 @@ const createCompany = async ({
         employee_id:user.userID ? user.userID : ref.current.userRegistration.uid,
         status: "confirmed",
         super_user: true,
-        role: "0",
         roleType: "root_admin",
         preference: { inventory_location: [] },
       },
