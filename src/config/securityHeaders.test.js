@@ -105,7 +105,7 @@ describe("buildSecurityHeaders", () => {
 
   it("ships the CSP in report-only mode first", () => {
     expect(headers["Content-Security-Policy-Report-Only"]).toBe(
-      buildContentSecurityPolicy({ apiOrigins: API })
+      buildContentSecurityPolicy({ apiOrigins: API, trustedTypes: true })
     );
     expect(headers["Content-Security-Policy"]).toBeUndefined();
   });
@@ -114,8 +114,55 @@ describe("buildSecurityHeaders", () => {
     const enforced = Object.fromEntries(
       buildSecurityHeaders({ apiOrigins: API, enforceCsp: true }).map(({ name, value }) => [name, value])
     );
-    expect(enforced["Content-Security-Policy"]).toBeDefined();
-    expect(enforced["Content-Security-Policy-Report-Only"]).toBeUndefined();
+    expect(enforced["Content-Security-Policy"]).toBe(buildContentSecurityPolicy({ apiOrigins: API }));
+    // Only Trusted Types stays report-only (see "Trusted Types reporting").
+    expect(directive(enforced["Content-Security-Policy-Report-Only"], "default-src")).toBeUndefined();
+  });
+});
+
+// GovRAMP code action #2 (FRONTEND_govramp_code_actions_2026-11-09.md, SI-10):
+// every string that reaches a DOM sink able to run script (innerHTML,
+// script src, eval-like calls) is reported, never blocked. The reports decide
+// whether Trusted Types can be enforced later (decision D2).
+describe("Trusted Types reporting", () => {
+  const PROD_API = ["https://db.devitrak.net/api"];
+  const REPORT_URI = "https://db.devitrak.net/api/csp-report";
+  const TRUSTED_TYPES = "require-trusted-types-for 'script'";
+  const headersFor = (options) =>
+    Object.fromEntries(buildSecurityHeaders(options).map(({ name, value }) => [name, value]));
+
+  it("reports Trusted Types violations while the CSP is report-only", () => {
+    const policy = headersFor({ apiOrigins: PROD_API })["Content-Security-Policy-Report-Only"];
+    expect(directive(policy, "require-trusted-types-for")).toBe(TRUSTED_TYPES);
+    expect(directive(policy, "report-uri")).toBe(`report-uri ${REPORT_URI}`);
+  });
+
+  it("is off in the policy itself unless asked for", () => {
+    const policy = buildContentSecurityPolicy({ apiOrigins: PROD_API });
+    expect(directive(policy, "require-trusted-types-for")).toBeUndefined();
+  });
+
+  it("never blocks on Trusted Types when the CSP is enforced", () => {
+    const headers = headersFor({ apiOrigins: PROD_API, enforceCsp: true });
+    expect(directive(headers["Content-Security-Policy"], "require-trusted-types-for")).toBeUndefined();
+  });
+
+  it("keeps reporting Trusted Types in a separate report-only policy once the CSP is enforced", () => {
+    const reportOnly = headersFor({ apiOrigins: PROD_API, enforceCsp: true })["Content-Security-Policy-Report-Only"];
+    expect(reportOnly).toBe(`${TRUSTED_TYPES}; report-uri ${REPORT_URI}; report-to csp`);
+  });
+
+  it("still reports to the console when there is no endpoint", () => {
+    const headers = headersFor({ apiOrigins: ["http://localhost:34001"], enforceCsp: true });
+    expect(headers["Content-Security-Policy-Report-Only"]).toBe(TRUSTED_TYPES);
+  });
+
+  // IIS refuses a web.config that adds the same header twice.
+  it("never sends the same header name twice", () => {
+    for (const enforceCsp of [false, true]) {
+      const names = buildSecurityHeaders({ apiOrigins: PROD_API, enforceCsp }).map(({ name }) => name);
+      expect(new Set(names).size).toBe(names.length);
+    }
   });
 });
 

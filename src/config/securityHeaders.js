@@ -14,6 +14,12 @@
  * 2026-11-04 batch): anonymous, always 204, kept 30 days and summarized on the
  * server with scripts/summarize-csp-reports.js. That summary is the evidence
  * for switching to enforce.
+ *
+ * Trusted Types are only ever reported (require-trusted-types-for 'script',
+ * SI-10): in the Report-Only policy while it is report-only, and in a
+ * separate Report-Only policy once the CSP is enforced, so enforcing the CSP
+ * never starts blocking on them. Their reports decide whether they can be
+ * enforced too.
  */
 
 export const SECURITY_HEADERS_MARKER = "<!-- SECURITY_HEADERS -->";
@@ -77,11 +83,27 @@ export const cspReportUri = (apiOrigins) => {
 // The Reporting API group the policy's report-to names.
 const CSP_REPORT_GROUP = "csp";
 
-export const buildContentSecurityPolicy = ({ apiOrigins }) => {
+const TRUSTED_TYPES = ["require-trusted-types-for", "'script'"];
+
+const reportingDirectives = (reportUri) =>
+  // report-uri for browsers without the Reporting API (Firefox, older
+  // Safari); report-to for the rest, which then ignore report-uri.
+  reportUri ? [["report-uri", reportUri], ["report-to", CSP_REPORT_GROUP]] : [];
+
+const serialize = (directives) => directives.map((parts) => parts.join(" ")).join("; ");
+
+/**
+ * trustedTypes adds require-trusted-types-for 'script'. Only for a policy
+ * sent as Report-Only: enforced, it would block every string-to-HTML sink.
+ */
+export const buildContentSecurityPolicy = ({ apiOrigins, trustedTypes = false }) => {
   const directives = [
     ["default-src", "'self'"],
     ["script-src", "'self'", ...STRIPE_SCRIPTS],
-    // MUI, emotion and antd inject <style> at runtime.
+    // Accepted risk (GovRAMP decision D1, SC-18): 'unsafe-inline' stays for
+    // styles because antd, MUI and emotion inject <style> at runtime and React
+    // writes style attributes. Injected CSS cannot run script; script-src
+    // never allows inline or eval (securityHeaders.test.js keeps it so).
     ["style-src", "'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
     ["font-src", "'self'", "data:", "https://fonts.gstatic.com"],
     // Item, staff and company images come from several hosts (Cloudinary, S3, Stripe).
@@ -95,13 +117,8 @@ export const buildContentSecurityPolicy = ({ apiOrigins }) => {
     ["form-action", "'self'"],
     ["frame-ancestors", "'none'"],
   ];
-  const reportUri = cspReportUri(apiOrigins);
-  if (reportUri) {
-    // report-uri for browsers without the Reporting API (Firefox, older
-    // Safari); report-to for the rest, which then ignore report-uri.
-    directives.push(["report-uri", reportUri], ["report-to", CSP_REPORT_GROUP]);
-  }
-  return directives.map((parts) => parts.join(" ")).join("; ");
+  if (trustedTypes) directives.push(TRUSTED_TYPES);
+  return serialize([...directives, ...reportingDirectives(cspReportUri(apiOrigins))]);
 };
 
 export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
@@ -112,10 +129,20 @@ export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
     { name: "X-Frame-Options", value: "DENY" },
     { name: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     { name: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
-    {
-      name: enforceCsp ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only",
-      value: buildContentSecurityPolicy({ apiOrigins }),
-    },
+    ...(enforceCsp
+      ? [
+          { name: "Content-Security-Policy", value: buildContentSecurityPolicy({ apiOrigins }) },
+          {
+            name: "Content-Security-Policy-Report-Only",
+            value: serialize([TRUSTED_TYPES, ...reportingDirectives(reportUri)]),
+          },
+        ]
+      : [
+          {
+            name: "Content-Security-Policy-Report-Only",
+            value: buildContentSecurityPolicy({ apiOrigins, trustedTypes: true }),
+          },
+        ]),
     ...(reportUri
       ? [{ name: "Reporting-Endpoints", value: `${CSP_REPORT_GROUP}="${reportUri}"` }]
       : []),
