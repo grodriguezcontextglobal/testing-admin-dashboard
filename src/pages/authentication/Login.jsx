@@ -72,7 +72,7 @@ import {
   readMfaSetupChallenge,
 } from "./utils/mfaEnrollment";
 import { readAttemptsRemaining, readLoginLockout } from "./utils/loginLockout";
-import { readRecoveryCodeUse, stashRecoveryNotice } from "./utils/mfaRecovery";
+import { loginRecoveryNotice, stashRecoveryNotice } from "./utils/mfaRecovery";
 import SystemUseNotice from "./login/SystemUseNotice";
 import MfaResetEmailNotice from "./login/MfaResetEmailNotice";
 import { readMfaResetEmailChallenge } from "./utils/mfaResetEmail";
@@ -384,10 +384,10 @@ const Login = () => {
         return;
       }
 
-      /* Signed in with a recovery code (FedRAMP A5): App says how many are
-         left once this screen has navigated away. */
-      const recoveryUse = readRecoveryCodeUse(loginResponse.data);
-      if (recoveryUse) stashRecoveryNotice(sessionStorage, recoveryUse);
+      /* Signed in with a recovery code (FedRAMP A5), or few or none are left
+         (GovRAMP #3): App says so once this screen has navigated away. */
+      const recoveryNotice = loginRecoveryNotice(loginResponse.data);
+      if (recoveryNotice) stashRecoveryNotice(sessionStorage, recoveryNotice);
 
       await continueAfterAuthentication({
         loginData,

@@ -8,9 +8,11 @@
  * are regenerated (POST /admin/mfa/recovery-codes). It keeps only their
  * hashes, so this is the one moment they can be shown.
  *
- * Signing in with one returns `recoveryCodeUsed` and `recoveryCodesRemaining`.
- * The sign-in screen unmounts as it navigates, so the notice about the codes
- * left travels through sessionStorage and App shows it.
+ * Every sign-in returns `recoveryCodesRemaining`: a number when the account
+ * has MFA, null when it has none. Signing in with a recovery code also
+ * returns `recoveryCodeUsed`. The sign-in screen unmounts as it navigates, so
+ * the notice about the codes left travels through sessionStorage and App
+ * shows it.
  */
 
 export const RECOVERY_NOTICE_KEY = "devitrak-recovery-notice";
@@ -64,9 +66,46 @@ export const recoveryCodeUseNotice = ({ remaining }) => {
   };
 };
 
-export const stashRecoveryNotice = (storage, use) => {
+/** At this many codes or fewer, an ordinary sign-in warns too. */
+const LOW_RECOVERY_CODES = 2;
+
+/**
+ * For an ordinary sign-in (GovRAMP #3, IA-2(1), IA-5): someone who ran out of
+ * codes never signs in with one, so they are told here. Kept on screen at
+ * zero, when losing the phone would lock the account out.
+ */
+export const lowRecoveryCodesNotice = ({ remaining }) => {
+  const none = remaining <= 0;
+  return {
+    type: none ? "error" : "warning",
+    title: `${codesLeft(remaining)}.`,
+    description: none
+      ? "If you lose the device with your authenticator app, you will not be able to sign in. Generate new codes in Profile → Multi-Factor Authentication."
+      : "Generate new codes in Profile → Multi-Factor Authentication before you run out.",
+    persistent: none,
+  };
+};
+
+// null means the account has no MFA. Number(null) is 0, so it is checked
+// before converting, or it would read as "no codes left".
+const readRemaining = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  const remaining = Number(value);
+  return Number.isFinite(remaining) ? remaining : null;
+};
+
+/** The notice a successful sign-in calls for, or null. */
+export const loginRecoveryNotice = (loginResponseData) => {
+  const use = readRecoveryCodeUse(loginResponseData);
+  if (use) return recoveryCodeUseNotice(use);
+  const remaining = readRemaining(loginResponseData?.recoveryCodesRemaining);
+  if (remaining === null || remaining > LOW_RECOVERY_CODES) return null;
+  return lowRecoveryCodesNotice({ remaining });
+};
+
+export const stashRecoveryNotice = (storage, notice) => {
   try {
-    storage.setItem(RECOVERY_NOTICE_KEY, JSON.stringify(recoveryCodeUseNotice(use)));
+    storage.setItem(RECOVERY_NOTICE_KEY, JSON.stringify(notice));
   } catch {
     // Without sessionStorage the notice is lost; the codes still work.
   }
