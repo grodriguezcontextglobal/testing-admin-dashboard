@@ -6,6 +6,7 @@ import {
   SECURITY_HEADERS_MARKER,
   buildContentSecurityPolicy,
   buildSecurityHeaders,
+  cspReportUri,
   injectSecurityHeaders,
 } from "./securityHeaders";
 
@@ -115,6 +116,52 @@ describe("buildSecurityHeaders", () => {
     );
     expect(enforced["Content-Security-Policy"]).toBeDefined();
     expect(enforced["Content-Security-Policy-Report-Only"]).toBeUndefined();
+  });
+});
+
+// GovRAMP code action #1 (FRONTEND_govramp_code_actions_2026-11-09.md): the
+// backend's POST /api/csp-report is live, so violations reach the server
+// instead of only the browser console. A week of them is the evidence for
+// switching the policy to enforce (SC-18).
+describe("CSP reporting", () => {
+  const PROD_API = ["https://db.devitrak.net/api", "https://db-backup.devitrak.net/api"];
+  const REPORT_URI = "https://db.devitrak.net/api/csp-report";
+
+  it("reports to the primary API's /csp-report", () => {
+    expect(cspReportUri(PROD_API)).toBe(REPORT_URI);
+    expect(cspReportUri(["https://db.devitrak.net/api/"])).toBe(REPORT_URI);
+  });
+
+  it("names the endpoint in the policy, both ways browsers read it", () => {
+    const policy = buildContentSecurityPolicy({ apiOrigins: PROD_API });
+    expect(directive(policy, "report-uri")).toBe(`report-uri ${REPORT_URI}`);
+    expect(directive(policy, "report-to")).toBe("report-to csp");
+  });
+
+  it("declares the csp reporting group the policy points to", () => {
+    const headers = Object.fromEntries(
+      buildSecurityHeaders({ apiOrigins: PROD_API }).map(({ name, value }) => [name, value])
+    );
+    expect(headers["Reporting-Endpoints"]).toBe(`csp="${REPORT_URI}"`);
+  });
+
+  it("keeps reporting once the policy is enforced", () => {
+    const headers = Object.fromEntries(
+      buildSecurityHeaders({ apiOrigins: PROD_API, enforceCsp: true }).map(({ name, value }) => [name, value])
+    );
+    expect(directive(headers["Content-Security-Policy"], "report-uri")).toBe(`report-uri ${REPORT_URI}`);
+    expect(headers["Reporting-Endpoints"]).toBe(`csp="${REPORT_URI}"`);
+  });
+
+  it("reports nowhere rather than to an unusable endpoint", () => {
+    for (const apiOrigins of [[], ["", undefined], ["http://db.devitrak.net/api"], ["not a url"]]) {
+      expect(cspReportUri(apiOrigins)).toBeNull();
+      const policy = buildContentSecurityPolicy({ apiOrigins });
+      expect(directive(policy, "report-uri")).toBeUndefined();
+      expect(directive(policy, "report-to")).toBeUndefined();
+      const names = buildSecurityHeaders({ apiOrigins }).map(({ name }) => name);
+      expect(names).not.toContain("Reporting-Endpoints");
+    }
   });
 });
 
