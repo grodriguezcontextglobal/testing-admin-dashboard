@@ -6,9 +6,14 @@
  * build time, in place of SECURITY_HEADERS_MARKER in public/web.config,
  * because the CSP has to name the API origins of the environment being built.
  *
- * The CSP ships as Report-Only first: violations show in the browser console
- * without blocking anything. Once a week of real use shows no false positives,
- * build with VITE_APP_CSP_ENFORCE=true to enforce it.
+ * The CSP ships as Report-Only first: violations are reported without
+ * blocking anything. Once a week of real use shows no false positives, build
+ * with VITE_APP_CSP_ENFORCE=true to enforce it.
+ *
+ * Reports go to the API's POST /csp-report (live since the backend's
+ * 2026-11-04 batch): anonymous, always 204, kept 30 days and summarized on the
+ * server with scripts/summarize-csp-reports.js. That summary is the evidence
+ * for switching to enforce.
  */
 
 export const SECURITY_HEADERS_MARKER = "<!-- SECURITY_HEADERS -->";
@@ -49,6 +54,29 @@ const cleanOrigins = (origins) => [
   ),
 ];
 
+/**
+ * Where the browser sends CSP violations: the primary API, whose env var
+ * already carries the /api path (https://db.devitrak.net/api). Null when there
+ * is no usable https API URL, so the policy names no endpoint rather than a
+ * wrong one.
+ */
+export const cspReportUri = (apiOrigins) => {
+  const primary = (Array.isArray(apiOrigins) ? apiOrigins : [])
+    .map((value) => String(value ?? "").trim())
+    .find(Boolean);
+  if (!primary) return null;
+  try {
+    const url = new URL(primary);
+    if (url.protocol !== "https:") return null;
+    return `${url.origin}${url.pathname.replace(/\/+$/, "")}/csp-report`;
+  } catch {
+    return null;
+  }
+};
+
+// The Reporting API group the policy's report-to names.
+const CSP_REPORT_GROUP = "csp";
+
 export const buildContentSecurityPolicy = ({ apiOrigins }) => {
   const directives = [
     ["default-src", "'self'"],
@@ -67,20 +95,32 @@ export const buildContentSecurityPolicy = ({ apiOrigins }) => {
     ["form-action", "'self'"],
     ["frame-ancestors", "'none'"],
   ];
+  const reportUri = cspReportUri(apiOrigins);
+  if (reportUri) {
+    // report-uri for browsers without the Reporting API (Firefox, older
+    // Safari); report-to for the rest, which then ignore report-uri.
+    directives.push(["report-uri", reportUri], ["report-to", CSP_REPORT_GROUP]);
+  }
   return directives.map((parts) => parts.join(" ")).join("; ");
 };
 
-export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => [
-  { name: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
-  { name: "X-Content-Type-Options", value: "nosniff" },
-  { name: "X-Frame-Options", value: "DENY" },
-  { name: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { name: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
-  {
-    name: enforceCsp ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only",
-    value: buildContentSecurityPolicy({ apiOrigins }),
-  },
-];
+export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
+  const reportUri = cspReportUri(apiOrigins);
+  return [
+    { name: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+    { name: "X-Content-Type-Options", value: "nosniff" },
+    { name: "X-Frame-Options", value: "DENY" },
+    { name: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+    { name: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+    {
+      name: enforceCsp ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only",
+      value: buildContentSecurityPolicy({ apiOrigins }),
+    },
+    ...(reportUri
+      ? [{ name: "Reporting-Endpoints", value: `${CSP_REPORT_GROUP}="${reportUri}"` }]
+      : []),
+  ];
+};
 
 const xmlAttribute = (value) =>
   String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
