@@ -65,7 +65,7 @@
 
 **Ask (Gustavo, 2026-11-10):** a design plan for a new dashboard where Devitrak super users monitor every client: companies, inventory, transactions, everything. Only accounts on the `devitrak.com` domain are accepted.
 
-**State:** the plan is not started. It has to settle at least:
+**State:** plan written in `DESIGN_platform_console.md`, decisions D-P1 to D-P6 pending. It settles:
 - **Where the check lives.** The domain check on the client is only presentation. The server has to require a dedicated role or claim, and match the domain exactly (`@devitrak.com`, not "contains devitrak").
 - **Cross-tenant access against AC-4.** Reading every company's data runs against the company-context control we are closing (`COMPANY_CONTEXT_MODE=enforce`). It needs dedicated, separately authorised server routes, not a bypass.
 - **Accountability:**
