@@ -9,10 +9,19 @@ import checkTypeFetchResponse from "../../../../../components/utils/checkTypeFet
 import { formatDate } from "../../../../../components/utils/dateFormat";
 import DangerButtonComponent from "../../../../../components/UX/buttons/DangerButton";
 import { onAddEventData } from "../../../../../store/slices/eventSlice";
+import { onUpdateCompanyData } from "../../../../../store/slices/adminSlice";
 import CenteringGrid from "../../../../../styles/global/CenteringGrid";
 import { useStatusNotification } from "../../../../../components/notification/alerts/useStatusNotification";
 import { EVENT_CONFIGURATION, writeEventConfiguration } from "../../../utils/eventLifecycle";
 import { staffToDeactivateAtEventEnd } from "../../staff/utils/eventStaffUtils";
+import {
+  DEACTIVATE_PATH,
+  buildDeactivationRequest,
+  deactivationNotice,
+  markDeactivated,
+  readDeactivationResult,
+  shouldUseLegacyDeactivation,
+} from "../../staff/utils/eventStaffDeactivation";
 import { userFacingError } from "../../../../../utils/userFacingError";
 
 const ModalToDisplayFunctionInProgress = lazy(
@@ -233,7 +242,10 @@ const EndEventButton = () => {
     notify(type.toLowerCase(), msg);
   };
 
-  const removingAccessFromStaffMemberOnly = async () => {
+  /* The pre-GovRAMP #5 path: the client picks who loses access and sends the
+     whole employee list to update-company. Kept only for a server without
+     event-staff/deactivate (decision D7). */
+  const removeAccessThroughCompanyUpdate = async () => {
     const { employees: employeesCompany, removedEmails } =
       staffToDeactivateAtEventEnd({ employees: user.companyData.employees, event });
     staffRemoveAccessRef.current = removedEmails.map((email) => email.toLowerCase());
@@ -271,13 +283,36 @@ const EndEventButton = () => {
         throw error;
       }
     }
+  };
+
+  /* GovRAMP #5 (AC-2): the server removes access, and keeps it for anyone on
+     another active event of the company. It answers 409 while the event is
+     active, so this runs after inactiveEventAfterEndIt. A refusal is shown by
+     the caller, never retried; only a missing route (404) falls back. */
+  const removingAccessFromStaffMemberOnly = async () => {
+    let notice;
+    try {
+      const response = await devitrakApi.post(
+        DEACTIVATE_PATH,
+        buildDeactivationRequest({ event, user }),
+      );
+      const result = readDeactivationResult(response.data);
+      staffRemoveAccessRef.current = result.deactivated.map((email) => email.toLowerCase());
+      dispatch(
+        onUpdateCompanyData({
+          employees: markDeactivated(user.companyData.employees, result.deactivated),
+        }),
+      );
+      notice = deactivationNotice(result);
+    } catch (error) {
+      if (!shouldUseLegacyDeactivation(error)) throw error;
+      console.warn("[event-end] event-staff/deactivate is not available; removing access through update-company.");
+      await removeAccessThroughCompanyUpdate();
+      notice = deactivationNotice({ deactivated: [], keptInOtherEvents: [], sqlSkipped: null });
+    }
 
     setOpenEndingEventModal(false);
-    openNotificationWithIcon(
-      "success",
-      "Event ended. Inventory is now in transit and will be available after warehouse check-in.",
-    );
-    // return window.location.reload();
+    openNotificationWithIcon("success", notice);
   };
 
   const findItemsInPoolEvent = () => {
