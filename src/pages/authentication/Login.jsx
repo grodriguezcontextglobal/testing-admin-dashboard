@@ -56,6 +56,8 @@ import {
   buildActiveCompaniesFromSQL,
   buildSetPermissionsPayload,
   extractStaffId,
+  pickCompanyRecord,
+  resolveMongoCompany,
 } from "./utils/loginUtils";
 // import devitrakLoginLogo from "../../assets/devitrak_login.svg";
 import { DevitrakLogo } from "../../components/icons/DevitrakLogo";
@@ -220,6 +222,12 @@ const Login = () => {
 
   const loginIntoOneCompanyAccount = async ({ props }) => {
     try {
+      // Resolved before anything is stored: a sign-in that cannot tell its
+      // company apart stops here (GovRAMP #4, AC-4).
+      const companyData = resolveMongoCompany(props.company_data, {
+        companyName: props.company_name,
+        email: props.email,
+      });
       localStorage.setItem("admin-token", props.respo.token);
       const _decoded = jwtDecode(props.respo.token);
       if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
@@ -229,27 +237,26 @@ const Login = () => {
           online: true,
         },
       );
+      // By id, from /db_staff/companies: a name can belong to two companies.
       const companyInfoTable = await devitrakApi.post(
         "/db_company/consulting-company",
         {
-          company_name: props.company_name,
+          company_id: props.sqlCompanyId,
         },
       );
-      const rawCompanyData = companyInfoTable.data.companies;
-      const companyRecord = Array.isArray(rawCompanyData)
-        ? rawCompanyData.at(-1)
-        : checkArray(rawCompanyData?.company);
-      if (!companyRecord?.company_id) {
+      const companyRecord = pickCompanyRecord(
+        companyInfoTable.data.companies,
+        props.sqlCompanyId,
+      );
+      if (!companyRecord) {
         throw new Error("Company SQL record not found. Please contact support.");
       }
       const stripeSQL = await devitrakApi.post("/db_stripe/consulting-stripe", {
         company_id: companyRecord.company_id,
       });
-      console.log("company info sql", companyRecord);
-      console.log("company info nosql", props.company_data);
       // Set the company-scoped default headers for subsequent requests.
       persistCompanyHeaders({
-        companyId: props.company_data?.[0]?.id,
+        companyId: companyData?.id,
         companySqlId: companyRecord.company_id,
       });
       dispatch(
@@ -268,7 +275,7 @@ const Login = () => {
           company: props.company_name,
           token: props.respo.token,
           online: updatingOnlineStatusResponse.data.entire.online,
-          companyData: props.company_data[0],
+          companyData,
           sqlMemberInfo: props.sqlMemberInfo,
           sqlInfo: {
             ...companyRecord,
@@ -460,6 +467,7 @@ const Login = () => {
           email: loginData.email,
           password: loginData.password,
           company_name: activeCompanies[0].company,
+          sqlCompanyId: activeCompanies[0].sqlCompanyId,
           role: activeCompanies[0].role,
           roleType: activeCompanies[0].roleType,
           locations: activeCompanies[0].locations,
