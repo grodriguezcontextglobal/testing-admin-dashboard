@@ -112,15 +112,27 @@ jobs:
           npm sbom --package-lock-only --sbom-format cyclonedx --sbom-type application > "$RUNNER_TEMP/sbom.json"
           node scripts/sbom-stamp.js "$RUNNER_TEMP/sbom.json" "$TAG" admin-sbom.cdx.json
 
+      # Registro del release (GovRAMP D3 · RA-5, SI-2): las notas llevan el
+      # resultado de npm audit, los riesgos aceptados con su fecha de revisión
+      # y lo que nadie ha revisado. Es también la puerta: un high o critical
+      # sin excepción vigente para el release.
+      - name: Dependency audit
+        run: node scripts/audit-gate.js --summary "$RUNNER_TEMP/audit.md"
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.package.outputs.tag }}
         run: |
+          {
+            echo "Build de ${GITHUB_SHA}. DEVITRACKAPP lo despliega en la siguiente pasada de Update-AdminSite.ps1."
+            echo
+            cat "$RUNNER_TEMP/audit.md"
+          } > "$RUNNER_TEMP/notes.md"
           gh release create "$TAG" admin-dist.zip admin-dist.zip.sha256 admin-sbom.cdx.json \
             --target "$GITHUB_SHA" \
             --title "$TAG" \
-            --notes "Build de ${GITHUB_SHA}. DEVITRACKAPP lo despliega en la siguiente pasada de Update-AdminSite.ps1." \
+            --notes-file "$RUNNER_TEMP/notes.md" \
             --latest
 
       # Los 15 más recientes bastan para volver atrás; el servidor guarda 5.
