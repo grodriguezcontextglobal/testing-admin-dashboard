@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Select } from "antd";
 import { dicSelectedOptions } from "./dicSelectedOptions";
 import { getLogisticStatusLabel } from "./logisticStatusConfig";

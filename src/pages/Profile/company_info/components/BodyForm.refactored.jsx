@@ -1,7 +1,7 @@
 
 import { Controller } from "react-hook-form";
 import { Avatar, AutoComplete } from "antd";
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { useState } from "react";
 import SectionLabel from "../../../../components/documents/new_form_components/SectionLabel";
 import { CompanyIcon } from "../../../../components/icons/CompanyIcon";

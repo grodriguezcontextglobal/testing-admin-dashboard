@@ -8,6 +8,7 @@ import {
   buildSecurityHeaders,
   cspReportUri,
   injectSecurityHeaders,
+  previewSecurityHeaders,
 } from "./securityHeaders";
 
 // fedRAMP/FRONTEND_action_plan_2026-10-26.md, A2: admin.devitrak.net answered
@@ -235,5 +236,41 @@ describe("injectSecurityHeaders", () => {
     const here = path.dirname(fileURLToPath(import.meta.url));
     const webConfig = fs.readFileSync(path.resolve(here, "../../public/web.config"), "utf8");
     expect(webConfig.split(SECURITY_HEADERS_MARKER)).toHaveLength(2);
+  });
+});
+
+// GovRAMP code action #9 (FRONTEND_govramp_pending_2026-11-10.md, SC-18,
+// SA-11): the E2E CSP check serves the build with vite preview. It has to
+// enforce the policy production would enforce, and must never send reports to
+// a real API's /csp-report: they would mix into the production summary.
+describe("previewSecurityHeaders", () => {
+  const preview = previewSecurityHeaders({ apiOrigins: API });
+  const production = Object.fromEntries(
+    buildSecurityHeaders({ apiOrigins: API, enforceCsp: true }).map(({ name, value }) => [name, value])
+  );
+  const withoutReporting = (policy) =>
+    policy
+      .split("; ")
+      .filter((part) => !part.startsWith("report-uri") && !part.startsWith("report-to"))
+      .join("; ");
+
+  it("enforces the same policy as an enforcing production build", () => {
+    expect(preview["Content-Security-Policy"]).toBe(withoutReporting(production["Content-Security-Policy"]));
+  });
+
+  it("keeps the other production headers", () => {
+    expect(preview["X-Frame-Options"]).toBe("DENY");
+    expect(preview["X-Content-Type-Options"]).toBe("nosniff");
+  });
+
+  it("reports nowhere", () => {
+    Object.values(preview).forEach((value) => {
+      expect(value).not.toMatch(/report-uri|report-to|csp-report/);
+    });
+    expect(preview["Reporting-Endpoints"]).toBeUndefined();
+  });
+
+  it("still surfaces Trusted Types violations, report-only", () => {
+    expect(preview["Content-Security-Policy-Report-Only"]).toBe("require-trusted-types-for 'script'");
   });
 });

@@ -7,12 +7,15 @@ const buildMockToken = () => {
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
   const header = toB64Url({ alg: 'HS256', typ: 'JWT' })
-  const payload = toB64Url({ exp: 9999999999, role: 0, email: 'admin@devitrak.com' })
+  // sqlStaffId: App.jsx signs out a token without it (issued before the
+  // backend's sqlStaffId fix).
+  const payload = toB64Url({ exp: 9999999999, role: 0, email: 'admin@devitrak.com', sqlStaffId: 1 })
   return `${header}.${payload}.mocksig`
 }
 
-// Configura localStorage con auth token y estado Redux Persist antes de visitar la página
-Cypress.Commands.add('loginAsAdmin', (visitPath = '/') => {
+// Configura localStorage con auth token y estado Redux Persist antes de visitar la página.
+// options.event: el evento abierto en Redux, para pantallas como event-quickglance.
+Cypress.Commands.add('loginAsAdmin', (visitPath = '/', options = {}) => {
   const token = buildMockToken()
 
   const adminUser = {
@@ -58,7 +61,7 @@ Cypress.Commands.add('loginAsAdmin', (visitPath = '/') => {
       locations: [],
     }),
     event: JSON.stringify({
-      event: {},
+      event: options.event ?? {},
       eventsPerAdmin: { active: [], completed: [] },
       isLoading: false,
     }),

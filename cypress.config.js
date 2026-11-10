@@ -4,6 +4,8 @@ export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:5523',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx}',
+    // The CSP check needs the enforcing preview build: npm run test:csp.
+    excludeSpecPattern: 'cypress/e2e/csp/**',
     supportFile: 'cypress/support/e2e.js',
     viewportWidth: 1280,
     viewportHeight: 720,

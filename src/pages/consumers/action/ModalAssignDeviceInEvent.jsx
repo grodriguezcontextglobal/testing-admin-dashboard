@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Grid, InputAdornment } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, Select, Tooltip } from "antd";

@@ -49,3 +49,17 @@ describe("the offline icon bundle", () => {
     expect([...new Set(missing)]).toEqual([]);
   });
 });
+
+// "@iconify/react" resolves to dist/iconify.mjs. Importing a dist file by path
+// loads a second copy of the library, with its own empty icon storage: the
+// bundle registered in main.jsx never reaches it, and its icons are fetched
+// from Iconify's API, which the CSP blocks once enforced. Found by the E2E CSP
+// check (GovRAMP #9) on /consumers.
+describe("@iconify/react imports", () => {
+  it("all go through the package entry, so every icon uses the bundle", () => {
+    const byPath = sourceFiles(SRC)
+      .filter((file) => /["']@iconify\/react\/dist\//.test(fs.readFileSync(file, "utf8")))
+      .map((file) => path.relative(SRC, file).replace(/\\/g, "/"));
+    expect(byPath).toEqual([]);
+  });
+});

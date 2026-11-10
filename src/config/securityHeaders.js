@@ -95,8 +95,9 @@ const serialize = (directives) => directives.map((parts) => parts.join(" ")).joi
 /**
  * trustedTypes adds require-trusted-types-for 'script'. Only for a policy
  * sent as Report-Only: enforced, it would block every string-to-HTML sink.
+ * reporting: false leaves out report-uri and report-to (vite preview).
  */
-export const buildContentSecurityPolicy = ({ apiOrigins, trustedTypes = false }) => {
+export const buildContentSecurityPolicy = ({ apiOrigins, trustedTypes = false, reporting = true }) => {
   const directives = [
     ["default-src", "'self'"],
     ["script-src", "'self'", ...STRIPE_SCRIPTS],
@@ -118,11 +119,12 @@ export const buildContentSecurityPolicy = ({ apiOrigins, trustedTypes = false })
     ["frame-ancestors", "'none'"],
   ];
   if (trustedTypes) directives.push(TRUSTED_TYPES);
-  return serialize([...directives, ...reportingDirectives(cspReportUri(apiOrigins))]);
+  const reportUri = reporting ? cspReportUri(apiOrigins) : null;
+  return serialize([...directives, ...reportingDirectives(reportUri)]);
 };
 
-export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
-  const reportUri = cspReportUri(apiOrigins);
+export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false, reporting = true }) => {
+  const reportUri = reporting ? cspReportUri(apiOrigins) : null;
   return [
     { name: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
     { name: "X-Content-Type-Options", value: "nosniff" },
@@ -131,7 +133,7 @@ export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
     { name: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
     ...(enforceCsp
       ? [
-          { name: "Content-Security-Policy", value: buildContentSecurityPolicy({ apiOrigins }) },
+          { name: "Content-Security-Policy", value: buildContentSecurityPolicy({ apiOrigins, reporting }) },
           {
             name: "Content-Security-Policy-Report-Only",
             value: serialize([TRUSTED_TYPES, ...reportingDirectives(reportUri)]),
@@ -140,7 +142,7 @@ export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
       : [
           {
             name: "Content-Security-Policy-Report-Only",
-            value: buildContentSecurityPolicy({ apiOrigins, trustedTypes: true }),
+            value: buildContentSecurityPolicy({ apiOrigins, trustedTypes: true, reporting }),
           },
         ]),
     ...(reportUri
@@ -148,6 +150,17 @@ export const buildSecurityHeaders = ({ apiOrigins, enforceCsp = false }) => {
       : []),
   ];
 };
+
+/**
+ * The headers vite preview serves (GovRAMP #9, SC-18): the policy an
+ * enforcing production build would send, so the E2E CSP check
+ * (cypress/e2e/csp) sees what enforce would block. Without reporting, so a
+ * local preview never mixes its violations into the production reports.
+ */
+export const previewSecurityHeaders = ({ apiOrigins }) =>
+  Object.fromEntries(
+    buildSecurityHeaders({ apiOrigins, enforceCsp: true, reporting: false }).map(({ name, value }) => [name, value])
+  );
 
 const xmlAttribute = (value) =>
   String(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

@@ -2,7 +2,7 @@ import { Button } from "antd";
 import { BlueButton } from "../../../../../../styles/global/BlueButton";
 import { Subtitle } from "../../../../../../styles/global/Subtitle";
 import CenteringGrid from "../../../../../../styles/global/CenteringGrid";
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 
 const Yes = ({ merchant, setMerchant, disabled = false }) => {
   return (

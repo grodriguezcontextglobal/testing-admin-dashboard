@@ -4,7 +4,11 @@ import { VitePWA } from "vite-plugin-pwa";
 import fs from "node:fs";
 import path from "node:path";
 import { checkEnv, formatEnvReport } from "./src/config/envValidation.js";
-import { buildSecurityHeaders, injectSecurityHeaders } from "./src/config/securityHeaders.js";
+import {
+  buildSecurityHeaders,
+  injectSecurityHeaders,
+  previewSecurityHeaders,
+} from "./src/config/securityHeaders.js";
 import { buildApiRuntimeCaching } from "./src/config/offlineCaching.js";
 import { PRODUCTION_STRIPPED_CONSOLE } from "./src/config/productionConsole.js";
 
@@ -58,6 +62,13 @@ export default defineConfig(({ command, mode }) => {
         usePolling: true,
         interval: 300,
       },
+    },
+    // GovRAMP #9 (SC-18): vite preview serves the build with the policy an
+    // enforcing production build sends, without reporting. The E2E CSP check
+    // (npm run test:csp) runs against it; IIS takes production's from
+    // dist/web.config (securityHeadersPlugin below).
+    preview: {
+      headers: previewSecurityHeaders({ apiOrigins }),
     },
     plugins: [
       react(),

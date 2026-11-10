@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { Card } from "antd";
 import renderingTitle from "../../../../components/general/renderingTitle";

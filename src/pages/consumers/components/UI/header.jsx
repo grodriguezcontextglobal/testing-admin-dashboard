@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Grid, InputAdornment, OutlinedInput, Typography } from "@mui/material";
 import { Divider } from "antd";
 import { useDispatch, useSelector } from "react-redux";

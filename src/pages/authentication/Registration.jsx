@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { FormLabel, Grid, InputAdornment, TextField, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar } from "antd";
