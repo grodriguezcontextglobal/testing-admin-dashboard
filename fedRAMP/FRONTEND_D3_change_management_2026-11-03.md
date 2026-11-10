@@ -9,7 +9,7 @@ Every change to production goes through one path: a pull request into `main`, a 
 | Step | Where | What enforces it | Evidence left behind |
 |---|---|---|---|
 | 1. Branch and PR | GitHub | Ruleset "Main" (below): no direct push to `main` | The PR: diff, description, author, timestamps |
-| 2. CI on the PR | `.github/workflows/ci.yml` | Required status check "Lint, tests y build" | The run log, the coverage report and the SBOM (artifacts, 90 days) |
+| 2. CI on the PR | `.github/workflows/ci.yml` | Required status checks "Lint, tests y build" and, since 2026-11-10, "CSP en modo enforce (E2E)" | The run log, the coverage report and the SBOM (artifacts, 90 days) |
 | 3. Static analysis on the PR | `.github/workflows/codeql.yml` (PR #51) | Findings shown on the PR and under Security → Code scanning | CodeQL analyses and alerts |
 | 4. Merge | GitHub | Only once step 2 is green; done by a maintainer | The merge commit on `main` |
 | 5. Release | `.github/workflows/release.yml` | Runs CI again, then builds with the `production` environment's variables | GitHub Release `admin-<date>-<sha>` with `admin-dist.zip`, its `.sha256` and `admin-sbom.cdx.json` |
@@ -37,7 +37,7 @@ All third-party actions are pinned by commit SHA. Dependabot proposes updates to
 ### Ruleset "Main" (applies to the default branch, active)
 
 - A pull request is required; direct pushes are rejected.
-- The status check "Lint, tests y build" must pass.
+- The status checks "Lint, tests y build" and "CSP en modo enforce (E2E)" (since 2026-11-10) must pass.
 - Force pushes and branch deletion are blocked.
 - No bypass actors: the rules apply to admins too.
 - Approving reviews required: **0** (decision of 2026-10-29, see "Gaps").

@@ -74,7 +74,7 @@ Status: **Met** · **Partial** · **Open** (with the owner).
 
 | Control | Status | How | Evidence |
 |---|---|---|---|
-| CM-3, CM-4 Change control | **Met** | Ruleset "Main": no direct push, no force push, no deletion; PR required; required check "Lint, tests y build". Every release is built by GitHub Actions; the server installs only a zip whose SHA-256 matches | D3 document, ruleset API |
+| CM-3, CM-4 Change control | **Met** | Ruleset "Main": no direct push, no force push, no deletion; PR required; required check "Lint, tests y build" (and "CSP en modo enforce (E2E)" since 2026-11-10). Every release is built by GitHub Actions; the server installs only a zip whose SHA-256 matches | D3 document, ruleset API |
 | CM-3 Second-person review | **Partial — accepted decision** | `required_approving_review_count: 0` (Gustavo's decision of 2026-10-29, option a). Approval is the maintainer's merge. The `production` environment has no required reviewer either, so a merged PR reaches production about 5 minutes after its release | D3 document |
 | CM-6 Configuration settings | **Met** | Environment variables validated at build time | Build config tests |
 | SA-11 Developer testing | **Met** | 5,005 unit tests, coverage report as a CI artifact, lint at 0 and enforced | CI artifacts |

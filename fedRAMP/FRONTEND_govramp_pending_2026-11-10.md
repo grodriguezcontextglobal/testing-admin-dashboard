@@ -16,7 +16,7 @@
 | **Done, waiting for the next release** | #12 session cookie, client side, behind a flag (#88) |
 | **Done, PR open** | #14 complete SBOM (see §3) |
 | **Code that waits on the week of reports** | #10 narrow `img-src` · #11 CSP in enforce |
-| **Checks** | #13 browser check · #15 Cypress update · the `csp` job as a required check |
+| **Checks** | #13 browser check · #15 Cypress update (the `csp` job is a required check since 2026-11-10) |
 | **Decisions** | D2, D4, D5 wait on the reports · D3 recorded (PR open) · D6–D8 decided |
 | **New** | #16 design plan for a Devitrak super-user dashboard (§5) |
 
@@ -84,7 +84,7 @@
 | 13 | Browser check with real accounts: sign-in with recovery codes running low (#81); single- and multi-company sign-in (#83); an invitation and role changes from the staff profile and from Roles management (#84); ending an event and reading the notice (#86); sign-in, a save and logout after #88, with the flag off | Now: all but #88 are in production; #88 after the next release |
 | 14 | The next release's SBOM lists `react`, `react-dom` and `workbox-*`, and no `vite`, `rollup` or `workbox-build` | The next release after the #14 PR |
 | 15 | Take the Cypress update when it brings `systeminformation` ≥ 5.33.16 (high, dev-only) | When Dependabot opens it |
-| — | Make the `CSP en modo enforce (E2E)` job a required check in the `main` ruleset | Before #11 |
+| — | ~~Make the `CSP en modo enforce (E2E)` job a required check in the `main` ruleset~~ | **Done 2026-11-10:** ruleset "Main" requires "Lint, tests y build" and "CSP en modo enforce (E2E)" |
 
 ---
 
@@ -108,7 +108,7 @@
 
 1. Merge the #14 PR; check the next release's SBOM.
 2. #13 browser check.
-3. Make the `csp` job required.
+3. ~~Make the `csp` job required~~ (done 2026-11-10).
 4. #16 design plan, while the reports accumulate.
 5. From **2026-11-16**: D2, then #10 + D4, then #11 + D5.
 6. D3: merge its PR; the next release's notes show it.
