@@ -356,6 +356,20 @@ export const resolveRoleType = (user) => {
   return legacyRoleType(user.role) ?? "assistant";
 };
 
+/**
+ * A Company.employees[] entry with this role (GovRAMP #7, AC-6): roleType
+ * only. The numeric `role` is dropped, since next to a new roleType it would
+ * be stale and could contradict it; old entries that carry only `role` are
+ * still read through resolveRoleType.
+ */
+export const employeeWithRoleType = (entry, roleType) => {
+  if (!VALID_ROLE_TYPES.has(roleType)) {
+    throw new Error(`Unknown role type: ${roleType}`);
+  }
+  const { role, ...rest } = entry ?? {};
+  return { ...rest, roleType };
+};
+
 /** ROLE_LEVELS rank of a user or employee record; 99 (last) without one. */
 export const roleLevelOf = (subject) => ROLE_LEVELS[resolveRoleType(subject)] ?? 99;
 

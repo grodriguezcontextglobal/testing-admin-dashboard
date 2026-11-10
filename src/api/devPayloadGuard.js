@@ -90,11 +90,80 @@ export function inspectRequest(config, contractOverride) {
   return problem;
 }
 
+/* ── Company context (GovRAMP #6, AC-4) ──────────────────────────────────────
+   The server's authorizePermission checks the permission against the
+   company_id it finds in the path, the body or the query, in that order, and
+   controllers act on the s-company-lq header. When they differ, the server
+   logs it (COMPANY_CONTEXT_MODE=warn) or answers 403 (enforce). This warns
+   about the same mismatch here, first. */
+
+const SQL_ROUTE = /^\/api\/db_/;
+
+const headerValue = (headers, name) => {
+  if (!headers) return undefined;
+  if (typeof headers.get === "function") return headers.get(name) ?? undefined;
+  return headers[name];
+};
+
+const plainObject = (value) =>
+  value !== null && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype;
+
+/** company_id from a path segment, for the routes the contract declares it in. */
+function pathCompanyId(requestUrl, source) {
+  for (const entry of Array.isArray(source) ? source : []) {
+    const endpoint = String(entry?.endpoint ?? "");
+    if (!endpoint.includes(":company_id")) continue;
+    const names = [];
+    const pattern = endpoint.replace(/:([A-Za-z_]+)/g, (_, name) => {
+      names.push(name);
+      return "([^/]+)";
+    });
+    const match = new RegExp(`^${pattern}$`).exec(requestUrl);
+    if (match) return match[names.indexOf("company_id") + 1];
+  }
+  return undefined;
+}
+
+/** The company a request names, read the way the server reads it; or null. */
+export function requestCompanyId(config, contractOverride) {
+  const fromPath = pathCompanyId(requestPath(config), contractOverride ?? contract);
+  const method = String(config?.method ?? "get").toUpperCase();
+  const body = method === "GET" ? undefined : config?.data;
+  const fromBody = plainObject(body) ? body.company_id : undefined;
+  const fromQuery = plainObject(config?.params) ? config.params.company_id : undefined;
+  const value = fromPath || fromBody || fromQuery;
+  return value === undefined || value === null || value === "" ? null : String(value);
+}
+
+/** A request to a SQL route whose company differs from s-company-lq, or null. */
+export function inspectCompanyContext(config, contractOverride) {
+  const url = requestPath(config);
+  if (!SQL_ROUTE.test(url)) return null;
+  const header = headerValue(config?.headers, "s-company-lq");
+  const sent = requestCompanyId(config, contractOverride);
+  if (!header || !sent || String(header) === sent) return null;
+
+  const endpoint = `${String(config?.method ?? "get").toUpperCase()} ${url}`;
+  const key = `company-context ${endpoint}`;
+  if (reported.has(key)) return null;
+  reported.add(key);
+  return { endpoint, sent, header: String(header) };
+}
+
 /** Wire into an axios request interceptor. Returns the config unchanged. */
 export function guardRequest(config) {
   if (!import.meta.env?.DEV) return config;
 
   ensureContract();
+  const mismatch = inspectCompanyContext(config);
+  if (mismatch) {
+    console.warn(
+      `[company-context] ${mismatch.endpoint} sends company_id ${mismatch.sent}, ` +
+        `but s-company-lq is ${mismatch.header}.\n` +
+        `  The server checks the permission on one and acts on the other; with\n` +
+        `  COMPANY_CONTEXT_MODE=enforce it answers 403. Send user.sqlInfo.company_id.`
+    );
+  }
   const problem = inspectRequest(config);
   if (problem) {
     console.warn(

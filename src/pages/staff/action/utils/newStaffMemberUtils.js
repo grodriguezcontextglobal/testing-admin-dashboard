@@ -78,14 +78,17 @@ export const existingEmployeeMessage = (entry) => {
   ].join("");
 };
 
-/** The employee object appended to company.employees. */
+/**
+ * The employee object appended to company.employees. `role` is the level
+ * picked in the form; the entry stores only the roleType it maps to
+ * (GovRAMP #7, AC-6).
+ */
 export const buildEmployeeEntry = ({ name, lastName, email, role }) => ({
   user: email,
   firstName: name,
   lastName,
   status: "Pending",
   super_user: false,
-  role: String(role),
   roleType: roleTypeFromRole(role),
   active: true,
 });

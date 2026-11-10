@@ -45,10 +45,11 @@ describe("buildEmployeeEntry", () => {
     expect(entry.super_user).toBe(false);
   });
 
-  it("guarda role como string y deriva el roleType correcto", () => {
+  // GovRAMP #7 (AC-6): the entry carries roleType only, no numeric role.
+  it("deriva el roleType del nivel elegido y no guarda el role numérico", () => {
     expect(entry.user).toBe("newhire@devitrak.com");
-    expect(entry.role).toBe("3");
     expect(entry.roleType).toBe(LEGACY_ROLE_MAP[3]);
+    expect(entry).not.toHaveProperty("role");
   });
 
   it("cae a 'assistant' cuando el role no mapea", () => {
