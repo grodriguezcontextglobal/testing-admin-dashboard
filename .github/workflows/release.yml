@@ -109,7 +109,7 @@ jobs:
         env:
           TAG: ${{ steps.package.outputs.tag }}
         run: |
-          npm sbom --omit dev --package-lock-only --sbom-format cyclonedx --sbom-type application > "$RUNNER_TEMP/sbom.json"
+          npm sbom --package-lock-only --sbom-format cyclonedx --sbom-type application > "$RUNNER_TEMP/sbom.json"
           node scripts/sbom-stamp.js "$RUNNER_TEMP/sbom.json" "$TAG" admin-sbom.cdx.json
 
       - name: Publish release

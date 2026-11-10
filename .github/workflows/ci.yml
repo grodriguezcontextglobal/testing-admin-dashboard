@@ -70,7 +70,7 @@ jobs:
       # que una PR que lo rompa falle antes de llegar a main.
       - name: SBOM
         run: |
-          npm sbom --omit dev --package-lock-only --sbom-format cyclonedx --sbom-type application > "$RUNNER_TEMP/sbom.json"
+          npm sbom --package-lock-only --sbom-format cyclonedx --sbom-type application > "$RUNNER_TEMP/sbom.json"
           node scripts/sbom-stamp.js "$RUNNER_TEMP/sbom.json" "ci-${GITHUB_SHA::7}" admin-sbom.cdx.json
 
       - name: Upload SBOM
