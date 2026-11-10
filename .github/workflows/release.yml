@@ -80,6 +80,9 @@ jobs:
           VITE_APP_FEATURE_SUBSCRIPTION_PLANS: ${{ vars.VITE_APP_FEATURE_SUBSCRIPTION_PLANS }}
           # FedRAMP A2: la CSP sale en Report-Only; 'true' la hace obligatoria.
           VITE_APP_CSP_ENFORCE: ${{ vars.VITE_APP_CSP_ENFORCE }}
+          # GovRAMP #12 (SC-23): sesión en cookie HttpOnly; 'true' solo cuando
+          # la fase 1 del servidor esté desplegada (src/api/sessionCredential.js).
+          VITE_APP_COOKIE_SESSION: ${{ vars.VITE_APP_COOKIE_SESSION }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.

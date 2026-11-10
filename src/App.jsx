@@ -1,4 +1,3 @@
-import { jwtDecode } from "jwt-decode";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { lazyWithRetry } from "./routes/lazyWithRetry";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +23,7 @@ import CenteringGrid from "./styles/global/CenteringGrid";
 import { clearSessionStorage, ensureCompanyHeaders } from "./api/sessionHeaders";
 import { persistor } from "./store/Store";
 import { setSessionExpiredHandler } from "./api/sessionExpiry";
+import { isSessionValid, readSessionClaims, readSessionMarker } from "./api/sessionCredential";
 import { takeRecoveryNotice } from "./pages/authentication/utils/mfaRecovery";
 import { useStatusNotification } from "./components/notification/alerts/useStatusNotification";
 import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
@@ -44,7 +44,9 @@ const PlanLimitNotice = lazyWithRetry(() =>
 const App = () => {
   // const [displayReportBugsModal, setDisplayReportBugsModal] = useState(false);
   const { status, user } = useSelector((state) => state.admin);
-  const adminToken = localStorage.getItem("admin-token");
+  // The stored session: the token, or its expiry with the cookie session
+  // (api/sessionCredential.js, GovRAMP #12).
+  const adminToken = readSessionMarker();
   const dispatch = useDispatch();
   const location = useLocation();
   // const currentVersion = "1.0.0"; // Replace this with the current version of your app
@@ -77,21 +79,12 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  const isTokenValid = (token) => {
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      if (new Date().getTime() >= decodedToken.exp * 1000) return false;
-      // Tokens issued before the sqlStaffId backend fix lack this field.
-      // Treat them as invalid so the user re-authenticates and gets a fresh token.
-      if (typeof decodedToken.sqlStaffId !== "number") return false;
-      return true;
-    }
-    return false;
-  };
+  // Expired, or issued before the sqlStaffId backend fix: sign in again.
+  const isTokenValid = () => isSessionValid(readSessionClaims());
 
   // Stable while the token is the same, so the effect below can list it.
   const dispatchActionBasedOnTokenValidation = useCallback(() => {
-    if (adminToken && !isTokenValid(adminToken)) {
+    if (adminToken && !isTokenValid()) {
       dispatch(onResetArticleEdited());
       dispatch(onResetCustomer());
       dispatch(onResetDevicesHandle());
@@ -156,7 +149,7 @@ const App = () => {
     // x-company-id to pick the company's email branding, and without it the
     // client's mail silently goes out wearing Devitrak's. Only ever fills what
     // is missing, so the company switch stays in charge.
-    if (status === "authenticated" && adminToken && isTokenValid(adminToken)) {
+    if (status === "authenticated" && adminToken && isTokenValid()) {
       ensureCompanyHeaders(user);
     }
     return () => {

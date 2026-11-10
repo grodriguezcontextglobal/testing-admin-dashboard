@@ -8,7 +8,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Checkbox, Typography } from "antd";
-import { jwtDecode } from "jwt-decode";
+import { preSessionHeaders, storeSession } from "../../api/sessionCredential";
 import PropTypes from "prop-types";
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -228,9 +228,9 @@ const Login = () => {
         companyName: props.company_name,
         email: props.email,
       });
-      localStorage.setItem("admin-token", props.respo.token);
-      const _decoded = jwtDecode(props.respo.token);
-      if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
+      // The token, or with the cookie session only its CSRF token (GovRAMP #12).
+      const session = storeSession(props.respo);
+      if (session.sqlStaffId) localStorage.setItem("sqlStaffId", String(session.sqlStaffId));
       const updatingOnlineStatusResponse = await devitrakApiAdmin.patch(
         `/profile/${props.respo.uid}`,
         {
@@ -273,7 +273,6 @@ const Login = () => {
           roleType: props.roleType,
           phone: props.respo.phone,
           company: props.company_name,
-          token: props.respo.token,
           online: updatingOnlineStatusResponse.data.entire.online,
           companyData,
           sqlMemberInfo: props.sqlMemberInfo,
@@ -426,7 +425,9 @@ const Login = () => {
   }) => {
     const tokenHeaders = {
       headers: {
-        "x-token": loginResponse.data.token,
+        // The session is not stored yet: x-token from the answer, or with the
+        // cookie session its CSRF token (GovRAMP #12).
+        ...preSessionHeaders(loginResponse.data),
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
       },

@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import { jwtDecode } from "jwt-decode";
+import { storeSession } from "../../../api/sessionCredential";
 import { useQueryClient } from "@tanstack/react-query";
 import { Select, message } from "antd";
 import { useState } from "react";
@@ -83,9 +83,9 @@ const ModalMultipleCompanies = ({
         companyName: selectedCompanySQL.company,
         email: dataPassed.email,
       });
-      localStorage.setItem("admin-token", dataPassed.respo.token);
-      const _decoded = jwtDecode(dataPassed.respo.token);
-      if (_decoded?.sqlStaffId) localStorage.setItem("sqlStaffId", String(_decoded.sqlStaffId));
+      // The token, or with the cookie session only its CSRF token (GovRAMP #12).
+      const session = storeSession(dataPassed.respo);
+      if (session.sqlStaffId) localStorage.setItem("sqlStaffId", String(session.sqlStaffId));
       await devitrakApiAdmin.patch(`/profile/${dataPassed.respo.uid}`, {
         online: true,
       });
@@ -134,7 +134,6 @@ const ModalMultipleCompanies = ({
           phone: dataPassed.respo.phone,
           company: selectedCompanySQL.company,
           companyData: selectedCompanyData,
-          token: dataPassed.respo.token,
           online: true,
           sqlMemberInfo: respoFindMemberInfo.data.member.at(-1),
           sqlInfo: {
@@ -188,7 +187,7 @@ const ModalMultipleCompanies = ({
     try {
       const { body, config } = signOutRequest({
         uid: dataPassed.respo.uid,
-        token: dataPassed.respo.token,
+        answer: dataPassed.respo,
       });
       await devitrakApi.post("/admin/logout", body, config);
     } catch (error) {
