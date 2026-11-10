@@ -81,7 +81,7 @@
 
 | # | Check | When |
 |---|---|---|
-| 13 | Browser check with real accounts: sign-in with recovery codes running low (#81); single- and multi-company sign-in (#83); an invitation and role changes from the staff profile and from Roles management (#84); ending an event and reading the notice (#86); sign-in, a save and logout after #88, with the flag off | Now: all but #88 are in production; #88 after the next release |
+| 13 | Browser check with real accounts: sign-in with recovery codes running low (#81); single- and multi-company sign-in (#83); an invitation and role changes from the staff profile and from Roles management (#84); ending an event and reading the notice (#86); sign-in, a save and logout after #88, with the flag off | Now: all of them are in production |
 | 14 | ~~The next release's SBOM lists `react`, `react-dom` and `workbox-*`, and no `vite`, `rollup` or `workbox-build`~~ | **Done 2026-11-10** on release `8b171d6` |
 | 15 | Take the Cypress update when it brings `systeminformation` ≥ 5.33.16 (high, dev-only) | When Dependabot opens it |
 | — | ~~Make the `CSP en modo enforce (E2E)` job a required check in the `main` ruleset~~ | **Done 2026-11-10:** ruleset "Main" requires "Lint, tests y build" and "CSP en modo enforce (E2E)" |
