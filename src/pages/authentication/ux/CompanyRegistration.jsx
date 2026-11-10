@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { FormLabel, Grid, Typography } from "@mui/material";
 import { AutoComplete, Avatar, Space, Tooltip } from "antd";
 import { Link } from "react-router-dom";

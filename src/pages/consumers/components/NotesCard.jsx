@@ -1,5 +1,5 @@
 import { resolveRoleType } from "../../../config/roles";
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { Card, Tooltip } from "antd";
 import { useState } from "react";

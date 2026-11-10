@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { ownershipLabel } from "../../../actions/utils/ownershipUtils";
 import {
   // Space, 

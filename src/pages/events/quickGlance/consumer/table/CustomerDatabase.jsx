@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, Table } from "antd";

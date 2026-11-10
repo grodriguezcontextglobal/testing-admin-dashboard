@@ -7,8 +7,9 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
   ],
-  // dev-dist is the service worker vite-plugin-pwa generates in dev.
-  ignorePatterns: ['dist', 'dev-dist', '.eslintrc.cjs'],
+  // dev-dist is the service worker vite-plugin-pwa generates in dev;
+  // dist-csp-check the build for the E2E CSP check (npm run build:csp-check).
+  ignorePatterns: ['dist', 'dev-dist', 'dist-csp-check', '.eslintrc.cjs'],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   settings: { react: { version: '18.2' } },
   plugins: ['react-refresh'],

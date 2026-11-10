@@ -109,3 +109,50 @@ jobs:
         env:
           VITE_APP_DEVITRACK_API: https://ci.invalid
           VITE_APP_PUBLIC_STRIPE_KEY: pk_test_ci
+
+  # Comprobación de la CSP en modo enforce (GovRAMP #9 · SC-18, SA-11): el
+  # build servido por vite preview con la política que enviaría producción en
+  # enforce, y Cypress visitando las pantallas principales. Falla con cualquier
+  # violación que el navegador bloquee. Es la prueba previa al paso a enforce
+  # (#11), que no depende de una semana de informes de producción. La API se
+  # simula en el spec: no llama a ningún servidor real.
+  csp:
+    name: CSP en modo enforce (E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+          cache: npm
+
+      # Con el binario de Cypress, a diferencia del job de arriba.
+      - name: Install dependencies
+        run: npm ci
+
+      # .env.csp-check: host de API inexistente y flags de producción.
+      - name: Build
+        run: npm run build:csp-check
+
+      - name: CSP check
+        run: |
+          npm run preview:csp-check > "$RUNNER_TEMP/preview.log" 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:5523/ && break
+            sleep 1
+          done
+          npm run test:csp
+
+      - name: Upload screenshots
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: csp-screenshots-${{ github.run_id }}
+          path: cypress/screenshots/
+          retention-days: 30
+          if-no-files-found: ignore

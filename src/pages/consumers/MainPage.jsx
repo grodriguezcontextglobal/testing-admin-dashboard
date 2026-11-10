@@ -1,7 +1,7 @@
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import { useLocation } from "react-router-dom";
 /* eslint-disable no-unused-vars */
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { Icon } from "@iconify/react";
 import { Grid } from "@mui/material";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useId, useState } from "react";
