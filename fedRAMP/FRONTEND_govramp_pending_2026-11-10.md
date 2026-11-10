@@ -1,6 +1,6 @@
 # GovRAMP: what is left in our hands (2026-11-10, end of day)
 
-**System:** admin.devitrak.net · **Repository:** `grodriguezcontextglobal/testing-admin-dashboard` · **As of:** `main` at `4a4a2a59` (PR #88). Last release `admin-20261110-192144-106c1fc` (19:21 UTC), which includes everything up to PR #87; #88 is merged and waits for the next release.
+**System:** admin.devitrak.net · **Repository:** `grodriguezcontextglobal/testing-admin-dashboard` · **As of:** `main` at `fd4c0f3c` (PR #92). Release `admin-20261110-211710-8b171d6` (21:17 UTC) includes everything up to PR #91; later PRs are documents only.
 
 **Scope:** only what the dashboard team decides, in code or in approach. Items that wait on the backend, legal or Gustavo's accounts are in §6, so that the picture is complete.
 
@@ -13,11 +13,11 @@
 | | Items |
 |---|---|
 | **Done and in production** | #1 CSP reporting (#78) · #2 Trusted Types reporting (#80) · #3 recovery-codes notice (#81) · #4 company by SQL id (#83) · #5 event-end access removal (#86) · #6 company-context dev guard and #7 `roleType`-only employees (#84) · #8 build tools in `devDependencies` (#82) · #9 E2E CSP check (#87) · D1 |
-| **Done, waiting for the next release** | #12 session cookie, client side, behind a flag (#88) |
-| **Done, PR open** | #14 complete SBOM (see §3) |
+| **Done and in production, flag off** | #12 session cookie, client side (#88) |
+| **Done and checked on a release** | #14 complete SBOM (#89) · D3 accepted risk in every release's notes (#91) |
 | **Code that waits on the week of reports** | #10 narrow `img-src` · #11 CSP in enforce |
 | **Checks** | #13 browser check · #15 Cypress update (the `csp` job is a required check since 2026-11-10) |
-| **Decisions** | D2, D4, D5 wait on the reports · D3 recorded (PR open) · D6–D8 decided |
+| **Decisions** | D2, D4, D5 wait on the reports · D3 done (#91) · D6–D8 decided |
 | **New** | #16 design plan for a Devitrak super-user dashboard (§5) |
 
 ---
@@ -40,7 +40,7 @@
 |---|---|---|---|---|
 | 9 | E2E CSP check | SC-18, SA-11 | **Done (#87).** `npm run test:csp`; a `csp` job in `ci.yml`. It found 18 files importing `@iconify/react/dist/iconify.js`, a second copy of the library that never got the offline icon bundle; fixed, with a guard test | — |
 | 12 | Session cookie, client side, behind a flag | SC-23, AC-12 | **Done (#88), not released.** `src/api/sessionCredential.js` is the only code that touches the token; with `VITE_APP_COOKIE_SESSION=true` requests use credentials and `X-CSRF-Token`, and the JWT is no longer stored. The JWT is also no longer copied into the persisted Redux user | The backend confirms the items in `server-testing/reports/FRONTEND_cookie_session_client_ready_2026-11-10.md`, then a staging test with the flag on |
-| 14 | Complete SBOM | CM-8, SR-4 | **PR open.** The release SBOM of 11-10 (`106c1fc`) had no dev tools, but **missed 9 direct production dependencies** (`react`, `react-dom`, `lodash` and the six `workbox-*`), plus about 100 transitive ones. `npm sbom --omit dev` (npm 11) drops production packages that a dev tool also depends on. CI and release now take the full SBOM and keep what the lockfile does not mark `dev` (`productionOnly` in `src/config/sbom.js`), and refuse an SBOM that misses a direct dependency. Locally: 458 components, all 54 direct dependencies, no dev tool | Merged; the next release's SBOM lists `react` and `workbox-*` |
+| 14 | Complete SBOM | CM-8, SR-4 | **Done (#89), checked on release `8b171d6`: 458 components, all direct dependencies, no dev tool.** The release SBOM of 11-10 (`106c1fc`) had no dev tools, but **missed 9 direct production dependencies** (`react`, `react-dom`, `lodash` and the six `workbox-*`), plus about 100 transitive ones. `npm sbom --omit dev` (npm 11) drops production packages that a dev tool also depends on. CI and release now take the full SBOM and keep what the lockfile does not mark `dev` (`productionOnly` in `src/config/sbom.js`), and refuse an SBOM that misses a direct dependency. Locally: 458 components, all 54 direct dependencies, no dev tool | — |
 | 10 | Narrow `img-src` | SC-7, SC-18 | Waits for the reports | `img-src` lists the hosts in the reports instead of `https:` (D4) |
 | 11 | CSP in enforce | SC-18 | Waits for the reports | `VITE_APP_CSP_ENFORCE=true` in the GitHub `production` environment (D5) |
 
@@ -52,7 +52,7 @@
 |---|---|---|---|
 | D1 | `style-src 'unsafe-inline'` stays | Accepted risk, recorded on the directive | Done (#80) |
 | D2 | Enforce Trusted Types, or only report them | Decide from the reports. Only the two DOMPurify paths reporting: enforce with one DOMPurify policy. Libraries reporting: keep Report-Only and record why | Waits for the reports |
-| D3 | `quill` 2.0.3 has no fix (low; XSS through its HTML export) | Accept until a fix ships: HTML is inserted only through DOMPurify. Record it in the release record with a review date | **PR open:** accepted in `.github/audit-exceptions.json` until 2027-02-10; every release's notes now carry the `npm audit` result, the accepted risks and anything unreviewed |
+| D3 | `quill` 2.0.3 has no fix (low; XSS through its HTML export) | Accept until a fix ships: HTML is inserted only through DOMPurify. Record it in the release record with a review date | **Done (#91):** accepted in `.github/audit-exceptions.json` until 2027-02-10, shown in the notes of release `8b171d6`; every release's notes now carry the `npm audit` result, the accepted risks and anything unreviewed |
 | D4 | The `img-src` host list | From the reports; one comment per host naming the feature | Waits for the reports |
 | D5 | When the CSP switches to enforce | First release after a clean week, with the `csp` job green. Rollback: `VITE_APP_CSP_ENFORCE=false` and a release | Waits for the reports |
 | D6 | Build the cookie client side before the server | Yes, behind a flag | Decided; done (#88) |
@@ -81,8 +81,8 @@
 
 | # | Check | When |
 |---|---|---|
-| 13 | Browser check with real accounts: sign-in with recovery codes running low (#81); single- and multi-company sign-in (#83); an invitation and role changes from the staff profile and from Roles management (#84); ending an event and reading the notice (#86); sign-in, a save and logout after #88, with the flag off | Now: all but #88 are in production; #88 after the next release |
-| 14 | The next release's SBOM lists `react`, `react-dom` and `workbox-*`, and no `vite`, `rollup` or `workbox-build` | The next release after the #14 PR |
+| 13 | Browser check with real accounts: sign-in with recovery codes running low (#81); single- and multi-company sign-in (#83); an invitation and role changes from the staff profile and from Roles management (#84); ending an event and reading the notice (#86); sign-in, a save and logout after #88, with the flag off | Now: all of them are in production |
+| 14 | ~~The next release's SBOM lists `react`, `react-dom` and `workbox-*`, and no `vite`, `rollup` or `workbox-build`~~ | **Done 2026-11-10** on release `8b171d6` |
 | 15 | Take the Cypress update when it brings `systeminformation` ≥ 5.33.16 (high, dev-only) | When Dependabot opens it |
 | — | ~~Make the `CSP en modo enforce (E2E)` job a required check in the `main` ruleset~~ | **Done 2026-11-10:** ruleset "Main" requires "Lint, tests y build" and "CSP en modo enforce (E2E)" |
 
@@ -106,10 +106,10 @@
 
 ## 8. Suggested order
 
-1. Merge the #14 PR; check the next release's SBOM.
+1. ~~#14: check the release SBOM~~ (done 2026-11-10).
 2. #13 browser check.
 3. ~~Make the `csp` job required~~ (done 2026-11-10).
 4. #16 design plan, while the reports accumulate.
 5. From **2026-11-16**: D2, then #10 + D4, then #11 + D5.
-6. D3: merge its PR; the next release's notes show it.
+6. ~~D3~~ (done 2026-11-10, release `8b171d6`).
 7. #12 on, on the server's date.
