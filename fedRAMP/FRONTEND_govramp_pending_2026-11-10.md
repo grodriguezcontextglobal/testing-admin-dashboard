@@ -17,7 +17,7 @@
 | **Done, PR open** | #14 complete SBOM (see §3) |
 | **Code that waits on the week of reports** | #10 narrow `img-src` · #11 CSP in enforce |
 | **Checks** | #13 browser check · #15 Cypress update · the `csp` job as a required check |
-| **Decisions** | D2, D4, D5 wait on the reports · D3 to record · D6–D8 decided |
+| **Decisions** | D2, D4, D5 wait on the reports · D3 recorded (PR open) · D6–D8 decided |
 | **New** | #16 design plan for a Devitrak super-user dashboard (§5) |
 
 ---
@@ -52,7 +52,7 @@
 |---|---|---|---|
 | D1 | `style-src 'unsafe-inline'` stays | Accepted risk, recorded on the directive | Done (#80) |
 | D2 | Enforce Trusted Types, or only report them | Decide from the reports. Only the two DOMPurify paths reporting: enforce with one DOMPurify policy. Libraries reporting: keep Report-Only and record why | Waits for the reports |
-| D3 | `quill` 2.0.3 has no fix (low; XSS through its HTML export) | Accept until a fix ships: HTML is inserted only through DOMPurify. Record it in the release record with a review date | To record |
+| D3 | `quill` 2.0.3 has no fix (low; XSS through its HTML export) | Accept until a fix ships: HTML is inserted only through DOMPurify. Record it in the release record with a review date | **PR open:** accepted in `.github/audit-exceptions.json` until 2027-02-10; every release's notes now carry the `npm audit` result, the accepted risks and anything unreviewed |
 | D4 | The `img-src` host list | From the reports; one comment per host naming the feature | Waits for the reports |
 | D5 | When the CSP switches to enforce | First release after a clean week, with the `csp` job green. Rollback: `VITE_APP_CSP_ENFORCE=false` and a release | Waits for the reports |
 | D6 | Build the cookie client side before the server | Yes, behind a flag | Decided; done (#88) |
@@ -111,5 +111,5 @@
 3. Make the `csp` job required.
 4. #16 design plan, while the reports accumulate.
 5. From **2026-11-16**: D2, then #10 + D4, then #11 + D5.
-6. D3 into the next release record.
+6. D3: merge its PR; the next release's notes show it.
 7. #12 on, on the server's date.

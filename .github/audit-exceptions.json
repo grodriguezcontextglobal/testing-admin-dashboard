@@ -1,4 +1,12 @@
 {
-  "_readme": "Risk acceptances for the CI dependency gate (scripts/audit-gate.js, FedRAMP plan A1 · RA-5). One entry per advisory and package, with why the risk is accepted and when the acceptance runs out. An expired entry fails CI again. Remove an entry once the advisory is fixed.",
-  "exceptions": []
+  "_readme": "Risk acceptances for the dependency gate (scripts/audit-gate.js, FedRAMP plan A1 · RA-5, SI-2; GovRAMP D3). One entry per advisory and package, with why the risk is accepted and the date it must be reviewed by. High and critical: CI fails without a current entry, and again once it expires. Low and moderate never fail CI; an entry records the acceptance, and without one (or once it expires) the advisory shows as unreviewed in every release's notes. Remove an entry once the advisory is fixed.",
+  "exceptions": [
+    {
+      "advisory": "GHSA-v3m3-f69x-jf25",
+      "package": "quill",
+      "severity": "low",
+      "reason": "XSS through Quill's HTML export (getSemanticHTML); quill 2.0.3 is the latest release and has no fix. Downgrading is not a fix: the advisory names only the version it was reported on, and react-quill-new needs ~2.0.2. Mitigated: the post editor's HTML is inserted in one place only, DisplayArticle.jsx, always through DOMPurify.sanitize; script-src allows no inline script. GovRAMP decision D3, proposed 2026-11-10; approved by merging the PR that adds this entry.",
+      "expires": "2027-02-10"
+    }
+  ]
 }

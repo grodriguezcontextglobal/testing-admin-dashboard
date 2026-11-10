@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateAudit } from "./auditGate";
+import { auditSummaryMarkdown, evaluateAudit } from "./auditGate";
 
 // FedRAMP plan 2026-10-26, A1: high and critical advisories fail CI unless a
 // written, dated exception accepts them (RA-5, SI-2).
@@ -103,5 +103,60 @@ describe("evaluateAudit", () => {
 
   it("treats a report with no vulnerabilities as clean", () => {
     expect(evaluateAudit({ report: {}, exceptions: undefined, today: TODAY }).blocking).toEqual([]);
+  });
+});
+
+// GovRAMP decision D3 (RA-5, SI-2): a low or moderate advisory with no fix is
+// accepted in writing too, with a review date, and every release records the
+// audit result and the accepted risks in its notes. The gate itself still
+// blocks only high and critical.
+describe("accepted low and moderate advisories", () => {
+  const quill = advisory("quill", "low", "GHSA-v3m3-f69x-jf25");
+  const acceptance = {
+    advisory: "GHSA-v3m3-f69x-jf25",
+    package: "quill",
+    reason: "No fix; HTML is inserted only through DOMPurify.",
+    expires: "2027-02-10",
+  };
+
+  it("records a current acceptance as accepted, never as blocking or unused", () => {
+    const result = evaluateAudit({ report: report(quill), exceptions: [acceptance], today: TODAY });
+    expect(result.blocking).toEqual([]);
+    expect(result.unused).toEqual([]);
+    expect(result.accepted).toEqual([
+      expect.objectContaining({ id: "GHSA-v3m3-f69x-jf25", package: "quill", severity: "low", expires: "2027-02-10" }),
+    ]);
+  });
+
+  it("lists a low or moderate advisory nobody accepted as unreviewed, without blocking", () => {
+    const result = evaluateAudit({ report: report(quill, advisory("esbuild", "moderate", "GHSA-dddd")), exceptions: [], today: TODAY });
+    expect(result.blocking).toEqual([]);
+    expect(result.unreviewed.map((a) => a.id)).toEqual(["GHSA-v3m3-f69x-jf25", "GHSA-dddd"]);
+  });
+
+  it("puts an expired acceptance back among the unreviewed", () => {
+    const result = evaluateAudit({ report: report(quill), exceptions: [{ ...acceptance, expires: "2026-10-01" }], today: TODAY });
+    expect(result.accepted).toEqual([]);
+    expect(result.unreviewed).toEqual([expect.objectContaining({ id: "GHSA-v3m3-f69x-jf25", expiredException: "2026-10-01" })]);
+  });
+});
+
+describe("auditSummaryMarkdown", () => {
+  it("states the counts, the accepted risks with their review date and what is unreviewed", () => {
+    const result = evaluateAudit({
+      report: { ...report(advisory("quill", "low", "GHSA-v3m3-f69x-jf25"), advisory("esbuild", "moderate", "GHSA-dddd")), metadata: { vulnerabilities: { critical: 0, high: 0, moderate: 1, low: 1 } } },
+      exceptions: [{ advisory: "GHSA-v3m3-f69x-jf25", package: "quill", reason: "Only through DOMPurify.", expires: "2027-02-10" }],
+      today: TODAY,
+    });
+    const markdown = auditSummaryMarkdown(result, { counts: { critical: 0, high: 0, moderate: 1, low: 1 }, today: TODAY });
+    expect(markdown).toContain("0 critical, 0 high, 1 moderate, 1 low");
+    expect(markdown).toMatch(/quill.*GHSA-v3m3-f69x-jf25.*low.*2027-02-10.*Only through DOMPurify\./);
+    expect(markdown).toMatch(/Unreviewed[\s\S]*esbuild.*GHSA-dddd/);
+  });
+
+  it("says so when nothing is accepted or unreviewed", () => {
+    const markdown = auditSummaryMarkdown(evaluateAudit({ report: {}, exceptions: [], today: TODAY }), { counts: {}, today: TODAY });
+    expect(markdown).toContain("0 critical, 0 high, 0 moderate, 0 low");
+    expect(markdown).toContain("None.");
   });
 });
