@@ -1,4 +1,5 @@
 import { buildRequestPath } from "./sessionHeaders";
+import { hasSession, requestCarriedSession } from "./sessionCredential";
 
 /**
  * What a 401 means when it reaches devitrakApi.
@@ -117,12 +118,11 @@ const readStorage = (storage, key) => {
 /** Called by devitrakApi's response interceptor for every failed request. */
 export const handleUnauthorized = (error) => {
   const config = error?.config ?? {};
-  const headers = config.headers ?? {};
   const expired = isSessionExpiry({
     status: error?.response?.status,
     requestPath: buildRequestPath(config.baseURL, config.url),
-    hadToken: Boolean(headers["x-token"] ?? headers["X-Token"]),
-    hasToken: Boolean(readStorage(localStorage, "admin-token")),
+    hadToken: requestCarriedSession(config),
+    hasToken: hasSession(),
     pathname: window.location.pathname,
   });
   if (!expired) return false;

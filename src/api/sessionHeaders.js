@@ -10,7 +10,9 @@ import { clearOfflineData } from "./offlineData";
 
 // Every localStorage key that belongs to an authenticated session.
 export const SESSION_STORAGE_KEYS = [
-  "admin-token", // JWT (x-token)
+  "admin-token", // JWT (x-token), while the session is not in a cookie
+  "devitrak-csrf", // CSRF token, with the cookie session (sessionCredential.js)
+  "devitrak-session", // the session's expiry and sqlStaffId, with the cookie session
   "sqlStaffId", // staff SQL id decoded from the JWT
   "s-token-lq", // retired header (B4); kept so logout clears values from older builds
   "x-company-id", // Mongo ObjectId of the active company

@@ -21,6 +21,7 @@ import { InformationIcon } from "../../../components/icons/InformationIcon";
 import { OutlinedInputStyle } from "../../../styles/global/OutlinedInputStyle";
 import VisibleIcon from "../../../components/icons/VisibleIcon";
 import HidenIcon from "../../../components/icons/HidenIcon";
+import { hasSession } from "../../../api/sessionCredential";
 
 const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
   const navigate = useNavigate();
@@ -143,9 +144,9 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
       }),
   });
   useEffect(() => {
-    const token = localStorage.getItem("admin-token");
-    if (token) {
-      setToken(token);
+    // Whether someone is signed in; the token itself is never needed here.
+    if (hasSession()) {
+      setToken(true);
     }
   }, []);
   useEffect(() => {
@@ -177,7 +178,7 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
        So the signer has to be signed in, and signed in as the staff member
        the document names — otherwise anyone's own password would sign it. */
     const staffMemberAuthentication = async (props) => {
-      if (!localStorage.getItem("admin-token")) {
+      if (!hasSession()) {
         message.error("Sign in with your Devitrak account to verify and sign this document.");
         return false;
       }
@@ -223,9 +224,8 @@ const StaffMemberVerificationSignatureAndSignatureStampComponent = () => {
           if (response.data.ok) {
             await addSignatureToDocument();
             setLoadingStatus(false);
-            const token = localStorage.getItem("admin-token");
             message.success("Signature collected successfully");
-            if (token) return navigate(`/staff/${staff_member_id}/main`);
+            if (hasSession()) return navigate(`/staff/${staff_member_id}/main`);
             return navigate("/login");
           }
         }

@@ -5,6 +5,7 @@ import { buildRequestPath, buildRouteScopedHeaders } from "./sessionHeaders";
 import { guardRequest } from "./devPayloadGuard";
 import { isOfflineQueueableRequest } from "../config/offlineQueue";
 import { handleUnauthorized } from "./sessionExpiry";
+import { attachSession } from "./sessionCredential";
 import { handlePlanLimit } from "./planLimit";
 
 // Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads.
@@ -84,9 +85,8 @@ const createDevitrakApiInstance = (suffix = "") => {
         // Remove headers that the server's CORS policy does not allow
         delete config.headers["pragma"];
         delete config.headers["Pragma"];
-        if (localStorage.getItem("admin-token")) {
-            config.headers["x-token"] = localStorage.getItem("admin-token");
-        }
+        // x-token, or the cookie and CSRF token (GovRAMP #12, sessionCredential.js).
+        attachSession(config);
         // Route-scoped company headers:
         //   x-company-id → /api/staff|admin|company|stripe
         //   s-company-lq → /api/db_*

@@ -9,6 +9,13 @@
 // regardless of this flag so backend-created scoped staff are never rendered
 // incorrectly (review R2).
 
+/**
+ * Session in an HttpOnly cookie instead of localStorage (GovRAMP #12, SC-23;
+ * src/api/sessionCredential.js). Default OFF: turn it on once the server's
+ * cookie phase 1 is deployed, first in staging.
+ */
+export const COOKIE_SESSION = import.meta.env.VITE_APP_COOKIE_SESSION === "true";
+
 /** Default OFF. Set VITE_APP_FEATURE_SCOPED_ROLES=true in .env.dev to enable. */
 export const FEATURE_SCOPED_ROLES =
   import.meta.env.VITE_APP_FEATURE_SCOPED_ROLES === "true";
