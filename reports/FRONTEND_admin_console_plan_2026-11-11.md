@@ -41,7 +41,7 @@ its own, or every client owner would see every other client.
 | O3 | Retention for entries not tied to a client (sign-ins, access changes). | Needs a decision. Suggest at least as long as the longest client retention. |
 | O4 | What makes a client "At risk" / "needs attention"? | Devices overdue > 7 days, failed payments in 7 days, no admin login in 21 days, trial ending in ≤ 7 days, available stock < 10% before an event. Thresholds in server config. |
 | O5 | Do console users see consumers' personal data (name, email)? | Yes, with every view/search/export audited. Minors shown only as member ID + guardian email. |
-| O6 | Subscription tab: plans. | Use the Free / Paid plans from `FRONTEND_subscription_plans_2026-10-27.md`. The design's `[Plan name]` / `[YOUR PRICE]` placeholders get replaced by that. |
+| O6 | Subscription tab: plans. | Use the Free / Pro / Enterprise plans (set 2026-11-06; `FRONTEND_subscription_plans_update_2026-11-06.md` replaces the Free / Paid plans of 2026-10-27). The design's `[Plan name]` / `[YOUR PRICE]` placeholders get replaced by that. |
 | O7 | "Add client" button in the Clients design. | Out of v1 (read-only). Remove from the screen. |
 
 ## 4. Backend plan (owner: backend agent)
@@ -54,8 +54,27 @@ its own, or every client owner would see every other client.
   - The email must be the verified sign-in email, not a free-text contact field.
 - Return `platformAccess: true|false` in the login/session response and in `GET /api/platform/me`.
 - Middleware `requirePlatformAccess` on **every** `/api/platform/*` route. Re-check on each request against the database (not only from the JWT), so removing super_user takes effect immediately.
-- Must work with both the header session and the HttpOnly cookie session (`COOKIE_SESSION`, GovRAMP #12).
+- Must work with today's header session (`x-token`) and, once cookie phase 1 ships, with the HttpOnly cookie session (`COOKIE_SESSION`, GovRAMP #12).
+- **Exempt `/api/platform/*` from `COMPANY_AUTH_MODE` and `COMPANY_CONTEXT_MODE`.** Both are `enforce` in production (see B1a), and these routes never carry `x-company-id` or `s-company-lq` on purpose. Without the exemption every console call is rejected, even for a user with `platformAccess: true`. `requirePlatformAccess` replaces the company check on these routes; it does not add to it.
 - **No new custom request headers.** Production's CORS allow-list rejects unknown headers as an empty `{}` error. The company is always in the path (`/companies/:id`), never in `x-company-id`.
+
+### B1a. Production server modes these routes run under
+
+The production `.env` on 2026-11-11:
+
+| Mode | Value | What it means for `/api/platform/*` |
+|---|---|---|
+| `SESSION_MODE` | enforce | Applies as usual: a valid session is required. |
+| `COMPANY_AUTH_MODE` | enforce | **Exempt these routes** (B1). |
+| `COMPANY_CONTEXT_MODE` | enforce | **Exempt these routes** (B1). |
+| `NOSQL_INPUT_MODE` | enforce | Applies as usual: `search`, `status` and other query parameters go through the same input check. |
+| `DB_COMPANY_PUBLIC_MODE` | enforce | Not involved. |
+| `NODEMAILER_AUTH_MODE`, `CONTRACT_LINK_MODE`, `ATTENDANCE_LINK_MODE` | enforce | Not involved. |
+| `CONSUMER_TOKEN_MODE`, `RECEIPT_PUBLIC_READ_MODE`, `STRIPE_OWNERSHIP_MODE` | warn | Not involved; see §8 for questions. |
+| `LOGIN_MAX_ATTEMPTS` / `LOGIN_ATTEMPT_WINDOW_S` / `LOGIN_LOCKOUT_S` | 5 / 900 / 1800 | Console users sign in through the same login, with the same limits. |
+| `SESSION_IDLE_MINUTES` | 30 | The same. The dashboard already signs out after 15 idle minutes. |
+
+There is no cookie-session mode in that list. The dashboard keeps `VITE_APP_COOKIE_SESSION` off in production until you confirm cookie phase 1 is deployed.
 
 ### B2. Audit log
 
@@ -159,3 +178,8 @@ live.
 3. Whether staff two-step status and last login are stored today (Staff tab).
 4. Whether consumer activity in the consumer app is logged today, or only staff activity (`/api/admin/activity-logs`).
 5. An ETA for M1.
+6. Confirmation that `/api/platform/*` will be exempt from `COMPANY_AUTH_MODE` and `COMPANY_CONTEXT_MODE` (B1), and that `SESSION_MODE` and `NOSQL_INPUT_MODE` still apply to it.
+7. **Cookie session:** is cookie phase 1 (`FRONTEND_session_cookie_proposal_2026-10-21.md`, your reply of 2026-11-04 §1.1) deployed? If yes: the name of the CSRF field in the login body (we assume `csrfToken`), and whether `x-token` is still accepted until phase 3. We turn on `VITE_APP_COOKIE_SESSION` only after that, first in staging.
+8. **Modes still in `warn`:**
+   - `RECEIPT_PUBLIC_READ_MODE`: the signed receipt QR has been in our `main` since 2026-10-20 (`d2292651`). What else do you need from us to move it to `enforce`?
+   - `CONSUMER_TOKEN_MODE` and `STRIPE_OWNERSHIP_MODE`: what does each one check, does the dashboard need any change before `enforce`, and is there a date?
