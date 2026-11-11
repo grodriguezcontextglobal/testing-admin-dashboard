@@ -104,3 +104,31 @@ describe("FEATURE_SUBSCRIPTION_PLANS", () => {
     expect(FEATURE_SUBSCRIPTION_PLANS).toBe(true);
   });
 });
+
+describe("FEATURE_PLATFORM_CONSOLE", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("defaults to false when the env var is unset", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_PLATFORM_CONSOLE", undefined);
+    const { FEATURE_PLATFORM_CONSOLE } = await import("./featureFlags");
+    expect(FEATURE_PLATFORM_CONSOLE).toBe(false);
+  });
+
+  it("is false for any value other than the exact string 'true'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_PLATFORM_CONSOLE", "1");
+    const { FEATURE_PLATFORM_CONSOLE } = await import("./featureFlags");
+    expect(FEATURE_PLATFORM_CONSOLE).toBe(false);
+  });
+
+  it("is true only when the env var is the string 'true'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_PLATFORM_CONSOLE", "true");
+    const { FEATURE_PLATFORM_CONSOLE } = await import("./featureFlags");
+    expect(FEATURE_PLATFORM_CONSOLE).toBe(true);
+  });
+});

@@ -88,3 +88,17 @@ export const FEATURE_EVENT_INVITATIONS =
  */
 export const FEATURE_SUBSCRIPTION_PLANS =
   import.meta.env.VITE_APP_FEATURE_SUBSCRIPTION_PLANS === "true";
+
+/**
+ * Devitrak Admin Console at /platform: Devitrak's own people looking across
+ * every client company (reports/FRONTEND_admin_console_plan_2026-11-11.md).
+ *
+ * Default OFF until the backend ships the access check, the audit log and the
+ * /api/platform/* routes (plan, milestone M1). Even with the flag on, only a
+ * user the server marked `platformAccess: true` gets in (roles.js,
+ * hasPlatformAccess).
+ *
+ * Set VITE_APP_FEATURE_PLATFORM_CONSOLE=true in .env.dev to work on it.
+ */
+export const FEATURE_PLATFORM_CONSOLE =
+  import.meta.env.VITE_APP_FEATURE_PLATFORM_CONSOLE === "true";

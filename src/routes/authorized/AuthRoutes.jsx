@@ -4,7 +4,11 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import PermissionGuard from "./PermissionGuard";
 import SuperUserGuard from "./SuperUserGuard";
 import IndustryTabGuard from "./IndustryTabGuard";
-import { FEATURE_SUBSCRIPTION_PLANS } from "../../config/featureFlags";
+import {
+  FEATURE_PLATFORM_CONSOLE,
+  FEATURE_SUBSCRIPTION_PLANS,
+} from "../../config/featureFlags";
+import PlatformGuard from "./PlatformGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import ErrorBoundary from "../../components/utils/ErrorBoundary";
@@ -93,6 +97,14 @@ const ParentRenderingChildrenPage = lazyWithRetry(() =>
   import("../../pages/ParentRenderingChildrenPage")
 );
 const Confirmation = lazyWithRetry(() => import("../../pages/payment/Confirmation"));
+// Devitrak Admin Console (FRONTEND_admin_console_plan_2026-11-11.md).
+const PlatformLayout = lazyWithRetry(() => import("../../pages/platform/PlatformLayout"));
+const PlatformClientsPage = lazyWithRetry(() =>
+  import("../../pages/platform/PlatformClientsPage")
+);
+const PlatformComingSoon = lazyWithRetry(() =>
+  import("../../pages/platform/PlatformComingSoon")
+);
 const BillingMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/billing/BillingMainPage")
 );
@@ -626,6 +638,40 @@ const AuthRoutes = () => {
               {/* Not permission-guarded: this is the same receipt the payer was
                   already handed, reached by scanning it. Guarding it would break
                   the scan for the staff who print receipts. */}
+              {/* Devitrak Admin Console: flag first, then only users the
+                  server marked platformAccess (roles.js, hasPlatformAccess). */}
+              {FEATURE_PLATFORM_CONSOLE && (
+                <Route element={<PlatformGuard />}>
+                  <Route path="/platform" element={<PlatformLayout />}>
+                    <Route index element={<Navigate to="clients" replace />} />
+                    <Route path="clients" element={<PlatformClientsPage />} />
+                    <Route
+                      path="overview"
+                      element={<PlatformComingSoon title="Overview" endpoint="GET /api/platform/summary" />}
+                    />
+                    <Route
+                      path="inventory"
+                      element={<PlatformComingSoon title="Inventory" endpoint="GET /api/platform/inventory" />}
+                    />
+                    <Route
+                      path="transactions"
+                      element={<PlatformComingSoon title="Transactions" endpoint="GET /api/platform/transactions" />}
+                    />
+                    <Route
+                      path="events"
+                      element={<PlatformComingSoon title="Events" endpoint="GET /api/platform/events" />}
+                    />
+                    <Route
+                      path="people"
+                      element={<PlatformComingSoon title="Members & consumers" endpoint="GET /api/platform/people" />}
+                    />
+                    <Route
+                      path="audit"
+                      element={<PlatformComingSoon title="Audit log" endpoint="GET /api/platform/audit" />}
+                    />
+                  </Route>
+                </Route>
+              )}
               <Route path="/receipt" element={<ReceiptPage />} />
               <Route path="/status" element={<ServiceStatusPage />} />
               <Route path="/*" element={<ErrorPage />} />

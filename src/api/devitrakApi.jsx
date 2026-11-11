@@ -110,8 +110,12 @@ const createDevitrakApiInstance = (suffix = "") => {
 export const devitrakApi = createDevitrakApiInstance("");
 export const devitrakApiAdmin = createDevitrakApiInstance("/admin");
 export const devitrakApiArticle = createDevitrakApiInstance("/article");
+// Devitrak Admin Console: cross-client, read-only /api/platform/* routes. The
+// company goes in the path, never in a header (sessionHeaders.js adds none
+// here; FRONTEND_admin_console_plan_2026-11-11.md, F3).
+export const devitrakApiPlatform = createDevitrakApiInstance("/platform");
 
-const instances = [devitrakApi, devitrakApiAdmin, devitrakApiArticle];
+const instances = [devitrakApi, devitrakApiAdmin, devitrakApiArticle, devitrakApiPlatform];
 
 export const updateApiInstanceURLs = (newBaseURL) => {
     if (!newBaseURL) return;

@@ -388,6 +388,25 @@ export const hasPermission = (action, roleType) => {
   return PERMISSIONS[action]?.includes(roleType) ?? false;
 };
 
+// ─── Devitrak Admin Console access ───────────────────────────────────────────
+/**
+ * True when the server marked this user as allowed into the Devitrak Admin
+ * Console (/platform): super_user of the Context Global company AND an
+ * @devitrak.com sign-in email (reports/FRONTEND_admin_console_plan_2026-11-11.md,
+ * D1 and B1).
+ *
+ * Deliberately NOT derived here from `super_user` or the email. Every company
+ * creator has `super_user: true` (Registration.jsx, createCompany.jsx), so a
+ * client-side check would show the console to every client owner. Only the
+ * boolean `true` from the server counts. This is a UI gate; the server checks
+ * again on every /api/platform request.
+ *
+ * Not a roleType and not in ALL_ROLES: no client company can assign it.
+ */
+export const hasPlatformAccess = (user) =>
+  !!user &&
+  (user.platformAccess === true || user.data?.platformAccess === true);
+
 // ─── Display labels ───────────────────────────────────────────────────────────
 export const ROLE_LABELS = {
   // Legacy strings
