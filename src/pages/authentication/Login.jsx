@@ -78,6 +78,7 @@ import { loginRecoveryNotice, stashRecoveryNotice } from "./utils/mfaRecovery";
 import SystemUseNotice from "./login/SystemUseNotice";
 import MfaResetEmailNotice from "./login/MfaResetEmailNotice";
 import { readMfaResetEmailChallenge } from "./utils/mfaResetEmail";
+import { readPlatformAccess } from "../../config/roles";
 const ForgotPassword = lazy(() => import("./ForgotPassword"));
 const ModalMultipleCompanies = lazy(() => import("./multipleCompanies/Modal"));
 const MfaEnrollmentModal = lazy(() => import("./mfa/MfaEnrollmentModal"));
@@ -281,6 +282,8 @@ const Login = () => {
             stripeID: checkArray(stripeSQL.data.stripe),
           },
           preference: props.respo.entire.preference,
+          // Admin Console: only the server's answer counts (roles.js).
+          platformAccess: readPlatformAccess(props.respo),
           subscription: {},
         }),
       );

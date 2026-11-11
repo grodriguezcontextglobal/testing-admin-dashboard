@@ -12,7 +12,7 @@ import {
 } from "../../../api/sessionHeaders";
 import { takeReturnPath } from "../../../api/sessionExpiry";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
-import { getRoleLabel, isAssistant } from "../../../config/roles";
+import { getRoleLabel, isAssistant, readPlatformAccess } from "../../../config/roles";
 import {
   buildSetPermissionsPayload,
   findActiveCompany,
@@ -141,6 +141,8 @@ const ModalMultipleCompanies = ({
             stripeID: stripeSQL.data.stripe.at(-1),
           },
           preference: dataPassed.respo.entire.preference,
+          // Admin Console: only the server's answer counts (roles.js).
+          platformAccess: readPlatformAccess(dataPassed.respo),
         }),
       );
       dispatch(setPermissions(buildSetPermissionsPayload(selectedCompanySQL)));
