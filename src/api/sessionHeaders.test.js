@@ -89,6 +89,18 @@ describe("buildRouteScopedHeaders", () => {
     expect(buildRouteScopedHeaders("/api/article/upload", values)).toEqual({});
     expect(buildRouteScopedHeaders("/api/event/event-list", values)).toEqual({});
   });
+
+  // Admin Console (FRONTEND_admin_console_plan_2026-11-11.md, F3): the console
+  // reads every client, so the company always travels in the path. A stored
+  // company header on these calls would scope them to the viewer's own company.
+  it.each([
+    "/api/platform/me",
+    "/api/platform/companies",
+    "/api/platform/companies/665f0abc/transactions",
+    "/api/platform/audit",
+  ])("adds no company header to the cross-client route %s", (path) => {
+    expect(buildRouteScopedHeaders(path, values)).toEqual({});
+  });
 });
 
 describe("persistCompanyHeaders", () => {
