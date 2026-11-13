@@ -407,6 +407,14 @@ export const hasPlatformAccess = (user) =>
   !!user &&
   (user.platformAccess === true || user.data?.platformAccess === true);
 
+/**
+ * The server's console answer from a login body, for the user the login
+ * stores (plan F2). Read at the top of the body or inside `entire`, whichever
+ * the backend uses; only the boolean `true` counts.
+ */
+export const readPlatformAccess = (loginBody) =>
+  loginBody?.platformAccess === true || loginBody?.entire?.platformAccess === true;
+
 // ─── Display labels ───────────────────────────────────────────────────────────
 export const ROLE_LABELS = {
   // Legacy strings

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import BaseTable from "../../components/UX/tables/BaseTable";
 import EmptyState from "../../components/UX/emptyState/EmptyState";
 import FilterBar from "../../components/UX/filterBar/FilterBar";
@@ -43,7 +44,12 @@ const columns = [
     key: "name",
     render: (name, row) => (
       <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-        <span style={{ fontWeight: 600 }}>{name}</span>
+        <Link
+          to={`/platform/clients/${encodeURIComponent(row.id)}`}
+          style={{ fontWeight: 600, color: "var(--blue-dark-600, #155eef)" }}
+        >
+          {name}
+        </Link>
         <span style={{ fontSize: "13px", color: "var(--gray600, #475467)" }}>
           {row.ownerEmail}
         </span>

@@ -102,6 +102,9 @@ const PlatformLayout = lazyWithRetry(() => import("../../pages/platform/Platform
 const PlatformClientsPage = lazyWithRetry(() =>
   import("../../pages/platform/PlatformClientsPage")
 );
+const PlatformClientProfilePage = lazyWithRetry(() =>
+  import("../../pages/platform/PlatformClientProfilePage")
+);
 const PlatformComingSoon = lazyWithRetry(() =>
   import("../../pages/platform/PlatformComingSoon")
 );
@@ -645,6 +648,7 @@ const AuthRoutes = () => {
                   <Route path="/platform" element={<PlatformLayout />}>
                     <Route index element={<Navigate to="clients" replace />} />
                     <Route path="clients" element={<PlatformClientsPage />} />
+                    <Route path="clients/:companyId" element={<PlatformClientProfilePage />} />
                     <Route
                       path="overview"
                       element={<PlatformComingSoon title="Overview" endpoint="GET /api/platform/summary" />}
