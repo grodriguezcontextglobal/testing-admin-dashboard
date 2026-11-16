@@ -4,6 +4,7 @@ import {
   buildCompaniesQuery,
   normalizeCompaniesResponse,
 } from "../../pages/platform/utils/platformClients";
+import { retryPlatformQuery } from "../../pages/platform/utils/platformQuery";
 
 /**
  * Every client company, for the Admin Console client list:
@@ -20,6 +21,7 @@ export const usePlatformCompanies = (filters = {}, { enabled = true } = {}) => {
     queryFn: () => devitrakApiPlatform.get("/companies", { params }),
     enabled,
     placeholderData: (previous) => previous,
+    retry: retryPlatformQuery,
   });
   return { ...query, ...normalizeCompaniesResponse(query.data?.data) };
 };

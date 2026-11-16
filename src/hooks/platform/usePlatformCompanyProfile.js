@@ -4,6 +4,7 @@ import {
   buildSectionQuery,
   normalizeSectionResponse,
 } from "../../pages/platform/utils/clientProfile";
+import { retryPlatformQuery } from "../../pages/platform/utils/platformQuery";
 
 const companyPath = (companyId) => `/companies/${encodeURIComponent(companyId)}`;
 
@@ -16,6 +17,7 @@ export const usePlatformCompany = (companyId) => {
     queryKey: ["platform", "company", companyId],
     queryFn: () => devitrakApiPlatform.get(companyPath(companyId)),
     enabled: Boolean(companyId),
+    retry: retryPlatformQuery,
   });
   const data = query.data?.data?.data;
   return { ...query, company: data && typeof data === "object" ? data : null };
@@ -32,6 +34,7 @@ export const usePlatformCompanySection = (companyId, resource, filters = {}) => 
     queryFn: () => devitrakApiPlatform.get(`${companyPath(companyId)}/${resource}`, { params }),
     enabled: Boolean(companyId && resource),
     placeholderData: (previous) => previous,
+    retry: retryPlatformQuery,
   });
   return { ...query, ...normalizeSectionResponse(query.data?.data) };
 };

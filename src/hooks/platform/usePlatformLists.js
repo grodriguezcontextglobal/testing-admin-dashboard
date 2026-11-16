@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApiPlatform } from "../../api/devitrakApi";
 import { normalizeSectionResponse } from "../../pages/platform/utils/clientProfile";
+import { retryPlatformQuery } from "../../pages/platform/utils/platformQuery";
 
 /**
  * A cross-client console list: GET /api/platform/<resource>?<query>
@@ -13,6 +14,7 @@ export const usePlatformList = (resource, query = {}, { enabled = true } = {}) =
     queryFn: () => devitrakApiPlatform.get(`/${resource}`, { params: query }),
     enabled: enabled && Boolean(resource),
     placeholderData: (previous) => previous,
+    retry: retryPlatformQuery,
   });
   return { ...result, ...normalizeSectionResponse(result.data?.data) };
 };
@@ -23,6 +25,7 @@ export const usePlatformSummary = (range) => {
     queryKey: ["platform", "summary", range],
     queryFn: () => devitrakApiPlatform.get("/summary", { params: { range } }),
     placeholderData: (previous) => previous,
+    retry: retryPlatformQuery,
   });
   const data = result.data?.data?.data;
   return { ...result, summary: data && typeof data === "object" ? data : null };
