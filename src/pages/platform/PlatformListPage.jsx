@@ -13,7 +13,13 @@ import CompanyFilter from "./components/CompanyFilter";
 import ConsoleNotice from "./components/ConsoleNotice";
 import PlatformRequestError from "./components/PlatformRequestError";
 import { toTableColumns } from "./components/platformColumns";
-import { PLATFORM_LIST_SCREENS, buildListQuery, screenTotalsTiles } from "./utils/platformScreens";
+import ConsoleSelect from "./components/ConsoleSelect";
+import {
+  AUDIT_RANGES,
+  PLATFORM_LIST_SCREENS,
+  buildListQuery,
+  screenTotalsTiles,
+} from "./utils/platformScreens";
 
 const PAGE_SIZE = 25;
 
@@ -28,6 +34,8 @@ const PlatformListPage = ({ screenKey }) => {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [company, setCompany] = useState("all");
+  const [staff, setStaff] = useState("all");
+  const [range, setRange] = useState(AUDIT_RANGES[1].value);
   const [page, setPage] = useState(1);
   const { startExport, exporting, contextHolder } = usePlatformExport({
     resource: screen.resource,
@@ -48,6 +56,8 @@ const PlatformListPage = ({ screenKey }) => {
     filter,
     search,
     company,
+    staff: screen.staffFilter ? staff : undefined,
+    range: screen.dateRange ? range : undefined,
     page,
     limit: PAGE_SIZE,
   });
@@ -77,6 +87,11 @@ const PlatformListPage = ({ screenKey }) => {
           {screen.notice}
         </ConsoleNotice>
       )}
+      {(screen.notes ?? []).map((note, index) => (
+        <ConsoleNotice key={note.slice(0, 32)} tone="info" testId={`platform-note-${screenKey}-${index}`}>
+          {note}
+        </ConsoleNotice>
+      ))}
       {!list.isError && <ProfileStatTiles tiles={screenTotalsTiles(screen, list.totals)} />}
       <FilterBar
         tabs={screen.filters}
@@ -89,15 +104,45 @@ const PlatformListPage = ({ screenKey }) => {
         onSearchChange={setSearchInput}
         searchPlaceholder={screen.searchPlaceholder}
         trailing={
-          screen.companyFilter ? (
-            <CompanyFilter
-              value={company}
-              onChange={(next) => {
-                setCompany(next);
-                setPage(1);
-              }}
-            />
-          ) : null
+          <>
+            {screen.staffFilter && (
+              <ConsoleSelect
+                label="Staff member"
+                testId="platform-staff-filter"
+                value={staff}
+                disabled={!list.filters?.staff?.length}
+                options={[
+                  { value: "all", label: "All super users" },
+                  ...(list.filters?.staff ?? []),
+                ]}
+                onChange={(next) => {
+                  setStaff(next);
+                  setPage(1);
+                }}
+              />
+            )}
+            {screen.companyFilter && (
+              <CompanyFilter
+                value={company}
+                onChange={(next) => {
+                  setCompany(next);
+                  setPage(1);
+                }}
+              />
+            )}
+            {screen.dateRange && (
+              <ConsoleSelect
+                label="Date range"
+                testId="platform-range-filter"
+                value={range}
+                options={AUDIT_RANGES}
+                onChange={(next) => {
+                  setRange(next);
+                  setPage(1);
+                }}
+              />
+            )}
+          </>
         }
       />
       {list.isError ? (

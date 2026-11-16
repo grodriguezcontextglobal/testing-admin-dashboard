@@ -104,7 +104,13 @@ const buildCompany = (name, index, now) => {
     deviceCount,
     devicesOut,
     devicesOverdue,
-    revenue30dCents: status === "paused" ? 0 : rand.int(800, 48000) * 100,
+    // Long-tailed on purpose. Drawn uniformly, the top six clients of
+    // thirty-six all land within 10% of each other and the "Revenue by
+    // client" chart shows six bars of the same length, which is a chart
+    // that says nothing. Real rental revenue concentrates in a few
+    // accounts, and the screen exists to show that.
+    revenue30dCents:
+      status === "paused" ? 0 : Math.round((800 + 47200 * Math.pow(rand.next(), 3)) * 100),
     currency: "USD",
     lastActivityAt: iso(now - (status === "paused" ? rand.int(15, 30) * DAY : rand.int(2, 60 * 30) * MINUTE)),
     eventsActive: status === "paused" ? 0 : rand.int(0, 6),

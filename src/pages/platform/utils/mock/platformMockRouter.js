@@ -54,8 +54,15 @@ const summaryFor = (data, range) => {
   const current = period(start, end);
   const previous = period(previousStart, start);
   const live = data.companies.filter((c) => c.status !== "paused");
+  // Precomputed on the server (plan B4): the console must never pull every
+  // company down just to draw six bars.
+  const topClientsByRevenue = [...data.companies]
+    .sort((a, b) => (b.revenue30dCents || 0) - (a.revenue30dCents || 0))
+    .slice(0, 6)
+    .map((c) => ({ companyId: c.id, companyName: c.name, revenueCents: c.revenue30dCents }));
   return {
     range: range in { "7d": 1, "30d": 1, "90d": 1 } ? range : "30d",
+    topClientsByRevenue,
     current: {
       ...current,
       activeClients: live.length,
@@ -226,17 +233,36 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
     }
 
     if (parts[0] === "audit" && parts.length === 1) {
+      const windowDays = { "7d": 7, "30d": 30, "90d": 90 }[p.range] ?? 30;
+      const since = data.now - windowDays * DAY;
       const rows = data.audit.filter(
         (entry) =>
+          Date.parse(entry.at) >= since &&
           (!isFilter(p.action) || entry.action === p.action) &&
           (!isFilter(p.company) || entry.companyId === p.company) &&
+          (!isFilter(p.staff) || entry.actorEmail === p.staff) &&
           matches(p.search, entry.actorEmail, entry.actorName, entry.companyName, entry.resource),
       );
-      return paginate(rows, p, {
-        total: rows.length,
-        exports: countBy(rows, "action", "export"),
-        denied: countBy(rows, "result", "denied"),
+      // The tiles answer oversight questions, so they are counted over their
+      // own fixed windows, not over whatever the filters happen to show.
+      const dayStart = data.now - DAY;
+      const weekStart = data.now - 7 * DAY;
+      const today = data.audit.filter((e) => Date.parse(e.at) >= dayStart);
+      const week = data.audit.filter((e) => Date.parse(e.at) >= weekStart);
+      const staffToday = new Set(today.map((e) => e.actorEmail));
+      const staffEver = new Set(data.audit.map((e) => e.actorEmail));
+      const answer = paginate(rows, p, {
+        activeSuperUsers: `${staffToday.size} of ${staffEver.size}`,
+        profilesOpenedToday: today.filter((e) => e.action === "view" && e.companyId).length,
+        exportsThisWeek: countBy(week, "action", "export"),
+        failedSignIns: week.filter((e) => e.action === "signin" && e.result === "denied").length,
       });
+      answer.data.filters = {
+        staff: [...staffEver]
+          .sort()
+          .map((email) => ({ value: email, label: email })),
+      };
+      return answer;
     }
 
     return notFound(url);
