@@ -131,4 +131,17 @@ describe("createPlatformMockRouter", () => {
   it("answers 404 for a route the console does not have", () => {
     expect(get("/nothing").status).toBe(404);
   });
+
+  // The demo stays honest about the export: the server has no
+  // POST /api/platform/exports yet, so the button says exactly that rather
+  // than pretending a file is on its way.
+  it("answers 404 for POST /exports, which the server has not built", () => {
+    expect(router.handle({ method: "post", url: "/exports" }).status).toBe(404);
+  });
+
+  it("answers 404 for any write, since the console is read-only in v1", () => {
+    for (const method of ["post", "put", "patch", "delete"]) {
+      expect(router.handle({ method, url: "/companies" }).status).toBe(404);
+    }
+  });
 });
