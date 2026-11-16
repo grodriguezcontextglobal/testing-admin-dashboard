@@ -8,6 +8,16 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { devitrakApiPlatform } from "../../api/devitrakApi";
+import { PLATFORM_CONSOLE_MOCK } from "../../config/featureFlags";
+import { createPlatformMockAdapter } from "./utils/mock/platformMockAdapter";
+
+// Demo mode (dev server only): answer /api/platform/* from invented sample
+// data. Installed when this module loads, which is before any console page
+// renders and asks for data.
+if (PLATFORM_CONSOLE_MOCK) {
+  devitrakApiPlatform.defaults.adapter = createPlatformMockAdapter();
+}
 
 // Devitrak Admin Console shell: its own side menu, so nothing from a client
 // company's navigation shows here (FRONTEND_admin_console_plan_2026-11-11.md, F6).
@@ -105,6 +115,28 @@ const PlatformLayout = () => (
         gap: "20px",
       }}
     >
+      {PLATFORM_CONSOLE_MOCK && (
+        <div
+          role="note"
+          data-testid="platform-sample-data"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            flexWrap: "wrap",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            border: "1px solid var(--warning-300, #fec84b)",
+            background: "var(--warning-50, #fffaeb)",
+            color: "var(--warning-800, #93370d)",
+            fontFamily: "Inter, sans-serif",
+            fontSize: "14px",
+          }}
+        >
+          <strong>Sample data.</strong>
+          <span>Prototype for review: every client, person and number here is invented.</span>
+        </div>
+      )}
       <Outlet />
     </main>
   </div>

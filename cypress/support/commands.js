@@ -79,6 +79,84 @@ Cypress.Commands.add('loginAsAdmin', (visitPath = '/', options = {}) => {
 })
 
 /**
+ * Admin Console (console plan F9). Entra como un usuario de una empresa
+ * cliente y visita `visitPath`.
+ *
+ * Por defecto es el caso trampa del plan (§2, §7): super_user en su propia
+ * empresa Y con correo @devitrak.com, pero sin `platformAccess`. Ese usuario
+ * NO puede entrar en la consola. Solo `platformAccess: true`, que únicamente
+ * pone el servidor, abre la puerta.
+ *
+ * @param {string} visitPath
+ * @param {object} [options]
+ * @param {boolean} [options.platformAccess=false]
+ * @param {string}  [options.email='owner@devitrak.com']
+ */
+Cypress.Commands.add('loginAsConsoleUser', (visitPath = '/platform', options = {}) => {
+  const { platformAccess = false, email = 'owner@devitrak.com' } = options
+  const token = buildMockToken()
+
+  const user = {
+    email,
+    name: 'Console',
+    lastName: 'Tester',
+    role: 0,
+    company: 'Test Company',
+    uid: 'test-uid-123',
+    token,
+    // Solo cuando el servidor lo manda. hasPlatformAccess() exige === true,
+    // así que `false` y la ausencia de la clave son el mismo caso.
+    ...(platformAccess ? { platformAccess: true } : {}),
+    companyData: {
+      id: 'test-company-id',
+      company_name: 'Test Company',
+      industry: 'Technology',
+      employees: [
+        {
+          user: email,
+          role: '0',
+          // La trampa: toda persona que crea una empresa lo tiene.
+          super_user: true,
+          preference: { managerLocation: [] },
+        },
+      ],
+    },
+    sqlInfo: { company_id: 'test-sql-company-id' },
+  }
+
+  const persistRoot = JSON.stringify({
+    admin: JSON.stringify({
+      status: 'authenticated',
+      user,
+      errorMessage: null,
+      mfaEnabled: false,
+      companyAccountStripe: null,
+      companyInfo: null,
+    }),
+    permission: JSON.stringify({
+      role: '0',
+      companyName: 'Test Company',
+      locations: [],
+    }),
+    event: JSON.stringify({
+      event: {},
+      eventsPerAdmin: { active: [], completed: [] },
+      isLoading: false,
+    }),
+    customer: JSON.stringify({ customer: {} }),
+    stripe: JSON.stringify({ stripe: null }),
+    _persist: JSON.stringify({ version: -1, rehydrated: true }),
+  })
+
+  cy.visit(visitPath, {
+    onBeforeLoad(win) {
+      win.localStorage.setItem('admin-token', token)
+      win.localStorage.setItem('persist:root', persistRoot)
+    },
+  })
+})
+
+/**
  * Visita la página de detalle de un consumer con el estado Redux correctamente
  * hidratado para que DetailPerConsumer pueda renderizar sin navegar desde la lista.
  *
