@@ -17,6 +17,8 @@ import {
 } from "../../components/UX/profile";
 import BaseTable from "../../components/UX/tables/BaseTable";
 import EmptyState from "../../components/UX/emptyState/EmptyState";
+import PlatformRequestError from "./components/PlatformRequestError";
+import { toTableColumns } from "./components/platformColumns";
 import {
   usePlatformCompany,
   usePlatformCompanySection,
@@ -54,40 +56,6 @@ const breadcrumbLinkStyle = {
 const breadcrumbTitleStyle = { ...breadcrumbLinkStyle, color: "var(--gray900, #101828)" };
 
 const notDeployed = (error) => error?.response?.status === 404;
-
-const SectionError = ({ error, path, onRetry }) => (
-  <ProfileErrorState
-    title={notDeployed(error) ? "The server does not have this yet" : "Couldn't load this section"}
-    description={
-      notDeployed(error)
-        ? `GET /api/platform${path} answered 404.`
-        : "The service didn't respond. Nothing was changed."
-    }
-    action={notDeployed(error) ? null : <GrayButtonComponent title="Try again" func={onRetry} />}
-  />
-);
-
-SectionError.propTypes = {
-  error: PropTypes.object,
-  path: PropTypes.string.isRequired,
-  onRetry: PropTypes.func,
-};
-
-const toTableColumns = (columns) =>
-  columns.map((column) => ({
-    title: column.title,
-    dataIndex: column.key,
-    key: column.key,
-    align: column.align,
-    render: (value, row) =>
-      column.format === "status" && value ? (
-        <StatusChip label={formatSectionValue("status", value)} tone={sectionStatusTone(value)} />
-      ) : (
-        <span style={column.align === "right" ? { fontVariantNumeric: "tabular-nums" } : undefined}>
-          {formatSectionValue(column.format, value, row)}
-        </span>
-      ),
-  }));
 
 const RecordList = ({ fields, record }) => (
   <dl
@@ -162,7 +130,7 @@ const SectionTab = ({ companyId, tab }) => {
   if (section.isError) {
     return (
       <ProfileSection title={tab.label}>
-        <SectionError error={section.error} path={path} onRetry={() => section.refetch()} />
+        <PlatformRequestError error={section.error} path={path} onRetry={() => section.refetch()} />
       </ProfileSection>
     );
   }

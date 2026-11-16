@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import {
+  Building2,
   Calendar,
   Home as HomeLine,
   Newspaper,
@@ -25,7 +26,7 @@ import CenteringGrid from "../../styles/global/CenteringGrid";
 import { DevitrakLogo } from "../icons/DevitrakLogo";
 import { DevitrakName } from "../icons/DevitrakName";
 // import { ProfileIcon } from "../icons/ProfileIcon";
-import { hasPermission, resolveRoleType } from "../../config/roles";
+import { hasPermission, hasPlatformAccess, resolveRoleType } from "../../config/roles";
 import { getIndustryProfile } from "../../config/industryProfiles";
 import MenuIcon from "../icons/MenuIcon";
 import { Icon } from "@iconify/react";
@@ -35,7 +36,11 @@ import DevitrakWordmark from "../icons/DevitrakWordmark";
 import Profile from "../icons/user-03.svg";
 import ConditionalButton from "./component/ConditionalButton";
 import "./style/style.css";
-import { FEATURE_THEME_SWITCH } from "../../config/featureFlags";
+import {
+  FEATURE_PLATFORM_CONSOLE,
+  FEATURE_THEME_SWITCH,
+  PLATFORM_CONSOLE_MOCK,
+} from "../../config/featureFlags";
 import ThemeToggle from "../theme/ThemeToggle";
 const { PropTypes } = pkg;
 // Same icons as the command menu navigation group (tabler set)
@@ -76,6 +81,9 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   // const [rowId, setRowId] = useState(null);
   // Ends the server session too; see useLogout.
   const logout = useLogout();
+  // Devitrak Admin Console entry: same rule as PlatformGuard.
+  const showPlatformConsole =
+    FEATURE_PLATFORM_CONSOLE && (PLATFORM_CONSOLE_MOCK || hasPlatformAccess(user));
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
@@ -181,6 +189,12 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
           margin: "12px 0",
         }}
       />
+      {showPlatformConsole && (
+        <NavLink to="/platform" style={drawerItemStyle(location.pathname.startsWith("/platform"))}>
+          <Building2 size={20} aria-hidden="true" color="var(--gray-500, #777b73)" />
+          Admin console
+        </NavLink>
+      )}
       <NavLink
         to="/login"
         onClick={() => logout()}
@@ -467,6 +481,25 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
             </div>
           </button>
           {FEATURE_THEME_SWITCH && <ThemeToggle />}
+          {showPlatformConsole && (
+            <NavLink to="/platform" title="Devitrak Admin Console" aria-label="Devitrak Admin Console">
+              <div className="content-main-navbar-updated">
+                <article
+                  className={
+                    location.pathname.startsWith("/platform")
+                      ? "nav-item-base-main-navbar-updated"
+                      : "nav-item-base-1-main-navbar-updated"
+                  }
+                >
+                  <div className="content-2-main-navbar-updated">
+                    <div className="text-1-main-navbar-updated text-mdsemibold">
+                      <Building2 size={22} aria-hidden="true" />
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </NavLink>
+          )}
           <NavLink key={"/profile/my_details"} to={`/profile/my_details`}>
             <div className="content-main-navbar-updated">
               <article

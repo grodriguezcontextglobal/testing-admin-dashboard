@@ -175,9 +175,9 @@ export const humanizeStatus = (value) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-const SUCCESS = new Set(["active", "succeeded", "paid", "enabled", "returned", "completed", "verified"]);
+const SUCCESS = new Set(["active", "succeeded", "paid", "enabled", "returned", "completed", "verified", "allowed", "live", "available"]);
 const CRITICAL = new Set(["past_due", "failed", "lost", "overdue", "disputed", "unpaid", "canceled", "cancelled", "denied", "restricted"]);
-const WARNING = new Set(["pending", "trial", "trialing", "incomplete", "at_risk", "invited", "paused"]);
+const WARNING = new Set(["pending", "trial", "trialing", "incomplete", "at_risk", "invited", "paused", "in_repair"]);
 
 /** StatusChip tone for a server status: semantic colors only, never action blue. */
 export const sectionStatusTone = (value) => {

@@ -102,3 +102,18 @@ export const FEATURE_SUBSCRIPTION_PLANS =
  */
 export const FEATURE_PLATFORM_CONSOLE =
   import.meta.env.VITE_APP_FEATURE_PLATFORM_CONSOLE === "true";
+
+/**
+ * Admin Console demo mode: /api/platform/* is answered from invented sample
+ * data (src/pages/platform/utils/mock/) and the console opens without the
+ * server's platformAccess, so the prototype can be shown before the backend
+ * exists.
+ *
+ * Dev server only: `import.meta.env.DEV` is false in every `vite build`, so a
+ * release can never ship it, whatever the env var says.
+ *
+ * Set VITE_APP_PLATFORM_CONSOLE_MOCK=true (with the console flag) to use it.
+ */
+export const PLATFORM_CONSOLE_MOCK =
+  import.meta.env.DEV === true &&
+  import.meta.env.VITE_APP_PLATFORM_CONSOLE_MOCK === "true";

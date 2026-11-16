@@ -105,8 +105,11 @@ const PlatformClientsPage = lazyWithRetry(() =>
 const PlatformClientProfilePage = lazyWithRetry(() =>
   import("../../pages/platform/PlatformClientProfilePage")
 );
-const PlatformComingSoon = lazyWithRetry(() =>
-  import("../../pages/platform/PlatformComingSoon")
+const PlatformOverviewPage = lazyWithRetry(() =>
+  import("../../pages/platform/PlatformOverviewPage")
+);
+const PlatformListPage = lazyWithRetry(() =>
+  import("../../pages/platform/PlatformListPage")
 );
 const BillingMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/billing/BillingMainPage")
@@ -646,33 +649,15 @@ const AuthRoutes = () => {
               {FEATURE_PLATFORM_CONSOLE && (
                 <Route element={<PlatformGuard />}>
                   <Route path="/platform" element={<PlatformLayout />}>
-                    <Route index element={<Navigate to="clients" replace />} />
+                    <Route index element={<Navigate to="overview" replace />} />
                     <Route path="clients" element={<PlatformClientsPage />} />
                     <Route path="clients/:companyId" element={<PlatformClientProfilePage />} />
-                    <Route
-                      path="overview"
-                      element={<PlatformComingSoon title="Overview" endpoint="GET /api/platform/summary" />}
-                    />
-                    <Route
-                      path="inventory"
-                      element={<PlatformComingSoon title="Inventory" endpoint="GET /api/platform/inventory" />}
-                    />
-                    <Route
-                      path="transactions"
-                      element={<PlatformComingSoon title="Transactions" endpoint="GET /api/platform/transactions" />}
-                    />
-                    <Route
-                      path="events"
-                      element={<PlatformComingSoon title="Events" endpoint="GET /api/platform/events" />}
-                    />
-                    <Route
-                      path="people"
-                      element={<PlatformComingSoon title="Members & consumers" endpoint="GET /api/platform/people" />}
-                    />
-                    <Route
-                      path="audit"
-                      element={<PlatformComingSoon title="Audit log" endpoint="GET /api/platform/audit" />}
-                    />
+                    <Route path="overview" element={<PlatformOverviewPage />} />
+                    <Route path="inventory" element={<PlatformListPage screenKey="inventory" />} />
+                    <Route path="transactions" element={<PlatformListPage screenKey="transactions" />} />
+                    <Route path="events" element={<PlatformListPage screenKey="events" />} />
+                    <Route path="people" element={<PlatformListPage screenKey="people" />} />
+                    <Route path="audit" element={<PlatformListPage screenKey="audit" />} />
                   </Route>
                 </Route>
               )}

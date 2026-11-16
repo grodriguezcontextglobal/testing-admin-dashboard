@@ -151,6 +151,11 @@ describe("statuses", () => {
     expect(sectionStatusTone("lost")).toBe("critical");
     expect(sectionStatusTone("pending")).toBe("warning");
     expect(sectionStatusTone("archived")).toBe("neutral");
+    expect(sectionStatusTone("allowed")).toBe("success");
+    expect(sectionStatusTone("denied")).toBe("critical");
+    expect(sectionStatusTone("live")).toBe("success");
+    expect(sectionStatusTone("in_repair")).toBe("warning");
+    expect(sectionStatusTone("assigned")).toBe("neutral");
     expect(sectionStatusTone(undefined)).toBe("neutral");
   });
 });

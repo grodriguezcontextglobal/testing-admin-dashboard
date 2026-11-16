@@ -132,3 +132,34 @@ describe("FEATURE_PLATFORM_CONSOLE", () => {
     expect(FEATURE_PLATFORM_CONSOLE).toBe(true);
   });
 });
+
+describe("PLATFORM_CONSOLE_MOCK", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("is true with the env var in a dev server", async () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
+    const { PLATFORM_CONSOLE_MOCK } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_MOCK).toBe(true);
+  });
+
+  it("is always false in a production build, even with the env var", async () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
+    const { PLATFORM_CONSOLE_MOCK } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_MOCK).toBe(false);
+  });
+
+  it("is false without the env var", async () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", undefined);
+    const { PLATFORM_CONSOLE_MOCK } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_MOCK).toBe(false);
+  });
+});
