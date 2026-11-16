@@ -13,6 +13,7 @@ export const PLATFORM_LIST_SCREENS = {
   inventory: {
     title: "Inventory",
     resource: "inventory",
+    companyFilter: true,
     description: "Every device across every client. Search by serial to find where a device is.",
     filterParam: "status",
     defaultFilter: "all",
@@ -43,6 +44,7 @@ export const PLATFORM_LIST_SCREENS = {
   transactions: {
     title: "Transactions",
     resource: "transactions",
+    companyFilter: true,
     description: "Payments, deposits and refunds from every client.",
     filterParam: "type",
     defaultFilter: "all",
@@ -73,6 +75,7 @@ export const PLATFORM_LIST_SCREENS = {
   events: {
     title: "Events",
     resource: "events",
+    companyFilter: true,
     description: "Every client's events, with the devices still out.",
     filterParam: "status",
     defaultFilter: "all",
@@ -102,7 +105,13 @@ export const PLATFORM_LIST_SCREENS = {
   people: {
     title: "Members & consumers",
     resource: "people",
+    companyFilter: true,
     description: "Members (school and club rosters) and consumers (event attendees) of every client.",
+    // Real people. Whoever opens this screen is told, on the screen, that
+    // the server records the visit with their name (plan risk "personal
+    // data exposure", AU-2; design board People).
+    notice:
+      "This page shows personal data. Every search, profile view and export here is written to the audit log with your name.",
     filterParam: "kind",
     defaultFilter: "members",
     filters: [
@@ -127,6 +136,7 @@ export const PLATFORM_LIST_SCREENS = {
   audit: {
     title: "Audit log",
     resource: "audit",
+    companyFilter: true,
     description:
       "Everything Devitrak staff did in this console. Written by the server, append-only, kept while the client is active plus 120 days.",
     filterParam: "action",
@@ -158,11 +168,15 @@ export const PLATFORM_LIST_SCREENS = {
   },
 };
 
-export const buildListQuery = ({ filterParam, filter, search, page, limit } = {}) => {
+export const buildListQuery = ({ filterParam, filter, search, company, page, limit } = {}) => {
   const query = {};
   if (filterParam && filter && filter !== "all") query[filterParam] = filter;
   const term = String(search ?? "").trim();
   if (term) query.search = term;
+  // The console is cross-client by default; a chosen client narrows it. This
+  // goes in the query, never in a company header: the header would scope the
+  // whole request and empty every other client out of the answer.
+  if (company && company !== "all") query.company = company;
   query.page = Math.max(1, Number(page) || 1);
   query.limit = Number(limit) || DEFAULT_LIMIT;
   return query;

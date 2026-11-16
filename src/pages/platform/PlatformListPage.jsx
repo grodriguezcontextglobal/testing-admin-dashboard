@@ -1,25 +1,18 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 import { Download } from "lucide-react";
-import { devitrakApiPlatform } from "../../api/devitrakApi";
 import EmptyState from "../../components/UX/emptyState/EmptyState";
 import FilterBar from "../../components/UX/filterBar/FilterBar";
 import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import PageHeader from "../../components/UX/pageHeader/PageHeader";
 import { ProfileStatTiles } from "../../components/UX/profile";
 import BaseTable from "../../components/UX/tables/BaseTable";
-import { useStatusNotification } from "../../components/notification/alerts/useStatusNotification";
+import { usePlatformExport } from "../../hooks/platform/usePlatformExport";
 import { usePlatformList } from "../../hooks/platform/usePlatformLists";
-import { onTrackBackgroundJob } from "../../store/slices/backgroundJobsSlice";
+import CompanyFilter from "./components/CompanyFilter";
+import ConsoleNotice from "./components/ConsoleNotice";
 import PlatformRequestError from "./components/PlatformRequestError";
 import { toTableColumns } from "./components/platformColumns";
-import {
-  buildExportRequest,
-  exportJob,
-  exportStartError,
-  readExportJobId,
-} from "./utils/platformExports";
 import { PLATFORM_LIST_SCREENS, buildListQuery, screenTotalsTiles } from "./utils/platformScreens";
 
 const PAGE_SIZE = 25;
@@ -34,10 +27,12 @@ const PlatformListPage = ({ screenKey }) => {
   const [filter, setFilter] = useState(screen.defaultFilter);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [company, setCompany] = useState("all");
   const [page, setPage] = useState(1);
-  const [exporting, setExporting] = useState(false);
-  const dispatch = useDispatch();
-  const { notify, contextHolder } = useStatusNotification();
+  const { startExport, exporting, contextHolder } = usePlatformExport({
+    resource: screen.resource,
+    title: screen.title,
+  });
 
   // One request per pause in typing, not one per key.
   useEffect(() => {
@@ -52,40 +47,11 @@ const PlatformListPage = ({ screenKey }) => {
     filterParam: screen.filterParam,
     filter,
     search,
+    company,
     page,
     limit: PAGE_SIZE,
   });
   const list = usePlatformList(screen.resource, query);
-
-  /**
-   * Long work, so the server answers 202 with a job id and
-   * BackgroundJobsTracker takes it from here (plan F8). The export covers
-   * everything the current filters match, not the page on screen.
-   *
-   * The server records every export in the audit log; this screen does not,
-   * and must not be the only place it is written down.
-   */
-  const startExport = async () => {
-    setExporting(true);
-    try {
-      const { data } = await devitrakApiPlatform.post(
-        "/exports",
-        buildExportRequest({ resource: screen.resource, query }),
-      );
-      const jobId = readExportJobId(data);
-      if (!jobId) {
-        notify("error", "Could not start the export", "The server sent no job to follow.");
-        return;
-      }
-      dispatch(onTrackBackgroundJob(exportJob({ jobId, title: screen.title })));
-      notify("info", "Export started", "You can keep working; we will tell you when it is ready.");
-    } catch (error) {
-      const notice = exportStartError(error);
-      notify("error", notice.title, notice.description);
-    } finally {
-      setExporting(false);
-    }
-  };
 
   return (
     <>
@@ -99,13 +65,18 @@ const PlatformListPage = ({ screenKey }) => {
             size="sm"
             title="Export CSV"
             iconLeading={<Download size={16} aria-hidden="true" />}
-            func={startExport}
+            func={() => startExport(query)}
             isLoading={exporting}
             isDisabled={exporting || list.isError}
             ariaLabel={`Export ${screen.title.toLowerCase()} as CSV`}
           />
         }
       />
+      {screen.notice && (
+        <ConsoleNotice tone="privacy" testId={`platform-notice-${screenKey}`}>
+          {screen.notice}
+        </ConsoleNotice>
+      )}
       {!list.isError && <ProfileStatTiles tiles={screenTotalsTiles(screen, list.totals)} />}
       <FilterBar
         tabs={screen.filters}
@@ -117,6 +88,17 @@ const PlatformListPage = ({ screenKey }) => {
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder={screen.searchPlaceholder}
+        trailing={
+          screen.companyFilter ? (
+            <CompanyFilter
+              value={company}
+              onChange={(next) => {
+                setCompany(next);
+                setPage(1);
+              }}
+            />
+          ) : null
+        }
       />
       {list.isError ? (
         <PlatformRequestError error={list.error} path={`/${screen.resource}`} onRetry={() => list.refetch()} />

@@ -145,3 +145,27 @@ describe("createPlatformMockRouter", () => {
     }
   });
 });
+
+describe("createPlatformMockRouter, plan and client scope", () => {
+  const router = createPlatformMockRouter({ now: NOW });
+  const get = (url, params) => router.handle({ method: "get", url, params });
+
+  it("filters companies by plan, counting a trial as its plan", () => {
+    const pro = get("/companies", { plan: "Pro", limit: 100 }).data.data;
+    expect(pro.length).toBeGreaterThan(0);
+    expect(pro.every((c) => String(c.plan).startsWith("Pro"))).toBe(true);
+    expect(pro.some((c) => c.plan === "Pro (trial)")).toBe(true);
+  });
+
+  it("narrows every cross-client list to one client", () => {
+    const company = get("/companies", { limit: 1 }).data.data[0];
+    for (const resource of ["inventory", "transactions", "events", "people", "audit"]) {
+      const rows = get(`/${resource}`, { company: company.id, limit: 100 }).data.data;
+      expect(rows.length, `${resource} has rows for one client`).toBeGreaterThan(0);
+      expect(
+        rows.every((row) => row.companyId === company.id),
+        `${resource} rows all belong to the chosen client`,
+      ).toBe(true);
+    }
+  });
+});

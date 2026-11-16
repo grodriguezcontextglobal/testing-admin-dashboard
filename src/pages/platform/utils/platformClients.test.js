@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  PLAN_FILTERS,
   buildCompaniesQuery,
   companyStatusPill,
   formatCents,
@@ -100,5 +101,28 @@ describe("normalizeCompaniesResponse", () => {
 
   it("falls back to the row count when total is missing", () => {
     expect(normalizeCompaniesResponse({ data: [{}, {}] }).total).toBe(2);
+  });
+});
+
+describe("buildCompaniesQuery, plan filter", () => {
+  it("sends the plan when one is chosen", () => {
+    expect(buildCompaniesQuery({ plan: "Pro" }).plan).toBe("Pro");
+  });
+
+  it("leaves the plan out when it is every plan", () => {
+    expect(buildCompaniesQuery({ plan: "all" }).plan).toBeUndefined();
+    expect(buildCompaniesQuery({}).plan).toBeUndefined();
+  });
+
+  it("carries the plan alongside status and search", () => {
+    const q = buildCompaniesQuery({ search: "harbor", status: "active", plan: "Enterprise" });
+    expect(q).toEqual({ search: "harbor", status: "active", plan: "Enterprise", page: 1, limit: 25 });
+  });
+});
+
+describe("PLAN_FILTERS", () => {
+  it("offers every plan the product sells, plus All", () => {
+    expect(PLAN_FILTERS.map((p) => p.value)).toEqual(["all", "Free", "Pro", "Enterprise"]);
+    expect(PLAN_FILTERS[0].label).toBe("All plans");
   });
 });

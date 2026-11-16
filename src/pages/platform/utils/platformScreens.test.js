@@ -119,3 +119,48 @@ describe("overviewTiles", () => {
     expect(overviewTiles(undefined).every((t) => t.value === "—")).toBe(true);
   });
 });
+
+describe("buildListQuery, client scope", () => {
+  it("sends the company when one is chosen", () => {
+    const q = buildListQuery({ filterParam: "status", filter: "all", company: "cmp_003" });
+    expect(q.company).toBe("cmp_003");
+  });
+
+  it("leaves the company out when the filter is every client", () => {
+    expect(buildListQuery({ company: "all" }).company).toBeUndefined();
+    expect(buildListQuery({ company: "" }).company).toBeUndefined();
+    expect(buildListQuery({}).company).toBeUndefined();
+  });
+
+  it("carries the company alongside the screen filter and the search", () => {
+    const q = buildListQuery({
+      filterParam: "status",
+      filter: "lost",
+      search: "RX-1",
+      company: "cmp_003",
+      page: 2,
+      limit: 25,
+    });
+    expect(q).toEqual({ status: "lost", search: "RX-1", company: "cmp_003", page: 2, limit: 25 });
+  });
+});
+
+describe("PLATFORM_LIST_SCREENS, client scope and notices", () => {
+  it("offers the client filter on every cross-client list", () => {
+    for (const [key, screen] of Object.entries(PLATFORM_LIST_SCREENS)) {
+      expect(screen.companyFilter, `${key} should filter by client`).toBe(true);
+    }
+  });
+
+  // Members and consumers are real people. Whoever opens this screen is told,
+  // on the screen, that their search is recorded with their name (plan risk
+  // "personal data exposure"; design board People).
+  it("warns on Members & consumers, and only there", () => {
+    expect(PLATFORM_LIST_SCREENS.people.notice).toMatch(/personal data/i);
+    expect(PLATFORM_LIST_SCREENS.people.notice).toMatch(/audit log/i);
+    const others = Object.entries(PLATFORM_LIST_SCREENS).filter(([key]) => key !== "people");
+    for (const [key, screen] of others) {
+      expect(screen.notice, `${key} needs no personal-data warning`).toBeUndefined();
+    }
+  });
+});

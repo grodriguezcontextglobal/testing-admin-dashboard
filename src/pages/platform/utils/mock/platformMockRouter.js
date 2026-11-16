@@ -148,6 +148,10 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
         const rows = data.companies.filter(
           (c) =>
             (!isFilter(p.status) || c.status === p.status) &&
+            // "Pro" also matches "Pro (trial)": the trial is a status, not a
+            // different plan.
+            (!isFilter(p.plan) ||
+              String(c.plan ?? "").toLowerCase().startsWith(String(p.plan).toLowerCase())) &&
             matches(p.search, c.name, c.ownerName, c.ownerEmail),
         );
         return paginate(rows, p);
