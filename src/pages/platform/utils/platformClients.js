@@ -7,15 +7,31 @@ const DEFAULT_LIMIT = 25;
  * Query params for GET /api/platform/companies. Leaves out what would not
  * filter anything, so the cache key does not change on a blank search.
  */
-export const buildCompaniesQuery = ({ search, status, page, limit } = {}) => {
+export const buildCompaniesQuery = ({ search, status, plan, page, limit } = {}) => {
   const query = {};
   const term = String(search ?? "").trim();
   if (term) query.search = term;
   if (status && status !== "all") query.status = status;
+  if (plan && plan !== "all") query.plan = plan;
   query.page = Math.max(1, Number(page) || 1);
   query.limit = Number(limit) || DEFAULT_LIMIT;
   return query;
 };
+
+/**
+ * The plans the product sells (Profile → Subscription, #71), for the client
+ * list's Plan dropdown (design board Clients).
+ *
+ * A trial is a status, not a plan: "Pro (trial)" is filtered by choosing Pro
+ * here, or by the Trial status tab. Kept as plain names because that is what
+ * the server stores on the company.
+ */
+export const PLAN_FILTERS = [
+  { value: "all", label: "All plans" },
+  { value: "Free", label: "Free" },
+  { value: "Pro", label: "Pro" },
+  { value: "Enterprise", label: "Enterprise" },
+];
 
 const STATUS_PILLS = {
   active: { label: "Active", color: "success" },

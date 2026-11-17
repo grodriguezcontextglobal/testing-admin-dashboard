@@ -91,6 +91,36 @@ describe('Admin Console access (console plan F9)', () => {
     })
   })
 
+  describe('an address outside devitrak.com', () => {
+    // Two locks: the server's platformAccess AND the sign-in domain. The
+    // server is the authority and re-checks every request; the domain here
+    // can only refuse, never grant. It is what stops a server that wrongly
+    // marked an outside address from also putting every client's data on
+    // that person's screen.
+    it('is refused even when the server marked platformAccess: true', () => {
+      cy.loginAsConsoleUser('/platform/clients', {
+        platformAccess: true,
+        email: 'contractor@partner.example',
+      })
+
+      cy.location('pathname', { timeout: 15000 }).should('not.match', /^\/platform/)
+      cy.get(CONSOLE_SHELL).should('not.exist')
+      cy.then(() => {
+        expect(platformRequests, 'requests to /api/platform').to.have.length(0)
+      })
+    })
+
+    it('is refused for a look-alike domain', () => {
+      cy.loginAsConsoleUser('/platform/clients', {
+        platformAccess: true,
+        email: 'someone@devitrak.com.attacker.test',
+      })
+
+      cy.location('pathname', { timeout: 15000 }).should('not.match', /^\/platform/)
+      cy.get(CONSOLE_SHELL).should('not.exist')
+    })
+  })
+
   describe('a user the server marked platformAccess: true', () => {
     it('sees the client list', () => {
       cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })

@@ -8,7 +8,6 @@ import {
   FEATURE_PLATFORM_CONSOLE,
   FEATURE_SUBSCRIPTION_PLANS,
 } from "../../config/featureFlags";
-import PlatformGuard from "./PlatformGuard";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import ErrorBoundary from "../../components/utils/ErrorBoundary";
@@ -25,6 +24,7 @@ import ViewDocument from "../../pages/Profile/Documents/ViewDocument";
 import EditDocument from "../../pages/Profile/Documents/EditDocument";
 import LandingPageForDownloadableDocuments from "../../pages/authentication/LandingPageForDownloadableDocuments";
 import PlatformPolicies from "../../pages/Profile/platform_policies/PlatformPolicies";
+import PlatformRoutes from "./PlatformRoutes";
 import SignedContractViewHigherPermissionLevel from "../../pages/staff/detail/components/equipment_components/SignedContractViewHigherLevelPermissions";
 import MfaSetup from "../../pages/Profile/mfa/MfaSetup";
 import MyDevicesPortal from "../../pages/authentication/MyDevicesPortal";
@@ -98,19 +98,6 @@ const ParentRenderingChildrenPage = lazyWithRetry(() =>
 );
 const Confirmation = lazyWithRetry(() => import("../../pages/payment/Confirmation"));
 // Devitrak Admin Console (FRONTEND_admin_console_plan_2026-11-11.md).
-const PlatformLayout = lazyWithRetry(() => import("../../pages/platform/PlatformLayout"));
-const PlatformClientsPage = lazyWithRetry(() =>
-  import("../../pages/platform/PlatformClientsPage")
-);
-const PlatformClientProfilePage = lazyWithRetry(() =>
-  import("../../pages/platform/PlatformClientProfilePage")
-);
-const PlatformOverviewPage = lazyWithRetry(() =>
-  import("../../pages/platform/PlatformOverviewPage")
-);
-const PlatformListPage = lazyWithRetry(() =>
-  import("../../pages/platform/PlatformListPage")
-);
 const BillingMainPage = lazyWithRetry(() =>
   import("../../pages/Profile/billing/BillingMainPage")
 );
@@ -274,9 +261,21 @@ const AssignmentDeviceMembers = lazyWithRetry(() =>
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/assignment/AssignmentDevicesToMember"
   )
 );
+const isConsolePath = (pathname) =>
+  pathname === "/platform" || pathname.startsWith("/platform/");
+
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   const location = useLocation();
+
+  // The Admin Console is its own page, reached from the dashboard but not
+  // drawn inside it: no client navigation bar, no client footer, no company
+  // name above it, no 1400px cap. Returning before any of that chrome is
+  // what makes it a separate page rather than a screen with a sidebar.
+  if (FEATURE_PLATFORM_CONSOLE && isConsolePath(location.pathname)) {
+    return <PlatformRoutes />;
+  }
+
   return (
     <div
       style={{
@@ -644,23 +643,6 @@ const AuthRoutes = () => {
               {/* Not permission-guarded: this is the same receipt the payer was
                   already handed, reached by scanning it. Guarding it would break
                   the scan for the staff who print receipts. */}
-              {/* Devitrak Admin Console: flag first, then only users the
-                  server marked platformAccess (roles.js, hasPlatformAccess). */}
-              {FEATURE_PLATFORM_CONSOLE && (
-                <Route element={<PlatformGuard />}>
-                  <Route path="/platform" element={<PlatformLayout />}>
-                    <Route index element={<Navigate to="overview" replace />} />
-                    <Route path="clients" element={<PlatformClientsPage />} />
-                    <Route path="clients/:companyId" element={<PlatformClientProfilePage />} />
-                    <Route path="overview" element={<PlatformOverviewPage />} />
-                    <Route path="inventory" element={<PlatformListPage screenKey="inventory" />} />
-                    <Route path="transactions" element={<PlatformListPage screenKey="transactions" />} />
-                    <Route path="events" element={<PlatformListPage screenKey="events" />} />
-                    <Route path="people" element={<PlatformListPage screenKey="people" />} />
-                    <Route path="audit" element={<PlatformListPage screenKey="audit" />} />
-                  </Route>
-                </Route>
-              )}
               <Route path="/receipt" element={<ReceiptPage />} />
               <Route path="/status" element={<ServiceStatusPage />} />
               <Route path="/*" element={<ErrorPage />} />

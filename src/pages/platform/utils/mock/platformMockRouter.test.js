@@ -131,4 +131,41 @@ describe("createPlatformMockRouter", () => {
   it("answers 404 for a route the console does not have", () => {
     expect(get("/nothing").status).toBe(404);
   });
+
+  // The demo stays honest about the export: the server has no
+  // POST /api/platform/exports yet, so the button says exactly that rather
+  // than pretending a file is on its way.
+  it("answers 404 for POST /exports, which the server has not built", () => {
+    expect(router.handle({ method: "post", url: "/exports" }).status).toBe(404);
+  });
+
+  it("answers 404 for any write, since the console is read-only in v1", () => {
+    for (const method of ["post", "put", "patch", "delete"]) {
+      expect(router.handle({ method, url: "/companies" }).status).toBe(404);
+    }
+  });
+});
+
+describe("createPlatformMockRouter, plan and client scope", () => {
+  const router = createPlatformMockRouter({ now: NOW });
+  const get = (url, params) => router.handle({ method: "get", url, params });
+
+  it("filters companies by plan, counting a trial as its plan", () => {
+    const pro = get("/companies", { plan: "Pro", limit: 100 }).data.data;
+    expect(pro.length).toBeGreaterThan(0);
+    expect(pro.every((c) => String(c.plan).startsWith("Pro"))).toBe(true);
+    expect(pro.some((c) => c.plan === "Pro (trial)")).toBe(true);
+  });
+
+  it("narrows every cross-client list to one client", () => {
+    const company = get("/companies", { limit: 1 }).data.data[0];
+    for (const resource of ["inventory", "transactions", "events", "people", "audit"]) {
+      const rows = get(`/${resource}`, { company: company.id, limit: 100 }).data.data;
+      expect(rows.length, `${resource} has rows for one client`).toBeGreaterThan(0);
+      expect(
+        rows.every((row) => row.companyId === company.id),
+        `${resource} rows all belong to the chosen client`,
+      ).toBe(true);
+    }
+  });
 });

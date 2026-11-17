@@ -395,17 +395,36 @@ export const hasPermission = (action, roleType) => {
  * @devitrak.com sign-in email (reports/FRONTEND_admin_console_plan_2026-11-11.md,
  * D1 and B1).
  *
- * Deliberately NOT derived here from `super_user` or the email. Every company
- * creator has `super_user: true` (Registration.jsx, createCompany.jsx), so a
- * client-side check would show the console to every client owner. Only the
- * boolean `true` from the server counts. This is a UI gate; the server checks
- * again on every /api/platform request.
+ * Access is never DERIVED here. Every company creator has `super_user: true`
+ * (Registration.jsx, createCompany.jsx), so a client-side check on that flag
+ * would show the console to every client owner. Only the boolean `true` from
+ * the server opens anything.
+ *
+ * The @devitrak.com check is a second lock, not a key: it can only refuse.
+ * The server computes the same rule and re-checks it on every
+ * /api/platform request, so this does not make the client an authority — it
+ * means a server that wrongly marked an outside address does not also put
+ * every client's data on that person's screen.
  *
  * Not a roleType and not in ALL_ROLES: no client company can assign it.
  */
+export const PLATFORM_EMAIL_DOMAIN = "devitrak.com";
+
+/**
+ * The text after the LAST "@", lower-cased. Compared whole, so a subdomain
+ * (mail.devitrak.com) and a look-alike (devitrak.com.attacker.test) are both
+ * simply not it.
+ */
+const emailDomain = (email) => {
+  const text = String(email ?? "").trim().toLowerCase();
+  const at = text.lastIndexOf("@");
+  return at === -1 ? "" : text.slice(at + 1);
+};
+
 export const hasPlatformAccess = (user) =>
   !!user &&
-  (user.platformAccess === true || user.data?.platformAccess === true);
+  (user.platformAccess === true || user.data?.platformAccess === true) &&
+  emailDomain(user.email ?? user.data?.email) === PLATFORM_EMAIL_DOMAIN;
 
 /**
  * The server's console answer from a login body, for the user the login

@@ -81,6 +81,7 @@ describe("normalizeSectionResponse", () => {
       rows: [{ id: 1 }],
       record: null,
       totals: { amountCents: 500 },
+      filters: null,
       page: 2,
       limit: 25,
       total: 26,
@@ -98,6 +99,7 @@ describe("normalizeSectionResponse", () => {
       rows: [],
       record: null,
       totals: null,
+      filters: null,
       page: 1,
       limit: 25,
       total: 0,
@@ -235,5 +237,17 @@ describe("companyStatTiles", () => {
   it("shows dashes while there is no company", () => {
     const tiles = companyStatTiles(undefined);
     expect(tiles.every((tile) => tile.value === "—")).toBe(true);
+  });
+});
+
+describe("normalizeSectionResponse, screen filter options", () => {
+  it("passes the server's filter options through", () => {
+    const body = { ok: true, data: [], filters: { staff: [{ value: "a@b.c", label: "a@b.c" }] } };
+    expect(normalizeSectionResponse(body).filters.staff).toHaveLength(1);
+  });
+
+  it("is null when the server sent none, or sent something that is not an object", () => {
+    expect(normalizeSectionResponse({ ok: true, data: [] }).filters).toBeNull();
+    expect(normalizeSectionResponse({ ok: true, data: [], filters: "staff" }).filters).toBeNull();
   });
 });

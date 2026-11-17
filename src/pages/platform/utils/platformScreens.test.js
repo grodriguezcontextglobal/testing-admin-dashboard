@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  AUDIT_RANGES,
   PLATFORM_LIST_SCREENS,
   buildListQuery,
   formatDelta,
   overviewTiles,
+  revenueByClient,
   screenTotalsTiles,
 } from "./platformScreens";
 
@@ -117,5 +119,139 @@ describe("overviewTiles", () => {
 
   it("shows dashes while loading", () => {
     expect(overviewTiles(undefined).every((t) => t.value === "—")).toBe(true);
+  });
+});
+
+describe("buildListQuery, client scope", () => {
+  it("sends the company when one is chosen", () => {
+    const q = buildListQuery({ filterParam: "status", filter: "all", company: "cmp_003" });
+    expect(q.company).toBe("cmp_003");
+  });
+
+  it("leaves the company out when the filter is every client", () => {
+    expect(buildListQuery({ company: "all" }).company).toBeUndefined();
+    expect(buildListQuery({ company: "" }).company).toBeUndefined();
+    expect(buildListQuery({}).company).toBeUndefined();
+  });
+
+  it("carries the company alongside the screen filter and the search", () => {
+    const q = buildListQuery({
+      filterParam: "status",
+      filter: "lost",
+      search: "RX-1",
+      company: "cmp_003",
+      page: 2,
+      limit: 25,
+    });
+    expect(q).toEqual({ status: "lost", search: "RX-1", company: "cmp_003", page: 2, limit: 25 });
+  });
+});
+
+describe("PLATFORM_LIST_SCREENS, client scope and notices", () => {
+  it("offers the client filter on every cross-client list", () => {
+    for (const [key, screen] of Object.entries(PLATFORM_LIST_SCREENS)) {
+      expect(screen.companyFilter, `${key} should filter by client`).toBe(true);
+    }
+  });
+
+  // Members and consumers are real people. Whoever opens this screen is told,
+  // on the screen, that their search is recorded with their name (plan risk
+  // "personal data exposure"; design board People).
+  it("warns on Members & consumers, and only there", () => {
+    expect(PLATFORM_LIST_SCREENS.people.notice).toMatch(/personal data/i);
+    expect(PLATFORM_LIST_SCREENS.people.notice).toMatch(/audit log/i);
+    const others = Object.entries(PLATFORM_LIST_SCREENS).filter(([key]) => key !== "people");
+    for (const [key, screen] of others) {
+      expect(screen.notice, `${key} needs no personal-data warning`).toBeUndefined();
+    }
+  });
+});
+
+describe("revenueByClient", () => {
+  const summary = {
+    topClientsByRevenue: [
+      { companyId: "cmp_1", companyName: "Harbor Point Events", revenueCents: 4504200 },
+      { companyId: "cmp_2", companyName: "Lakeside Academy", revenueCents: 2252100 },
+      { companyId: "cmp_3", companyName: "Summit Arena Group", revenueCents: 1126050 },
+    ],
+  };
+
+  it("measures every bar against the largest, so the top one fills the row", () => {
+    const bars = revenueByClient(summary);
+    expect(bars.map((b) => b.width)).toEqual([100, 50, 25]);
+  });
+
+  it("keeps the client id for the link and formats the money", () => {
+    const [first] = revenueByClient(summary);
+    expect(first.companyId).toBe("cmp_1");
+    expect(first.name).toBe("Harbor Point Events");
+    expect(first.amount).toBe("$45,042.00");
+  });
+
+  it("gives each bar its share of the total shown", () => {
+    const bars = revenueByClient(summary);
+    expect(bars[0].share).toBe("57%");
+    expect(bars.map((b) => b.share).every((s) => /%$/.test(s))).toBe(true);
+  });
+
+  // A client with no revenue still deserves a row rather than a broken bar.
+  it("survives a zero and a missing top list", () => {
+    const zeroes = revenueByClient({
+      topClientsByRevenue: [{ companyId: "a", companyName: "A", revenueCents: 0 }],
+    });
+    expect(zeroes[0].width).toBe(0);
+    expect(zeroes[0].share).toBe("0%");
+    expect(revenueByClient(null)).toEqual([]);
+    expect(revenueByClient({})).toEqual([]);
+  });
+});
+
+describe("the audit log screen", () => {
+  const audit = PLATFORM_LIST_SCREENS.audit;
+
+  it("counts oversight, not rows", () => {
+    expect(audit.totals.map((t) => t.key)).toEqual([
+      "activeSuperUsers",
+      "profilesOpenedToday",
+      "exportsThisWeek",
+      "failedSignIns",
+    ]);
+    expect(audit.totals.find((t) => t.key === "failedSignIns").critical).toBe(true);
+  });
+
+  it("says in writing that the log cannot be edited, and who may be here", () => {
+    expect(audit.notes).toHaveLength(2);
+    expect(audit.notes[0]).toMatch(/cannot be edited or deleted/i);
+    expect(audit.notes[0]).toMatch(/120 days/);
+    expect(audit.notes[1]).toMatch(/@devitrak\.com/);
+  });
+
+  it("filters by staff member and by date range, and only here", () => {
+    expect(audit.staffFilter).toBe(true);
+    expect(audit.dateRange).toBe(true);
+    const others = Object.entries(PLATFORM_LIST_SCREENS).filter(([key]) => key !== "audit");
+    for (const [key, screen] of others) {
+      expect(screen.staffFilter, `${key}`).toBeUndefined();
+      expect(screen.dateRange, `${key}`).toBeUndefined();
+    }
+  });
+});
+
+describe("buildListQuery, audit scope", () => {
+  it("sends the staff member and the range", () => {
+    const q = buildListQuery({ staff: "super.user1@devitrak.com", range: "30d" });
+    expect(q.staff).toBe("super.user1@devitrak.com");
+    expect(q.range).toBe("30d");
+  });
+
+  it("leaves the staff member out when it is everyone", () => {
+    expect(buildListQuery({ staff: "all", range: "7d" }).staff).toBeUndefined();
+  });
+});
+
+describe("AUDIT_RANGES", () => {
+  it("offers the three windows the board shows, newest first", () => {
+    expect(AUDIT_RANGES.map((r) => r.value)).toEqual(["7d", "30d", "90d"]);
+    expect(AUDIT_RANGES[0].label).toBe("Last 7 days");
   });
 });

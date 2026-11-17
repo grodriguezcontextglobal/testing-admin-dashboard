@@ -160,6 +160,10 @@ export const normalizeSectionResponse = (body) => {
     rows,
     record,
     totals: body?.totals && typeof body.totals === "object" ? body.totals : null,
+    // Options the server supplies for this screen's own dropdowns (the audit
+    // log's staff list). Only the server knows the full set; deriving it from
+    // the page on screen would offer a short list and read as the whole one.
+    filters: body?.filters && typeof body.filters === "object" ? body.filters : null,
     page: Number(body?.page) || 1,
     limit: Number(body?.limit) || DEFAULT_LIMIT,
     total: body?.total !== undefined && Number.isFinite(total) ? total : rows.length,

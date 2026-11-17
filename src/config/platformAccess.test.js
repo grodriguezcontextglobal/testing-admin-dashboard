@@ -7,12 +7,41 @@ import { ALL_ROLES, ROLE_TYPES, hasPlatformAccess, readPlatformAccess } from "./
 // client never derives it: `super_user` is also set on every company creator.
 
 describe("hasPlatformAccess", () => {
-  it("is true when the server sent platformAccess: true on the user", () => {
-    expect(hasPlatformAccess({ platformAccess: true })).toBe(true);
+  it("is true when the server sent platformAccess: true for a devitrak address", () => {
+    expect(hasPlatformAccess({ email: "super.user1@devitrak.com", platformAccess: true })).toBe(true);
   });
 
   it("is true when the server sent it inside the login payload (user.data)", () => {
-    expect(hasPlatformAccess({ data: { platformAccess: true } })).toBe(true);
+    expect(
+      hasPlatformAccess({ data: { platformAccess: true, email: "a@devitrak.com" } }),
+    ).toBe(true);
+  });
+
+  // Both locks have to open. The server decides; the domain can only refuse.
+  it("is false for any address outside devitrak.com, whatever the server said", () => {
+    expect(hasPlatformAccess({ email: "someone@client.example", platformAccess: true })).toBe(false);
+    expect(hasPlatformAccess({ platformAccess: true })).toBe(false);
+    expect(hasPlatformAccess({ email: "", platformAccess: true })).toBe(false);
+  });
+
+  it("is false for a subdomain or a look-alike of devitrak.com", () => {
+    const addresses = [
+      "a@mail.devitrak.com",
+      "a@devitrak.com.attacker.test",
+      "a@devitrak.co",
+      "a@notdevitrak.com",
+      "a@devitrak.com.co",
+      "devitrak.com@client.example",
+    ];
+    for (const email of addresses) {
+      expect(hasPlatformAccess({ email, platformAccess: true }), email).toBe(false);
+    }
+  });
+
+  it("ignores case and surrounding spaces in the address", () => {
+    expect(hasPlatformAccess({ email: "  Super.User1@DeviTrak.COM ", platformAccess: true })).toBe(
+      true,
+    );
   });
 
   it("is false for a client owner: super_user alone never grants access", () => {
@@ -28,9 +57,10 @@ describe("hasPlatformAccess", () => {
   });
 
   it("accepts only the boolean true, not truthy look-alikes", () => {
-    expect(hasPlatformAccess({ platformAccess: "true" })).toBe(false);
-    expect(hasPlatformAccess({ platformAccess: 1 })).toBe(false);
-    expect(hasPlatformAccess({ data: { platformAccess: "yes" } })).toBe(false);
+    const at = "a@devitrak.com";
+    expect(hasPlatformAccess({ email: at, platformAccess: "true" })).toBe(false);
+    expect(hasPlatformAccess({ email: at, platformAccess: 1 })).toBe(false);
+    expect(hasPlatformAccess({ email: at, data: { platformAccess: "yes" } })).toBe(false);
   });
 
   it("is false for a missing or empty user", () => {

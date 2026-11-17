@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { Download } from "lucide-react";
+import GrayButtonComponent from "../../components/UX/buttons/GrayButton";
 import BaseTable from "../../components/UX/tables/BaseTable";
 import EmptyState from "../../components/UX/emptyState/EmptyState";
 import FilterBar from "../../components/UX/filterBar/FilterBar";
 import PageHeader from "../../components/UX/pageHeader/PageHeader";
 import PillUIComponent from "../../components/UX/Chip/PillUIComponent";
 import { usePlatformCompanies } from "../../hooks/platform/usePlatformCompanies";
+import { usePlatformExport } from "../../hooks/platform/usePlatformExport";
+import ConsoleSelect from "./components/ConsoleSelect";
 import {
+  PLAN_FILTERS,
   companyStatusPill,
   formatCents,
   formatLastActivity,
@@ -90,6 +95,7 @@ const columns = [
 
 const PlatformClientsPage = () => {
   const [status, setStatus] = useState("all");
+  const [plan, setPlan] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -103,23 +109,35 @@ const PlatformClientsPage = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { rows, total, isLoading, isFetching, isError, error } = usePlatformCompanies({
-    search,
-    status,
-    page,
-    limit: PAGE_SIZE,
+  const query = { search, status, plan, page, limit: PAGE_SIZE };
+  const { rows, total, isLoading, isFetching, isError, error } = usePlatformCompanies(query);
+  const { startExport, exporting, contextHolder } = usePlatformExport({
+    resource: "companies",
+    title: "Clients",
   });
 
   const notDeployed = error?.response?.status === 404;
 
   return (
     <>
+      {contextHolder}
       <PageHeader
         title="Clients"
         supportingText={
           isLoading ? "Loading companies…" : `${total.toLocaleString("en-US")} companies`
         }
         divider
+        actions={
+          <GrayButtonComponent
+            size="sm"
+            title="Export CSV"
+            iconLeading={<Download size={16} aria-hidden="true" />}
+            func={() => startExport(query)}
+            isLoading={exporting}
+            isDisabled={exporting || isError}
+            ariaLabel="Export clients as CSV"
+          />
+        }
       />
       <FilterBar
         tabs={STATUS_TABS}
@@ -131,6 +149,18 @@ const PlatformClientsPage = () => {
         searchValue={searchInput}
         onSearchChange={setSearchInput}
         searchPlaceholder="Search by company, admin or email"
+        trailing={
+          <ConsoleSelect
+            label="Plan"
+            testId="platform-plan-filter"
+            value={plan}
+            options={PLAN_FILTERS.map((p) => ({ value: p.value, label: p.label }))}
+            onChange={(next) => {
+              setPlan(next);
+              setPage(1);
+            }}
+          />
+        }
       />
       {isError ? (
         <EmptyState

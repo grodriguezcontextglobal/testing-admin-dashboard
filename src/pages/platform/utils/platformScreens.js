@@ -7,12 +7,20 @@ import { formatSectionValue } from "./clientProfile";
 
 const DEFAULT_LIMIT = 25;
 
+/** The audit log's date range (design board Audit). */
+export const AUDIT_RANGES = [
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" },
+  { value: "90d", label: "Last 90 days" },
+];
+
 const company = { key: "companyName", title: "Client", format: "company" };
 
 export const PLATFORM_LIST_SCREENS = {
   inventory: {
     title: "Inventory",
     resource: "inventory",
+    companyFilter: true,
     description: "Every device across every client. Search by serial to find where a device is.",
     filterParam: "status",
     defaultFilter: "all",
@@ -43,6 +51,7 @@ export const PLATFORM_LIST_SCREENS = {
   transactions: {
     title: "Transactions",
     resource: "transactions",
+    companyFilter: true,
     description: "Payments, deposits and refunds from every client.",
     filterParam: "type",
     defaultFilter: "all",
@@ -73,6 +82,7 @@ export const PLATFORM_LIST_SCREENS = {
   events: {
     title: "Events",
     resource: "events",
+    companyFilter: true,
     description: "Every client's events, with the devices still out.",
     filterParam: "status",
     defaultFilter: "all",
@@ -102,7 +112,13 @@ export const PLATFORM_LIST_SCREENS = {
   people: {
     title: "Members & consumers",
     resource: "people",
+    companyFilter: true,
     description: "Members (school and club rosters) and consumers (event attendees) of every client.",
+    // Real people. Whoever opens this screen is told, on the screen, that
+    // the server records the visit with their name (plan risk "personal
+    // data exposure", AU-2; design board People).
+    notice:
+      "This page shows personal data. Every search, profile view and export here is written to the audit log with your name.",
     filterParam: "kind",
     defaultFilter: "members",
     filters: [
@@ -127,6 +143,7 @@ export const PLATFORM_LIST_SCREENS = {
   audit: {
     title: "Audit log",
     resource: "audit",
+    companyFilter: true,
     description:
       "Everything Devitrak staff did in this console. Written by the server, append-only, kept while the client is active plus 120 days.",
     filterParam: "action",
@@ -150,19 +167,35 @@ export const PLATFORM_LIST_SCREENS = {
       { key: "result", title: "Result", format: "status" },
       { key: "ip", title: "IP", format: "text" },
     ],
+    // The design board's four, which are about oversight rather than row
+    // counts: who is using the console, how much they are reading, how much
+    // is leaving it, and whether anyone is failing to get in.
     totals: [
-      { key: "total", label: "Entries", format: "number" },
-      { key: "exports", label: "Exports", format: "number" },
-      { key: "denied", label: "Denied", format: "number", critical: true },
+      { key: "activeSuperUsers", label: "Super users active today", format: "text" },
+      { key: "profilesOpenedToday", label: "Client profiles opened today", format: "number" },
+      { key: "exportsThisWeek", label: "Exports this week", format: "number" },
+      { key: "failedSignIns", label: "Failed sign-ins (7 days)", format: "number", critical: true },
+    ],
+    staffFilter: true,
+    dateRange: true,
+    notes: [
+      "Entries are written by the server and cannot be edited or deleted, by anyone. Each client's entries are kept while the client is active and for 120 days after the account closes. Exporting this log is itself recorded.",
+      "Who can use this console: the super users of the Context Global company, signing in with their @devitrak.com address. A @devitrak.com account without super user is denied.",
     ],
   },
 };
 
-export const buildListQuery = ({ filterParam, filter, search, page, limit } = {}) => {
+export const buildListQuery = ({ filterParam, filter, search, company, staff, range, page, limit } = {}) => {
   const query = {};
   if (filterParam && filter && filter !== "all") query[filterParam] = filter;
   const term = String(search ?? "").trim();
   if (term) query.search = term;
+  // The console is cross-client by default; a chosen client narrows it. This
+  // goes in the query, never in a company header: the header would scope the
+  // whole request and empty every other client out of the answer.
+  if (company && company !== "all") query.company = company;
+  if (staff && staff !== "all") query.staff = staff;
+  if (range) query.range = range;
   query.page = Math.max(1, Number(page) || 1);
   query.limit = Number(limit) || DEFAULT_LIMIT;
   return query;
@@ -214,3 +247,32 @@ export const overviewTiles = (summary) =>
       testId: `platform-kpi-${tile.key}`,
     };
   });
+
+/**
+ * "Revenue by client" (design board Main): the handful of clients that
+ * brought in the most money in the chosen period, ranked.
+ *
+ * One measure across named items, so it is a ranked bar — one series, one
+ * hue, no legend, and the amount written beside each bar rather than hidden
+ * behind an axis. `width` is the percentage of the largest bar, which is what
+ * makes a ranked chart readable; `share` is the percentage of the revenue
+ * shown, which is what people actually ask ("how much of this is Harbor
+ * Point?").
+ */
+export const revenueByClient = (summary) => {
+  const rows = Array.isArray(summary?.topClientsByRevenue) ? summary.topClientsByRevenue : [];
+  if (rows.length === 0) return [];
+  const amounts = rows.map((row) => Math.max(0, Number(row.revenueCents) || 0));
+  const largest = Math.max(...amounts);
+  const total = amounts.reduce((sum, value) => sum + value, 0);
+  return rows.map((row, index) => {
+    const cents = amounts[index];
+    return {
+      companyId: row.companyId,
+      name: row.companyName ?? "Unnamed client",
+      amount: formatSectionValue("cents", cents, row),
+      width: largest > 0 ? Math.round((cents / largest) * 100) : 0,
+      share: `${total > 0 ? Math.round((cents / total) * 100) : 0}%`,
+    };
+  });
+};

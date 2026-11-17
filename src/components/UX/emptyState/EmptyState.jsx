@@ -29,6 +29,11 @@ const EmptyState = ({ icon, title, description, action, compact }) => (
       textAlign: "center",
       padding: compact ? "24px 16px" : "48px 24px",
       width: "100%",
+      // Without this the horizontal padding is added OUTSIDE the 100%, so the
+      // empty state is 32px (or 48px) wider than whatever holds it. In any
+      // container that clips, that is a stray horizontal scrollbar under an
+      // empty table — which reads as a broken screen.
+      boxSizing: "border-box",
     }}
   >
     <div
