@@ -20,6 +20,57 @@ DEVITRACKAPP ─ tarea programada cada 5 min ─ Update-AdminSite.ps1 ───�
 - **Cambio sin cortes.** IIS sirve `C:\inetpub\devitrak-admin\current`, una
   junction que pasa de una versión completa a otra en un rename.
 
+## Dos hosts, un paquete
+
+```
+                         ┌─ sitio Admin ─ admin.devitrak.net ─ dashboard de clientes
+C:\inetpub\devitrak-admin\current ─┤
+                         └─ sitio Ops ─── ops.devitrak.net ─── Admin Console (/platform)
+```
+
+Los dos sitios apuntan a la **misma** junction. No hay segundo build, ni
+segundo release, ni segunda tarea programada: al cambiar `current` cambian los
+dos a la vez, y `state.json` sigue siendo uno solo.
+
+El reparto lo hace `web.config`, que viaja dentro del paquete:
+
+| Petición | Resultado |
+|---|---|
+| `ops.devitrak.net/` | 302 a `/platform` |
+| `ops.devitrak.net/platform/...` | la consola |
+| `admin.devitrak.net/platform/...` | 302 a `https://ops.devitrak.net/platform/...` |
+| `admin.devitrak.net/...` | el dashboard de siempre |
+
+Un host distinto es un **origen** distinto para el navegador, que es justo lo
+que se busca (`DESIGN_platform_console.md` §4, opción B): la sesión, el
+`localStorage` y el service worker de la consola no son los de la app de
+clientes. Además la consola tiene grupo de aplicaciones y certificado propios,
+así que se puede parar, restringir por IP o revocar sin tocar
+`admin.devitrak.net`. El backend tiene ese origen como entrada aparte en su
+lista de CORS por la misma razón.
+
+**Publicarlo (una vez, por Remote Desktop, como Administrador):**
+
+```powershell
+.\Add-ConsoleSite.ps1 -CertThumbprint <huella del certificado de ops.devitrak.net>
+```
+
+Es idempotente. Sin `-CertThumbprint` crea el sitio solo en http y avisa: no
+anuncies el host hasta que tenga https, porque las cabeceras ya envían HSTS.
+
+Dos cosas que conviene saber:
+
+- **La redirección es 302, no 301.** Una permanente se queda cacheada en el
+  navegador de los operadores y no hay forma de retirarla si la consola se
+  mueve otra vez. `src/config/webConfigHosts.test.js` falla si alguien la
+  "optimiza" a permanente, o si mueve las reglas por debajo del catch-all de
+  React Router, que las dejaría sin efecto.
+- **El bundle sigue siendo el mismo en los dos sitios.** El host separa los
+  orígenes, no el código: `admin.devitrak.net` no sirve `/platform`, pero sus
+  chunks siguen dentro del paquete. Separarlos de verdad es el segundo build
+  (`platform.html` → `dist-platform/`) que describe el diseño, y no está hecho.
+  Quien lea esto buscando esa garantía no la tiene todavía.
+
 ## Configuración en GitHub (una vez)
 
 1. **Settings → Environments → New environment →** `production`.
@@ -80,6 +131,8 @@ OneDrive bloqueaba `node_modules`.
 | Desplegar ya, sin esperar | En el servidor: `Start-ScheduledTask "Devitrak Admin - Update from GitHub"` |
 | Volver a la versión anterior | En GitHub, en el release anterior: **Edit → Set as the latest release**. O, en el servidor: `C:\inetpub\devitrak-admin\bin\Update-AdminSite.ps1 -Tag admin-…` |
 | Parar los despliegues | `Disable-ScheduledTask "Devitrak Admin - Update from GitHub"` |
+| Publicar la consola en su host | `.\Add-ConsoleSite.ps1 -CertThumbprint …` (una vez) |
+| Cerrar solo la consola | `Stop-Website Ops` — `admin.devitrak.net` sigue arriba |
 
 El servidor guarda las 5 últimas versiones y GitHub, las 15 últimas.
 
