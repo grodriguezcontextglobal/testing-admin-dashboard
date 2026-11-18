@@ -391,20 +391,31 @@ export const hasPermission = (action, roleType) => {
 // ─── Devitrak Admin Console access ───────────────────────────────────────────
 /**
  * True when the server marked this user as allowed into the Devitrak Admin
- * Console (/platform): super_user of the Context Global company AND an
- * @devitrak.com sign-in email (reports/FRONTEND_admin_console_plan_2026-11-11.md,
- * D1 and B1).
+ * Console (/platform).
+ *
+ * The server's gate is five checks re-read from the database on every
+ * /api/platform request, and since M1 went live it is **a closed list of exact
+ * addresses** with the domain as a guard on the list itself — not a domain
+ * rule, and explicitly NOT `super_user`
+ * (reports/BACKEND_console_m1_live_2026-11-19.md §2). `super_user` is a write
+ * bypass across every company and the console is read-only, so it was rejected
+ * as a way in.
  *
  * Access is never DERIVED here. Every company creator has `super_user: true`
  * (Registration.jsx, createCompany.jsx), so a client-side check on that flag
  * would show the console to every client owner. Only the boolean `true` from
  * the server opens anything.
  *
- * The @devitrak.com check is a second lock, not a key: it can only refuse.
- * The server computes the same rule and re-checks it on every
- * /api/platform request, so this does not make the client an authority — it
- * means a server that wrongly marked an outside address does not also put
- * every client's data on that person's screen.
+ * The @devitrak.com check below is a second lock, not a key: it can only
+ * refuse. It means a server that wrongly marked an outside address does not
+ * also put every client's data on that person's screen.
+ *
+ * KNOWN DIVERGENCE, deliberate: the server's allowlist could admit an address
+ * outside this domain — every real staff account is @contextglobal.com — and
+ * this check would then send that operator to "/" with no message and nothing
+ * in any log. The backend has been asked to tell us before the list stops
+ * being single-domain. Until then the extra lock is worth more than the risk;
+ * if that changes, this becomes an allowlist check, not a looser domain.
  *
  * Not a roleType and not in ALL_ROLES: no client company can assign it.
  */

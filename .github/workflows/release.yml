@@ -83,6 +83,12 @@ jobs:
           # GovRAMP #12 (SC-23): sesión en cookie HttpOnly; 'true' solo cuando
           # la fase 1 del servidor esté desplegada (src/api/sessionCredential.js).
           VITE_APP_COOKIE_SESSION: ${{ vars.VITE_APP_COOKIE_SESSION }}
+          # Devitrak Admin Console (/platform). Faltaba aquí, así que en toda
+          # build de release la variable era undefined, el flag quedaba en false
+          # y Rollup se llevaba el árbol entero: en producción no existe ni la
+          # cadena "/platform". Por defecto 'false' — esta línea es la fontanería,
+          # el interruptor es la variable del environment.
+          VITE_APP_FEATURE_PLATFORM_CONSOLE: ${{ vars.VITE_APP_FEATURE_PLATFORM_CONSOLE || 'false' }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.
