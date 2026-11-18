@@ -89,6 +89,12 @@ jobs:
           # cadena "/platform". Por defecto 'false' — esta línea es la fontanería,
           # el interruptor es la variable del environment.
           VITE_APP_FEATURE_PLATFORM_CONSOLE: ${{ vars.VITE_APP_FEATURE_PLATFORM_CONSOLE || 'false' }}
+          # Data de muestra en el console: 'true' sirve datos inventados en vez
+          # de llamar a /api/platform/*, con un aviso permanente en pantalla.
+          # NO abre nada: el gate del servidor sigue decidiendo quién entra
+          # (featureFlags.js, PLATFORM_CONSOLE_SAMPLE_DATA vs _DEV_BYPASS).
+          # A 'false' en cuanto el backend tenga /summary y /companies.
+          VITE_APP_PLATFORM_CONSOLE_MOCK: ${{ vars.VITE_APP_PLATFORM_CONSOLE_MOCK || 'false' }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.

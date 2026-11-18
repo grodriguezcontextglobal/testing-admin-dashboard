@@ -2,8 +2,9 @@ import { createPlatformMockRouter } from "./platformMockRouter";
 
 /**
  * An axios adapter that answers from sample data instead of the network.
- * Installed on devitrakApiPlatform only in the dev-server demo mode
- * (PLATFORM_CONSOLE_MOCK). A short delay keeps the loading states visible.
+ * Installed on devitrakApiPlatform when PLATFORM_CONSOLE_SAMPLE_DATA is on,
+ * in a dev server or in a build. A short delay keeps the loading states
+ * visible.
  */
 export const createPlatformMockAdapter = ({ now = new Date(), delayMs = 250 } = {}) => {
   const router = createPlatformMockRouter({ now });

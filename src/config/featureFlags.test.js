@@ -133,7 +133,12 @@ describe("FEATURE_PLATFORM_CONSOLE", () => {
   });
 });
 
-describe("PLATFORM_CONSOLE_MOCK", () => {
+// The demo mode used to be one flag doing two jobs: it chose the sample-data
+// source AND it opened the console without the server's platformAccess. That
+// second job is a gate bypass, which is why the whole thing was pinned to the
+// dev server and could never be deployed. Split in two so the sample data can
+// ship to a real URL while the gate still decides who sees it.
+describe("PLATFORM_CONSOLE_SAMPLE_DATA (the data source)", () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -145,21 +150,61 @@ describe("PLATFORM_CONSOLE_MOCK", () => {
   it("is true with the env var in a dev server", async () => {
     vi.stubEnv("DEV", true);
     vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
-    const { PLATFORM_CONSOLE_MOCK } = await import("./featureFlags");
-    expect(PLATFORM_CONSOLE_MOCK).toBe(true);
+    const { PLATFORM_CONSOLE_SAMPLE_DATA } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_SAMPLE_DATA).toBe(true);
   });
 
-  it("is always false in a production build, even with the env var", async () => {
+  it("is ALSO true in a build, which is the point of the split", async () => {
     vi.stubEnv("DEV", false);
     vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
-    const { PLATFORM_CONSOLE_MOCK } = await import("./featureFlags");
-    expect(PLATFORM_CONSOLE_MOCK).toBe(false);
+    const { PLATFORM_CONSOLE_SAMPLE_DATA } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_SAMPLE_DATA).toBe(true);
   });
 
   it("is false without the env var", async () => {
     vi.stubEnv("DEV", true);
     vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", undefined);
-    const { PLATFORM_CONSOLE_MOCK } = await import("./featureFlags");
-    expect(PLATFORM_CONSOLE_MOCK).toBe(false);
+    const { PLATFORM_CONSOLE_SAMPLE_DATA } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_SAMPLE_DATA).toBe(false);
+  });
+});
+
+describe("PLATFORM_CONSOLE_DEV_BYPASS (skips the access gate)", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("is true with the env var in a dev server", async () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
+    const { PLATFORM_CONSOLE_DEV_BYPASS } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_DEV_BYPASS).toBe(true);
+  });
+
+  // The one that matters. A build must never contain a way into the console
+  // that does not go through the server's answer, whatever any env var says.
+  it("is always false in a build, even with the env var", async () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
+    const { PLATFORM_CONSOLE_DEV_BYPASS } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_DEV_BYPASS).toBe(false);
+  });
+
+  it("is false without the env var", async () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", undefined);
+    const { PLATFORM_CONSOLE_DEV_BYPASS } = await import("./featureFlags");
+    expect(PLATFORM_CONSOLE_DEV_BYPASS).toBe(false);
+  });
+
+  it("no longer exists under its old name, so a stale import cannot bypass", async () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("VITE_APP_PLATFORM_CONSOLE_MOCK", "true");
+    const flags = await import("./featureFlags");
+    expect(flags.PLATFORM_CONSOLE_MOCK).toBeUndefined();
   });
 });

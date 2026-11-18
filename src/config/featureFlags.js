@@ -104,16 +104,39 @@ export const FEATURE_PLATFORM_CONSOLE =
   import.meta.env.VITE_APP_FEATURE_PLATFORM_CONSOLE === "true";
 
 /**
- * Admin Console demo mode: /api/platform/* is answered from invented sample
- * data (src/pages/platform/utils/mock/) and the console opens without the
- * server's platformAccess, so the prototype can be shown before the backend
- * exists.
+ * Admin Console demo mode, which used to be one flag doing two different jobs:
+ * choosing the sample-data source, and opening the console without the
+ * server's platformAccess. The second is a gate bypass, and it is the only
+ * reason the whole thing had to be pinned to the dev server. Split so the
+ * sample data can ship to a real URL while the gate still decides who sees it.
  *
- * Dev server only: `import.meta.env.DEV` is false in every `vite build`, so a
- * release can never ship it, whatever the env var says.
- *
- * Set VITE_APP_PLATFORM_CONSOLE_MOCK=true (with the console flag) to use it.
+ * Both read the same variable, VITE_APP_PLATFORM_CONSOLE_MOCK, because they
+ * describe one intention — "this is the prototype" — with two different
+ * blast radii.
  */
-export const PLATFORM_CONSOLE_MOCK =
-  import.meta.env.DEV === true &&
+
+/**
+ * The data source: /api/platform/* is answered from invented sample data
+ * (src/pages/platform/utils/mock/) instead of the network.
+ *
+ * Deliberately allowed in a build, so the prototype can be reviewed on a real
+ * URL before the backend's data endpoints exist. It is safe there because it
+ * no longer opens anything: a deployed build with this on still admits only a
+ * user the server marked platformAccess. PlatformLayout shows a permanent
+ * "Sample data" notice whenever it is on — invented numbers on a production
+ * URL need to announce themselves.
+ */
+export const PLATFORM_CONSOLE_SAMPLE_DATA =
   import.meta.env.VITE_APP_PLATFORM_CONSOLE_MOCK === "true";
+
+/**
+ * The gate bypass: opens the console without the server's platformAccess, so
+ * the prototype can be worked on without an operator account.
+ *
+ * Dev server only, and it must stay that way: `import.meta.env.DEV` is false
+ * in every `vite build`, so a release can never ship a way into the console
+ * that skips the server's answer, whatever the env var says. This is the half
+ * that would have let any signed-in client user reach /platform.
+ */
+export const PLATFORM_CONSOLE_DEV_BYPASS =
+  import.meta.env.DEV === true && PLATFORM_CONSOLE_SAMPLE_DATA;

@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { ALL_ROLES, ROLE_TYPES, hasPlatformAccess, readPlatformAccess } from "./roles";
 
@@ -96,5 +99,33 @@ describe("readPlatformAccess", () => {
   it("lets hasPlatformAccess open the console for a user built with it", () => {
     const user = { email: "a@devitrak.com", platformAccess: readPlatformAccess({ platformAccess: true }) };
     expect(hasPlatformAccess(user)).toBe(true);
+  });
+});
+
+// ─── The sample-data flag must never become a way in ─────────────────────────
+// PLATFORM_CONSOLE_SAMPLE_DATA is allowed in a build so the prototype can be
+// reviewed on a real URL. That is only safe while it stays a data source. If
+// it ever appears in a place that decides access, a deployed build would open
+// the console to every signed-in user, which is exactly what the split undid.
+describe("the sample-data flag never decides access", () => {
+  const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+  const GATEKEEPERS = [
+    path.join("routes", "authorized", "PlatformGuard.jsx"),
+    path.join("components", "navbar", "NavigationBarMain.jsx"),
+  ];
+
+  for (const file of GATEKEEPERS) {
+    it(`${file} gates on the server's answer, not on sample data`, () => {
+      const text = fs.readFileSync(path.join(SRC, file), "utf8");
+      expect(text).toContain("hasPlatformAccess");
+      expect(text).not.toContain("PLATFORM_CONSOLE_SAMPLE_DATA");
+    });
+  }
+
+  it("the dev bypass is the only other way in, and only in a dev server", () => {
+    const flags = fs.readFileSync(path.join(SRC, "config", "featureFlags.js"), "utf8");
+    const bypass = flags.slice(flags.indexOf("export const PLATFORM_CONSOLE_DEV_BYPASS"));
+    expect(bypass).toContain("import.meta.env.DEV === true");
   });
 });
