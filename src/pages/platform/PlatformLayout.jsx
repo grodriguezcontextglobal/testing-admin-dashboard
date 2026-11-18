@@ -11,13 +11,13 @@ import {
   Users,
 } from "lucide-react";
 import { devitrakApiPlatform } from "../../api/devitrakApi";
-import { PLATFORM_CONSOLE_MOCK } from "../../config/featureFlags";
+import { PLATFORM_CONSOLE_SAMPLE_DATA } from "../../config/featureFlags";
 import { createPlatformMockAdapter } from "./utils/mock/platformMockAdapter";
 
-// Demo mode (dev server only): answer /api/platform/* from invented sample
-// data. Installed when this module loads, which is before any console page
-// renders and asks for data.
-if (PLATFORM_CONSOLE_MOCK) {
+// Demo mode: answer /api/platform/* from invented sample data. Installed when
+// this module loads, which is before any console page renders and asks for
+// data. Allowed in a build, so the notice below is not optional.
+if (PLATFORM_CONSOLE_SAMPLE_DATA) {
   devitrakApiPlatform.defaults.adapter = createPlatformMockAdapter();
 }
 
@@ -248,7 +248,7 @@ const PlatformLayout = () => {
         boxSizing: "border-box",
       }}
     >
-      {PLATFORM_CONSOLE_MOCK && (
+      {PLATFORM_CONSOLE_SAMPLE_DATA && (
         <div
           role="note"
           data-testid="platform-sample-data"

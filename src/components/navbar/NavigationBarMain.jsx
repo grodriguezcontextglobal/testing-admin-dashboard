@@ -39,7 +39,7 @@ import "./style/style.css";
 import {
   FEATURE_PLATFORM_CONSOLE,
   FEATURE_THEME_SWITCH,
-  PLATFORM_CONSOLE_MOCK,
+  PLATFORM_CONSOLE_DEV_BYPASS,
 } from "../../config/featureFlags";
 import ThemeToggle from "../theme/ThemeToggle";
 const { PropTypes } = pkg;
@@ -83,7 +83,7 @@ const NavigationBarMain = forwardRef(function NavigationBarMain(props, ref) {
   const logout = useLogout();
   // Devitrak Admin Console entry: same rule as PlatformGuard.
   const showPlatformConsole =
-    FEATURE_PLATFORM_CONSOLE && (PLATFORM_CONSOLE_MOCK || hasPlatformAccess(user));
+    FEATURE_PLATFORM_CONSOLE && (PLATFORM_CONSOLE_DEV_BYPASS || hasPlatformAccess(user));
 
   const handleDrawerToggle = () => {
     setMobileOpen((prevState) => !prevState);
