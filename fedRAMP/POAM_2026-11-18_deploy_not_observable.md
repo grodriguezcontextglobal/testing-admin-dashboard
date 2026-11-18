@@ -92,7 +92,16 @@ By Remote Desktop on DEVITRACKAPP, in this order:
 3. `state.json` — whether the tag was recorded as deployed. If it says the new tag while IIS serves the old build, the swap is the problem and not the download.
 4. The scheduled task `Devitrak Admin - Update from GitHub` — `LastRunTime`, `LastTaskResult`, for completeness.
 
-Once the cause is known: re-run the deploy by hand with `C:\inetpub\devitrak-admin\bin\Update-AdminSite.ps1 -Tag admin-20261118-100828-d789f64`.
+Once the cause is known, re-run the deploy by hand — **with the most recent release tag, not the one that stalled**:
+
+```powershell
+gh release list --limit 1          # or read the latest tag from the Releases page
+C:\inetpub\devitrak-admin\bin\Update-AdminSite.ps1 -Tag <latest>
+```
+
+Releases are cumulative, so the newest one contains the AC-4 fix along with everything merged after it. `admin-20261118-100828-d789f64` is the release that failed to deploy, and naming it here is how this entry recorded the incident — it is **not** the tag to deploy. Three further releases were published while this item was open, and more will be by the time anyone reads it.
+
+That a written-down tag goes stale within hours is itself the argument for **M4**: the deploy instruction should not have to name a version that a human then has to check is still current.
 
 Record the finding here; it decides whether M2 needs anything beyond what is written below.
 
