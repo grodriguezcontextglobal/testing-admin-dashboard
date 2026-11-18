@@ -49,8 +49,11 @@ const DeleteItemModal = ({
   const itemsInInventoryQuery = useQuery({
     queryKey: ["ItemsInfoInStockCheckingQuery"],
     queryFn: () =>
+      // AC-4: `item_id` alone is a cross-company lookup — the route filters by
+      // the columns it is sent, and the id is not scoped by itself.
       devitrakApi.post("/db_item/consulting-item", {
         item_id: dataFound[0].item_id,
+        company_id: user?.sqlInfo?.company_id,
       }),
     refetchOnMount: false,
   });

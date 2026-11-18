@@ -40,8 +40,13 @@ const useDraftEventActions = () => {
   const role = resolveRoleType(user);
 
   const findSqlEventId = async (event) => {
-    const response = await devitrakApi.post("/db_event/events_information", sqlLookupFor(event));
-    return pickSqlEventId(response?.data?.events, user?.sqlInfo?.company_id);
+    const companyId = user?.sqlInfo?.company_id;
+    // AC-4: scoped in the request now. pickSqlEventId stays as the second
+    // lock, not the first one.
+    const lookup = sqlLookupFor(event, companyId);
+    if (!lookup) return null;
+    const response = await devitrakApi.post("/db_event/events_information", lookup);
+    return pickSqlEventId(response?.data?.events, companyId);
   };
 
   const nameOf = (event) => event?.eventInfoDetail?.eventName ?? "The draft";

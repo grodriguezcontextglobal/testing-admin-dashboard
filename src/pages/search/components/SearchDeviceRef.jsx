@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
+import { pickOwnEventRow } from "../../events/utils/eventSqlLookup";
 import DevitrakLoading from "../../../components/animation/DevitrakLoading";
 import { checkArray } from "../../../components/utils/checkArray";
 import { onAddCustomerInfo } from "../../../store/slices/customerSlice";
@@ -171,7 +172,10 @@ const SearchDeviceRef = ({
             return afterActionTakenCollectStoreAndNavigate({
               paymentIntentDetailSelectedProfile,
               eventInfo: eventInfo.data.list,
-              eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
+              eventInfoSqlDB: pickOwnEventRow(
+                eventInfoSqlDB.data.events,
+                user?.sqlInfo?.company_id,
+              ),
               eventInventoryQuery: { ...record.data, activity: false },
               record,
             });
@@ -241,7 +245,10 @@ const SearchDeviceRef = ({
             afterActionTakenCollectStoreAndNavigate({
               paymentIntentDetailSelectedProfile,
               eventInfo: eventInfo.data.list,
-              eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
+              eventInfoSqlDB: pickOwnEventRow(
+                eventInfoSqlDB.data.events,
+                user?.sqlInfo?.company_id,
+              ),
               record,
               eventInventoryQuery: record.data,
             });
@@ -261,7 +268,10 @@ const SearchDeviceRef = ({
             paymentIntent: null,
           },
           eventInfo: eventInfo.data.list,
-          eventInfoSqlDB: eventInfoSqlDB.data.events.at(-1),
+          eventInfoSqlDB: pickOwnEventRow(
+            eventInfoSqlDB.data.events,
+            user?.sqlInfo?.company_id,
+          ),
           record,
           eventInventoryQuery: record.data,
         });

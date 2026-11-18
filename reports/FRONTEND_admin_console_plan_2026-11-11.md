@@ -55,7 +55,7 @@ its own, or every client owner would see every other client.
 - Return `platformAccess: true|false` in the login/session response and in `GET /api/platform/me`.
 - Middleware `requirePlatformAccess` on **every** `/api/platform/*` route. Re-check on each request against the database (not only from the JWT), so removing super_user takes effect immediately.
 - Must work with today's header session (`x-token`) and, once cookie phase 1 ships, with the HttpOnly cookie session (`COOKIE_SESSION`, GovRAMP #12).
-- **Exempt `/api/platform/*` from `COMPANY_AUTH_MODE` and `COMPANY_CONTEXT_MODE`.** Both are `enforce` in production (see B1a), and these routes never carry `x-company-id` or `s-company-lq` on purpose. Without the exemption every console call is rejected, even for a user with `platformAccess: true`. `requirePlatformAccess` replaces the company check on these routes; it does not add to it.
+- ~~**Exempt `/api/platform/*` from `COMPANY_AUTH_MODE` and `COMPANY_CONTEXT_MODE`.**~~ **Withdrawn 2026-11-17.** This was wrong, and the way it was wrong is worth keeping: we read both modes as `enforce` in the production `.env` and inferred from the variable being global that its effect was global. We never checked where either is applied. The server team did: `COMPANY_AUTH_MODE` is mounted by a `router.use` inside `routes/company.js` and can never see `/api/platform/*`, and `COMPANY_CONTEXT_MODE` is not a middleware at all — it sits inside `authorizePermission`, which is applied per route. **There is nothing to exempt**, and writing the exemption anyway would leave an allow-list that a later reader mistakes for evidence these routes were considered and cleared. `SESSION_MODE` and `NOSQL_INPUT_MODE` do apply and stay.
 - **No new custom request headers.** Production's CORS allow-list rejects unknown headers as an empty `{}` error. The company is always in the path (`/companies/:id`), never in `x-company-id`.
 
 ### B1a. Production server modes these routes run under
@@ -65,8 +65,8 @@ The production `.env` on 2026-11-11:
 | Mode | Value | What it means for `/api/platform/*` |
 |---|---|---|
 | `SESSION_MODE` | enforce | Applies as usual: a valid session is required. |
-| `COMPANY_AUTH_MODE` | enforce | **Exempt these routes** (B1). |
-| `COMPANY_CONTEXT_MODE` | enforce | **Exempt these routes** (B1). |
+| `COMPANY_AUTH_MODE` | enforce | **Never reaches these routes** — mounted inside `routes/company.js`. No exemption needed (corrected 2026-11-17). |
+| `COMPANY_CONTEXT_MODE` | enforce | **Never reaches these routes** — it lives inside `authorizePermission`, applied per route. No exemption needed (corrected 2026-11-17). |
 | `NOSQL_INPUT_MODE` | enforce | Applies as usual: `search`, `status` and other query parameters go through the same input check. |
 | `DB_COMPANY_PUBLIC_MODE` | enforce | Not involved. |
 | `NODEMAILER_AUTH_MODE`, `CONTRACT_LINK_MODE`, `ATTENDANCE_LINK_MODE` | enforce | Not involved. |
