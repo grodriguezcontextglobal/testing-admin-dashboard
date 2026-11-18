@@ -52,11 +52,33 @@ lista de CORS por la misma razón.
 **Publicarlo (una vez, por Remote Desktop, como Administrador):**
 
 ```powershell
-.\Add-ConsoleSite.ps1 -CertThumbprint <huella del certificado de ops.devitrak.net>
+.\Add-ConsoleSite.ps1
 ```
 
-Es idempotente. Sin `-CertThumbprint` crea el sitio solo en http y avisa: no
-anuncies el host hasta que tenga https, porque las cabeceras ya envían HSTS.
+El sitio de `ops.devitrak.net` **ya existe**: se levantó con el build de
+`testing-admin-vite` para probar DNS y SSL, y funciona. Así que el script no
+crea nada — **busca el sitio por su binding, no por su nombre**, y solo le
+cambia la ruta física a `current`, guardando la anterior en
+`previous-ops-physical-path.txt`. Los bindings, el certificado y el grupo de
+aplicaciones no se tocan: ya van bien, y cambiarlos es justo la forma de
+romper un https que funcionaba. (Si algún día el sitio no existe, el script
+sí lo crea, y ahí sí acepta `-CertThumbprint`.)
+
+Desde ese momento el build de `testing-admin-vite` deja de servirse. Su
+carpeta se queda donde está; si algo la sigue reconstruyendo, conviene
+pararlo para no dejar dos cosas vivas que parecen la misma.
+
+**Antes de reapuntar, el script comprueba que el paquete desplegado trae la
+consola**, buscando la ruta `/platform` en los chunks. Un build al que no
+llegó `VITE_APP_FEATURE_PLATFORM_CONSOLE` no la contiene — Vite pliega
+`import.meta.env.*` a una constante y elimina la rama entera — y eso le pasó a
+**todos** los releases hasta el #110, porque el flag no estaba en
+`release.yml`. Reapuntar el host a un paquete así dejaría `ops.devitrak.net`
+sirviendo un dashboard sin consola, que es peor que no haberlo movido. Por eso
+se detiene y dice qué desplegar primero; `-Force` lo salta.
+
+**El orden importa:** primero el despliegue del release nuevo, después el
+reapuntado.
 
 Dos cosas que conviene saber:
 
