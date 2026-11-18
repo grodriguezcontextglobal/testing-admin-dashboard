@@ -410,12 +410,21 @@ export const hasPermission = (action, roleType) => {
  * refuse. It means a server that wrongly marked an outside address does not
  * also put every client's data on that person's screen.
  *
- * KNOWN DIVERGENCE, deliberate: the server's allowlist could admit an address
- * outside this domain — every real staff account is @contextglobal.com — and
- * this check would then send that operator to "/" with no message and nothing
- * in any log. The backend has been asked to tell us before the list stops
- * being single-domain. Until then the extra lock is worth more than the risk;
- * if that changes, this becomes an allowlist check, not a looser domain.
+ * We thought this could drift from the server's allowlist — an operator added
+ * at @contextglobal.com would be let in there and bounced here in silence.
+ * It cannot, and the reason is in the order of the server's five checks
+ * (BACKEND_console_m1_answers_2026-11-19.md §2):
+ *
+ *     active → platform_observer → domain → allowlist → mfaEnabled
+ *
+ * The domain sits ABOVE the list, as its guard, so an address from another
+ * domain is refused there with `wrong_domain` — a logged reason, not a silent
+ * nothing — before this check is ever reached. Their CI also fails on a
+ * multi-domain allowlist, with a message telling whoever edits it to warn us
+ * first. So this is a genuine second lock, not the only one.
+ *
+ * It would take a deliberate change to their PLATFORM_DOMAIN as well. If that
+ * ever happens, this becomes an allowlist check rather than a looser domain.
  *
  * Not a roleType and not in ALL_ROLES: no client company can assign it.
  */
