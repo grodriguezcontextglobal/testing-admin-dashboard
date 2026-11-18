@@ -1,10 +1,11 @@
 import { Grid, Typography } from "@mui/material";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar, Tooltip } from "antd";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { notifyStatus } from "../../../components/notification/alerts/useStatusNotification";
+import { buildEventSqlLookup, pickOwnEventRow } from "../utils/eventSqlLookup";
 import ReusableCardWithFooter from "../../../components/UX/cards/ReusableCardWithFooter";
 import {
   onAddEventData,
@@ -31,6 +32,7 @@ import renderingStatusUIComponent from "./renderingStatusUIComponent";
 const CardEventDisplay = ({ props }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.admin);
   const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
   const isMediumDevice = useMediaQuery(
     "only screen and (min-width : 769px) and (max-width : 992px)",
@@ -62,15 +64,20 @@ const CardEventDisplay = ({ props }) => {
     // merge, instead of not opening at all.
     let sqlEventInfo = null;
     try {
-      const sqpFetchInfo = await devitrakApi.post(
-        "/db_event/events_information",
-        {
-          zip_address: props.eventInfoDetail.address.split(" ").at(-1),
-          event_name: props.eventInfoDetail.eventName,
-        },
-      );
-      if (sqpFetchInfo.data.ok) {
-        sqlEventInfo = sqpFetchInfo.data.events.at(-1);
+      const companyId = user?.sqlInfo?.company_id;
+      // AC-4: this used to ask by name and zip alone and then take the LAST
+      // row of the answer, with no company check — two companies with the
+      // same event name and zip and it adopted the other one's SQL identity.
+      const lookup = buildEventSqlLookup({
+        eventName: props.eventInfoDetail.eventName,
+        address: props.eventInfoDetail.address,
+        companyId,
+      });
+      const sqpFetchInfo = lookup
+        ? await devitrakApi.post("/db_event/events_information", lookup)
+        : null;
+      if (sqpFetchInfo?.data?.ok) {
+        sqlEventInfo = pickOwnEventRow(sqpFetchInfo.data.events, companyId);
       }
     } catch {
       notifyStatus(

@@ -20,6 +20,7 @@ import {
   persistCompanyHeaders,
 } from "../../api/sessionHeaders";
 import { takeReturnPath } from "../../api/sessionExpiry";
+import { buildEventSqlLookup, pickOwnEventRow } from "../events/utils/eventSqlLookup";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import FooterComponent from "../../components/general/FooterComponent";
 // import HidenIcon from "../../components/icons/HidenIcon";
@@ -137,19 +138,25 @@ const Login = () => {
      and `setMfaEnrollmentOpen` is the render that reads it. */
   const pendingLogin = useRef(null);
 
-  const addingEventState = useCallback(async (props) => {
-    const sqpFetchInfo = await devitrakApi.post(
-      "/db_event/events_information",
-      {
-        zip_address: props.eventInfoDetail.address.split(" ").at(-1),
-        event_name: props.eventInfoDetail.eventName,
-      },
-    );
+  const addingEventState = useCallback(async (props, companySqlId) => {
+    // AC-4: the SQL company id has to travel here from the sign-in flow —
+    // Redux is not populated yet at this point in the login, and without the
+    // column the route answers with every company's matching event.
+    const lookup = buildEventSqlLookup({
+      eventName: props.eventInfoDetail.eventName,
+      address: props.eventInfoDetail.address,
+      companyId: companySqlId,
+    });
+    if (!lookup) return;
+    const sqpFetchInfo = await devitrakApi.post("/db_event/events_information", lookup);
     if (sqpFetchInfo.data.ok) {
       dispatch(onSelectEvent(props.eventInfoDetail.eventName));
       dispatch(onSelectCompany(props.company));
       dispatch(
-        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) }),
+        onAddEventData({
+          ...props,
+          sql: pickOwnEventRow(sqpFetchInfo.data.events, companySqlId),
+        }),
       );
       dispatch(onAddSubscription(props.subscription));
       dispatch(
@@ -202,7 +209,7 @@ const Login = () => {
           });
 
           if (response.data.ok && response.data.list.length > 0) {
-            await addingEventState(response.data.list[0]);
+            await addingEventState(response.data.list[0], props.companySqlId);
             return;
           }
 
@@ -301,6 +308,9 @@ const Login = () => {
       await navigateUserBasedOnRole({
         roleType: props.roleType,
         email: props.email,
+        // AC-4: the assistant path looks an event up in SQL before Redux has
+        // the company, so it has to be carried rather than read.
+        companySqlId: companyRecord.company_id,
       });
     } catch (error) {
       console.error("loginIntoOneCompanyAccount", error);

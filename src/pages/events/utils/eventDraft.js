@@ -1,4 +1,5 @@
 import { EVENT_CONFIGURATION, eventLifecycle } from "./eventLifecycle";
+import { eventSqlLookupFromEvent, pickOwnEventRow } from "./eventSqlLookup";
 import { normalizeEventStaff } from "../../../store/slices/eventSlice";
 
 /**
@@ -51,24 +52,22 @@ export const draftResumeState = (event, sqlEventId) => {
 
 /**
  * The body for `/db_event/events_information` that finds a draft's SQL row —
- * the same name + zip lookup PastEventsTable uses to open an event.
+ * the same name + zip lookup PastEventsTable uses to open an event, now
+ * carrying the company (AC-4; see eventSqlLookup.js). Null without a company
+ * id, and the caller must not send the request then.
  */
-export const sqlLookupFor = (event) => ({
-  event_name: event?.eventInfoDetail?.eventName,
-  zip_address: `${event?.eventInfoDetail?.address ?? ""}`.trim().split(" ").at(-1),
-});
+export const sqlLookupFor = (event, companyId) => eventSqlLookupFromEvent(event, companyId);
 
 /**
  * This company's row among the matches, the newest if the name repeats. Null
  * when there is none, and the caller must not resume then: without the SQL id,
  * step 1 creates a second event.
+ *
+ * Kept now that the request itself is scoped, as the second lock rather than
+ * the first.
  */
-export const pickSqlEventId = (rows = [], companyId) => {
-  const own = (rows ?? []).filter(
-    (row) => String(row?.company_assigned_event_id) === String(companyId)
-  );
-  return own.at(-1)?.event_id ?? null;
-};
+export const pickSqlEventId = (rows = [], companyId) =>
+  pickOwnEventRow(rows, companyId)?.event_id ?? null;
 
 /**
  * What to do after the SQL half of deleting a draft, by its HTTP status.

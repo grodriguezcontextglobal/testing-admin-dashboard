@@ -1,9 +1,10 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Avatar } from "antd";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { devitrakApi } from "../../../api/devitrakApi";
 import { RightNarrowInCircle } from "../../../components/icons/RightNarrowInCircle";
+import { buildEventSqlLookup, pickOwnEventRow } from "../utils/eventSqlLookup";
 import {
   onAddEventData,
   onAddExtraServiceListSetup,
@@ -18,20 +19,27 @@ import BaseTable from "../../../components/UX/tables/BaseTable";
 const PastEventsTable = ({ events }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.admin);
 
   const quickGlance = async (props) => {
-    const sqpFetchInfo = await devitrakApi.post(
-      "/db_event/events_information",
-      {
-        zip_address: props.eventInfoDetail.address.split(" ").at(-1),
-        event_name: props.eventInfoDetail.eventName,
-      },
-    );
+    const companyId = user?.sqlInfo?.company_id;
+    // AC-4: the route filters by whatever columns we send, so without the
+    // company it answers with every company's matching event.
+    const lookup = buildEventSqlLookup({
+      eventName: props.eventInfoDetail.eventName,
+      address: props.eventInfoDetail.address,
+      companyId,
+    });
+    if (!lookup) return;
+    const sqpFetchInfo = await devitrakApi.post("/db_event/events_information", lookup);
     if (sqpFetchInfo.data.ok) {
       dispatch(onSelectEvent(props.eventInfoDetail.eventName));
       dispatch(onSelectCompany(props.company));
       dispatch(
-        onAddEventData({ ...props, sql: sqpFetchInfo.data.events.at(-1) }),
+        onAddEventData({
+          ...props,
+          sql: pickOwnEventRow(sqpFetchInfo.data.events, companyId),
+        }),
       );
       dispatch(onAddSubscription(props.subscription));
       dispatch(

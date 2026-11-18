@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 10;
 import { devitrakApi } from "../../../api/devitrakApi";
+import { buildEventSqlLookup, pickOwnEventRow } from "../../events/utils/eventSqlLookup";
 import {
   onAddEventData,
   onAddQRCodeLink,
@@ -35,17 +36,26 @@ const SearchEventsRef = ({ data }) => {
     currentPage * PAGE_SIZE
   );
   const handleStoreData = async (record) => {
+    // AC-4: scoped to this company, and the row that comes back is checked
+    // against it too.
+    const companyId = user?.sqlInfo?.company_id;
+    const lookup = buildEventSqlLookup({
+      eventName: record.data.eventInfoDetail.eventName,
+      address: record.data.eventInfoDetail.address,
+      companyId,
+    });
+    if (!lookup) return;
     const sqpFetchInfo = await devitrakApi.post(
       "/db_event/events_information",
-      {
-        zip_address: record.data.eventInfoDetail.address.split(" ").at(-1),
-        event_name: record.data.eventInfoDetail.eventName,
-      }
+      lookup
     );
     dispatch(onSelectEvent(record.data.eventInfoDetail.eventName));
     dispatch(onSelectCompany(record.data.company));
     dispatch(
-      onAddEventData({ ...record.data, sql: sqpFetchInfo.data.events.at(-1) })
+      onAddEventData({
+        ...record.data,
+        sql: pickOwnEventRow(sqpFetchInfo.data.events, companyId),
+      })
     );
     dispatch(onAddSubscription(record.data.subscription));
     dispatch(

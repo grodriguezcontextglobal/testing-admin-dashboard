@@ -126,8 +126,16 @@ describe("draftResumeState — what the wizard needs to pick up where it stopped
    step 1 would create a second event). The same lookup the Past table uses to
    open an event: name + zip. */
 describe("finding the draft's SQL row", () => {
-  it("looks it up by event name and the zip at the end of the address", () => {
-    expect(sqlLookupFor(draft)).toEqual({ event_name: "BBQ", zip_address: "20001" });
+  it("looks it up by event name and the zip at the end of the address, scoped to the company", () => {
+    expect(sqlLookupFor(draft, 7)).toEqual({
+      event_name: "BBQ",
+      zip_address: "20001",
+      company_assigned_event_id: 7,
+    });
+  });
+
+  it("refuses to build the lookup without a company (AC-4)", () => {
+    expect(sqlLookupFor(draft)).toBeNull();
   });
 
   it("takes this company's row, the newest one if the name repeats", () => {

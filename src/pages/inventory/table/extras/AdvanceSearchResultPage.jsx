@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 // import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useQuery } from "@tanstack/react-query";
 import { devitrakApi } from "../../../../api/devitrakApi";
+import { buildEventSqlLookup, pickOwnEventRow } from "../../../events/utils/eventSqlLookup";
 import Chip from "../../../../components/UX/Chip/Chip";
 import {
   onAddAdvanceSearch,
@@ -61,15 +62,19 @@ const AdvanceSearchResultPage = () => {
         return;
       }
 
-      // Fetch additional event information for SQL data
+      // Fetch additional event information for SQL data, scoped to this
+      // company (AC-4): the route filters by the columns it is sent, so
+      // without the company it answers across every client.
+      const companyId = user?.sqlInfo?.company_id;
+      const lookup = buildEventSqlLookup({
+        eventName: selectedEventInfo.eventInfoDetail.eventName,
+        address: selectedEventInfo.eventInfoDetail.address,
+        companyId,
+      });
+      if (!lookup) return;
       const sqpFetchInfo = await devitrakApi.post(
         "/db_event/events_information",
-        {
-          zip_address: selectedEventInfo.eventInfoDetail.address
-            .split(" ")
-            .at(-1),
-          event_name: selectedEventInfo.eventInfoDetail.eventName,
-        },
+        lookup,
       );
 
       // Dispatch Redux actions to store event information
@@ -80,7 +85,7 @@ const AdvanceSearchResultPage = () => {
         dispatch(
           onAddEventData({
             ...selectedEventInfo,
-            sql: sqpFetchInfo.data.events.at(-1),
+            sql: pickOwnEventRow(sqpFetchInfo.data.events, companyId),
           }),
         );
       } else {
