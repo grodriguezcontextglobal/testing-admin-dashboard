@@ -106,6 +106,11 @@ A scheduled GitHub Actions workflow that compares the tag of the latest release 
 
 This is deliberately **outside** DEVITRACKAPP. A monitor that lives on the machine it monitors shares its failure modes, and the failure mode here is "the thing on that machine stopped running."
 
+Two requirements learned from building the manual version of this check today, both of which would otherwise be rediscovered the hard way:
+
+- **Compare commit SHAs, not statuses.** While verifying this very item, `gh pr checks --watch` exited 0 and reported five passing checks — for the *previous* commit, because the pull request had been merged from the web minutes earlier and the branch had moved on. A tool answering successfully about a state other than the one being asked about is the same class of error as a log whose silence is ambiguous. The monitor must assert *which* commit it is talking about and refuse to conclude anything when that does not match.
+- **Tolerate slow, alert on stuck.** A single sample can be confidently wrong in both directions — see §3. The check needs two consecutive disagreeing samples over the threshold before it reports, not one.
+
 ### M4 — Make the deployed version readable · owner dashboard · due 2026-11-25
 
 Production does not state which release it is serving. Today's verification had to fingerprint a hashed bundle filename and compare `Last-Modified`, which worked but is indirect and breaks the moment a build is byte-identical.
