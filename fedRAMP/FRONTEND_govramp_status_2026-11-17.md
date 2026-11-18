@@ -242,6 +242,7 @@ Status: **Met** · **Partial** · **Open** (with the owner). Every row re-checke
 | Twilio token rotation | IA-5(7) | Gustavo | None |
 | Hardening report output analysed into POA&M entries | CM-6, CM-7, AC-2, AU-2 | Gustavo → dashboard | Read the `.txt` and write the entries |
 | Browser check of #81, #83, #84, #86, #88 with real accounts | — | Gustavo | — |
+| **Deployment to production can fail silently, and did** | CM-3, CM-4, SA-10, SI-2, AU-6 | Gustavo (VM) + dashboard | **POA&M `DVK-ADMIN-2026-001`**, opened 2026-11-18. A released AC-4 fix sat undeployed with nothing to say so. Target 2026-11-25 |
 | **`localhost` origins out of the production CORS allow-list** | AC-4, SC-7 | Backend + dashboard | **Date agreed 2026-11-17:** they come out in the same deploy that sets `SameSite=lax` — cookie production day |
 | A real staging host for the dashboard, with its own API origin | AC-4, SC-7, CA-2 | Dashboard → proposal | The permanent fix behind the row above. Also removes "we test production from a laptop" from the SSP |
 | **Database error text returned to the client** | SI-11 | Backend, with our route list | ~351 sites across 52 files; **not reachable anonymously**. A shared error responder, not 351 edits |
