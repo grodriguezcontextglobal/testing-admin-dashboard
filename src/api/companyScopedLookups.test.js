@@ -78,29 +78,48 @@ const withResolvedBodyVariable = (expression, text) => {
   return [expression, ...bodies].join("\n");
 };
 
+/**
+ * Every source file, read once. Reading the tree per assertion took four
+ * passes over ~500 files and ran into Vitest's 5s timeout on a loaded
+ * machine; the offsets are precomputed here too, so locating a match is not
+ * a join of every preceding line.
+ */
+const readSourceTree = () =>
+  walk(SRC)
+    .filter((file) => !ALLOWED.has(path.relative(SRC, file)))
+    .map((file) => {
+      const text = fs.readFileSync(file, "utf8");
+      const lines = text.split("\n");
+      let offset = 0;
+      const offsets = lines.map((line) => {
+        const start = offset;
+        offset += line.length + 1;
+        return start;
+      });
+      return { name: path.relative(SRC, file), text, lines, offsets };
+    });
+
 describe("SQL read routes are always scoped to a company (AC-4)", () => {
-  let files = [];
+  let sources = [];
 
   beforeAll(() => {
-    files = walk(SRC).filter((file) => !ALLOWED.has(path.relative(SRC, file)));
+    sources = readSourceTree();
   }, 60_000);
 
   it("actually reads the source tree", () => {
-    expect(files.length).toBeGreaterThan(200);
+    expect(sources.length).toBeGreaterThan(200);
   });
 
   for (const [route, scopeMarkers] of Object.entries(SCOPED_ROUTES)) {
     it(`every call to ${route} names the company`, () => {
       const offenders = [];
-      for (const file of files) {
-        const text = fs.readFileSync(file, "utf8");
-        const lines = text.split("\n");
+      for (const { name, text, lines, offsets } of sources) {
         lines.forEach((line, i) => {
           if (isComment(line) || !line.includes(route)) return;
-          const at = lines.slice(0, i).join("\n").length + line.indexOf(route);
+          const at = offsets[i] + line.indexOf(route);
           const body = withResolvedBodyVariable(callExpressionAround(text, at), text);
           if (!scopeMarkers.some((marker) => body.includes(marker))) {
-            offenders.push(`${path.relative(SRC, file)}:${i + 1}`);
+            offenders.push(`${name}:${i + 1}`);
           }
         });
       }
@@ -113,12 +132,11 @@ describe("SQL read routes are always scoped to a company (AC-4)", () => {
     // last. pickOwnEventRow filters first; this keeps the old shape from
     // coming back.
     const offenders = [];
-    for (const file of files) {
-      const lines = fs.readFileSync(file, "utf8").split("\n");
+    for (const { name, lines } of sources) {
       lines.forEach((line, i) => {
         if (isComment(line)) return;
         if (/\.events\.at\(-1\)|events\?\.at\(-1\)/.test(line)) {
-          offenders.push(`${path.relative(SRC, file)}:${i + 1}`);
+          offenders.push(`${name}:${i + 1}`);
         }
       });
     }
