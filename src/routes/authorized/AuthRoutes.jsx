@@ -1,4 +1,5 @@
 import { Suspense, useRef } from "react";
+import { useSelector } from "react-redux";
 import { lazyWithRetry } from "../lazyWithRetry";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import PermissionGuard from "./PermissionGuard";
@@ -8,6 +9,8 @@ import {
   FEATURE_PLATFORM_CONSOLE,
   FEATURE_SUBSCRIPTION_PLANS,
 } from "../../config/featureFlags";
+import { CONSOLE_PATH, consoleUrl, shouldSendToConsole } from "../../config/consoleHosts";
+import ExternalRedirect from "../../components/utils/ExternalRedirect";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
 import ErrorBoundary from "../../components/utils/ErrorBoundary";
@@ -267,6 +270,23 @@ const isConsolePath = (pathname) =>
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   const location = useLocation();
+  const { user } = useSelector((state) => state.admin);
+
+  // An operator signs in at @devitrak.com and belongs on the console host:
+  // the client dashboard is not their screen, and ops.devitrak.net is a
+  // different origin, so its session and storage are their own.
+  //
+  // By domain, not by access. Whether this person may READ anything is asked
+  // once, by PlatformGuard, with the server's answer; a devitrak.com account
+  // without the flag is sent there and politely sent back. See
+  // config/consoleHosts.js for why there is only one yes in the codebase.
+  if (FEATURE_PLATFORM_CONSOLE && shouldSendToConsole({ hostname: window.location.hostname, user })) {
+    return (
+      <ExternalRedirect
+        to={consoleUrl(isConsolePath(location.pathname) ? location.pathname : CONSOLE_PATH)}
+      />
+    );
+  }
 
   // The Admin Console is its own page, reached from the dashboard but not
   // drawn inside it: no client navigation bar, no client footer, no company
