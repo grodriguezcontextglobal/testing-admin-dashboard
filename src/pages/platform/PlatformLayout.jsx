@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router";
 import { useSelector } from "react-redux";
 import {
+  ArrowLeft,
   Boxes,
   Building2,
   CalendarDays,
@@ -11,7 +12,9 @@ import {
   Users,
 } from "lucide-react";
 import { devitrakApiPlatform } from "../../api/devitrakApi";
+import { dashboardUrl } from "../../config/consoleHosts";
 import { PLATFORM_CONSOLE_SAMPLE_DATA } from "../../config/featureFlags";
+import useLogout from "../../hooks/useLogout";
 import { createPlatformMockAdapter } from "./utils/mock/platformMockAdapter";
 
 // Demo mode: answer /api/platform/* from invented sample data. Installed when
@@ -47,8 +50,24 @@ const linkStyle = ({ isActive }) => ({
   background: isActive ? "var(--brand-500, #0a2f52)" : "transparent",
 });
 
+const exitStyle = {
+  marginTop: "12px",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  minHeight: "40px",
+  padding: "0 12px",
+  borderRadius: "8px",
+  textDecoration: "none",
+  fontFamily: "Inter, sans-serif",
+  fontSize: "13px",
+  fontWeight: 500,
+  color: "var(--brand-200, #8fb0cc)",
+};
+
 const PlatformLayout = () => {
   const { user } = useSelector((state) => state.admin);
+  const logout = useLogout();
   const operatorName = [user?.name, user?.lastName].filter(Boolean).join(" ") || "Devitrak staff";
   const initials =
     [user?.name, user?.lastName]
@@ -215,27 +234,36 @@ const PlatformLayout = () => {
         </div>
       </div>
       {/* The way back: this is a separate page, so the client dashboard is a
-          link out of it, not a tab inside it. */}
-      <a
-        href="/"
-        style={{
-          marginTop: "12px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          minHeight: "40px",
-          padding: "0 12px",
-          borderRadius: "8px",
-          textDecoration: "none",
-          fontFamily: "Inter, sans-serif",
-          fontSize: "13px",
-          fontWeight: 500,
-          color: "var(--brand-200, #8fb0cc)",
-        }}
-      >
-        <LogOut size={16} aria-hidden="true" style={{ transform: "rotate(180deg)" }} />
+          link out of it, not a tab inside it. The dashboard host is named in
+          full on purpose — a bare "/" here is a request for the console host's
+          own root, which IIS sends straight back to /platform, so the way out
+          led back in (public/web.config, "Console host root"). */}
+      <a href={dashboardUrl("/")} style={exitStyle}>
+        <ArrowLeft size={16} aria-hidden="true" />
         Back to the dashboard
       </a>
+      {/* And the way out of the session itself. The console draws no dashboard
+          navigation bar, so without this the only way to sign out of this host
+          was clearing the browser's storage by hand — which leaves the session
+          open on the server and makes the next sign-in fail with "Active
+          session already exists". useLogout is the shared one that posts
+          /admin/logout as well as tearing down the client. */}
+      <button
+        type="button"
+        onClick={logout}
+        style={{
+          ...exitStyle,
+          marginTop: "4px",
+          width: "100%",
+          border: "none",
+          background: "transparent",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <LogOut size={16} aria-hidden="true" />
+        Sign out
+      </button>
     </nav>
     <main
       style={{
