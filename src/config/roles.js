@@ -441,10 +441,22 @@ const emailDomain = (email) => {
   return at === -1 ? "" : text.slice(at + 1);
 };
 
+/**
+ * The sign-in domain, and nothing else. It says where a person works, not
+ * what they may read: an operator whose platformAccess was revoked still
+ * signs in at @devitrak.com. Only hasPlatformAccess below answers access,
+ * and it needs the server's flag as well.
+ *
+ * Exported for the host redirect (config/consoleHosts.js), which decides an
+ * address rather than a permission.
+ */
+export const hasPlatformDomain = (user) =>
+  emailDomain(user?.email ?? user?.data?.email) === PLATFORM_EMAIL_DOMAIN;
+
 export const hasPlatformAccess = (user) =>
   !!user &&
   (user.platformAccess === true || user.data?.platformAccess === true) &&
-  emailDomain(user.email ?? user.data?.email) === PLATFORM_EMAIL_DOMAIN;
+  hasPlatformDomain(user);
 
 /**
  * The server's console answer from a login body, for the user the login
