@@ -53,7 +53,22 @@ describe("public/web.config", () => {
     it("opens the console host on the console", () => {
       const rule = text.slice(text.indexOf('<rule name="Console host root'));
       expect(rule).toContain('<match url="^$" />');
-      expect(rule).toContain('url="/platform"');
+      expect(rule).toContain(`url="https://${CONSOLE_HOST}/platform"`);
+    });
+
+    it("never redirects to a plain-http URL", () => {
+      // Measured against production on 2026-11-19: with a relative
+      // url="/platform", IIS built the Location header as
+      // http://ops.devitrak.net/platform even for an https request. The chain
+      // still ended on https (a 301 http->https sits in front, and HSTS is a
+      // year), but a first visit without HSTS cached made one cleartext hop
+      // that nobody needs. Both console rules carry the scheme themselves.
+      const actions = text.match(/<action type="Redirect"[^>]*>/g) ?? [];
+      expect(actions.length).toBeGreaterThan(0);
+      for (const action of actions) {
+        expect(action).toContain(`url="https://${CONSOLE_HOST}/`);
+        expect(action).not.toContain('url="http://');
+      }
     });
   });
 
