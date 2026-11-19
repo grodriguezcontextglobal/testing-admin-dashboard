@@ -86,15 +86,38 @@ jobs:
           # Devitrak Admin Console (/platform). Faltaba aquí, así que en toda
           # build de release la variable era undefined, el flag quedaba en false
           # y Rollup se llevaba el árbol entero: en producción no existe ni la
-          # cadena "/platform". Por defecto 'false' — esta línea es la fontanería,
-          # el interruptor es la variable del environment.
-          VITE_APP_FEATURE_PLATFORM_CONSOLE: ${{ vars.VITE_APP_FEATURE_PLATFORM_CONSOLE || 'false' }}
+          # cadena "/platform".
+          #
+          # Por defecto 'true', y no 'false', porque este repo NO TIENE NINGUNA
+          # variable de Actions: ni a nivel de repositorio ni en el environment
+          # `production`, donde lo único configurado son dos secrets
+          # (VITE_APP_DEVITRACK_API y VITE_APP_PUBLIC_STRIPE_KEY). Con el
+          # default a 'false', el flag estaba apagado y nada lo decía: la
+          # consola se quedó fuera del bundle en todos los releases y lo
+          # descubrimos midiendo el paquete publicado, no leyendo un ajuste.
+          #
+          # Encenderla por defecto no abre nada. El flag es un interruptor de
+          # apagado, no un control de acceso: quién entra lo decide el servidor
+          # con platformAccess, y la pantalla no se ve sin esa respuesta
+          # (config/roles.js, routes/authorized/PlatformGuard.jsx).
+          #
+          # Para apagarla, poner la variable a 'false' en el environment: una
+          # cadena no vacía gana al default, así que la variable sigue mandando.
+          VITE_APP_FEATURE_PLATFORM_CONSOLE: ${{ vars.VITE_APP_FEATURE_PLATFORM_CONSOLE || 'true' }}
           # Data de muestra en el console: 'true' sirve datos inventados en vez
           # de llamar a /api/platform/*, con un aviso permanente en pantalla.
           # NO abre nada: el gate del servidor sigue decidiendo quién entra
           # (featureFlags.js, PLATFORM_CONSOLE_SAMPLE_DATA vs _DEV_BYPASS).
-          # A 'false' en cuanto el backend tenga /summary y /companies.
-          VITE_APP_PLATFORM_CONSOLE_MOCK: ${{ vars.VITE_APP_PLATFORM_CONSOLE_MOCK || 'false' }}
+          #
+          # Por defecto 'true' por lo mismo de arriba, y porque hoy es la única
+          # opción que muestra algo: de los seis endpoints que llaman las
+          # pantallas, el backend solo tiene /api/platform/me
+          # (BACKEND_console_m1_answers_2026-11-19.md §1). Sin esto la consola
+          # se despliega y falla en cada pantalla.
+          #
+          # A 'false' en cuanto el backend tenga /summary y /companies. Ese día
+          # hay que cambiar ESTA línea, no solo la variable.
+          VITE_APP_PLATFORM_CONSOLE_MOCK: ${{ vars.VITE_APP_PLATFORM_CONSOLE_MOCK || 'true' }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.
