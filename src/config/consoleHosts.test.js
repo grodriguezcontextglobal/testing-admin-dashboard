@@ -160,11 +160,28 @@ describe("the redirect never decides access", () => {
     expect(text).not.toContain("shouldSendToConsole");
   });
 
-  it("a refusal on the console host leaves the host, instead of looping", () => {
-    // IIS sends "/" on the console host straight back to /platform, so a
-    // refusal that navigated to "/" would bounce on every reload.
+  it("a refusal on the console host says so, instead of navigating anywhere", () => {
+    // Measured on 2026-11-19 with a real account that correctly has no console
+    // access: the refusal was a window.location.replace to the dashboard host,
+    // where that origin has no session, so the person landed on a login screen
+    // with no explanation. "The console does not open" was the report; the gate
+    // was working perfectly.
+    //
+    // A refusal now renders a page on the console host. It cannot loop, because
+    // it does not navigate: the IIS rule that sends "/" to /platform never
+    // fires, and neither does shouldLandOnConsole.
     const text = fs.readFileSync(path.join(SRC, "routes", "authorized", "PlatformGuard.jsx"), "utf8");
     expect(text).toContain("isConsoleHost");
+    expect(text).toContain("PlatformNoAccess");
+    expect(text).not.toContain("ExternalRedirect");
+  });
+
+  it("the refusal page can end the session it is refusing", () => {
+    // Otherwise the person is held on a host they cannot use and cannot leave
+    // properly: signing out elsewhere does not reach this origin's session, and
+    // clearing storage by hand leaves it open on the server.
+    const text = fs.readFileSync(path.join(SRC, "pages", "platform", "PlatformNoAccess.jsx"), "utf8");
+    expect(text).toContain("useLogout");
     expect(text).toContain("dashboardUrl");
   });
 
