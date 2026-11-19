@@ -9,7 +9,13 @@ import {
   FEATURE_PLATFORM_CONSOLE,
   FEATURE_SUBSCRIPTION_PLANS,
 } from "../../config/featureFlags";
-import { CONSOLE_PATH, consoleUrl, shouldSendToConsole } from "../../config/consoleHosts";
+import {
+  CONSOLE_PATH,
+  consoleUrl,
+  isConsolePath,
+  shouldLandOnConsole,
+  shouldSendToConsole,
+} from "../../config/consoleHosts";
 import ExternalRedirect from "../../components/utils/ExternalRedirect";
 import DevitrakLoading from "../../components/animation/DevitrakLoading";
 import CenteringGrid from "../../styles/global/CenteringGrid";
@@ -264,28 +270,30 @@ const AssignmentDeviceMembers = lazyWithRetry(() =>
     "../../pages/conditionalPage/components/memberDetailsDashboard/innerComponents/assignmentComponents/assignment/AssignmentDevicesToMember"
   )
 );
-const isConsolePath = (pathname) =>
-  pathname === "/platform" || pathname.startsWith("/platform/");
-
 const AuthRoutes = () => {
   const navbarRef = useRef(null);
   const location = useLocation();
   const { user } = useSelector((state) => state.admin);
 
-  // An operator signs in at @devitrak.com and belongs on the console host:
-  // the client dashboard is not their screen, and ops.devitrak.net is a
-  // different origin, so its session and storage are their own.
+  const hostname = window.location.hostname;
+
+  // The console lives on its own host, so a /platform page asked for here is
+  // served from there. Only /platform: an operator is staff as well, and the
+  // rest of the dashboard is theirs to use like anyone's.
   //
   // By domain, not by access. Whether this person may READ anything is asked
-  // once, by PlatformGuard, with the server's answer; a devitrak.com account
-  // without the flag is sent there and politely sent back. See
+  // once, by PlatformGuard, with the server's answer. See
   // config/consoleHosts.js for why there is only one yes in the codebase.
-  if (FEATURE_PLATFORM_CONSOLE && shouldSendToConsole({ hostname: window.location.hostname, user })) {
-    return (
-      <ExternalRedirect
-        to={consoleUrl(isConsolePath(location.pathname) ? location.pathname : CONSOLE_PATH)}
-      />
-    );
+  if (FEATURE_PLATFORM_CONSOLE && shouldSendToConsole({ hostname, pathname: location.pathname, user })) {
+    return <ExternalRedirect to={consoleUrl(location.pathname)} />;
+  }
+
+  // The mirror image, and the half IIS cannot do: public/web.config redirects
+  // a REQUEST for "/" on the console host, but signing in ends in navigate("/")
+  // inside React Router, which makes no request. Without this, a sign-in on
+  // ops.devitrak.net landed on the customer dashboard, on the console host.
+  if (FEATURE_PLATFORM_CONSOLE && shouldLandOnConsole({ hostname, pathname: location.pathname })) {
+    return <Navigate to={CONSOLE_PATH} replace />;
   }
 
   // The Admin Console is its own page, reached from the dashboard but not
