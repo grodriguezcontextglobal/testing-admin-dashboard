@@ -174,6 +174,26 @@ describe("the redirect never decides access", () => {
     expect(text).toContain("FEATURE_PLATFORM_CONSOLE && shouldLandOnConsole");
   });
 
+  it("the console offers a way out that works on its own host", () => {
+    // The console has no dashboard navigation bar by design, so the only way
+    // out is the one it draws itself. Its link used to be href="/", which on
+    // the console host is a request IIS sends straight back to /platform: the
+    // way out led nowhere. It has to name the dashboard host.
+    const text = fs.readFileSync(path.join(SRC, "pages", "platform", "PlatformLayout.jsx"), "utf8");
+    expect(text).toContain("dashboardUrl");
+    expect(text).not.toContain('href="/"');
+  });
+
+  it("the console can end the session, server side too", () => {
+    // Without this the only way off an operator session on the console host
+    // was clearing localStorage by hand, which leaves the session open on the
+    // server: the next sign-in is refused with "Active session already
+    // exists" (hooks/useLogout.js). The shared hook is the one that posts
+    // /admin/logout.
+    const text = fs.readFileSync(path.join(SRC, "pages", "platform", "PlatformLayout.jsx"), "utf8");
+    expect(text).toContain("useLogout");
+  });
+
   it("AuthRoutes asks both questions with the current path", () => {
     // Both bugs of 2026-11-19 were a decision taken without the path: one
     // redirect that ignored it and one that could not see it. Neither may be
