@@ -113,6 +113,11 @@ describe("collecting the finished file", () => {
     // been told it was ready, and had no way to get it. It never showed in
     // production only because the server has no POST /exports yet.
     const job = exportJob({ jobId: "job_1", title: "Audit log" });
+    // The path the backend confirmed on 2026-11-20:
+    // GET /api/platform/exports/:jobId/file. It is requested on the platform
+    // client, whose base is /api/platform, so these two halves must stay in
+    // agreement -- the gate and the audit row come from being under that
+    // prefix, with no exception carved for the download.
     expect(job.download).toMatchObject({ api: "platform", path: "/exports/job_1/file" });
     expect(job.successMessage).not.toMatch(/notification/i);
   });
@@ -162,7 +167,12 @@ describe("collecting the finished file", () => {
     // again" is honest rather than a repeat of expensive work.
     expect(exportDownloadError({ response: { status: 404 } }).title).toMatch(/does not have/i);
     expect(exportDownloadError({ response: { status: 403 } }).title).toMatch(/not allowed/i);
-    expect(exportDownloadError({ response: { status: 410 } }).title).toMatch(/expired/i);
+    const gone = exportDownloadError({ response: { status: 410 } });
+    expect(gone.title).toMatch(/expired/i);
+    // The window is one hour (confirmed by the backend, 2026-11-20). Naming
+    // it is what makes re-running read as the normal next step rather than
+    // as a failure the operator caused.
+    expect(gone.description).toMatch(/one hour/i);
     const other = exportDownloadError(new Error("boom"));
     expect(other.description).toMatch(/still on the server/i);
   });

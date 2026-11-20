@@ -144,9 +144,16 @@ export const exportDownloadError = (error) => {
     };
   }
   if (status === 410) {
+    // One hour, confirmed by the backend on 2026-11-20. The window is short
+    // on purpose and the reason is worth keeping next to the message: a file
+    // of cross-client data downloaded a day later under yesterday's
+    // authorisation would be recorded under yesterday. Re-running is cheap
+    // and writes a new audit row, so every later download is its own
+    // recorded act. Saying the hour out loud is what makes re-running read
+    // as normal rather than as a failure.
     return {
       title: "This export has expired",
-      description: "Run it again to get a fresh file.",
+      description: "Exports can be downloaded for one hour. Run it again to get a fresh file.",
     };
   }
   return {
