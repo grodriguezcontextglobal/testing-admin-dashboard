@@ -191,7 +191,7 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
         (t) =>
           (!isFilter(p.type) || t.type === p.type) &&
           (!isFilter(p.company) || t.companyId === p.company) &&
-          matches(p.search, t.consumerEmail, t.companyName, t.eventName, t.id),
+          matches(p.search, t.consumerName, t.companyName, t.eventName, t.id),
       );
       return paginate(rows, p, {
         count: rows.length,
@@ -216,21 +216,10 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
       });
     }
 
-    if (parts[0] === "people" && parts.length === 1) {
-      const kind = p.kind === "consumers" ? "consumer" : "member";
-      const rows = data.people.filter(
-        (person) =>
-          person.kind === kind &&
-          (!isFilter(p.status) || person.status === p.status) &&
-          (!isFilter(p.company) || person.companyId === p.company) &&
-          matches(p.search, person.name, person.email, person.companyName, person.memberId),
-      );
-      return paginate(rows, p, {
-        total: rows.length,
-        active: countBy(rows, "status", "active"),
-        devicesOut: sum(rows, "devicesOut"),
-      });
-    }
+    // No /people route. The cross-client roster it answered was removed on
+    // 2026-11-19; members and consumers are served per company above, where
+    // the request carries a company id. A call here falls through to 404,
+    // which is what the real server will do too.
 
     if (parts[0] === "audit" && parts.length === 1) {
       const windowDays = { "7d": 7, "30d": 30, "90d": 90 }[p.range] ?? 30;

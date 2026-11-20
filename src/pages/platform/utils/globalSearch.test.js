@@ -20,18 +20,15 @@ describe("globalSearchGroups", () => {
   const devices = [
     { id: "d1", serial: "RX-000007", deviceName: "Receiver", companyId: "cmp_1", companyName: "Harbor Point Events" },
   ];
-  const people = [
-    { id: "p1", name: "Ana Ortiz", email: "ana@family.example", companyId: "cmp_1", companyName: "Harbor Point Events" },
-  ];
 
-  it("groups the three things the box says it searches", () => {
-    const groups = globalSearchGroups({ companies, devices, people });
-    expect(groups.map((g) => g.key)).toEqual(["clients", "devices", "people"]);
-    expect(groups.map((g) => g.label)).toEqual(["Clients", "Devices", "Members & consumers"]);
+  it("groups the two things the box says it searches", () => {
+    const groups = globalSearchGroups({ companies, devices });
+    expect(groups.map((g) => g.key)).toEqual(["clients", "devices"]);
+    expect(groups.map((g) => g.label)).toEqual(["Clients", "Devices"]);
   });
 
   it("sends a client to its profile", () => {
-    const [clients] = globalSearchGroups({ companies, devices: [], people: [] });
+    const [clients] = globalSearchGroups({ companies, devices: [] });
     expect(clients.items[0]).toMatchObject({
       title: "Harbor Point Events",
       subtitle: "ana@harbor.example",
@@ -42,7 +39,7 @@ describe("globalSearchGroups", () => {
   // A serial is the question "where is this device?", and the answer is the
   // client that holds it.
   it("sends a device to the client that holds it, and keeps the serial as text", () => {
-    const groups = globalSearchGroups({ companies: [], devices, people: [] });
+    const groups = globalSearchGroups({ companies: [], devices });
     const found = groups.find((g) => g.key === "devices");
     expect(found.items[0]).toMatchObject({
       title: "RX-000007",
@@ -51,18 +48,23 @@ describe("globalSearchGroups", () => {
     });
   });
 
-  it("sends a person to their client's people tab", () => {
+  it("cannot be made to search people, whatever it is handed", () => {
+    // It used to have a third group: members and consumers, by name and
+    // email, across every client, from a box on every console screen.
+    // Members are school and club rosters. People are searched inside one
+    // client's profile now -- after an operator has deliberately opened that
+    // client, so the read carries a company id and the client sees it in
+    // their own audit view. Decided by Gustavo on 2026-11-19, option B.
+    const people = [
+      { id: "p1", name: "Ana Ortiz", email: "ana@family.example", companyId: "cmp_1" },
+    ];
     const groups = globalSearchGroups({ companies: [], devices: [], people });
-    const found = groups.find((g) => g.key === "people");
-    expect(found.items[0]).toMatchObject({
-      title: "Ana Ortiz",
-      subtitle: "ana@family.example · Harbor Point Events",
-      to: "/platform/clients/cmp_1?tab=members",
-    });
+    expect(groups).toEqual([]);
+    expect(String(globalSearchGroups)).not.toContain("person");
   });
 
   it("drops a group with nothing in it rather than showing an empty heading", () => {
-    expect(globalSearchGroups({ companies, devices: [], people: [] })).toHaveLength(1);
+    expect(globalSearchGroups({ companies, devices: [] })).toHaveLength(1);
     expect(globalSearchGroups({})).toEqual([]);
   });
 

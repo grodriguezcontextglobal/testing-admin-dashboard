@@ -13,14 +13,36 @@ import {
 } from "./platformScreens";
 
 describe("PLATFORM_LIST_SCREENS", () => {
-  it("has the five cross-client list screens", () => {
+  it("has the four cross-client list screens, and no screen about people", () => {
     expect(Object.keys(PLATFORM_LIST_SCREENS).sort()).toEqual([
       "audit",
       "events",
       "inventory",
-      "people",
       "transactions",
     ]);
+  });
+
+  it("puts no personal contact detail in any cross-client list", () => {
+    // There was a "Members & consumers" screen here: members and consumers of
+    // every client, searchable by name and email, exportable. Members are
+    // school and club rosters, so it was a vendor-side index of children --
+    // the thing our own plan of 2026-11-10 ruled out in §2.4 and the backend
+    // refused to build on 2026-11-19. Removed by Gustavo's decision, option
+    // B: people are read inside one client's profile, where the request
+    // carries a company id.
+    //
+    // The second half is the one that was nearly missed. The transactions
+    // list still showed consumerEmail, with search over it: the same
+    // exposure through the screen about money rather than the screen about
+    // people. At this scope the column is the name; the address is in the
+    // client's own profile.
+    for (const [key, screen] of Object.entries(PLATFORM_LIST_SCREENS)) {
+      const columns = screen.columns.map((c) => c.key);
+      expect(columns, `${key}`).not.toContain("email");
+      expect(columns, `${key}`).not.toContain("consumerEmail");
+      expect(screen.searchPlaceholder ?? "", `${key}`).not.toMatch(/email/i);
+    }
+    expect(PLATFORM_LIST_SCREENS.transactions.columns.map((c) => c.key)).toContain("consumerName");
   });
 
   it("gives every screen a resource, filters with a default, columns and totals", () => {
@@ -38,7 +60,7 @@ describe("PLATFORM_LIST_SCREENS", () => {
   });
 
   it("links every row that names a client to that client", () => {
-    for (const key of ["inventory", "transactions", "events", "people", "audit"]) {
+    for (const key of ["inventory", "transactions", "events", "audit"]) {
       const company = PLATFORM_LIST_SCREENS[key].columns.find((c) => c.key === "companyName");
       expect(company.format).toBe("company");
     }
@@ -160,12 +182,15 @@ describe("PLATFORM_LIST_SCREENS, client scope and notices", () => {
   // Members and consumers are real people. Whoever opens this screen is told,
   // on the screen, that their search is recorded with their name (plan risk
   // "personal data exposure"; design board People).
-  it("warns on Members & consumers, and only there", () => {
-    expect(PLATFORM_LIST_SCREENS.people.notice).toMatch(/personal data/i);
-    expect(PLATFORM_LIST_SCREENS.people.notice).toMatch(/audit log/i);
-    const others = Object.entries(PLATFORM_LIST_SCREENS).filter(([key]) => key !== "people");
-    for (const [key, screen] of others) {
-      expect(screen.notice, `${key} needs no personal-data warning`).toBeUndefined();
+  it("needs no personal-data warning anywhere, because no screen shows any", () => {
+    // The warning lived on the people screen and read well: "every search,
+    // profile view and export here is written to the audit log with your
+    // name." It was the right instinct and it did not solve the problem --
+    // it tells an operator they are watched, which is a different question
+    // from whether a district's students are searchable by a vendor at all.
+    // The screen went instead of the notice.
+    for (const [key, screen] of Object.entries(PLATFORM_LIST_SCREENS)) {
+      expect(screen.notice, `${key}`).toBeUndefined();
     }
   });
 });
@@ -280,8 +305,8 @@ describe("the audit log screen", () => {
 
 describe("buildListQuery, audit scope", () => {
   it("sends the staff member and the range", () => {
-    const q = buildListQuery({ staff: "super.user1@devitrak.com", range: "30d" });
-    expect(q.staff).toBe("super.user1@devitrak.com");
+    const q = buildListQuery({ staff: "operator1@devitrak.com", range: "30d" });
+    expect(q.staff).toBe("operator1@devitrak.com");
     expect(q.range).toBe("30d");
   });
 

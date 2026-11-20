@@ -198,6 +198,9 @@ const buildCompanyDetail = (company, index, now) => {
       ...ref,
       createdAt: iso(now - rand.int(10, 60 * 24 * 95) * MINUTE),
       type,
+      // Both, because the two scopes show different ones: the cross-client
+      // list shows the name, the client's own profile shows the address.
+      consumerName: consumer?.name ?? null,
       consumerEmail: consumer?.email ?? null,
       eventName: events.length ? rand.pick(events).name : null,
       amountCents: rand.int(5, 250) * 100 * (type === "refund" ? -1 : 1),
@@ -253,7 +256,6 @@ const buildCompanyDetail = (company, index, now) => {
     chargesEnabled: company.status !== "paused",
     payoutsEnabled: company.status === "active" || company.status === "trial",
     payoutSchedule: rand.pick(["Daily", "Weekly (Monday)", "Monthly (1st)"]),
-    bankLast4: `•••• ${pad(rand.int(0, 9999), 4)}`,
     requirementsDue: company.status === "at_risk" ? ["Bank account verification"] : [],
     balanceCents: rand.int(0, 9000) * 100,
     disputesOpen: company.status === "at_risk" ? rand.int(1, 3) : 0,
@@ -302,7 +304,7 @@ const buildDevices = (company, groups, index) => {
 
 const buildAudit = (companies, now) => {
   const rand = makeRandom(77);
-  const resources = ["company.profile", "company.transactions", "company.inventory", "company.members", "company.merchant", "company.subscription", "inventory.search", "people.search"];
+  const resources = ["company.profile", "company.transactions", "company.inventory", "company.members", "company.merchant", "company.subscription", "inventory.search", "company.consumers"];
   return Array.from({ length: 320 }, (_, i) => {
     const actor = rand.pick(OPERATORS);
     const action = rand.pick(["view", "view", "view", "search", "search", "export", "signin", "access_change"]);
@@ -345,7 +347,6 @@ export const createPlatformMockData = (now = new Date()) => {
     transactions: all("transactions").sort(byNewest("createdAt")),
     events: all("events").sort(byNewest("startsAt")),
     activity: all("activity").sort(byNewest("at")),
-    people: [...all("members"), ...all("consumers")],
     audit: buildAudit(companies, nowMs),
   };
 };
