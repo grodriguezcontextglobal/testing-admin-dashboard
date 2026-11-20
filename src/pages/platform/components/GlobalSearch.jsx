@@ -8,14 +8,20 @@ import { globalSearchGroups, isSearchable } from "../utils/globalSearch";
 const PER_GROUP = 5;
 
 /**
- * One box for the whole console (design board Main): clients, serial numbers
- * and people. Three requests, not one — the server has no combined endpoint,
- * and asking each list what it knows keeps the contract the console already
- * has.
+ * One box for the whole console (design board Main): clients and serial
+ * numbers. Two requests, not one — the server has no combined endpoint, and
+ * asking each list what it knows keeps the contract the console already has.
  *
  * Every hit leads to the client that holds it. "Where is RX-000007?" is
  * really "whose is it?", and the client profile is where the rest of the
  * answer lives.
+ *
+ * It searched people too, by name and email, across every client. That is
+ * gone: members are school and club rosters, and a box on every console
+ * screen that turns a child's name into their email and their client is the
+ * one capability nobody asked for. Members and consumers are searchable
+ * inside a client's own profile, which is where a support call starts anyway.
+ * Decided by Gustavo on 2026-11-19, option B.
  */
 const GlobalSearch = () => {
   const [input, setInput] = useState("");
@@ -31,17 +37,14 @@ const GlobalSearch = () => {
   const query = { search: term, page: 1, limit: PER_GROUP };
   const companies = usePlatformCompanies(query, { enabled });
   const devices = usePlatformList("inventory", query, { enabled });
-  const people = usePlatformList("people", { ...query, kind: "members" }, { enabled });
 
   const groups = enabled
     ? globalSearchGroups({
         companies: companies.rows,
         devices: devices.rows,
-        people: people.rows,
       })
     : [];
-  const searching =
-    enabled && (companies.isFetching || devices.isFetching || people.isFetching);
+  const searching = enabled && (companies.isFetching || devices.isFetching);
   const showPanel = enabled && (searching || groups.length > 0 || input.length > 0);
 
   return (

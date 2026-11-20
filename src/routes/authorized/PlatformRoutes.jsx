@@ -50,7 +50,11 @@ const PlatformRoutes = () => (
             <Route path="inventory" element={<PlatformListPage screenKey="inventory" />} />
             <Route path="transactions" element={<PlatformListPage screenKey="transactions" />} />
             <Route path="events" element={<PlatformListPage screenKey="events" />} />
-            <Route path="people" element={<PlatformListPage screenKey="people" />} />
+            {/* No /platform/people: a cross-client roster of members and
+                consumers was removed on 2026-11-19 (platformScreens.js). An
+                old link lands on the catch-all below and goes to the
+                overview, which is the right answer for a page that no longer
+                exists in a console with no error page. */}
             <Route path="audit" element={<PlatformListPage screenKey="audit" />} />
             {/* Anything else under /platform is a typo, not an error page in
                 the client app's chrome. */}

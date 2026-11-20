@@ -27,10 +27,10 @@ describe("buildExportRequest", () => {
 
   it("keeps every other filter, including a company scope", () => {
     const body = buildExportRequest({
-      resource: "people",
-      query: { kind: "members", company: "cmp_001", page: 1, limit: 25 },
+      resource: "inventory",
+      query: { status: "lost", company: "cmp_001", page: 1, limit: 25 },
     });
-    expect(body.filters).toEqual({ kind: "members", company: "cmp_001" });
+    expect(body.filters).toEqual({ status: "lost", company: "cmp_001" });
   });
 
   it("leaves out empty values instead of sending them", () => {

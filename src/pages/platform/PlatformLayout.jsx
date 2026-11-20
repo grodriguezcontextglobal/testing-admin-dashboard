@@ -9,7 +9,6 @@ import {
   Receipt,
   LogOut,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 import { devitrakApiPlatform } from "../../api/devitrakApi";
 import { dashboardUrl } from "../../config/consoleHosts";
@@ -32,7 +31,8 @@ const SECTIONS = [
   { to: "inventory", label: "Inventory", Icon: Boxes },
   { to: "transactions", label: "Transactions", Icon: Receipt },
   { to: "events", label: "Events", Icon: CalendarDays },
-  { to: "people", label: "Members & consumers", Icon: Users },
+  // No "Members & consumers" entry: people are reached through the client
+  // that holds them, not from a console-wide roster (platformScreens.js).
 ];
 
 const linkStyle = ({ isActive }) => ({

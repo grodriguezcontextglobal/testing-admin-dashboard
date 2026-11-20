@@ -5,7 +5,9 @@ import { retryPlatformQuery } from "../../pages/platform/utils/platformQuery";
 
 /**
  * A cross-client console list: GET /api/platform/<resource>?<query>
- * (inventory, transactions, events, people, audit, activity, attention; plan B3).
+ * (inventory, transactions, events, audit, activity, attention; plan B3).
+ * Not people: members and consumers are read per company, through
+ * usePlatformClientSection, so every read of a person carries a company id.
  * `rows` is always an array and `totals` an object or null.
  */
 export const usePlatformList = (resource, query = {}, { enabled = true } = {}) => {

@@ -66,7 +66,13 @@ export const PLATFORM_LIST_SCREENS = {
     columns: [
       { key: "createdAt", title: "Date", format: "datetime" },
       company,
-      { key: "consumerEmail", title: "Consumer", format: "text" },
+      // The name, not the email. This list is cross-client, and a consumer's
+      // email address in a cross-client list is the same exposure the people
+      // screen was removed for, arriving by the door marked money instead of
+      // the one marked people -- which is exactly why it was easy to miss.
+      // The full address is still on the transaction inside that client's own
+      // profile (clientProfile.js), where the read carries a company id.
+      { key: "consumerName", title: "Consumer", format: "text" },
       { key: "eventName", title: "Event", format: "text" },
       { key: "type", title: "Type", format: "status" },
       { key: "amountCents", title: "Amount", format: "cents", align: "right" },
@@ -109,37 +115,24 @@ export const PLATFORM_LIST_SCREENS = {
       { key: "revenueCents", label: "Revenue", format: "cents" },
     ],
   },
-  people: {
-    title: "Members & consumers",
-    resource: "people",
-    companyFilter: true,
-    description: "Members (school and club rosters) and consumers (event attendees) of every client.",
-    // Real people. Whoever opens this screen is told, on the screen, that
-    // the server records the visit with their name (plan risk "personal
-    // data exposure", AU-2; design board People).
-    notice:
-      "This page shows personal data. Every search, profile view and export here is written to the audit log with your name.",
-    filterParam: "kind",
-    defaultFilter: "members",
-    filters: [
-      { key: "members", label: "Members" },
-      { key: "consumers", label: "Consumers" },
-    ],
-    searchPlaceholder: "Search name, email, member ID or client",
-    columns: [
-      { key: "name", title: "Name", format: "text" },
-      { key: "email", title: "Email", format: "text" },
-      company,
-      { key: "status", title: "Status", format: "status" },
-      { key: "devicesOut", title: "Devices out", format: "number", align: "right" },
-      { key: "lastSeenAt", title: "Last seen", format: "relative" },
-    ],
-    totals: [
-      { key: "total", label: "People", format: "number" },
-      { key: "active", label: "Active", format: "number" },
-      { key: "devicesOut", label: "Devices out", format: "number" },
-    ],
-  },
+  // There is deliberately no cross-client "people" screen.
+  //
+  // It existed here: members and consumers of every client, searchable by name
+  // and email, with an export. Members are school and club rosters, so that is
+  // a vendor-side, cross-client, exportable index of children by name and
+  // email -- the thing our own plan of 2026-11-10 ruled out in §2.4, and the
+  // backend refused to build on 2026-11-19 after reading this file.
+  //
+  // The notice we put on it ("every search here is written to the audit log
+  // with your name") was the right instinct and did not solve it: it tells an
+  // operator they are watched, which is a different question from whether a
+  // district's students are searchable by a vendor at all.
+  //
+  // Members and consumers remain where the support case actually starts --
+  // inside one client's profile, after an operator has deliberately opened
+  // that client (clientProfile.js). Every read there carries a company id, so
+  // the client can see it in their own audit view. Decided by Gustavo on
+  // 2026-11-19, option B.
   audit: {
     title: "Audit log",
     resource: "audit",
