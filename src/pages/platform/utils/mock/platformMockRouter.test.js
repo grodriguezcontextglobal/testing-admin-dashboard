@@ -20,8 +20,10 @@ describe("createPlatformMockData", () => {
   });
 
   it("uses only example contact addresses, never real domains", () => {
-    const { companies, people } = createPlatformMockData(NOW);
+    const { companies, details } = createPlatformMockData(NOW);
     for (const c of companies) expect(c.ownerEmail).toMatch(/@[a-z0-9-]+\.example$/);
+    const people = Object.values(details).flatMap((d) => [...d.members, ...d.consumers]);
+    expect(people.length).toBeGreaterThan(0);
     for (const p of people.slice(0, 50)) expect(p.email).toMatch(/\.example$/);
   });
 
@@ -108,11 +110,26 @@ describe("createPlatformMockRouter", () => {
     expect(get("/inventory").data.totals.total).toBeGreaterThan(0);
   });
 
-  it("splits people into members and consumers", () => {
-    const members = get("/people", { kind: "members", limit: 50 }).data.data;
+  it("serves members and consumers only under a company, never across clients", () => {
+    // /people answered a cross-client roster by name and email. It is gone,
+    // and the mock has to refuse it the way the real server will -- a mock
+    // that keeps answering a route nobody will build is how a removed screen
+    // comes back. Decided by Gustavo on 2026-11-19, option B.
+    expect(get("/people", { kind: "members" }).status).toBe(404);
+    const company = get("/companies", { limit: 1 }).data.data[0];
+    const members = get(`/companies/${company.id}/members`, { limit: 50 }).data.data;
+    expect(members.length).toBeGreaterThan(0);
     expect(members.every((p) => p.kind === "member")).toBe(true);
-    const consumers = get("/people", { kind: "consumers", limit: 50 }).data.data;
+    const consumers = get(`/companies/${company.id}/consumers`, { limit: 50 }).data.data;
     expect(consumers.every((p) => p.kind === "consumer")).toBe(true);
+  });
+
+  it("searches transactions by consumer name, never by their address", () => {
+    const rows = get("/transactions", { limit: 5 }).data.data;
+    const row = rows.find((t) => t.consumerName && t.consumerEmail);
+    expect(get("/transactions", { search: row.consumerName, limit: 100 }).data.data.length)
+      .toBeGreaterThan(0);
+    expect(get("/transactions", { search: row.consumerEmail, limit: 100 }).data.data).toEqual([]);
   });
 
   it("finds a device by serial across every client", () => {
@@ -159,7 +176,7 @@ describe("createPlatformMockRouter, plan and client scope", () => {
 
   it("narrows every cross-client list to one client", () => {
     const company = get("/companies", { limit: 1 }).data.data[0];
-    for (const resource of ["inventory", "transactions", "events", "people", "audit"]) {
+    for (const resource of ["inventory", "transactions", "events", "audit"]) {
       const rows = get(`/${resource}`, { company: company.id, limit: 100 }).data.data;
       expect(rows.length, `${resource} has rows for one client`).toBeGreaterThan(0);
       expect(

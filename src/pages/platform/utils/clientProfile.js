@@ -116,7 +116,12 @@ export const RECORD_FIELDS = {
     { key: "chargesEnabled", label: "Charges enabled", format: "bool" },
     { key: "payoutsEnabled", label: "Payouts enabled", format: "bool" },
     { key: "payoutSchedule", label: "Payout schedule", format: "text" },
-    { key: "bankLast4", label: "Bank account", format: "text" },
+    // No bankLast4. The support question this tab exists for is "why has this
+    // client not been paid out", and payoutsEnabled plus requirementsDue
+    // answer it better than the last four digits of their bank account do.
+    // Those digits answer nothing here and turn a support screen into
+    // something worth photographing. Dropped on 2026-11-19 at the backend's
+    // request, agreed by Gustavo.
     { key: "requirementsDue", label: "Requirements due", format: "list" },
     { key: "balanceCents", label: "Balance", format: "cents" },
     { key: "disputesOpen", label: "Open disputes", format: "number" },
