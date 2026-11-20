@@ -164,15 +164,41 @@ start an export, be told it is ready, and have no way to get the file.
 So your worry — a plain URL reachable by anyone holding it — is not yet true on our side,
 and the cleanest moment to prevent it is now, before either of us builds the download:
 
-**Our proposal: the finished job carries no URL.** It carries the job id it already has, and
-the file is fetched with an authenticated request that passes the console gate and writes
-its own audit row — "operator X downloaded export Y", separate from the row you write when
-they ask for it. We already hold a session-bearing client (`devitrakApi`) in the component
-that would make the call, so this costs us a fetch and a blob, not an architecture.
+**Our half is now built, so this is a smaller ask than it was an hour ago.**
 
-Tell us the route and we will build the download against it. If you would rather issue a
-short-lived signed URL, that also works for us, but then we would want the expiry and
-whether a second use is allowed, so the UI can say something true when it has gone stale.
+The finished job carries no URL. It carries the job id it already has, and the file is
+fetched with an authenticated `GET` on the console's own client — the same client, and
+therefore the same gate, that was allowed to produce it. The completion notification now
+has a **Download** button that makes that request, and stays on screen until it is
+clicked rather than timing out while the operator is looking elsewhere. A failed download
+says the export is still on the server and can be retried, which is the opposite of what
+we say when the export itself failed.
+
+What we need from you is one line:
+
+```
+GET /api/platform/exports/:jobId/file
+```
+
+That is our proposal and it lives in a single constant on our side
+(`platformExports.js`, `EXPORT_DOWNLOAD_PATH`), so if you want a different path or a
+different shape, your answer is a one-line change here and nothing else. Until the route
+exists the request 404s and the notification says *"the server does not have this yet"* —
+the same honest degradation `POST /exports` already has.
+
+Two things we would like the route to do, both of them yours to decide:
+
+- **write its own audit row.** The row you write at request time records who asked for
+  what; a second row at download time records who actually took the file, which is the
+  one an assessor asks about.
+- **expire.** We already render a distinct message for `410`, so if the file goes stale
+  after some window, say which, and the UI will tell the truth about it instead of showing
+  a generic failure.
+
+If you would rather issue a short-lived signed URL after all, that still works for us, but
+then we would want the expiry and whether a second use is allowed — and we would point out
+that a URL is a file reachable by anyone holding the string, from a session that never
+passed your gate, which is the thing you raised in the first place.
 
 ---
 
@@ -186,10 +212,10 @@ whether a second use is allowed, so the UI can say something true when it has go
 | `merchant` | §3 + the join | **unblocked on §3** (no `bankLast4`); still the join |
 | `inventory`, `transactions`, `subscription` | the join | unchanged — and see §6 on its priority |
 | `people`, `members`, `consumers` | §1 | **`people` deleted.** `members`/`consumers` are per-client only |
-| exports | §7 | our half is missing; §7 is a proposal, waiting on your route |
+| exports | §7 | **our half is built.** Waiting only on the route, or your alternative |
 
-**What we still owe you:** the merchant tab's own error state, and the download once you name
-the route. **What we are waiting on:** the cookie scope question from §6.3 of our DC3 answers,
+**What we still owe you:** the merchant tab's own error state. **What we are waiting on:** the
+route in §7, and the cookie scope question from §6.3 of our DC3 answers,
 which has become more urgent — the console is a second origin, and a session on one host is
 invisible to the other, which cost a real operator an afternoon this week.
 
