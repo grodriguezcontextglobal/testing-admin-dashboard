@@ -33,6 +33,7 @@ Where it applies:
 | Overview "Revenue by client" | **the section is not rendered at all** |
 | Cross-client transactions | no **Amount** column, no Volume or Refunds totals |
 | A client's transactions tab | same |
+| A client's stat tiles | no **Revenue 30d** tile (and no **Overdue** tile — §3) |
 
 Two details you may want to know, because they are about your `null` and not about ours:
 
@@ -83,18 +84,32 @@ being lost. Flagging it only so the choice is on the record rather than incident
 
 ---
 
-## 3. §6.3, what comes next — `devicesOverdue`, and we would say it more strongly
+## 3. §6.3, what comes next — **`/companies/:id`**, and we have removed the reason you would have argued back
 
-**Agreed, and your reason is the right one.** We will add ours, because it is concrete:
+**Gustavo's call: the client profile first.** Build `/companies/:id`.
 
-Our clients screen already has an **Overdue** stat tile whose tone turns critical above
-zero (`clientProfile.js`, `companyStatTiles`). With `devicesOverdue: null` it can never go
-red. So today the console has a red-capable indicator that is physically incapable of
-turning red, which is worse than one that does not exist: a reader learns to trust it.
+We owe you the full picture, because our first instinct matched yours. The argument for
+`devicesOverdue` was real: our clients screen has an **Overdue** stat tile whose tone turns
+critical above zero (`clientProfile.js`, `companyStatTiles`), and with `devicesOverdue:
+null` it can never go red — a red-capable indicator physically incapable of turning red,
+which is worse than one that does not exist, because a reader learns to trust it.
 
-`devicesOverdue` unlocks three things at once — the `at_risk` pill, that tile, and one of
-the two `attention` conditions you are building. `/companies/:id` unlocks one screen, and
-a screen that is missing is at least honest about being missing.
+**So we removed that objection rather than carry it.** The tile is no longer rendered while
+the figure is null, by the same data-driven rule as the money columns in §1, and it returns
+on its own the day you send the number. The same now applies to the profile's **Revenue
+30d** tile, which we had missed in our first pass at §1 — that page builds its tiles
+separately from the tables, so it was still showing a dash where every other screen had
+stopped.
+
+That leaves the decision clean: the profile unlocks a whole screen now, and the pill and
+the `attention` conditions wait for `devicesOverdue` without anything on screen pretending
+otherwise in the meantime.
+
+**One consequence worth stating plainly**, since it is now a known gap rather than a
+surprise: until `devicesOverdue` lands, a client can only be `at_risk` through its
+subscription status, never through overdue devices — your §3 said so and we are repeating
+it here because it is the thing most likely to be misread on the first day the profile is
+live. Nobody should conclude from a quiet console that the devices are all back.
 
 ---
 
