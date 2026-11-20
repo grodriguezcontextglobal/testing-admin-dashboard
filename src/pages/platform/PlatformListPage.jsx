@@ -19,6 +19,7 @@ import {
   PLATFORM_LIST_SCREENS,
   buildListQuery,
   screenTotalsTiles,
+  withReportedMoney,
 } from "./utils/platformScreens";
 
 const PAGE_SIZE = 25;
@@ -150,7 +151,7 @@ const PlatformListPage = ({ screenKey }) => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <BaseTable
-            columns={toTableColumns(screen.columns)}
+            columns={toTableColumns(withReportedMoney(screen.columns, list.rows))}
             dataSource={list.rows}
             rowKey={(row) => row.id ?? JSON.stringify(row)}
             loading={list.isLoading || list.isFetching}

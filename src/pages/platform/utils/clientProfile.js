@@ -258,7 +258,28 @@ export const companyFactGroups = (company) => {
   ];
 };
 
-/** Stat tiles above the tabs. Only Overdue may be critical (one at most). */
+/**
+ * Stat tiles above the tabs. Only Overdue may be critical (one at most).
+ *
+ * A tile whose figure the server does not report is left out rather than
+ * shown as a dash. This row is four tiles wide and reads as a summary, so a
+ * dash here is not an absence anyone notices -- it is a number people will
+ * take for zero.
+ *
+ * Two of them are unreported today, for different reasons:
+ *
+ * - Revenue, because no transaction model stores an amount; the money is in
+ *   Stripe and nowhere else (backend note of 2026-11-20, §2). Same decision
+ *   as every other money column in the console.
+ * - Overdue, because `devicesOverdue` comes from the device-lease views and
+ *   that query is not wired yet. This one matters more than a missing figure
+ *   would suggest: the tile turns critical above zero, so while the value is
+ *   null the console shows a red-capable indicator that is physically
+ *   incapable of turning red. A reader learns to trust it, and it cannot
+ *   earn that. Better absent than quietly reassuring.
+ *
+ * Driven by the data, so each returns on its own the day the server sends it.
+ */
 export const companyStatTiles = (company) => {
   const c = company ?? {};
   const overdue = Number(c.devicesOverdue);
@@ -276,16 +297,18 @@ export const companyStatTiles = (company) => {
       tone: overdue > 0 ? "critical" : "neutral",
       sub: overdue > 0 ? "Past their return date" : null,
       testId: "platform-stat-overdue",
+      reported: !isEmpty(c.devicesOverdue),
     },
     {
       label: "Revenue 30d",
       value: formatSectionValue("cents", c.revenue30dCents, c),
       testId: "platform-stat-revenue",
+      reported: !isEmpty(c.revenue30dCents),
     },
     {
       label: "Staff",
       value: formatSectionValue("number", c.staffCount),
       testId: "platform-stat-staff",
     },
-  ];
+  ].filter((tile) => tile.reported !== false);
 };
