@@ -1,6 +1,12 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import {
+  EXPORT_DOWNLOAD_PATH,
   buildExportRequest,
+  exportDownloadError,
+  exportFilename,
   exportJob,
   exportStartError,
   readExportJobId,
@@ -96,5 +102,68 @@ describe("exportStartError", () => {
     const notice = exportStartError(new Error("boom"));
     expect(notice.title).toMatch(/could not start/i);
     expect(notice.description).toMatch(/nothing was exported/i);
+  });
+});
+
+describe("collecting the finished file", () => {
+  it("gives the job a way to be collected, on the console's own client", () => {
+    // The whole of §7. The tracker read no link, opened no window and built
+    // no anchor, while this very message told the operator to "open it from
+    // the job notification". An operator would have asked for an export,
+    // been told it was ready, and had no way to get it. It never showed in
+    // production only because the server has no POST /exports yet.
+    const job = exportJob({ jobId: "job_1", title: "Audit log" });
+    expect(job.download).toMatchObject({ api: "platform", path: "/exports/job_1/file" });
+    expect(job.successMessage).not.toMatch(/notification/i);
+  });
+
+  it("promises nothing the notification cannot do", () => {
+    // The message and the button travel together: if a descriptor ever says
+    // the file is ready without carrying a way to fetch it, that is the old
+    // bug back.
+    const job = exportJob({ jobId: "job_1", title: "Audit log" });
+    expect(job.successMessage).toMatch(/ready/i);
+    expect(job.download.path).toBeTruthy();
+  });
+
+  it("fetches through the gate instead of handing out a url", () => {
+    // A link in a notification is a file anyone holding the string can
+    // fetch, from a session that never passed the console gate and that
+    // leaves no row in platform_audit_log. The path is relative and is
+    // requested on the platform client, so the gate runs again.
+    expect(EXPORT_DOWNLOAD_PATH("job_1")).not.toMatch(/^https?:/);
+    expect(EXPORT_DOWNLOAD_PATH("a/b")).toBe("/exports/a%2Fb/file");
+    const tracker = fs.readFileSync(
+      path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        "../../../components/backgroundJobs/BackgroundJobsTracker.jsx",
+      ),
+      "utf8",
+    );
+    expect(tracker).toContain("responseType");
+    expect(tracker).not.toContain("window.open");
+  });
+
+  it("lets the server name the file, and dates its own fallback", () => {
+    expect(
+      exportFilename({ "content-disposition": 'attachment; filename="audit-2026-11-20.csv"' }),
+    ).toBe("audit-2026-11-20.csv");
+    expect(exportFilename({}, { title: "Audit log", at: new Date("2026-11-20T10:00:00Z") })).toBe(
+      "devitrak-audit-log-2026-11-20.csv",
+    );
+    expect(exportFilename(undefined, { title: "", at: new Date("2026-11-20T10:00:00Z") })).toBe(
+      "devitrak-export-2026-11-20.csv",
+    );
+  });
+
+  it("says the export survived when only the download failed", () => {
+    // Opposite meanings: exportStartError means nothing was exported, this
+    // one means the file exists and only collecting it failed -- so "try
+    // again" is honest rather than a repeat of expensive work.
+    expect(exportDownloadError({ response: { status: 404 } }).title).toMatch(/does not have/i);
+    expect(exportDownloadError({ response: { status: 403 } }).title).toMatch(/not allowed/i);
+    expect(exportDownloadError({ response: { status: 410 } }).title).toMatch(/expired/i);
+    const other = exportDownloadError(new Error("boom"));
+    expect(other.description).toMatch(/still on the server/i);
   });
 });
