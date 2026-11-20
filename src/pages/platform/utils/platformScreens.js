@@ -171,7 +171,7 @@ export const PLATFORM_LIST_SCREENS = {
     // counts: who is using the console, how much they are reading, how much
     // is leaving it, and whether anyone is failing to get in.
     totals: [
-      { key: "activeSuperUsers", label: "Super users active today", format: "text" },
+      { key: "activeOperators", label: "Operators active today", format: "text" },
       { key: "profilesOpenedToday", label: "Client profiles opened today", format: "number" },
       { key: "exportsThisWeek", label: "Exports this week", format: "number" },
       { key: "failedSignIns", label: "Failed sign-ins (7 days)", format: "number", critical: true },
@@ -180,7 +180,17 @@ export const PLATFORM_LIST_SCREENS = {
     dateRange: true,
     notes: [
       "Entries are written by the server and cannot be edited or deleted, by anyone. Each client's entries are kept while the client is active and for 120 days after the account closes. Exporting this log is itself recorded.",
-      "Who can use this console: the super users of the Context Global company, signing in with their @devitrak.com address. A @devitrak.com account without super user is denied.",
+      // This sentence describes a control, on the screen an assessor is shown,
+      // so it has to be the control the server actually runs: active ->
+      // platform_observer -> domain -> allowlist -> mfaEnabled. It used to say
+      // the gate was the Context Global super users. It never has been, and
+      // the exclusion is deliberate: the owner of every client company has
+      // super_user: true in their own company, so admitting that flag would
+      // open a cross-client console to clients. Described one way and
+      // implemented another is a finding even when, as here, the
+      // implementation is the stricter of the two. Caught by the backend on
+      // 2026-11-19, reading our code before writing their routes.
+      "Who can use this console: Devitrak operators on a closed list, each signing in with an @devitrak.com address, the platform_observer flag and MFA enabled. Any one of those missing is a denial, and the denial is recorded with its reason.",
     ],
   },
 };

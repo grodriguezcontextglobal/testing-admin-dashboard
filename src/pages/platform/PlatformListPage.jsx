@@ -112,7 +112,7 @@ const PlatformListPage = ({ screenKey }) => {
                 value={staff}
                 disabled={!list.filters?.staff?.length}
                 options={[
-                  { value: "all", label: "All super users" },
+                  { value: "all", label: "All operators" },
                   ...(list.filters?.staff ?? []),
                 ]}
                 onChange={(next) => {

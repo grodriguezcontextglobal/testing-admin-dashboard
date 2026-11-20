@@ -49,9 +49,9 @@ const DEVICES = [
 ];
 const LOCATIONS = ["Main warehouse", "North dock", "Room 114", "Box office", "Van 2", "Storage B"];
 const EVENT_WORDS = ["Spring Gala", "Open House", "Annual Summit", "Field Trip", "Expo Day", "Championship", "Career Fair", "Night Tour", "Graduation", "Workshop Series"];
-const SUPER_USERS = [1, 2, 3, 4].map((n) => ({
-  name: `Super user ${n}`,
-  email: `super.user${n}@devitrak.com`,
+const OPERATORS = [1, 2, 3, 4].map((n) => ({
+  name: `Operator ${n}`,
+  email: `operator${n}@devitrak.com`,
 }));
 
 const slug = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -304,7 +304,7 @@ const buildAudit = (companies, now) => {
   const rand = makeRandom(77);
   const resources = ["company.profile", "company.transactions", "company.inventory", "company.members", "company.merchant", "company.subscription", "inventory.search", "people.search"];
   return Array.from({ length: 320 }, (_, i) => {
-    const actor = rand.pick(SUPER_USERS);
+    const actor = rand.pick(OPERATORS);
     const action = rand.pick(["view", "view", "view", "search", "search", "export", "signin", "access_change"]);
     const company = action === "signin" || action === "access_change" ? null : rand.pick(companies);
     return {
