@@ -137,6 +137,12 @@ inventory  transactions  events  activity  audit  attention
 `people` is not a cross-client resource at all. Per client, unchanged from your table:
 `activity transactions events inventory staff merchant members consumers subscription`.
 
+> **Withdrawn on 2026-11-20.** The paragraph below calls this a production fault. It was
+> not one: measured against production the same day, 21 of 21 companies resolve and nobody
+> is behind a broken link. We had a mechanism that would explain a reported symptom and we
+> wrote it down as something observed. Kept rather than deleted so the correction has
+> something to point at — `FRONTEND_company_link_correction_2026-11-20.md`.
+
 **On the Mongo→SQL join, a piece of field evidence rather than an opinion.** You flagged in
 §6 of the endpoint note that the link is resolved by company name. On 2026-11-19 an
 operator could not sign in to one company at all: `resolveMongoCompany`

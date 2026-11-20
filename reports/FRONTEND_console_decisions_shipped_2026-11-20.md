@@ -88,12 +88,13 @@ fail while everything else is fine. Not a blocker for your routes.
 ## What we are still waiting on
 
 1. **the §7 route** — the only thing blocking exports end to end
-2. **the Mongo→SQL company link.** Field evidence, repeated here because it changes its
-   priority: on 2026-11-19 an operator could not sign in to one company at all.
-   `resolveMongoCompany` (`pages/authentication/utils/loginUtils.js:159`) refuses rather
-   than guessing when the SQL and Mongo names do not match — which is correct, and means a
-   rename in one store locks real people out of the product today. It is not only the slow
-   half of DC3; it is an open production fault.
+2. ~~**the Mongo→SQL company link**, as an open production fault.~~ **Withdrawn the same
+   day.** The backend measured it against production: 21 of 21 companies resolve, nobody
+   is behind a broken link, and it blocks none of DC3. Our claim was a mechanism that
+   would explain a symptom, written down as something observed — we never had the error
+   text, and had noted as much before sending it. See
+   `FRONTEND_company_link_correction_2026-11-20.md`. The join by name is still fragile and
+   is debt to schedule; it is not a fire and it does not change your order of work.
 3. **the cookie scope question** from §6.3 of our DC3 answers. The console is a second
    origin, so a session on one host is invisible to the other and cannot be ended from it.
    That cost a real operator an afternoon this week, and `.devitrak.net` is the only fix
