@@ -122,7 +122,7 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
     const p = params ?? {};
 
     if (parts[0] === "me" && parts.length === 1) {
-      return ok({ data: { platformAccess: true, name: "Super user 1", email: "super.user1@devitrak.com" } });
+      return ok({ data: { platformAccess: true, name: "Operator 1", email: "operator1@devitrak.com" } });
     }
 
     if (parts[0] === "summary" && parts.length === 1) {
@@ -252,7 +252,7 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
       const staffToday = new Set(today.map((e) => e.actorEmail));
       const staffEver = new Set(data.audit.map((e) => e.actorEmail));
       const answer = paginate(rows, p, {
-        activeSuperUsers: `${staffToday.size} of ${staffEver.size}`,
+        activeOperators: `${staffToday.size} of ${staffEver.size}`,
         profilesOpenedToday: today.filter((e) => e.action === "view" && e.companyId).length,
         exportsThisWeek: countBy(week, "action", "export"),
         failedSignIns: week.filter((e) => e.action === "signin" && e.result === "denied").length,

@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import {
   AUDIT_RANGES,
@@ -211,7 +214,7 @@ describe("the audit log screen", () => {
 
   it("counts oversight, not rows", () => {
     expect(audit.totals.map((t) => t.key)).toEqual([
-      "activeSuperUsers",
+      "activeOperators",
       "profilesOpenedToday",
       "exportsThisWeek",
       "failedSignIns",
@@ -224,6 +227,44 @@ describe("the audit log screen", () => {
     expect(audit.notes[0]).toMatch(/cannot be edited or deleted/i);
     expect(audit.notes[0]).toMatch(/120 days/);
     expect(audit.notes[1]).toMatch(/@devitrak\.com/);
+  });
+
+  it("names the gate the server actually runs, not a flag it ignores", () => {
+    // The server's gate is active -> platform_observer -> domain -> allowlist
+    // -> mfaEnabled (helpers/platformAccess.js). This note used to say the
+    // console was for "the super users of the Context Global company", which
+    // is a flag the gate never reads and deliberately excludes: every client
+    // company's owner has super_user: true in their own company. Found by the
+    // backend on 2026-11-19 while reading our code.
+    //
+    // It is a sentence about a control, printed on the screen an assessor is
+    // shown, so it has to match the implementation -- being stricter than the
+    // description is still a mismatch.
+    expect(audit.notes[1]).toMatch(/platform_observer/);
+    expect(audit.notes[1]).toMatch(/MFA/);
+    expect(audit.notes[1]).toMatch(/denial/i);
+  });
+
+  it("counts operators from the log, and never calls them super users", () => {
+    // Two different mistakes, one word. The tile was already derived the right
+    // way -- distinct actorEmail in the console's own audit rows, never a flag
+    // -- so only the name was wrong. The ban is blanket on purpose: "super
+    // user" means something else in this product, and on this screen the
+    // reader is an assessor who cannot know we meant it loosely.
+    const copy = [...audit.notes, ...audit.totals.map((t) => t.label)].join(" ");
+    expect(copy).not.toMatch(/super.?users?/i);
+    expect(audit.totals[0].key).toBe("activeOperators");
+  });
+
+  it("the console's own screens never say super user either", () => {
+    // The note was one of three places. The staff filter said "All super
+    // users" and the mock answered an activeSuperUsers key, so a reader got
+    // the wrong word from the copy, the filter and the data.
+    const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+    for (const file of ["PlatformListPage.jsx", "utils/mock/platformMockRouter.js"]) {
+      const text = fs.readFileSync(path.join(dir, file), "utf8");
+      expect(text, file).not.toMatch(/super.?users?/i);
+    }
   });
 
   it("filters by staff member and by date range, and only here", () => {
