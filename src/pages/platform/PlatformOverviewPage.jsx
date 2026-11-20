@@ -17,7 +17,7 @@ import RevenueByClient from "./components/RevenueByClient";
 import PlatformRequestError from "./components/PlatformRequestError";
 import { toTableColumns } from "./components/platformColumns";
 import { formatSectionValue, sectionStatusTone } from "./utils/clientProfile";
-import { overviewTiles, revenueByClient } from "./utils/platformScreens";
+import { overviewTiles, revenueByClient, revenueUnavailable } from "./utils/platformScreens";
 
 const RANGES = [
   { key: "7d", label: "7 days" },
@@ -122,25 +122,38 @@ const PlatformOverviewPage = () => {
         )}
       </ProfileSection>
 
-      <ProfileSection
-        title="Revenue by client"
-        description={`The six clients that brought in the most in the last ${
-          { "7d": "7 days", "30d": "30 days", "90d": "90 days" }[range]
-        }.`}
-        testId="platform-overview-revenue"
-      >
-        {summary.isError ? (
-          <PlatformRequestError error={summary.error} path="/summary" onRetry={() => summary.refetch()} />
-        ) : summary.isLoading ? (
-          <div style={{ padding: "0 20px 20px" }}>
-            <ProfileSkeleton lines={6} />
-          </div>
-        ) : revenueRows.length === 0 ? (
-          <EmptyState compact title="No revenue yet" description="Nothing was charged in this period." />
-        ) : (
-          <RevenueByClient rows={revenueRows} />
-        )}
-      </ProfileSection>
+      {/* Revenue by client is not rendered at all while the server has no
+          amounts to report. Neither transaction model stores one -- the money
+          is in Stripe and nowhere else -- so every figure would arrive null
+          (backend note of 2026-11-20, §2), and a section headed "the six
+          clients that brought in the most" with nothing under it reads as a
+          product that is broken rather than as one waiting on a data source.
+          Gustavo's decision, 2026-11-20: leave the money out until there is a
+          real source for it. The section returns on its own the day the
+          server sends a number, because the condition is the data and not a
+          flag. A loading summary keeps the section, so it does not appear to
+          pop into existence once the request lands. */}
+      {(summary.isLoading || summary.isError || !revenueUnavailable(summary.summary)) && (
+        <ProfileSection
+          title="Revenue by client"
+          description={`The six clients that brought in the most in the last ${
+            { "7d": "7 days", "30d": "30 days", "90d": "90 days" }[range]
+          }.`}
+          testId="platform-overview-revenue"
+        >
+          {summary.isError ? (
+            <PlatformRequestError error={summary.error} path="/summary" onRetry={() => summary.refetch()} />
+          ) : summary.isLoading ? (
+            <div style={{ padding: "0 20px 20px" }}>
+              <ProfileSkeleton lines={6} />
+            </div>
+          ) : revenueRows.length === 0 ? (
+            <EmptyState compact title="No revenue yet" description="Nothing was charged in this period." />
+          ) : (
+            <RevenueByClient rows={revenueRows} />
+          )}
+        </ProfileSection>
+      )}
 
       <ProfileSection
         title="Latest transactions"

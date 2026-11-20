@@ -9,6 +9,9 @@ import {
   formatDelta,
   overviewTiles,
   revenueByClient,
+  revenueUnavailable,
+  withReportedMoney,
+  withReportedMoneyTiles,
   screenTotalsTiles,
 } from "./platformScreens";
 
@@ -319,5 +322,94 @@ describe("AUDIT_RANGES", () => {
   it("offers the three windows the board shows, newest first", () => {
     expect(AUDIT_RANGES.map((r) => r.value)).toEqual(["7d", "30d", "90d"]);
     expect(AUDIT_RANGES[0].label).toBe("Last 7 days");
+  });
+});
+
+describe("an unknown amount is not an amount of zero", () => {
+  // The amounts live in Stripe and not in our database, so until that is
+  // resolved every money field arrives null (backend note of 2026-11-20, §2).
+  // With topClientsByRevenue empty, the revenue section used to say "No
+  // revenue yet -- nothing was charged in this period". That is a statement
+  // of fact nobody had: the server was not reporting zero, it was not
+  // reporting at all.
+  it("tells a server that does not know from a period that earned nothing", () => {
+    expect(revenueUnavailable({ current: { revenueCents: null } })).toBe(true);
+    expect(revenueUnavailable({ current: {} })).toBe(true);
+    expect(revenueUnavailable({})).toBe(true);
+    expect(revenueUnavailable(null)).toBe(true);
+    // A real zero is an answer, and gets the sentence that says so.
+    expect(revenueUnavailable({ current: { revenueCents: 0 } })).toBe(false);
+    expect(revenueUnavailable({ current: { revenueCents: 125000 } })).toBe(false);
+  });
+
+  it("the revenue section is not rendered while nothing can fill it", () => {
+    // Gustavo's decision, 2026-11-20: leave the money out until there is a
+    // real source, rather than show a section of dashes. A heading that
+    // promises "the six clients that brought in the most" over an empty box
+    // reads as a broken product; the honest shape is no section.
+    const text = fs.readFileSync(
+      path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../PlatformOverviewPage.jsx"),
+      "utf8",
+    );
+    expect(text).toContain("!revenueUnavailable(summary.summary)");
+    // The real-zero sentence stays, for the day amounts exist and a period
+    // genuinely earned nothing.
+    expect(text).toContain("Nothing was charged in this period");
+  });
+});
+
+describe("money columns while the server has no amounts", () => {
+  const columns = [
+    { key: "createdAt", title: "Date", format: "datetime" },
+    { key: "consumerName", title: "Consumer", format: "text" },
+    { key: "amountCents", title: "Amount", format: "cents" },
+  ];
+
+  it("drops a money column every row is silent about", () => {
+    const rows = [{ amountCents: null }, { amountCents: null }];
+    expect(withReportedMoney(columns, rows).map((c) => c.key)).toEqual([
+      "createdAt",
+      "consumerName",
+    ]);
+  });
+
+  it("keeps it the moment one row reports a figure, including a real zero", () => {
+    // The whole distinction: null is "we do not know", 0 is an answer. A
+    // period that genuinely billed nothing still deserves its column.
+    expect(withReportedMoney(columns, [{ amountCents: null }, { amountCents: 0 }])).toHaveLength(3);
+    expect(withReportedMoney(columns, [{ amountCents: 125000 }])).toHaveLength(3);
+  });
+
+  it("leaves a column that is not about money alone, whatever it holds", () => {
+    const rows = [{ consumerName: null, amountCents: null }];
+    expect(withReportedMoney(columns, rows).map((c) => c.key)).toContain("consumerName");
+  });
+
+  it("keeps every column on an empty page, so a search finding nothing does not reshape the table", () => {
+    expect(withReportedMoney(columns, [])).toHaveLength(3);
+    expect(withReportedMoney(columns, undefined)).toHaveLength(3);
+  });
+
+  it("applies the same rule to tiles, which have one value each", () => {
+    const tiles = [
+      { key: "count", label: "Transactions", format: "number" },
+      { key: "volumeCents", label: "Volume", format: "cents" },
+    ];
+    expect(withReportedMoneyTiles(tiles, { count: 4, volumeCents: null })).toHaveLength(1);
+    expect(withReportedMoneyTiles(tiles, { count: 4, volumeCents: 0 })).toHaveLength(2);
+    expect(withReportedMoneyTiles(tiles, undefined)).toHaveLength(1);
+  });
+
+  it("every screen that shows money routes through it", () => {
+    // Four tables and two tile rows show amounts. One that renders its
+    // columns directly would keep printing dashes after this decision.
+    const pages = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+    for (const file of [
+      "PlatformListPage.jsx",
+      "PlatformClientsPage.jsx",
+      "PlatformClientProfilePage.jsx",
+    ]) {
+      expect(fs.readFileSync(path.join(pages, file), "utf8"), file).toContain("withReportedMoney(");
+    }
   });
 });

@@ -10,6 +10,7 @@ import PillUIComponent from "../../components/UX/Chip/PillUIComponent";
 import { usePlatformCompanies } from "../../hooks/platform/usePlatformCompanies";
 import { usePlatformExport } from "../../hooks/platform/usePlatformExport";
 import ConsoleSelect from "./components/ConsoleSelect";
+import { withReportedMoney } from "./utils/platformScreens";
 import {
   PLAN_FILTERS,
   companyStatusPill,
@@ -82,6 +83,9 @@ const columns = [
     title: "Revenue 30d",
     dataIndex: "revenue30dCents",
     key: "revenue30dCents",
+    // Tagged so withReportedMoney recognises it: this table is antd-shaped
+    // rather than built from the console's own column descriptors.
+    format: "cents",
     align: "right",
     render: (cents, row) => formatCents(cents, row.currency || "USD"),
   },
@@ -175,7 +179,7 @@ const PlatformClientsPage = () => {
       ) : (
         <div style={{ overflowX: "auto" }}>
           <BaseTable
-            columns={columns}
+            columns={withReportedMoney(columns, rows)}
             dataSource={rows}
             rowKey="id"
             loading={isLoading || isFetching}

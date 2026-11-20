@@ -19,6 +19,7 @@ import BaseTable from "../../components/UX/tables/BaseTable";
 import EmptyState from "../../components/UX/emptyState/EmptyState";
 import PlatformRequestError from "./components/PlatformRequestError";
 import { toTableColumns } from "./components/platformColumns";
+import { withReportedMoney } from "./utils/platformScreens";
 import {
   usePlatformCompany,
   usePlatformCompanySection,
@@ -169,7 +170,7 @@ const SectionTab = ({ companyId, tab }) => {
       )}
       <div style={{ overflowX: "auto", padding: "0 20px 20px" }}>
         <BaseTable
-          columns={toTableColumns(SECTION_COLUMNS[tab.key])}
+          columns={toTableColumns(withReportedMoney(SECTION_COLUMNS[tab.key], section.rows))}
           dataSource={section.rows}
           rowKey={(row) => row.id ?? JSON.stringify(row)}
           loading={section.isLoading || section.isFetching}
