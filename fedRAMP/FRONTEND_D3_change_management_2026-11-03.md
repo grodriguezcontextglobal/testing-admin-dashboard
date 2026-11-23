@@ -13,7 +13,26 @@ Every change to production goes through one path: a pull request into `main`, a 
 | 3. Static analysis on the PR | `.github/workflows/codeql.yml` (PR #51) | Findings shown on the PR and under Security → Code scanning | CodeQL analyses and alerts |
 | 4. Merge | GitHub | Only once step 2 is green; done by a maintainer | The merge commit on `main` |
 | 5. Release | `.github/workflows/release.yml` | Runs CI again, then builds with the `production` environment's variables | GitHub Release `admin-<date>-<sha>` with `admin-dist.zip`, its `.sha256` and `admin-sbom.cdx.json` |
-| 6. Deploy | DEVITRACKAPP, `deploy/iis/Update-AdminSite.ps1` | Scheduled task every 5 min; refuses a zip whose SHA-256 does not match, or with no `index.html` / `web.config` | `C:\inetpub\devitrak-admin\state.json` and `logs\update-YYYY-MM.log` |
+| 6. Deploy | DEVITRACKAPP, `deploy/iis/Update-AdminSite.ps1` | Scheduled task every 5 min; refuses a zip whose SHA-256 does not match, or with no `index.html` / `web.config` | `C:\inetpub\devitrak-admin\state.json` (`tag`, `deployedAt`, `lastCheckedAt`) and `logs\update-YYYY-MM.log`, one line per pass |
+| 7. Deployment verified | `.github/workflows/deploy-check.yml` | Scheduled, outside DEVITRACKAPP: compares the latest release tag with `admin.devitrak.net/version.json`. Two consecutive disagreeing samples past a 20-minute window fail the run and open an issue | The workflow run, the `deploy-stuck` issue, and `version.json` itself |
+
+> **Correction, 2026-11-18.** Rows 1 to 5 were written from the configuration and are
+> accurate. **Row 6 described what was intended rather than what was verified**, and on
+> 2026-11-18 a released AC-4 fix sat undeployed with nothing to say so: the release
+> succeeded, the deploy did not happen, and every artifact in this table stayed green,
+> because none of them observes the step that puts code in front of users.
+>
+> The gap was not that a deploy failed — deploys fail — but that **the pipeline's own
+> evidence could not tell a successful deploy from an absent one.** A log that wrote
+> nothing on an uneventful pass meant either "nothing to do" or "the task is not running",
+> and nothing distinguished them.
+>
+> This is recorded rather than quietly edited, because the original row was written in
+> good faith and the correction is itself the evidence that review works. See
+> `POAM_2026-11-18_deploy_not_observable.md` (DVK-ADMIN-2026-001). Row 7 and the changes
+> to row 6's evidence column are its remediation: the log now carries a line on **every**
+> pass, so an absent line is proof of a stopped task rather than a question, and the
+> verification lives off the machine it verifies.
 
 ### What the CI checks (step 2)
 

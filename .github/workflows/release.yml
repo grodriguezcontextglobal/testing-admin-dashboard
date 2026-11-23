@@ -132,6 +132,21 @@ jobs:
         id: package
         run: |
           tag="admin-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          # POA&M DVK-ADMIN-2026-001, M4: the artifact states its own version,
+          # so "what is in production?" is one request instead of fingerprinting
+          # a hashed bundle name. web.config serves this file with no-store;
+          # deploy-check.yml reads it from outside the VM (M3).
+          cat > dist/version.json <<JSON
+          {
+            "tag": "$tag",
+            "commit": "$GITHUB_SHA",
+            "builtAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "run": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          }
+          JSON
+          # A package whose version.json does not name this build is worse than
+          # none: the monitor would compare two tags and conclude wrongly.
+          grep -q "\"tag\": \"$tag\"" dist/version.json
           (cd dist && zip -qr ../admin-dist.zip .)
           sha256sum admin-dist.zip | cut -d' ' -f1 > admin-dist.zip.sha256
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

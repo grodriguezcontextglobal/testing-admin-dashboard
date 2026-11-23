@@ -60,9 +60,33 @@ function Write-Log([string]$Message) {
   Write-Host $line
 }
 
+# POA&M DVK-ADMIN-2026-001, M2. Mantiene $KeepMonths ficheros mensuales de log.
+# La razon de rotar es que sin rotacion el argumento contra escribir una linea
+# en cada pasada es el tamano del fichero, y ese argumento compra silencio: la
+# respuesta correcta es rotar, no callar.
+function Remove-OldLogs([int]$KeepMonths = 6) {
+  Get-ChildItem $Logs -Filter "update-*.log" -File -ErrorAction SilentlyContinue |
+    Sort-Object Name -Descending |
+    Select-Object -Skip $KeepMonths |
+    ForEach-Object { Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue }
+}
+
 function Read-State {
   if (Test-Path $StateFile) { return Get-Content $StateFile -Raw | ConvertFrom-Json }
   return $null
+}
+
+# lastCheckedAt se escribe en cada pasada, tambien cuando no hay nada nuevo
+# (M2). Separarlo de deployedAt es lo que permite distinguir "no hay releases
+# nuevos desde hace dias" de "nadie ha mirado desde hace dias": antes las dos
+# cosas se veian igual desde fuera.
+function Save-State([string]$CurrentTag, [string]$PreviousTag, [string]$DeployedAt) {
+  @{
+    tag = $CurrentTag
+    previous = $PreviousTag
+    deployedAt = $DeployedAt
+    lastCheckedAt = (Get-Date).ToString("o")
+  } | ConvertTo-Json | Set-Content -Path $StateFile -Encoding UTF8
 }
 
 # Una junction se borra con rmdir. Remove-Item en PowerShell 5.1 puede
@@ -170,8 +194,19 @@ try {
     $releaseTag = $release.tag_name
   }
 
-  # Lo normal: nada nuevo. Sin línea en el log, o crecería cada 5 minutos.
+  # Lo normal: nada nuevo. Antes esta pasada no escribia nada, para que el log
+  # no creciera cada 5 minutos -- y por eso un log sin lineas podia significar
+  # "todo correcto" o "la tarea no se ejecuta". Esa ambiguedad es lo que hizo
+  # invisible el fallo del 2026-11-18 (POA&M DVK-ADMIN-2026-001, M2).
+  #
+  # Ahora cada pasada deja rastro y state.json guarda la hora de la ultima
+  # comprobacion ademas de la del ultimo despliegue. Con eso, un log sin linea
+  # reciente es prueba de que la tarea esta parada, no una duda. El tamano se
+  # resuelve rotando (Remove-OldLogs), no callando.
   if (-not $Force -and $state -and $state.tag -eq $releaseTag -and (Test-Path $Current)) {
+    Write-Log "Sin cambios: $releaseTag"
+    Save-State $state.tag $state.previous $state.deployedAt
+    Remove-OldLogs
     exit 0
   }
 
@@ -180,13 +215,11 @@ try {
   $target = Expand-Release $zipPath $releaseTag
   Switch-Current $target
 
-  @{
-    tag = $releaseTag
-    previous = if ($state) { $state.tag } else { $null }
-    deployedAt = (Get-Date).ToString("o")
-  } | ConvertTo-Json | Set-Content -Path $StateFile -Encoding UTF8
+  $previousTag = if ($state) { $state.tag } else { $null }
+  Save-State $releaseTag $previousTag ((Get-Date).ToString("o"))
 
   Remove-OldReleases $releaseTag
+  Remove-OldLogs
   Write-Log "OK: $Current -> $target"
   exit 0
 } catch {

@@ -84,3 +84,55 @@ describe("public/web.config", () => {
     expect(hostRoot).toBeLessThan(catchAll);
   });
 });
+
+describe("version.json, so production can state what it serves", () => {
+  // POA&M DVK-ADMIN-2026-001, M4. On 2026-11-18 a released build sat
+  // undeployed and the only way to tell was to fingerprint a hashed bundle
+  // filename and compare Last-Modified -- indirect, and useless the moment a
+  // build is byte-identical to the one before it.
+  //
+  // release.yml writes dist/version.json at package time; this file is what
+  // makes it readable. deploy-check.yml reads it from outside the VM, so if
+  // either half goes, the monitor silently stops monitoring.
+  const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+  it("is served with no-store, so a cached copy cannot report the previous deploy", () => {
+    // no-store rather than no-cache: a revalidated stale answer is still a
+    // wrong answer here, and wrong in the direction of saying a stuck deploy
+    // is fine.
+    const block = /<location path="version\.json">[\s\S]*?<\/location>/.exec(text)?.[0];
+    expect(block, "web.config has no <location> for version.json").toBeTruthy();
+    expect(block).toMatch(/Cache-Control/);
+    expect(block).toMatch(/no-store/);
+  });
+
+  it("is written by the release with the tag it is publishing", () => {
+    const release = fs.readFileSync(
+      path.join(ROOT_DIR, ".github", "workflows", "release.yml"),
+      "utf8",
+    );
+    expect(release).toContain("dist/version.json");
+    // The tag must be the one in the same step, not recomputed: two clocks
+    // one second apart would publish a release whose artifact names a
+    // different build, and the monitor would compare two tags and conclude
+    // wrongly -- the exact failure mode M3 was written to avoid.
+    const step = release.slice(release.indexOf("- name: Package"));
+    expect(step.slice(0, step.indexOf("- name: SBOM"))).toMatch(/"tag": "\$tag"/);
+  });
+
+  it("is read by a check that lives off the machine it checks", () => {
+    const check = fs.readFileSync(
+      path.join(ROOT_DIR, ".github", "workflows", "deploy-check.yml"),
+      "utf8",
+    );
+    expect(check).toContain("version.json");
+    expect(check).toMatch(/schedule:/);
+    // runs-on a GitHub runner, never a self-hosted one on DEVITRACKAPP: a
+    // monitor on the machine it monitors shares its failure modes, and the
+    // failure mode is "the thing on that machine stopped running".
+    expect(check).toMatch(/runs-on: ubuntu-latest/);
+    expect(check).not.toMatch(/self-hosted/);
+    // Two samples before concluding, because one can be confidently wrong.
+    expect(check).toContain("RESAMPLE_SECONDS");
+  });
+});
