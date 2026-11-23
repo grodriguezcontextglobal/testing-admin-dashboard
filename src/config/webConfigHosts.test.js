@@ -157,3 +157,32 @@ describe("version.json, so production can state what it serves", () => {
     expect(check).toContain("RESAMPLE_SECONDS");
   });
 });
+
+describe("the console access check runs in CI", () => {
+  // The client half of the control that keeps one company's staff out of
+  // every other company's data: nine Cypress cases that, until 2026-11-23,
+  // ran only when somebody ran them by hand -- while the console was live.
+  const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+  const ci = fs.readFileSync(path.join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
+
+  it("has a job of its own", () => {
+    expect(ci).toContain("platform-access:");
+    expect(ci).toContain("npm run test:platform");
+  });
+
+  it("runs with the sample-data bypass off, and proves it before testing", () => {
+    // PLATFORM_CONSOLE_DEV_BYPASS opens the guard to everyone on purpose, so
+    // the console can be shown without a server. An access spec run against
+    // that mode does not fail and does not pass -- it proves nothing. On
+    // 2026-11-23 a forgotten dev server in console-demo mode held this port
+    // and all nine cases failed for the setup rather than the code.
+    const env = fs.readFileSync(path.join(ROOT, ".env.platform-e2e"), "utf8");
+    expect(env).toMatch(/^VITE_APP_PLATFORM_CONSOLE_MOCK=false$/m);
+    expect(env).toMatch(/^VITE_APP_FEATURE_PLATFORM_CONSOLE=true$/m);
+    // And CI asserts the same two lines itself, so editing the env file does
+    // not quietly turn the control into a formality.
+    expect(ci).toContain("VITE_APP_PLATFORM_CONSOLE_MOCK=false");
+    // The server answering must be the one this job started.
+    expect(ci).toContain("--mode platform-e2e");
+  });
+});
