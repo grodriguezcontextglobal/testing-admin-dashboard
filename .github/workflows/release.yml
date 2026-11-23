@@ -109,15 +109,23 @@ jobs:
           # NO abre nada: el gate del servidor sigue decidiendo quién entra
           # (featureFlags.js, PLATFORM_CONSOLE_SAMPLE_DATA vs _DEV_BYPASS).
           #
-          # Por defecto 'true' por lo mismo de arriba, y porque hoy es la única
-          # opción que muestra algo: de los seis endpoints que llaman las
-          # pantallas, el backend solo tiene /api/platform/me
-          # (BACKEND_console_m1_answers_2026-11-19.md §1). Sin esto la consola
-          # se despliega y falla en cada pantalla.
+          # A 'false' desde el 2026-11-23: el backend desplegó /summary y
+          # /companies ese día a las 14:41 UTC, release defd3cf
+          # (BACKEND_console_status_rule_correction_2026-11-23.md §0), y la
+          # consola pasa a datos reales de clientes.
           #
-          # A 'false' en cuanto el backend tenga /summary y /companies. Ese día
-          # hay que cambiar ESTA línea, no solo la variable.
-          VITE_APP_PLATFORM_CONSOLE_MOCK: ${{ vars.VITE_APP_PLATFORM_CONSOLE_MOCK || 'true' }}
+          # El resto de pantallas todavía no tienen endpoint, y eso es
+          # deliberado: cada sección trae su propio estado de error y un 404
+          # escribe en pantalla la ruta que falta, sin botón de reintentar
+          # porque reintentar un rechazo no sirve de nada. Una consola a medio
+          # migrar no está rota, es la lista de lo que queda.
+          #
+          # El día que los datos son reales, dos cosas dejan de ser teóricas:
+          # el servidor escribe una fila en platform_audit_log por cada lectura
+          # (AU-2), y el spec de acceso de cypress/e2e/platform es la mitad
+          # cliente del control que separa los datos de una compañía de los de
+          # otra. Por eso ese spec entró en CI antes que esta línea.
+          VITE_APP_PLATFORM_CONSOLE_MOCK: ${{ vars.VITE_APP_PLATFORM_CONSOLE_MOCK || 'false' }}
 
       # El script del servidor se niega a desplegar un paquete sin index.html o
       # sin web.config (la regla de rewrite de la SPA); mejor fallar aquí.
