@@ -156,3 +156,68 @@ jobs:
           path: cypress/screenshots/
           retention-days: 30
           if-no-files-found: ignore
+
+  # Acceso a la Admin Console (GovRAMP · AC-3, AC-6, SA-11): la mitad cliente
+  # del control que mantiene al personal de una empresa fuera de los datos de
+  # las demas. Nueve casos: una cuenta de cliente con super_user en su propia
+  # empresa, una direccion fuera de devitrak.com, y una cuenta valida sin la
+  # respuesta del servidor. El servidor vuelve a comprobarlo en cada peticion
+  # a /api/platform; esconder las pantallas no es un control por si solo y el
+  # spec no finge lo contrario.
+  #
+  # Servidor propio, en .env.platform-e2e, con la consola encendida y los
+  # datos de muestra APAGADOS. Esa distincion no es un detalle: con el flag de
+  # muestra encendido, PLATFORM_CONSOLE_DEV_BYPASS abre la guarda a todo el
+  # mundo a proposito, para poder enseñar la consola sin servidor. Un spec de
+  # acceso ejecutado contra ese modo no falla ni aprueba: no prueba nada. El
+  # paso de abajo lo comprueba antes de arrancar Cypress, porque el 2026-11-23
+  # un dev server olvidado en modo console-demo ocupaba este puerto y los
+  # nueve casos fallaron por el montaje y no por el codigo.
+  platform-access:
+    name: Acceso a la consola (E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.2
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Comprobar que el bypass esta apagado
+        run: |
+          set -euo pipefail
+          # Si alguien pone el flag de muestra en este .env, la guarda se abre
+          # sola y el spec aprueba sin comprobar nada. Mejor fallar aqui.
+          grep -q '^VITE_APP_PLATFORM_CONSOLE_MOCK=false$' .env.platform-e2e
+          grep -q '^VITE_APP_FEATURE_PLATFORM_CONSOLE=true$' .env.platform-e2e
+
+      - name: Acceso a la consola
+        run: |
+          npm run dev:platform-e2e > "$RUNNER_TEMP/platform-e2e.log" 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:5523/ && break
+            sleep 1
+          done
+          # El servidor que responde tiene que ser el nuestro. --strictPort
+          # haria fallar el arranque si el puerto estuviera ocupado, pero el
+          # fallo quedaria en el log del segundo plano y Cypress correria
+          # contra lo que hubiera: eso es justo lo que paso en local.
+          grep -q -- "--mode platform-e2e" "$RUNNER_TEMP/platform-e2e.log"
+          npm run test:platform
+
+      - name: Upload screenshots
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: platform-access-screenshots-${{ github.run_id }}
+          path: cypress/screenshots/
+          retention-days: 30
+          if-no-files-found: ignore
