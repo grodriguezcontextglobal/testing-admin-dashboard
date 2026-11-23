@@ -113,15 +113,18 @@ describe("version.json, so production can state what it serves", () => {
     // The cache header is tracked in the POA&M as risk accepted with a
     // compensating control. It is not worth a second outage: the monitor
     // busts cache itself.
-    // Comments stripped first: this file explains the outage in prose, and
-    // prose that names the element must not fail a check about the element.
-    const xml = text.replace(/<!--[\s\S]*?-->/g, "");
-    expect(xml).not.toMatch(/<location/);
+    // No comment stripping. An earlier version of this test removed comments
+    // with a regex first, and CodeQL flagged it as incomplete sanitization --
+    // correctly as a pattern, harmlessly in a test that reads a repository
+    // file. Rather than carry a dismissed alert, the file's own prose avoids
+    // writing these elements in angle brackets, so matching the element form
+    // cannot hit the explanation of why the element is absent.
+    expect(text).not.toMatch(/<location/);
     // Nothing should reintroduce the section that took the site down. The one
-    // <staticContent> this file has is the mimeMap block, at the top level,
+    // staticContent this file has is the mimeMap block, at the top level,
     // where it has always worked.
-    expect(xml).not.toMatch(/<clientCache/);
-    expect(xml.match(/<staticContent>/g) ?? []).toHaveLength(1);
+    expect(text).not.toMatch(/<clientCache/);
+    expect(text.match(/<staticContent>/g) ?? []).toHaveLength(1);
   });
 
   it("is written by the release with the tag it is publishing", () => {
