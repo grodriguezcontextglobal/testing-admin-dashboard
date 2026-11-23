@@ -1,0 +1,217 @@
+# POA&M DVK-ADMIN-2026-001, M3: check the deployment from outside the VM.
+#
+# On 2026-11-18 a published release did not reach production and nothing said
+# so. The GitHub Actions run was green -- correctly, because from GitHub's side
+# the job had built a package and published a release. The step that puts code
+# in front of users was the one step with no observer.
+#
+# This workflow is that observer, and it runs here rather than on DEVITRACKAPP
+# on purpose: a monitor living on the machine it monitors shares that machine's
+# failure modes, and the failure mode is "the thing on that machine stopped
+# running".
+#
+# Two rules, both learned the hard way while verifying the incident by hand and
+# written into the POA&M so they would not be rediscovered:
+#
+#   Compare tags, never statuses. `gh pr checks` once exited 0 reporting five
+#   passing checks for a different commit than the one being asked about. A
+#   tool answering successfully about another state is the same class of error
+#   as a log whose silence is ambiguous. So this job names the tag it is
+#   talking about and refuses to conclude anything when it cannot read one.
+#
+#   Tolerate slow, alert on stuck. A single sample can be confidently wrong in
+#   both directions. Two consecutive disagreeing samples are required, and a
+#   release younger than the deploy window is not a finding at all -- the task
+#   runs every five minutes and a download takes as long as it takes.
+
+name: Deployment reached production
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub delays scheduled runs under load, which this
+    # tolerates: the window below is measured from the release's own publish
+    # time, not from when this job happened to start.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: deploy-check
+  cancel-in-progress: false
+
+env:
+  SITE: https://admin.devitrak.net
+  # The updater runs every 5 minutes; a deploy is a download, an unzip and a
+  # junction swap. 20 minutes is four passes: slow is tolerated, stuck is not.
+  WINDOW_MINUTES: "20"
+  # Between the two samples. Long enough that a deploy finishing mid-check
+  # clears the second sample, short enough to stay one job.
+  RESAMPLE_SECONDS: "120"
+
+jobs:
+  check:
+    name: Live site serves the latest release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read the latest release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 20 \
+            --json tagName,publishedAt,isLatest > releases.json
+          tag=$(jq -r '[.[] | select(.tagName | startswith("admin-"))]
+                        | sort_by(.publishedAt) | reverse | .[0].tagName // empty' releases.json)
+          published=$(jq -r '[.[] | select(.tagName | startswith("admin-"))]
+                        | sort_by(.publishedAt) | reverse | .[0].publishedAt // empty' releases.json)
+          if [ -z "$tag" ]; then
+            echo "No admin-* release exists yet. Nothing to compare."
+            echo "conclude=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          age=$(( ( $(date -u +%s) - $(date -u -d "$published" +%s) ) / 60 ))
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "age=$age" >> "$GITHUB_OUTPUT"
+          echo "conclude=true" >> "$GITHUB_OUTPUT"
+          echo "Latest release $tag, published $age minute(s) ago."
+
+      - name: Wait out the deploy window
+        id: window
+        if: steps.release.outputs.conclude == 'true'
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.release.outputs.age }}" -lt "$WINDOW_MINUTES" ]; then
+            echo "Released ${{ steps.release.outputs.age }} minute(s) ago, inside the ${WINDOW_MINUTES}-minute window."
+            echo "This is not a finding: the updater runs every five minutes and a deploy takes as long as it takes."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sample what production is serving, twice
+        id: sample
+        if: steps.window.outputs.proceed == 'true'
+        run: |
+          set -uo pipefail
+          read_tag() {
+            # Cache-busting as well as the no-store header: a proxy between
+            # here and IIS is not ours to trust, and this check is worthless if
+            # it can read a cached answer.
+            curl -fsS --max-time 20 -H 'Cache-Control: no-cache' \
+              "$SITE/version.json?at=$(date -u +%s)" 2>/dev/null | jq -r '.tag // empty' 2>/dev/null
+          }
+
+          first=$(read_tag)
+          if [ -z "$first" ]; then
+            # Either production predates M4, or something is serving the SPA's
+            # index.html for this path. Both mean we cannot name the deployed
+            # tag -- and a monitor that cannot name what it is talking about
+            # must not conclude. Loud, but not a failure of this control.
+            {
+              echo "### Cannot read the deployed version"
+              echo
+              echo "\`$SITE/version.json\` did not return a tag."
+              echo
+              echo "Expected until a release built after POA&M M4 has been deployed."
+              echo "If a newer release is live and this persists, version.json is not reaching the site and M4 is not done."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "conclude=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          expected="${{ steps.release.outputs.tag }}"
+          if [ "$first" = "$expected" ]; then
+            echo "Production serves $first, which is the latest release."
+            echo "conclude=true" >> "$GITHUB_OUTPUT"
+            echo "match=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "First sample disagrees: production serves $first, latest release is $expected."
+          echo "Resampling in ${RESAMPLE_SECONDS}s before concluding anything."
+          sleep "$RESAMPLE_SECONDS"
+          second=$(read_tag)
+
+          echo "conclude=true" >> "$GITHUB_OUTPUT"
+          echo "deployed=$second" >> "$GITHUB_OUTPUT"
+          if [ "$second" = "$expected" ]; then
+            echo "Second sample agrees: the deploy landed between samples. Slow, not stuck."
+            echo "match=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "$second" ]; then
+            echo "Second sample could not be read; refusing to conclude from one disagreeing sample."
+            echo "conclude=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Second sample disagrees too: production serves $second."
+            echo "match=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report a stuck deployment
+        if: steps.sample.outputs.conclude == 'true' && steps.sample.outputs.match == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED: ${{ steps.release.outputs.tag }}
+          DEPLOYED: ${{ steps.sample.outputs.deployed }}
+          AGE: ${{ steps.release.outputs.age }}
+        run: |
+          set -euo pipefail
+          title="Deployment stuck: production is not serving the latest release"
+          body=$(cat <<MD
+          Two consecutive samples, ${RESAMPLE_SECONDS}s apart, both disagree.
+
+          | | |
+          |---|---|
+          | Latest release | \`$EXPECTED\` |
+          | Production serves | \`$DEPLOYED\` |
+          | Published | $AGE minutes ago |
+          | Checked by | [this run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) |
+
+          The updater on DEVITRACKAPP runs every five minutes, so $AGE minutes without
+          the new tag means it is not running, not merely slow.
+
+          **First place to look:** \`C:\\inetpub\\devitrak-admin\\logs\\update-$(date -u +%Y-%m).log\`.
+          Since POA&M M2 that file carries a line on every pass including the no-op, so an
+          absent line is a stopped task and an \`ERROR:\` line names the cause.
+
+          Opened automatically by \`deploy-check.yml\` (POA&M DVK-ADMIN-2026-001, M3).
+          It closes itself on the next run that finds production up to date.
+          MD
+          )
+
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --label deploy-stuck --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh label create deploy-stuck --repo "$GITHUB_REPOSITORY" \
+              --color B60205 --description "Production is not serving the latest release" 2>/dev/null || true
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+              --label deploy-stuck --body "$body"
+          fi
+
+          {
+            echo "### Deployment stuck"
+            echo
+            echo "Latest release \`$EXPECTED\`, production serves \`$DEPLOYED\`, published $AGE minutes ago."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # The job fails on purpose. A red scheduled workflow is the signal;
+          # the issue is the record that outlives the run's retention.
+          exit 1
+
+      - name: Close a resolved report
+        if: steps.sample.outputs.match == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --label deploy-stuck --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$GITHUB_REPOSITORY" \
+              --comment "Production now serves \`${{ steps.release.outputs.tag }}\`. Closed by deploy-check.yml."
+          fi
+          echo "Production serves ${{ steps.release.outputs.tag }}." >> "$GITHUB_STEP_SUMMARY"

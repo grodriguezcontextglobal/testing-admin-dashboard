@@ -105,6 +105,36 @@ That a written-down tag goes stale within hours is itself the argument for **M4*
 
 Record the finding here; it decides whether M2 needs anything beyond what is written below.
 
+#### Finding, recorded 2026-11-19 — closed
+
+**The updater had never been installed.** Not a failed download, not a hash mismatch, not a
+junction held open: there was no scheduled task, no `state.json`, and no `C:\inetpub\devitrak-admin`
+deploy tree at all. `Install-AdminSiteUpdater.ps1` was run on DEVITRACKAPP on 2026-11-19 and
+reported `actual: ninguno` — "current: none" — and logged the first deployment as a first
+deployment. Both sites had been served, by hand, from a `dist` folder built on the machine
+(`C:\Users\CGAdmin\Documents\GitHub\admin-dashboard-vite\dist`).
+
+**This changes what the remediation is for, and it is worth being exact about it.**
+
+- The original diagnosis from outside — that a scheduled task had stalled — was wrong, and
+  wrong in a way that would have sent the fix to the wrong place. It is recorded in §4 for
+  that reason, and this is the second time in this item that an inference from one
+  observation turned out to be confident and incorrect.
+- **M2 would not have caught this.** A heartbeat in `Update-AdminSite.ps1` writes nothing
+  when nothing runs the script. M2 is still worth doing — it is what makes an absent line
+  mean something from now on — but it would not have shortened this incident by a day.
+- **M3 is the milestone that was actually needed**, and the root cause raises its priority
+  rather than lowering it. A check outside the VM comparing the published release with what
+  the site serves does not care *why* the deploy did not happen. It is the only one of the
+  four that reports an updater that was never installed.
+- **M4 likewise.** The verification that found the stall had to fingerprint a hashed bundle
+  filename, which is also what made the first diagnosis so easy to get wrong.
+
+The gap between the release pipeline and the machine was therefore total rather than
+intermittent: **every release published before 2026-11-19 reached production only if
+somebody built and copied it by hand.** Release artifacts from before that date are
+evidence of what was built, not of what was served.
+
 ### M2 — Make silence mean failure · owner dashboard · due 2026-11-25
 
 Change `Update-AdminSite.ps1` to write a heartbeat line on **every** run, including the no-op, and to keep `state.json` stamped with the time of the last successful check as well as the last deploy. The log volume objection is answered by rotation, not by silence. **After this, an absent line is unambiguous evidence of a stopped task** — which is what makes the control assessable.
