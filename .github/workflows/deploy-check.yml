@@ -33,6 +33,14 @@ on:
     # time, not from when this job happened to start.
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      drill:
+        description: >-
+          Prove the alarm fires. Compares production against a tag that cannot
+          exist, so the mismatch branch runs end to end: two samples, a red run
+          and the summary. It opens no issue and touches nothing in production.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -43,6 +51,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # A drill proves the alarm path without waiting for a real outage. The
+  # healthy path proved itself on 2026-11-23; this is the other half, and the
+  # question an assessor asks is "have you checked that it fires?"
+  DRILL: ${{ github.event.inputs.drill || 'false' }}
   SITE: https://admin.devitrak.net
   # The updater runs every 5 minutes; a deploy is a download, an unzip and a
   # junction swap. 20 minutes is four passes: slow is tolerated, stuck is not.
@@ -84,6 +96,11 @@ jobs:
         if: steps.release.outputs.conclude == 'true'
         run: |
           set -euo pipefail
+          if [ "$DRILL" = "true" ]; then
+            echo "Drill: skipping the window so the mismatch branch can run."
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ "${{ steps.release.outputs.age }}" -lt "$WINDOW_MINUTES" ]; then
             echo "Released ${{ steps.release.outputs.age }} minute(s) ago, inside the ${WINDOW_MINUTES}-minute window."
             echo "This is not a finding: the updater runs every five minutes and a deploy takes as long as it takes."
@@ -124,6 +141,15 @@ jobs:
           fi
 
           expected="${{ steps.release.outputs.tag }}"
+          if [ "$DRILL" = "true" ]; then
+            # Deliberately unmatchable. Everything else runs for real: the two
+            # samples, the resample wait, the conclusion. Only the expectation
+            # is false, so the drill exercises the code rather than a mock of
+            # it -- and if reading version.json were broken, the drill would
+            # stop at "cannot read" instead of reaching the alarm.
+            expected="${expected}-DRILL-THIS-TAG-CANNOT-EXIST"
+            echo "Drill: expecting $expected, which no release will ever be."
+          fi
           if [ "$first" = "$expected" ]; then
             echo "Production serves $first, which is the latest release."
             echo "conclude=true" >> "$GITHUB_OUTPUT"
@@ -180,6 +206,23 @@ jobs:
           It closes itself on the next run that finds production up to date.
           MD
           )
+
+          if [ "$DRILL" = "true" ]; then
+            # A drill must be unmistakable in the record and must leave nothing
+            # behind. The red run and the summary are the evidence that the
+            # alarm fires; an issue would read as a real outage to whoever
+            # found it next week, and closing it afterwards would put a false
+            # incident in this item's history.
+            {
+              echo "### Drill: the alarm fires"
+              echo
+              echo "Compared production against a tag that cannot exist: \`$EXPECTED\`."
+              echo "Production serves \`$DEPLOYED\`. Two samples, both disagreeing, reached this step."
+              echo
+              echo "No issue opened, nothing in production touched. This run is red on purpose."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
           existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
             --label deploy-stuck --json number --jq '.[0].number // empty')

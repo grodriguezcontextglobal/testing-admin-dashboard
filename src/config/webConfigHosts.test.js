@@ -184,6 +184,26 @@ describe("version.json, so production can state what it serves", () => {
     // Two samples before concluding, because one can be confidently wrong.
     expect(check).toContain("RESAMPLE_SECONDS");
   });
+
+  it("can prove its own alarm fires, without opening a false incident", () => {
+    // The healthy path proved itself in production on 2026-11-23. The alarm
+    // path had never run, and an untested alarm is a plausible alarm. The
+    // drill drives the mismatch branch against a tag that cannot exist.
+    const check = fs.readFileSync(
+      path.join(ROOT_DIR, ".github", "workflows", "deploy-check.yml"),
+      "utf8",
+    );
+    expect(check).toMatch(/drill:/);
+    expect(check).toContain("DRILL-THIS-TAG-CANNOT-EXIST");
+
+    // The guard has to come before the issue is created, or a drill leaves a
+    // false outage in the record for whoever finds it next week.
+    const report = check.slice(check.indexOf("Report a stuck deployment"));
+    const guard = report.indexOf('DRILL" = "true"');
+    const creates = report.indexOf("gh issue create");
+    expect(guard, "the drill guard is missing from the report step").toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(creates);
+  });
 });
 
 describe("the updater refuses a package it cannot serve", () => {
