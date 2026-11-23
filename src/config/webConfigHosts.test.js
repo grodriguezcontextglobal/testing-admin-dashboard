@@ -24,6 +24,34 @@ describe("public/web.config", () => {
     expect(doc.querySelector("parsererror")).toBeNull();
   });
 
+  it("has no comment XML forbids, which this parser accepts and IIS does not", () => {
+    // 2026-11-23: both sites answered 500 for roughly three hours. The cause
+    // was a comment in this file containing "--", which XML forbids inside a
+    // comment. IIS reported it exactly:
+    //
+    //   Config Error: Configuration file is not well-formed XML
+    //   Config Source: 110: ... answered 500 -- static files included ...
+    //
+    // The test above did not catch it, and its own comment already said what
+    // was at stake: a file that does not parse takes down the whole
+    // dashboard. happy-dom's DOMParser is lenient about this and reports no
+    // parsererror, so the guard has to be explicit.
+    //
+    // It happened twice. The second time was the fix for the first, rewritten
+    // with "--" again -- which is why an hour of rollbacks and redeploys
+    // changed nothing.
+    const comments = text.match(/<!--[\s\S]*?-->/g) ?? [];
+    expect(comments.length).toBeGreaterThan(0);
+    for (const comment of comments) {
+      const body = comment.slice(4, -3);
+      const at = body.indexOf("--");
+      const where = at === -1 ? "" : body.slice(Math.max(0, at - 40), at + 40).trim();
+      expect(body.includes("--"), `comment contains "--" near: ${where}`).toBe(false);
+      // A comment may not end with a hyphen either: it would make "--->".
+      expect(body.endsWith("-"), "comment ends with a hyphen").toBe(false);
+    }
+  });
+
   it("still carries the security-headers marker", () => {
     // vite.config.js replaces it at build time; without it the build throws
     // rather than shipping a site with no CSP (securityHeaders.js).
