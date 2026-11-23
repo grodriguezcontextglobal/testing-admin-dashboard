@@ -96,16 +96,32 @@ describe("version.json, so production can state what it serves", () => {
   // either half goes, the monitor silently stops monitoring.
   const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-  it("is served uncached, so a cached copy cannot report the previous deploy", () => {
-    // Through <clientCache>, not a Cache-Control custom header. The header was
-    // tried and measured against production on 2026-11-23: the inherited
-    // security headers reached version.json, proving the file and the config
-    // were deployed, and the Cache-Control line was simply absent from the
-    // response. This is the mechanism IIS documents for static files.
-    const block = /<location path="version\.json">[\s\S]*?<\/location>/.exec(text)?.[0];
-    expect(block, "web.config has no <location> for version.json").toBeTruthy();
-    expect(block).toMatch(/clientCache/);
-    expect(block).toMatch(/DisableCache/);
+  it("is served as a plain static file, with no <location> block at all", () => {
+    // This assertion is inverted from what it said this morning, and the
+    // reason is an outage.
+    //
+    // Two attempts were made to serve version.json uncached. A Cache-Control
+    // custom header scoped with <location> deployed fine and never appeared
+    // in the response. Replacing it with <staticContent><clientCache
+    // cacheControlMode="DisableCache" /> inside the same <location> also
+    // produced no header, and roughly twenty minutes later every request to
+    // both sites answered 500 -- static files included, which is an IIS
+    // configuration error and not an application fault. staticContent is
+    // commonly locked at machine level, and a worker process still holding
+    // the previous configuration would not fail until it recycled.
+    //
+    // The cache header is tracked in the POA&M as risk accepted with a
+    // compensating control. It is not worth a second outage: the monitor
+    // busts cache itself.
+    // Comments stripped first: this file explains the outage in prose, and
+    // prose that names the element must not fail a check about the element.
+    const xml = text.replace(/<!--[\s\S]*?-->/g, "");
+    expect(xml).not.toMatch(/<location/);
+    // Nothing should reintroduce the section that took the site down. The one
+    // <staticContent> this file has is the mimeMap block, at the top level,
+    // where it has always worked.
+    expect(xml).not.toMatch(/<clientCache/);
+    expect(xml.match(/<staticContent>/g) ?? []).toHaveLength(1);
   });
 
   it("is written by the release with the tag it is publishing", () => {
