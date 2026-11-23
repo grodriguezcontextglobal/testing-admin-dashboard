@@ -34,6 +34,9 @@ param(
   [string]$Repo = "grodriguezcontextglobal/testing-admin-dashboard",
   [string]$Root = "C:\inetpub\devitrak-admin",
   [int]$Keep = 5,
+  # Los sitios de IIS que sirven <Root>\current. Se reciclan tras cambiar la
+  # junction para que IIS relea el web.config del release nuevo.
+  [string[]]$AppPools = @("Admin", "Ops"),
   [string]$Tag,
   [string]$PackagePath,
   [switch]$Force
@@ -143,8 +146,55 @@ function Expand-Release([string]$ZipPath, [string]$ReleaseTag) {
       throw "El paquete $ReleaseTag no trae $required. No se despliega."
     }
   }
+
+  # Que el fichero exista no basta: si no es XML bien formado, IIS responde
+  # 500.19 a TODAS las peticiones del sitio, ficheros estaticos incluidos.
+  #
+  # El 2026-11-23 eso tiro los dos sitios durante unas tres horas y media. La
+  # causa fue un comentario con "--" dentro, que XML prohibe. El paquete traia
+  # su index.html y su web.config, el hash cuadraba, y este script lo desplego
+  # sin mas: hizo exactamente lo que se le pedia.
+  #
+  # El servidor no debe aceptar un paquete que no puede servir. Este parseo
+  # cuesta milisegundos, ocurre ANTES de tocar la junction, y deja el release
+  # anterior sirviendo. El mensaje de .NET nombra la linea y la columna
+  # exactas, asi que el log dice que hay que arreglar en vez de "algo falla".
+  $configPath = Join-Path $partial "web.config"
+  try {
+    [void][xml](Get-Content -Path $configPath -Raw -Encoding UTF8)
+  } catch {
+    Remove-Item $partial -Recurse -Force
+    throw "El web.config de $ReleaseTag no es XML valido; IIS devolveria 500 en todo el sitio. No se despliega. Detalle: $($_.Exception.Message)"
+  }
+
   Rename-Item -Path $partial -NewName (Split-Path $target -Leaf)
   return $target
+}
+
+# IIS cachea su configuracion y un cambio de junction no siempre le hace
+# releerla: el 2026-11-23 un release con el web.config arreglado se desplego y
+# el sitio siguio dando 500 hasta que se reciclaron los grupos de aplicaciones
+# a mano. Un despliegue que no surte efecto es el fallo que la POA&M
+# DVK-ADMIN-2026-001 existe para impedir, asi que el reciclado es parte del
+# despliegue y no un paso que alguien recuerda.
+#
+# No es fatal: si falla, el fichero ya esta en su sitio y lo peor que pasa es
+# que IIS sirva la configuracion anterior hasta su proximo reciclado. Se
+# registra para que eso no sea invisible.
+function Restart-AppPools([string[]]$Names) {
+  $appcmd = Join-Path $env:WINDIR "system32\inetsrv\appcmd.exe"
+  if (-not (Test-Path $appcmd)) {
+    Write-Log "AVISO: no se encontro appcmd.exe; IIS puede seguir con la configuracion anterior."
+    return
+  }
+  foreach ($name in $Names) {
+    & $appcmd recycle apppool /apppool.name:"$name" 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+      Write-Log "Reciclado el grupo de aplicaciones $name"
+    } else {
+      Write-Log "AVISO: no se pudo reciclar $name (codigo $LASTEXITCODE); IIS puede seguir con la configuracion anterior."
+    }
+  }
 }
 
 # Prepara la junction nueva al lado y la cambia con dos renames: el sitio pasa
@@ -214,6 +264,7 @@ try {
   if (-not $PackagePath) { $zipPath = Get-Package $release }
   $target = Expand-Release $zipPath $releaseTag
   Switch-Current $target
+  Restart-AppPools $AppPools
 
   $previousTag = if ($state) { $state.tag } else { $null }
   Save-State $releaseTag $previousTag ((Get-Date).ToString("o"))

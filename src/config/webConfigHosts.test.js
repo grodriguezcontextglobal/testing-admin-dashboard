@@ -24,6 +24,34 @@ describe("public/web.config", () => {
     expect(doc.querySelector("parsererror")).toBeNull();
   });
 
+  it("has no comment XML forbids, which this parser accepts and IIS does not", () => {
+    // 2026-11-23: both sites answered 500 for roughly three hours. The cause
+    // was a comment in this file containing "--", which XML forbids inside a
+    // comment. IIS reported it exactly:
+    //
+    //   Config Error: Configuration file is not well-formed XML
+    //   Config Source: 110: ... answered 500 -- static files included ...
+    //
+    // The test above did not catch it, and its own comment already said what
+    // was at stake: a file that does not parse takes down the whole
+    // dashboard. happy-dom's DOMParser is lenient about this and reports no
+    // parsererror, so the guard has to be explicit.
+    //
+    // It happened twice. The second time was the fix for the first, rewritten
+    // with "--" again -- which is why an hour of rollbacks and redeploys
+    // changed nothing.
+    const comments = text.match(/<!--[\s\S]*?-->/g) ?? [];
+    expect(comments.length).toBeGreaterThan(0);
+    for (const comment of comments) {
+      const body = comment.slice(4, -3);
+      const at = body.indexOf("--");
+      const where = at === -1 ? "" : body.slice(Math.max(0, at - 40), at + 40).trim();
+      expect(body.includes("--"), `comment contains "--" near: ${where}`).toBe(false);
+      // A comment may not end with a hyphen either: it would make "--->".
+      expect(body.endsWith("-"), "comment ends with a hyphen").toBe(false);
+    }
+  });
+
   it("still carries the security-headers marker", () => {
     // vite.config.js replaces it at build time; without it the build throws
     // rather than shipping a site with no CSP (securityHeaders.js).
@@ -155,6 +183,61 @@ describe("version.json, so production can state what it serves", () => {
     expect(check).not.toMatch(/self-hosted/);
     // Two samples before concluding, because one can be confidently wrong.
     expect(check).toContain("RESAMPLE_SECONDS");
+  });
+
+  it("can prove its own alarm fires, without opening a false incident", () => {
+    // The healthy path proved itself in production on 2026-11-23. The alarm
+    // path had never run, and an untested alarm is a plausible alarm. The
+    // drill drives the mismatch branch against a tag that cannot exist.
+    const check = fs.readFileSync(
+      path.join(ROOT_DIR, ".github", "workflows", "deploy-check.yml"),
+      "utf8",
+    );
+    expect(check).toMatch(/drill:/);
+    expect(check).toContain("DRILL-THIS-TAG-CANNOT-EXIST");
+
+    // The guard has to come before the issue is created, or a drill leaves a
+    // false outage in the record for whoever finds it next week.
+    const report = check.slice(check.indexOf("Report a stuck deployment"));
+    const guard = report.indexOf('DRILL" = "true"');
+    const creates = report.indexOf("gh issue create");
+    expect(guard, "the drill guard is missing from the report step").toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(creates);
+  });
+});
+
+describe("the updater refuses a package it cannot serve", () => {
+  // 2026-11-23: a web.config with "--" in a comment was published, the
+  // package had its index.html and its web.config, the SHA-256 matched, and
+  // the updater deployed it. IIS then answered 500.19 to every request on
+  // both sites for about three and a half hours.
+  //
+  // The script did exactly what it was asked. What it was asked was not
+  // enough: a file existing is not the same as a file IIS can parse.
+  const updater = fs.readFileSync(
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "deploy", "iis", "Update-AdminSite.ps1"),
+    "utf8",
+  );
+
+  it("parses web.config before it swaps the junction", () => {
+    // Order is the whole protection. Validating after the swap would leave
+    // the broken build serving, which is the state this guards against.
+    const validates = updater.indexOf("no es XML valido");
+    const swaps = updater.indexOf("Rename-Item -Path $partial");
+    expect(validates, "the XML check is missing").toBeGreaterThan(-1);
+    expect(validates).toBeLessThan(swaps);
+    expect(updater).toContain("[xml](Get-Content");
+  });
+
+  it("recycles the application pools after deploying", () => {
+    // A junction swap does not always make IIS re-read its configuration.
+    // On 2026-11-23 a release with the fixed file deployed and the site kept
+    // answering 500 until the pools were recycled by hand. A deploy that does
+    // not take effect is the failure POA&M DVK-ADMIN-2026-001 exists for.
+    expect(updater).toContain("Restart-AppPools");
+    const deploys = updater.indexOf("Switch-Current $target");
+    const recycles = updater.indexOf("Restart-AppPools $AppPools");
+    expect(recycles).toBeGreaterThan(deploys);
   });
 });
 
