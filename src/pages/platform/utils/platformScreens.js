@@ -206,7 +206,7 @@ export const buildListQuery = ({ filterParam, filter, search, company, staff, ra
 
 /** Total tiles above a list. A `critical` total turns red only when above zero. */
 export const screenTotalsTiles = (screen, totals) =>
-  screen.totals.map((total) => {
+  withReportedMoneyTiles(screen.totals, totals).map((total) => {
     const raw = totals?.[total.key];
     return {
       label: total.label,
@@ -238,9 +238,56 @@ const OVERVIEW_TILES = [
   { key: "activeEvents", label: "Live events", format: "number" },
 ];
 
+/**
+ * Whether the server reported any money at all for this period.
+ *
+ * `null` means the server does not know, `0` means nothing was charged, and
+ * the difference is the whole point: with an empty topClientsByRevenue our
+ * revenue section used to say "No revenue yet -- nothing was charged in this
+ * period", which is a statement of fact we did not have. The amounts live in
+ * Stripe and not in the database (backend note of 2026-11-20, §2), so until
+ * that is resolved every money field arrives null and the honest empty state
+ * is a different sentence.
+ *
+ * Deliberately `== null`, so undefined counts too: a summary that omits the
+ * field is also a summary that does not know.
+ */
+export const revenueUnavailable = (summary) => summary?.current?.revenueCents == null;
+
+const reported = (value) => value !== null && value !== undefined;
+
+/**
+ * Drop the money columns while the server has no amounts to put in them.
+ *
+ * Neither transaction model stores an amount; the money is in Stripe and
+ * nowhere else (backend note of 2026-11-20, §2). Until that is resolved every
+ * amount arrives null, and a column of dashes is worse than no column: it
+ * occupies the width a reader expects a figure in, and invites the reading
+ * that these clients billed nothing. Gustavo's decision, 2026-11-20 — leave
+ * the money out until there is a real source for it.
+ *
+ * Driven by the data rather than by a flag, so the columns come back on their
+ * own the day the server starts sending numbers, with no second deploy and no
+ * flag anyone has to remember. "For now" should expire by itself.
+ *
+ * An empty page keeps its columns: there is nothing to show either way, and a
+ * table whose shape changes when a search finds nothing reads as a bug.
+ */
+export const withReportedMoney = (columns, rows) => {
+  const list = Array.isArray(rows) ? rows : [];
+  if (list.length === 0) return columns;
+  return columns.filter(
+    (column) => column.format !== "cents" || list.some((row) => reported(row?.[column.key])),
+  );
+};
+
+/** The same rule for a row of totals or KPI tiles, which have one value each. */
+export const withReportedMoneyTiles = (tiles, values) =>
+  tiles.filter((tile) => tile.format !== "cents" || reported(values?.[tile.key]));
+
 /** Platform KPI tiles for Overview, each with its change vs the previous period. */
 export const overviewTiles = (summary) =>
-  OVERVIEW_TILES.map((tile) => {
+  withReportedMoneyTiles(OVERVIEW_TILES, summary?.current).map((tile) => {
     const current = summary?.current?.[tile.key];
     return {
       label: tile.label,

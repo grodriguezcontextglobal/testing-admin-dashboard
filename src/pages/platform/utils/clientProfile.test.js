@@ -251,3 +251,50 @@ describe("normalizeSectionResponse, screen filter options", () => {
     expect(normalizeSectionResponse({ ok: true, data: [], filters: "staff" }).filters).toBeNull();
   });
 });
+
+describe("a stat tile the server cannot fill", () => {
+  const full = {
+    devicesOut: 31, deviceCount: 240, devicesOverdue: 4,
+    revenue30dCents: 125000, currency: "USD", staffCount: 7,
+  };
+
+  it("shows all four when every figure is reported", () => {
+    expect(companyStatTiles(full).map((t) => t.label)).toEqual([
+      "Devices out",
+      "Overdue",
+      "Revenue 30d",
+      "Staff",
+    ]);
+  });
+
+  it("leaves out Overdue rather than showing a red tile that cannot go red", () => {
+    // devicesOverdue comes from the device-lease views, not wired yet, and
+    // Gustavo chose /companies/:id ahead of it on 2026-11-20 -- so this page
+    // ships before the figure does. The tile turns critical above zero, so a
+    // null value means a red-capable indicator physically incapable of
+    // turning red. A reader learns to trust it and it cannot earn that.
+    const tiles = companyStatTiles({ ...full, devicesOverdue: null });
+    expect(tiles.map((t) => t.label)).not.toContain("Overdue");
+    expect(tiles.map((t) => t.label)).toContain("Devices out");
+  });
+
+  it("leaves out Revenue while no transaction stores an amount", () => {
+    // Same rule as every other money column in the console: the money is in
+    // Stripe and nowhere else, so the figure is null, and this row reads as
+    // a summary where a dash is taken for a zero.
+    const tiles = companyStatTiles({ ...full, revenue30dCents: null });
+    expect(tiles.map((t) => t.label)).not.toContain("Revenue 30d");
+  });
+
+  it("keeps a real zero, which is an answer and not a silence", () => {
+    const tiles = companyStatTiles({ ...full, devicesOverdue: 0, revenue30dCents: 0 });
+    expect(tiles.map((t) => t.label)).toContain("Overdue");
+    expect(tiles.map((t) => t.label)).toContain("Revenue 30d");
+    expect(tiles.find((t) => t.label === "Overdue").tone).toBe("neutral");
+  });
+
+  it("never drops a tile the server always sends", () => {
+    const tiles = companyStatTiles({});
+    expect(tiles.map((t) => t.label)).toEqual(["Devices out", "Staff"]);
+  });
+});
