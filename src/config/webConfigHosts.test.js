@@ -185,3 +185,38 @@ describe("version.json, so production can state what it serves", () => {
     expect(check).toContain("RESAMPLE_SECONDS");
   });
 });
+
+describe("the updater refuses a package it cannot serve", () => {
+  // 2026-11-23: a web.config with "--" in a comment was published, the
+  // package had its index.html and its web.config, the SHA-256 matched, and
+  // the updater deployed it. IIS then answered 500.19 to every request on
+  // both sites for about three and a half hours.
+  //
+  // The script did exactly what it was asked. What it was asked was not
+  // enough: a file existing is not the same as a file IIS can parse.
+  const updater = fs.readFileSync(
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "deploy", "iis", "Update-AdminSite.ps1"),
+    "utf8",
+  );
+
+  it("parses web.config before it swaps the junction", () => {
+    // Order is the whole protection. Validating after the swap would leave
+    // the broken build serving, which is the state this guards against.
+    const validates = updater.indexOf("no es XML valido");
+    const swaps = updater.indexOf("Rename-Item -Path $partial");
+    expect(validates, "the XML check is missing").toBeGreaterThan(-1);
+    expect(validates).toBeLessThan(swaps);
+    expect(updater).toContain("[xml](Get-Content");
+  });
+
+  it("recycles the application pools after deploying", () => {
+    // A junction swap does not always make IIS re-read its configuration.
+    // On 2026-11-23 a release with the fixed file deployed and the site kept
+    // answering 500 until the pools were recycled by hand. A deploy that does
+    // not take effect is the failure POA&M DVK-ADMIN-2026-001 exists for.
+    expect(updater).toContain("Restart-AppPools");
+    const deploys = updater.indexOf("Switch-Current $target");
+    const recycles = updater.indexOf("Restart-AppPools $AppPools");
+    expect(recycles).toBeGreaterThan(deploys);
+  });
+});
