@@ -269,3 +269,30 @@ describe("the console access check runs in CI", () => {
     expect(ci).toContain("--mode platform-e2e");
   });
 });
+
+describe("the console shows real data in a release", () => {
+  const ROOT_DIR2 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+  const release = fs.readFileSync(path.join(ROOT_DIR2, ".github", "workflows", "release.yml"), "utf8");
+
+  it("builds with the sample data off", () => {
+    // The backend deployed /summary and /companies on 2026-11-23 at 14:41
+    // UTC, which is what this line was waiting for. Until then the default
+    // was 'true' because it was the only setting that showed anything.
+    expect(release).toMatch(/VITE_APP_PLATFORM_CONSOLE_MOCK:.*\|\|\s*'false'/);
+  });
+
+  it("keeps the console itself switched on", () => {
+    // Two separate flags on purpose: a build may serve sample data and still
+    // require the gate. Turning the data real must not turn the gate off.
+    expect(release).toMatch(/VITE_APP_FEATURE_PLATFORM_CONSOLE:.*\|\|\s*'true'/);
+  });
+
+  it("does not ship the development bypass, whatever the flags say", () => {
+    // PLATFORM_CONSOLE_DEV_BYPASS is import.meta.env.DEV && sample data, and
+    // DEV is false in every vite build. With real client data on screen this
+    // stops being a detail: it is the half that would let any signed-in
+    // client user reach /platform.
+    const flags = fs.readFileSync(path.join(ROOT_DIR2, "src", "config", "featureFlags.js"), "utf8");
+    expect(flags).toMatch(/PLATFORM_CONSOLE_DEV_BYPASS\s*=[\s\S]{0,200}?import\.meta\.env\.DEV\s*===\s*true/);
+  });
+});
