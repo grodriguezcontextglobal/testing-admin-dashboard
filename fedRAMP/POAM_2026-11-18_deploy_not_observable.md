@@ -156,6 +156,37 @@ Production does not state which release it is serving. Today's verification had 
 
 Publish the release tag in the artifact — a `version.json` written at package time, served by IIS and uncached. M3 then compares two tags rather than inferring from a hash, and anybody can answer "what is in production?" with one request.
 
+#### Verified in production, 2026-11-23
+
+M1–M5 merged as PR #129. Release `admin-20261123-134626-07a6ee1` deployed itself, and
+**four minutes after the merge production was stating its own version**:
+
+```json
+{ "tag": "admin-20261123-134626-07a6ee1", "commit": "07a6ee14…", "builtAt": "2026-11-23T13:46:26Z" }
+```
+
+That request is now the answer to "what is in production?", and it is also the first
+deployment in this item's history that was confirmed rather than assumed.
+
+**M3 ran and behaved as specified, on its first exercise.** Triggered one minute after the
+release, it read the tag, measured the release's age and **declined to conclude**, because
+one minute is inside the twenty-minute window. "Tolerate slow" is therefore not only
+written down, it is observed. The comparison path itself is exercised by the next run past
+the window.
+
+**One part of M4 failed on the first attempt and is recorded rather than quietly fixed.**
+`version.json` was served without any `Cache-Control`. The inherited security headers did
+reach it, which proves both the file and the configuration were deployed, so this was not a
+deployment failure — a `<location>`-scoped custom header simply did not apply. Rather than
+guess at the reason, it was rebuilt on `<clientCache cacheControlMode="DisableCache" />`,
+the mechanism IIS documents for static files. **Until a release carrying that change is
+deployed and measured, this line is a claim and not evidence.**
+
+The practical risk in the meantime is low rather than absent: the external check appends a
+cache-busting parameter and sends its own `no-cache`, so the monitor cannot read a stale
+answer even if an intermediary caches the file. Anyone else reading `version.json` by hand
+could.
+
 ### M5 — Correct the change-management evidence · owner dashboard · due 2026-11-25
 
 Amend `FRONTEND_D3_change_management_2026-11-03.md` so the deployment step describes what is verified rather than what is intended, and reference this item. **Do not quietly edit the claim** — it was written in good faith from the configuration, and the correction is itself evidence that the review process works.
