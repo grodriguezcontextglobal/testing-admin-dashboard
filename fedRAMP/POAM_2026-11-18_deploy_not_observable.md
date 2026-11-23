@@ -174,18 +174,46 @@ one minute is inside the twenty-minute window. "Tolerate slow" is therefore not 
 written down, it is observed. The comparison path itself is exercised by the next run past
 the window.
 
-**One part of M4 failed on the first attempt and is recorded rather than quietly fixed.**
-`version.json` was served without any `Cache-Control`. The inherited security headers did
-reach it, which proves both the file and the configuration were deployed, so this was not a
-deployment failure — a `<location>`-scoped custom header simply did not apply. Rather than
-guess at the reason, it was rebuilt on `<clientCache cacheControlMode="DisableCache" />`,
-the mechanism IIS documents for static files. **Until a release carrying that change is
-deployed and measured, this line is a claim and not evidence.**
+**The comparison itself was exercised at 14:24**, once a release was old enough to leave
+the window:
 
-The practical risk in the meantime is low rather than absent: the external check appends a
-cache-busting parameter and sends its own `no-cache`, so the monitor cannot read a stale
-answer even if an intermediary caches the file. Anyone else reading `version.json` by hand
-could.
+```
+Latest release    admin-20261123-140305-1a6ae40, published 21 minute(s) ago.
+Production serves admin-20261123-140305-1a6ae40, which is the latest release.
+```
+
+That is the first time in this item's history that "what is in production?" was answered
+by a machine, from outside the machine in question, against a published release.
+
+#### Still open: `version.json` carries no cache headers
+
+Two mechanisms were tried and **both failed in production**, which is recorded here rather
+than fixed quietly because the second failure changes the diagnosis.
+
+1. A `Cache-Control` custom header scoped with `<location>`. Absent from the response.
+2. `<clientCache cacheControlMode="DisableCache" />` in the same `<location>`. Deployed in
+   release `admin-20261123-140305-1a6ae40` and measured: also absent.
+
+**This is not a deployment failure and not a syntax error we can see.** The inherited
+security headers — HSTS, CSP, `X-Frame-Options`, `Permissions-Policy` — all reach
+`version.json`, so the file and the configuration are in force. And the discriminating
+measurement: **no resource on the site returns `Cache-Control`, not even a hashed asset
+under `/assets/`**, which is the one kind of file a static site normally does cache. That
+points away from this `web.config` and towards the reverse proxy in front of IIS
+(`Server: openresty`), which is not ours to inspect.
+
+**Owner: Gustavo → whoever administers openresty.** The question is one sentence: does the
+proxy strip `Cache-Control` and `Expires` on responses from `admin.devitrak.net`? A third
+blind attempt from our side costs a merge, a release and a deploy cycle each time, and the
+evidence says it would probably fail too.
+
+**Risk accepted in the meantime, with a compensating control.** `deploy-check.yml` appends
+a cache-busting parameter *and* sends its own `no-cache` request header, so the monitor —
+the thing this item exists to make work — cannot read a stale answer whatever any
+intermediary does. `version.json` also carries `ETag` and `Last-Modified`, so a client that
+revalidates gets the right answer. The residual exposure is a person reading the file by
+hand in a browser applying heuristic freshness, which immediately after a deploy is a
+window of seconds. **Tracked, not closed.**
 
 ### M5 — Correct the change-management evidence · owner dashboard · due 2026-11-25
 
@@ -211,3 +239,29 @@ This item closes when all of the following are true:
 4. The change-management document describes the pipeline as it is.
 
 **Target completion: 2026-11-25.**
+
+### Against those criteria, 2026-11-23
+
+| | Criterion | State |
+|---|---|---|
+| 1 | Root cause recorded and fixed | **Met.** The updater had never been installed; it is installed and deploying on its own |
+| 2 | A stopped updater is visible within 20 minutes, from outside the VM | **Partial** — see below |
+| 3 | Production states its version and the check reads it | **Met**, demonstrated at 14:24 |
+| 4 | The change-management document describes the pipeline as it is | **Met**, D3 rows 6 and 7 |
+
+**Why criterion 2 is partial, stated precisely.** What has been demonstrated is the healthy
+path: the check runs off the machine, reads both tags and concludes correctly when they
+agree. **The alarm path — two disagreeing samples, a red run, an issue — has never run
+against real data.** An untested alarm is a plausible alarm, and the question an assessor
+asks about a detective control is whether anyone has checked that it fires.
+
+So the check now takes a **drill**: `workflow_dispatch` with `drill: true` compares
+production against a tag that cannot exist, which drives the mismatch branch end to end —
+both samples, the resample wait, the red run and the summary — while opening no issue and
+touching nothing in production. Everything except the expectation is real, so a drill that
+could not read `version.json` would stop at "cannot read" rather than reaching the alarm,
+which makes it a test of the code and not of a mock of it.
+
+**Criterion 2 is met on the first drill run that goes red**, and that run is the evidence to
+keep. Run it after any change to this workflow, and periodically, the way one tests a smoke
+alarm rather than waiting for a fire.
