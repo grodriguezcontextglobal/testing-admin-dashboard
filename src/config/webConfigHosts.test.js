@@ -96,14 +96,16 @@ describe("version.json, so production can state what it serves", () => {
   // either half goes, the monitor silently stops monitoring.
   const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-  it("is served with no-store, so a cached copy cannot report the previous deploy", () => {
-    // no-store rather than no-cache: a revalidated stale answer is still a
-    // wrong answer here, and wrong in the direction of saying a stuck deploy
-    // is fine.
+  it("is served uncached, so a cached copy cannot report the previous deploy", () => {
+    // Through <clientCache>, not a Cache-Control custom header. The header was
+    // tried and measured against production on 2026-11-23: the inherited
+    // security headers reached version.json, proving the file and the config
+    // were deployed, and the Cache-Control line was simply absent from the
+    // response. This is the mechanism IIS documents for static files.
     const block = /<location path="version\.json">[\s\S]*?<\/location>/.exec(text)?.[0];
     expect(block, "web.config has no <location> for version.json").toBeTruthy();
-    expect(block).toMatch(/Cache-Control/);
-    expect(block).toMatch(/no-store/);
+    expect(block).toMatch(/clientCache/);
+    expect(block).toMatch(/DisableCache/);
   });
 
   it("is written by the release with the tag it is publishing", () => {
