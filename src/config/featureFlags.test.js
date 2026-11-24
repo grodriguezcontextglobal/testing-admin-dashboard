@@ -208,3 +208,69 @@ describe("PLATFORM_CONSOLE_DEV_BYPASS (skips the access gate)", () => {
     expect(flags.PLATFORM_CONSOLE_MOCK).toBeUndefined();
   });
 });
+
+describe("FEATURE_ASSISTANT", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("defaults to false when the env var is unset", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_ASSISTANT", undefined);
+    const { FEATURE_ASSISTANT } = await import("./featureFlags");
+    expect(FEATURE_ASSISTANT).toBe(false);
+  });
+
+  it("is false for any value other than the exact string 'true'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_ASSISTANT", "1");
+    const { FEATURE_ASSISTANT } = await import("./featureFlags");
+    expect(FEATURE_ASSISTANT).toBe(false);
+  });
+
+  it("is true only when the env var is the string 'true'", async () => {
+    vi.stubEnv("VITE_APP_FEATURE_ASSISTANT", "true");
+    const { FEATURE_ASSISTANT } = await import("./featureFlags");
+    expect(FEATURE_ASSISTANT).toBe(true);
+  });
+});
+
+// Unlike the console's sample data, which is allowed in a build because
+// invented numbers there announce themselves and open nothing, invented
+// ANSWERS are different in kind: an answer is a sentence a staff member acts
+// on, and it arrives in the same window a real one would. So this one is
+// pinned to the dev server the way the console's gate bypass is.
+describe("ASSISTANT_STUB (invented answers)", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("is true with the env var in a dev server", async () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_APP_ASSISTANT_STUB", "true");
+    const { ASSISTANT_STUB } = await import("./featureFlags");
+    expect(ASSISTANT_STUB).toBe(true);
+  });
+
+  // The one that matters: no release can ever answer a staff question with
+  // text we invented, whatever any env var says.
+  it("is always false in a build, even with the env var", async () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("VITE_APP_ASSISTANT_STUB", "true");
+    const { ASSISTANT_STUB } = await import("./featureFlags");
+    expect(ASSISTANT_STUB).toBe(false);
+  });
+
+  it("is false without the env var", async () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_APP_ASSISTANT_STUB", undefined);
+    const { ASSISTANT_STUB } = await import("./featureFlags");
+    expect(ASSISTANT_STUB).toBe(false);
+  });
+});
