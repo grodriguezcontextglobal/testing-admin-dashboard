@@ -140,3 +140,39 @@ export const PLATFORM_CONSOLE_SAMPLE_DATA =
  */
 export const PLATFORM_CONSOLE_DEV_BYPASS =
   import.meta.env.DEV === true && PLATFORM_CONSOLE_SAMPLE_DATA;
+
+/**
+ * Staff assistant: a chat window that asks a question through the server,
+ * which hands it to an n8n agent and answers through the job route
+ * (reports/FRONTEND_assistant_three_questions_2026-11-23.md).
+ *
+ * Default OFF, and it has to stay off until three things are true: the backend
+ * ships POST /api/admin/assistant/ask, the agent reads data through a
+ * short-lived token scoped to one company, and the question of whether
+ * customer data may leave our boundary has an answer that is written down.
+ * The last one is not ours to decide, which is exactly why the flag exists --
+ * the window can be finished and reviewed without anyone having decided it.
+ *
+ * The day it is turned on, that is a line in release.yml, not a variable: this
+ * repository has no Actions variables, so a `vars.VITE_APP_FEATURE_ASSISTANT`
+ * set to "true" would fall to its default and nothing would say so. That is
+ * how the console shipped for weeks with its feature flag unread.
+ *
+ * Set VITE_APP_FEATURE_ASSISTANT=true in .env.dev to work on it.
+ */
+export const FEATURE_ASSISTANT = import.meta.env.VITE_APP_FEATURE_ASSISTANT === "true";
+
+/**
+ * Invented answers instead of the network, so the window can be built and
+ * reviewed before the endpoint exists (src/pages/assistant/utils/stub/).
+ *
+ * Dev server only, and unlike PLATFORM_CONSOLE_SAMPLE_DATA that is deliberate
+ * rather than incidental. Sample numbers on a console screen announce
+ * themselves with a banner and are obviously a prototype. An invented ANSWER
+ * is a sentence, in the same window a real answer would use, and a staff
+ * member may act on it before noticing any banner. `import.meta.env.DEV` is
+ * false in every `vite build`, so no release can answer a question with text
+ * we made up, whatever the env var says.
+ */
+export const ASSISTANT_STUB =
+  import.meta.env.DEV === true && import.meta.env.VITE_APP_ASSISTANT_STUB === "true";
