@@ -205,6 +205,23 @@ export const answerSegments = (answer) => {
     .filter((segment) => segment.text.length > 0);
 };
 
+/**
+ * The clock time to print under a message, or "" when there is nothing to
+ * print.
+ *
+ * Empty rather than "Invalid Date" for a timestamp we cannot read: a line of
+ * metadata that cannot be trusted should disappear, not shout. The locale and
+ * zone are the reader's by default and are arguments only so a test can pin
+ * them -- a fixed locale here would show one staff member a time in a format
+ * nobody around them uses.
+ */
+export const clockTime = (at, { locale, timeZone } = {}) => {
+  if (typeof at !== "string" && typeof at !== "number") return "";
+  const moment = new Date(at);
+  if (Number.isNaN(moment.getTime())) return "";
+  return moment.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+};
+
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 const RANGE_LABELS = { "7d": "7 days", "30d": "30 days", "90d": "90 days" };

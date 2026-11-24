@@ -1,0 +1,146 @@
+/* The staff assistant window.
+ *
+ * Only the things inline styles cannot express live here: keyframes, hover and
+ * focus states, the scrollbar, and the reduced-motion opt-out. Everything that
+ * is a one-off value stays inline in the component, which is this repository's
+ * split (CLAUDE.md, "Styling").
+ *
+ * This file is imported by AssistantWindow.jsx, which is lazy and gated on the
+ * flag, so a build with the assistant off emits neither the chunk nor this CSS.
+ */
+
+/* ── the panel ─────────────────────────────────────────────────────────────── */
+
+.assistant-panel {
+  animation: assistant-rise 180ms ease-out;
+}
+
+@keyframes assistant-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── the thread ────────────────────────────────────────────────────────────── */
+
+.assistant-thread {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300, #d0d5dd) transparent;
+}
+
+.assistant-thread::-webkit-scrollbar {
+  width: 6px;
+}
+
+.assistant-thread::-webkit-scrollbar-thumb {
+  background: var(--gray-300, #d0d5dd);
+  border-radius: 999px;
+}
+
+.assistant-thread::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* A message arrives rather than appears. Short enough not to delay reading. */
+.assistant-message {
+  animation: assistant-arrive 160ms ease-out;
+}
+
+@keyframes assistant-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── the thinking indicator ────────────────────────────────────────────────── */
+
+.assistant-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gray-400, #98a2b3);
+  animation: assistant-bounce 1.2s infinite ease-in-out;
+}
+
+.assistant-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.assistant-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes assistant-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+/* ── the suggestion chips ──────────────────────────────────────────────────── */
+
+.assistant-chip {
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.assistant-chip:hover:not(:disabled) {
+  background: var(--blue-dark-25, #f5f8ff);
+  border-color: var(--blue-dark-300, #84adff);
+}
+
+.assistant-chip:focus-visible,
+.assistant-icon-button:focus-visible,
+.assistant-send:focus-visible {
+  outline: 2px solid var(--blue-dark-600, #155eef);
+  outline-offset: 2px;
+}
+
+.assistant-icon-button {
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.assistant-icon-button:hover {
+  background: var(--gray-100, #f2f4f7);
+  color: var(--gray-700, #344054);
+}
+
+/* ── the send button ───────────────────────────────────────────────────────── */
+
+.assistant-send {
+  transition: background 120ms ease, opacity 120ms ease;
+}
+
+.assistant-send:hover:not(:disabled) {
+  background: var(--blue-dark-700, #004eeb);
+}
+
+.assistant-send:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* ── motion is a preference, not a decision we get to make for the reader ──── */
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-panel,
+  .assistant-message,
+  .assistant-dot {
+    animation: none;
+  }
+}

@@ -11,6 +11,7 @@ import {
   ASSISTANT_CATALOG_PATH,
   buildAskRequest,
   catalogLabel,
+  clockTime,
   describeAnswer,
   isCompanyUnknown,
   isPartial,
@@ -340,6 +341,29 @@ describe("describeAnswer", () => {
 
   it("returns null for an unknown company rather than inventing a zero", () => {
     expect(describeAnswer({ questionId: "company_devices_out", data: null })).toBeNull();
+  });
+});
+
+describe("clockTime", () => {
+  const at = "2026-11-24T16:05:00Z";
+
+  it("prints the hour and minute of a message", () => {
+    expect(clockTime(at, { locale: "en-GB", timeZone: "UTC" })).toBe("16:05");
+  });
+
+  // The reader's own locale and zone by default: a fixed format would show a
+  // staff member a time written the way nobody around them writes it.
+  it("formats in the reader's locale by default", () => {
+    expect(clockTime(at)).toBeTruthy();
+  });
+
+  // Empty rather than "Invalid Date": a line of metadata that cannot be
+  // trusted should disappear, not shout.
+  it("is empty for a timestamp it cannot read", () => {
+    expect(clockTime("not a date")).toBe("");
+    expect(clockTime(undefined)).toBe("");
+    expect(clockTime(null)).toBe("");
+    expect(clockTime({})).toBe("");
   });
 });
 
