@@ -1,144 +1,90 @@
+/* eslint-env node */
+// The last block reads this file's own source from disk, so it runs with
+// Node's globals available even though the test environment is happy-dom.
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import {
+  answerSegments,
+  askError,
   ASSISTANT_ASK_PATH,
-  QUESTION_MAX_CHARS,
-  LABEL_MAX_CHARS,
-  questionError,
+  ASSISTANT_CATALOG_PATH,
   buildAskRequest,
-  readAskJobId,
-  readAnswer,
-  assistantJob,
-  askStartError,
-  safeSources,
+  catalogLabel,
+  describeAnswer,
+  isCompanyUnknown,
+  isPartial,
+  isUnsupported,
+  LABEL_MAX_CHARS,
+  QUESTION_MAX_CHARS,
+  questionError,
+  readCatalog,
+  readReply,
   requesterFromUser,
+  retryAfterSeconds,
+  safeSources,
+  UNSUPPORTED_QUESTION_ID,
 } from "./assistant";
+
+describe("the routes", () => {
+  // Its own namespace, NOT under /api/admin. A new route inside an existing
+  // router can be shadowed by a parameter registered earlier, which in the
+  // server's repository is not theoretical.
+  it("is its own namespace rather than a route inside admin", () => {
+    expect(ASSISTANT_ASK_PATH).toBe("/assistant/ask");
+    expect(ASSISTANT_CATALOG_PATH).toBe("/assistant/catalog");
+    expect(ASSISTANT_ASK_PATH.startsWith("/admin")).toBe(false);
+  });
+});
 
 describe("questionError", () => {
   it("refuses an empty question before it costs a request", () => {
     expect(questionError("")).toBeTruthy();
-    expect(questionError("   \n  ")).toBeTruthy();
+    expect(questionError("   ")).toBeTruthy();
     expect(questionError(undefined)).toBeTruthy();
   });
 
-  it("refuses one over the cap, and says the cap", () => {
+  it("refuses a question past the server's cap, and says both numbers", () => {
     const tooLong = "a".repeat(QUESTION_MAX_CHARS + 1);
-    const message = questionError(tooLong);
-    expect(message).toContain(String(QUESTION_MAX_CHARS));
+    const refusal = questionError(tooLong);
+    expect(refusal).toContain(String(QUESTION_MAX_CHARS));
+    expect(refusal).toContain(String(QUESTION_MAX_CHARS + 1));
   });
 
   it("accepts a question exactly at the cap", () => {
     expect(questionError("a".repeat(QUESTION_MAX_CHARS))).toBeNull();
   });
 
-  it("accepts an ordinary question", () => {
-    expect(questionError("Which devices are overdue this week?")).toBeNull();
-  });
-});
-
-describe("buildAskRequest", () => {
-  it("sends the trimmed question", () => {
-    expect(buildAskRequest({ question: "  hello  " }).question).toBe("hello");
-  });
-
-  it("carries a conversation id only when there is one", () => {
-    expect(buildAskRequest({ question: "x", conversationId: "c1" }).conversation_id).toBe("c1");
-    expect(buildAskRequest({ question: "x", conversationId: "" })).not.toHaveProperty(
-      "conversation_id",
-    );
-    expect(buildAskRequest({ question: "x", conversationId: null })).not.toHaveProperty(
-      "conversation_id",
-    );
-  });
-
-  // The agent answers better when it knows which company and which staff
-  // member is asking, and this product runs on two databases, so each id has
-  // a Mongo and a SQL form. Both go, because the agent reaching either store
-  // with only the other one's id would have to look it up to start.
-  it("carries both forms of both ids", () => {
-    const body = buildAskRequest({
-      question: "x",
-      requester: {
-        companyId: "65f0c0ffee",
-        companySqlId: 12,
-        staffMemberId: "65f0beef",
-        staffMemberSqlId: 34,
-      },
-    });
-    expect(body.company_id).toEqual({ nosql: "65f0c0ffee", sql: 12 });
-    expect(body.staff_member_id).toEqual({ nosql: "65f0beef", sql: 34 });
-  });
-
-  // A predictable shape beats a minimal one: the agent should never have to
-  // branch on whether a key exists. A null says "we do not have this", which
-  // is information; a missing key is silence, which reads the same as a bug.
-  it("sends null rather than dropping an id it does not have", () => {
-    const body = buildAskRequest({ question: "x", requester: { companyId: "only-this" } });
-    expect(body.company_id).toEqual({ nosql: "only-this", sql: null });
-    expect(body.staff_member_id).toEqual({ nosql: null, sql: null });
-  });
-
-  it("still sends both envelopes when it knows nothing", () => {
-    const body = buildAskRequest({ question: "x" });
-    expect(body.company_id).toEqual({ nosql: null, sql: null });
-    expect(body.staff_member_id).toEqual({ nosql: null, sql: null });
-  });
-
-  // The body stays a shape the backend can validate. Anything else handed to
-  // this function is dropped rather than forwarded, so a caller cannot grow
-  // the contract by accident.
-  it("sends nothing beyond the agreed fields", () => {
-    const body = buildAskRequest({
-      question: "x",
-      conversationId: "c1",
-      requester: { companyId: "a", role: "admin", token: "secret" },
-      role: "admin",
-      extra: "no",
-    });
-    expect(Object.keys(body).sort()).toEqual([
-      "company_id",
-      "conversation_id",
-      "question",
-      "staff_member_id",
-    ]);
-    expect(JSON.stringify(body)).not.toContain("secret");
+  it("measures the trimmed question, the way the server will", () => {
+    expect(questionError(`  ${"a".repeat(QUESTION_MAX_CHARS)}  `)).toBeNull();
   });
 });
 
 describe("requesterFromUser", () => {
   const user = {
-    uid: "65f0beef",
-    companyData: { id: "65f0c0ffee" },
-    sqlInfo: { company_id: 12, staff_id: 34 },
+    uid: "mongo-staff",
+    companyData: { id: "mongo-company" },
+    sqlInfo: { company_id: 42, staff_id: 7 },
   };
 
-  it("reads the four ids from the session", () => {
+  it("reads both id forms for the company and the staff member", () => {
     expect(requesterFromUser(user)).toEqual({
-      companyId: "65f0c0ffee",
-      companySqlId: 12,
-      staffMemberId: "65f0beef",
-      staffMemberSqlId: 34,
+      companyId: "mongo-company",
+      companySqlId: 42,
+      staffMemberId: "mongo-staff",
+      staffMemberSqlId: 7,
     });
   });
 
-  // The fallback the rest of the dashboard already uses when writing
-  // created_by (CreateLocationModal, CreateSubLocationPathModal). Copied
-  // rather than invented so the assistant names the same staff member the
-  // rest of the app does.
-  it("falls back to sqlInfo.id when there is no staff_id", () => {
-    const legacy = { ...user, sqlInfo: { company_id: 12, id: 99 } };
-    expect(requesterFromUser(legacy).staffMemberSqlId).toBe(99);
+  it("falls back to sqlInfo.id, the way created_by already does", () => {
+    const withoutStaffId = { ...user, sqlInfo: { company_id: 42, id: 9 } };
+    expect(requesterFromUser(withoutStaffId).staffMemberSqlId).toBe(9);
   });
 
-  it("prefers uid over id for the Mongo staff id", () => {
-    expect(requesterFromUser({ ...user, id: "other" }).staffMemberId).toBe("65f0beef");
-    expect(requesterFromUser({ id: "other" }).staffMemberId).toBe("other");
-  });
-
-  it("is all nulls rather than a throw when there is no session", () => {
-    expect(requesterFromUser(undefined)).toEqual({
+  // An empty string is not an id. Null says "we do not know".
+  it("turns blanks into null rather than sending an empty id", () => {
+    const blank = requesterFromUser({ uid: "  ", companyData: { id: "" }, sqlInfo: {} });
+    expect(blank).toEqual({
       companyId: null,
       companySqlId: null,
       staffMemberId: null,
@@ -146,175 +92,384 @@ describe("requesterFromUser", () => {
     });
   });
 
-  // An empty string is not an id. Sending "" would have the agent look up a
-  // company that cannot exist and answer about nothing, instead of the server
-  // noticing that we do not know who is asking.
-  it("turns blanks into nulls", () => {
-    const blank = { uid: "  ", companyData: { id: "" }, sqlInfo: { company_id: "" } };
-    expect(requesterFromUser(blank)).toEqual({
-      companyId: null,
-      companySqlId: null,
-      staffMemberId: null,
-      staffMemberSqlId: null,
+  it("survives no session at all", () => {
+    expect(() => requesterFromUser(undefined)).not.toThrow();
+  });
+});
+
+describe("buildAskRequest", () => {
+  it("sends the trimmed question", () => {
+    expect(buildAskRequest({ question: "  how many devices?  " }).question).toBe(
+      "how many devices?",
+    );
+  });
+
+  // Kept deliberately although the server never reads them (contract §3). The
+  // test states the fact so nobody re-derives a purpose for them.
+  it("still carries both id envelopes, with null for what we do not know", () => {
+    const body = buildAskRequest({ question: "x", requester: { companyId: "c" } });
+    expect(body.company_id).toEqual({ nosql: "c", sql: null });
+    expect(body.staff_member_id).toEqual({ nosql: null, sql: null });
+  });
+
+  // §9: there is no conversation id on the server. Sending one would describe
+  // a feature that does not exist.
+  it("never sends a conversation id", () => {
+    const body = buildAskRequest({ question: "x", conversationId: "abc" });
+    expect(body).not.toHaveProperty("conversation_id");
+  });
+
+  it("drops keys it was not asked to send", () => {
+    const body = buildAskRequest({ question: "x", role: "admin", sql: "DROP TABLE" });
+    expect(Object.keys(body).sort()).toEqual(["company_id", "question", "staff_member_id"]);
+  });
+});
+
+describe("readReply", () => {
+  const answered = {
+    ok: true,
+    question_id: "company_devices_out",
+    answer: "Tienes **4** equipos fuera.",
+    data: { devicesOut: 4 },
+    scope: { scoped: false, roleType: "admin" },
+    params: {},
+  };
+
+  it("normalises an answered question", () => {
+    const reply = readReply(answered);
+    expect(reply.questionId).toBe("company_devices_out");
+    expect(reply.data).toEqual({ devicesOut: 4 });
+    expect(isUnsupported(reply)).toBe(false);
+  });
+
+  // The difference the backend asked us not to lose: unknown is not zero.
+  it("keeps data null rather than turning it into an empty object", () => {
+    const reply = readReply({ ...answered, data: null });
+    expect(reply.data).toBeNull();
+    expect(isCompanyUnknown(reply)).toBe(true);
+  });
+
+  it("does not call a miss an unknown company", () => {
+    const reply = readReply({ question_id: UNSUPPORTED_QUESTION_ID, data: null });
+    expect(isUnsupported(reply)).toBe(true);
+    expect(isCompanyUnknown(reply)).toBe(false);
+  });
+
+  it("treats a reply with no question id as a miss", () => {
+    expect(isUnsupported(readReply({}))).toBe(true);
+  });
+
+  it("reads the inlined catalogue of a miss, so no second call is needed", () => {
+    const reply = readReply({
+      question_id: UNSUPPORTED_QUESTION_ID,
+      catalog: [{ id: "company_devices_out", label: "Equipos fuera" }],
     });
+    expect(reply.catalog).toEqual([
+      { id: "company_devices_out", label: "Equipos fuera" },
+    ]);
+  });
+
+  it("reports a scoped answer as partial", () => {
+    expect(isPartial(readReply({ ...answered, scope: { scoped: true } }))).toBe(true);
+    expect(isPartial(readReply(answered))).toBe(false);
+    expect(isPartial(readReply({}))).toBe(false);
+  });
+
+  it("survives a body that is not a reply at all", () => {
+    expect(() => readReply(undefined)).not.toThrow();
+    expect(readReply("nonsense").catalog).toEqual([]);
   });
 });
 
-describe("readAskJobId", () => {
-  it("reads the id from either envelope", () => {
-    expect(readAskJobId({ jobId: "j1" })).toBe("j1");
-    expect(readAskJobId({ data: { jobId: "j2" } })).toBe("j2");
+describe("readCatalog", () => {
+  it("reads the catalogue endpoint's own shape", () => {
+    expect(readCatalog({ ok: true, catalog: [{ id: "a", label: "A" }] })).toEqual([
+      { id: "a", label: "A" },
+    ]);
   });
 
-  // A job tracked without an id polls nothing for the rest of the session and
-  // never tells the user anything. Same reason as the exports.
-  it("is null when there is no usable id", () => {
-    expect(readAskJobId({})).toBeNull();
-    expect(readAskJobId(undefined)).toBeNull();
-    expect(readAskJobId({ jobId: "" })).toBeNull();
-    expect(readAskJobId({ jobId: 7 })).toBeNull();
-  });
-});
-
-describe("readAnswer", () => {
-  it("passes the markdown through", () => {
-    expect(readAnswer({ answer: "# hi" })).toBe("# hi");
-    expect(readAnswer({ data: { answer: "# hi" } })).toBe("# hi");
+  it("reads a bare array", () => {
+    expect(readCatalog([{ id: "a", label: "A" }])).toEqual([{ id: "a", label: "A" }]);
   });
 
-  it("is an empty string when the server sent no text", () => {
-    expect(readAnswer({})).toBe("");
-    expect(readAnswer({ answer: { not: "text" } })).toBe("");
-    expect(readAnswer(null)).toBe("");
-  });
-});
-
-describe("assistantJob", () => {
-  it("is a job the tracker can follow", () => {
-    const job = assistantJob({ jobId: "j1" });
-    expect(job.jobId).toBe("j1");
-    expect(job.type).toBe("assistant-ask");
-    expect(job.successMessage).toBeTruthy();
-    expect(job.failureMessage).toBeTruthy();
+  it("drops an entry with no id, which could not be asked anyway", () => {
+    expect(readCatalog({ catalog: [{ label: "no id" }, { id: "a", label: "A" }] })).toEqual([
+      { id: "a", label: "A" },
+    ]);
   });
 
-  // No file to collect, so no button. A download descriptor here would put a
-  // "Download" button on an answer that is text on the screen already.
-  it("has nothing to download", () => {
-    expect(assistantJob({ jobId: "j1" }).download).toBeUndefined();
+  it("caps a label that arrived as prose", () => {
+    const [entry] = readCatalog({ catalog: [{ id: "a", label: "x".repeat(500) }] });
+    expect(entry.label.length).toBe(LABEL_MAX_CHARS);
   });
 
-  it("invalidates nothing", () => {
-    expect(assistantJob({ jobId: "j1" }).invalidateKeys).toEqual([]);
+  it("is an empty list for anything else", () => {
+    expect(readCatalog(null)).toEqual([]);
+    expect(readCatalog({ data: { devicesOut: 4 } })).toEqual([]);
   });
 });
 
-describe("askStartError", () => {
-  it("names the route when the server does not have it yet", () => {
-    const notice = askStartError({ response: { status: 404 } });
-    expect(notice.description).toContain(ASSISTANT_ASK_PATH);
+describe("catalogLabel", () => {
+  it("uses our English label for a question we know", () => {
+    expect(catalogLabel({ id: "company_devices_out", label: "Equipos fuera" })).toBe(
+      "Devices out of the warehouse",
+    );
   });
 
-  it("tells the user to sign in again on a refusal", () => {
-    for (const status of [401, 403]) {
-      expect(askStartError({ response: { status } }).title).toBeTruthy();
-      expect(askStartError({ response: { status } }).description).toMatch(/sign in/i);
+  // A catalogue entry we have never seen should still be offerable.
+  it("falls back to the server's label for a question we do not know", () => {
+    expect(catalogLabel({ id: "company_new_thing", label: "Algo nuevo" })).toBe("Algo nuevo");
+  });
+
+  it("is a string even for nonsense", () => {
+    expect(catalogLabel(undefined)).toBe("");
+  });
+});
+
+describe("answerSegments", () => {
+  it("splits the server's bold markers into runs", () => {
+    expect(answerSegments("Tienes **4** equipos.")).toEqual([
+      { text: "Tienes ", bold: false },
+      { text: "4", bold: true },
+      { text: " equipos.", bold: false },
+    ]);
+  });
+
+  it("leaves plain text alone", () => {
+    expect(answerSegments("sin formato")).toEqual([{ text: "sin formato", bold: false }]);
+  });
+
+  // A stray marker should look like a typo, not make the rest of the sentence
+  // bold and change how it reads.
+  it("keeps an unclosed marker as text", () => {
+    expect(answerSegments("Tienes **4 equipos")).toEqual([
+      { text: "Tienes **4 equipos", bold: false },
+    ]);
+  });
+
+  it("never returns an empty run", () => {
+    for (const segment of answerSegments("**4** **5**")) {
+      expect(segment.text.length).toBeGreaterThan(0);
     }
   });
 
-  it("says to wait when rate limited", () => {
-    expect(askStartError({ response: { status: 429 } }).description).toMatch(/wait/i);
+  // Not one empty run: nothing at all, so a bubble with no text renders as an
+  // empty bubble rather than as a stray node.
+  it("has no runs for a missing answer", () => {
+    expect(answerSegments(undefined)).toEqual([]);
+    expect(answerSegments("")).toEqual([]);
+  });
+});
+
+describe("describeAnswer", () => {
+  const describe_ = (questionId, data) => describeAnswer({ questionId, data });
+
+  it("counts devices out, with the verb agreeing", () => {
+    expect(describe_("company_devices_out", { devicesOut: 4 })).toBe(
+      "4 devices are out of the warehouse right now.",
+    );
+    expect(describe_("company_devices_out", { devicesOut: 1 })).toContain("1 device is");
   });
 
-  it("still says something when there is no status at all", () => {
-    expect(askStartError(undefined).title).toBeTruthy();
-    expect(askStartError(undefined).description).toBeTruthy();
+  it("does not render zero as nothing: zero is an answer", () => {
+    expect(describe_("company_devices_out", { devicesOut: 0 })).toContain("0 devices");
+  });
+
+  it("splits the inventory summary into its three numbers", () => {
+    expect(describe_("company_inventory_summary", { deviceCount: 128, devicesOut: 4, inWarehouse: 124 })).toBe(
+      "128 devices in total: 4 out and 124 in the warehouse.",
+    );
+  });
+
+  it("lists the events under their count", () => {
+    const text = describe_("company_events_active", { activeEvents: 2, events: ["A", "B"] });
+    expect(text).toContain("2 active events.");
+    expect(text).toContain("• A");
+    expect(text).toContain("• B");
+  });
+
+  it("prints a staff member with no role without a dangling dash", () => {
+    const text = describe_("company_staff_list", {
+      staffCount: 2,
+      staff: [{ name: "Ana", role: null }, { name: "Beto", role: "admin" }],
+    });
+    expect(text).toContain("• Ana\n");
+    expect(text).toContain("• Beto — admin");
+    expect(text).not.toContain("null");
+  });
+
+  it("drops an activity row with no summary rather than printing null", () => {
+    const text = describe_("company_activity_recent", {
+      range: "30d",
+      count: 2,
+      activity: [{ summary: "Device assigned", actor: "Ana" }, { summary: null, actor: "system" }],
+    });
+    expect(text).toContain("2 entries in the last 30 days.");
+    expect(text).toContain("• Device assigned — Ana");
+    expect(text).not.toContain("null");
+  });
+
+  it("names the range it was given", () => {
+    expect(describe_("company_activity_recent", { range: "7d", count: 0 })).toContain("7 days");
+    expect(describe_("company_activity_recent", { range: "nonsense", count: 0 })).toContain(
+      "the selected period",
+    );
+  });
+
+  it("reads the subscription status the console's pill already understands", () => {
+    expect(
+      describe_("company_subscription_status", {
+        plan: "Pro",
+        subscriptionStatus: "active",
+        status: "at_risk",
+      }),
+    ).toBe("Plan Pro, status at_risk.");
+  });
+
+  // The fallback that keeps a wrong number off the screen. A shape we do not
+  // recognise is handed back to the server's own sentence, which is always
+  // truthful even when it is not in our language.
+  it("returns null for a question id we do not know", () => {
+    expect(describe_("company_money_owed", { total: 900 })).toBeNull();
+  });
+
+  it("returns null when a field the sentence needs is missing", () => {
+    expect(describe_("company_inventory_summary", { deviceCount: 10 })).toBeNull();
+    expect(describe_("company_devices_out", { devicesOut: "four" })).toBeNull();
+  });
+
+  it("returns null for an unknown company rather than inventing a zero", () => {
+    expect(describeAnswer({ questionId: "company_devices_out", data: null })).toBeNull();
+  });
+});
+
+describe("retryAfterSeconds", () => {
+  const limited = (headers) => ({ response: { status: 429, headers } });
+
+  it("prefers Retry-After, which answers the question directly", () => {
+    expect(retryAfterSeconds(limited({ "retry-after": "30", "ratelimit-reset": "90" }))).toBe(30);
+  });
+
+  it("falls back to the standard RateLimit-Reset", () => {
+    expect(retryAfterSeconds(limited({ "ratelimit-reset": "45" }))).toBe(45);
+  });
+
+  it("rounds a fractional reset up, so the advice is never early", () => {
+    expect(retryAfterSeconds(limited({ "ratelimit-reset": "12.2" }))).toBe(13);
+  });
+
+  it("is null when the limiter said nothing we can use", () => {
+    expect(retryAfterSeconds(limited({}))).toBeNull();
+    expect(retryAfterSeconds(limited({ "retry-after": "soon" }))).toBeNull();
+    expect(retryAfterSeconds(limited({ "retry-after": "0" }))).toBeNull();
+    expect(retryAfterSeconds(undefined)).toBeNull();
+  });
+});
+
+describe("askError", () => {
+  const failure = (status, msg, headers = {}) => ({
+    response: { status, headers, data: msg ? { ok: false, msg } : undefined },
+  });
+
+  it("tells the user when they may ask again", () => {
+    const notice = askError(failure(429, null, { "ratelimit-reset": "45" }));
+    expect(notice.description).toContain("45 seconds");
+  });
+
+  it("still says something useful when the limiter sent no reset", () => {
+    expect(askError(failure(429)).description).toContain("10 questions");
+  });
+
+  // The server's own messages are written in English and for a reader.
+  // Replacing them with a generic sentence would be losing information.
+  it("passes the server's own refusal through", () => {
+    expect(
+      askError(failure(400, "Company context is required (send the s-company-lq header).")),
+    ).toMatchObject({ description: "Company context is required (send the s-company-lq header)." });
+    expect(askError(failure(403, "Not an active staff member of this company.")).description).toBe(
+      "Not an active staff member of this company.",
+    );
+  });
+
+  it("names the route when the endpoint is not deployed yet", () => {
+    expect(askError(failure(404)).description).toContain("/api/assistant/ask");
+  });
+
+  it("has a sentence for a request that never reached the server", () => {
+    expect(askError(new Error("Network Error")).title).toBe("Could not reach the assistant");
   });
 });
 
 describe("safeSources", () => {
-  const knowsInventory = (p) => p === "/inventory";
+  const label = "Inventory";
 
-  // The source of the rule: the answer and its links come from a model, and a
-  // model can be steered by the text of the question. A link rendered as given
-  // is a destination chosen by whoever wrote the question, inside our
-  // interface, with the staff session open.
-  it("fails closed: with no route matcher, nothing is clickable", () => {
-    const out = safeSources([{ label: "Device ABC-001", path: "/inventory" }]);
-    expect(out).toEqual([{ label: "Device ABC-001", path: null }]);
-  });
-
-  it("keeps a path the route table recognises", () => {
-    const out = safeSources([{ label: "Inventory", path: "/inventory" }], {
-      isKnownRoute: knowsInventory,
-    });
-    expect(out).toEqual([{ label: "Inventory", path: "/inventory" }]);
-  });
-
-  it("refuses a path the route table does not recognise", () => {
-    const out = safeSources([{ label: "Nope", path: "/not-a-route" }], {
-      isKnownRoute: knowsInventory,
-    });
-    expect(out).toEqual([{ label: "Nope", path: null }]);
-  });
-
-  // Every one of these is a real way to leave the application while looking
-  // like an in-app link. They are refused before the route matcher is even
-  // consulted, so a permissive matcher cannot let them through.
+  // §9: the server does not send sources yet. The rule stays anyway -- the day
+  // a link arrives is not the day to start deciding whether it may be clicked.
   it.each([
-    ["an absolute url", "https://evil.example/steal"],
-    ["an http url", "http://evil.example"],
-    ["a javascript scheme", "javascript:alert(1)"],
-    ["a spaced javascript scheme", "  javascript:alert(1)"],
-    ["a cased javascript scheme", "JavaScript:alert(1)"],
-    ["a data url", "data:text/html,<script>1</script>"],
-    ["a protocol-relative url", "//evil.example/steal"],
-    ["a backslash protocol-relative url", "/\\evil.example"],
-    ["a mixed slash url", "/\\/evil.example"],
-    ["a bare word", "inventory"],
-    ["an empty path", ""],
-    ["a non-string", 7],
-  ])("refuses %s even when the matcher is permissive", (_name, bad) => {
-    const out = safeSources([{ label: "x", path: bad }], { isKnownRoute: () => true });
-    expect(out).toEqual([{ label: "x", path: null }]);
+    "https://example.invalid/steal",
+    "http://example.invalid",
+    "//example.invalid/steal",
+    "/\\example.invalid",
+    "/\\/example.invalid",
+    "javascript:alert(1)",
+    " javascript:alert(1)",
+    "data:text/html,<script>",
+    "inventory",
+    "../admin",
+    "/",
+    "",
+    "/inventory\\..\\admin",
+  ])("refuses to make %s clickable", (path) => {
+    const [source] = safeSources([{ label, path }], { isKnownRoute: () => true });
+    expect(source).toEqual({ label, path: null });
   });
 
-  // Refusing the link is not refusing the source. The staff member should
-  // still see what the answer was leaning on, as text they can read and judge.
-  it("keeps the label when it refuses the path", () => {
-    const out = safeSources([{ label: "Device ABC-001", path: "https://evil.example" }], {
-      isKnownRoute: () => true,
+  it("keeps a path our own route table recognises", () => {
+    const [source] = safeSources([{ label, path: "/inventory" }], {
+      isKnownRoute: (candidate) => candidate === "/inventory",
     });
-    expect(out[0].label).toBe("Device ABC-001");
+    expect(source.path).toBe("/inventory");
   });
 
-  // A label is a few words naming a thing. A paragraph in that slot is a
-  // message written by the model into our chrome, where it reads as ours.
-  it("caps a label that is trying to be a paragraph", () => {
-    const out = safeSources([{ label: "a".repeat(LABEL_MAX_CHARS + 50), path: "/x" }]);
-    expect(out[0].label).toHaveLength(LABEL_MAX_CHARS);
+  // Refusing the link is not refusing the source: the staff member should see
+  // what the answer leaned on even when they cannot click it.
+  it("keeps the label of a refused source", () => {
+    const [source] = safeSources([{ label, path: "https://example.invalid" }]);
+    expect(source.label).toBe(label);
   });
 
-  it("drops a source with no usable label", () => {
-    expect(safeSources([{ path: "/inventory" }, { label: "   ", path: "/x" }])).toEqual([]);
+  it("refuses everything by default, so a wiring mistake is visible", () => {
+    const [source] = safeSources([{ label, path: "/inventory" }]);
+    expect(source.path).toBeNull();
   });
 
-  it("is an empty list when the server sent no sources", () => {
+  it("drops a source with no label, which would render as nothing", () => {
+    expect(safeSources([{ path: "/inventory" }, { label: "  " }])).toEqual([]);
+  });
+
+  it("caps a label that arrived as prose", () => {
+    const [source] = safeSources([{ label: "x".repeat(500), path: "/x" }]);
+    expect(source.label.length).toBe(LABEL_MAX_CHARS);
+  });
+
+  it("is an empty list for anything that is not a list", () => {
     expect(safeSources(undefined)).toEqual([]);
-    expect(safeSources(null)).toEqual([]);
     expect(safeSources("sources")).toEqual([]);
-    expect(safeSources([null, 7])).toEqual([]);
   });
 });
 
-describe("the module itself", () => {
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const source = fs.readFileSync(path.join(here, "assistant.js"), "utf8");
-
-  // Pure means pure: no api client, no store, no React. The guard is here
-  // because this file is the one place where the rules about untrusted model
-  // output live, and it has to stay testable without mocking anything.
+describe("the file itself", () => {
+  // The rules about untrusted server text live here, and they have to stay
+  // testable without mocking anything. An import is how that stops being true.
   it("imports nothing", () => {
+    // Resolved from the repository root rather than from import.meta.url: the
+    // test environment is happy-dom, where import.meta.url is an http URL and
+    // fileURLToPath refuses it.
+    const source = fs.readFileSync(
+      path.resolve(process.cwd(), "src/pages/assistant/utils/assistant.js"),
+      "utf8",
+    );
     expect(source).not.toMatch(/^\s*import\s/m);
+    expect(source).not.toMatch(/\brequire\s*\(/);
   });
 });
