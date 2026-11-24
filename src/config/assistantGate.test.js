@@ -1,3 +1,6 @@
+/* eslint-env node */
+// Reads source files from disk, so it runs with Node's globals available
+// (process.cwd) even though the test environment is happy-dom.
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";

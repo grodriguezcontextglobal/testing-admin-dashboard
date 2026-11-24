@@ -2,12 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement } from "react";
-import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import { devitrakApi } from "../../api/devitrakApi";
 import { useAssistantAsk } from "./useAssistantAsk";
 
 vi.mock("../../api/devitrakApi", () => ({
-  devitrakApi: { get: vi.fn() },
-  devitrakApiAdmin: { post: vi.fn() },
+  devitrakApi: { get: vi.fn(), post: vi.fn() },
 }));
 
 const user = {
@@ -27,12 +26,25 @@ function makeWrapper() {
   };
 }
 
-const render = () => renderHook(() => useAssistantAsk(), { wrapper: makeWrapper() });
+const render = (options) =>
+  renderHook(() => useAssistantAsk(options), { wrapper: makeWrapper() });
+
+const answered = {
+  ok: true,
+  question_id: "company_devices_out",
+  answer: "Tienes **4** equipos fuera del almacen ahora mismo.",
+  data: { devicesOut: 4 },
+  scope: { scoped: false, roleType: "admin" },
+  params: {},
+};
+
+const textOf = (message) => message.segments.map((segment) => segment.text).join("");
 
 describe("useAssistantAsk", () => {
   beforeEach(() => {
-    devitrakApiAdmin.post.mockReset();
+    devitrakApi.post.mockReset();
     devitrakApi.get.mockReset();
+    devitrakApi.get.mockResolvedValue({ data: { ok: true, catalog: [] } });
   });
 
   it("starts with an empty thread and nothing in flight", () => {
@@ -41,200 +53,196 @@ describe("useAssistantAsk", () => {
     expect(result.current.asking).toBe(false);
   });
 
-  it("asks the agreed route with the body the backend confirmed", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockReturnValue(new Promise(() => {}));
+  // The route is its own namespace and the body is the one the contract
+  // describes. Both were different a day ago, and both fail silently if wrong:
+  // the old path 404s, and the ids are read by nobody.
+  it("posts to the assistant's own namespace, not to /admin", async () => {
+    devitrakApi.post.mockResolvedValue({ data: answered });
     const { result } = render();
 
-    await act(async () => {
-      await result.current.ask("Which devices are overdue?");
-    });
+    await act(() => result.current.ask("cuantos equipos tengo fuera"));
 
-    expect(devitrakApiAdmin.post).toHaveBeenCalledWith("/assistant/ask", {
-      question: "Which devices are overdue?",
-      company_id: { nosql: "65f0c0ffee", sql: 12 },
-      staff_member_id: { nosql: "65f0beef", sql: 34 },
-    });
+    const [path, body] = devitrakApi.post.mock.calls[0];
+    expect(path).toBe("/assistant/ask");
+    expect(body.question).toBe("cuantos equipos tengo fuera");
+    expect(body).not.toHaveProperty("conversation_id");
   });
 
-  // The cheapest refusal is the one that never leaves the browser, and a
-  // rate-limited user who spends a request on a 2,000-character paste learns
-  // nothing from the 400 that comes back.
-  it("refuses a question over the cap without calling the server", async () => {
+  it("keeps the asked question in the thread before the answer lands", async () => {
+    devitrakApi.post.mockResolvedValue({ data: answered });
     const { result } = render();
-    await act(async () => {
-      await result.current.ask("a".repeat(1001));
+
+    await act(() => result.current.ask("  cuantos equipos tengo fuera  "));
+
+    expect(result.current.messages[0].from).toBe("staff");
+    expect(textOf(result.current.messages[0])).toBe("cuantos equipos tengo fuera");
+  });
+
+  // The language rule: every other string in this dashboard is English, and a
+  // chat bubble is not the place to make an exception. The server's Spanish
+  // sentence stays available as a fallback, it is just not what is shown when
+  // we can build the sentence from `data` ourselves.
+  it("renders the English sentence built from data, not the server's Spanish one", async () => {
+    devitrakApi.post.mockResolvedValue({ data: answered });
+    const { result } = render();
+
+    await act(() => result.current.ask("equipos fuera"));
+
+    const answer = result.current.messages[1];
+    expect(textOf(answer)).toBe("4 devices are out of the warehouse right now.");
+    expect(textOf(answer)).not.toContain("equipos");
+  });
+
+  it("falls back to the server's own sentence for a question id we do not know", async () => {
+    devitrakApi.post.mockResolvedValue({
+      data: { ...answered, question_id: "company_something_new", data: { total: 9 } },
     });
-    expect(devitrakApiAdmin.post).not.toHaveBeenCalled();
+    const { result } = render();
+
+    await act(() => result.current.ask("algo nuevo"));
+
+    expect(textOf(result.current.messages[1])).toContain("equipos fuera del almacen");
+  });
+
+  it("splits the server's bold markers instead of printing asterisks", async () => {
+    devitrakApi.post.mockResolvedValue({
+      data: { ...answered, question_id: "company_something_new" },
+    });
+    const { result } = render();
+
+    await act(() => result.current.ask("algo nuevo"));
+
+    expect(result.current.messages[1].segments.some((segment) => segment.bold)).toBe(true);
+    expect(textOf(result.current.messages[1])).not.toContain("**");
+  });
+
+  // A miss is a 200 and the single most likely outcome of a keyword matcher.
+  // It must never reach the red error strip.
+  it("treats an unsupported question as an answer with the catalogue in it", async () => {
+    devitrakApi.post.mockResolvedValue({
+      data: {
+        ok: true,
+        question_id: "unsupported",
+        answer: "No se contestar eso todavia.",
+        data: null,
+        catalog: [{ id: "company_devices_out", label: "Equipos fuera" }],
+      },
+    });
+    const { result } = render();
+
+    await act(() => result.current.ask("what is the meaning of life"));
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.messages[1].catalog).toHaveLength(1);
+    expect(textOf(result.current.messages[1])).toContain("what I can look up");
+  });
+
+  // Unknown and zero are different sentences about the business.
+  it("says unknown, not zero, when the company cannot be resolved", async () => {
+    devitrakApi.post.mockResolvedValue({ data: { ...answered, data: null } });
+    const { result } = render();
+
+    await act(() => result.current.ask("equipos fuera"));
+
+    const answer = result.current.messages[1];
+    expect(answer.unknown).toBe(true);
+    expect(textOf(answer)).toContain("unknown");
+    expect(textOf(answer)).not.toMatch(/\b0\b/);
+  });
+
+  it("marks a scoped answer as partial so the window can say so", async () => {
+    devitrakApi.post.mockResolvedValue({
+      data: { ...answered, scope: { scoped: true, roleType: "category_assistant" } },
+    });
+    const { result } = render();
+
+    await act(() => result.current.ask("equipos fuera"));
+
+    expect(result.current.messages[1].partial).toBe(true);
+  });
+
+  it("refuses a question past the cap without spending a request", async () => {
+    const { result } = render();
+
+    await act(() => result.current.ask("a".repeat(1001)));
+
+    expect(devitrakApi.post).not.toHaveBeenCalled();
     expect(result.current.error).toContain("1000");
   });
 
-  it("refuses an empty question without calling the server", async () => {
+  it("refuses an empty question", async () => {
     const { result } = render();
-    await act(async () => {
-      await result.current.ask("   ");
-    });
-    expect(devitrakApiAdmin.post).not.toHaveBeenCalled();
-    expect(result.current.error).toBeTruthy();
+    await act(() => result.current.ask("   "));
+    expect(devitrakApi.post).not.toHaveBeenCalled();
   });
 
-  it("puts the question in the thread straight away", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockReturnValue(new Promise(() => {}));
+  it("tells the user when they may ask again after a 429", async () => {
+    devitrakApi.post.mockRejectedValue({
+      response: { status: 429, headers: { "ratelimit-reset": "45" }, data: { msg: "too many" } },
+    });
     const { result } = render();
 
-    await act(async () => {
-      await result.current.ask("hello");
-    });
+    await act(() => result.current.ask("equipos fuera"));
 
-    expect(result.current.messages).toHaveLength(1);
-    expect(result.current.messages[0]).toMatchObject({ from: "staff", text: "hello" });
-    expect(result.current.asking).toBe(true);
+    expect(result.current.error).toContain("45 seconds");
+    expect(result.current.asking).toBe(false);
   });
 
-  it("polls the job route the backend told us already exists", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockReturnValue(new Promise(() => {}));
-    const { result } = render();
-
-    await act(async () => {
-      await result.current.ask("hello");
-    });
-
-    await waitFor(() => expect(devitrakApi.get).toHaveBeenCalledWith("/jobs/owned/j1"));
-  });
-
-  it("shows the answer when the job is done", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockResolvedValue({
-      data: {
-        status: "done",
-        result: { answer: "Three devices.", conversation_id: "c1", sources: [] },
+  it("passes the server's own refusal through on a 400", async () => {
+    devitrakApi.post.mockRejectedValue({
+      response: {
+        status: 400,
+        headers: {},
+        data: { ok: false, msg: "Company context is required (send the s-company-lq header)." },
       },
     });
     const { result } = render();
 
-    await act(async () => {
-      await result.current.ask("hello");
-    });
+    await act(() => result.current.ask("equipos fuera"));
 
-    await waitFor(() => expect(result.current.messages).toHaveLength(2));
-    expect(result.current.messages[1]).toMatchObject({
-      from: "assistant",
-      text: "Three devices.",
-    });
-    expect(result.current.asking).toBe(false);
+    expect(result.current.error).toContain("s-company-lq");
   });
 
-  // Links come back from a model. Until a route matcher is wired in, none of
-  // them is clickable, and that is the behaviour we want rather than a
-  // placeholder: a permissive default would make a wiring mistake look like
-  // working links to nowhere.
-  it("hands the window sources that are already safe", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockResolvedValue({
-      data: {
-        status: "done",
-        result: {
-          answer: "x",
-          sources: [
-            { label: "Inventory", path: "/inventory" },
-            { label: "Elsewhere", path: "https://evil.example" },
-          ],
-        },
-      },
-    });
+  it("stops asking even when the request throws", async () => {
+    devitrakApi.post.mockRejectedValue(new Error("Network Error"));
     const { result } = render();
 
-    await act(async () => {
-      await result.current.ask("hello");
-    });
-
-    await waitFor(() => expect(result.current.messages).toHaveLength(2));
-    expect(result.current.messages[1].sources).toEqual([
-      { label: "Inventory", path: null },
-      { label: "Elsewhere", path: null },
-    ]);
-  });
-
-  it("carries the conversation id into the next question", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockResolvedValue({
-      data: { status: "done", result: { answer: "x", conversation_id: "c1" } },
-    });
-    const { result } = render();
-
-    await act(async () => {
-      await result.current.ask("first");
-    });
-    await waitFor(() => expect(result.current.messages).toHaveLength(2));
-
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j2" } });
-    await act(async () => {
-      await result.current.ask("second");
-    });
-
-    expect(devitrakApiAdmin.post).toHaveBeenLastCalledWith(
-      "/assistant/ask",
-      expect.objectContaining({ conversation_id: "c1" }),
-    );
-  });
-
-  it("says so in the thread when the job fails", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockResolvedValue({ data: { status: "failed" } });
-    const { result } = render();
-
-    await act(async () => {
-      await result.current.ask("hello");
-    });
-
-    await waitFor(() => expect(result.current.messages).toHaveLength(2));
-    expect(result.current.messages[1].from).toBe("assistant");
-    expect(result.current.messages[1].failed).toBe(true);
-    expect(result.current.asking).toBe(false);
-  });
-
-  // A job tracked without an id would poll nothing forever while the window
-  // showed a spinner that can never resolve.
-  it("stops rather than waits when the server sends no job id", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: {} });
-    const { result } = render();
-
-    await act(async () => {
-      await result.current.ask("hello");
-    });
+    await act(() => result.current.ask("equipos fuera"));
 
     expect(result.current.asking).toBe(false);
     expect(result.current.error).toBeTruthy();
-    expect(devitrakApi.get).not.toHaveBeenCalled();
   });
 
-  it("names the route when the endpoint is not there yet", async () => {
-    devitrakApiAdmin.post.mockRejectedValue({ response: { status: 404 } });
+  it("clears the error when the user dismisses it", async () => {
     const { result } = render();
-
-    await act(async () => {
-      await result.current.ask("hello");
-    });
-
-    expect(result.current.error).toContain("/assistant/ask");
-    expect(result.current.asking).toBe(false);
+    await act(() => result.current.ask(""));
+    expect(result.current.error).toBeTruthy();
+    act(() => result.current.dismissError());
+    expect(result.current.error).toBeNull();
   });
 
-  it("refuses a second question while one is in flight", async () => {
-    devitrakApiAdmin.post.mockResolvedValue({ data: { jobId: "j1" } });
-    devitrakApi.get.mockReturnValue(new Promise(() => {}));
-    const { result } = render();
+  // Until the endpoint is deployed this is a 404, and a 404 nobody asked for
+  // in every session is noise that teaches people to ignore the console.
+  it("does not fetch the catalogue until the panel is open", async () => {
+    render({ enabled: false });
+    await waitFor(() => expect(devitrakApi.get).not.toHaveBeenCalled());
+  });
 
-    await act(async () => {
-      await result.current.ask("first");
+  it("fetches the catalogue once the panel is open", async () => {
+    devitrakApi.get.mockResolvedValue({
+      data: { ok: true, catalog: [{ id: "company_devices_out", label: "Equipos fuera" }] },
     });
-    await act(async () => {
-      await result.current.ask("second");
-    });
+    const { result } = render({ enabled: true });
 
-    expect(devitrakApiAdmin.post).toHaveBeenCalledTimes(1);
-    expect(result.current.messages).toHaveLength(1);
+    await waitFor(() => expect(result.current.catalog).toHaveLength(1));
+    expect(devitrakApi.get).toHaveBeenCalledWith("/assistant/catalog");
+  });
+
+  it("survives a catalogue the server does not have yet", async () => {
+    devitrakApi.get.mockRejectedValue({ response: { status: 404 } });
+    const { result } = render({ enabled: true });
+
+    await waitFor(() => expect(result.current.catalog).toEqual([]));
+    expect(result.current.error).toBeNull();
   });
 });

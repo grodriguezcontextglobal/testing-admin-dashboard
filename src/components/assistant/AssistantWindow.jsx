@@ -5,23 +5,27 @@ import BlueButton from "../UX/buttons/BlueButton";
 import Input from "../UX/inputs/Input";
 import { useAssistantAsk } from "../../hooks/assistant/useAssistantAsk";
 import { ASSISTANT_STUB, FEATURE_ASSISTANT } from "../../config/featureFlags";
-import { QUESTION_MAX_CHARS } from "../../pages/assistant/utils/assistant";
+import { catalogLabel, QUESTION_MAX_CHARS } from "../../pages/assistant/utils/assistant";
 
 // The staff assistant window.
 //
-// Nothing here renders HTML from the server. The answer arrives as text and is
+// Nothing here renders HTML from the server. An answer arrives as text and is
 // rendered as React children, which escapes it; there is no
-// dangerouslySetInnerHTML in this file and there should not be one. When a
-// markdown renderer is chosen it has to be one with raw HTML disabled, and
-// that is a decision to take on purpose rather than inherit from whichever
-// library is nearest -- so for now the answer keeps its line breaks and
-// nothing else.
+// dangerouslySetInnerHTML in this file and there should not be one. The only
+// formatting the server composes is `**bold**` around a number, and the hook
+// has already split that into runs -- so no markdown library is needed, and
+// the day one is chosen it has to be one with raw HTML disabled.
 //
-// The links in `sources` have already been judged by the hook, which hands us
-// `path: null` for anything our own route table does not recognise. That is
-// everything, today, because no matcher is wired yet. A refused source still
-// shows its label: the staff member should see what the answer leaned on even
-// when they cannot click through to it.
+// ── The chips are the main interface, not decoration ─────────────────────────
+// Matching is keyword-based and the backend says plainly that it will miss
+// (BACKEND_assistant_contract_2026-11-24.md §1). A user who guesses the
+// phrasing gets an answer and a user who does not gets "unsupported". Showing
+// the questions turns that from a guessing game into a menu, and the text box
+// becomes the shortcut rather than the only door.
+//
+// Chips print OUR English label and send the SERVER'S own wording. The label
+// the server authored is the one its matcher is guaranteed to understand; the
+// label a reader sees should be in the same language as the rest of the app.
 
 const palette = {
   staff: "var(--blue-dark-600, #155eef)",
@@ -29,6 +33,7 @@ const palette = {
   border: "var(--gray-200, #eaecf0)",
   muted: "var(--gray-500, #667085)",
   danger: "var(--error-600, #d92d20)",
+  notice: "var(--warning-50, #fffaeb)",
 };
 
 const Source = ({ source }) =>
@@ -43,7 +48,36 @@ const Source = ({ source }) =>
     <span style={{ color: palette.muted, fontSize: "12px" }}>{source.label}</span>
   );
 
-const Message = ({ message }) => {
+const Chip = ({ entry, onPick, disabled }) => (
+  <button
+    type="button"
+    disabled={disabled}
+    onClick={() => onPick(entry.label || catalogLabel(entry))}
+    style={{
+      border: `1px solid ${palette.border}`,
+      borderRadius: "999px",
+      background: "var(--basewhite, #fff)",
+      color: palette.staff,
+      padding: "5px 10px",
+      fontSize: "12px",
+      cursor: disabled ? "default" : "pointer",
+      opacity: disabled ? 0.5 : 1,
+    }}
+  >
+    {catalogLabel(entry)}
+  </button>
+);
+
+const Chips = ({ catalog, onPick, disabled }) =>
+  catalog.length === 0 ? null : (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
+      {catalog.map((entry) => (
+        <Chip key={entry.id} entry={entry} onPick={onPick} disabled={disabled} />
+      ))}
+    </div>
+  );
+
+const Message = ({ message, onPick, disabled }) => {
   const fromStaff = message.from === "staff";
   return (
     <div
@@ -63,13 +97,35 @@ const Message = ({ message }) => {
           border: fromStaff ? "none" : `1px solid ${palette.border}`,
           fontSize: "14px",
           lineHeight: 1.5,
-          // The answer's own line breaks are all the formatting it gets until
-          // a markdown renderer is chosen deliberately.
+          // The sentence's own line breaks are all the formatting it gets: the
+          // lists under a count are newline-separated bullets, not markup.
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
         }}
       >
-        <span style={message.failed ? { color: palette.danger } : undefined}>{message.text}</span>
+        {message.segments.map((segment, index) =>
+          segment.bold ? (
+            <strong key={index}>{segment.text}</strong>
+          ) : (
+            <span key={index} style={message.unknown ? { color: palette.muted } : undefined}>
+              {segment.text}
+            </span>
+          )
+        )}
+
+        {/* A scoped staff member sees a smaller number than the real one.
+            Said out loud, because with no notice they read their own blind
+            spot as a fact. */}
+        {message.partial && (
+          <p style={{ margin: "8px 0 0", fontSize: "12px", color: palette.muted }}>
+            Showing only the categories assigned to you, so this is partial.
+          </p>
+        )}
+
+        {message.catalog?.length > 0 && (
+          <Chips catalog={message.catalog} onPick={onPick} disabled={disabled} />
+        )}
+
         {message.sources?.length > 0 && (
           <div
             style={{
@@ -94,7 +150,10 @@ const Message = ({ message }) => {
 const AssistantWindow = () => {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
-  const { messages, ask, asking, error, dismissError } = useAssistantAsk();
+  // The catalogue is fetched when the panel opens, not on sign-in.
+  const { messages, catalog, ask, asking, error, dismissError } = useAssistantAsk({
+    enabled: open,
+  });
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -106,11 +165,12 @@ const AssistantWindow = () => {
 
   const tooLong = draft.length > QUESTION_MAX_CHARS;
 
-  const send = async () => {
-    if (asking || tooLong || draft.trim().length === 0) return;
-    const question = draft;
+  const send = async (question) => {
+    if (asking) return;
+    const asked = typeof question === "string" ? question : draft;
+    if (asked.trim().length === 0 || asked.length > QUESTION_MAX_CHARS) return;
     setDraft("");
-    await ask(question);
+    await ask(asked);
   };
 
   if (!open) {
@@ -169,28 +229,29 @@ const AssistantWindow = () => {
         <div
           style={{
             padding: "8px 14px",
-            background: "var(--warning-50, #fffaeb)",
+            background: palette.notice,
             borderBottom: `1px solid ${palette.border}`,
             fontSize: "12px",
           }}
         >
-          <strong>Invented answers.</strong> The endpoint does not exist yet; this is the stub.
+          <strong>Invented answers.</strong> This is the stub, not the server.
         </div>
       )}
 
       <div style={{ flex: 1, overflowY: "auto", padding: "14px" }}>
         {messages.length === 0 && (
-          <p style={{ color: palette.muted, fontSize: "13px", margin: 0 }}>
-            Ask about your own company&apos;s devices, events or staff. The assistant reads the same
-            data you can see, and it can be wrong — check anything you are about to act on.
-          </p>
+          <div style={{ color: palette.muted, fontSize: "13px" }}>
+            <p style={{ margin: 0 }}>
+              Ask about your own company&apos;s inventory, events, staff or subscription. These are
+              the questions it can answer today:
+            </p>
+            <Chips catalog={catalog} onPick={send} disabled={asking} />
+          </div>
         )}
         {messages.map((message) => (
-          <Message key={message.id} message={message} />
+          <Message key={message.id} message={message} onPick={send} disabled={asking} />
         ))}
-        {asking && (
-          <p style={{ color: palette.muted, fontSize: "13px" }}>Working on it…</p>
-        )}
+        {asking && <p style={{ color: palette.muted, fontSize: "13px" }}>Working on it…</p>}
         <div ref={endRef} />
       </div>
 
@@ -231,15 +292,13 @@ const AssistantWindow = () => {
           name="question"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Which devices are overdue this week?"
+          placeholder="How many devices are out right now?"
           disabled={asking}
           error={tooLong}
           // The cap is shown before the question is spent, not after the
           // server refuses it. The backend asked us to enforce it here too.
           helperText={
-            tooLong
-              ? `${draft.length} characters. The limit is ${QUESTION_MAX_CHARS}.`
-              : undefined
+            tooLong ? `${draft.length} characters. The limit is ${QUESTION_MAX_CHARS}.` : undefined
           }
         />
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>

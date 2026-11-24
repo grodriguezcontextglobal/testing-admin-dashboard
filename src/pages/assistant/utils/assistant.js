@@ -1,90 +1,68 @@
 // Staff assistant: what we send, what we accept back, and what we refuse.
 // Pure -- no React, no api client, no store. There is a test asserting this
-// file imports nothing, because the rules about untrusted model output live
+// file imports nothing, because the rules about untrusted server text live
 // here and have to stay testable without mocking anything.
 //
-// The shape follows FRONTEND_assistant_proxy_2026-10-27.md and the narrowed
-// FRONTEND_assistant_three_questions_2026-11-23.md. The backend has not
-// answered yet, so every value the server gets to decide -- the route, the
-// character cap -- is one constant here. Their answer should be a line of this
-// file and nothing else.
+// ── What this file used to assume, and what it says now ──────────────────────
+// It was written against FRONTEND_assistant_three_questions_2026-11-23.md: an
+// agent with tool calls, answering 202 with a job to poll, returning markdown
+// and in-app `sources`. The backend built something else and told us on
+// 2026-11-24 (BACKEND_assistant_contract_2026-11-24.md). Three differences,
+// each of which deletes code rather than adds it:
 //
-// The flow is the one the dashboard already runs for long work and which the
-// backend already operates for exports: POST answers 202 with a job id,
-// BackgroundJobsTracker polls it, the answer arrives in a notification.
+//   synchronous   -- no 202, no job, no polling. There is no model and no agent:
+//                    the question is matched against a closed catalogue of six
+//                    questions and one query runs. It answers in milliseconds.
+//   own namespace -- /api/assistant/ask, not /api/admin/assistant/ask, and it
+//                    resolves the company from `s-company-lq` (see the matching
+//                    line in api/sessionHeaders.js, without which every request
+//                    is a 400).
+//   a catalogue   -- matching is keyword-based in Spanish and English, and it
+//                    will miss. Missing is a 200 with `question_id:
+//                    "unsupported"` and the catalogue inlined, not an error.
 //
-// ── Why this file is careful ─────────────────────────────────────────────────
-// An assistant turns a person's text into API calls, and returns text written
-// by a model that the question can steer. So both directions are untrusted:
-//
-//   going out  -- the request names the company and the staff member asking,
-//                 because the agent answers far better when it does not have
-//                 to guess. Those four ids come from the browser, so they are
-//                 forgeable, and the rule that makes them safe lives on the
-//                 server: VERIFY, DO NOT TRUST. Each id is compared with the
-//                 validated token and a mismatch is a 403 and an audit row,
-//                 never a query. Sent-and-checked is strictly better than not
-//                 sent: a forged id stops being a field nobody looks at and
-//                 becomes a tripwire that fires the moment it is touched.
-//   coming back -- the answer is content, not instructions, and the links in
-//                 it are destinations chosen by whoever wrote the question.
-//
-// Neither is handled by asking the model nicely. They are handled by the
-// server checking what we send against what it knows, and by a link being
-// unclickable unless our own route table recognises it.
+// ── What is still untrusted ──────────────────────────────────────────────────
+// Less than before, and for a reason worth writing down: `answer` is composed
+// by the server from the same numbers it puts in `data`, deterministically, so
+// it cannot say anything `data` does not. No model sees the question. That
+// removes the injection surface, it does not remove the rendering rule -- the
+// answer is still text, still rendered as React children, never as HTML, and
+// `safeSources` is still here for the day the links arrive (§9: not yet).
 
-/**
- * Agreed with the backend on 2026-11-23
- * (BACKEND_assistant_three_questions_REPLY_2026-11-23.md, §1). Under
- * /api/admin so it rides the staff session that already exists -- no new
- * header, so the production CORS allow-list does not change.
- *
- * The job it returns is polled on GET /api/jobs/owned/:jobId, which already
- * exists and already refuses a job that is not yours: it compares the job's
- * uid against the caller's. BackgroundJobsTracker polls exactly that route
- * today, so there is nothing to add on either side.
- */
+/** POST. The whole body is `{ question }`. Its own namespace, not /api/admin. */
 export const ASSISTANT_ASK_PATH = "/assistant/ask";
 
+/** GET. What it knows how to look up, for the chips shown before anyone types. */
+export const ASSISTANT_CATALOG_PATH = "/assistant/catalog";
+
+/** The `question_id` the server sends when its matcher found nothing. */
+export const UNSUPPORTED_QUESTION_ID = "unsupported";
+
 /**
- * The backend's number, which turned out to be the one we had guessed (§3 of
- * their reply). Enforced here as well as there, as they asked: a user who sees
- * the limit before spending a request learns more than one who gets a 400
- * after. It also bounds how much instruction text an injection attempt can
- * carry in a single question.
+ * The backend's cap, enforced here too as they asked: a user who sees the limit
+ * before spending a request has a better time than one who sees a 400 after.
+ * It also bounds how much text a single question can carry.
  *
- * Their other two limits are the server's alone, and we deliberately do not
- * model them here -- a client-side copy of a rate limit is a second source of
- * truth that drifts: 10 questions per staff member per 10 minutes, 100 per
- * company per hour. We render the 429 (askStartError) rather than predict it.
+ * Their rate limit -- 10 questions per 10 minutes per staff member -- is
+ * deliberately NOT modelled here. A client-side copy of a server limit is a
+ * second source of truth that drifts; we render the 429 instead (askError).
  */
 export const QUESTION_MAX_CHARS = 1000;
 
 /** A source label names a thing. It is not a place for prose. */
 export const LABEL_MAX_CHARS = 80;
 
-/**
- * The statuses GET /api/jobs/owned/:jobId stops on. Defined once, here,
- * because two pieces of code have to agree with a third: the window that
- * polls, the stub that imitates the server, and BackgroundJobsTracker, which
- * owns the original list. A test in the stub reads the tracker's own source
- * and fails if these drift apart -- a job that finishes with a word the
- * poller does not recognise is polled every three seconds for the rest of the
- * session, and nothing looks broken while it happens.
- */
-export const TERMINAL_JOB_STATUSES = ["done", "failed", "dead"];
-
-/** Whether a polled job has stopped moving, whichever way it ended. */
-export const isJobFinished = (status) => TERMINAL_JOB_STATUSES.includes(status);
-
 const text = (value) => (typeof value === "string" ? value : "");
+const count = (value) =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
 
 /**
  * Why the question cannot be sent, or null when it can.
  *
  * Checked here rather than only on the server because the cheapest refusal is
  * the one that never leaves the browser, and because a rate-limited user who
- * burns a request on a 2,000-character paste learns nothing from the 413.
+ * burns one of ten requests on a 2,000-character paste learns nothing from the
+ * 400 that comes back.
  */
 export const questionError = (question) => {
   const asked = text(question).trim();
@@ -105,18 +83,8 @@ const id = (value) => {
  * The four ids of whoever is asking, read from the session.
  *
  * Devitrak runs on two stores, so a company and a staff member each have a
- * Mongo id and a SQL id (CLAUDE.md, "Session Headers"). Both forms go to the
- * agent: with only one, its first move on the other store would be a lookup
- * to find the id it was not given.
- *
- * The staff SQL id follows the fallback the dashboard already uses when it
- * writes `created_by` (CreateLocationModal, CreateSubLocationPathModal), so
- * the assistant names the same staff member the rest of the app does rather
- * than a second opinion about who that is.
- *
- * Blanks become null on purpose. An empty string is not an id: it would have
- * the agent look up a company that cannot exist and answer about nothing,
- * instead of the server noticing we do not know who is asking.
+ * Mongo id and a SQL id (CLAUDE.md, "Session Headers"). The staff SQL id
+ * follows the fallback the dashboard already uses when it writes `created_by`.
  */
 export const requesterFromUser = (user) => ({
   companyId: id(user?.companyData?.id),
@@ -126,104 +94,290 @@ export const requesterFromUser = (user) => ({
 });
 
 /**
- * The body for POST /api/admin/assistant/ask.
+ * The body for POST /api/assistant/ask.
  *
- * The question, the conversation it continues when there is one, and who is
- * asking in both id forms so the agent can scope its work without a round of
- * lookups first.
+ * The server's whole body is `{ question }`. The ids are still sent, and this
+ * comment is here so nobody mistakes that for the server needing them:
  *
- * **The server must verify these four ids against the validated token rather
- * than read them.** They arrive from a browser, so they can be edited before
- * they leave; a server that trusts them lets any staff member ask about
- * another company's data by changing one line in a console. Checked, the same
- * field becomes useful twice over: the agent gets its scope, and a mismatch
- * is a deliberate act that can be refused and recorded.
+ * The backend confirmed on 2026-11-24 (§3) that `company_id` and
+ * `staff_member_id` are **never read** -- not validated and then ignored: the
+ * controller hands the company resolver a view of the request with `body` and
+ * `query` emptied. The staff identity comes from the signed JWT and the company
+ * from the `s-company-lq` header.
  *
- * Written down because it is not true yet: the backend told us on 2026-11-23
- * (§5 of their reply) that COMPANY_CONTEXT_MODE -- the control that compares
- * the company in the body against the one in the header -- is in `warn`, so
- * today a mismatch writes a log line and continues. The tripwire described
- * above exists and is not armed. The assistant resolves the company from the
- * session regardless, so nothing here depends on it; what depends on it is
- * whether anyone finds out when the body disagrees.
+ * So the reason they were added -- give the agent its scope without a round of
+ * lookups, and make a forged id a tripwire rather than a field nobody checks --
+ * does not apply to this version: there is no agent, and nothing reads the
+ * field to be tripped by it. They are kept because they are harmless and
+ * because the decision to send them was taken deliberately; dropping them is a
+ * one-line change whenever we want one fewer copy of a fact that already
+ * arrives twice.
  *
- * There are also two company headers, not one: `x-company-id` on the Mongo
- * side and `s-company-lq` on the MySQL side. Both are real and both are in
- * CORS. One of them has to be the authoritative resolution for the assistant
- * and the other ignored, or we inherit an ambiguity that today only produces
- * a log line. That choice is the server's to make and to state.
- *
- * Both envelopes are always present, with null for an id we do not have. The
- * agent should never have to branch on whether a key exists -- a null says
- * "we do not know", a missing key is indistinguishable from a bug.
- *
- * Extra keys handed to this function are dropped rather than forwarded, so
- * the contract cannot grow by accident.
+ * No `conversation_id`: §9 says there is none, so every question is matched on
+ * its own. Sending a field the server does not have would be us describing a
+ * feature that does not exist.
  */
-export const buildAskRequest = ({ question, conversationId, requester } = {}) => {
+export const buildAskRequest = ({ question, requester } = {}) => {
   const who = requester ?? {};
-  const body = {
+  return {
     question: text(question).trim(),
     company_id: { nosql: id(who.companyId), sql: id(who.companySqlId) },
     staff_member_id: { nosql: id(who.staffMemberId), sql: id(who.staffMemberSqlId) },
   };
-  const conversation = text(conversationId).trim();
-  if (conversation.length > 0) body.conversation_id = conversation;
-  return body;
 };
 
 /**
- * The job id from the 202 answer, or null. Null matters: a job tracked without
- * an id sits in the store for the rest of the session polling nothing, and the
- * user is left watching a spinner that will never resolve.
+ * One catalogue entry, or null. The label is the server's Spanish text; the
+ * English one this dashboard shows is chosen by `catalogLabel` below.
  */
-export const readAskJobId = (body) => {
-  const id = body?.jobId ?? body?.data?.jobId;
-  return typeof id === "string" && id.length > 0 ? id : null;
+const readEntry = (entry) => {
+  const entryId = text(entry?.id).trim();
+  if (entryId.length === 0) return null;
+  return { id: entryId, label: text(entry?.label).trim().slice(0, LABEL_MAX_CHARS) };
 };
 
-/** The answer markdown, or an empty string. Never null, so callers can render. */
-export const readAnswer = (body) => text(body?.answer ?? body?.data?.answer);
+/** The catalogue, from either endpoint: GET /catalog, or inlined in a miss. */
+export const readCatalog = (payload) => {
+  const list = Array.isArray(payload)
+    ? payload
+    : payload?.catalog ?? payload?.data?.catalog ?? payload?.data;
+  if (!Array.isArray(list)) return [];
+  return list.map(readEntry).filter(Boolean);
+};
 
-/** The descriptor BackgroundJobsTracker needs for one question. */
-export const assistantJob = ({ jobId } = {}) => ({
-  jobId,
-  type: "assistant-ask",
-  successMessage: "Your answer is ready.",
-  failureMessage: "The assistant could not answer that.",
-  // No `download`: there is no file. A download button on an answer that is
-  // already text on the screen would be a button that cannot do anything.
-  //
-  // Empty `invalidateKeys` on purpose, and it should stay empty for as long as
-  // the assistant is read-only: an answer changes nothing on the server, so
-  // there is no cached list to refresh. The day it can act is the day this
-  // line needs an argument, not a habit.
-  invalidateKeys: [],
+/**
+ * One answer, normalised.
+ *
+ * `data` keeps `null` as a value rather than becoming `{}`: §5 says a company
+ * registered in SQL inventory that cannot be crossed with its Mongo record
+ * comes back as `data: null`, and that means UNKNOWN. Collapsing it into an
+ * empty object would let a caller read a missing count as zero, which is a
+ * different sentence about the business.
+ */
+export const readReply = (payload) => ({
+  questionId: text(payload?.question_id).trim() || UNSUPPORTED_QUESTION_ID,
+  answer: text(payload?.answer),
+  data: payload?.data ?? null,
+  scope: payload?.scope ?? null,
+  params: payload?.params ?? {},
+  catalog: readCatalog(payload),
+  // None today (§9) -- they arrive once questions return lists rather than
+  // counts. Read through safeSources from the start so the first one that ever
+  // arrives is already judged rather than trusted.
+  sources: safeSources(payload?.sources),
 });
 
-/** What to tell the user when the question could not even be sent. */
-export const askStartError = (error) => {
+/** The matcher found nothing. A normal outcome, and a 200. */
+export const isUnsupported = (reply) => reply?.questionId === UNSUPPORTED_QUESTION_ID;
+
+/**
+ * The question was understood but the company could not be resolved. Must not
+ * be rendered as zero: unknown and none are different answers.
+ */
+export const isCompanyUnknown = (reply) =>
+  Boolean(reply) && !isUnsupported(reply) && reply.data === null;
+
+/**
+ * The answer covers only part of the company's data, because the staff member
+ * is scoped to certain categories.
+ *
+ * Worth saying out loud on screen. A `category_assistant` sees a smaller number
+ * than the real one, and with no notice they read their own blind spot as a
+ * fact -- the same reasoning that had us drop the Overdue tile, except a
+ * sentence hides it less badly than an empty tile does.
+ */
+export const isPartial = (reply) => reply?.scope?.scoped === true;
+
+/**
+ * `answer` is markdown, and the only markdown the server composes is `**bold**`
+ * around a number. Split into runs rather than parse: each run is rendered as a
+ * React child, so there is no HTML anywhere in the path and nothing to escape.
+ *
+ * An unclosed `**` keeps its asterisks instead of making the rest of the
+ * sentence bold -- a stray marker should look like a typo, not change the
+ * reading of the text after it.
+ */
+export const answerSegments = (answer) => {
+  const parts = text(answer).split("**");
+  if (parts.length % 2 === 0) return [{ text: text(answer), bold: false }];
+  return parts
+    .map((part, index) => ({ text: part, bold: index % 2 === 1 }))
+    .filter((segment) => segment.text.length > 0);
+};
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+const RANGE_LABELS = { "7d": "7 days", "30d": "30 days", "90d": "90 days" };
+
+const bullets = (items) => items.map((line) => `• ${line}`).join("\n");
+
+/**
+ * The English sentence this dashboard shows, built from `data`.
+ *
+ * Two reasons this exists rather than rendering `answer` straight:
+ *
+ *   `answer` is in Spanish today (§4). Every other string in this dashboard is
+ *   in English, and a chat bubble is not the place to make an exception.
+ *   The backend offered language negotiation and did not guess; asking for it
+ *   is in the reply note.
+ *
+ *   `data` is the source of truth and `answer` is a convenience (§4, their
+ *   words). Rendering from `data` is language-neutral and survives them
+ *   rewording a sentence.
+ *
+ * Returns null when the shape is not one we know -- a new `question_id`, or a
+ * field missing. The caller then falls back to the server's own sentence, which
+ * is always truthful even when it is not in our language. Guessing at a shape
+ * we do not recognise would be the one way to put a wrong number on screen.
+ */
+export const describeAnswer = (reply) => {
+  const data = reply?.data;
+  if (!data || typeof data !== "object") return null;
+
+  switch (reply.questionId) {
+    case "company_inventory_summary": {
+      const total = count(data.deviceCount);
+      const out = count(data.devicesOut);
+      const stored = count(data.inWarehouse);
+      if (total === null || out === null || stored === null) return null;
+      return `${plural(total, "device", "devices")} in total: ${out} out and ${stored} in the warehouse.`;
+    }
+    case "company_devices_out": {
+      const out = count(data.devicesOut);
+      if (out === null) return null;
+      return `${out} ${out === 1 ? "device is" : "devices are"} out of the warehouse right now.`;
+    }
+    case "company_events_active": {
+      const active = count(data.activeEvents);
+      if (active === null) return null;
+      const names = Array.isArray(data.events) ? data.events.filter(Boolean) : [];
+      const headline = `${plural(active, "active event", "active events")}.`;
+      return names.length > 0 ? `${headline}\n${bullets(names)}` : headline;
+    }
+    case "company_staff_list": {
+      const total = count(data.staffCount);
+      if (total === null) return null;
+      const people = Array.isArray(data.staff) ? data.staff : [];
+      const lines = people
+        .map((person) => {
+          const name = text(person?.name).trim();
+          if (name.length === 0) return null;
+          const role = text(person?.role).trim();
+          return role.length > 0 ? `${name} — ${role}` : name;
+        })
+        .filter(Boolean);
+      const headline = `${plural(total, "staff member", "staff members")}.`;
+      return lines.length > 0 ? `${headline}\n${bullets(lines)}` : headline;
+    }
+    case "company_subscription_status": {
+      const plan = text(data.plan).trim();
+      const status = text(data.status).trim();
+      if (plan.length === 0 || status.length === 0) return null;
+      return `Plan ${plan}, status ${status}.`;
+    }
+    case "company_activity_recent": {
+      const entries = count(data.count);
+      if (entries === null) return null;
+      const range = RANGE_LABELS[text(data.range).trim()] ?? "the selected period";
+      const rows = Array.isArray(data.activity) ? data.activity : [];
+      const lines = rows
+        .map((row) => {
+          const summary = text(row?.summary).trim();
+          if (summary.length === 0) return null;
+          const actor = text(row?.actor).trim();
+          return actor.length > 0 ? `${summary} — ${actor}` : summary;
+        })
+        .filter(Boolean);
+      const headline = `${plural(entries, "entry", "entries")} in the last ${range}.`;
+      return lines.length > 0 ? `${headline}\n${bullets(lines)}` : headline;
+    }
+    default:
+      return null;
+  }
+};
+
+/** The English chip labels, so the catalogue reads like the rest of the app. */
+const CATALOG_LABELS = {
+  company_inventory_summary: "Inventory summary",
+  company_devices_out: "Devices out of the warehouse",
+  company_events_active: "Active events",
+  company_staff_list: "Staff members",
+  company_subscription_status: "Subscription status",
+  company_activity_recent: "Recent activity",
+};
+
+/**
+ * What to print on a chip. Ours when we know the question, the server's label
+ * otherwise -- a catalogue entry we have never seen should still be offerable,
+ * in whatever language it arrives in, rather than silently missing.
+ */
+export const catalogLabel = (entry) =>
+  CATALOG_LABELS[entry?.id] ?? text(entry?.label).trim();
+
+/**
+ * How long until the user may ask again, in seconds, or null.
+ *
+ * Read from the standard RateLimit-* headers the limiter sends (§7). Axios
+ * lower-cases header names. `Retry-After` wins when both are present: it is the
+ * one that answers this question directly.
+ */
+export const retryAfterSeconds = (error) => {
+  const headers = error?.response?.headers ?? {};
+  const raw = headers["retry-after"] ?? headers["ratelimit-reset"];
+  const seconds = Number(raw);
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : null;
+};
+
+/**
+ * What to tell the user when the question could not be answered.
+ *
+ * The server's own `msg` is used where it has one: §8 lists them and they are
+ * written in English and for a reader. Replacing a specific sentence with a
+ * generic one of ours would be losing information on purpose.
+ */
+export const askError = (error) => {
   const status = error?.response?.status;
-  if (status === 404) {
+  const serverMessage = text(error?.response?.data?.msg).trim();
+
+  if (status === 429) {
+    const seconds = retryAfterSeconds(error);
     return {
-      title: "The server does not have this yet",
-      description: `POST /api/admin${ASSISTANT_ASK_PATH} answered 404.`,
+      title: "Too many questions",
+      description: seconds
+        ? `You can ask again in ${seconds} ${seconds === 1 ? "second" : "seconds"}.`
+        : "The limit is 10 questions every 10 minutes. Try again shortly.",
+    };
+  }
+  if (status === 400) {
+    return {
+      title: "The assistant refused the question",
+      description: serverMessage || "Check the question and try again.",
     };
   }
   if (status === 401 || status === 403) {
     return {
       title: "The assistant refused the session",
-      description: "Sign in again if this is unexpected.",
+      description: serverMessage || "Sign in again if this is unexpected.",
     };
   }
-  if (status === 429) {
+  if (status === 404) {
     return {
-      title: "Too many questions",
-      description: "Wait a moment and try again.",
+      title: "The server does not have this yet",
+      description: `POST /api${ASSISTANT_ASK_PATH} answered 404.`,
+    };
+  }
+  if (status === 500) {
+    // Worth its own sentence rather than "something went wrong". Every answered
+    // question writes an audit row BEFORE the reply is sent, and a failed write
+    // means the question is not answered: a read that leaves no trace is not
+    // served (§8). Rare, and not a bug when it happens.
+    return {
+      title: "The assistant could not answer",
+      description: serverMessage || "Try the question again.",
     };
   }
   return {
-    title: "Could not ask the assistant",
+    title: "Could not reach the assistant",
     description: "The question was not sent.",
   };
 };
@@ -256,16 +410,18 @@ const isInAppPath = (value) => {
 /**
  * The `sources` of an answer, made safe to render.
  *
+ * §9: there are none yet -- they arrive once questions return lists rather than
+ * counts, built from the server's route table. This stays, unwired, because the
+ * rule is easier to keep than to rediscover, and because the day a link does
+ * arrive is not the day to start thinking about whether it may be clicked.
+ *
  * Every entry comes back as `{ label, path }` where a `path` of null means
  * "show the label as text, not as a link". Refusing the link is not refusing
- * the source: the staff member should still see what the answer leaned on, so
- * they can judge it. Dropping it silently would hide the one clue that an
- * answer was built on something odd.
+ * the source: the staff member should still see what the answer leaned on.
  *
  * `isKnownRoute` defaults to refusing everything. That is not a placeholder to
- * tidy up later -- it is the behaviour we want until the real route matcher is
- * wired in. A default that accepted paths would mean a mistake in wiring shows
- * up as working links to nowhere, instead of as text.
+ * tidy up later -- a default that accepted paths would mean a mistake in wiring
+ * shows up as working links to nowhere, instead of as text.
  */
 export const safeSources = (sources, { isKnownRoute = () => false } = {}) => {
   if (!Array.isArray(sources)) return [];

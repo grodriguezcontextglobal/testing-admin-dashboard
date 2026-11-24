@@ -71,6 +71,24 @@ describe("buildRouteScopedHeaders", () => {
     expect(headers).not.toHaveProperty("x-company-id");
   });
 
+  // The assistant's own namespace. It resolves the company through
+  // resolveCompanyContext (s-company-lq) and answers 400 on x-company-id
+  // alone, so this is the one header it must carry -- and before it was
+  // listed, neither pattern matched and it carried none.
+  it.each(["/api/assistant/ask", "/api/assistant/catalog"])(
+    "attaches s-company-lq, and only that, on assistant route %s",
+    (path) => {
+      const headers = buildRouteScopedHeaders(path, values);
+      expect(headers["s-company-lq"]).toBe("42");
+      expect(headers).not.toHaveProperty("x-company-id");
+    },
+  );
+
+  // Prefix-only matching would make /api/assistantship a company route too.
+  it("does not match a route that merely starts with the assistant's name", () => {
+    expect(buildRouteScopedHeaders("/api/assistantship/x", values)).toEqual({});
+  });
+
   it("does not treat /api/db_company as an x-company-id (company) route", () => {
     const headers = buildRouteScopedHeaders("/api/db_company/x", values);
     expect(headers).not.toHaveProperty("x-company-id");

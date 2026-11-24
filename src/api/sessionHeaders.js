@@ -110,8 +110,18 @@ export const buildRequestPath = (baseURL = "", url = "") => {
 // than from the payload, which lets all forty-odd notification call sites stay
 // as they are. See server nodeMailer/branding.js#resolveBranding.
 const COMPANY_ID_ROUTE = /\/api\/(staff|admin|company|stripe|nodemailer)(\/|$)/;
-// s-company-lq → any /api/db_* route
-const COMPANY_SQL_ROUTE = /\/api\/db_/;
+// s-company-lq → any /api/db_* route, and /api/assistant
+//
+// The assistant is neither: it is its own namespace that resolves the company
+// through the server's resolveCompanyContext, which reads s-company-lq
+// (BACKEND_assistant_contract_2026-11-24.md §2). Sending only x-company-id is
+// a 400 there.
+//
+// This line is load-bearing in a way that is invisible from the call site:
+// before it, /api/assistant matched NEITHER pattern, so the request went out
+// with no company header at all and every question would have come back 400 --
+// with nothing in our own code looking wrong.
+const COMPANY_SQL_ROUTE = /\/api\/(db_|assistant(\/|$))/;
 
 /**
  * Returns the route-scoped headers to merge onto a request, given its path and

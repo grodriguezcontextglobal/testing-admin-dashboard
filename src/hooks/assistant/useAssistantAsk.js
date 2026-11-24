@@ -1,52 +1,56 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
-import { devitrakApi, devitrakApiAdmin } from "../../api/devitrakApi";
+import { devitrakApi } from "../../api/devitrakApi";
 import { ASSISTANT_STUB } from "../../config/featureFlags";
 import {
+  answerSegments,
   ASSISTANT_ASK_PATH,
-  askStartError,
+  ASSISTANT_CATALOG_PATH,
+  askError,
   buildAskRequest,
-  isJobFinished,
+  describeAnswer,
+  isCompanyUnknown,
+  isPartial,
+  isUnsupported,
   questionError,
-  readAnswer,
-  readAskJobId,
+  readCatalog,
+  readReply,
   requesterFromUser,
-  safeSources,
 } from "../../pages/assistant/utils/assistant";
 import { createAssistantStub } from "../../pages/assistant/utils/stub/assistantStub";
 
 /**
  * One conversation with the staff assistant.
  *
- * The shape is the one this dashboard already uses for long work, and the
- * backend confirmed on 2026-11-23 that both halves of it already exist on
- * their side: POST /api/admin/assistant/ask answers 202 with a job id, and
- * GET /api/jobs/owned/:jobId -- the route BackgroundJobsTracker has been
- * polling for months -- reports on it and refuses a job that is not yours.
+ * ── Why there is no polling here any more ────────────────────────────────────
+ * There was, and it was right for the design we had been given: an agent with
+ * tool calls takes tens of seconds, so it answered 202 with a job and
+ * BackgroundJobsTracker's route reported on it. The backend built something
+ * else and said so on 2026-11-24: no agent, no model, a closed catalogue of six
+ * questions and one query. It answers in the same request, in milliseconds.
  *
- * ── Why this polls instead of handing the job to BackgroundJobsTracker ──────
- * The tracker exists for work whose result is somewhere else: a file to
- * download, a list to refresh. It notifies and gets out of the way. An answer
- * is not somewhere else -- it is text that belongs in the conversation that
- * produced it, and the job store keeps descriptors, not results, so the
- * tracker could not hand it over even if we asked.
+ * So this is an ordinary POST. The polling code was deleted rather than left
+ * dormant -- the tracker still owns the pattern for the work that genuinely
+ * runs long, and a second copy of it sitting unused in the assistant would read
+ * as a feature that exists.
  *
- * A notification saying "your answer is ready" with no way to read it is
- * exactly the broken promise the exports already had once, and the comment at
- * the top of platformExports.js is the record of fixing it. So the window
- * polls while it is open, and `assistantJob` stays unused in the utils until
- * there is a notification that can reopen this window -- at which point it
- * has something true to say.
- *
- * Sources are made safe here rather than in the component, so no screen can
- * render a link this hook has not already judged.
+ * ── The three things this hook is careful about ──────────────────────────────
+ *   a miss is not an error   -- `question_id: "unsupported"` comes back 200 and
+ *                               is the most likely outcome of a keyword matcher.
+ *                               It becomes a message with the catalogue in it,
+ *                               never the red error strip.
+ *   unknown is not zero      -- `data: null` on an understood question means the
+ *                               company could not be resolved. Rendering it as a
+ *                               count would state a fact nobody checked.
+ *   English comes from data  -- `answer` is the server's Spanish convenience;
+ *                               `data` is the truth. We build the sentence from
+ *                               `data` and keep `answer` as the fallback.
  */
-export const useAssistantAsk = () => {
+export const useAssistantAsk = ({ enabled = true } = {}) => {
   const { user } = useSelector((state) => state.admin);
   const [messages, setMessages] = useState([]);
-  const [jobId, setJobId] = useState(null);
-  const [conversationId, setConversationId] = useState(null);
+  const [asking, setAsking] = useState(false);
   const [error, setError] = useState(null);
 
   // One stub per conversation, created only in a dev server. In a build
@@ -55,64 +59,27 @@ export const useAssistantAsk = () => {
   const stubRef = useRef(null);
   if (ASSISTANT_STUB && !stubRef.current) stubRef.current = createAssistantStub();
 
-  // Guards the effect below, which runs on every poll: without it, a finished
-  // job appends its answer again on each render until the window is closed.
-  const handledRef = useRef(null);
-
-  const { data } = useQuery({
-    queryKey: ["assistant", "job", jobId],
+  // Fetched when the panel opens, not on sign-in: until the endpoint is
+  // deployed this is a 404, and a 404 nobody asked for in every session is
+  // noise that teaches people to ignore the console.
+  const { data: catalogPayload } = useQuery({
+    queryKey: ["assistant", "catalog"],
     queryFn: () =>
       ASSISTANT_STUB
-        ? stubRef.current.status(jobId)
-        : devitrakApi.get(`/jobs/owned/${jobId}`).then((response) => response.data),
-    enabled: Boolean(jobId),
-    // react-query v4, where this callback is handed the data itself. The
-    // tracker does the same; on v5 it would be the query object instead, and
-    // the predicate would quietly never be true.
-    refetchInterval: (latest) => (isJobFinished(latest?.status) ? false : 3000),
-    refetchIntervalInBackground: true,
+        ? stubRef.current.catalog()
+        : devitrakApi.get(ASSISTANT_CATALOG_PATH).then((response) => response.data),
+    enabled,
+    staleTime: Infinity,
     retry: false,
   });
 
-  useEffect(() => {
-    if (!data || !isJobFinished(data.status) || handledRef.current === jobId) return;
-    handledRef.current = jobId;
-    setJobId(null);
-
-    if (data.status !== "done") {
-      setMessages((thread) => [
-        ...thread,
-        {
-          id: `${handledRef.current}-answer`,
-          from: "assistant",
-          failed: true,
-          text: "The assistant could not answer that. Try asking again.",
-          sources: [],
-        },
-      ]);
-      return;
-    }
-
-    const result = data.result ?? data;
-    if (result?.conversation_id) setConversationId(result.conversation_id);
-    setMessages((thread) => [
-      ...thread,
-      {
-        id: `${handledRef.current}-answer`,
-        from: "assistant",
-        failed: false,
-        text: readAnswer(result),
-        sources: safeSources(result?.sources),
-      },
-    ]);
-  }, [data, jobId]);
+  const catalog = useMemo(() => readCatalog(catalogPayload), [catalogPayload]);
 
   const ask = useCallback(
     async (question) => {
-      // One question at a time. A second POST while the first is unanswered
-      // would orphan the first job: its id is gone, so nothing would ever read
-      // the answer the server is still working on.
-      if (jobId) return;
+      // One question at a time. Not because the server minds, but because two
+      // answers landing out of order would read as replies to each other.
+      if (asking) return;
 
       const refusal = questionError(question);
       if (refusal) {
@@ -122,42 +89,90 @@ export const useAssistantAsk = () => {
       setError(null);
 
       const asked = question.trim();
+      const turn = `${Date.now()}`;
       setMessages((thread) => [
         ...thread,
-        { id: `${Date.now()}-question`, from: "staff", text: asked, sources: [] },
+        { id: `${turn}-question`, from: "staff", segments: [{ text: asked, bold: false }] },
       ]);
+      setAsking(true);
 
-      const body = buildAskRequest({
-        question: asked,
-        conversationId,
-        requester: requesterFromUser(user),
-      });
+      const body = buildAskRequest({ question: asked, requester: requesterFromUser(user) });
 
       try {
-        const accepted = ASSISTANT_STUB
+        const payload = ASSISTANT_STUB
           ? stubRef.current.ask(body)
-          : await devitrakApiAdmin.post(ASSISTANT_ASK_PATH, body).then((res) => res.data);
+          : await devitrakApi.post(ASSISTANT_ASK_PATH, body).then((res) => res.data);
 
-        const accepted_id = readAskJobId(accepted);
-        if (!accepted_id) {
-          // Stop rather than wait. A job tracked without an id polls nothing
-          // for the rest of the session behind a spinner that cannot resolve.
-          setError("The server took the question but sent no job to follow.");
+        const reply = readReply(payload);
+
+        // A miss. Not a failure: showing the questions again turns a guessing
+        // game into a menu.
+        if (isUnsupported(reply)) {
+          setMessages((thread) => [
+            ...thread,
+            {
+              id: `${turn}-answer`,
+              from: "assistant",
+              segments: [
+                { text: "I cannot answer that yet. Here is what I can look up:", bold: false },
+              ],
+              catalog: reply.catalog.length > 0 ? reply.catalog : catalog,
+              sources: [],
+            },
+          ]);
           return;
         }
-        setJobId(accepted_id);
+
+        // Understood, but the company could not be crossed between the two
+        // stores. The sentence has to say unknown, because the alternative a
+        // reader will assume is zero.
+        if (isCompanyUnknown(reply)) {
+          setMessages((thread) => [
+            ...thread,
+            {
+              id: `${turn}-answer`,
+              from: "assistant",
+              unknown: true,
+              segments: [
+                {
+                  text: "Your company could not be identified, so this is unknown — not zero.",
+                  bold: false,
+                },
+              ],
+              sources: [],
+            },
+          ]);
+          return;
+        }
+
+        const english = describeAnswer(reply);
+        setMessages((thread) => [
+          ...thread,
+          {
+            id: `${turn}-answer`,
+            from: "assistant",
+            // Ours when we can build it from `data`; the server's own sentence
+            // when we cannot, which is truthful even when it is not in English.
+            segments: english ? [{ text: english, bold: false }] : answerSegments(reply.answer),
+            partial: isPartial(reply),
+            sources: reply.sources,
+          },
+        ]);
       } catch (failure) {
-        const notice = askStartError(failure);
+        const notice = askError(failure);
         setError(`${notice.title}. ${notice.description}`);
+      } finally {
+        setAsking(false);
       }
     },
-    [conversationId, jobId, user],
+    [asking, catalog, user],
   );
 
   return {
     messages,
+    catalog,
     ask,
-    asking: Boolean(jobId),
+    asking,
     error,
     dismissError: () => setError(null),
   };

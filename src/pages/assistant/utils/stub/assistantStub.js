@@ -1,100 +1,162 @@
-// A stand-in for POST /api/admin/assistant/ask and the job route behind it,
-// so the chat window can be built, reviewed and argued about before the
-// backend has answered FRONTEND_assistant_three_questions_2026-11-23.md.
+// A stand-in for /api/assistant, for a dev server only.
 //
-// Dev server only. featureFlags.ASSISTANT_STUB is pinned to
-// `import.meta.env.DEV`, so no release can answer a staff question with text
-// we invented. That is a stronger rule than the console's sample data gets,
-// and the reason is in the flag's comment: invented numbers under a banner
-// read as a prototype; an invented sentence reads as an answer.
+// It was a job queue until 2026-11-24, because that is what we had been told to
+// expect. The real endpoint is synchronous and catalogue-based
+// (BACKEND_assistant_contract_2026-11-24.md), so this is too. A stub that
+// imitates a contract the server does not have is worse than no stub: every
+// hour spent against it is spent learning the wrong shape.
 //
-// It imitates the real contract rather than a convenient one:
+// What it deliberately does NOT do is only return the happy case. The states
+// below are the ones the window has to render and the ones that are hardest to
+// see by accident:
 //
-//   ask    -> the 202 body, { jobId }, which readAskJobId already parses;
-//   status -> what GET /jobs/owned/:jobId returns, using the same words
-//             BackgroundJobsTracker treats as terminal. They are written out
-//             here rather than imported, on purpose: a stub that borrowed the
-//             constant would agree with us by construction and prove nothing.
-//             Its test compares these words against TERMINAL_JOB_STATUSES and
-//             against the tracker's own source, so the agreement is checked
-//             rather than assumed.
+//   unsupported     -- keyword matching MISSES, and the backend says so plainly
+//                      (§1). It is a 200 with the catalogue inlined, and it is
+//                      the single most likely thing a real user will see.
+//   scope.scoped    -- a scoped staff member reads a smaller number than the
+//                      real one. Without a notice they read a blind spot as a
+//                      fact.
+//   data: null      -- a company that cannot be resolved. Means unknown, and
+//                      must not render as zero.
+//   429             -- the limiter, with the headers that say when to come back.
 //
-// It is deliberately unhelpful in two ways. It takes a few polls to finish,
-// because a stub that is instantly done hides every loading state we are here
-// to build. And it returns sources with links that must be refused, because a
-// stub that only returns well-behaved data would mean the first refused link
-// anyone ever saw came from a real model in production.
+// Ask for each by typing the word: "unsupported", "scoped", "unknown", "429".
 
-const sourcesFor = () => [
-  // Fine, assuming the route table knows /inventory.
-  { label: "Inventory", path: "/inventory" },
-  // An in-app shape the route table should not recognise.
-  { label: "A screen that does not exist", path: "/not-a-real-route" },
-  // Off-site, dressed as a citation. This is the one the window must render
-  // as plain text, and the reason safeSources exists.
-  { label: "Supporting document", path: "https://example.invalid/looks-official" },
-  // Leaving by a different door.
-  { label: "Another way out", path: "//example.invalid/steal" },
+export const STUB_CATALOG = [
+  { id: "company_inventory_summary", label: "Resumen de inventario" },
+  { id: "company_devices_out", label: "Equipos fuera del almacen ahora mismo" },
+  { id: "company_events_active", label: "Eventos activos" },
+  { id: "company_staff_list", label: "Personal de la compania" },
+  { id: "company_subscription_status", label: "Estado de la suscripcion" },
+  { id: "company_activity_recent", label: "Actividad reciente" },
 ];
 
-const answerFor = (question) =>
-  [
-    "**This answer is invented.** The assistant endpoint does not exist yet;",
-    "you are looking at the stub in `src/pages/assistant/utils/stub/`.",
-    "",
-    `You asked: ${question}`,
-    "",
-    "A real answer would arrive as markdown, and the sources below would be",
-    "checked against the route table before any of them became a link.",
-  ].join("\n");
+// Keyword matching in Spanish and English, which is what the server does. Kept
+// crude on purpose: a stub that understands more than the server teaches the
+// window that misses are rare, and they will not be.
+const MATCHERS = [
+  { id: "company_inventory_summary", words: ["inventario", "inventory", "resumen", "summary"] },
+  { id: "company_devices_out", words: ["fuera", "out", "afuera"] },
+  { id: "company_events_active", words: ["evento", "event"] },
+  { id: "company_staff_list", words: ["staff", "personal", "empleado"] },
+  { id: "company_subscription_status", words: ["suscrip", "subscription", "plan"] },
+  { id: "company_activity_recent", words: ["actividad", "activity", "reciente", "recent"] },
+];
+
+const ANSWERS = {
+  company_inventory_summary: {
+    data: { deviceCount: 128, devicesOut: 4, inWarehouse: 124 },
+    answer: "Tienes **128** equipos: **4** fuera y **124** en el almacen.",
+  },
+  company_devices_out: {
+    data: { devicesOut: 4 },
+    answer: "Tienes **4** equipos fuera del almacen ahora mismo.",
+  },
+  company_events_active: {
+    data: { activeEvents: 2, events: ["Convencion Miami 2026", "Feria Bogota"] },
+    answer: "Tienes **2** eventos activos.",
+    params: { limit: 25 },
+  },
+  company_staff_list: {
+    data: {
+      staffCount: 3,
+      staff: [
+        { name: "Gustavo Rodriguez", role: "admin" },
+        { name: "Fredrik Nilsson", role: "approver" },
+        // A null role is in the contract (§5) and renders differently.
+        { name: "Ana Perez", role: null },
+      ],
+    },
+    answer: "Tienes **3** miembros del personal.",
+    params: { limit: 25 },
+  },
+  company_subscription_status: {
+    data: { plan: "Pro", subscriptionStatus: "active", status: "active" },
+    answer: "Tu plan es **Pro** y la suscripcion esta **activa**.",
+  },
+  company_activity_recent: {
+    data: {
+      range: "30d",
+      count: 2,
+      activity: [
+        { summary: "Device DVK-0012 assigned", actor: "Gustavo Rodriguez", at: "2026-11-23T14:02:11Z" },
+        // A null summary is in the contract too, and must not print "null".
+        { summary: null, actor: "system", at: "2026-11-22T09:10:00Z" },
+      ],
+    },
+    answer: "Hubo **2** movimientos en los ultimos 30 dias.",
+    params: { range: "30d", limit: 25 },
+  },
+};
+
+const matchQuestion = (question) => {
+  const asked = String(question ?? "").toLowerCase();
+  const found = MATCHERS.find((matcher) => matcher.words.some((word) => asked.includes(word)));
+  return found?.id ?? null;
+};
 
 /**
- * One stub instance, with its own jobs. Create it where the window lives.
- *
- * `pollsBeforeDone` is how many times `status` says "pending" before it
- * finishes -- 0 to finish at once. A question containing "fail" ends as
- * "failed" instead, because the error state needs building too and waiting
- * for a real failure to happen is not a plan.
+ * A rate-limit refusal shaped like axios', so the error path is exercised with
+ * the same object the real client will throw -- including the headers that say
+ * when to come back.
  */
-export const createAssistantStub = ({ pollsBeforeDone = 2 } = {}) => {
-  const jobs = new Map();
-  let issued = 0;
-
-  const ask = ({ question } = {}) => {
-    issued += 1;
-    const jobId = `stub-job-${issued}`;
-    const asked = typeof question === "string" ? question : "";
-    jobs.set(jobId, {
-      asked,
-      polls: 0,
-      fails: asked.toLowerCase().includes("fail"),
-    });
-    return { jobId };
+const rateLimited = () => {
+  const failure = new Error("Too many questions in a short time.");
+  failure.response = {
+    status: 429,
+    headers: { "ratelimit-reset": "45", "ratelimit-limit": "10", "ratelimit-remaining": "0" },
+    data: { ok: false, msg: "Too many questions in a short time, please wait." },
   };
+  return failure;
+};
 
-  const status = (jobId) => {
-    const job = jobs.get(jobId);
-    // "dead" rather than "pending": the tracker polls a non-terminal status
-    // every three seconds for as long as the session lasts, so shrugging at
-    // an id nobody issued would leave whoever is working on this watching a
-    // spinner and looking for the bug in their own code.
-    if (!job) return { status: "dead" };
+export const createAssistantStub = () => ({
+  catalog: () => ({ ok: true, catalog: STUB_CATALOG }),
 
-    if (job.polls < pollsBeforeDone) {
-      job.polls += 1;
-      return { status: "pending" };
+  ask: (body) => {
+    const question = body?.question ?? "";
+    const asked = String(question).toLowerCase();
+
+    if (asked.includes("429")) throw rateLimited();
+
+    const questionId = asked.includes("unsupported") ? null : matchQuestion(question);
+
+    if (!questionId) {
+      return {
+        ok: true,
+        question_id: "unsupported",
+        answer: "No se contestar eso todavia. Esto es lo que si puedo mirar:",
+        data: null,
+        catalog: STUB_CATALOG,
+      };
     }
-    if (job.fails) return { status: "failed" };
+
+    const known = ANSWERS[questionId];
+
+    // Understood, but the company could not be crossed between the two stores.
+    // `data: null` with an `answer` that says so -- never a zero.
+    if (asked.includes("unknown")) {
+      return {
+        ok: true,
+        question_id: questionId,
+        answer: "No pude identificar tu compania, asi que no lo se.",
+        data: null,
+        scope: { scoped: false, roleType: "admin" },
+        params: {},
+      };
+    }
 
     return {
-      status: "done",
-      result: {
-        answer: answerFor(job.asked),
-        conversation_id: `stub-conversation-${jobId}`,
-        sources: sourcesFor(),
-      },
+      ok: true,
+      question_id: questionId,
+      answer: known.answer,
+      data: known.data,
+      scope: asked.includes("scoped")
+        ? { scoped: true, roleType: "category_assistant" }
+        : { scoped: false, roleType: "admin" },
+      params: known.params ?? {},
     };
-  };
+  },
+});
 
-  return { ask, status };
-};
+export default createAssistantStub;
