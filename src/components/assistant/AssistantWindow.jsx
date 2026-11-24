@@ -281,7 +281,7 @@ const AssistantWindow = () => {
   if (!open) {
     return (
       <BlueButton
-        title="Ask the assistant"
+        title="Ask Devi"
         iconLeading={<MessageSquare size={16} />}
         func={() => setOpen(true)}
         styles={{
