@@ -223,7 +223,7 @@ const Thinking = () => (
   >
     <Avatar />
     <div
-      aria-label="The assistant is working on it"
+      aria-label="Devi is working on it"
       role="status"
       style={{
         display: "flex",
@@ -299,7 +299,10 @@ const AssistantWindow = () => {
 
   return (
     <section
-      aria-label="Staff assistant"
+      // A landmark says what it is, not only what it is called. This is read
+      // out before anything inside it, to someone who does not yet know what a
+      // "Devi" is.
+      aria-label="Devi, the staff assistant"
       className="assistant-panel"
       style={{
         position: "fixed",
@@ -335,7 +338,7 @@ const AssistantWindow = () => {
       >
         <Avatar />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <strong style={{ display: "block", fontSize: "14px", lineHeight: 1.3 }}>Assistant</strong>
+          <strong style={{ display: "block", fontSize: "14px", lineHeight: 1.3 }}>Devi</strong>
           <span style={{ fontSize: "11px", color: palette.muted }}>
             Answers from your own company&apos;s data
           </span>
@@ -344,7 +347,7 @@ const AssistantWindow = () => {
           type="button"
           className="assistant-icon-button"
           onClick={() => setOpen(false)}
-          aria-label="Close the assistant"
+          aria-label="Close Devi"
           style={{
             background: "none",
             border: "none",
