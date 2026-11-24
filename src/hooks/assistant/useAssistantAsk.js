@@ -92,7 +92,12 @@ export const useAssistantAsk = ({ enabled = true } = {}) => {
       const turn = `${Date.now()}`;
       setMessages((thread) => [
         ...thread,
-        { id: `${turn}-question`, from: "staff", segments: [{ text: asked, bold: false }] },
+        {
+          id: `${turn}-question`,
+          from: "staff",
+          at: new Date().toISOString(),
+          segments: [{ text: asked, bold: false }],
+        },
       ]);
       setAsking(true);
 
@@ -113,6 +118,7 @@ export const useAssistantAsk = ({ enabled = true } = {}) => {
             {
               id: `${turn}-answer`,
               from: "assistant",
+              at: new Date().toISOString(),
               segments: [
                 { text: "I cannot answer that yet. Here is what I can look up:", bold: false },
               ],
@@ -132,6 +138,7 @@ export const useAssistantAsk = ({ enabled = true } = {}) => {
             {
               id: `${turn}-answer`,
               from: "assistant",
+              at: new Date().toISOString(),
               unknown: true,
               segments: [
                 {
@@ -151,6 +158,7 @@ export const useAssistantAsk = ({ enabled = true } = {}) => {
           {
             id: `${turn}-answer`,
             from: "assistant",
+            at: new Date().toISOString(),
             // Ours when we can build it from `data`; the server's own sentence
             // when we cannot, which is truthful even when it is not in English.
             segments: english ? [{ text: english, bold: false }] : answerSegments(reply.answer),

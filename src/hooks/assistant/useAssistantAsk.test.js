@@ -19,6 +19,18 @@ vi.mock("react-redux", () => ({
   useSelector: (select) => select({ admin: { user } }),
 }));
 
+// Pinned, not inherited. ASSISTANT_STUB is `import.meta.env.DEV === true &&
+// VITE_APP_ASSISTANT_STUB === "true"`, and vitest runs with DEV true and reads
+// the developer's own .env -- so a developer who switches the stub on to look
+// at the window makes ten tests in this file assert against invented answers
+// instead of the mocked client. CI never sees it, because .env is gitignored.
+// These tests are about what we send and what we do with what comes back, so
+// the stub is the one thing that must be off.
+vi.mock("../../config/featureFlags", () => ({
+  ASSISTANT_STUB: false,
+  FEATURE_ASSISTANT: true,
+}));
+
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return function Wrapper({ children }) {
