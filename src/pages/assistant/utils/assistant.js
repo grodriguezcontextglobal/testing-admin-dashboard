@@ -63,6 +63,20 @@ export const QUESTION_MAX_CHARS = 1000;
 /** A source label names a thing. It is not a place for prose. */
 export const LABEL_MAX_CHARS = 80;
 
+/**
+ * The statuses GET /api/jobs/owned/:jobId stops on. Defined once, here,
+ * because two pieces of code have to agree with a third: the window that
+ * polls, the stub that imitates the server, and BackgroundJobsTracker, which
+ * owns the original list. A test in the stub reads the tracker's own source
+ * and fails if these drift apart -- a job that finishes with a word the
+ * poller does not recognise is polled every three seconds for the rest of the
+ * session, and nothing looks broken while it happens.
+ */
+export const TERMINAL_JOB_STATUSES = ["done", "failed", "dead"];
+
+/** Whether a polled job has stopped moving, whichever way it ended. */
+export const isJobFinished = (status) => TERMINAL_JOB_STATUSES.includes(status);
+
 const text = (value) => (typeof value === "string" ? value : "");
 
 /**

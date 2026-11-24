@@ -12,18 +12,18 @@
 //
 //   ask    -> the 202 body, { jobId }, which readAskJobId already parses;
 //   status -> what GET /jobs/owned/:jobId returns, using the same words
-//             BackgroundJobsTracker treats as terminal ("done", "failed",
-//             "dead") -- there is a test that reads the tracker and fails if
-//             these drift apart.
+//             BackgroundJobsTracker treats as terminal. They are written out
+//             here rather than imported, on purpose: a stub that borrowed the
+//             constant would agree with us by construction and prove nothing.
+//             Its test compares these words against TERMINAL_JOB_STATUSES and
+//             against the tracker's own source, so the agreement is checked
+//             rather than assumed.
 //
 // It is deliberately unhelpful in two ways. It takes a few polls to finish,
 // because a stub that is instantly done hides every loading state we are here
 // to build. And it returns sources with links that must be refused, because a
 // stub that only returns well-behaved data would mean the first refused link
 // anyone ever saw came from a real model in production.
-
-/** The words the tracker stops polling on. Kept here so a test can compare. */
-export const STUB_TERMINAL_STATUSES = ["done", "failed", "dead"];
 
 const sourcesFor = () => [
   // Fine, assuming the route table knows /inventory.

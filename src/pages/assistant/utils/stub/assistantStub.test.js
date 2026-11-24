@@ -2,8 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
-import { createAssistantStub, STUB_TERMINAL_STATUSES } from "./assistantStub";
-import { readAskJobId, readAnswer, safeSources } from "../assistant";
+import { createAssistantStub } from "./assistantStub";
+import {
+  readAskJobId,
+  readAnswer,
+  safeSources,
+  TERMINAL_JOB_STATUSES,
+} from "../assistant";
 
 describe("createAssistantStub", () => {
   it("answers an ask the way a 202 does, with an id our reader accepts", () => {
@@ -61,7 +66,7 @@ describe("createAssistantStub", () => {
   // id would leave a dev watching a spinner and blaming their own code.
   it("is terminal for a job it never issued", () => {
     const stub = createAssistantStub();
-    expect(STUB_TERMINAL_STATUSES).toContain(stub.status("never-issued").status);
+    expect(TERMINAL_JOB_STATUSES).toContain(stub.status("never-issued").status);
   });
 
   it("returns a conversation id so the follow-up question can carry one", () => {
@@ -122,9 +127,21 @@ describe("the stub and the real job route agree", () => {
     expect(declared).toBeTruthy();
     const terminal = [...declared[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
     expect(terminal.length).toBeGreaterThan(0);
-    for (const status of STUB_TERMINAL_STATUSES) {
+    for (const status of TERMINAL_JOB_STATUSES) {
       expect(terminal, `the tracker does not treat "${status}" as terminal`).toContain(status);
     }
+  });
+
+  // The stub writes its words out rather than importing the constant, so that
+  // it can disagree. This is the test that would notice if it did.
+  it("ends on words the shared list already knows", () => {
+    const done = createAssistantStub({ pollsBeforeDone: 0 });
+    const doneId = readAskJobId(done.ask({ question: "x" }));
+    expect(TERMINAL_JOB_STATUSES).toContain(done.status(doneId).status);
+
+    const broken = createAssistantStub({ pollsBeforeDone: 0 });
+    const brokenId = readAskJobId(broken.ask({ question: "fail" }));
+    expect(TERMINAL_JOB_STATUSES).toContain(broken.status(brokenId).status);
   });
 
   it("uses a non-terminal word while it is still working", () => {

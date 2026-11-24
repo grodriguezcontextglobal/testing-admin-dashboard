@@ -1,5 +1,6 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { lazyWithRetry } from "./routes/lazyWithRetry";
+import { FEATURE_ASSISTANT } from "./config/featureFlags";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import "./App.css";
@@ -30,6 +31,19 @@ import { InstallPromptProvider } from "./hooks/useInstallPromptContext";
 const IdleSessionGuard = lazyWithRetry(() => import("./components/session/IdleSessionGuard"));
 const AuthRoutes = lazyWithRetry(() => import("./routes/authorized/AuthRoutes"));
 const NoAuthRoutes = lazyWithRetry(() => import("./routes/no-authorized/NoAuthRoutes"));
+// Staff assistant (/src/components/assistant).
+//
+// The flag is read HERE, around the dynamic import, and not only at the call
+// site. Measured, not assumed: with `lazyWithRetry(() => import(...))` at
+// module scope and the flag checked in the JSX, the factory is still
+// evaluated, so Rollup emitted an AssistantWindow chunk in a build with the
+// flag off. With the flag folded to false the import is unreachable and the
+// chunk is not emitted at all. A flag that merely hides a feature still ships
+// it, and "it returns null anyway" is not the same claim.
+const AssistantWindow = FEATURE_ASSISTANT
+  ? lazyWithRetry(() => import("./components/assistant/AssistantWindow"))
+  : null;
+
 const BackgroundJobsTracker = lazyWithRetry(() =>
   import("./components/backgroundJobs/BackgroundJobsTracker")
 );
@@ -179,6 +193,7 @@ const App = () => {
               }
             />
             <BackgroundJobsTracker />
+            {FEATURE_ASSISTANT && <AssistantWindow />}
             <OfflineIndicator />
             <PlanLimitNotice />
             <AuthRoutes />
