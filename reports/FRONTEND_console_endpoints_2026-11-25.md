@@ -163,6 +163,35 @@ days. **The third one must not ship before 2026-12-09** — `lastLoginAt` only s
 written on 11-09, and you were right that this is a data-age problem with a known expiry rather
 than a cost problem. Two of three now still beats three later.
 
+### 5.1 — `events` reads Mongo, so every console read of it needs `type: 'event'`
+
+Your own note settles the source: `events` is the Mongo `Event` model
+(`BACKEND_console_dc3_endpoints_2026-11-19.md:47`), and `liveEvents` on a `/companies` row
+reads the same one (:148). Both are in the group you listed as buildable without the SQL
+join (:208).
+
+**That collection does not hold only events.** Every read in the dashboard that asks for *a
+company's list* carries the discriminator: `GET /api/event/event-list-per-company?company=…&type=event`
+(`eventsListQuery.js:16`), and the `POST /event/event-list` bodies in home, consumers, staff
+and posts all send `type: "event"`. The reads that leave it out are the ones fetching a single
+document by `_id` or by a staff email, where the id already identifies it. So it is not a habit
+in our client — it is the rule for any count or list, and the console's events screens are all
+counts and lists.
+
+**Gustavo's instruction, 2026-11-25:** anything the console reads out of `Event` is filtered
+with `type: 'event'`. That covers `GET /platform/events`, `GET /companies/:id/events`, and the
+`eventsActive` field on the company profile.
+
+**One of those reads is already live**, which is why this is not a note for later:
+`/summary` returns `current.activeEvents`, and it comes from `Event`. If that query does not
+carry the filter, the figure on the console's Overview today is counting documents that are not
+events — a wrong number on the one screen that is already in front of an operator. It is the
+cheapest thing in this note to check.
+
+While you are in there: if `type` has values beyond `event`, we would like the list. Our status
+pills map event statuses only (`live`, `upcoming`, `closed`), so a document of another kind would
+not merely inflate a count — it would arrive with a status our table has no colour for.
+
 `inventory` is also half of the console's search box: `GET /inventory?search=&limit=5`
 (`GlobalSearch.jsx:39`), paired with `/companies?search=`. Both fire after a 300 ms pause, never
 per keystroke, and only from two characters up.
@@ -245,6 +274,9 @@ until it doesn't.
 
 ## 8. What we need, in the order we would build it
 
+0. **Check the `type: 'event'` filter on the `Event` query behind `/summary.current.activeEvents`**
+   (§5.1). Live today, one line, and it is the only item here that can be wrong on a screen
+   somebody is already looking at.
 1. **`GET /companies/:id`** — unlocks the profile header and Overview, and nine tabs become
    incremental after it.
 2. **`devicesOverdue`**, wherever it lands first. Until it exists a client can only become
