@@ -33,6 +33,43 @@ export const PLAN_FILTERS = [
   { value: "Enterprise", label: "Enterprise" },
 ];
 
+/**
+ * One page, for the "Client" dropdown the cross-client lists share.
+ *
+ * It is the server's own cap and not a round number of our choosing: a
+ * `/companies` page tops out at 100, and asking for more is not an error --
+ * you get 100 and `limit` tells you what you got (backend, 2026-11-20). We
+ * asked for 500 for five days, which meant the dropdown was one signup away
+ * from showing the first hundred clients as though they were all of them,
+ * with nothing on screen to say otherwise. Harmless at 21 clients, and a trap
+ * set for a day when nobody would be reading this file.
+ *
+ * Replaced by GET /api/platform/companies/options -- id and name, uncapped --
+ * when the backend ships it. Until then, companyOptionsComplete below is what
+ * keeps the control honest.
+ */
+export const COMPANY_OPTIONS_LIMIT = 100;
+
+/**
+ * Whether that one page holds every client there is.
+ *
+ * When it does not, the dropdown must not offer what it has: a filter listing
+ * 100 of 137 clients is not a short list, it is a wrong answer to "which
+ * clients exist", and the operator has no way to see the difference. Better a
+ * control that does nothing.
+ *
+ * An unreadable or absent total counts as complete, deliberately. The rows are
+ * then all we know, and disabling the filter over a field the server did not
+ * send would break the screen for a missing number rather than for a missing
+ * client.
+ */
+export const companyOptionsComplete = ({ rows, total } = {}) => {
+  const received = Array.isArray(rows) ? rows.length : 0;
+  const counted = Number(total);
+  if (!Number.isFinite(counted)) return true;
+  return counted <= received;
+};
+
 const STATUS_PILLS = {
   active: { label: "Active", color: "success" },
   at_risk: { label: "At risk", color: "error" },

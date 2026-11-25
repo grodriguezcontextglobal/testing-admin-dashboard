@@ -39,7 +39,7 @@ const summaryFor = (data, range) => {
   const start = end - days * DAY;
   const previousStart = start - days * DAY;
   const inWindow = (from, to) => (row) => {
-    const at = Date.parse(row.createdAt);
+    const at = Date.parse(row.at);
     return at >= from && at < to;
   };
   const period = (from, to) => {
@@ -175,14 +175,13 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
         (d) =>
           (!isFilter(p.status) || d.status === p.status) &&
           (!isFilter(p.company) || d.companyId === p.company) &&
-          matches(p.search, d.serial, d.deviceName, d.companyName),
+          matches(p.search, d.serial, d.group, d.companyName),
       );
       return paginate(rows, p, {
         total: rows.length,
         available: countBy(rows, "status", "available"),
         assigned: countBy(rows, "status", "assigned"),
         lost: countBy(rows, "status", "lost"),
-        inRepair: countBy(rows, "status", "in_repair"),
       });
     }
 
@@ -210,7 +209,6 @@ export const createPlatformMockRouter = ({ now = new Date() } = {}) => {
       );
       return paginate(rows, p, {
         live: countBy(rows, "status", "live"),
-        upcoming: countBy(rows, "status", "upcoming"),
         devicesNotReturned: sum(rows, "devicesNotReturned"),
         revenueCents: sum(rows, "revenueCents"),
       });

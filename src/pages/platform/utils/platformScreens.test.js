@@ -413,3 +413,20 @@ describe("money columns while the server has no amounts", () => {
     }
   });
 });
+
+describe("filters a screen must not offer", () => {
+  // Both of these were on screen and could never match anything. They are
+  // pinned here rather than merely deleted, because the cheapest way for
+  // either to come back is somebody restoring a filter list from a design
+  // board that still shows four tabs.
+  it("inventory does not offer In repair: item_inv records no such state", () => {
+    const keys = PLATFORM_LIST_SCREENS.inventory.filters.map((f) => f.key);
+    expect(keys).toEqual(["all", "available", "assigned", "lost"]);
+  });
+
+  it("events does not offer Upcoming, in the tabs or in the totals", () => {
+    const screen = PLATFORM_LIST_SCREENS.events;
+    expect(screen.filters.map((f) => f.key)).toEqual(["all", "live", "closed"]);
+    expect(screen.totals.map((t) => t.key)).not.toContain("upcoming");
+  });
+});

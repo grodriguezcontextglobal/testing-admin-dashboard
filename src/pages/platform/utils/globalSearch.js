@@ -47,7 +47,7 @@ export const globalSearchGroups = ({ companies = [], devices = [] } = {}) =>
         id: `device-${device.id}`,
         // Serials are text with a trailing counter: never Number() them.
         title: String(device.serial ?? ""),
-        subtitle: join(device.deviceName, device.companyName),
+        subtitle: join(device.group, device.companyName),
         to: clientPath(device.companyId, "inventory"),
       })),
     },
