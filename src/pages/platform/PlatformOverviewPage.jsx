@@ -36,7 +36,7 @@ const ACTIVITY_COLUMNS = [
 const TRANSACTION_COLUMNS = [
   { key: "companyName", title: "Client", format: "company" },
   { key: "type", title: "Type", format: "status" },
-  { key: "createdAt", title: "When", format: "relative" },
+  { key: "at", title: "When", format: "relative" },
   { key: "amountCents", title: "Amount", format: "cents", align: "right" },
   { key: "status", title: "Status", format: "status" },
 ];

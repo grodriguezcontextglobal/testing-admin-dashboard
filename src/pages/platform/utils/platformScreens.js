@@ -24,18 +24,25 @@ export const PLATFORM_LIST_SCREENS = {
     description: "Every device across every client. Search by serial to find where a device is.",
     filterParam: "status",
     defaultFilter: "all",
+    // Three, not four. `item_inv.logistic_status` writes six values from this
+    // app -- in-stock, assigned, in-event, in-transit, in-reserved, lost --
+    // and "in repair" is not among them: `damaged` and `under-maintenance`
+    // are declared in logisticStatusConfig.js and nothing in this client
+    // writes either. A tab that can never match anything is the Overdue tile
+    // again, so it is gone until a repair flow exists to fill it.
     filters: [
       { key: "all", label: "All" },
       { key: "available", label: "Available" },
       { key: "assigned", label: "Out" },
       { key: "lost", label: "Lost" },
-      { key: "in_repair", label: "In repair" },
     ],
     searchPlaceholder: "Search serial, device or client",
     columns: [
       // Serials are text with a trailing counter: never Number() them.
       { key: "serial", title: "Serial", format: "text" },
-      { key: "deviceName", title: "Device", format: "text" },
+      // `group`, because the column is `item_inv.item_group` and that is the
+      // word the table uses for it. Taken from the backend on 2026-11-25.
+      { key: "group", title: "Device", format: "text" },
       { key: "category", title: "Category", format: "text" },
       company,
       { key: "status", title: "Status", format: "status" },
@@ -64,7 +71,7 @@ export const PLATFORM_LIST_SCREENS = {
     ],
     searchPlaceholder: "Search consumer, client or event",
     columns: [
-      { key: "createdAt", title: "Date", format: "datetime" },
+      { key: "at", title: "Date", format: "datetime" },
       company,
       // The name, not the email. This list is cross-client, and a consumer's
       // email address in a cross-client list is the same exposure the people
@@ -92,10 +99,15 @@ export const PLATFORM_LIST_SCREENS = {
     description: "Every client's events, with the devices still out.",
     filterParam: "status",
     defaultFilter: "all",
+    // No Upcoming, here or in the totals below. The event's own `active` flag
+    // answers live and closed; "upcoming" has to be derived from
+    // `eventInfoDetail.dateBegin`, which has no schema and is therefore
+    // unindexed, so a filter over it is a full scan (backend, 2026-11-25).
+    // Better a control that is not there than one whose cost nobody can see.
+    // It comes back the day that field is indexed or denormalised.
     filters: [
       { key: "all", label: "All" },
       { key: "live", label: "Live" },
-      { key: "upcoming", label: "Upcoming" },
       { key: "closed", label: "Closed" },
     ],
     searchPlaceholder: "Search event, client or lead",
@@ -104,13 +116,13 @@ export const PLATFORM_LIST_SCREENS = {
       company,
       { key: "status", title: "Status", format: "status" },
       { key: "startsAt", title: "Starts", format: "date" },
-      { key: "devicesAssigned", title: "Assigned", format: "number", align: "right" },
+      // The server counts `deviceSetup`, and calls it `deviceCount`.
+      { key: "deviceCount", title: "Assigned", format: "number", align: "right" },
       { key: "devicesNotReturned", title: "Not returned", format: "number", align: "right" },
       { key: "revenueCents", title: "Revenue", format: "cents", align: "right" },
     ],
     totals: [
       { key: "live", label: "Live now", format: "number" },
-      { key: "upcoming", label: "Upcoming", format: "number" },
       { key: "devicesNotReturned", label: "Not returned", format: "number", critical: true },
       { key: "revenueCents", label: "Revenue", format: "cents" },
     ],

@@ -46,7 +46,10 @@ export const SECTION_COLUMNS = {
     { key: "source", title: "Source", format: "status" },
   ],
   transactions: [
-    { key: "createdAt", title: "Date", format: "datetime" },
+    // `at` and `group` below are the server's words for these columns, taken
+    // on 2026-11-25 so the console says one thing in both places: this tab
+    // and the cross-client list in platformScreens.js.
+    { key: "at", title: "Date", format: "datetime" },
     { key: "type", title: "Type", format: "status" },
     { key: "consumerEmail", title: "Consumer", format: "text" },
     { key: "eventName", title: "Event", format: "text" },
@@ -58,14 +61,14 @@ export const SECTION_COLUMNS = {
     { key: "status", title: "Status", format: "status" },
     { key: "startsAt", title: "Starts", format: "date" },
     { key: "endsAt", title: "Ends", format: "date" },
-    { key: "devicesAssigned", title: "Assigned", format: "number", align: "right" },
+    { key: "deviceCount", title: "Assigned", format: "number", align: "right" },
     { key: "devicesNotReturned", title: "Not returned", format: "number", align: "right" },
     { key: "consumersCount", title: "Consumers", format: "number", align: "right" },
     { key: "revenueCents", title: "Revenue", format: "cents", align: "right" },
     { key: "leadName", title: "Lead", format: "text" },
   ],
   inventory: [
-    { key: "groupName", title: "Group", format: "text" },
+    { key: "group", title: "Group", format: "text" },
     { key: "category", title: "Category", format: "text" },
     // Serials are text with a trailing counter: never Number() them.
     { key: "serialRange", title: "Serials", format: "text" },

@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  COMPANY_OPTIONS_LIMIT,
   PLAN_FILTERS,
   buildCompaniesQuery,
+  companyOptionsComplete,
   companyStatusPill,
   formatCents,
   formatLastActivity,
@@ -124,5 +126,40 @@ describe("PLAN_FILTERS", () => {
   it("offers every plan the product sells, plus All", () => {
     expect(PLAN_FILTERS.map((p) => p.value)).toEqual(["all", "Free", "Pro", "Enterprise"]);
     expect(PLAN_FILTERS[0].label).toBe("All plans");
+  });
+});
+
+describe("COMPANY_OPTIONS_LIMIT", () => {
+  it("asks for exactly what the server will give, not more", () => {
+    // The client dropdown used to ask for 500 against a server cap of 100:
+    // it would have shown the first hundred clients as if they were all of
+    // them, silently, the day the hundred-and-first signed up.
+    expect(COMPANY_OPTIONS_LIMIT).toBe(100);
+    expect(buildCompaniesQuery({ limit: COMPANY_OPTIONS_LIMIT }).limit).toBe(100);
+  });
+});
+
+describe("companyOptionsComplete", () => {
+  it("is complete when the page holds every client the server counted", () => {
+    expect(companyOptionsComplete({ rows: [1, 2, 3], total: 3 })).toBe(true);
+  });
+
+  it("is incomplete when the server counted more than it sent", () => {
+    expect(companyOptionsComplete({ rows: new Array(100).fill(1), total: 137 })).toBe(false);
+  });
+
+  it("is complete while there is nothing to be missing", () => {
+    // An empty list has its own empty state; it is not a truncated one.
+    expect(companyOptionsComplete({ rows: [], total: 0 })).toBe(true);
+  });
+
+  it("treats a total it cannot read as complete, because the rows are all we know", () => {
+    expect(companyOptionsComplete({ rows: [1], total: undefined })).toBe(true);
+    expect(companyOptionsComplete({ rows: [1], total: "many" })).toBe(true);
+  });
+
+  it("survives being called before anything has loaded", () => {
+    expect(companyOptionsComplete({})).toBe(true);
+    expect(companyOptionsComplete()).toBe(true);
   });
 });

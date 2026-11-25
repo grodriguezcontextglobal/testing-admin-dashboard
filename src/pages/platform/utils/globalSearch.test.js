@@ -18,7 +18,7 @@ describe("isSearchable", () => {
 describe("globalSearchGroups", () => {
   const companies = [{ id: "cmp_1", name: "Harbor Point Events", ownerEmail: "ana@harbor.example" }];
   const devices = [
-    { id: "d1", serial: "RX-000007", deviceName: "Receiver", companyId: "cmp_1", companyName: "Harbor Point Events" },
+    { id: "d1", serial: "RX-000007", group: "Receiver", companyId: "cmp_1", companyName: "Harbor Point Events" },
   ];
 
   it("groups the two things the box says it searches", () => {

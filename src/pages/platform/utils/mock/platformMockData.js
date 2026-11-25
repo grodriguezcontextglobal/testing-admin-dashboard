@@ -141,8 +141,10 @@ const buildCompanyDetail = (company, index, now) => {
   const events = Array.from({ length: rand.int(6, 14) }, (_, i) => {
     const start = now + rand.int(-120, 45) * DAY;
     const end = start + rand.int(0, 3) * DAY + 8 * HOUR;
-    const state = end < now ? "closed" : start > now ? "upcoming" : "live";
-    const assigned = state === "upcoming" ? 0 : rand.int(20, 400);
+    // Two states, like the server: the event carries an `active` flag, and
+    // "upcoming" would have to be derived from an unindexed date.
+    const state = end < now ? "closed" : "live";
+    const assigned = start > now ? 0 : rand.int(20, 400);
     return {
       id: `${company.id}_evt_${i}`,
       ...ref,
@@ -150,7 +152,7 @@ const buildCompanyDetail = (company, index, now) => {
       status: state,
       startsAt: iso(start),
       endsAt: iso(end),
-      devicesAssigned: assigned,
+      deviceCount: assigned,
       devicesNotReturned: state === "closed" ? rand.int(0, company.status === "at_risk" ? 25 : 3) : rand.int(0, assigned),
       consumersCount: assigned ? rand.int(Math.floor(assigned / 2), assigned) : 0,
       revenueCents: assigned * rand.int(300, 2500),
@@ -196,7 +198,7 @@ const buildCompanyDetail = (company, index, now) => {
     return {
       id: `${company.id}_trx_${i}`,
       ...ref,
-      createdAt: iso(now - rand.int(10, 60 * 24 * 95) * MINUTE),
+      at: iso(now - rand.int(10, 60 * 24 * 95) * MINUTE),
       type,
       // Both, because the two scopes show different ones: the cross-client
       // list shows the name, the client's own profile shows the address.
@@ -216,7 +218,7 @@ const buildCompanyDetail = (company, index, now) => {
     const out = Math.min(total - lost, rand.int(0, Math.floor(total * 0.4)));
     return {
       id: `${company.id}_grp_${i}`,
-      groupName: device.name,
+      group: device.name,
       category: device.category,
       serialRange: `${device.prefix}-${pad(first, 6)} – ${device.prefix}-${pad(first + total - 1, 6)}`,
       prefix: device.prefix,
@@ -280,17 +282,20 @@ const buildCompanyDetail = (company, index, now) => {
   return { staff, events, consumers, members, transactions, inventoryGroups, activity, merchant, subscription };
 };
 
-const buildDevices = (company, groups, index) => {
-  const rand = makeRandom(9000 + index);
+// No randomness left in here: every unit's state follows from its group's
+// counts, now that in_repair is gone.
+const buildDevices = (company, groups) => {
   const devices = [];
   for (const group of groups) {
     const shown = Math.min(group.total, 12);
     for (let i = 0; i < shown; i += 1) {
-      const status = i < group.lost ? "lost" : i < group.lost + group.out ? "assigned" : rand.chance(0.05) ? "in_repair" : "available";
+      // No in_repair: item_inv does not record one, so the sample data must
+      // not invent a state the real server can never send.
+      const status = i < group.lost ? "lost" : i < group.lost + group.out ? "assigned" : "available";
       devices.push({
         id: `${group.id}_${i}`,
         serial: `${group.prefix}-${pad(group.first + i, 6)}`,
-        deviceName: group.groupName,
+        group: group.group,
         category: group.category,
         companyId: company.id,
         companyName: company.name,
@@ -334,7 +339,7 @@ export const createPlatformMockData = (now = new Date()) => {
   companies.forEach((company, index) => {
     const detail = buildCompanyDetail(company, index, nowMs);
     details[company.id] = detail;
-    inventory.push(...buildDevices(company, detail.inventoryGroups, index));
+    inventory.push(...buildDevices(company, detail.inventoryGroups));
   });
   const all = (key) => companies.flatMap((c) => details[c.id][key]);
   const byNewest = (field) => (a, b) => String(b[field]).localeCompare(String(a[field]));
