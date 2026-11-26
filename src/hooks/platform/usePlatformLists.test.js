@@ -58,3 +58,62 @@ describe("usePlatformSummary", () => {
     expect(result.current.summary).toEqual(summary);
   });
 });
+
+describe("the Event collection discriminator", () => {
+  beforeEach(() => {
+    devitrakApiPlatform.get.mockReset();
+    devitrakApiPlatform.get.mockResolvedValue({ data: { ok: true, data: [] } });
+  });
+
+  it("sends type=event on the cross-client events list", async () => {
+    // Mongo's `Event` collection does not hold only events. Every read in the
+    // dashboard that asks for a LIST carries the discriminator
+    // (eventsListQuery.js:16, and the /event/event-list bodies in home,
+    // consumers and posts). Gustavo's instruction, 2026-11-25: anything the
+    // console reads out of Event is filtered the same way.
+    renderHook(() => usePlatformList("events", { status: "live", page: 1, limit: 25 }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/events", {
+      params: { status: "live", page: 1, limit: 25, type: "event" },
+    });
+  });
+
+  it("is added by the hook, so no screen can forget it", async () => {
+    // The point of putting it here rather than in buildListQuery: this hook is
+    // the one place every cross-client list read goes through. A caller that
+    // passes a hand-built query still gets the filter.
+    renderHook(() => usePlatformList("events"), { wrapper: makeWrapper() });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/events", {
+      params: { type: "event" },
+    });
+  });
+
+  it("cannot be overridden by a caller's own type", async () => {
+    renderHook(() => usePlatformList("events", { type: "anything" }), { wrapper: makeWrapper() });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/events", {
+      params: { type: "event" },
+    });
+  });
+
+  it("leaves the transactions type filter alone", async () => {
+    // A different table and a different meaning: this one IS the operator's
+    // filter.
+    renderHook(() => usePlatformList("transactions", { type: "refund" }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/transactions", {
+      params: { type: "refund" },
+    });
+  });
+
+  it("adds nothing to the other lists", async () => {
+    renderHook(() => usePlatformList("inventory", { page: 1 }), { wrapper: makeWrapper() });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/inventory", { params: { page: 1 } });
+  });
+});

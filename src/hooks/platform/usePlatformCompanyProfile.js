@@ -3,6 +3,7 @@ import { devitrakApiPlatform } from "../../api/devitrakApi";
 import {
   buildSectionQuery,
   normalizeSectionResponse,
+  resourceDiscriminator,
 } from "../../pages/platform/utils/clientProfile";
 import { retryPlatformQuery } from "../../pages/platform/utils/platformQuery";
 
@@ -26,9 +27,13 @@ export const usePlatformCompany = (companyId) => {
 /**
  * One profile tab: GET /api/platform/companies/:id/<resource>. Each tab asks
  * only when it is open, so the profile does not fire ten requests at once.
+ *
+ * The resource's discriminator is added last, for the same reason as in
+ * usePlatformList: a client's events tab reads the same Mongo collection as
+ * the cross-client list, and the rule has to live where it cannot be left out.
  */
 export const usePlatformCompanySection = (companyId, resource, filters = {}) => {
-  const params = buildSectionQuery(filters);
+  const params = { ...buildSectionQuery(filters), ...resourceDiscriminator(resource) };
   const query = useQuery({
     queryKey: ["platform", "company-section", companyId, resource, params],
     queryFn: () => devitrakApiPlatform.get(`${companyPath(companyId)}/${resource}`, { params }),

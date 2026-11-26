@@ -82,3 +82,28 @@ describe("usePlatformCompanySection", () => {
     expect(result.current.rows).toEqual([]);
   });
 });
+
+describe("the Event collection discriminator, per client", () => {
+  beforeEach(() => {
+    devitrakApiPlatform.get.mockReset();
+    devitrakApiPlatform.get.mockResolvedValue({ data: { ok: true, data: [] } });
+  });
+
+  it("sends type=event on a client's events tab", async () => {
+    renderHook(() => usePlatformCompanySection("c1", "events", { page: 2 }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/companies/c1/events", {
+      params: { page: 2, limit: 25, type: "event" },
+    });
+  });
+
+  it("adds nothing to the other tabs", async () => {
+    renderHook(() => usePlatformCompanySection("c1", "members"), { wrapper: makeWrapper() });
+    await waitFor(() => expect(devitrakApiPlatform.get).toHaveBeenCalledTimes(1));
+    expect(devitrakApiPlatform.get).toHaveBeenCalledWith("/companies/c1/members", {
+      params: { page: 1, limit: 25 },
+    });
+  });
+});

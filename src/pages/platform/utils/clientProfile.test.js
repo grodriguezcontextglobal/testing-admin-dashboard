@@ -10,6 +10,7 @@ import {
   humanizeStatus,
   normalizeSectionResponse,
   resolveProfileTab,
+  resourceDiscriminator,
   sectionStatusTone,
 } from "./clientProfile";
 
@@ -296,5 +297,31 @@ describe("a stat tile the server cannot fill", () => {
   it("never drops a tile the server always sends", () => {
     const tiles = companyStatTiles({});
     expect(tiles.map((t) => t.label)).toEqual(["Devices out", "Staff"]);
+  });
+});
+
+describe("resourceDiscriminator", () => {
+  it("marks every events read with type: 'event'", () => {
+    expect(resourceDiscriminator("events")).toEqual({ type: "event" });
+  });
+
+  it("marks nothing else", () => {
+    // `transactions` has a `type` of its own (deposit|rental|sale|refund) on a
+    // different table, and it is the operator's filter, not a discriminator.
+    for (const resource of ["inventory", "transactions", "activity", "audit", "members", "staff"]) {
+      expect(resourceDiscriminator(resource), resource).toEqual({});
+    }
+  });
+
+  it("survives a resource that is missing or unknown", () => {
+    expect(resourceDiscriminator(undefined)).toEqual({});
+    expect(resourceDiscriminator(null)).toEqual({});
+    expect(resourceDiscriminator("something_new")).toEqual({});
+  });
+
+  it("hands out a fresh object, so a caller cannot mutate the rule", () => {
+    const first = resourceDiscriminator("events");
+    first.type = "tampered";
+    expect(resourceDiscriminator("events")).toEqual({ type: "event" });
   });
 });
