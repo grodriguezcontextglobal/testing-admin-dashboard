@@ -42,6 +42,43 @@ const COMPANIES = {
 describe('Admin Console access (console plan F9)', () => {
   let platformRequests
 
+  /**
+   * The gate's own question (src/hooks/platform/usePlatformMe.js), asked
+   * before any screen asks for data.
+   *
+   * It is recorded like every other platform request, because the header
+   * assertions below have to cover it too: it is a cross-client call and must
+   * carry no company header. It is deliberately NOT part of the `@platform`
+   * alias — a test that waits for "the console's first data request" means
+   * /companies, and /me would otherwise arrive first and answer for it.
+   *
+   * A refused case needs no stub. The guard only asks when the sign-in
+   * response AND the address already say yes, so anything refused on those
+   * two is refused without a request at all. The catch-all covers the rest,
+   * and it answers /me with a company list — which is not a body that says
+   * yes, so a case that forgets this stub is refused rather than wrongly let
+   * in. That is the right way round for this file.
+   */
+  const stubMe = ({ platformAccess, email = 'owner@devitrak.com' }) =>
+    cy.intercept('GET', '**/api/platform/me', (req) => {
+      platformRequests.push({ url: req.url, headers: req.headers })
+      req.reply({
+        statusCode: 200,
+        body: {
+          ok: true,
+          data: {
+            uid: 'usr_console_1',
+            email,
+            platformAccess,
+            domain: email.split('@')[1],
+            platformObserver: platformAccess,
+            mfaEnabled: true,
+            checkedAt: new Date().toISOString(),
+          },
+        },
+      })
+    })
+
   beforeEach(() => {
     platformRequests = []
 
@@ -123,6 +160,7 @@ describe('Admin Console access (console plan F9)', () => {
 
   describe('a user the server marked platformAccess: true', () => {
     it('sees the client list', () => {
+      stubMe({ platformAccess: true })
       cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })
 
       cy.location('pathname', { timeout: 15000 }).should('eq', '/platform/clients')
@@ -131,9 +169,46 @@ describe('Admin Console access (console plan F9)', () => {
     })
 
     it('lands on Overview when opening /platform', () => {
+      stubMe({ platformAccess: true })
       cy.loginAsConsoleUser('/platform', { platformAccess: true })
 
       cy.location('pathname', { timeout: 15000 }).should('eq', '/platform/overview')
+      cy.get(CONSOLE_SHELL).should('exist')
+    })
+  })
+
+  describe('a user whose access the server has since revoked', () => {
+    // The reason the guard asks at all. The sign-in response is a copy taken
+    // once, and redux-persist writes it to localStorage, so it outlives the
+    // tab: before the gate asked /me, a revoked operator kept the console on
+    // screen until they signed out, not until they reloaded. Nothing leaked —
+    // the server refuses every /api/platform request — but what they met was
+    // an error rather than a refusal that explains itself.
+    it('is refused, although the sign-in copy still says yes', () => {
+      stubMe({ platformAccess: false })
+      cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })
+
+      cy.location('pathname', { timeout: 15000 }).should('not.match', /^\/platform/)
+      cy.get(CONSOLE_SHELL).should('not.exist')
+    })
+
+    // A 401 is the server saying no. Anything else is the server failing to
+    // answer, and "we could not ask" is not "no": the console is read-only,
+    // the server gates every request behind the screen, and a blip must not
+    // lock an operator out of it (src/pages/platform/utils/platformGate.js).
+    it('is refused on a 401 from /me', () => {
+      cy.intercept('GET', '**/api/platform/me', { statusCode: 401, body: { ok: false } })
+      cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })
+
+      cy.location('pathname', { timeout: 15000 }).should('not.match', /^\/platform/)
+      cy.get(CONSOLE_SHELL).should('not.exist')
+    })
+
+    it('still opens when /me itself breaks', () => {
+      cy.intercept('GET', '**/api/platform/me', { statusCode: 500, body: { ok: false } })
+      cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })
+
+      cy.location('pathname', { timeout: 15000 }).should('eq', '/platform/clients')
       cy.get(CONSOLE_SHELL).should('exist')
     })
   })
@@ -154,6 +229,7 @@ describe('Admin Console access (console plan F9)', () => {
     // header. A company header here would scope the answer to one client and
     // quietly empty every screen (sessionHeaders.js, plan F3).
     it('sends no x-company-id and no s-company-lq', () => {
+      stubMe({ platformAccess: true })
       cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })
 
       cy.wait('@platform')
@@ -161,6 +237,11 @@ describe('Admin Console access (console plan F9)', () => {
 
       cy.then(() => {
         expect(platformRequests.length, 'requests to /api/platform').to.be.greaterThan(0)
+        // /me is in here too: the gate's own call is cross-client like the rest.
+        expect(
+          platformRequests.some(({ url }) => /\/api\/platform\/me(\?|$)/.test(url)),
+          'the gate asked /api/platform/me',
+        ).to.equal(true)
         platformRequests.forEach(({ url, headers }) => {
           expect(headers, `x-company-id on ${url}`).not.to.have.property('x-company-id')
           expect(headers, `s-company-lq on ${url}`).not.to.have.property('s-company-lq')
@@ -171,8 +252,12 @@ describe('Admin Console access (console plan F9)', () => {
     })
 
     it('asks for /api/platform/companies, not a company-scoped route', () => {
+      stubMe({ platformAccess: true })
       cy.loginAsConsoleUser('/platform/clients', { platformAccess: true })
 
+      // `@platform` is the catch-all, and /me has its own intercept, so the
+      // first request this waits on is the screen's own — which is the thing
+      // being asserted.
       cy.wait('@platform').its('request.url').should('match', /\/api\/platform\/companies(\?|$)/)
     })
   })
