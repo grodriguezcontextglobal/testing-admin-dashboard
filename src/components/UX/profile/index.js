@@ -7,7 +7,7 @@ export { default as ProfileAvatar } from "./ProfileAvatar";
 export { getInitials, getTint } from "./utils/avatar";
 export { default as StatusChip } from "./StatusChip";
 export { default as LoanDateCell } from "./LoanDateCell";
-export { ProfileSkeleton, ProfileErrorState } from "./ProfileStates";
+export { ProfileSkeleton, ProfileErrorState, ErrorReference } from "./ProfileStates";
 export {
   calendarDaysUntil,
   formatLoanDate,
