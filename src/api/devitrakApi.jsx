@@ -7,6 +7,7 @@ import { isOfflineQueueableRequest } from "../config/offlineQueue";
 import { handleUnauthorized } from "./sessionExpiry";
 import { attachSession } from "./sessionCredential";
 import { handlePlanLimit } from "./planLimit";
+import { attachErrorReference, errorReferenceLog } from "./errorReference";
 
 // Mirrors src/api/serverManager.js's own PRIMARY_API/BACKUP_API reads.
 const configuredApiOrigins = [
@@ -136,6 +137,24 @@ const setupResponseInterceptor = (instance) => {
         async (error) => {
             const { config, message } = error;
             const originalRequest = config;
+            const requestUrl = originalRequest?.baseURL
+                ? `${originalRequest.baseURL}${originalRequest.url || ""}`
+                : originalRequest?.url;
+
+            // Since 2026-11-26 the API answers a failure with a generic message
+            // and a reference to what it logged (errorReference.js). Attach it
+            // before anything else here, so even an expired session carries it,
+            // and log it beside the URL: that line alone is the bug report.
+            attachErrorReference(error);
+            if (error.errorRef) {
+                console.error(
+                    errorReferenceLog({
+                        ref: error.errorRef,
+                        method: originalRequest?.method,
+                        url: requestUrl,
+                    }),
+                );
+            }
 
             // An authenticated request answered 401 is an expired session:
             // end it once, globally, instead of leaving the screen half
@@ -150,9 +169,7 @@ const setupResponseInterceptor = (instance) => {
             if (
                 isOfflineQueueableRequest({
                     method: originalRequest?.method,
-                    url: originalRequest?.baseURL
-                        ? `${originalRequest.baseURL}${originalRequest.url || ""}`
-                        : originalRequest?.url,
+                    url: requestUrl,
                     isOnline: navigator.onLine,
                     apiOrigins: configuredApiOrigins,
                 })

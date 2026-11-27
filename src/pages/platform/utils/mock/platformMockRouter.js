@@ -9,6 +9,21 @@ const DAY = 24 * 60 * 60 * 1000;
 const ok = (body) => ({ status: 200, data: { ok: true, ...body } });
 const notFound = (url) => ({ status: 404, data: { ok: false, msg: `No mock for ${url}` } });
 
+/**
+ * 501: the route exists, the data is not the server's to give. The sample
+ * build has to answer this the way production does, or a demo teaches a
+ * contract the live server does not keep — the Merchant tab would look
+ * finished here and refuse everywhere else.
+ *
+ * `msg` is the server's own sentence, quoted from the backend note of
+ * 2026-11-26. `needs` carries only the one entry that note spelled out; the
+ * rest was elided there and inventing it would put words in their mouth.
+ */
+const notServed = (resource, msg, needs) => ({
+  status: 501,
+  data: { ok: false, resource, msg, needs },
+});
+
 const matches = (term, ...fields) => {
   const needle = String(term ?? "").trim().toLowerCase();
   if (!needle) return true;
@@ -103,7 +118,9 @@ const companySection = (data, company, section, params) => {
     case "staff":
       return paginate(detail.staff, params);
     case "merchant":
-      return ok({ data: detail.merchant });
+      return notServed("merchant", "Merchant status is held by Stripe, not by this server.", [
+        "a Stripe API call per client (account, balance, payouts)",
+      ]);
     case "subscription":
       return ok({ data: detail.subscription });
     default:

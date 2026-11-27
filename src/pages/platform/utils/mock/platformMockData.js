@@ -253,18 +253,11 @@ const buildCompanyDetail = (company, index, now) => {
     };
   }).sort((a, b) => b.at.localeCompare(a.at));
 
-  const merchant = {
-    accountId: `acct_${hex(rand, 16)}`,
-    chargesEnabled: company.status !== "paused",
-    payoutsEnabled: company.status === "active" || company.status === "trial",
-    payoutSchedule: rand.pick(["Daily", "Weekly (Monday)", "Monthly (1st)"]),
-    requirementsDue: company.status === "at_risk" ? ["Bank account verification"] : [],
-    balanceCents: rand.int(0, 9000) * 100,
-    disputesOpen: company.status === "at_risk" ? rand.int(1, 3) : 0,
-    fees30dCents: Math.floor(company.revenue30dCents * 0.029),
-    lastPayoutAt: iso(now - rand.int(1, 9) * DAY),
-    currency: "USD",
-  };
+  // No `merchant` here on purpose. Those nine fields are Stripe account
+  // state, and the live server refuses them with a 501 rather than serve a
+  // stale copy of the sign-up form (backend note, 2026-11-26). Sample data
+  // that answered them would be the only place in the product where the
+  // Merchant tab works, which is worse than not having it.
 
   const prices = { Free: 0, Pro: 32000, "Pro (trial)": 32000, Enterprise: 120000 };
   const subscription = {
@@ -279,7 +272,7 @@ const buildCompanyDetail = (company, index, now) => {
     currency: "USD",
   };
 
-  return { staff, events, consumers, members, transactions, inventoryGroups, activity, merchant, subscription };
+  return { staff, events, consumers, members, transactions, inventoryGroups, activity, subscription };
 };
 
 // No randomness left in here: every unit's state follows from its group's

@@ -86,11 +86,23 @@ describe("createPlatformMockRouter", () => {
       expect(res.status).toBe(200);
       expect(Array.isArray(res.data.data)).toBe(true);
     }
-    for (const tab of ["merchant", "subscription"]) {
-      const res = get(`/companies/${id}/${tab}`);
-      expect(res.status).toBe(200);
-      expect(Array.isArray(res.data.data)).toBe(false);
-    }
+    const subscription = get(`/companies/${id}/subscription`);
+    expect(subscription.status).toBe(200);
+    expect(Array.isArray(subscription.data.data)).toBe(false);
+  });
+
+  // The live server answers this 501 (backend note, 2026-11-26): the nine
+  // fields are Stripe account state and the database only holds the sign-up
+  // form sent the day the account was created. A sample build that answered
+  // 200 here would show a finished tab that refuses in production.
+  it("refuses merchant the way the live server does, with what it is waiting on", () => {
+    const id = get("/companies", { limit: 1 }).data.data[0].id;
+    const res = get(`/companies/${id}/merchant`);
+    expect(res.status).toBe(501);
+    expect(res.data.ok).toBe(false);
+    expect(res.data.resource).toBe("merchant");
+    expect(res.data.msg).toMatch(/Stripe/);
+    expect(res.data.needs.length).toBeGreaterThan(0);
   });
 
   it("filters a company's activity by category", () => {

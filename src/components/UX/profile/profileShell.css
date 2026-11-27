@@ -512,3 +512,38 @@
 .profile-error__action {
   margin-top: 16px;
 }
+
+/* The API's error reference: secondary to the message, never the headline. */
+.profile-error__reference {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--gray-500, #747a73);
+}
+
+.profile-error__reference-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--gray-700, #414840);
+  user-select: all;
+}
+
+.profile-error__copy {
+  padding: 2px 8px;
+  border: 1px solid var(--gray-300, #d0d5dd);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--base-white, #fff);
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  color: var(--gray-600, #5d615a);
+  cursor: pointer;
+}
+
+.profile-error__copy:hover {
+  background: var(--gray-50, #f9fafb);
+}

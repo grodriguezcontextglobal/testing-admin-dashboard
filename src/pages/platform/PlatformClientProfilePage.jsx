@@ -19,6 +19,7 @@ import BaseTable from "../../components/UX/tables/BaseTable";
 import EmptyState from "../../components/UX/emptyState/EmptyState";
 import PlatformRequestError from "./components/PlatformRequestError";
 import { toTableColumns } from "./components/platformColumns";
+import { isNotDeployed as notDeployed } from "./utils/platformQuery";
 import { withReportedMoney } from "./utils/platformScreens";
 import {
   usePlatformCompany,
@@ -55,8 +56,6 @@ const breadcrumbLinkStyle = {
 };
 
 const breadcrumbTitleStyle = { ...breadcrumbLinkStyle, color: "var(--gray900, #101828)" };
-
-const notDeployed = (error) => error?.response?.status === 404;
 
 const RecordList = ({ fields, record }) => (
   <dl
@@ -236,6 +235,7 @@ const PlatformClientProfilePage = () => {
               ? "GET /api/platform/companies/:id answered 404: the client does not exist, or the server does not have this route yet."
               : "The service didn't respond. Nothing was changed."
           }
+          reference={error?.errorRef ?? null}
           action={
             notDeployed(error) ? (
               <Link to="/platform/clients">
