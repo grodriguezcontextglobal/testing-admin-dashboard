@@ -160,6 +160,16 @@ describe("the redirect never decides access", () => {
     expect(text).not.toContain("shouldSendToConsole");
   });
 
+  it("asks the server now, instead of trusting the sign-in copy", () => {
+    // The sign-in field is a hint that can only refuse. The answer comes from
+    // GET /api/platform/me, because redux-persist keeps the sign-in copy in
+    // localStorage past the end of the tab: without this, an operator whose
+    // access was revoked kept the console on screen until they signed out.
+    const text = fs.readFileSync(path.join(SRC, "routes", "authorized", "PlatformGuard.jsx"), "utf8");
+    expect(text).toContain("usePlatformMe");
+    expect(text).toContain("platformGateVerdict");
+  });
+
   it("a refusal on the console host says so, instead of navigating anywhere", () => {
     // Measured on 2026-11-19 with a real account that correctly has no console
     // access: the refusal was a window.location.replace to the dashboard host,

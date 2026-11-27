@@ -146,6 +146,27 @@ export const RECORD_FIELDS = {
 export const resolveProfileTab = (requested) =>
   CLIENT_PROFILE_TABS.some((tab) => tab.key === requested) ? requested : "overview";
 
+/**
+ * Extra query parameters a resource always carries, whatever the operator
+ * chose on screen.
+ *
+ * There is one, and it is `events`. Mongo's `Event` collection does not hold
+ * only events, so every read in this app that asks for a *list* carries the
+ * discriminator: `/event/event-list-per-company?company=…&type=event`
+ * (eventsListQuery.js:16), and the `POST /event/event-list` bodies in home,
+ * consumers, staff and posts all send `type: "event"`. The reads that leave it
+ * out are the ones fetching a single document by `_id`, where the id already
+ * identifies it. Gustavo's instruction of 2026-11-25 extends the same rule to
+ * the console, and the backend confirmed the routes read it on 2026-11-26.
+ *
+ * `transactions` also has a `type`, and it is deliberately not here: it is the
+ * operator's own filter (deposit|rental|sale|refund) over a different table.
+ *
+ * A fresh object each time, so a caller cannot edit the rule for everyone.
+ */
+export const resourceDiscriminator = (resource) =>
+  resource === "events" ? { type: "event" } : {};
+
 export const buildSectionQuery = ({ page, limit, category } = {}) => {
   const query = {
     page: Math.max(1, Number(page) || 1),
